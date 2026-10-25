@@ -1,0 +1,102 @@
+{
+  "tenants": 1000,
+  "concurrency": 32,
+  "load_secs": 20.668379996,
+  "load_requests": {
+    "put": 11148,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 40964,
+    "get_range": 0,
+    "head": 9000,
+    "list": 5826,
+    "delete": 0
+  },
+  "storage_objects": 11148,
+  "storage_bytes": 424596535,
+  "avg_bytes_per_tenant": 424596.535,
+  "avg_objects_per_tenant": 11.148,
+  "bytes_by_dir": {
+    "compacted": 213547000,
+    "compactions": 110000,
+    "manifest": 1298000,
+    "wal": 209641535
+  },
+  "cold_open_get": {
+    "p50_ms": 34.261709,
+    "p99_ms": 122.22856,
+    "min_ms": 29.564267,
+    "max_ms": 174.44687,
+    "mean_ms": 37.91358656000001
+  },
+  "cold_open_get_requests": {
+    "put": 500,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 2442,
+    "get_range": 233,
+    "head": 900,
+    "list": 297,
+    "delete": 0
+  },
+  "cold_close_requests": {
+    "put": 100,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 716,
+    "get_range": 0,
+    "head": 0,
+    "list": 116,
+    "delete": 0
+  },
+  "warm_get": {
+    "p50_ms": 0.065386,
+    "p99_ms": 2.497418,
+    "min_ms": 0.056097,
+    "max_ms": 3.850565,
+    "mean_ms": 0.1795714470000001
+  },
+  "warm_requests": {
+    "put": 0,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 31,
+    "get_range": 68,
+    "head": 0,
+    "list": 5,
+    "delete": 0
+  },
+  "idle_secs": 60,
+  "idle_closed_requests": {
+    "put": 0,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 0,
+    "get_range": 0,
+    "head": 0,
+    "list": 0,
+    "delete": 0
+  },
+  "idle_open_requests": {
+    "put": 0,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 194,
+    "get_range": 0,
+    "head": 0,
+    "list": 0,
+    "delete": 0
+  }
+}

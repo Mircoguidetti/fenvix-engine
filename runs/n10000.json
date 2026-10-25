@@ -1,0 +1,102 @@
+{
+  "tenants": 10000,
+  "concurrency": 32,
+  "load_secs": 209.048480838,
+  "load_requests": {
+    "put": 112229,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 413210,
+    "get_range": 0,
+    "head": 90000,
+    "list": 58896,
+    "delete": 0
+  },
+  "storage_objects": 112229,
+  "storage_bytes": 4246073943,
+  "avg_bytes_per_tenant": 424607.3943,
+  "avg_objects_per_tenant": 11.2229,
+  "bytes_by_dir": {
+    "compacted": 2135470000,
+    "compactions": 1100000,
+    "manifest": 12980000,
+    "wal": 2096523943
+  },
+  "cold_open_get": {
+    "p50_ms": 35.591581999999995,
+    "p99_ms": 47.90688,
+    "min_ms": 28.594901,
+    "max_ms": 49.372249,
+    "mean_ms": 36.09305335
+  },
+  "cold_open_get_requests": {
+    "put": 500,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 2451,
+    "get_range": 239,
+    "head": 900,
+    "list": 296,
+    "delete": 0
+  },
+  "cold_close_requests": {
+    "put": 100,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 703,
+    "get_range": 0,
+    "head": 0,
+    "list": 117,
+    "delete": 0
+  },
+  "warm_get": {
+    "p50_ms": 0.071452,
+    "p99_ms": 2.506109,
+    "min_ms": 0.031561,
+    "max_ms": 9.703204999999999,
+    "mean_ms": 0.19544454400000005
+  },
+  "warm_requests": {
+    "put": 0,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 29,
+    "get_range": 68,
+    "head": 0,
+    "list": 5,
+    "delete": 0
+  },
+  "idle_secs": 60,
+  "idle_closed_requests": {
+    "put": 0,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 0,
+    "get_range": 0,
+    "head": 0,
+    "list": 0,
+    "delete": 0
+  },
+  "idle_open_requests": {
+    "put": 0,
+    "multipart_create": 0,
+    "multipart_part": 0,
+    "multipart_complete": 0,
+    "copy": 0,
+    "get": 190,
+    "get_range": 0,
+    "head": 0,
+    "list": 0,
+    "delete": 0
+  }
+}
