@@ -181,6 +181,50 @@
 ]
 },
 {
+"name": "admin.legacy_op_query_handshake",
+"group": "handshake and admin",
+"category": "core",
+"steps": [
+{
+"op": "raw_op_query"
+}
+]
+},
+{
+"name": "admin.unacknowledged_write_w0",
+"group": "handshake and admin",
+"category": "core",
+"steps": [
+{
+"op": "insert_one_w0",
+"coll": "c",
+"doc": {
+"_id": 1
+}
+},
+{
+"op": "sleep",
+"secs": 0.5
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {}
+}
+]
+},
+{
+"name": "admin.client_compression_requested",
+"group": "handshake and admin",
+"category": "core",
+"steps": [
+{
+"op": "client_with_compression",
+"coll": "c"
+}
+]
+},
+{
 "name": "admin.empty_db_reads",
 "group": "handshake and admin",
 "category": "core",
@@ -35426,6 +35470,292 @@ null,
 "op": "find",
 "coll": "a",
 "filter": {}
+}
+]
+},
+{
+"name": "persist.drop_database_races_background_compaction",
+"group": "persistence: idle close and wake",
+"category": "core",
+"steps": [
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 0,
+"r": 0
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 1,
+"r": 0
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 2,
+"r": 0
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 3,
+"r": 0
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 4,
+"r": 0
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 5,
+"r": 0
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "drop_database"
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0
+},
+{
+"_id": 1
+},
+{
+"_id": 2
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {}
+},
+{
+"op": "drop_database"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 0,
+"r": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 1,
+"r": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 2,
+"r": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 3,
+"r": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 4,
+"r": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 5,
+"r": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "drop_database"
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0
+},
+{
+"_id": 1
+},
+{
+"_id": 2
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {}
+},
+{
+"op": "drop_database"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 0,
+"r": 2
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 1,
+"r": 2
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 2,
+"r": 2
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 3,
+"r": 2
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 4,
+"r": 2
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "insert_one",
+"coll": "c",
+"doc": {
+"_id": 5,
+"r": 2
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "drop_database"
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0
+},
+{
+"_id": 1
+},
+{
+"_id": 2
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {}
+},
+{
+"op": "drop_database"
 }
 ]
 },

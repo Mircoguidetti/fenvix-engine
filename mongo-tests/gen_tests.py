@@ -108,6 +108,9 @@ add("admin.list_databases", [ins("c", [{"_id": 1}]), {"op": "db_in_list"}, {"op"
 add("admin.list_databases_namesonly_shape", [ins("c", [{"_id": 1}]), {"op": "admin_command", "cmd": {"listDatabases": 1, "nameOnly": True}, "pick": ["ok"]}], G)
 add("admin.session_insert", [{"op": "session_insert", "coll": "c"}], G)
 add("admin.server_api_client", [{"op": "ping_with_server_api"}], G)
+add("admin.legacy_op_query_handshake", [{"op": "raw_op_query"}], G)
+add("admin.unacknowledged_write_w0", [{"op": "insert_one_w0", "coll": "c", "doc": {"_id": 1}}, {"op": "sleep", "secs": 0.5}, find("c")], G)
+add("admin.client_compression_requested", [{"op": "client_with_compression", "coll": "c"}], G)
 add("admin.empty_db_reads", [find("nothing"), {"op": "count_documents", "coll": "nothing", "filter": {}}, {"op": "list_collection_names"}, agg("nothing", [{"$match": {}}])], G)
 
 # ---------------------------------------------------------------------------------------------
@@ -401,6 +404,12 @@ add("persist.id_types_survive", [ins("c", [{"_id": 1}, {"_id": "s"}, {"_id": 2.5
 add("persist.restart_server_graceful", [ins("c", [{"_id": i} for i in range(1, 6)]), {"op": "restart_server", "kill": False}, find("c", sort={"_id": 1}), ins("c", [{"_id": 6}]), {"op": "restart_server", "kill": False}, find("c", sort={"_id": 1})], G, restart=True)
 add("persist.restart_server_sigkill", [ins("c", [{"_id": i} for i in range(1, 6)]), upd("c", {"_id": 1}, {"$set": {"x": 1}}), {"op": "restart_server", "kill": True}, find("c", sort={"_id": 1}), ins("c", [{"_id": 6}]), {"op": "restart_server", "kill": True}, find("c", sort={"_id": 1}), {"op": "count_documents", "coll": "c", "filter": {}}], G, restart=True)
 add("persist.drop_database", [ins("a", [{"_id": 1}]), {"op": "drop_database"}, {"op": "db_in_list"}, find("a"), ins("a", [{"_id": 2}]), find("a")], G)
+_race = []
+for _r in range(3):
+    for _k in range(6):  # each closed writer session leaves an L0 SST; four or more queue a compaction
+        _race += [{"op": "insert_one", "coll": "c", "doc": {"_id": _k, "r": _r}}, {"op": "tenant_close"}]
+    _race += [{"op": "drop_database"}, ins("c", [{"_id": i} for i in range(3)]), {"op": "count_documents", "coll": "c", "filter": {}}, {"op": "drop_database"}]
+add("persist.drop_database_races_background_compaction", _race, G)
 add("persist.many_collections", [ins(f"c{i}", [{"_id": 1, "i": i}]) for i in range(30)] + [{"op": "list_collection_names"}, {"op": "tenant_close"}, {"op": "list_collection_names"}, find("c17")], G)
 
 G = "concurrency"

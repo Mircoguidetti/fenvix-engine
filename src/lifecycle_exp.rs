@@ -368,7 +368,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     // ---- lifecycle + background maintenance -------------------------------------------------
     let (queue, rx) = CompactionQueue::new();
     let lc = Lifecycle::new(Arc::clone(&counting), Some(Arc::clone(&queue)));
-    let maint = Maintenance::start(Arc::clone(&s3), Arc::clone(&raw), Arc::clone(&queue), rx, Arc::clone(&lc.touched), 4, GC_AFTER, GC_MIN_AGE);
+    let maint = Maintenance::start(Arc::clone(&s3), Arc::clone(&raw), Arc::clone(&queue), rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 4, GC_AFTER, GC_MIN_AGE);
 
     // Reserve disjoint tenant sets: step 3 (20), stress (1), control (1), crash (20).
     let pool: Vec<usize> = sample(&mut rng, n, STEP3_TENANTS + 2 + CRASH_TENANTS).into_vec();

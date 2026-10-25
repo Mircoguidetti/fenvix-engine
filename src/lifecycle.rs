@@ -111,12 +111,21 @@ impl CompactionQueue {
 // Lifecycle
 // ---------------------------------------------------------------------------
 
+/// One lock per tenant, held for the duration of a compaction or GC pass (and by anything that must
+/// not race with them, such as deleting the tenant).
+pub type MaintLocks = Arc<Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>>;
+
+pub fn maint_lock(locks: &MaintLocks, id: &str) -> Arc<tokio::sync::Mutex<()>> {
+    Arc::clone(locks.lock().unwrap().entry(id.to_string()).or_default())
+}
+
 pub struct Lifecycle {
     pub store: Arc<dyn ObjectStore>,
     pub counting: Arc<CountingStore>,
     pub queue: Option<Arc<CompactionQueue>>,
     /// Tenants a writer touched, with the time of the last touch (drives GC).
     pub touched: Arc<Mutex<HashMap<String, Instant>>>,
+    pub maint_locks: MaintLocks,
     /// Wait for compaction before upgrading a tenant that is near the L0 limit.
     pub l0_guard: bool,
     pub stats: Arc<Mutex<LifecycleStats>>,
@@ -149,6 +158,7 @@ impl Lifecycle {
             counting,
             queue,
             touched: Arc::new(Mutex::new(HashMap::new())),
+            maint_locks: Arc::new(Mutex::new(HashMap::new())),
             l0_guard,
             stats: Arc::new(Mutex::new(LifecycleStats::default())),
         })
@@ -255,9 +265,18 @@ impl Tenant {
 
     /// All key/value pairs whose key starts with `prefix`, in key order.
     pub async fn scan_prefix(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        // slatedb's scan defaults fetch one 4 KiB block per request, one at a time, and do not cache
+        // the blocks: a 1 MB scan costs ~250 sequential GETs every time. Read ahead in large
+        // requests, fetch in parallel, and keep the blocks.
+        let opts = slatedb::config::ScanOptions {
+            read_ahead_bytes: 4 << 20,
+            max_fetch_tasks: 4,
+            cache_blocks: true,
+            ..Default::default()
+        };
         let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
-            Mode::Reader(r) => r.scan_prefix(prefix, ..).await?,
-            Mode::Writer(db) => db.scan_prefix(prefix, ..).await?,
+            Mode::Reader(r) => r.scan_prefix_with_options(prefix, .., &opts).await?,
+            Mode::Writer(db) => db.scan_prefix_with_options(prefix, .., &opts).await?,
         };
         let mut out = Vec::new();
         while let Some(kv) = it.next().await? {
@@ -280,7 +299,10 @@ impl Tenant {
                 Op::Delete(k) => batch.delete(k),
             }
         }
-        db.write(batch).await?.await_durable().await?;
+        let handle = db.write(batch).await?;
+        // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
+        db.flush().await?;
+        handle.await_durable().await?;
         Ok(())
     }
 
@@ -444,6 +466,7 @@ impl Maintenance {
         queue: Arc<CompactionQueue>,
         mut rx: mpsc::UnboundedReceiver<Option<String>>,
         touched: Arc<Mutex<HashMap<String, Instant>>>,
+        locks: MaintLocks,
         workers: usize,
         gc_after: Duration,
         gc_min_age: Duration,
@@ -451,12 +474,14 @@ impl Maintenance {
         let log = Arc::new(Mutex::new(MaintenanceLog::default()));
         let sem = Arc::new(Semaphore::new(workers));
         let dispatcher = {
-            let (s3, raw, queue, log, sem) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), sem.clone());
+            let (s3, raw, queue, log, sem, locks) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), sem.clone(), locks.clone());
             tokio::spawn(async move {
                 while let Some(Some(id)) = rx.recv().await {
                     let permit = sem.clone().acquire_owned().await.unwrap();
-                    let (s3, raw, queue, log) = (s3.clone(), raw.clone(), queue.clone(), log.clone());
+                    let (s3, raw, queue, log, locks) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), locks.clone());
                     tokio::spawn(async move {
+                        let lock = maint_lock(&locks, &id);
+                        let _held = lock.lock().await;
                         let l0_after = match compact_tenant(&s3, &raw, &id).await {
                             Ok(Some(rec)) => {
                                 let l0 = rec.l0_after;
@@ -477,7 +502,7 @@ impl Maintenance {
         };
         let gc_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let gc_task = {
-            let (s3, log, stop) = (s3.clone(), log.clone(), gc_stop.clone());
+            let (s3, log, stop, locks) = (s3.clone(), log.clone(), gc_stop.clone(), locks.clone());
             tokio::spawn(async move {
                 while !stop.load(std::sync::atomic::Ordering::Relaxed) {
                     tokio::time::sleep(Duration::from_secs(2)).await;
@@ -491,6 +516,8 @@ impl Maintenance {
                         due
                     };
                     for id in due {
+                        let lock = maint_lock(&locks, &id);
+                        let _held = lock.lock().await;
                         match gc_tenant(&s3, &id, gc_min_age).await {
                             Ok(rec) => log.lock().unwrap().gcs.push(rec),
                             Err(e) => log.lock().unwrap().errors.push(format!("gc {id}: {e:#}")),

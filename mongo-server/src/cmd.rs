@@ -367,7 +367,12 @@ impl Server {
         if bool_arg(cmd.get("close"), false) {
             g.close().await?;
         }
-        Ok(doc! { "mode": g.mode(), "wakes": g.wakes as i64, "closes": g.closes as i64, "uncleanWake": g.unclean_wake().unwrap_or(false), "ok": 1.0 })
+        let (put_tier, get_tier, deletes) = self.dbs.request_counts();
+        Ok(doc! {
+            "mode": g.mode(), "wakes": g.wakes as i64, "closes": g.closes as i64, "uncleanWake": g.unclean_wake().unwrap_or(false),
+            "requests": { "putTier": put_tier as i64, "getTier": get_tier as i64, "delete": deletes as i64 },
+            "ok": 1.0
+        })
     }
 
     // ---- cursors ---------------------------------------------------------------------------

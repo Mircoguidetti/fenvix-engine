@@ -9,6 +9,8 @@ order, is compared exactly via canonical Extended JSON.
 """
 import argparse
 import copy
+import socket
+import struct
 import json
 import os
 import subprocess
@@ -176,6 +178,19 @@ def exec_step(ctx, db, dbname, step):
             return c.admin.command("ping")["ok"]
         finally:
             c.close()
+    if op == "raw_op_query":
+        return raw_op_query(ctx)
+    if op == "insert_one_w0":
+        from pymongo import WriteConcern
+        r = coll.with_options(write_concern=WriteConcern(w=0)).insert_one(step["doc"])
+        return {"acknowledged": r.acknowledged}
+    if op == "client_with_compression":
+        c = MongoClient(ctx.uri, compressors="zlib", serverSelectionTimeoutMS=15000)
+        try:
+            c[dbname][step["coll"]].insert_one({"_id": 1, "v": "x" * 2000})
+            return list(c[dbname][step["coll"]].find())
+        finally:
+            c.close()
     if op == "cursor_batches":
         cmd = {"find": step["coll"], "sort": step["sort"]}
         if "batch_size" in step:
@@ -270,6 +285,27 @@ def exec_step(ctx, db, dbname, step):
         [t.join() for t in ts]
         return {"bad": bad, "final": coll.count_documents({})}
     raise RuntimeError(f"unknown op {op}")
+
+
+def raw_op_query(ctx):
+    """Send a legacy OP_QUERY `isMaster` to admin.$cmd on a plain socket and parse the OP_REPLY."""
+    import bson
+    host, port = ctx.uri.split("//")[1].split(":")
+    body = struct.pack("<i", 0) + b"admin.$cmd\x00" + struct.pack("<ii", 0, -1) + bson.encode({"ismaster": 1, "helloOk": True})
+    msg = struct.pack("<iiii", 16 + len(body), 4242, 0, 2004) + body
+    with socket.create_connection((host, int(port)), timeout=10) as s:
+        s.sendall(msg)
+        hdr = b""
+        while len(hdr) < 16:
+            hdr += s.recv(16 - len(hdr))
+        length, _, response_to, opcode = struct.unpack("<iiii", hdr)
+        rest = b""
+        while len(rest) < length - 16:
+            rest += s.recv(length - 16 - len(rest))
+    flags, cursor_id, starting_from, n_returned = struct.unpack("<iqii", rest[:20])
+    doc = bson.decode(rest[20:])
+    keep = ("ismaster", "helloOk", "maxBsonObjectSize", "maxMessageSizeBytes", "maxWriteBatchSize", "minWireVersion", "maxWireVersion", "readOnly", "ok")
+    return {"opcode": opcode, "response_to": response_to, "response_flags": flags, "cursor_id": cursor_id, "starting_from": starting_from, "number_returned": n_returned, "doc": {k: doc[k] for k in keep if k in doc}}
 
 
 def run_threads(fn, n):

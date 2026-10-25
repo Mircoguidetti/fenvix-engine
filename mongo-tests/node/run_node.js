@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const net = require('net');
 const { MongoClient, ObjectId, Long, BSON } = require('mongodb');
 const { EJSON } = BSON;
 
@@ -77,6 +78,31 @@ async function rawBatches(db, coll, first) {
     cid = r.cursor.id;
   }
   return { batch_sizes: sizes, ids_sorted: ids.every((v, i) => i === 0 || ids[i - 1] <= v), n: ids.length };
+}
+
+// Legacy OP_QUERY `isMaster` to admin.$cmd on a plain socket; parse the OP_REPLY.
+function rawOpQuery(ctx) {
+  const [host, port] = ctx.uri.split('//')[1].split(':');
+  const q = BSON.serialize({ ismaster: 1, helloOk: true });
+  const ns = Buffer.from('admin.$cmd\0');
+  const body = Buffer.concat([Buffer.alloc(4), ns, Buffer.from(new Int32Array([0, -1]).buffer), q]);
+  const head = Buffer.alloc(16);
+  head.writeInt32LE(16 + body.length, 0); head.writeInt32LE(4242, 4); head.writeInt32LE(0, 8); head.writeInt32LE(2004, 12);
+  return new Promise((resolve, reject) => {
+    const s = net.connect({ host, port: Number(port) }, () => s.write(Buffer.concat([head, body])));
+    let buf = Buffer.alloc(0);
+    s.on('data', (d) => {
+      buf = Buffer.concat([buf, d]);
+      if (buf.length >= 16 && buf.length >= buf.readInt32LE(0)) {
+        s.end();
+        const rest = buf.subarray(16);
+        const doc = BSON.deserialize(rest.subarray(20), { promoteValues: false });
+        const keep = ['ismaster', 'helloOk', 'maxBsonObjectSize', 'maxMessageSizeBytes', 'maxWriteBatchSize', 'minWireVersion', 'maxWireVersion', 'readOnly', 'ok'];
+        resolve({ opcode: buf.readInt32LE(12), response_to: buf.readInt32LE(8), response_flags: rest.readInt32LE(0), cursor_id: Long.fromBigInt(rest.readBigInt64LE(4)), starting_from: rest.readInt32LE(12), number_returned: rest.readInt32LE(16), doc: Object.fromEntries(keep.filter((k) => k in doc).map((k) => [k, doc[k]])) });
+      }
+    });
+    s.on('error', reject);
+  });
 }
 
 async function execStep(ctx, db, dbname, step) {
@@ -151,6 +177,18 @@ async function execStep(ctx, db, dbname, step) {
     case 'ping_with_server_api': {
       const c = new MongoClient(ctx.uri, { serverApi: { version: '1' }, serverSelectionTimeoutMS: 15000 });
       try { await c.connect(); return (await c.db('admin').command({ ping: 1 })).ok; } finally { await c.close(); }
+    }
+    case 'raw_op_query': return await rawOpQuery(ctx);
+    case 'insert_one_w0': {
+      const r = await ctx.client.db(dbname).collection(step.coll, { writeConcern: { w: 0 } }).insertOne(step.doc);
+      return { acknowledged: r.acknowledged };
+    }
+    case 'client_with_compression': {
+      const c = new MongoClient(ctx.uri, { compressors: ['zlib'], serverSelectionTimeoutMS: 15000, promoteValues: false });
+      try {
+        await c.db(dbname).collection(step.coll).insertOne({ _id: 1, v: 'x'.repeat(2000) });
+        return await c.db(dbname).collection(step.coll).find().toArray();
+      } finally { await c.close(); }
     }
     case 'cursor_batches': {
       const cmd = { find: step.coll, sort: step.sort };

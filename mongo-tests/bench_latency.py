@@ -49,7 +49,7 @@ def main():
     for label, uri, is_ours in (("mongo-server (slatedb on MinIO)", a.ours, True), ("MongoDB 7.0 (reference)", a.real, False)):
         c = MongoClient(uri, serverSelectionTimeoutMS=15000)
         db = c["bench_lat"]
-        db.drop_collection("docs")
+        c.drop_database("bench_lat")
         db.docs.insert_many([{"_id": i, "n": i, "grp": i % 10, "name": f"user{i}", "pad": PAD} for i in range(DOCS)])
         coll = db.docs
         close = (lambda: db.command({"tenantAdmin": 1, "close": True})) if is_ours else None

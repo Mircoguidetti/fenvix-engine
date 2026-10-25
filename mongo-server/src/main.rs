@@ -95,7 +95,7 @@ async fn main() -> Result<()> {
         Lifecycle::new(counting, Some(Arc::clone(&queue)))
     };
     let maintenance = (!args.no_maintenance).then(|| {
-        Maintenance::start(Arc::clone(&s3), Arc::clone(&s3), queue, rx, Arc::clone(&lc.touched), 2, Duration::from_secs(30), Duration::from_secs(15))
+        Maintenance::start(Arc::clone(&s3), Arc::clone(&s3), queue, rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 2, Duration::from_secs(30), Duration::from_secs(15))
     });
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs));
     dbs.spawn_reaper();

@@ -12,6 +12,9 @@ nd = {r["name"]: r for r in json.load(open(os.path.join(HERE, "out", "results_no
 # (area, feature, regex over test names, kind) -- kind "req" = in the requested scope, "extra" = outside it
 ROWS = [
     ("Handshake", "hello / isMaster over OP_QUERY and OP_MSG (also with serverApi)", r"^admin\.(hello|ismaster|server_api_client)$"),
+    ("Handshake", "legacy OP_QUERY isMaster -> OP_REPLY (raw socket)", r"^admin\.legacy_op_query_handshake$"),
+    ("Handshake", "unacknowledged writes (OP_MSG moreToCome, w:0)", r"^admin\.unacknowledged_write_w0$"),
+    ("Handshake", "client requests compression (server does not advertise it)", r"^admin\.client_compression_requested$"),
     ("Handshake", "ping", r"^admin\.ping$"),
     ("Handshake", "buildInfo", r"^admin\.buildinfo$"),
     ("Handshake", "getParameter (featureCompatibilityVersion)", r"^admin\.getparameter_fcv$"),

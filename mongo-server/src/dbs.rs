@@ -5,7 +5,7 @@ use crate::layout;
 use anyhow::{bail, Result};
 use bson::{doc, Bson, Document};
 use bytes::Bytes;
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
 use object_store::path::Path;
 use object_store::ObjectStore;
 use std::collections::HashMap;
@@ -60,6 +60,13 @@ impl Dbs {
                 .clone()
         };
         e.lock_owned().await
+    }
+
+    /// Cumulative object-store requests made through the lifecycle (not maintenance passes):
+    /// (PUT/LIST-tier, GET-tier, DELETE), priced like S3's request tiers.
+    pub fn request_counts(&self) -> (u64, u64, u64) {
+        let s = self.lc.counting.counters.snapshot();
+        (s.billed_put_tier(), s.billed_get_tier(), s.delete)
     }
 
     /// Close tenants that have been idle for `idle`. Runs until the process exits.
@@ -177,15 +184,25 @@ impl Entry {
         self.tenant.as_mut().unwrap().apply(ops).await
     }
 
-    /// Close the tenant and delete every object of the database.
+    /// Close the tenant and delete every object of the database. Holds the tenant's maintenance
+    /// lock so no compaction or GC pass can write into it while (or after) it is being deleted:
+    /// a pass that finds no manifest does nothing. Repeats the listing until the prefix is empty.
     pub async fn drop_database(&mut self) -> Result<()> {
+        let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
+        let _held = lock.lock().await;
         self.close().await?;
         let prefix = Path::from(format!("tenants/{}", self.name));
-        let objs = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).boxed();
-        let mut del = self.raw.delete_stream(objs);
-        while let Some(r) = del.next().await {
-            r?;
+        for _ in 0..5 {
+            let objs: Vec<Path> = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).try_collect().await?;
+            if objs.is_empty() {
+                break;
+            }
+            let mut del = self.raw.delete_stream(futures::stream::iter(objs.into_iter().map(Ok)).boxed());
+            while let Some(r) = del.next().await {
+                r?;
+            }
         }
+        self.lc.touched.lock().unwrap().remove(&self.name);
         Ok(())
     }
 
