@@ -1,7 +1,7 @@
-mod counting;
 mod experiment;
-mod lifecycle;
 mod lifecycle_exp;
+
+use tenant_bench::{counting, lifecycle};
 
 use anyhow::{Context, Result};
 use clap::Parser;

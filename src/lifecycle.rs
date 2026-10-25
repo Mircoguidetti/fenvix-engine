@@ -32,11 +32,11 @@ pub const L0_COMPACT_THRESHOLD: usize = 4;
 pub const L0_GUARD: usize = 6;
 const LONG_POLL: Duration = Duration::from_secs(3600);
 
-pub fn tenant_path(id: usize) -> String {
+pub fn tenant_path(id: impl std::fmt::Display) -> String {
     format!("tenants/{id}")
 }
 
-pub fn marker_path(id: usize) -> Path {
+pub fn marker_path(id: impl std::fmt::Display) -> Path {
     Path::from(format!("tenants/{id}/_clean"))
 }
 
@@ -55,7 +55,7 @@ fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
     o
 }
 
-async fn open_reader(store: &Arc<dyn ObjectStore>, id: usize, skip_wal_replay: bool) -> Result<DbReader> {
+async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool) -> Result<DbReader> {
     Ok(DbReader::builder(tenant_path(id), Arc::clone(store))
         .with_reader_mode(DbReaderMode::FollowLatest)
         .with_options(reader_options(skip_wal_replay))
@@ -70,19 +70,19 @@ async fn open_reader(store: &Arc<dyn ObjectStore>, id: usize, skip_wal_replay: b
 /// De-duplicating queue of tenants that need compaction. A caller may attach a waiter
 /// that is told the tenant's L0 count when the compaction pass it joined has finished.
 pub struct CompactionQueue {
-    pending: Mutex<HashMap<usize, Vec<oneshot::Sender<usize>>>>,
-    tx: mpsc::UnboundedSender<usize>,
+    pending: Mutex<HashMap<String, Vec<oneshot::Sender<usize>>>>,
+    tx: mpsc::UnboundedSender<Option<String>>,
 }
 
 impl CompactionQueue {
-    pub fn new() -> (Arc<Self>, mpsc::UnboundedReceiver<usize>) {
+    pub fn new() -> (Arc<Self>, mpsc::UnboundedReceiver<Option<String>>) {
         let (tx, rx) = mpsc::unbounded_channel();
         (Arc::new(Self { pending: Mutex::new(HashMap::new()), tx }), rx)
     }
 
-    pub fn request(&self, id: usize, waiter: Option<oneshot::Sender<usize>>) {
+    pub fn request(&self, id: &str, waiter: Option<oneshot::Sender<usize>>) {
         let mut p = self.pending.lock().unwrap();
-        match p.entry(id) {
+        match p.entry(id.to_string()) {
             std::collections::hash_map::Entry::Occupied(mut e) => {
                 if let Some(w) = waiter {
                     e.get_mut().push(w);
@@ -90,20 +90,20 @@ impl CompactionQueue {
             }
             std::collections::hash_map::Entry::Vacant(v) => {
                 v.insert(waiter.into_iter().collect());
-                let _ = self.tx.send(id);
+                let _ = self.tx.send(Some(id.to_string()));
             }
         }
     }
 
-    fn finish(&self, id: usize, l0_after: usize) {
-        let waiters = self.pending.lock().unwrap().remove(&id).unwrap_or_default();
+    fn finish(&self, id: &str, l0_after: usize) {
+        let waiters = self.pending.lock().unwrap().remove(id).unwrap_or_default();
         for w in waiters {
             let _ = w.send(l0_after);
         }
     }
 
     pub fn stop(&self) {
-        let _ = self.tx.send(usize::MAX);
+        let _ = self.tx.send(None);
     }
 }
 
@@ -116,7 +116,7 @@ pub struct Lifecycle {
     pub counting: Arc<CountingStore>,
     pub queue: Option<Arc<CompactionQueue>>,
     /// Tenants a writer touched, with the time of the last touch (drives GC).
-    pub touched: Arc<Mutex<HashMap<usize, Instant>>>,
+    pub touched: Arc<Mutex<HashMap<String, Instant>>>,
     /// Wait for compaction before upgrading a tenant that is near the L0 limit.
     pub l0_guard: bool,
     pub stats: Arc<Mutex<LifecycleStats>>,
@@ -130,6 +130,15 @@ pub struct LifecycleStats {
 }
 
 impl Lifecycle {
+    /// Open a writer on a tenant that has no database yet (the first write to a new tenant).
+    /// There is no marker to delete: a tenant without a database has never been written.
+    pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
+        let id = id.to_string();
+        let db = Db::builder(tenant_path(&id), Arc::clone(&self.store)).with_settings(writer_settings()).build().await?;
+        self.touched.lock().unwrap().insert(id.clone(), Instant::now());
+        Ok(Tenant { lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
+    }
+
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
         Self::with_guard(counting, queue, true)
     }
@@ -147,9 +156,10 @@ impl Lifecycle {
 
     /// Wake a tenant read-only. The clean-marker HEAD runs in parallel with a
     /// speculative `skip_wal_replay` reader open; nothing is served before both finish.
-    pub async fn wake(self: &Arc<Self>, id: usize) -> Result<Tenant> {
-        let marker = marker_path(id);
-        let (reader, head) = tokio::join!(open_reader(&self.store, id, true), self.store.head(&marker));
+    pub async fn wake(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
+        let id = id.to_string();
+        let marker = marker_path(&id);
+        let (reader, head) = tokio::join!(open_reader(&self.store, &id, true), self.store.head(&marker));
         let mut reader = reader?;
         let clean = match head {
             Ok(_) => true,
@@ -159,12 +169,18 @@ impl Lifecycle {
         if !clean {
             // Possible unflushed WAL: the speculative reader may be missing data. Reopen with replay.
             reader.close().await?;
-            reader = open_reader(&self.store, id, false).await?;
+            reader = open_reader(&self.store, &id, false).await?;
             self.stats.lock().unwrap().unclean_wakes += 1;
         }
         let l0_at_wake = reader.manifest().l0().len();
         Ok(Tenant { lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake })
     }
+}
+
+/// A write for [`Tenant::apply`].
+pub enum Op {
+    Put(Vec<u8>, Vec<u8>),
+    Delete(Vec<u8>),
 }
 
 enum Mode {
@@ -174,7 +190,7 @@ enum Mode {
 
 pub struct Tenant {
     lc: Arc<Lifecycle>,
-    pub id: usize,
+    pub id: String,
     mode: Option<Mode>,
     /// The wake took the unclean path (marker missing).
     pub unclean: bool,
@@ -186,7 +202,7 @@ impl Tenant {
         matches!(self.mode, Some(Mode::Writer(_)))
     }
 
-    pub async fn get(&self, key: &str) -> Result<Option<Bytes>> {
+    pub async fn get<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
         Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
             Mode::Reader(r) => r.get(key).await?,
             Mode::Writer(db) => db.get(key).await?,
@@ -205,7 +221,7 @@ impl Tenant {
                 let started = Instant::now();
                 for _ in 0..3 {
                     let (tx, rx) = oneshot::channel();
-                    q.request(self.id, Some(tx));
+                    q.request(&self.id, Some(tx));
                     let l0 = tokio::time::timeout(Duration::from_secs(30), rx)
                         .await
                         .context("compaction wait timed out")??;
@@ -223,17 +239,48 @@ impl Tenant {
             r.close().await?;
         }
         let store = &self.lc.store;
-        let marker = marker_path(self.id);
+        let marker = marker_path(&self.id);
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            Db::builder(tenant_path(self.id), Arc::clone(store)).with_settings(writer_settings()).build()
+            Db::builder(tenant_path(&self.id), Arc::clone(store)).with_settings(writer_settings()).build()
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
             Err(e) => return Err(e.into()),
         }
         self.mode = Some(Mode::Writer(db?));
-        self.lc.touched.lock().unwrap().insert(self.id, Instant::now());
+        self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
+        Ok(())
+    }
+
+    /// All key/value pairs whose key starts with `prefix`, in key order.
+    pub async fn scan_prefix(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.scan_prefix(prefix, ..).await?,
+            Mode::Writer(db) => db.scan_prefix(prefix, ..).await?,
+        };
+        let mut out = Vec::new();
+        while let Some(kv) = it.next().await? {
+            out.push((kv.key, kv.value));
+        }
+        Ok(out)
+    }
+
+    /// Apply writes as one atomic batch and wait until they are durable. Upgrades first.
+    pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
+        if ops.is_empty() {
+            return Ok(());
+        }
+        self.upgrade().await?;
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        let mut batch = slatedb::WriteBatch::new();
+        for op in ops {
+            match op {
+                Op::Put(k, v) => batch.put(k, v),
+                Op::Delete(k) => batch.delete(k),
+            }
+        }
+        db.write(batch).await?.await_durable().await?;
         Ok(())
     }
 
@@ -253,12 +300,12 @@ impl Tenant {
                 let l0 = db.manifest().l0().len();
                 self.lc
                     .store
-                    .put(&marker_path(self.id), PutPayload::from_static(b"clean"))
+                    .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
                     .await?;
-                self.lc.touched.lock().unwrap().insert(self.id, Instant::now());
+                self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
                 if l0 >= L0_COMPACT_THRESHOLD {
                     if let Some(q) = &self.lc.queue {
-                        q.request(self.id, None);
+                        q.request(&self.id, None);
                     }
                 }
             }
@@ -274,7 +321,7 @@ impl Tenant {
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct CompactionRecord {
-    pub tenant: usize,
+    pub tenant: String,
     pub l0_before: usize,
     pub l0_after: usize,
     pub checkpoints_deleted: usize,
@@ -284,18 +331,18 @@ pub struct CompactionRecord {
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct GcRecord {
-    pub tenant: usize,
+    pub tenant: String,
     pub requests: Snapshot,
 }
 
 /// Number of checkpoints in a tenant's latest manifest (no request counting).
-pub async fn checkpoint_count(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<usize> {
+pub async fn checkpoint_count(raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) -> Result<usize> {
     let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
     Ok(admin.list_checkpoints(None).await?.len())
 }
 
 /// Read a tenant's L0 SST count straight from the latest manifest (no request counting).
-pub async fn l0_count(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<usize> {
+pub async fn l0_count(raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) -> Result<usize> {
     let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
     Ok(admin.read_manifest(None).await?.map(|m| m.l0().len()).unwrap_or(0))
 }
@@ -303,7 +350,9 @@ pub async fn l0_count(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<usize> {
 /// One bounded compaction pass over a closed or idle tenant, using a standalone
 /// compactor (`CompactorBuilder::run`) with its own request counter. The harness
 /// polls the manifest through `raw` (not counted) to know when to stop it.
-pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: usize) -> Result<Option<CompactionRecord>> {
+pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) -> Result<Option<CompactionRecord>> {
+    let id = id.to_string();
+    let id = id.as_str();
     let l0_before = l0_count(raw, id).await?;
     if l0_before < L0_COMPACT_THRESHOLD {
         return Ok(None);
@@ -345,7 +394,7 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     }
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
     Ok(Some(CompactionRecord {
-        tenant: id,
+        tenant: id.to_string(),
         l0_before,
         l0_after,
         checkpoints_deleted,
@@ -354,7 +403,7 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     }))
 }
 
-pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: usize, min_age: Duration) -> Result<GcRecord> {
+pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
     let dir = GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false };
@@ -365,8 +414,8 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: usize, min_age: Duration) 
         compactions_options: Some(dir),
         ..GarbageCollectorOptions::default()
     };
-    Admin::builder(tenant_path(id), store).build().run_gc_once(opts).await?;
-    Ok(GcRecord { tenant: id, requests: counting.counters.snapshot() })
+    Admin::builder(tenant_path(&id), store).build().run_gc_once(opts).await?;
+    Ok(GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() })
 }
 
 #[derive(Default)]
@@ -393,8 +442,8 @@ impl Maintenance {
         s3: Arc<dyn ObjectStore>,
         raw: Arc<dyn ObjectStore>,
         queue: Arc<CompactionQueue>,
-        mut rx: mpsc::UnboundedReceiver<usize>,
-        touched: Arc<Mutex<HashMap<usize, Instant>>>,
+        mut rx: mpsc::UnboundedReceiver<Option<String>>,
+        touched: Arc<Mutex<HashMap<String, Instant>>>,
         workers: usize,
         gc_after: Duration,
         gc_min_age: Duration,
@@ -404,26 +453,23 @@ impl Maintenance {
         let dispatcher = {
             let (s3, raw, queue, log, sem) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), sem.clone());
             tokio::spawn(async move {
-                while let Some(id) = rx.recv().await {
-                    if id == usize::MAX {
-                        break;
-                    }
+                while let Some(Some(id)) = rx.recv().await {
                     let permit = sem.clone().acquire_owned().await.unwrap();
                     let (s3, raw, queue, log) = (s3.clone(), raw.clone(), queue.clone(), log.clone());
                     tokio::spawn(async move {
-                        let l0_after = match compact_tenant(&s3, &raw, id).await {
+                        let l0_after = match compact_tenant(&s3, &raw, &id).await {
                             Ok(Some(rec)) => {
                                 let l0 = rec.l0_after;
                                 log.lock().unwrap().compactions.push(rec);
                                 l0
                             }
-                            Ok(None) => l0_count(&raw, id).await.unwrap_or(0),
+                            Ok(None) => l0_count(&raw, &id).await.unwrap_or(0),
                             Err(e) => {
                                 log.lock().unwrap().errors.push(format!("compact {id}: {e:#}"));
                                 usize::MAX / 2
                             }
                         };
-                        queue.finish(id, l0_after);
+                        queue.finish(&id, l0_after);
                         drop(permit);
                     });
                 }
@@ -435,17 +481,17 @@ impl Maintenance {
             tokio::spawn(async move {
                 while !stop.load(std::sync::atomic::Ordering::Relaxed) {
                     tokio::time::sleep(Duration::from_secs(2)).await;
-                    let due: Vec<usize> = {
+                    let due: Vec<String> = {
                         let mut t = touched.lock().unwrap();
-                        let due: Vec<usize> =
-                            t.iter().filter(|(_, at)| at.elapsed() >= gc_after).map(|(id, _)| *id).collect();
+                        let due: Vec<String> =
+                            t.iter().filter(|(_, at)| at.elapsed() >= gc_after).map(|(id, _)| id.clone()).collect();
                         for id in &due {
                             t.remove(id);
                         }
                         due
                     };
                     for id in due {
-                        match gc_tenant(&s3, id, gc_min_age).await {
+                        match gc_tenant(&s3, &id, gc_min_age).await {
                             Ok(rec) => log.lock().unwrap().gcs.push(rec),
                             Err(e) => log.lock().unwrap().errors.push(format!("gc {id}: {e:#}")),
                         }

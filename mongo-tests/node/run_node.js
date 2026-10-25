@@ -1,0 +1,303 @@
+#!/usr/bin/env node
+// Differential test runner (official Node.js "mongodb" driver). Same scripts, same comparison
+// rules as run_py.py: ObjectIds are normalised unless the test supplied them, top-level result
+// lists are sorted when the test says the order is unspecified, everything else is compared exactly
+// as canonical Extended JSON. Replies are deserialised with promoteValues:false so int32, int64
+// and double stay distinct.
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
+const { MongoClient, ObjectId, Long, BSON } = require('mongodb');
+const { EJSON } = BSON;
+
+const HERE = path.resolve(__dirname, '..');
+const SKIP = Symbol('skip');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function generatedDocs(kind, n) {
+  const tags = ['x', 'y', 'z'];
+  return Array.from({ length: n }, (_, i) => ({ _id: i, n: i, grp: i % 10, name: `user${i}`, tag: tags[i % 3], nested: { k: i % 7 } }));
+}
+const swapDb = (v, db) => {
+  if (typeof v === 'string') return v.split('$DB').join(db);
+  if (Array.isArray(v)) return v.map((x) => swapDb(x, db));
+  if (v && typeof v === 'object' && !v._bsontype && !(v instanceof Date)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swapDb(x, db)]));
+  return v;
+};
+const clone = (v) => EJSON.parse(EJSON.stringify(v, { relaxed: false }), { relaxed: false });
+const num = (v) => (v && typeof v.valueOf === 'function' ? Number(v.valueOf()) : v);
+
+class Ctx {
+  constructor(uri, port, idleSecs, isOurs) {
+    Object.assign(this, { uri, port, idleSecs, isOurs, asserts: [] });
+    this.client = this.newClient();
+  }
+  newClient() {
+    return new MongoClient(this.uri, { serverSelectionTimeoutMS: 15000, socketTimeoutMS: 60000, promoteValues: false });
+  }
+  async connect() { await this.client.connect(); }
+  async reconnect() { await this.client.close(); this.client = this.newClient(); await this.client.connect(); }
+}
+
+const val = (x) => (x && x.valueOf && x._bsontype ? x.valueOf() : x);
+function errResult(e, cmpMsg) {
+  const name = e && e.constructor && e.constructor.name;
+  if (name === 'MongoBulkWriteError') {
+    const we = (Array.isArray(e.writeErrors) ? e.writeErrors : e.writeErrors ? [e.writeErrors] : []).map((w) => {
+      const x = { index: w.index, code: w.code };
+      if (cmpMsg) { x.errmsg = w.errmsg; }
+      return x;
+    });
+    const r = e.result || {};
+    return { __bulk_error__: { nInserted: num(r.insertedCount), nMatched: num(r.matchedCount), nModified: num(r.modifiedCount), nRemoved: num(r.deletedCount), nUpserted: num(r.upsertedCount), writeErrors: we } };
+  }
+  if (name === 'MongoServerError' || (e && e.code !== undefined && e.codeName !== undefined)) {
+    const r = { code: num(e.code) };
+    if (num(e.code) !== 11000) r.codeName = e.codeName;
+    if (cmpMsg) { r.msg = e.errmsg || e.message; if (num(e.code) === 11000) { r.keyPattern = e.keyPattern; r.keyValue = e.keyValue; } }
+    return { __error__: r };
+  }
+  return { __exception__: name, text: String(e.message).slice(0, 200) };
+}
+
+const pick = (doc, keys) => {
+  if (!keys) { const o = { ...doc }; for (const k of ['operationTime', '$clusterTime', 'localTime', 'connectionId', 'topologyVersion', '$db']) delete o[k]; return o; }
+  return Object.fromEntries(keys.filter((k) => k in doc).map((k) => [k, doc[k]]));
+};
+
+async function rawBatches(db, coll, first) {
+  const sizes = [first.cursor.firstBatch.length];
+  const ids = first.cursor.firstBatch.map((d) => num(d._id));
+  let cid = first.cursor.id;
+  while (!Long.fromValue(cid).isZero()) {
+    const r = await db.command({ getMore: cid, collection: coll });
+    sizes.push(r.cursor.nextBatch.length);
+    ids.push(...r.cursor.nextBatch.map((d) => num(d._id)));
+    cid = r.cursor.id;
+  }
+  return { batch_sizes: sizes, ids_sorted: ids.every((v, i) => i === 0 || ids[i - 1] <= v), n: ids.length };
+}
+
+async function execStep(ctx, db, dbname, step) {
+  const op = step.op;
+  const coll = step.coll ? db.collection(step.coll) : null;
+  switch (op) {
+    case 'insert_one': return { inserted_id: (await coll.insertOne(step.doc)).insertedId };
+    case 'insert_many': return { inserted_ids: Object.values((await coll.insertMany(step.docs, { ordered: step.ordered ?? true })).insertedIds) };
+    case 'insert_generated': {
+      const docs = generatedDocs(step.kind, num(step.n));
+      for (let i = 0; i < docs.length; i += 500) await coll.insertMany(docs.slice(i, i + 500), { ordered: step.ordered ?? true });
+      return { inserted: docs.length };
+    }
+    case 'find': case 'find_one': case 'find_count': {
+      const o = {};
+      if (step.projection) o.projection = step.projection;
+      if (step.sort) o.sort = step.sort;
+      if (step.skip !== undefined) o.skip = num(step.skip);
+      if (step.limit !== undefined) o.limit = num(step.limit);
+      if (step.batch_size !== undefined) o.batchSize = num(step.batch_size);
+      if (op === 'find_one') {
+        delete o.limit;
+        const d = await coll.findOne(step.filter ?? {}, o);
+        return step.keys_only && d ? Object.keys(d) : d;
+      }
+      const docs = await coll.find(step.filter ?? {}, o).toArray();
+      return op === 'find_count' ? docs.length : docs;
+    }
+    case 'count_documents': {
+      const o = {};
+      if (step.skip !== undefined) o.skip = num(step.skip);
+      if (step.limit !== undefined) o.limit = num(step.limit);
+      return await coll.countDocuments(step.filter ?? {}, o);
+    }
+    case 'estimated_count': return await coll.estimatedDocumentCount();
+    case 'aggregate': return await coll.aggregate(step.pipeline, step.batch_size !== undefined ? { batchSize: num(step.batch_size) } : {}).toArray();
+    case 'distinct': return await coll.distinct(step.key, step.filter ?? {});
+    case 'update_one': case 'update_many': case 'replace_one': {
+      const o = { upsert: step.upsert ?? false };
+      if (step.array_filters) o.arrayFilters = step.array_filters;
+      const fn = { update_one: 'updateOne', update_many: 'updateMany', replace_one: 'replaceOne' }[op];
+      const r = await coll[fn](step.filter, step.update, o);
+      return { matched: r.matchedCount, modified: r.modifiedCount, upserted_id: r.upsertedId ?? null };
+    }
+    case 'delete_one': return { deleted: (await coll.deleteOne(step.filter)).deletedCount };
+    case 'delete_many': return { deleted: (await coll.deleteMany(step.filter)).deletedCount };
+    case 'find_one_and_update': return await coll.findOneAndUpdate(step.filter, step.update);
+    case 'create_collection': await db.createCollection(step.coll); return 'ok';
+    case 'drop_collection': await coll.drop(); return 'ok';
+    case 'list_collection_names': return (await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name).sort();
+    case 'list_collections': {
+      const cs = await db.listCollections(step.filter ?? {}).toArray();
+      return cs.map((c) => ({ name: c.name, type: c.type })).sort((a, b) => (a.name < b.name ? -1 : 1));
+    }
+    case 'create_index': {
+      const keys = Object.fromEntries(step.keys.map(([k, d]) => [k, d]));
+      const o = {};
+      if (step.unique !== undefined) o.unique = step.unique;
+      if (step.name !== undefined) o.name = step.name;
+      return await coll.createIndex(keys, o);
+    }
+    case 'list_indexes': return (await coll.listIndexes().toArray()).map((i) => Object.fromEntries(['v', 'key', 'name', 'unique'].filter((k) => k in i).map((k) => [k, i[k]])));
+    case 'command': case 'command_raw': return pick(await db.command(swapDb(step.cmd, dbname)), step.pick);
+    case 'admin_command': return pick(await ctx.client.db('admin').command(swapDb(step.cmd, dbname)), step.pick);
+    case 'db_in_list': return (await ctx.client.db().admin().listDatabases({ nameOnly: true })).databases.some((d) => d.name === dbname);
+    case 'db_in_list_command': return (await ctx.client.db('admin').command({ listDatabases: 1, nameOnly: true })).databases.some((d) => d.name === dbname);
+    case 'drop_database': await db.dropDatabase(); return 'ok';
+    case 'session_insert': {
+      const s = ctx.client.startSession();
+      try { await coll.insertOne({ _id: 1 }, { session: s }); return await coll.find({}, { session: s }).toArray(); } finally { await s.endSession(); }
+    }
+    case 'ping_with_server_api': {
+      const c = new MongoClient(ctx.uri, { serverApi: { version: '1' }, serverSelectionTimeoutMS: 15000 });
+      try { await c.connect(); return (await c.db('admin').command({ ping: 1 })).ok; } finally { await c.close(); }
+    }
+    case 'cursor_batches': {
+      const cmd = { find: step.coll, sort: step.sort };
+      if (step.batch_size !== undefined) cmd.batchSize = step.batch_size;
+      return await rawBatches(db, step.coll, await db.command(cmd));
+    }
+    case 'cursor_batches_agg': return await rawBatches(db, step.coll, await db.command({ aggregate: step.coll, pipeline: step.pipeline, cursor: { batchSize: step.batch_size } }));
+    case 'cursor_kill_after': {
+      const cur = coll.find({}, { sort: { _id: 1 }, batchSize: num(step.batch_size) });
+      const take = num(step.take);
+      for (let i = 0; i < take; i++) await cur.next();
+      await cur.close();
+      return { taken: take, alive: !cur.closed };
+    }
+    case 'cursor_close_midway': {
+      const cur = coll.find({}, { sort: { _id: 1 }, batchSize: num(step.batch_size) });
+      const got = [];
+      for (let i = 0; i < num(step.take); i++) got.push(num((await cur.next())._id));
+      if (ctx.isOurs) await db.command({ tenantAdmin: 1, close: true });
+      for await (const d of cur) got.push(num(d._id));
+      return { n: got.length, ids_ok: got.every((v, i) => v === i) && got.length === 300 };
+    }
+    case 'getmore_bogus': return await db.command({ getMore: Long.fromNumber(123456789), collection: step.coll });
+    case 'sleep': await sleep(num(step.secs) * 1000); return SKIP;
+    case 'tenant_close': if (ctx.isOurs) await db.command({ tenantAdmin: 1, close: true }); return SKIP;
+    case 'expect_mode': {
+      if (ctx.isOurs) {
+        const got = (await db.command({ tenantAdmin: 1 })).mode;
+        if (got !== step.mode) ctx.asserts.push(`expected tenant mode '${step.mode}', found '${got}'`);
+      }
+      return SKIP;
+    }
+    case 'restart_server': {
+      if (ctx.isOurs) {
+        const pid = parseInt(fs.readFileSync(path.join(HERE, 'out', `server-${ctx.port}.pid`), 'utf8'), 10);
+        if (step.kill) { process.kill(pid, 'SIGKILL'); await sleep(500); }
+        execFileSync(path.join(HERE, 'server.sh'), [String(ctx.port), String(ctx.idleSecs)], { stdio: 'ignore' });
+        await ctx.reconnect();
+      }
+      return SKIP;
+    }
+    case 'parallel_inserts': {
+      const errs = [];
+      await Promise.all(Array.from({ length: num(step.workers) }, async (_, w) => {
+        try { for (let i = 0; i < num(step.per_worker); i++) await coll.insertOne({ _id: `${w}-${i}`, w, i }); } catch (e) { errs.push(String(e)); }
+      }));
+      return { errors: errs };
+    }
+    case 'parallel_inc': {
+      const errs = [];
+      await Promise.all(Array.from({ length: num(step.workers) }, async () => {
+        try { for (let i = 0; i < num(step.per_worker); i++) await coll.updateOne({ _id: 1 }, { $inc: { n: 1 } }); } catch (e) { errs.push(String(e)); }
+      }));
+      return { errors: errs };
+    }
+    case 'parallel_dbs': {
+      const n = num(step.dbs), per = num(step.per_db);
+      const counts = await Promise.all(Array.from({ length: n }, async (_, k) => {
+        const d = ctx.client.db(`${dbname}_${k}`);
+        await d.collection('c').insertMany(Array.from({ length: per }, (_, i) => ({ _id: i })));
+        return await d.collection('c').countDocuments({});
+      }));
+      for (let k = 0; k < n; k++) await ctx.client.db(`${dbname}_${k}`).dropDatabase();
+      return counts;
+    }
+    case 'parallel_read_write': {
+      const bad = [];
+      const writers = Array.from({ length: 4 }, async (_, w) => { for (let i = 0; i < 30; i++) await coll.insertOne({ _id: 1000 + w * 100 + i }); });
+      const readers = Array.from({ length: 4 }, async () => { for (let i = 0; i < 30; i++) if (num(await coll.countDocuments({})) < 100) bad.push('count dropped below 100'); });
+      await Promise.all([...writers, ...readers]);
+      return { bad, final: await coll.countDocuments({}) };
+    }
+    default: throw new Error(`unknown op ${op}`);
+  }
+}
+
+async function runScript(ctx, test, dbname) {
+  const results = [];
+  ctx.asserts = [];
+  for (const step of clone(test.steps)) {
+    let r;
+    try { r = await execStep(ctx, ctx.client.db(dbname), dbname, step); } catch (e) { r = errResult(e, step.cmp_msg ?? false); }
+    if (r !== SKIP) results.push(r);
+  }
+  return results;
+}
+
+function normalize(x, keepOids, sortKeys) {
+  if (x === null || x === undefined) return x;
+  if (x instanceof ObjectId) return keepOids ? x : '<oid>';
+  if (x._bsontype || x instanceof Date || x instanceof Uint8Array) return x;
+  if (Array.isArray(x)) return x.map((v) => normalize(v, keepOids, sortKeys));
+  if (typeof x === 'object') {
+    const keys = sortKeys ? Object.keys(x).sort() : Object.keys(x);
+    return Object.fromEntries(keys.map((k) => [k, normalize(x[k], keepOids, sortKeys)]));
+  }
+  return x;
+}
+function canon(x, test) {
+  x = normalize(x, test.keep_oids ?? false, test.sort_keys ?? false);
+  if (test.unordered && Array.isArray(x)) x = [...x].sort((a, b) => { const sa = EJSON.stringify(normalize(a, true, true), { relaxed: false }), sb = EJSON.stringify(normalize(b, true, true), { relaxed: false }); return sa < sb ? -1 : sa > sb ? 1 : 0; });
+  return EJSON.stringify(x === undefined ? null : x, { relaxed: false });
+}
+function compare(test, real, ours) {
+  if (real.length !== ours.length) return { step: Math.min(real.length, ours.length), real: `${real.length} results`, ours: `${ours.length} results` };
+  for (let i = 0; i < real.length; i++) {
+    const a = canon(real[i], test), b = canon(ours[i], test);
+    if (a !== b) return { step: i, op: test.steps[Math.min(i, test.steps.length - 1)].op, real: a.slice(0, 600), ours: b.slice(0, 600) };
+  }
+  return null;
+}
+
+async function main() {
+  const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')).map(([k, v]) => [k, v ?? true]));
+  const testsPath = args.tests || path.join(HERE, 'tests.json');
+  let tests = EJSON.parse(fs.readFileSync(testsPath, 'utf8'), { relaxed: false });
+  if (args.only) tests = tests.filter((t) => t.name.includes(args.only));
+  if (args.category) tests = tests.filter((t) => t.category === args.category);
+  const out = args.out || path.join(HERE, 'out', 'results_node.json');
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  const real = new Ctx(args.real || 'mongodb://localhost:27017', 27017, 0, false);
+  const ours = new Ctx(args.ours || 'mongodb://localhost:27018', 27018, 60, true);
+  const idle = new Ctx(args.idle || 'mongodb://localhost:27019', 27019, 3, true);
+  await Promise.all([real.connect(), ours.connect(), idle.connect()]);
+  const results = [];
+  let n = 0;
+  for (const t of tests) {
+    const dbname = `dn${n++}_${Math.random().toString(16).slice(2, 10)}`;
+    const ourCtx = t.idle ? idle : ours;
+    const t0 = Date.now();
+    let status, diff = null;
+    try {
+      const r = await runScript(real, t, dbname);
+      const o = await runScript(ourCtx, t, dbname);
+      diff = compare(t, r, o);
+      if (ourCtx.asserts.length) diff = diff || { step: -1, real: '', ours: ourCtx.asserts.join('; ') };
+      status = diff ? 'fail' : 'pass';
+    } catch (e) { status = 'error'; diff = { step: -1, real: '', ours: `harness error: ${e && e.stack || e}` }; }
+    for (const c of [real, ourCtx]) { try { await c.client.db(dbname).dropDatabase(); } catch (e) { /* ignore */ } }
+    results.push({ name: t.name, group: t.group, category: t.category, status, detail: diff, secs: (Date.now() - t0) / 1000 });
+    console.log(status === 'pass' ? `. ${t.name}` : `F ${t.name}\n    step ${diff.step} ${diff.op || ''}\n    real: ${diff.real}\n    ours: ${diff.ours}`);
+  }
+  fs.writeFileSync(out, JSON.stringify(results, null, 1));
+  for (const cat of ['core', 'extra']) {
+    const sel = results.filter((x) => x.category === cat);
+    if (sel.length) console.log(`${cat}: ${sel.filter((x) => x.status === 'pass').length}/${sel.length} passed`);
+  }
+  await Promise.all([real.client.close(), ours.client.close(), idle.client.close()]);
+}
+main().catch((e) => { console.error(e); process.exit(1); });

@@ -1,0 +1,125 @@
+//! A MongoDB wire-protocol server whose databases are slatedb tenants on object storage.
+//!
+//! Each MongoDB database is one tenant at `tenants/{dbname}` managed by the results3 lifecycle
+//! (reader wake, upgrade on first write, clean close after an idle period, `_clean` marker,
+//! standalone compaction and GC).
+
+mod agg;
+mod cmd;
+mod dbs;
+mod error;
+mod layout;
+mod query;
+mod update;
+mod wire;
+
+use anyhow::Result;
+use clap::Parser;
+use cmd::Server;
+use dbs::Dbs;
+use object_store::aws::AmazonS3Builder;
+use object_store::ObjectStore;
+use std::sync::Arc;
+use std::time::Duration;
+use tenant_bench::counting::CountingStore;
+use tenant_bench::lifecycle::{CompactionQueue, Lifecycle, Maintenance};
+use tokio::io::BufReader;
+use tokio::net::{TcpListener, TcpStream};
+
+#[derive(Parser, Debug)]
+struct Args {
+    /// Address to listen on.
+    #[arg(long, default_value = "127.0.0.1:27018")]
+    listen: String,
+    /// Close a database's tenant after this many idle seconds.
+    #[arg(long, default_value_t = 60)]
+    idle_secs: u64,
+    /// S3-compatible endpoint (MinIO).
+    #[arg(long, default_value = "http://localhost:9000")]
+    endpoint: String,
+    #[arg(long, default_value = "bench")]
+    bucket: String,
+    /// Do not run the background compaction and GC loops (also disables the L0 guard).
+    #[arg(long)]
+    no_maintenance: bool,
+    /// Log every command name and database to stderr.
+    #[arg(long)]
+    log_commands: bool,
+}
+
+async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64) {
+    let _ = stream.set_nodelay(true);
+    let (r, mut w) = stream.into_split();
+    let mut r = BufReader::new(r);
+    let mut response_id = 1;
+    loop {
+        match wire::read_request(&mut r).await {
+            Ok(Some(req)) => {
+                let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
+                if req.more_to_come {
+                    continue;
+                }
+                response_id += 1;
+                if let Err(e) = wire::write_reply(&mut w, &req, &reply, response_id).await {
+                    eprintln!("conn {conn_id}: write failed: {e:#}");
+                    break;
+                }
+            }
+            Ok(None) => break,
+            Err(e) => {
+                eprintln!("conn {conn_id}: {e:#}");
+                break;
+            }
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+    let s3: Arc<dyn ObjectStore> = Arc::new(
+        AmazonS3Builder::new()
+            .with_endpoint(&args.endpoint)
+            .with_allow_http(true)
+            .with_region("us-east-1")
+            .with_bucket_name(&args.bucket)
+            .with_access_key_id("minioadmin")
+            .with_secret_access_key("minioadmin")
+            .build()?,
+    );
+    let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
+    let (queue, rx) = CompactionQueue::new();
+    let lc = if args.no_maintenance {
+        Lifecycle::with_guard(counting, None, false)
+    } else {
+        Lifecycle::new(counting, Some(Arc::clone(&queue)))
+    };
+    let maintenance = (!args.no_maintenance).then(|| {
+        Maintenance::start(Arc::clone(&s3), Arc::clone(&s3), queue, rx, Arc::clone(&lc.touched), 2, Duration::from_secs(30), Duration::from_secs(15))
+    });
+    let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs));
+    dbs.spawn_reaper();
+    let server = Server::new(Arc::clone(&dbs), args.log_commands);
+
+    let listener = TcpListener::bind(&args.listen).await?;
+    eprintln!("mongo-server listening on {} (idle close after {} s)", args.listen, args.idle_secs);
+    let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+    loop {
+        tokio::select! {
+            accepted = listener.accept() => {
+                let (stream, _) = accepted?;
+                let server = Arc::clone(&server);
+                let id = server.new_connection_id();
+                tokio::spawn(handle_connection(server, stream, id));
+            }
+            _ = tokio::signal::ctrl_c() => break,
+            _ = term.recv() => break,
+        }
+    }
+    eprintln!("shutting down: closing tenants cleanly");
+    dbs.close_all().await;
+    if let Some(m) = maintenance {
+        m.shutdown().await;
+    }
+    Ok(())
+}
