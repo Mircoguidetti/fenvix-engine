@@ -277,6 +277,7 @@ pub struct CompactionRecord {
     pub tenant: usize,
     pub l0_before: usize,
     pub l0_after: usize,
+    pub checkpoints_deleted: usize,
     pub secs: f64,
     pub requests: Snapshot,
 }
@@ -285,6 +286,12 @@ pub struct CompactionRecord {
 pub struct GcRecord {
     pub tenant: usize,
     pub requests: Snapshot,
+}
+
+/// Number of checkpoints in a tenant's latest manifest (no request counting).
+pub async fn checkpoint_count(raw: &Arc<dyn ObjectStore>, id: usize) -> Result<usize> {
+    let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
+    Ok(admin.list_checkpoints(None).await?.len())
 }
 
 /// Read a tenant's L0 SST count straight from the latest manifest (no request counting).
@@ -303,6 +310,7 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     }
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
+    let cleanup_store = Arc::clone(&store);
     let mut opts = CompactorOptions::default();
     opts.poll_interval = Duration::from_millis(50);
     let mut worker = CompactionWorkerOptions::default();
@@ -325,11 +333,22 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     }
     compactor.stop().await?;
     let _ = runner.await;
+    // A standalone compactor leaves one checkpoint (15 min lifetime) per compaction. Each pins the
+    // manifest version it was taken at, and through it old SSTs and WALs, so GC cannot reclaim them
+    // until they expire. Nothing else takes checkpoints in this lifecycle (FollowLatest readers
+    // create none), so drop them all once the pass is over. Counted in the pass's requests.
+    let admin = Admin::builder(tenant_path(id), cleanup_store).build();
+    let checkpoints = admin.list_checkpoints(None).await?;
+    let checkpoints_deleted = checkpoints.len();
+    for cp in checkpoints {
+        admin.delete_checkpoint(cp.id).await?;
+    }
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
     Ok(Some(CompactionRecord {
         tenant: id,
         l0_before,
         l0_after,
+        checkpoints_deleted,
         secs: started.elapsed().as_secs_f64(),
         requests: counting.counters.snapshot(),
     }))

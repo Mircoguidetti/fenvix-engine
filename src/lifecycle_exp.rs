@@ -274,6 +274,7 @@ pub async fn probe_wal(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
         "manifest {} replay_after_wal_id={} next_wal_sst_id={} last_l0_seq={} l0={} marker={}",
         m.id(), m.replay_after_wal_id(), m.next_wal_sst_id(), m.last_l0_seq(), m.l0().len(), marker_present(&s3, id).await?
     );
+    println!("sorted runs={} sst views referenced by manifest={} checkpoints={}", m.compacted().len(), m.all_sst_views().count(), m.checkpoints().len());
     for f in WalReader::new(tenant_path(id), Arc::clone(&s3)).list(..).await? {
         println!("  wal {} size {}", f.id, f.metadata().await?.metadata.size);
     }
@@ -582,8 +583,10 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let (storage_final, objects_final, by_dir_final) = storage(&s3, n).await?;
     let per_tenant = bytes_per_tenant(&s3).await?;
     let mut final_l0_max = 0;
+    let mut final_cp_max = 0;
     for &id in &all {
         final_l0_max = final_l0_max.max(l0_count(&raw, id).await?);
+        final_cp_max = final_cp_max.max(checkpoint_count(&raw, id).await?);
     }
 
     // Every acknowledged write of steps 1-4 must be readable through the normal lifecycle.
@@ -668,12 +671,13 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let nc = comp.len().max(1) as f64;
     let ngc = log.gcs.len().max(1) as f64;
     let gcreq = log.gcs.iter().fold(Snapshot::default(), |a, g| super::add(&a, &g.requests));
-    let _ = writeln!(r, "\n| Maintenance (during steps 1–4) | Passes | Requests per pass: PUT/LIST-tier · GET-tier · DELETE | Wall time per pass p50 / p99 (s) | Mean L0 before → after |\n|---|---|---|---|---|");
+    let _ = writeln!(r, "\n| Maintenance (during steps 1–4) | Passes | Requests per pass: PUT/LIST-tier · GET-tier · DELETE | Wall time per pass p50 / p99 (s) | Mean L0 before → after, checkpoints deleted per pass |\n|---|---|---|---|---|");
     let _ = writeln!(
-        r, "| Compaction (standalone compactor) | {} | {:.2} · {:.2} · {:.2} | {:.2} / {:.2} | {:.1} → {:.1} |",
+        r, "| Compaction (standalone compactor, incl. checkpoint cleanup) | {} | {:.2} · {:.2} · {:.2} | {:.2} / {:.2} | {:.1} → {:.1}, {:.1} |",
         comp.len(), creq.billed_put_tier() as f64 / nc, creq.billed_get_tier() as f64 / nc, creq.delete as f64 / nc,
         pct(&mut secs, 0.5), pct(&mut secs, 0.99),
-        comp.iter().map(|c| c.l0_before as f64).sum::<f64>() / nc, comp.iter().map(|c| c.l0_after as f64).sum::<f64>() / nc
+        comp.iter().map(|c| c.l0_before as f64).sum::<f64>() / nc, comp.iter().map(|c| c.l0_after as f64).sum::<f64>() / nc,
+        comp.iter().map(|c| c.checkpoints_deleted as f64).sum::<f64>() / nc
     );
     let _ = writeln!(
         r, "| GC (`run_gc_once`, min_age {}s) | {} | {:.2} · {:.2} · {:.2} | | |",
@@ -681,7 +685,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     );
     let sweep = sweep_log.lock().unwrap();
     let fgc = final_gc.iter().fold(Snapshot::default(), |a, g| super::add(&a, &g.requests));
-    let _ = writeln!(r, "\nMaintenance errors: {}. Final sweep after quiesce: {} tenants still needed compaction; final GC (min_age 0) over {} tenants used {} PUT/LIST-tier + {} GET-tier + {} DELETE requests in total. Maximum L0 count across all tenants after the final sweep: {final_l0_max}.\n",
+    let _ = writeln!(r, "\nMaintenance errors: {}. Final sweep after quiesce: {} tenants still needed compaction; final GC (min_age 0) over {} tenants used {} PUT/LIST-tier + {} GET-tier + {} DELETE requests in total. Maximum L0 count across all tenants after the final sweep: {final_l0_max}; maximum checkpoints left in any manifest: {final_cp_max}.\n",
         log.errors.len(), sweep.len(), all.len(), fgc.billed_put_tier(), fgc.billed_get_tier(), fgc.delete);
     if !log.errors.is_empty() {
         for e in log.errors.iter().take(5) {
