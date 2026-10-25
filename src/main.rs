@@ -1,5 +1,7 @@
 mod counting;
 mod experiment;
+mod lifecycle;
+mod lifecycle_exp;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -42,9 +44,16 @@ struct Args {
     /// Length of each idle-cost observation window, in seconds.
     #[arg(long, default_value_t = 60)]
     idle_secs: u64,
-    /// Run an experiment instead of the default benchmark. Supported: `wake-variants`.
+    /// Run an experiment instead of the default benchmark. Supported: `wake-variants`, `lifecycle`.
+    /// (`crash-child` is used internally by `lifecycle`.)
     #[arg(long)]
     experiment: Option<String>,
+    /// `crash-child` only: tenant to write to.
+    #[arg(long)]
+    tenant: Option<usize>,
+    /// `crash-child` only: how many of the 10 writes to await as durable before reporting DONE.
+    #[arg(long)]
+    acks: Option<usize>,
     /// With `--experiment wake-variants`: comma-separated variant names to run (default: all).
     #[arg(long)]
     only: Option<String>,
@@ -142,8 +151,13 @@ async fn main() -> Result<()> {
     );
     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
     if let Some(name) = args.experiment.as_deref() {
-        anyhow::ensure!(name == "wake-variants", "unknown experiment {name:?}");
-        return experiment::run(&args, s3, counting).await;
+        return match name {
+            "wake-variants" => experiment::run(&args, s3, counting).await,
+            "lifecycle" => lifecycle_exp::run(&args, s3).await,
+            "crash-child" => lifecycle_exp::crash_child(&args, s3).await,
+            "probe-wal" => lifecycle_exp::probe_wal(&args, s3).await,
+            other => Err(anyhow::anyhow!("unknown experiment {other:?}")),
+        };
     }
     let counters = Arc::clone(&counting.counters);
     let store: Arc<dyn ObjectStore> = counting;

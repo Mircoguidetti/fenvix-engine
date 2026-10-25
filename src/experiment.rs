@@ -201,18 +201,18 @@ fn rel(path: &str) -> String {
 }
 
 #[derive(Serialize, Clone, Copy, Default)]
-struct Shape {
-    total: usize,
+pub(crate) struct Shape {
+    pub(crate) total: usize,
     /// Calls that no other traced call overlapped with at any point.
-    strictly_sequential: usize,
+    pub(crate) strictly_sequential: usize,
     /// Calls that overlapped at least one other call.
-    parallel: usize,
+    pub(crate) parallel: usize,
     /// Round trips on the critical path: calls whose time intervals overlap are merged
     /// into one step, so this counts the sequential steps (what latency scales with).
-    steps: usize,
+    pub(crate) steps: usize,
 }
 
-fn shape(events: &[TraceEvent]) -> Shape {
+pub(crate) fn shape(events: &[TraceEvent]) -> Shape {
     let mut iv: Vec<(u64, u64)> = events.iter().map(|e| (e.start_us, e.start_us + e.dur_us)).collect();
     iv.sort();
     let mut steps = 0;
@@ -301,7 +301,7 @@ struct VariantResult {
     idle_events: Vec<TraceEvent>,
 }
 
-async fn storage(s3: &Arc<dyn ObjectStore>, n: usize) -> Result<(f64, f64, BTreeMap<String, f64>)> {
+pub(crate) async fn storage(s3: &Arc<dyn ObjectStore>, n: usize) -> Result<(f64, f64, BTreeMap<String, f64>)> {
     let prefix = Path::from("tenants");
     let mut bytes = 0u64;
     let mut objects = 0u64;
