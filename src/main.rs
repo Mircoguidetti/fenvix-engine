@@ -1,4 +1,5 @@
 mod counting;
+mod experiment;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -41,6 +42,12 @@ struct Args {
     /// Length of each idle-cost observation window, in seconds.
     #[arg(long, default_value_t = 60)]
     idle_secs: u64,
+    /// Run an experiment instead of the default benchmark. Supported: `wake-variants`.
+    #[arg(long)]
+    experiment: Option<String>,
+    /// With `--experiment wake-variants`: comma-separated variant names to run (default: all).
+    #[arg(long)]
+    only: Option<String>,
     /// Where to write this run's report (markdown) and raw data (json).
     #[arg(long, default_value = "runs")]
     out_dir: String,
@@ -134,6 +141,10 @@ async fn main() -> Result<()> {
             .build()?,
     );
     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
+    if let Some(name) = args.experiment.as_deref() {
+        anyhow::ensure!(name == "wake-variants", "unknown experiment {name:?}");
+        return experiment::run(&args, s3, counting).await;
+    }
     let counters = Arc::clone(&counting.counters);
     let store: Arc<dyn ObjectStore> = counting;
 

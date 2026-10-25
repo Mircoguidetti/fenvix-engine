@@ -2,15 +2,17 @@
 //! costs can be computed from real call counts.
 
 use async_trait::async_trait;
-use futures::stream::{BoxStream, StreamExt};
+use futures::stream::{BoxStream, StreamExt, TryStreamExt};
 use object_store::path::Path;
 use object_store::{
-    CopyOptions, GetOptions, GetResult, ListResult, MultipartUpload, ObjectMeta, ObjectStore,
-    PutMultipartOptions, PutOptions, PutPayload, PutResult, RenameOptions, Result, UploadPart,
+    CopyOptions, GetOptions, GetResult, GetResultPayload, ListResult, MultipartUpload, ObjectMeta,
+    ObjectStore, PutMode, PutMultipartOptions, PutOptions, PutPayload, PutResult, RenameOptions,
+    Result, UploadPart,
 };
 use std::fmt;
-use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 /// S3 returns at most 1000 keys per LIST page.
 const LIST_PAGE_SIZE: u64 = 1000;
@@ -102,15 +104,139 @@ impl Snapshot {
     }
 }
 
+/// One recorded object-store call (trace mode only).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TraceEvent {
+    pub op: String,
+    pub path: String,
+    pub start_us: u64,
+    pub dur_us: u64,
+    pub bytes: u64,
+    /// True if any other traced call was in flight at some point during this one.
+    pub overlapped: bool,
+}
+
+#[derive(Debug, Default)]
+struct TraceState {
+    origin: Option<Instant>,
+    /// Bumped on every `start`, so a call that outlives its trace cannot write into the next one.
+    generation: u64,
+    events: Vec<TraceEvent>,
+    inflight: Vec<usize>,
+}
+
+/// Identifies one in-flight traced call: (trace generation, event index).
+type Token = (u64, usize);
+
+/// Records every call in order. Disabled by default: when off, `begin` is a
+/// single atomic load and the store behaves exactly as without tracing.
+#[derive(Debug, Default)]
+pub struct Trace {
+    enabled: AtomicBool,
+    state: Mutex<TraceState>,
+}
+
+impl Trace {
+    pub fn start(&self) {
+        let mut st = self.state.lock().unwrap();
+        let generation = st.generation + 1;
+        *st = TraceState { origin: Some(Instant::now()), generation, ..Default::default() };
+        self.enabled.store(true, Relaxed);
+    }
+
+    pub fn take(&self) -> Vec<TraceEvent> {
+        self.enabled.store(false, Relaxed);
+        let mut st = self.state.lock().unwrap();
+        // Calls still in flight keep their start time; give them the time elapsed so far.
+        let now = st.origin.map(|o| o.elapsed().as_micros() as u64).unwrap_or(0);
+        for i in std::mem::take(&mut st.inflight) {
+            let ev = &mut st.events[i];
+            ev.dur_us = now.saturating_sub(ev.start_us);
+        }
+        st.generation += 1;
+        std::mem::take(&mut st.events)
+    }
+
+    fn begin(&self, op: &str, path: &str) -> Option<Token> {
+        if !self.enabled.load(Relaxed) {
+            return None;
+        }
+        let mut st = self.state.lock().unwrap();
+        let origin = st.origin?;
+        let idx = st.events.len();
+        let overlapped = !st.inflight.is_empty();
+        for i in st.inflight.clone() {
+            st.events[i].overlapped = true;
+        }
+        st.events.push(TraceEvent {
+            op: op.to_string(),
+            path: path.to_string(),
+            start_us: origin.elapsed().as_micros() as u64,
+            dur_us: 0,
+            bytes: 0,
+            overlapped,
+        });
+        st.inflight.push(idx);
+        Some((st.generation, idx))
+    }
+
+    fn end(&self, token: Option<Token>, bytes: u64) {
+        let Some((generation, idx)) = token else { return };
+        let mut st = self.state.lock().unwrap();
+        if st.generation != generation {
+            return;
+        }
+        let Some(origin) = st.origin else { return };
+        let now = origin.elapsed().as_micros() as u64;
+        if let Some(ev) = st.events.get_mut(idx) {
+            ev.dur_us = now.saturating_sub(ev.start_us);
+            ev.bytes = bytes;
+        }
+        st.inflight.retain(|&i| i != idx);
+    }
+
+    fn is_on(&self) -> bool {
+        self.enabled.load(Relaxed)
+    }
+}
+
 #[derive(Debug)]
 pub struct CountingStore {
     inner: Arc<dyn ObjectStore>,
     pub counters: Arc<Counters>,
+    pub trace: Arc<Trace>,
 }
 
 impl CountingStore {
     pub fn new(inner: Arc<dyn ObjectStore>) -> Self {
-        Self { inner, counters: Arc::new(Counters::default()) }
+        Self {
+            inner,
+            counters: Arc::new(Counters::default()),
+            trace: Arc::new(Trace::default()),
+        }
+    }
+
+    /// In trace mode, a list call is timed from its first poll until every page
+    /// has been read, so the stream is drained before it is handed back.
+    fn trace_list(
+        &self,
+        op: &'static str,
+        prefix: Option<&Path>,
+        stream: BoxStream<'static, Result<ObjectMeta>>,
+    ) -> BoxStream<'static, Result<ObjectMeta>> {
+        if !self.trace.is_on() {
+            return stream;
+        }
+        let trace = Arc::clone(&self.trace);
+        let path = prefix.map(|p| p.to_string()).unwrap_or_default();
+        futures::stream::once(async move {
+            let token = trace.begin(op, &path);
+            let items: Vec<Result<ObjectMeta>> = stream.collect().await;
+            trace.end(token, 0);
+            items
+        })
+        .flat_map(futures::stream::iter)
+        .boxed()
     }
 
     /// Counts one LIST request when the stream is created and one more for
@@ -143,7 +269,16 @@ impl fmt::Display for CountingStore {
 impl ObjectStore for CountingStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
         self.counters.put.fetch_add(1, Relaxed);
-        self.inner.put_opts(location, payload, opts).await
+        let op = match opts.mode {
+            PutMode::Create => "PUT(create)",
+            PutMode::Update(_) => "PUT(update)",
+            PutMode::Overwrite => "PUT",
+        };
+        let token = self.trace.begin(op, location.as_ref());
+        let bytes = payload.content_length() as u64;
+        let res = self.inner.put_opts(location, payload, opts).await;
+        self.trace.end(token, bytes);
+        res
     }
 
     async fn put_multipart_opts(
@@ -152,8 +287,10 @@ impl ObjectStore for CountingStore {
         opts: PutMultipartOptions,
     ) -> Result<Box<dyn MultipartUpload>> {
         self.counters.multipart_create.fetch_add(1, Relaxed);
-        let inner = self.inner.put_multipart_opts(location, opts).await?;
-        Ok(Box::new(CountingUpload { inner, counters: Arc::clone(&self.counters) }))
+        let token = self.trace.begin("PUT_MULTIPART_CREATE", location.as_ref());
+        let inner = self.inner.put_multipart_opts(location, opts).await;
+        self.trace.end(token, 0);
+        Ok(Box::new(CountingUpload { inner: inner?, counters: Arc::clone(&self.counters) }))
     }
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
@@ -165,7 +302,38 @@ impl ObjectStore for CountingStore {
             &self.counters.get
         };
         counter.fetch_add(1, Relaxed);
-        self.inner.get_opts(location, options).await
+        let op = if options.head {
+            "HEAD"
+        } else if options.range.is_some() {
+            "GET_RANGE"
+        } else {
+            "GET"
+        };
+        let token = self.trace.begin(op, location.as_ref());
+        let mut res = self.inner.get_opts(location, options).await;
+        if token.is_some() {
+            // Read the body inside the timed window so the duration covers the
+            // whole transfer, not just the response headers.
+            if let Ok(r) = res.as_mut() {
+                let payload = std::mem::replace(
+                    &mut r.payload,
+                    GetResultPayload::Stream(futures::stream::empty().boxed()),
+                );
+                if let GetResultPayload::Stream(body) = payload {
+                    match body.try_collect::<Vec<_>>().await {
+                        Ok(chunks) => {
+                            r.payload = GetResultPayload::Stream(
+                                futures::stream::iter(chunks.into_iter().map(Ok)).boxed(),
+                            );
+                        }
+                        Err(e) => res = Err(e),
+                    }
+                }
+            }
+        }
+        let bytes = res.as_ref().map(|r| r.range.end - r.range.start).unwrap_or(0);
+        self.trace.end(token, bytes);
+        res
     }
 
     // `get_ranges` is intentionally not overridden: the default implementation
@@ -177,30 +345,44 @@ impl ObjectStore for CountingStore {
         locations: BoxStream<'static, Result<Path>>,
     ) -> BoxStream<'static, Result<Path>> {
         let counters = Arc::clone(&self.counters);
+        let trace = Arc::clone(&self.trace);
         let locations = locations
-            .inspect(move |_| {
+            .inspect(move |p| {
                 counters.delete.fetch_add(1, Relaxed);
+                if let Ok(p) = p {
+                    // Deletes are instantaneous from the caller's view; record them as events.
+                    let t = trace.begin("DELETE", p.as_ref());
+                    trace.end(t, 0);
+                }
             })
             .boxed();
         self.inner.delete_stream(locations)
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
-        self.count_list(self.inner.list(prefix))
+        let stream = self.count_list(self.inner.list(prefix));
+        self.trace_list("LIST", prefix, stream)
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
-        self.count_list(self.inner.list_with_offset(prefix, offset))
+        let stream = self.count_list(self.inner.list_with_offset(prefix, offset));
+        self.trace_list("LIST", prefix, stream)
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
         self.counters.list.fetch_add(1, Relaxed);
-        self.inner.list_with_delimiter(prefix).await
+        let token = self.trace.begin("LIST", &prefix.map(|p| p.to_string()).unwrap_or_default());
+        let res = self.inner.list_with_delimiter(prefix).await;
+        self.trace.end(token, 0);
+        res
     }
 
     async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
         self.counters.copy.fetch_add(1, Relaxed);
-        self.inner.copy_opts(from, to, options).await
+        let token = self.trace.begin("COPY", to.as_ref());
+        let res = self.inner.copy_opts(from, to, options).await;
+        self.trace.end(token, 0);
+        res
     }
 
     async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()> {
