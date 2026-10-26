@@ -42,8 +42,30 @@ impl LatBuckets {
     }
 }
 
+/// Object categories requests are attributed to, by key: WAL objects, manifests, compacted SSTs (memtable
+/// flushes and compaction output), the tenant lease, the clean marker, everything else.
+pub const CATEGORIES: [&str; 6] = ["wal", "manifest", "compacted_sst", "lease", "clean_marker", "other"];
+
+pub fn category(path: &str) -> usize {
+    if path.contains("/wal/") {
+        0
+    } else if path.contains("/manifest/") {
+        1
+    } else if path.contains("/compacted/") {
+        2
+    } else if path.ends_with("/_lease") {
+        3
+    } else if path.ends_with("/_clean") {
+        4
+    } else {
+        5
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Counters {
+    pub put_cat: [AtomicU64; 6],
+    pub get_cat: [AtomicU64; 6],
     pub lat_put: LatBuckets,
     pub lat_get: LatBuckets,
     pub put: AtomicU64,
@@ -305,6 +327,7 @@ impl ObjectStore for CountingStore {
         let bytes = payload.content_length() as u64;
         let t0 = Instant::now();
         let res = self.inner.put_opts(location, payload, opts).await;
+        self.counters.put_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         self.counters.lat_put.record(t0.elapsed());
         self.trace.end(token, bytes);
         res
@@ -331,6 +354,7 @@ impl ObjectStore for CountingStore {
             &self.counters.get
         };
         counter.fetch_add(1, Relaxed);
+        self.counters.get_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         let op = if options.head {
             "HEAD"
         } else if options.range.is_some() {

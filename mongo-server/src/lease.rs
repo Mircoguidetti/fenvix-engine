@@ -57,6 +57,8 @@ pub struct Leases {
     /// Tenants another process was just seen to own: refused without asking the store again for a moment.
     denied: Mutex<HashMap<String, (Instant, String, u64)>>,
     pub stats: Mutex<LeaseStats>,
+    /// Test control only: never treat a lease as expired or lost (`--unsafe-skip-ownership-checks`).
+    pub unsafe_skip: std::sync::atomic::AtomicBool,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -94,7 +96,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -103,7 +105,19 @@ impl Leases {
 
     /// True while this process may act as the tenant's owner (it holds the lease and has renewed it recently enough).
     pub fn valid(&self, id: &str) -> bool {
+        if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) {
+            return true;
+        }
         self.held.lock().unwrap().get(id).map_or(false, |h| Instant::now() + self.ttl / 6 < h.valid_until)
+    }
+
+    /// Fails with a retryable error if this process no longer owns `id` (checked after every read).
+    pub fn check_owner(&self, id: &str) -> Result<()> {
+        if self.valid(id) {
+            return Ok(());
+        }
+        self.stats.lock().unwrap().refused += 1;
+        Err(LeaseHeld { tenant: id.to_string(), holder: "(ownership lost during the request)".into(), remaining_ms: 0 }.into())
     }
 
     pub fn is_held(&self, id: &str) -> bool {
@@ -274,6 +288,7 @@ impl Leases {
                 }
                 self.stats.lock().unwrap().renewals += 1;
             }
+            Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) => {}
             Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) => {
                 // The etag moved. That is a lost lease only if someone else now holds it; our own release or
                 // re-acquire racing with this renewal also moves it.

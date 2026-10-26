@@ -52,6 +52,26 @@ struct Args {
     /// Lease holder id (default: a unique id per process start).
     #[arg(long)]
     holder: Option<String>,
+    /// WAL flush interval in milliseconds. 0 (default) keeps the baseline: slatedb's 100 ms periodic flush plus an
+    /// explicit flush after every write batch, so a write is acknowledged as soon as its WAL object is durable. A
+    /// value above 0 sets the periodic interval and drops the explicit flush: a write is acknowledged (durable) at
+    /// the next flush, up to one interval later, and concurrent writes to a tenant share one WAL object.
+    #[arg(long, default_value_t = 0)]
+    wal_flush_ms: u64,
+    /// Object store: `s3` (the endpoint above), `local` (a directory, see --local-dir) or `memory`.
+    #[arg(long, default_value = "s3")]
+    store: String,
+    #[arg(long, default_value = "/tmp/mongo-server-store")]
+    local_dir: String,
+    /// Cold wakes allowed at once; more queue (0 = unlimited).
+    #[arg(long, default_value_t = 0)]
+    max_concurrent_wakes: usize,
+    /// Test control only: never treat a lease as expired or lost. Demonstrates what the ownership checks prevent.
+    #[arg(long)]
+    unsafe_skip_ownership_checks: bool,
+    /// Let reads of one tenant run concurrently (a shared lock) instead of one command per tenant at a time.
+    #[arg(long)]
+    shared_reads: bool,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -87,16 +107,28 @@ async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64)
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let s3: Arc<dyn ObjectStore> = Arc::new(
-        AmazonS3Builder::new()
-            .with_endpoint(&args.endpoint)
-            .with_allow_http(true)
-            .with_region("us-east-1")
-            .with_bucket_name(&args.bucket)
-            .with_access_key_id("minioadmin")
-            .with_secret_access_key("minioadmin")
-            .build()?,
-    );
+    let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
+        "s3" => Arc::new(
+            AmazonS3Builder::new()
+                .with_endpoint(&args.endpoint)
+                .with_allow_http(true)
+                .with_region("us-east-1")
+                .with_bucket_name(&args.bucket)
+                .with_access_key_id("minioadmin")
+                .with_secret_access_key("minioadmin")
+                .build()?,
+        ),
+        "local" => {
+            std::fs::create_dir_all(&args.local_dir)?;
+            Arc::new(object_store::local::LocalFileSystem::new_with_prefix(&args.local_dir)?)
+        }
+        "memory" => Arc::new(object_store::memory::InMemory::new()),
+        other => anyhow::bail!("unknown --store {other}"),
+    };
+    tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
+    dbs::set_wake_limit(args.max_concurrent_wakes);
+    dbs::SHARED_READS.store(args.shared_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
     let s3: Arc<dyn ObjectStore> = global.clone();
@@ -112,6 +144,7 @@ async fn main() -> Result<()> {
     });
     let holder = args.holder.clone().unwrap_or_else(|| format!("{}-{:08x}", std::process::id(), rand::random::<u32>()));
     let leases = lease::Leases::new(Arc::clone(&lc.store), holder.clone(), Duration::from_secs(args.lease_ttl_secs));
+    leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();

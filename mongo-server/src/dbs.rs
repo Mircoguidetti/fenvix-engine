@@ -14,7 +14,29 @@ use std::sync::atomic::{AtomicI64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tenant_bench::lifecycle::{Lifecycle, Op, Tenant};
-use tokio::sync::{Mutex as AsyncMutex, OwnedMutexGuard};
+use std::sync::atomic::AtomicU64;
+use tokio::sync::{OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock as AsyncMutex, Semaphore};
+
+static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+
+fn now_ms() -> u64 {
+    START.get_or_init(Instant::now).elapsed().as_millis() as u64
+}
+
+/// Cold wakes that may run at once (None = unlimited). Wakes beyond the limit queue instead of piling onto the store.
+static WAKE_SEM: std::sync::OnceLock<Option<Arc<Semaphore>>> = std::sync::OnceLock::new();
+pub static WAKE_QUEUED: AtomicI64 = AtomicI64::new(0);
+pub static WAKE_WAITS: AtomicU64 = AtomicU64::new(0);
+pub static WAKE_WAIT_MS: AtomicU64 = AtomicU64::new(0);
+pub static WAKE_MAX_QUEUED: AtomicI64 = AtomicI64::new(0);
+
+/// Reads of one tenant share the entry lock (true) or take it exclusively like writes (false: the behaviour
+/// before concurrent reads, one command per tenant at a time).
+pub static SHARED_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn set_wake_limit(n: usize) {
+    let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });
+}
 
 /// Idle and shutdown closes that may run at once.
 const CLOSE_CONCURRENCY: usize = 64;
@@ -40,7 +62,7 @@ pub struct Entry {
     writers: Arc<AtomicI64>,
     /// 0 closed, 1 reader, 2 writer: what this entry currently contributes to the open-tenant gauges.
     counted: u8,
-    pub last_used: Instant,
+    last_used_ms: AtomicU64,
     pub wakes: u64,
     pub closes: u64,
 }
@@ -66,7 +88,7 @@ impl Dbs {
             while let Some(id) = rx.recv().await {
                 let e = me.entries.lock().unwrap().get(&id).cloned();
                 if let Some(e) = e {
-                    let mut g = e.lock().await;
+                    let mut g = e.write().await;
                     g.abandon().await;
                 }
             }
@@ -74,8 +96,8 @@ impl Dbs {
     }
 
     /// Lock a database's entry. Commands on one database run one at a time.
-    pub async fn lock(&self, name: &str) -> OwnedMutexGuard<Entry> {
-        let e = {
+    fn entry(&self, name: &str) -> Arc<AsyncMutex<Entry>> {
+        {
             let mut m = self.entries.lock().unwrap();
             m.entry(name.to_string())
                 .or_insert_with(|| {
@@ -88,14 +110,45 @@ impl Dbs {
                         readers: Arc::clone(&self.readers),
                         writers: Arc::clone(&self.writers),
                         counted: 0,
-                        last_used: Instant::now(),
+                        last_used_ms: AtomicU64::new(now_ms()),
                         wakes: 0,
                         closes: 0,
                     }))
                 })
                 .clone()
-        };
-        e.lock_owned().await
+        }
+    }
+
+    /// Lock a database's entry exclusively (every command that writes, and tenant state changes).
+    pub async fn lock(&self, name: &str) -> OwnedRwLockWriteGuard<Entry> {
+        self.entry(name).write_owned().await
+    }
+
+    /// Open the database for reading and share it with other readers: reads of one tenant run concurrently with
+    /// each other and exclude only writes and state changes. The tenant is opened (and its lease taken) under the
+    /// exclusive lock first when needed. `ReadView` re-checks ownership after every read.
+    pub async fn read(&self, name: &str) -> Result<ReadView> {
+        let e = self.entry(name);
+        if !SHARED_READS.load(Relaxed) {
+            let mut w = Arc::clone(&e).write_owned().await;
+            if !w.ensure_open().await? {
+                return Ok(ReadView { g: None });
+            }
+            return Ok(ReadView { g: Some(Guard::Write(w)) });
+        }
+        loop {
+            {
+                let g = Arc::clone(&e).read_owned().await;
+                if g.tenant.is_some() && g.leases.valid(&g.name) {
+                    g.touch();
+                    return Ok(ReadView { g: Some(Guard::Read(g)) });
+                }
+            }
+            let mut w = Arc::clone(&e).write_owned().await;
+            if !w.ensure_open().await? {
+                return Ok(ReadView { g: None });
+            }
+        }
     }
 
     /// Cumulative object-store requests made through the lifecycle (not maintenance passes):
@@ -117,8 +170,8 @@ impl Dbs {
                 let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
                 for e in entries {
                     // Cheap pre-check without waiting: skip entries in use or not idle yet.
-                    let due = match e.try_lock() {
-                        Ok(g) => g.tenant.is_some() && g.last_used.elapsed() >= me.idle,
+                    let due = match e.try_read() {
+                        Ok(g) => g.tenant.is_some() && g.idle_for() >= me.idle,
                         Err(_) => false,
                     };
                     if !due {
@@ -128,8 +181,8 @@ impl Dbs {
                     let idle = me.idle;
                     tokio::spawn(async move {
                         let _p = permit;
-                        if let Ok(mut g) = e.try_lock_owned() {
-                            if g.tenant.is_some() && g.last_used.elapsed() >= idle {
+                        if let Ok(mut g) = e.try_write_owned() {
+                            if g.tenant.is_some() && g.idle_for() >= idle {
                                 if let Err(err) = g.close().await {
                                     eprintln!("idle close of {} failed: {err:#}", g.name);
                                 }
@@ -145,7 +198,7 @@ impl Dbs {
         let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
         futures::stream::iter(entries)
             .for_each_concurrent(CLOSE_CONCURRENCY, |e| async move {
-                let mut g = e.lock().await;
+                let mut g = e.write().await;
                 if let Err(err) = g.close().await {
                     eprintln!("close of {} failed: {err:#}", g.name);
                 }
@@ -168,6 +221,14 @@ impl Dbs {
 }
 
 impl Entry {
+    pub fn touch(&self) {
+        self.last_used_ms.store(now_ms(), Relaxed);
+    }
+
+    pub fn idle_for(&self) -> Duration {
+        Duration::from_millis(now_ms().saturating_sub(self.last_used_ms.load(Relaxed)))
+    }
+
     pub fn mode(&self) -> &'static str {
         match &self.tenant {
             None => "closed",
@@ -232,7 +293,7 @@ impl Entry {
     /// Wake the tenant as a reader if it is closed. `Ok(false)` if the database does not exist.
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
-        self.last_used = Instant::now();
+        self.touch();
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
                 return Ok(true);
@@ -241,6 +302,19 @@ impl Entry {
             lease::log("invalid", &self.name, &self.leases.holder, "");
             self.abandon().await;
         }
+        let _wake_permit = match WAKE_SEM.get().and_then(|o| o.clone()) {
+            Some(sem) => {
+                let q = WAKE_QUEUED.fetch_add(1, Relaxed) + 1;
+                WAKE_MAX_QUEUED.fetch_max(q, Relaxed);
+                let t0 = Instant::now();
+                let p = sem.acquire_owned().await.ok();
+                WAKE_QUEUED.fetch_sub(1, Relaxed);
+                WAKE_WAITS.fetch_add(1, Relaxed);
+                WAKE_WAIT_MS.fetch_add(t0.elapsed().as_millis() as u64, Relaxed);
+                p
+            }
+            None => None,
+        };
         let took = self.leases.acquire(&self.name).await?;
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
         match self.lc.wake(&self.name).await {
@@ -304,7 +378,7 @@ impl Entry {
             self.wakes += 1;
             self.sync_gauges();
         }
-        self.last_used = Instant::now();
+        self.touch();
         let r = self.tenant.as_mut().unwrap().apply(ops).await;
         self.sync_gauges();
         r
@@ -387,5 +461,60 @@ impl Entry {
 
     pub fn delete_doc_op(coll: &str, id: &Bson) -> Op {
         Op::Delete(layout::doc_key(coll, id))
+    }
+}
+
+/// A shared (read) hold on a database. Every read re-checks that this process still owns the tenant before
+/// the result is returned, so a process that lost its lease while the read was in flight returns a retryable
+/// error instead of data. `None` inside means the database does not exist.
+pub struct ReadView {
+    g: Option<Guard>,
+}
+
+enum Guard {
+    Read(OwnedRwLockReadGuard<Entry>),
+    Write(OwnedRwLockWriteGuard<Entry>),
+}
+
+impl std::ops::Deref for Guard {
+    type Target = Entry;
+    fn deref(&self) -> &Entry {
+        match self {
+            Guard::Read(g) => g,
+            Guard::Write(g) => g,
+        }
+    }
+}
+
+impl ReadView {
+    fn done<T>(&self, v: T) -> Result<T> {
+        if let Some(g) = &self.g {
+            g.leases.check_owner(&g.name)?;
+        }
+        Ok(v)
+    }
+
+    pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        let Some(g) = &self.g else { return Ok(vec![]) };
+        let r = g.tenant.as_ref().unwrap().scan_prefix(prefix).await?;
+        self.done(r)
+    }
+
+    pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
+        let Some(g) = &self.g else { return Ok(None) };
+        let r = g.tenant.as_ref().unwrap().get(key).await?;
+        self.done(r)
+    }
+
+    pub async fn scan_collection(&self, coll: &str) -> Result<Vec<Document>> {
+        let rows = self.scan(&layout::doc_prefix(coll)).await?;
+        rows.into_iter().map(|(_, v)| Ok(Document::from_reader(&v[..])?)).collect()
+    }
+
+    pub async fn get_doc(&self, coll: &str, id: &Bson) -> Result<Option<Document>> {
+        match self.get(&layout::doc_key(coll, id)).await? {
+            Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
+            None => Ok(None),
+        }
     }
 }

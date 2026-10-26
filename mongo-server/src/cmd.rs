@@ -178,6 +178,7 @@ impl Server {
                 Ok(doc! { "dropped": db, "ok": 1.0 })
             }
             "tenantAdmin" => self.tenant_admin(db, cmd).await,
+            "tenantTrace" => Box::pin(self.tenant_trace(db, cmd)).await,
             other => {
                 eprintln!("UNKNOWN COMMAND {other:?} db={db}");
                 Err(MongoError::command_not_found(other))
@@ -389,12 +390,55 @@ impl Server {
                 "get": (s.get + s.get_range) as i64, "head": s.head as i64, "delete": s.delete as i64,
                 "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
             },
+            "putByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.put_cat[i].load(Relaxed) as i64))).collect::<Document>(),
+            "getByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.get_cat[i].load(Relaxed) as i64))).collect::<Document>(),
+            "maintenance": {
+                "compactRuns": tenant_bench::lifecycle::MAINT.compact_runs.load(Relaxed) as i64, "compactPuts": tenant_bench::lifecycle::MAINT.compact_puts.load(Relaxed) as i64,
+                "compactGets": tenant_bench::lifecycle::MAINT.compact_gets.load(Relaxed) as i64, "gcRuns": tenant_bench::lifecycle::MAINT.gc_runs.load(Relaxed) as i64,
+                "gcDeletes": tenant_bench::lifecycle::MAINT.gc_deletes.load(Relaxed) as i64, "gcLists": tenant_bench::lifecycle::MAINT.gc_lists.load(Relaxed) as i64,
+                "gcGets": tenant_bench::lifecycle::MAINT.gc_gets.load(Relaxed) as i64,
+            },
+            "wakeQueue": { "queued": crate::dbs::WAKE_QUEUED.load(Relaxed), "maxQueued": crate::dbs::WAKE_MAX_QUEUED.load(Relaxed), "waits": crate::dbs::WAKE_WAITS.load(Relaxed) as i64, "waitMs": crate::dbs::WAKE_WAIT_MS.load(Relaxed) as i64 },
             "lat": {
                 "put": self.dbs.global.counters.lat_put.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),
                 "get": self.dbs.global.counters.lat_get.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),
             },
             "ok": 1.0
         }
+    }
+
+    /// Runs a command with object-store tracing on and returns every request it made, in order. For the wake
+    /// breakdown: `cold` closes the tenant first, `marker` (`present` | `missing`) sets the clean marker so the wake
+    /// takes the clean or the unclean path. Meant for a quiet server (the trace is process-wide).
+    async fn tenant_trace(&self, db: &str, cmd: &Document) -> R<Document> {
+        use object_store::ObjectStoreExt;
+        let run = cmd.get_document("run").map_err(|_| MongoError::bad_value("tenantTrace needs a `run` command".into()))?.clone();
+        let name = run.keys().next().cloned().unwrap_or_default();
+        if bool_arg(cmd.get("cold"), true) {
+            let mut g = self.dbs.lock(db).await;
+            g.close().await?;
+        }
+        let marker = object_store::path::Path::from(format!("tenants/{db}/_clean"));
+        match cmd.get_str("marker").unwrap_or("") {
+            "present" => {
+                self.dbs.global.put(&marker, object_store::PutPayload::from_static(b"clean")).await.map_err(|e| MongoError::internal(e.to_string()))?;
+            }
+            "missing" => {
+                let _ = self.dbs.global.delete(&marker).await;
+            }
+            _ => {}
+        }
+        self.dbs.global.trace.start();
+        let t0 = std::time::Instant::now();
+        let reply = self.dispatch(db, &name, &run, 0).await;
+        let elapsed = t0.elapsed();
+        let events = self.dbs.global.trace.take();
+        Ok(doc! {
+            "elapsedUs": elapsed.as_micros() as i64,
+            "innerOk": reply.is_ok(),
+            "events": events.into_iter().map(|e| Bson::Document(doc! { "op": e.op, "path": e.path, "startUs": e.start_us as i64, "durUs": e.dur_us as i64, "bytes": e.bytes as i64 })).collect::<Vec<_>>(),
+            "ok": 1.0,
+        })
     }
 
     async fn tenant_admin(&self, db: &str, cmd: &Document) -> R<Document> {
@@ -460,7 +504,7 @@ impl Server {
     // ---- reads -----------------------------------------------------------------------------
 
     /// Documents of a collection matching `filter`; `_id` equality becomes a point read.
-    async fn matching_docs(&self, g: &mut Entry, coll: &str, filter: &Document) -> R<Vec<Document>> {
+    async fn matching_docs(&self, g: &crate::dbs::ReadView, coll: &str, filter: &Document) -> R<Vec<Document>> {
         if let Some(id) = id_equality(filter) {
             return Ok(g.get_doc(coll, id).await?.into_iter().collect());
         }
@@ -489,8 +533,8 @@ impl Server {
         let batch = int_arg(cmd.get("batchSize")).map(|b| b.max(0) as usize);
         let single = bool_arg(cmd.get("singleBatch"), false);
         let mut docs = {
-            let mut g = self.dbs.lock(db).await;
-            self.matching_docs(&mut g, coll, &filter).await?
+            let g = self.dbs.read(db).await?;
+            self.matching_docs(&g, coll, &filter).await?
         };
         sort_docs(&mut docs, &sort);
         let mut docs: VecDeque<Document> = docs.into_iter().skip(skip).collect();
@@ -512,8 +556,8 @@ impl Server {
         let skip = int_arg(cmd.get("skip")).unwrap_or(0).max(0) as usize;
         let limit = int_arg(cmd.get("limit")).unwrap_or(0).unsigned_abs() as usize;
         let n = {
-            let mut g = self.dbs.lock(db).await;
-            self.matching_docs(&mut g, coll, &filter).await?.len()
+            let g = self.dbs.read(db).await?;
+            self.matching_docs(&g, coll, &filter).await?.len()
         };
         let mut n = n.saturating_sub(skip);
         if limit > 0 {
@@ -527,8 +571,8 @@ impl Server {
         let key = cmd.get_str("key").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'distinct.key' is missing but a required field".into()))?;
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
         let docs = {
-            let mut g = self.dbs.lock(db).await;
-            self.matching_docs(&mut g, coll, &filter).await?
+            let g = self.dbs.read(db).await?;
+            self.matching_docs(&g, coll, &filter).await?
         };
         let mut values: Vec<Bson> = Vec::new();
         for d in &docs {
@@ -554,13 +598,13 @@ impl Server {
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
         let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
         let docs = {
-            let mut g = self.dbs.lock(db).await;
+            let g = self.dbs.read(db).await?;
             g.scan_collection(coll).await?
         };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(pipeline) {
             let fd = {
-                let mut g = self.dbs.lock(db).await;
+                let g = self.dbs.read(db).await?;
                 g.scan_collection(&from).await?
             };
             foreign.insert(from, fd);
