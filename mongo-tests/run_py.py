@@ -418,7 +418,7 @@ def exec_step(ctx, db, dbname, step):
 def raw_op_query(ctx):
     """Send a legacy OP_QUERY `isMaster` to admin.$cmd on a plain socket and parse the OP_REPLY."""
     import bson
-    host, port = ctx.uri.split("//")[1].split(":")
+    host, port = ctx.uri.split("//")[1].split("/")[0].split(":")
     body = struct.pack("<i", 0) + b"admin.$cmd\x00" + struct.pack("<ii", 0, -1) + bson.encode({"ismaster": 1, "helloOk": True})
     msg = struct.pack("<iiii", 16 + len(body), 4242, 0, 2004) + body
     with socket.create_connection((host, int(port)), timeout=10) as s:

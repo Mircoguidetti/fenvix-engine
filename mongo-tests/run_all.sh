@@ -7,8 +7,8 @@ cd "$(dirname "$0")"
 mkdir -p out
 docker start mongo7 >/dev/null 2>&1 || docker run -d --name mongo7 -p 27017:27017 mongo:7.0 >/dev/null
 (cd .. && cargo build --release -p mongo-server)
-./server.sh 27018 60 --ttl-sweep-secs 1
-./server.sh 27019 3
+./server.sh 27018 60 --ttl-sweep-secs 1 --replica-set rs0 --advertise localhost:27018
+./server.sh 27019 3 --replica-set rs0 --advertise localhost:27019
 ./.venv/bin/python gen_tests.py tests.json
 ./.venv/bin/python run_py.py            | tee out/py_run.log
 (cd node && node run_node.js)           | tee out/node_run.log

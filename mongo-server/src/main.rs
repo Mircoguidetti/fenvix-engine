@@ -75,9 +75,10 @@ struct Args {
     /// At most this many sleeping tenants are woken for expiry per maintenance pass.
     #[arg(long, default_value_t = 20)]
     ttl_max_wakes: usize,
-    /// Replica-set name reported by `hello` (drivers allow multi-document transactions and change streams only on
-    /// replica sets); empty for a standalone server.
-    #[arg(long, default_value = "rs0")]
+    /// Replica-set name reported by `hello`. Drivers allow multi-document transactions and change streams only on
+    /// replica sets, so set it (with `--advertise`) when an application needs them; empty (default) is a standalone
+    /// server, which is what clients that connect by another host name or address expect.
+    #[arg(long, default_value = "")]
     replica_set: String,
     /// Address advertised in `hello.hosts` / `me`; must match the host:port clients connect to
     /// (default `localhost:<listen port>`).

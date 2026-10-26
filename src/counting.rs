@@ -56,6 +56,9 @@ pub struct Counters {
     pub head: AtomicU64,
     pub list: AtomicU64,
     pub delete: AtomicU64,
+    /// Bytes uploaded (PUT bodies and multipart parts) and downloaded (GET bodies, ranges).
+    pub put_bytes: AtomicU64,
+    pub get_bytes: AtomicU64,
 }
 
 /// A point-in-time copy of the counters.
@@ -303,6 +306,7 @@ impl ObjectStore for CountingStore {
         };
         let token = self.trace.begin(op, location.as_ref());
         let bytes = payload.content_length() as u64;
+        self.counters.put_bytes.fetch_add(bytes, Relaxed);
         let t0 = Instant::now();
         let res = self.inner.put_opts(location, payload, opts).await;
         self.counters.lat_put.record(t0.elapsed());
@@ -363,6 +367,7 @@ impl ObjectStore for CountingStore {
             }
         }
         let bytes = res.as_ref().map(|r| r.range.end - r.range.start).unwrap_or(0);
+        self.counters.get_bytes.fetch_add(bytes, Relaxed);
         self.trace.end(token, bytes);
         res
     }
@@ -434,6 +439,7 @@ struct CountingUpload {
 impl MultipartUpload for CountingUpload {
     fn put_part(&mut self, data: PutPayload) -> UploadPart {
         self.counters.multipart_part.fetch_add(1, Relaxed);
+        self.counters.put_bytes.fetch_add(data.content_length() as u64, Relaxed);
         self.inner.put_part(data)
     }
 

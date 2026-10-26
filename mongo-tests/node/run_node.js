@@ -106,7 +106,7 @@ async function rawBatches(db, coll, first) {
 
 // Legacy OP_QUERY `isMaster` to admin.$cmd on a plain socket; parse the OP_REPLY.
 function rawOpQuery(ctx) {
-  const [host, port] = ctx.uri.split('//')[1].split(':');
+  const [host, port] = ctx.uri.split('//')[1].split('/')[0].split(':');
   const q = BSON.serialize({ ismaster: 1, helloOk: true });
   const ns = Buffer.from('admin.$cmd\0');
   const body = Buffer.concat([Buffer.alloc(4), ns, Buffer.from(new Int32Array([0, -1]).buffer), q]);

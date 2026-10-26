@@ -291,6 +291,7 @@ impl Server {
                 "copy": s.copy as i64, "list": s.list as i64,
                 "get": (s.get + s.get_range) as i64, "head": s.head as i64, "delete": s.delete as i64,
                 "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
+                "putBytes": self.dbs.global.counters.put_bytes.load(Relaxed) as i64, "getBytes": self.dbs.global.counters.get_bytes.load(Relaxed) as i64,
             },
             "lat": {
                 "put": self.dbs.global.counters.lat_put.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),

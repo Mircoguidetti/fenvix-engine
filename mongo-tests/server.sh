@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Start (or restart) the mongo-server binary: ./server.sh <port> <idle-secs> [extra args...]
+# $SERVER_EXTRA (with %PORT% replaced by the port) is added to every start, including the restarts done by the tests.
 # The log goes to mongo-tests/out/server-<port>.log. SIGTERM makes the server close its tenants cleanly.
 set -euo pipefail
 port=${1:?port}; idle=${2:?idle secs}; shift 2
@@ -10,7 +11,9 @@ if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
   kill -TERM "$(cat "$pidfile")"
   while kill -0 "$(cat "$pidfile")" 2>/dev/null; do sleep 0.2; done
 fi
-nohup ./target/release/mongo-server --listen 127.0.0.1:$port --idle-secs "$idle" --holder "srv-$port" "$@" > mongo-tests/out/server-$port.log 2>&1 &
+extra=${SERVER_EXTRA//%PORT%/$port}
+# shellcheck disable=SC2086
+nohup ./target/release/mongo-server --listen 127.0.0.1:$port --idle-secs "$idle" --holder "srv-$port" $extra "$@" > mongo-tests/out/server-$port.log 2>&1 &
 echo $! > "$pidfile"
 for _ in $(seq 1 50); do
   if (exec 3<>/dev/tcp/127.0.0.1/$port) 2>/dev/null; then echo "mongo-server up on $port (pid $(cat "$pidfile"))"; exit 0; fi

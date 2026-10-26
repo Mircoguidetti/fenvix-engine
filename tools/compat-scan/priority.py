@@ -27,7 +27,7 @@ def group_of(key, kind):
             "aggregation expression": "aggregation expressions", "aggregation accumulator": "aggregation accumulators"}.get(kind, kind)
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--profile", default="after"); ap.add_argument("--out")
+    ap = argparse.ArgumentParser(); ap.add_argument("--profile", default="r6"); ap.add_argument("--out")
     a = ap.parse_args()
     data = json.load(open(os.path.join(HERE, "results.json")))
     scanned = [r for r in data["repos"] if r["status"] == "scanned"]

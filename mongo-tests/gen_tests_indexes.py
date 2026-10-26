@@ -216,6 +216,9 @@ def register(g):
     def wait(secs=4):
         return {"op": "sleep", "secs": secs}
 
+    def cnt_c():
+        return {"op": "count_documents", "coll": "c", "filter": {}}
+
     tt("expired_docs_removed", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}, {"_id": 3, "t": PAST}]), wait(), ids()])
     tt("expire_after_zero_seconds", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}]), wait(), ids()])
     tt("non_date_values_never_expire", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": "2001-01-01"}, {"_id": 2, "t": 5}, {"_id": 3}, {"_id": 4, "t": None}, {"_id": 5, "t": PAST}]), wait(), ids()])
@@ -243,3 +246,20 @@ def register(g):
     tt("update_many_skips_expired", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST, "g": 1}, {"_id": 2, "t": FUTURE, "g": 1}]), wait(), upd("c", {"g": 1}, {"$set": {"z": 1}}, kind="update_many"), ids()])
     tt("sort_limit_with_index_skips_expired", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": i, "t": PAST if i <= 5 else FUTURE} for i in range(1, 11)]), wait(), find("c", {}, sort={"t": 1, "_id": 1}, limit=3, projection={"t": 0})])
     tt("lookup_foreign_respects_expiry", [cix("f", [["t", 1]], expireAfterSeconds=0), ins("f", [{"_id": 1, "t": PAST, "k": 1}, {"_id": 2, "t": FUTURE, "k": 1}]), ins("c", [{"_id": 1, "k": 1}]), wait(), agg("c", [{"$lookup": {"from": "f", "localField": "k", "foreignField": "k", "as": "m"}}, {"$project": {"m": {"_id": 1}}}])])
+
+    # ---- more TTL tests ---------------------------------------------------------------------------------------------
+    tt("array_of_subdocuments_path", [cix("c", [["items.exp", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "items": [{"exp": FUTURE}, {"exp": PAST}]}, {"_id": 2, "items": [{"exp": FUTURE}]}]), wait(), ids()])
+    tt("relative_boundary", [cix("c", [["t", 1]], expireAfterSeconds=3), ins("c", [{"_id": 1, "t": now(-3000)}, {"_id": 2, "t": now(-100000)}, {"_id": 3, "t": now(100000)}]), wait(), ids()])
+    tt("large_batch", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": i, "t": PAST if i % 4 else FUTURE} for i in range(400)]), wait(), cnt_c(), ids(limit=5)])
+    tt("drop_collection_with_ttl_index", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST}]), {"op": "drop_collection", "coll": "c"}, ins("c", [{"_id": 2, "t": PAST}]), {"op": "list_indexes", "coll": "c"}, ids()])
+    tt("recreate_with_different_ttl_error", [cix("c", [["t", 1]], expireAfterSeconds=100), cix("c", [["t", 1]], expireAfterSeconds=200)])
+    tt("sparse_ttl_index", [cix("c", [["t", 1]], expireAfterSeconds=0, sparse=True), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2}, {"_id": 3, "t": FUTURE}]), wait(), ids()])
+    tt("aggregate_match_group_after_expiry", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": i, "t": PAST if i % 2 else FUTURE, "g": i % 3} for i in range(1, 13)]), wait(), agg("c", [{"$match": {"g": {"$gte": 0}}}, {"$group": {"_id": "$g", "n": {"$sum": 1}}}, {"$sort": {"_id": 1}}])])
+    tt("find_one_and_update_skips_expired", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST, "g": 1}, {"_id": 2, "t": FUTURE, "g": 1}]), wait(), {"op": "find_one_and_update", "coll": "c", "filter": {"g": 1}, "update": {"$set": {"z": 1}}, "return_document": "after", "projection": {"t": 0}}, ids()])
+    tt("upsert_after_expiry_creates_new", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST, "old": True}]), wait(), upd("c", {"_id": 1}, {"$set": {"t": FUTURE, "new": True}}, upsert=True), ids()])
+    tt("two_ttl_indexes_either_expires", [cix("c", [["a", 1]], expireAfterSeconds=0), cix("c", [["b", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "a": PAST, "b": FUTURE}, {"_id": 2, "a": FUTURE, "b": PAST}, {"_id": 3, "a": FUTURE, "b": FUTURE}]), wait(), ids()])
+    tt("dates_before_1970", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": datetime.datetime(1950, 1, 1)}, {"_id": 2, "t": FUTURE}]), wait(), ids()])
+    tt("count_documents_only_unexpired", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": i, "t": PAST if i < 6 else FUTURE} for i in range(1, 11)]), wait(), cnt_c(), {"op": "estimated_count", "coll": "c"}])
+    tt("drop_and_recreate_ttl_index", [cix("c", [["t", 1]], expireAfterSeconds=100000), ins("c", [{"_id": 1, "t": now(-10000)}]), {"op": "drop_index", "coll": "c", "index": "t_1"}, cix("c", [["t", 1]], expireAfterSeconds=0), wait(), ids()])
+    tt("expiry_removes_index_entries", [cix("c", [["t", 1]], expireAfterSeconds=0), cix("c", [["k", 1]]), ins("c", [{"_id": i, "t": PAST, "k": i} for i in range(1, 6)] + [{"_id": 9, "t": FUTURE, "k": 9}]), wait(), find("c", {"k": {"$gte": 0}}, projection={"t": 0}, sort={"_id": 1}), cmd({"validate": "c"}, ["valid"])])
+    tt("unique_ttl_index_values", [cix("c", [["t", 1]], expireAfterSeconds=0, unique=True), ins("c", [{"_id": 1, "t": FUTURE}]), {"op": "insert_one", "coll": "c", "doc": {"_id": 2, "t": FUTURE}, "cmp_msg": True}])
