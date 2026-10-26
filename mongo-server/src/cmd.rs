@@ -20,6 +20,10 @@ const DEFAULT_FIRST_BATCH: usize = 101;
 pub struct Server {
     pub dbs: Arc<Dbs>,
     pub(crate) builds: Arc<Mutex<HashSet<String>>>,
+    pub(crate) sessions: crate::txn::Sessions,
+    pub(crate) next_txn_id: std::sync::atomic::AtomicU64,
+    /// Replica-set name and advertised address reported by `hello` (drivers allow transactions only on replica sets).
+    pub(crate) rs: Mutex<Option<(String, String)>>,
     /// Print every command name and database (used to discover what drivers send on connect).
     pub log_commands: bool,
     cursors: Mutex<HashMap<i64, Cursor>>,
@@ -76,7 +80,7 @@ pub(crate) fn write_error(index: usize, code: i32, msg: String) -> Document {
 
 impl Server {
     pub fn new(dbs: Arc<Dbs>, log_commands: bool) -> Arc<Self> {
-        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), log_commands, cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1) })
+        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1) })
     }
 
     pub fn new_connection_id(&self) -> i64 {
@@ -109,7 +113,10 @@ impl Server {
             "ping" => return Ok(ok()),
             "buildInfo" | "buildinfo" => return Ok(build_info()),
             "getParameter" => return get_parameter(cmd),
-            "endSessions" | "killSessions" | "refreshSessions" => return Ok(ok()),
+            "endSessions" => return self.end_sessions(cmd).await,
+            "killSessions" | "refreshSessions" => return Ok(ok()),
+            "commitTransaction" => return self.commit_txn(cmd).await,
+            "abortTransaction" => return self.abort_txn(cmd).await,
             "whatsmyuri" => return Ok(doc! { "you": "127.0.0.1:0", "ok": 1.0 }),
             "connectionStatus" => {
                 return Ok(doc! { "authInfo": { "authenticatedUsers": [], "authenticatedUserRoles": [], "authenticatedUserPrivileges": [] }, "ok": 1.0 })
@@ -126,17 +133,22 @@ impl Server {
         if !valid_db_name(db) {
             return Err(MongoError::new(73, "InvalidNamespace", format!("Invalid database name: '{db}'")));
         }
+        if let Some(tc) = crate::txn::parse(cmd)? {
+            return self.run_in_txn(db, name, cmd, &tc).await;
+        }
+        let mut no_tx: Option<crate::txn::Txn> = None;
+        let tx = &mut no_tx;
         match name {
-            "insert" => self.insert(db, cmd).await,
-            "find" => self.find(db, cmd).await,
+            "insert" => self.insert(db, cmd, tx).await,
+            "find" => self.find(db, cmd, tx).await,
             "getMore" => self.get_more(db, cmd),
             "killCursors" => self.kill_cursors(cmd),
-            "update" => self.update(db, cmd).await,
-            "delete" => self.delete(db, cmd).await,
-            "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd).await,
-            "count" => self.count(db, cmd).await,
-            "distinct" => self.distinct(db, cmd).await,
-            "aggregate" => self.aggregate(db, cmd).await,
+            "update" => self.update(db, cmd, tx).await,
+            "delete" => self.delete(db, cmd, tx).await,
+            "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd, tx).await,
+            "count" => self.count(db, cmd, tx).await,
+            "distinct" => self.distinct(db, cmd, tx).await,
+            "aggregate" => self.aggregate(db, cmd, tx).await,
             "drop" => self.drop_collection(db, cmd).await,
             "create" => self.create(db, cmd).await,
             "dropIndexes" => self.drop_indexes(db, cmd).await,
@@ -177,6 +189,15 @@ impl Server {
         d.insert("minWireVersion", 0_i32);
         d.insert("maxWireVersion", MAX_WIRE_VERSION);
         d.insert("readOnly", false);
+        if let Some((set, addr)) = &*self.rs.lock().unwrap() {
+            d.insert("hosts", vec![Bson::String(addr.clone())]);
+            d.insert("setName", set.clone());
+            d.insert("setVersion", 1_i32);
+            d.insert("secondary", false);
+            d.insert("primary", addr.clone());
+            d.insert("me", addr.clone());
+            d.insert("electionId", ObjectId::from_bytes([0x7f, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 1]));
+        }
         d.insert("ok", 1.0);
         d
     }
@@ -307,7 +328,7 @@ impl Server {
         }
     }
 
-    fn get_more(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) fn get_more(&self, db: &str, cmd: &Document) -> R<Document> {
         let id = int_arg(cmd.get("getMore")).ok_or_else(|| MongoError::new(14, "TypeMismatch", "getMore's cursor id must be a long".into()))?;
         let batch = int_arg(cmd.get("batchSize")).map(|b| b as usize);
         let mut cursors = self.cursors.lock().unwrap();
@@ -369,24 +390,3 @@ fn get_parameter(cmd: &Document) -> R<Document> {
     Ok(reply)
 }
 
-#[allow(dead_code)]
-fn _assert_send(s: &Server) {
-    fn ck<T: Send>(_: T) {}
-    let c = Document::new();
-    ck(s.find("", &c));
-    ck(s.count("", &c));
-    ck(s.distinct("", &c));
-    ck(s.aggregate("", &c));
-    ck(s.insert("", &c));
-    ck(s.update("", &c));
-    ck(s.find_and_modify("", &c));
-    ck(s.delete("", &c));
-    ck(s.drop_collection("", &c));
-    ck(s.list_indexes("", &c));
-    ck(s.create_indexes("", &c));
-    ck(s.drop_indexes("", &c));
-    ck(s.explain("", &c));
-    ck(s.validate("", &c));
-    ck(s.coll_stats("", &c));
-    ck(s.db_stats("", &c));
-}

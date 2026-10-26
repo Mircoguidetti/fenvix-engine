@@ -141,18 +141,37 @@ function substNow(x) {
 
 async function execStep(ctx, db, dbname, step) {
   step = substNow(step);
+  ctx.sessions = ctx.sessions ?? {};
+  const ses = step.session !== undefined ? ctx.sessions[step.session] : undefined;
+  const so = ses ? { session: ses } : {};
+  if (step.op === 'txn_start') { const s = ctx.client.startSession(); s.startTransaction(); ctx.sessions[step.name] = s; return SKIP; }
+  if (step.op === 'txn_commit' || step.op === 'txn_abort') {
+    const s = ctx.sessions[step.session]; delete ctx.sessions[step.session];
+    try { await (step.op === 'txn_commit' ? s.commitTransaction() : s.abortTransaction()); } finally { await s.endSession(); }
+    return 'ok';
+  }
+  if (step.op === 'with_txn') {
+    const s = ctx.client.startSession(); const out = [];
+    try {
+      await s.withTransaction(async () => {
+        out.length = 0; ctx.sessions.__wt = s;
+        for (const st of step.steps) out.push(await execStep(ctx, db, dbname, { ...st, session: '__wt' }));
+      });
+    } finally { delete ctx.sessions.__wt; await s.endSession(); }
+    return out;
+  }
   const op = step.op;
   const coll = step.coll ? db.collection(step.coll) : null;
   switch (op) {
-    case 'insert_one': return { inserted_id: (await coll.insertOne(step.doc)).insertedId };
-    case 'insert_many': return { inserted_ids: Object.values((await coll.insertMany(step.docs, { ordered: step.ordered ?? true })).insertedIds) };
+    case 'insert_one': return { inserted_id: (await coll.insertOne(step.doc, so)).insertedId };
+    case 'insert_many': return { inserted_ids: Object.values((await coll.insertMany(step.docs, { ordered: step.ordered ?? true, ...so })).insertedIds) };
     case 'insert_generated': {
       const docs = generatedDocs(step.kind, num(step.n));
       for (let i = 0; i < docs.length; i += 500) await coll.insertMany(docs.slice(i, i + 500), { ordered: step.ordered ?? true });
       return { inserted: docs.length };
     }
     case 'find': case 'find_one': case 'find_count': {
-      const o = {};
+      const o = { ...so };
       if (step.projection) o.projection = step.projection;
       if (step.sort) o.sort = step.sort;
       if (step.hint !== undefined) o.hint = step.hint;
@@ -168,25 +187,25 @@ async function execStep(ctx, db, dbname, step) {
       return op === 'find_count' ? docs.length : docs;
     }
     case 'count_documents': {
-      const o = {};
+      const o = { ...so };
       if (step.skip !== undefined) o.skip = num(step.skip);
       if (step.limit !== undefined) o.limit = num(step.limit);
       return await coll.countDocuments(step.filter ?? {}, o);
     }
     case 'estimated_count': return await coll.estimatedDocumentCount();
-    case 'aggregate': return await coll.aggregate(step.pipeline, step.batch_size !== undefined ? { batchSize: num(step.batch_size) } : {}).toArray();
-    case 'distinct': return await coll.distinct(step.key, step.filter ?? {});
+    case 'aggregate': return await coll.aggregate(step.pipeline, step.batch_size !== undefined ? { batchSize: num(step.batch_size), ...so } : { ...so }).toArray();
+    case 'distinct': return await coll.distinct(step.key, step.filter ?? {}, so);
     case 'update_one': case 'update_many': case 'replace_one': {
-      const o = { upsert: step.upsert ?? false };
+      const o = { upsert: step.upsert ?? false, ...so };
       if (step.array_filters) o.arrayFilters = step.array_filters;
       const fn = { update_one: 'updateOne', update_many: 'updateMany', replace_one: 'replaceOne' }[op];
       const r = await coll[fn](step.filter, step.update, o);
       return { matched: r.matchedCount, modified: r.modifiedCount, upserted_id: r.upsertedId ?? null };
     }
-    case 'delete_one': return { deleted: (await coll.deleteOne(step.filter)).deletedCount };
-    case 'delete_many': return { deleted: (await coll.deleteMany(step.filter)).deletedCount };
+    case 'delete_one': return { deleted: (await coll.deleteOne(step.filter, so)).deletedCount };
+    case 'delete_many': return { deleted: (await coll.deleteMany(step.filter, so)).deletedCount };
     case 'find_one_and_update': case 'find_one_and_replace': case 'find_one_and_delete': {
-      const o = {};
+      const o = { ...so };
       if (step.projection) o.projection = step.projection;
       if (step.sort) o.sort = step.sort;
       if (op !== 'find_one_and_delete') {
@@ -215,7 +234,7 @@ async function execStep(ctx, db, dbname, step) {
     }
     case 'drop_index': await coll.dropIndex(typeof step.index === 'string' ? step.index : Object.fromEntries(step.index.map(([k, d]) => [k, d]))); return 'ok';
     case 'list_indexes': return (await coll.listIndexes().toArray()).map((i) => (step.full ? i : Object.fromEntries(['v', 'key', 'name', 'unique'].filter((k) => k in i).map((k) => [k, i[k]]))));
-    case 'command': case 'command_raw': return pick(await db.command(swapDb(step.cmd, dbname)), step.pick, step.reduce);
+    case 'command': case 'command_raw': return pick(await db.command(swapDb(step.cmd, dbname), so), step.pick, step.reduce);
     case 'admin_command': return pick(await ctx.client.db('admin').command(swapDb(step.cmd, dbname)), step.pick);
     case 'db_in_list': return (await ctx.client.db().admin().listDatabases({ nameOnly: true })).databases.some((d) => d.name === dbname);
     case 'db_in_list_command': return (await ctx.client.db('admin').command({ listDatabases: 1, nameOnly: true })).databases.some((d) => d.name === dbname);
@@ -352,7 +371,7 @@ function compare(test, real, ours) {
 }
 
 async function main() {
-  const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')).map(([k, v]) => [k, v ?? true]));
+  const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '')).map((a) => { const i = a.indexOf('='); return i < 0 ? [a, true] : [a.slice(0, i), a.slice(i + 1)]; }));
   const testsPath = args.tests || path.join(HERE, 'tests.json');
   let tests = EJSON.parse(fs.readFileSync(testsPath, 'utf8'), { relaxed: false });
   if (args.only) tests = tests.filter((t) => t.name.includes(args.only));
@@ -382,7 +401,7 @@ async function main() {
     console.log(status === 'pass' ? `. ${t.name}` : `F ${t.name}\n    step ${diff.step} ${diff.op || ''}\n    real: ${diff.real}\n    ours: ${diff.ours}`);
   }
   fs.writeFileSync(out, JSON.stringify(results, null, 1));
-  for (const cat of ['core', 'extra']) {
+  for (const cat of ['core', 'extra', 'replset']) {
     const sel = results.filter((x) => x.category === cat);
     if (sel.length) console.log(`${cat}: ${sel.filter((x) => x.status === 'pass').length}/${sel.length} passed`);
   }

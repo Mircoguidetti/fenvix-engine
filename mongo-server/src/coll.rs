@@ -321,11 +321,17 @@ pub struct Writes {
     released: HashSet<(usize, Vec<u8>, Vec<u8>)>,
     /// Index definitions changed (multikey flag set).
     pub indexes_dirty: bool,
+    /// Index definitions to persist at commit (collection -> all its indexes) and the collection list, for transactions.
+    pub meta: HashMap<String, Vec<IndexDef>>,
+    pub names: Option<Vec<String>>,
+    /// Transaction: write counter at its snapshot; writing a document that changed since is a write conflict.
+    pub snap_seq: Option<u64>,
+    pub txn_id: Option<u64>,
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None }
     }
 
     /// Current version of a document: this write set first, then the store.
@@ -340,10 +346,44 @@ impl Writes {
         })
     }
 
+    /// Does a document with this `_id` exist now (latest committed state plus this write set)?
+    pub async fn exists(&self, g: &mut Entry, coll: &str, id: &Bson) -> R<bool> {
+        let k = doc_key(coll, id);
+        if let Some(v) = self.ov.get(&k) {
+            return Ok(v.is_some());
+        }
+        Ok(g.get_live(&k).await?.is_some())
+    }
+
+    /// All ops to apply at commit: the document and index writes, changed index definitions, the collection list.
+    pub fn final_ops(mut self) -> R<Vec<Op>> {
+        let mut ops = std::mem::take(&mut self.ops);
+        for (coll, idx) in &self.meta {
+            ops.push(Entry::indexes_op(coll, idx)?);
+        }
+        if let Some(names) = &self.names {
+            ops.push(Entry::collections_op(names)?);
+        }
+        Ok(ops)
+    }
+
+    fn check_conflict(&self, g: &mut Entry, key: &[u8]) -> R<()> {
+        if let Some(id) = self.txn_id {
+            if !g.lock_key(key, id) {
+                return Err(MongoError::write_conflict());
+            }
+        }
+        match self.snap_seq {
+            Some(seq) if g.modified_after(key, seq) => Err(MongoError::write_conflict()),
+            _ => Ok(()),
+        }
+    }
+
     /// Insert or replace a document, maintaining every index. Nothing is recorded if it fails.
     pub async fn put(&mut self, g: &mut Entry, coll: &str, ns: &str, indexes: &mut [IndexDef], new: &Document, old: Option<&Document>) -> R<()> {
         let id = new.get("_id").cloned().ok_or_else(|| MongoError::internal("document without _id".into()))?;
         let id_enc = encode_sortable(&id);
+        self.check_conflict(g, &doc_key(coll, &id))?;
         let mut plans: Vec<(usize, Vec<Vec<u8>>, Vec<Vec<u8>>, bool)> = Vec::new(); // (idx, to_add, to_remove, multikey)
         for (i, idx) in indexes.iter().enumerate() {
             if !idx.has_entries() || idx.state == State::Dropping {
@@ -368,7 +408,7 @@ impl Writes {
                     let mut p = idx.prefix(coll);
                     p.extend(c);
                     let end = prefix_end(&p);
-                    for (k, _) in g.scan_range(&p, end.as_deref(), false, Some(8), 4096).await? {
+                    for (k, _) in g.scan_range_live(&p, end.as_deref(), Some(8)).await? {
                         if let Some(owner) = entry_id(&k) {
                             if owner != id_enc.as_slice() && !self.released.contains(&(i, c.clone(), owner.to_vec())) {
                                 return Err(dup());
@@ -404,8 +444,9 @@ impl Writes {
         Ok(())
     }
 
-    pub fn delete(&mut self, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
+    pub fn delete(&mut self, g: &mut Entry, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
         let id = old.get("_id").cloned().unwrap_or(Bson::Null);
+        self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
         for (i, idx) in indexes.iter().enumerate() {
             if !idx.has_entries() || idx.state == State::Dropping {

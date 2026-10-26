@@ -288,6 +288,13 @@ impl Tenant {
         Ok(out)
     }
 
+    /// A consistent snapshot of the database as of now (upgrades to a writer first: snapshots exist on writers only).
+    pub async fn snapshot(&mut self) -> Result<Arc<slatedb::DbSnapshot>> {
+        self.upgrade().await?;
+        let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
+        Ok(db.snapshot().await?)
+    }
+
     /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,
     /// ascending or descending. `read_ahead` is the bytes fetched per request (small for short index scans).
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {

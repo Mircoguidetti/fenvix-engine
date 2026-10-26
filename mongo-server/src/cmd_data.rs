@@ -5,6 +5,7 @@ use crate::agg::run_pipeline;
 use crate::cmd::{bool_arg, collection_name, int_arg, write_error, Server, R};
 use crate::coll::{find_docs, resolve_hint, FindOpts, Hint, Writes};
 use crate::dbs::Entry;
+use crate::txn::{attach, take_writes, tx_ov, Txn};
 use crate::error::MongoError;
 use crate::index::{self, IndexDef};
 use crate::layout::{doc_prefix, encode_sortable};
@@ -34,20 +35,20 @@ impl Server {
     }
 
     /// Matching documents of `coll`: (docs, indexes) with TTL-expired documents hidden.
-    pub(crate) async fn matching(&self, g: &mut Entry, db: &str, coll: &str, filter: &Document, hint: Option<&Bson>) -> R<Vec<Document>> {
+    pub(crate) async fn matching(&self, g: &mut Entry, db: &str, coll: &str, filter: &Document, hint: Option<&Bson>, ov: Option<&crate::coll::Overlay>) -> R<Vec<Document>> {
         let indexes = self.load_indexes(g, db, coll).await?;
         let hint = resolve_hint(&indexes, hint)?;
         let specs = index::ttl_specs(&indexes);
-        let (docs, _, _) = find_docs(g, coll, &indexes, &FindOpts { filter, sort: &[], want: None, hint, ttl: ttl_ctx(&specs), ov: None }).await?;
+        let (docs, _, _) = find_docs(g, coll, &indexes, &FindOpts { filter, sort: &[], want: None, hint, ttl: ttl_ctx(&specs), ov }).await?;
         Ok(docs)
     }
 
     /// Every visible document of a collection (TTL-expired ones hidden).
     pub(crate) async fn scan_visible(&self, g: &mut Entry, db: &str, coll: &str) -> R<Vec<Document>> {
-        self.matching(g, db, coll, &Document::new(), None).await
+        self.matching(g, db, coll, &Document::new(), None, None).await
     }
 
-    pub(crate) async fn find(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn find(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "find")?;
         let filter = cmd.get_document("filter").cloned().unwrap_or_default();
         let sort = match cmd.get_document("sort") {
@@ -64,11 +65,12 @@ impl Server {
         let single = bool_arg(cmd.get("singleBatch"), false);
         let mut docs = {
             let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
             let indexes = self.load_indexes(&mut g, db, coll).await?;
             let hint = resolve_hint(&indexes, cmd.get("hint"))?;
             let specs = index::ttl_specs(&indexes);
             let want = if limit > 0 { Some(skip + limit as usize) } else { None };
-            let (docs, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &filter, sort: &sort, want, hint, ttl: ttl_ctx(&specs), ov: None }).await?;
+            let (docs, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &filter, sort: &sort, want, hint, ttl: ttl_ctx(&specs), ov: tx_ov(tx) }).await?;
             docs
         };
         sort_docs(&mut docs, &sort);
@@ -84,14 +86,15 @@ impl Server {
         Ok(self.cursor_reply(format!("{db}.{coll}"), docs, batch, single))
     }
 
-    pub(crate) async fn count(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn count(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "count")?;
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
         let skip = int_arg(cmd.get("skip")).unwrap_or(0).max(0) as usize;
         let limit = int_arg(cmd.get("limit")).unwrap_or(0).unsigned_abs() as usize;
         let n = {
             let mut g = self.dbs.lock(db).await;
-            self.matching(&mut g, db, coll, &filter, cmd.get("hint")).await?.len()
+        attach(&mut g, tx);
+            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?.len()
         };
         let mut n = n.saturating_sub(skip);
         if limit > 0 {
@@ -100,13 +103,14 @@ impl Server {
         Ok(doc! { "n": n as i32, "ok": 1.0 })
     }
 
-    pub(crate) async fn distinct(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn distinct(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "distinct")?;
         let key = cmd.get_str("key").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'distinct.key' is missing but a required field".into()))?;
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
         let docs = {
             let mut g = self.dbs.lock(db).await;
-            self.matching(&mut g, db, coll, &filter, cmd.get("hint")).await?
+        attach(&mut g, tx);
+            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?
         };
         let mut values: Vec<Bson> = Vec::new();
         for d in &docs {
@@ -126,7 +130,7 @@ impl Server {
         Ok(doc! { "values": values, "ok": 1.0 })
     }
 
-    pub(crate) async fn aggregate(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn aggregate(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "aggregate")?;
         let pipeline = cmd.get_array("pipeline").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'aggregate.pipeline' is missing but a required field".into()))?;
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
@@ -134,12 +138,14 @@ impl Server {
         let first_match = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
         let docs = {
             let mut g = self.dbs.lock(db).await;
-            self.matching(&mut g, db, coll, &first_match, cmd.get("hint")).await?
+        attach(&mut g, tx);
+            self.matching(&mut g, db, coll, &first_match, cmd.get("hint"), tx_ov(tx)).await?
         };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(pipeline) {
             let fd = {
                 let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
                 self.scan_visible(&mut g, db, &from).await?
             };
             foreign.insert(from, fd);
@@ -150,29 +156,36 @@ impl Server {
 
     // ---- writes ----------------------------------------------------------------------------
 
-    /// Apply a write set (plus catalog changes) as one batch.
-    pub(crate) async fn commit(&self, g: &mut Entry, coll: &str, mut w: Writes, indexes: &[IndexDef], new_coll: Option<Vec<String>>) -> R<()> {
-        let mut ops = std::mem::take(&mut w.ops);
+    /// Apply a write set (plus catalog changes) as one batch, or, inside a transaction, keep it in the transaction.
+    pub(crate) async fn commit(&self, g: &mut Entry, coll: &str, mut w: Writes, indexes: &[IndexDef], new_coll: Option<Vec<String>>, tx: &mut Option<Txn>) -> R<()> {
         if w.indexes_dirty {
-            ops.push(Entry::indexes_op(coll, indexes)?);
+            w.meta.insert(coll.to_string(), indexes.to_vec());
+            w.indexes_dirty = false;
         }
-        if let Some(names) = new_coll {
-            ops.push(Entry::collections_op(&names)?);
+        if new_coll.is_some() {
+            w.names = new_coll;
         }
+        if let Some(t) = tx {
+            t.w = w;
+            return Ok(());
+        }
+        let ops = w.final_ops()?;
         g.apply(ops).await?;
         Ok(())
     }
 
-    pub(crate) async fn insert(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn insert(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "insert")?;
         let docs = cmd.get_array("documents").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'insert.documents' is missing but a required field".into()))?;
-        let ordered = bool_arg(cmd.get("ordered"), true);
+        let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
         let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
-        let mut w = Writes::new();
+        let mut w = take_writes(tx);
+        let names = w.names.clone().unwrap_or(names);
         let mut errors: Vec<Bson> = Vec::new();
         let mut n = 0;
         for (i, raw) in docs.iter().enumerate() {
@@ -202,11 +215,14 @@ impl Server {
                 if ordered { break } else { continue }
             }
             // An expired-but-not-yet-removed document still holds its _id and its unique keys.
-            if w.get(&mut g, coll, &id).await?.is_some() {
+            if w.exists(&mut g, coll, &id).await? {
                 errors.push(Bson::Document(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }).to_write_error(i)));
                 if ordered { break } else { continue }
             }
             if let Err(e) = w.put(&mut g, coll, &ns, &mut indexes, &d, None).await {
+                if e.code == 112 {
+                    return Err(e);
+                }
                 errors.push(Bson::Document(e.to_write_error(i)));
                 if ordered { break } else { continue }
             }
@@ -217,7 +233,7 @@ impl Server {
             v.push(coll.to_string());
             v
         });
-        self.commit(&mut g, coll, w, &indexes, new_coll).await?;
+        self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
         let mut reply = doc! { "n": n as i32 };
         if !errors.is_empty() {
             reply.insert("writeErrors", errors);
@@ -226,23 +242,28 @@ impl Server {
         Ok(reply)
     }
 
-    pub(crate) async fn update(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn update(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "update")?;
         let specs = cmd.get_array("updates").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'update.updates' is missing but a required field".into()))?;
-        let ordered = bool_arg(cmd.get("ordered"), true);
+        let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
         let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
-        let mut w = Writes::new();
+        let mut w = take_writes(tx);
+        let names = w.names.clone().unwrap_or(names);
         let mut acc = UpdAcc::default();
         let mut errors: Vec<Bson> = Vec::new();
 
         'specs: for (i, spec) in specs.iter().enumerate() {
             let step: R<()> = update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc).await;
             if let Err(e) = step {
+                if e.code == 112 {
+                    return Err(e);
+                }
                 errors.push(Bson::Document(e.to_write_error(i)));
                 if ordered {
                     break 'specs;
@@ -254,7 +275,7 @@ impl Server {
             v.push(coll.to_string());
             v
         });
-        self.commit(&mut g, coll, w, &indexes, new_coll).await?;
+        self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
         let mut reply = doc! { "n": acc.n, "nModified": acc.n_modified };
         if !acc.upserted.is_empty() {
             reply.insert("upserted", acc.upserted);
@@ -266,7 +287,7 @@ impl Server {
         Ok(reply)
     }
 
-    pub(crate) async fn find_and_modify(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn find_and_modify(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let key = cmd.keys().next().cloned().unwrap_or_default();
         let coll = collection_name(cmd, &key)?;
         let ns = format!("{db}.{coll}");
@@ -319,21 +340,23 @@ impl Server {
             }
         };
         let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
         let hint = resolve_hint(&indexes, cmd.get("hint"))?;
-        let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: None }).await?;
+        let mut w = take_writes(tx);
+        let names = w.names.clone().unwrap_or(names);
+        let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: Some(&w.ov) }).await?;
         sort_docs(&mut matched, &sort);
         let hit = matched.into_iter().next();
-        let mut w = Writes::new();
         if remove {
             return Ok(match hit {
                 None => doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 },
                 Some(old) => {
-                    w.delete(coll, &indexes, &old)?;
-                    self.commit(&mut g, coll, w, &indexes, None).await?;
+                    w.delete(&mut g, coll, &indexes, &old)?;
+                    self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                     doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old)), "ok": 1.0 }
                 }
             });
@@ -344,7 +367,7 @@ impl Server {
                 let new = apply_update(&old, u)?;
                 if new.to_vec()? != old.to_vec()? {
                     w.put(&mut g, coll, &ns, &mut indexes, &new, Some(&old)).await?;
-                    self.commit(&mut g, coll, w, &indexes, None).await?;
+                    self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                 }
                 let value = shape(Some(if want_new { new } else { old }));
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": true }, "value": value, "ok": 1.0 })
@@ -352,7 +375,7 @@ impl Server {
             None if upsert => {
                 let nd = upsert_document(&q, u)?;
                 let id = nd.get("_id").cloned().unwrap();
-                if w.get(&mut g, coll, &id).await?.is_some() {
+                if w.exists(&mut g, coll, &id).await? {
                     return Err(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": nd.get("_id").cloned().unwrap_or(Bson::Null) }));
                 }
                 w.put(&mut g, coll, &ns, &mut indexes, &nd, None).await?;
@@ -361,7 +384,7 @@ impl Server {
                     v.push(coll.to_string());
                     v
                 });
-                self.commit(&mut g, coll, w, &indexes, new_coll).await?;
+                self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
                 let value = if want_new { shape(Some(nd)) } else { Bson::Null };
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": false, "upserted": id }, "value": value, "ok": 1.0 })
             }
@@ -369,28 +392,31 @@ impl Server {
         }
     }
 
-    pub(crate) async fn delete(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn delete(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "delete")?;
         let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'delete.deletes' is missing but a required field".into()))?;
         let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
         let indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
-        let mut w = Writes::new();
+        let mut w = take_writes(tx);
         let mut n = 0;
         let mut errors: Vec<Bson> = Vec::new();
-        let ordered = bool_arg(cmd.get("ordered"), true);
+        let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         for (i, spec) in specs.iter().enumerate() {
             let res: R<()> = delete_stmt(&mut g, coll, &indexes, &ttl_specs, &mut w, spec, &mut n).await;
             if let Err(e) = res {
+                if e.code == 112 {
+                    return Err(e);
+                }
                 errors.push(Bson::Document(write_error(i, e.code, e.msg)));
                 if ordered {
                     break;
                 }
             }
         }
-        let ops = std::mem::take(&mut w.ops);
-        g.apply(ops).await?;
+        self.commit(&mut g, coll, w, &indexes, None, tx).await?;
         let mut reply = doc! { "n": n };
         if !errors.is_empty() {
             reply.insert("writeErrors", errors);
@@ -435,7 +461,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     }
                     let nd = upsert_document(q, u)?;
                     let id = nd.get("_id").cloned().unwrap();
-                    if w.get(g, coll, &id).await?.is_some() {
+                    if w.exists(g, coll, &id).await? {
                         return Err(MongoError::duplicate_key(ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }));
                     }
                     w.put(g, coll, ns, indexes, &nd, None).await?;
@@ -466,7 +492,7 @@ async fn delete_stmt(g: &mut Entry, coll: &str, indexes: &[IndexDef], ttl_specs:
                     found.truncate(limit as usize);
                 }
                 for d in found {
-                    w.delete(coll, indexes, &d)?;
+                    w.delete(g, coll, indexes, &d)?;
                     *n += 1;
                 }
                 Ok(())

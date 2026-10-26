@@ -123,10 +123,41 @@ def pick(doc, keys, reduce=None):
 def exec_step(ctx, db, dbname, step):
     op = step["op"]
     coll = db[step["coll"]] if "coll" in step else None
+    if not hasattr(ctx, "sessions"):
+        ctx.sessions = {}
+    ses = ctx.sessions.get(step["session"]) if "session" in step else None
+    skw = {"session": ses} if ses is not None else {}
+    if op == "txn_start":
+        s = ctx.client.start_session()
+        s.start_transaction()
+        ctx.sessions[step["name"]] = s
+        return SKIP
+    if op in ("txn_commit", "txn_abort"):
+        s = ctx.sessions.pop(step["session"])
+        try:
+            (s.commit_transaction if op == "txn_commit" else s.abort_transaction)()
+        finally:
+            s.end_session()
+        return "ok"
+    if op == "with_txn":
+        s = ctx.client.start_session()
+        out = []
+
+        def body(sess):
+            out.clear()
+            ctx.sessions["__wt"] = sess
+            for st in step["steps"]:
+                out.append(exec_step(ctx, db, dbname, dict(st, session="__wt")))
+        try:
+            s.with_transaction(body)
+        finally:
+            ctx.sessions.pop("__wt", None)
+            s.end_session()
+        return out
     if op == "insert_one":
-        return {"inserted_id": coll.insert_one(step["doc"]).inserted_id}
+        return {"inserted_id": coll.insert_one(step["doc"], **skw).inserted_id}
     if op == "insert_many":
-        return {"inserted_ids": coll.insert_many(step["docs"], ordered=step.get("ordered", True)).inserted_ids}
+        return {"inserted_ids": coll.insert_many(step["docs"], ordered=step.get("ordered", True), **skw).inserted_ids}
     if op == "insert_generated":
         docs = generated_docs(step["kind"], step["n"])
         for i in range(0, len(docs), 500):
@@ -144,28 +175,28 @@ def exec_step(ctx, db, dbname, step):
             kw["hint"] = h if isinstance(h, str) else pairs(h)
         if op == "find_one":
             kw.pop("limit", None)
-            d = coll.find_one(step.get("filter", {}), **kw)
+            d = coll.find_one(step.get("filter", {}), **kw, **skw)
             return list(d.keys()) if step.get("keys_only") and d else d
-        cur = coll.find(step.get("filter", {}), **kw)
+        cur = coll.find(step.get("filter", {}), **kw, **skw)
         return len(list(cur)) if op == "find_count" else list(cur)
     if op == "count_documents":
         kw = {k: step[k] for k in ("skip", "limit") if k in step}
-        return coll.count_documents(step.get("filter", {}), **kw)
+        return coll.count_documents(step.get("filter", {}), **kw, **skw)
     if op == "estimated_count":
         return coll.estimated_document_count()
     if op == "aggregate":
         kw = {"batchSize": step["batch_size"]} if "batch_size" in step else {}
-        return list(coll.aggregate(step["pipeline"], **kw))
+        return list(coll.aggregate(step["pipeline"], **kw, **skw))
     if op == "distinct":
-        return coll.distinct(step["key"], step.get("filter", {}))
+        return coll.distinct(step["key"], step.get("filter", {}), **skw)
     if op in ("update_one", "update_many", "replace_one"):
         kw = {"upsert": step.get("upsert", False)}
         if "array_filters" in step:
             kw["array_filters"] = step["array_filters"]
-        r = getattr(coll, op)(step["filter"], step["update"], **kw)
+        r = getattr(coll, op)(step["filter"], step["update"], **kw, **skw)
         return {"matched": r.matched_count, "modified": r.modified_count, "upserted_id": r.upserted_id}
     if op in ("delete_one", "delete_many"):
-        return {"deleted": getattr(coll, op)(step["filter"]).deleted_count}
+        return {"deleted": getattr(coll, op)(step["filter"], **skw).deleted_count}
     if op in ("find_one_and_update", "find_one_and_replace", "find_one_and_delete"):
         from pymongo import ReturnDocument
         kw = {}
@@ -179,8 +210,8 @@ def exec_step(ctx, db, dbname, step):
         if "array_filters" in step:
             kw["array_filters"] = step["array_filters"]
         if op == "find_one_and_delete":
-            return coll.find_one_and_delete(step["filter"], **kw)
-        return getattr(coll, op)(step["filter"], step["update"], **kw)
+            return coll.find_one_and_delete(step["filter"], **kw, **skw)
+        return getattr(coll, op)(step["filter"], step["update"], **kw, **skw)
     if op == "create_collection":
         db.create_collection(step["coll"])
         return "ok"
@@ -205,7 +236,7 @@ def exec_step(ctx, db, dbname, step):
             out.append(dict(i) if step.get("full") else {k: i[k] for k in ("v", "key", "name", "unique") if k in i})
         return out
     if op in ("command", "command_raw"):
-        return pick(db.command(swap_db(step["cmd"], dbname)), step.get("pick"), step.get("reduce"))
+        return pick(db.command(swap_db(step["cmd"], dbname), **skw), step.get("pick"), step.get("reduce"))
     if op == "admin_command":
         return pick(ctx.client.admin.command(swap_db(step["cmd"], dbname)), step.get("pick"))
     if op == "db_in_list":
@@ -487,7 +518,7 @@ def main():
         mark = "." if status == "pass" else "F"
         print(f"{mark} {t['name']}" + ("" if status == "pass" else f"\n    step {diff['step']} {diff.get('op','')}\n    real: {diff['real']}\n    ours: {diff['ours']}"), flush=True)
     json.dump(out, open(a.out, "w"), indent=1)
-    for cat in ("core", "extra"):
+    for cat in ("core", "extra", "replset"):
         sel = [x for x in out if x["category"] == cat]
         if sel:
             print(f"{cat}: {sum(x['status']=='pass' for x in sel)}/{len(sel)} passed")

@@ -19,6 +19,7 @@ mod lease;
 mod query;
 mod regex;
 mod ttl;
+mod txn;
 mod update;
 mod wire;
 
@@ -70,6 +71,14 @@ struct Args {
     /// At most this many sleeping tenants are woken for expiry per maintenance pass.
     #[arg(long, default_value_t = 20)]
     ttl_max_wakes: usize,
+    /// Replica-set name reported by `hello` (drivers allow multi-document transactions and change streams only on
+    /// replica sets); empty for a standalone server.
+    #[arg(long, default_value = "rs0")]
+    replica_set: String,
+    /// Address advertised in `hello.hosts` / `me`; must match the host:port clients connect to
+    /// (default `localhost:<listen port>`).
+    #[arg(long)]
+    advertise: Option<String>,
     /// Do not run the TTL sweeps (expired documents stay hidden but are not removed).
     #[arg(long)]
     no_ttl: bool,
@@ -143,6 +152,11 @@ async fn main() -> Result<()> {
         dbs.spawn_ttl_maintenance(Duration::from_secs(args.ttl_maintenance_secs), Duration::from_secs(args.ttl_min_gap_secs), args.ttl_max_wakes);
     }
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
+    if !args.replica_set.is_empty() {
+        let port = args.listen.rsplit(':').next().unwrap_or("27017");
+        *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
+    }
+    server.spawn_txn_janitor();
 
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);

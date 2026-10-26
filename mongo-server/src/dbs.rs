@@ -49,6 +49,14 @@ pub struct Entry {
     pub(crate) hint_written: bool,
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
+    /// Snapshot that this command's reads go through (a transaction's), set after taking the lock.
+    pub(crate) snap: Option<Arc<slatedb::DbSnapshot>>,
+    /// Write counter and, while transactions are open, the last write of each document key (conflict detection).
+    pub(crate) seq: u64,
+    pub(crate) modified: HashMap<Vec<u8>, u64>,
+    pub(crate) active_txns: usize,
+    /// Document keys written by open transactions -> transaction id (a second writer gets a write conflict at once).
+    pub(crate) locks: HashMap<Vec<u8>, u64>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -90,6 +98,11 @@ impl Dbs {
                     ttl_seen: false,
                     hint_written: false,
                     swept: HashMap::new(),
+                    snap: None,
+                    seq: 0,
+                    modified: HashMap::new(),
+                    active_txns: 0,
+                    locks: HashMap::new(),
                 }))
             })
             .clone()
@@ -134,11 +147,18 @@ impl Dbs {
                         ttl_seen: false,
                         hint_written: false,
                         swept: HashMap::new(),
+                    snap: None,
+                    seq: 0,
+                    modified: HashMap::new(),
+                    active_txns: 0,
+                    locks: HashMap::new(),
                     }))
                 })
                 .clone()
         };
-        e.lock_owned().await
+        let mut g = e.lock_owned().await;
+        g.snap = None;
+        g
     }
 
     /// Cumulative object-store requests made through the lifecycle (not maintenance passes):
@@ -161,7 +181,7 @@ impl Dbs {
                 for e in entries {
                     // Cheap pre-check without waiting: skip entries in use or not idle yet.
                     let due = match e.try_lock() {
-                        Ok(g) => g.tenant.is_some() && g.last_used.elapsed() >= me.idle,
+                        Ok(g) => g.tenant.is_some() && g.active_txns == 0 && g.last_used.elapsed() >= me.idle,
                         Err(_) => false,
                     };
                     if !due {
@@ -172,7 +192,7 @@ impl Dbs {
                     tokio::spawn(async move {
                         let _p = permit;
                         if let Ok(mut g) = e.try_lock_owned() {
-                            if g.tenant.is_some() && g.last_used.elapsed() >= idle {
+                            if g.tenant.is_some() && g.active_txns == 0 && g.last_used.elapsed() >= idle {
                                 if let Err(err) = g.close().await {
                                     eprintln!("idle close of {} failed: {err:#}", g.name);
                                 }
@@ -326,12 +346,27 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(None);
         }
+        if let Some(s) = &self.snap {
+            return Ok(s.get(key).await?);
+        }
+        self.tenant.as_ref().unwrap().get(key).await
+    }
+
+    /// Like [`Entry::get`] but always reads the latest committed state, not the command's snapshot.
+    pub async fn get_live(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
+        if !self.ensure_open().await? {
+            return Ok(None);
+        }
         self.tenant.as_ref().unwrap().get(key).await
     }
 
     pub async fn scan(&mut self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         if !self.ensure_open().await? {
             return Ok(vec![]);
+        }
+        if self.snap.is_some() {
+            let end = crate::keyenc::prefix_end(prefix);
+            return self.scan_range(prefix, end.as_deref(), false, None, 4 << 20).await;
         }
         self.tenant.as_ref().unwrap().scan_prefix(prefix).await
     }
@@ -349,6 +384,17 @@ impl Entry {
             self.sync_gauges();
         }
         self.last_used = Instant::now();
+        self.seq += 1;
+        if self.active_txns > 0 {
+            for op in &ops {
+                let k = match op {
+                    Op::Put(k, _) | Op::Delete(k) => k,
+                };
+                if k.starts_with(b"doc/") {
+                    self.modified.insert(k.clone(), self.seq);
+                }
+            }
+        }
         let r = self.tenant.as_mut().unwrap().apply(ops).await;
         self.sync_gauges();
         r
@@ -498,7 +544,76 @@ impl Entry {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
+        if let Some(s) = &self.snap {
+            let opts = slatedb::config::ScanOptions {
+                read_ahead_bytes: read_ahead,
+                max_fetch_tasks: 4,
+                cache_blocks: true,
+                order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
+                ..Default::default()
+            };
+            let range = match end {
+                Some(e) => (std::ops::Bound::Included(start.to_vec()), std::ops::Bound::Excluded(e.to_vec())),
+                None => (std::ops::Bound::Included(start.to_vec()), std::ops::Bound::Unbounded),
+            };
+            let mut it = s.scan_with_options(range, &opts).await?;
+            let mut out = Vec::new();
+            while let Some(kv) = it.next().await? {
+                out.push((kv.key, kv.value));
+                if limit.map(|l| out.len() >= l).unwrap_or(false) {
+                    break;
+                }
+            }
+            return Ok(out);
+        }
         self.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await
+    }
+
+    /// [`Entry::scan_range`] on the latest committed state.
+    pub async fn scan_range_live(&mut self, start: &[u8], end: Option<&[u8]>, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        if !self.ensure_open().await? {
+            return Ok(vec![]);
+        }
+        self.tenant.as_ref().unwrap().scan_range(start, end, false, limit, 4096).await
+    }
+
+    /// Take a snapshot for a transaction (opens the tenant as a writer) and remember the write counter.
+    pub async fn begin_snapshot(&mut self) -> Result<(Arc<slatedb::DbSnapshot>, u64)> {
+        if !self.ensure_open().await? {
+            // The database does not exist yet: create it so the transaction has something to snapshot.
+            self.leases.acquire(&self.name).await?;
+            self.tenant = Some(self.lc.create(&self.name).await?);
+            self.wakes += 1;
+            self.sync_gauges();
+        }
+        let snap = self.tenant.as_mut().unwrap().snapshot().await?;
+        self.sync_gauges();
+        self.active_txns += 1;
+        Ok((snap, self.seq))
+    }
+
+    /// Try to take the write lock of a document key for transaction `id`.
+    pub(crate) fn lock_key(&mut self, key: &[u8], id: u64) -> bool {
+        match self.locks.get(key) {
+            Some(o) if *o != id => false,
+            _ => {
+                self.locks.insert(key.to_vec(), id);
+                true
+            }
+        }
+    }
+
+    pub(crate) fn end_txn(&mut self, id: u64) {
+        self.locks.retain(|_, o| *o != id);
+        self.active_txns = self.active_txns.saturating_sub(1);
+        if self.active_txns == 0 {
+            self.modified.clear();
+        }
+    }
+
+    /// Was the document key written after write counter `seq`?
+    pub(crate) fn modified_after(&self, key: &[u8], seq: u64) -> bool {
+        self.modified.get(key).map(|s| *s > seq).unwrap_or(false)
     }
 
     /// Point reads in parallel, in key order.
@@ -507,6 +622,10 @@ impl Entry {
             return Ok(vec![None; keys.len()]);
         }
         let t = self.tenant.as_ref().unwrap();
+        if let Some(s) = &self.snap {
+            let futs: Vec<_> = keys.iter().map(|k| s.get(k.clone())).collect();
+            return Ok(futures::stream::iter(futs).buffered(32).try_collect::<Vec<_>>().await?);
+        }
         let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
         futures::stream::iter(futs).buffered(32).try_collect().await
     }

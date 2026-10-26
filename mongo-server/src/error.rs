@@ -35,6 +35,11 @@ impl MongoError {
     pub fn command_not_found(name: &str) -> Self {
         Self::new(59, "CommandNotFound", format!("no such command: '{name}'"))
     }
+    pub fn write_conflict() -> Self {
+        let mut e = Self::new(112, "WriteConflict", "Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.".into());
+        e.extra = Some(doc! { "errorLabels": ["TransientTransactionError"] });
+        e
+    }
     pub fn cursor_not_found(id: i64) -> Self {
         Self::new(43, "CursorNotFound", format!("cursor id {id} not found"))
     }
