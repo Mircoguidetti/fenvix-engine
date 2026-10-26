@@ -78,3 +78,198 @@ shutting down: closing tenants cleanly
 LEASE writer_close tenant=race_5bbc50d1 holder=A unix_ms=1793008404985 
 LEASE release_begin tenant=race_5bbc50d1 holder=A unix_ms=1793008404985 
 LEASE release tenant=race_5bbc50d1 holder=A unix_ms=1793008404989 ok=true
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106869 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106881 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106890 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106900 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106906 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106913 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106919 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106925 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106933 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106938 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106945 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106954 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106961 takeover_from=-
+LEASE acquired tenant=own1_d3c18a66 holder=A unix_ms=1793049106968 takeover_from=- new=true
+LEASE writer_open tenant=own1_d3c18a66 holder=A unix_ms=1793049106984 
+LEASE writer_close tenant=own1_d3c18a66 holder=A unix_ms=1793049107001 
+LEASE release_begin tenant=own1_d3c18a66 holder=A unix_ms=1793049107001 
+LEASE release tenant=own1_d3c18a66 holder=A unix_ms=1793049107004 ok=true
+LEASE acquired tenant=ghost_d3c18a66 holder=A unix_ms=1793049108438 takeover_from=-
+LEASE acquired tenant=crash_d3c18a66 holder=A unix_ms=1793049108488 takeover_from=-
+LEASE acquired tenant=crash_d3c18a66 holder=A unix_ms=1793049108495 takeover_from=-
+LEASE acquired tenant=crash_d3c18a66 holder=A unix_ms=1793049108503 takeover_from=-
+LEASE acquired tenant=crash_d3c18a66 holder=A unix_ms=1793049108513 takeover_from=-
+LEASE acquired tenant=crash_d3c18a66 holder=A unix_ms=1793049108522 takeover_from=- new=true
+LEASE writer_open tenant=crash_d3c18a66 holder=A unix_ms=1793049108536 
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE acquired tenant=race_d3c18a66 holder=A unix_ms=1793049115511 takeover_from=-
+LEASE acquired tenant=race_d3c18a66 holder=A unix_ms=1793049115520 takeover_from=-
+LEASE acquired tenant=race_d3c18a66 holder=A unix_ms=1793049115529 takeover_from=-
+LEASE acquired tenant=race_d3c18a66 holder=A unix_ms=1793049115538 takeover_from=-
+LEASE acquired tenant=race_d3c18a66 holder=A unix_ms=1793049115550 takeover_from=- new=true
+LEASE writer_open tenant=race_d3c18a66 holder=A unix_ms=1793049115578 
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=race_d3c18a66 holder=A unix_ms=1793049115615 
+LEASE release_begin tenant=race_d3c18a66 holder=A unix_ms=1793049115615 
+LEASE release tenant=race_d3c18a66 holder=A unix_ms=1793049115617 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE process_lease tenant=- holder=A unix_ms=1793049119890 inc=efd10422297875fc gen=1
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119894 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119902 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119920 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119928 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119935 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119941 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119947 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119953 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119960 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119967 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119974 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119981 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119989 takeover_from=-
+LEASE acquired tenant=own1_bb7e0c08 holder=A unix_ms=1793049119997 takeover_from=- new=true
+LEASE writer_open tenant=own1_bb7e0c08 holder=A unix_ms=1793049120016 
+LEASE writer_close tenant=own1_bb7e0c08 holder=A unix_ms=1793049120046 
+LEASE release_begin tenant=own1_bb7e0c08 holder=A unix_ms=1793049120046 
+LEASE release tenant=own1_bb7e0c08 holder=A unix_ms=1793049120049 ok=true
+LEASE acquired tenant=ghost_bb7e0c08 holder=A unix_ms=1793049121481 takeover_from=-
+LEASE acquired tenant=crash_bb7e0c08 holder=A unix_ms=1793049121524 takeover_from=-
+LEASE acquired tenant=crash_bb7e0c08 holder=A unix_ms=1793049121536 takeover_from=-
+LEASE acquired tenant=crash_bb7e0c08 holder=A unix_ms=1793049121545 takeover_from=-
+LEASE acquired tenant=crash_bb7e0c08 holder=A unix_ms=1793049121553 takeover_from=-
+LEASE acquired tenant=crash_bb7e0c08 holder=A unix_ms=1793049121563 takeover_from=- new=true
+LEASE writer_open tenant=crash_bb7e0c08 holder=A unix_ms=1793049121578 
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE process_lease tenant=- holder=A unix_ms=1793049128284 inc=9b7953fc8f9d061f gen=1
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149919 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149928 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149935 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149943 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149949 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149956 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149962 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149969 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149975 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149980 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149986 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149993 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049149999 takeover_from=-
+LEASE acquired tenant=own1_43945361 holder=A unix_ms=1793049150007 takeover_from=- new=true
+LEASE writer_open tenant=own1_43945361 holder=A unix_ms=1793049150018 
+LEASE writer_close tenant=own1_43945361 holder=A unix_ms=1793049150034 
+LEASE release_begin tenant=own1_43945361 holder=A unix_ms=1793049150034 
+LEASE release tenant=own1_43945361 holder=A unix_ms=1793049150037 ok=true
+LEASE acquired tenant=ghost_43945361 holder=A unix_ms=1793049151460 takeover_from=-
+LEASE acquired tenant=crash_43945361 holder=A unix_ms=1793049151478 takeover_from=-
+LEASE acquired tenant=crash_43945361 holder=A unix_ms=1793049151485 takeover_from=-
+LEASE acquired tenant=crash_43945361 holder=A unix_ms=1793049151491 takeover_from=-
+LEASE acquired tenant=crash_43945361 holder=A unix_ms=1793049151497 takeover_from=-
+LEASE acquired tenant=crash_43945361 holder=A unix_ms=1793049151503 takeover_from=- new=true
+LEASE writer_open tenant=crash_43945361 holder=A unix_ms=1793049151515 
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE process_lease tenant=- holder=A unix_ms=1793049163003 inc=643291eca988997a gen=1
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163007 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163014 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163022 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163028 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163035 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163045 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163052 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163063 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163070 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163079 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163087 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163096 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163104 takeover_from=-
+LEASE acquired tenant=own1_2fb08737 holder=A unix_ms=1793049163111 takeover_from=- new=true
+LEASE writer_open tenant=own1_2fb08737 holder=A unix_ms=1793049163126 
+LEASE writer_close tenant=own1_2fb08737 holder=A unix_ms=1793049163151 
+LEASE release_begin tenant=own1_2fb08737 holder=A unix_ms=1793049163151 
+LEASE release tenant=own1_2fb08737 holder=A unix_ms=1793049163153 ok=true
+LEASE acquired tenant=ghost_2fb08737 holder=A unix_ms=1793049164575 takeover_from=-
+LEASE acquired tenant=crash_2fb08737 holder=A unix_ms=1793049164589 takeover_from=-
+LEASE acquired tenant=crash_2fb08737 holder=A unix_ms=1793049164597 takeover_from=-
+LEASE acquired tenant=crash_2fb08737 holder=A unix_ms=1793049164605 takeover_from=-
+LEASE acquired tenant=crash_2fb08737 holder=A unix_ms=1793049164612 takeover_from=-
+LEASE acquired tenant=crash_2fb08737 holder=A unix_ms=1793049164618 takeover_from=- new=true
+LEASE writer_open tenant=crash_2fb08737 holder=A unix_ms=1793049164631 
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE process_lease tenant=- holder=A unix_ms=1793049171487 inc=5096f58c1805f10e gen=1
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176196 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176206 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176215 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176225 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176237 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176248 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176259 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176269 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176278 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176287 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176295 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176306 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176315 takeover_from=-
+LEASE acquired tenant=own1_80b83b3a holder=A unix_ms=1793049176324 takeover_from=- new=true
+LEASE writer_open tenant=own1_80b83b3a holder=A unix_ms=1793049176343 
+LEASE writer_close tenant=own1_80b83b3a holder=A unix_ms=1793049176366 
+LEASE release_begin tenant=own1_80b83b3a holder=A unix_ms=1793049176366 
+LEASE release tenant=own1_80b83b3a holder=A unix_ms=1793049176371 ok=true
+LEASE acquired tenant=ghost_80b83b3a holder=A unix_ms=1793049177806 takeover_from=-
+LEASE acquired tenant=crash_80b83b3a holder=A unix_ms=1793049177822 takeover_from=-
+LEASE acquired tenant=crash_80b83b3a holder=A unix_ms=1793049177829 takeover_from=-
+LEASE acquired tenant=crash_80b83b3a holder=A unix_ms=1793049177837 takeover_from=-
+LEASE acquired tenant=crash_80b83b3a holder=A unix_ms=1793049177845 takeover_from=-
+LEASE acquired tenant=crash_80b83b3a holder=A unix_ms=1793049177854 takeover_from=- new=true
+LEASE writer_open tenant=crash_80b83b3a holder=A unix_ms=1793049177868 
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE process_lease tenant=- holder=A unix_ms=1793049189489 inc=30bff42a9c185601 gen=1
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189492 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189500 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189507 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189513 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189520 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189529 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189540 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189547 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189556 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189564 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189572 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189581 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189588 takeover_from=-
+LEASE acquired tenant=own1_4376fa7d holder=A unix_ms=1793049189595 takeover_from=- new=true
+LEASE writer_open tenant=own1_4376fa7d holder=A unix_ms=1793049189621 
+LEASE writer_close tenant=own1_4376fa7d holder=A unix_ms=1793049189649 
+LEASE release_begin tenant=own1_4376fa7d holder=A unix_ms=1793049189649 
+LEASE release tenant=own1_4376fa7d holder=A unix_ms=1793049189652 ok=true
+LEASE acquired tenant=ghost_4376fa7d holder=A unix_ms=1793049191085 takeover_from=-
+LEASE acquired tenant=crash_4376fa7d holder=A unix_ms=1793049191107 takeover_from=-
+LEASE acquired tenant=crash_4376fa7d holder=A unix_ms=1793049191116 takeover_from=-
+LEASE acquired tenant=crash_4376fa7d holder=A unix_ms=1793049191124 takeover_from=-
+LEASE acquired tenant=crash_4376fa7d holder=A unix_ms=1793049191131 takeover_from=-
+LEASE acquired tenant=crash_4376fa7d holder=A unix_ms=1793049191140 takeover_from=- new=true
+LEASE writer_open tenant=crash_4376fa7d holder=A unix_ms=1793049191155 
+mongo-server listening on 127.0.0.1:29001 (idle close after 600 s, holder A, lease ttl 4 s)
+LEASE process_lease tenant=- holder=A unix_ms=1793049197910 inc=301570091c33117c gen=1
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped

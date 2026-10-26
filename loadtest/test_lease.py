@@ -32,7 +32,7 @@ results = []
 
 def start(port, holder):
     f = open(os.path.join(OUT, f"server-{port}.log"), "ab")
-    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{port}", "--idle-secs", "600", "--holder", holder, "--lease-ttl-secs", str(TTL)], stdout=f, stderr=f)
+    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{port}", "--idle-secs", "600", "--holder", holder, "--lease-ttl-secs", str(TTL)] + os.environ.get("EXTRA_SERVER_FLAGS", "").split(), stdout=f, stderr=f)
     for _ in range(100):
         try:
             MongoClient(f"mongodb://127.0.0.1:{port}", serverSelectionTimeoutMS=200).admin.command("ping")
@@ -87,7 +87,9 @@ def main():
         # 3. non-existent database leaves nothing behind
         ghost = f"ghost_{tag}"
         r = ca[ghost].c.find_one({})
-        listing = subprocess.run(["docker", "exec", "minio", "sh", "-c", f"ls /data/bench/tenants/{ghost} 2>&1"], capture_output=True, text=True).stdout
+        data = os.environ.get("MINIO_DATA_DIR")  # MinIO running outside docker: its data directory
+        cmd = ["sh", "-c", f"ls {data}/bench/tenants/{ghost} 2>&1"] if data else ["docker", "exec", "minio", "sh", "-c", f"ls /data/bench/tenants/{ghost} 2>&1"]
+        listing = subprocess.run(cmd, capture_output=True, text=True).stdout
         check("reading a database that does not exist creates no objects", r is None and "No such file" in listing, listing.strip()[:80])
         # 4. SIGKILL of the owner
         db = f"crash_{tag}"

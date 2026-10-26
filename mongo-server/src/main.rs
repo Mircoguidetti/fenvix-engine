@@ -88,6 +88,11 @@ struct Args {
     /// stalled on a full L0, at this pace). One GET per open writer per interval.
     #[arg(long, default_value_t = 30)]
     writer_poll_secs: u64,
+    /// One lease per process (`processes/{holder}/_lease`, renewed every third of the ttl) plus a per-database owner
+    /// record written when the database is opened, instead of one lease object renewed per open database: an idle open
+    /// database then costs no request. Every process sharing the bucket must use the same setting.
+    #[arg(long)]
+    process_lease: bool,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -163,6 +168,7 @@ async fn main() -> Result<()> {
     });
     let holder = args.holder.clone().unwrap_or_else(|| format!("{}-{:08x}", std::process::id(), rand::random::<u32>()));
     let leases = lease::Leases::new(Arc::clone(&lc.store), holder.clone(), Duration::from_secs(args.lease_ttl_secs));
+    leases.process_mode.store(args.process_lease, std::sync::atomic::Ordering::Relaxed);
     leases.disabled.store(args.no_leases, std::sync::atomic::Ordering::Relaxed);
     leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
@@ -189,6 +195,7 @@ async fn main() -> Result<()> {
     }
     eprintln!("shutting down: closing tenants cleanly");
     dbs.close_all().await;
+    leases.release_process().await;
     eprintln!("tenants closed; stopping maintenance");
     if let Some(m) = maintenance {
         m.shutdown().await;

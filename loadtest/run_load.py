@@ -49,7 +49,7 @@ def minio_usage(prefix="/data/bench/tenants"):
 
 class Server:
     def __init__(self, port, holder, outdir, idle, ttl, extra=()):
-        self.port, self.holder, self.idle, self.ttl, self.extra = port, holder, idle, ttl, list(extra)
+        self.port, self.holder, self.idle, self.ttl, self.extra = port, holder, idle, ttl, list(extra) + os.environ.get("EXTRA_SERVER_FLAGS", "").split()
         self.log = os.path.join(outdir, f"server-{port}.log")
         self.proc = None
 
