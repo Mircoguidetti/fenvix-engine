@@ -1,0 +1,35 @@
+{
+ "load": {
+  "tenants": 50000,
+  "first": 0,
+  "docs_per_tenant": 50,
+  "doc_bytes": 1000,
+  "parallel": 64,
+  "loaded": 50000,
+  "failed": 0,
+  "seconds": 1210.589891678,
+  "tenants_per_sec": 41.30217866819865,
+  "per_tenant_latency_ms": {
+   "p50": 1539.071,
+   "p99": 2004.991,
+   "max": 2643.967
+  },
+  "unix_ms_end": 1793009461044
+ },
+ "usage_before": {
+  "disk_kb": 247120,
+  "file_bytes": 152868365,
+  "objects": 11672
+ },
+ "usage_after": {
+  "disk_kb": 9202504,
+  "file_bytes": 5321020000,
+  "objects": 454012
+ },
+ "wall_seconds": 1215.3513066768646,
+ "per_tenant": {
+  "disk_kb": 179.10768,
+  "file_bytes": 103363.0327,
+  "objects": 8.8468
+ }
+}

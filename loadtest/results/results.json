@@ -1,0 +1,67 @@
+[
+ {
+  "check": "non-owner read is refused with a retryable error",
+  "ok": true,
+  "detail": "OperationFailure(\"tenant own1_5bbc50d1 is owned by server process A (lease valid for another 3637 ms); retry, full error"
+ },
+ {
+  "check": "non-owner write is refused with code 134 and the RetryableWriteError label",
+  "ok": true,
+  "detail": "OperationFailure(\"tenant own1_5bbc50d1 is owned by server process A (lease valid for another 3637 ms); retry, full error"
+ },
+ {
+  "check": "owner still reads its data",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "check": "after the owner's clean close the other process opens the tenant and sees all writes",
+  "ok": true,
+  "detail": "count=10"
+ },
+ {
+  "check": "and now the first process is refused",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "check": "reading a database that does not exist creates no objects",
+  "ok": true,
+  "detail": "ls: cannot access '/data/bench/tenants/ghost_5bbc50d1': No such file or director"
+ },
+ {
+  "check": "right after the owner was killed the other process is still refused (lease not expired)",
+  "ok": true,
+  "detail": "OperationFailure(\"tenant crash_5bbc50d1 is owned by server process A (lease valid for another 3760 m"
+ },
+ {
+  "check": "after the lease expired the other process took the tenant over and sees all 25 acknowledged writes",
+  "ok": true,
+  "detail": "count=25, took 5.7s with ttl=4s"
+ },
+ {
+  "check": "the takeover woke on the unclean path (WAL replay)",
+  "ok": true,
+  "detail": "uncleanWake=True"
+ },
+ {
+  "check": "and not before the expiry",
+  "ok": true,
+  "detail": "5.7s"
+ },
+ {
+  "check": "a restarted process with the same holder id re-takes its own tenants immediately and replays the WAL",
+  "ok": true,
+  "detail": "count=10, 0.52s, unclean=True"
+ },
+ {
+  "check": "40 concurrent first writes through both processes: only one process succeeds, the other gets 134",
+  "ok": true,
+  "detail": "winning side={0}, other codes={134}, ok=20"
+ },
+ {
+  "check": "the lease log shows a single holder for the raced tenant",
+  "ok": true,
+  "detail": "{'A'}"
+ }
+]
