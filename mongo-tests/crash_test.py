@@ -110,12 +110,14 @@ def writer(t, stop, seed, stats):
                 with t.lock:
                     i = rnd.choice(list(t.acked))
                 if r < 0.65:
+                    was_uncertain = i in t.uncertain  # an earlier failed write to this document may or may not have been applied
                     t.uncertain.add(i)
                     new = rnd.randint(0, 20)
                     res = coll.update_one({"_id": i}, {"$set": {"a": new}, "$push": {"m": 99}})
                     if res.matched_count:
                         t.acked[i] = dict(t.acked[i], a=new, m=t.acked[i]["m"] + [99])
-                    t.uncertain.discard(i)
+                    if not was_uncertain:
+                        t.uncertain.discard(i)
                 elif r < 0.75:
                     t.uncertain.add(i)
                     coll.delete_one({"_id": i})
@@ -128,11 +130,13 @@ def writer(t, stop, seed, stats):
                     t.acked[i] = d
                     t.uncertain.discard(i)
                 elif r < 0.92:
+                    was_uncertain = i in t.uncertain
                     t.uncertain.add(i)
                     d = coll.find_one_and_update({"_id": i}, {"$inc": {"b": 1}}, return_document=pymongo.ReturnDocument.AFTER)
                     if d is not None:
                         t.acked[i] = d
-                    t.uncertain.discard(i)
+                    if not was_uncertain:
+                        t.uncertain.discard(i)
                 else:
                     # transaction touching two documents
                     j = rnd.choice(list(t.acked))
@@ -182,13 +186,18 @@ def check_tenant(name, acked, uncertain, report, label):
             if not multikey and n != total:
                 problems.append((collname, "hint-scan", ix["name"], n, total))
     if "c" in db.list_collection_names() and name in acked:
-        coll = db["c"]
+        docs = {d["_id"]: d for d in db["c"].find({})}
         for i, d in acked[name].items():
             if i in uncertain[name]:
                 continue
-            got = coll.find_one({"_id": i})
-            if got is None or any(got.get(k) != d.get(k) for k in ("a", "b", "c", "u", "m", "s", "p", "on")):
-                problems.append(("c", "acked-write-lost", i))
+            got = docs.get(i)
+            if got is None:
+                problems.append(("c", "acked-write-missing", i))
+            else:
+                diff = {k: (d.get(k), got.get(k)) for k in ("a", "b", "c", "u", "m", "s", "p", "on") if got.get(k) != d.get(k)}
+                if diff:
+                    problems.append(("c", "acked-write-differs", i, diff))
+        report["acked_documents_compared"] = report.get("acked_documents_compared", 0) + sum(1 for i in acked[name] if i not in uncertain[name])
     if problems:
         report["problems"].append({"tenant": name, "at": label, "problems": [str(p) for p in problems][:10]})
     report["tenants_checked"] += 1

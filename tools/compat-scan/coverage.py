@@ -182,6 +182,9 @@ def _auto_supported():
         for key in _operators_of_test(t):
             users.setdefault(key, []).append(ok)
     supported = {f"{op}|{role}" for (op, role), oks in users.items() if oks and all(oks)}
+    # the scan files `$function` under accumulators; it is an expression (and `$accumulator` has its own tests)
+    if "$function|expression" in supported:
+        supported.add("$function|accumulator")
     evidence = {f"{op}|{role}": (sum(oks), len(oks)) for (op, role), oks in users.items()}
     return supported, evidence
 
@@ -236,6 +239,10 @@ def status(key, profile):
     return st
 
 
+# index options a server must honour (not merely record) to be counted as covered
+INDEX_OPTIONS = {"index: sparse", "index: partialFilterExpression", "index: TTL (expireAfterSeconds)", "index: compound", "index: text", "index: hashed / wildcard", "index: 2dsphere / 2d (geo)"}
+
+
 def compute(data, profile):
     out = []
     for r in data["repos"]:
@@ -244,8 +251,12 @@ def compute(data, profile):
         un = []
         for section in ("operators", "methods", "indexes"):
             for key, c in r[section].items():
-                if c["app"] and status(key, profile) == NOT:
+                if not c["app"]:
+                    continue
+                if status(key, profile) == NOT:
                     un.append((report.display(key)[0], c["app"]))
+                elif section == "indexes" and key in INDEX_OPTIONS and status(key, profile) != report.SUPPORTED:
+                    un.append((report.display(key)[0] + " (recorded only)", c["app"]))
         un.sort(key=lambda x: (-x[1], x[0]))
         out.append({"repo": r["name"], "unsupported": un})
     return out
