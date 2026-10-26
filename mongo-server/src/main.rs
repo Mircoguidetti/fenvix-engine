@@ -15,6 +15,7 @@ mod dbs;
 mod error;
 mod expr;
 mod index;
+mod js;
 mod keyenc;
 mod layout;
 mod lease;

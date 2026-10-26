@@ -291873,5 +291873,1810 @@ null,
 "pipeline": []
 }
 ]
+},
+{
+"name": "where.expression_string",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a > 2"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.expression_compares_fields",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a == this.b"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.function_string",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "function() { return this.a < this.b; }"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.return_statement_string",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "return this.a > 4"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.array_length",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.arr.length > 0"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.array_methods",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.arr.indexOf(9) >= 0"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.string_methods",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.s.toLowerCase() == 'world'"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.string_length",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.s.length === 0"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.nested_field",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.o && this.o.x > 3"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.math_functions",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "Math.max(this.a, this.b) == 5"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.regex_test",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "/^h/.test(this.s)"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.missing_field_is_undefined",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.b === undefined"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.null_field",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a === null"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.truthy_number_result",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.combined_with_other_conditions",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"a": {
+"$gte": 1
+},
+"$where": "this.b > 1"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.inside_or",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$or": [
+{
+"a": 1
+},
+{
+"$where": "this.a == 9"
+}
+]
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.count_documents",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {
+"$where": "this.a > 1"
+}
+}
+]
+},
+{
+"name": "where.delete_many",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "delete_many",
+"coll": "c",
+"filter": {
+"$where": "this.a >= 5"
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.update_many",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "update_many",
+"coll": "c",
+"filter": {
+"$where": "this.a >= 5"
+},
+"update": {
+"$set": {
+"big": true
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.find_one_and_update",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find_one_and_update",
+"coll": "c",
+"filter": {
+"$where": "this.a == 9"
+},
+"update": {
+"$inc": {
+"a": 1
+}
+},
+"return_document": "after"
+}
+]
+},
+{
+"name": "where.syntax_error",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a >>>>> 1"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.runtime_error",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a.b.c.d"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.throws",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "throw 'boom'"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.not_a_string_error",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": 5
+}
+}
+]
+},
+{
+"name": "where.not_allowed_in_aggregate_match",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$where": "this.a > 1"
+}
+}
+]
+}
+]
+},
+{
+"name": "where.empty_collection",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "create_collection",
+"coll": "c"
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.a > 1"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.int64_and_double_fields",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"l": {
+"$numberLong": "5"
+},
+"d": 2.5
+},
+{
+"_id": 2,
+"l": {
+"$numberLong": "1"
+},
+"d": 9.5
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.l > 2 && this.d < 3"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.date_field",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": {
+"$date": {
+"$numberLong": "1577836800000"
+}
+}
+},
+{
+"_id": 2,
+"d": {
+"$date": {
+"$numberLong": "1893456000000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.d.getFullYear() > 2025"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.boolean_field",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"f": true
+},
+{
+"_id": 2,
+"f": false
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$where": "this.f"
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "where.uses_index_candidates_then_where",
+"group": "$where",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+1
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 1,
+"b": 2,
+"s": "hello",
+"arr": [
+1,
+2,
+3
+],
+"o": {
+"x": 5
+}
+},
+{
+"_id": 2,
+"a": 5,
+"b": 5,
+"s": "World",
+"arr": [],
+"o": {
+"x": 1
+}
+},
+{
+"_id": 3,
+"a": 9,
+"b": 1,
+"s": "",
+"arr": [
+9
+],
+"o": null
+},
+{
+"_id": 4,
+"a": null,
+"s": "abc"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"a": {
+"$gt": 0
+},
+"$where": "this.b == 5"
+},
+"sort": {
+"_id": 1
+}
+}
+]
 }
 ]

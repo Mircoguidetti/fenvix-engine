@@ -735,6 +735,18 @@ fn positive_int(v: &Bson, stage: &str) -> R<usize> {
     Ok(n as usize)
 }
 
+/// Does a match filter use `$where` anywhere?
+fn has_where(f: &Document) -> bool {
+    f.iter().any(|(k, v)| {
+        k == "$where"
+            || match v {
+                Bson::Array(a) => a.iter().any(|x| x.as_document().map(has_where).unwrap_or(false)),
+                Bson::Document(d) => has_where(d),
+                _ => false,
+            }
+    })
+}
+
 pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreign) -> R<Vec<Document>> {
     for stage in pipeline {
         let sd = stage.as_document().filter(|d| d.len() == 1).ok_or_else(|| {
@@ -744,6 +756,9 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
         match name.as_str() {
             "$match" => {
                 let f = arg.as_document().ok_or_else(|| MongoError::new(15959, "Location15959", "the match filter must be an expression in an object".into()))?;
+                if has_where(f) {
+                    return Err(MongoError::new(2, "BadValue", "$where is not allowed inside of a $match aggregation expression".into()));
+                }
                 let mut kept = Vec::new();
                 for d in docs {
                     if matches(&d, f)? {

@@ -139,6 +139,8 @@ impl Server {
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
         let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
         let first_match = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
+        // The pipeline's own $match rejects $where; do not run it here as a plain find filter.
+        let first_match = if first_match.contains_key("$where") || format!("{first_match:?}").contains("$where") { Document::new() } else { first_match };
         let docs = {
             let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);

@@ -207,6 +207,7 @@ pub fn matches(doc: &Document, filter: &Document) -> R<bool> {
                 }
             }
             "$comment" => true,
+            "$where" => crate::js::eval_where(v, doc)?,
             "$expr" => {
                 crate::expr::validate(v)?;
                 crate::expr::truthy(crate::expr::eval(v, &crate::expr::Scope::new(doc))?.as_ref())

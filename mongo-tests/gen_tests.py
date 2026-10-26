@@ -1356,6 +1356,8 @@ import gen_tests_txn
 gen_tests_txn.register(globals())
 import gen_tests_changes
 gen_tests_changes.register(globals())
+import gen_tests_where
+gen_tests_where.register(globals())
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "tests.json"
