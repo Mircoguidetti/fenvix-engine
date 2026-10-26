@@ -170,7 +170,7 @@ def overload():
     """5,000 cold tenants all within 10 s (about 500 wakes per second, more than the server can do): without a limit and
     with limits at the throughput plateau of the knee test (32) and at the p99 rule's choice (128)."""
     res = {}
-    for label, flags in [("unlimited", []), ("limit 32", ["--max-concurrent-wakes", "32"]), ("limit 128", ["--max-concurrent-wakes", "128"])]:
+    for label, flags in [("unlimited", []), ("limit 32", ["--max-concurrent-wakes", "32"]), ("limit 128", ["--max-concurrent-wakes", "128"]), ("unlimited (repeat, to see run-to-run spread)", [])]:
         prefetch(32000, 36999)
         p = start(flags, idle=30)
         try:

@@ -145,7 +145,6 @@ if s4:
     a = jl("t3", "analysis.json")
     w("Same scenario as S4 of the first round: two server processes on one bucket, 1,000 active tenants for 5 minutes, every request to a random process, 10 SIGKILLs of a random process each followed by an automatic restart (same holder id), TTL 10 s, retries by the generator. New: the disk was warmed first (objects of the 10,000 tenants read once; I/O wait was normal), the generator keeps a log of every operation, and after every acknowledged insert or update it reads the document back **once, through the other process**: the read must see the write or fail, never return an older value or a missing document.")
     w("")
-    w(rt.summary_table(["t3"]).replace("| T3 |", "| S4 redo |") if False else "")
     g = s4["normal"]
     t = a["total"]
     w("| Metric | First S4 (cold disk, after reboot) | S4 redo (warmed disk) |")
