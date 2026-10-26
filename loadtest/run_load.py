@@ -185,7 +185,14 @@ def scenario_s3(a):
                                       "--rate", a.rate, "--duration-secs", a.s3_secs, "--docs", a.docs, "--hot-tenant", a.hot_tenant, "--hot-rate", a.hot_rate])
 
 
+def prefetch(lo, hi):
+    """Read the tenants' objects once so the disk is warm (the first S4 ran in the minutes after a host reboot)."""
+    sh(f"docker exec minio sh -c 'for i in $(seq {lo} {hi}); do cat /data/bench/tenants/t$(printf %06d $i)/*/* 2>/dev/null; done > /dev/null'")
+
+
 def scenario_s4(a):
+    if os.environ.get("PREFETCH", "1") == "1":
+        prefetch(a.s4_start, a.s4_start + a.s4_pool)
     def hooks(servers, lg, events, d):
         rng = random.Random(4)
         kills = a.s4_kills
@@ -209,7 +216,7 @@ def scenario_s4(a):
             events.write(json.dumps({"event": "restart", "holder": s.holder, "port": s.port, "unix_ms_before": t2, "unix_ms_after": now_ms()}) + "\n")
             events.flush()
     scenario_common(a, "s4", [28001, 28002], ["--mode", "rotate", "--start", a.s4_start, "--pool", a.s4_pool, "--active", a.s4_active, "--lifetime-secs", a.lifetime_secs,
-                                              "--rate", a.rate, "--duration-secs", a.s4_secs, "--docs", a.docs, "--max-attempts", 200, "--retry-backoff-ms", 100, "--op-timeout-secs", 15],
+                                              "--rate", a.rate, "--duration-secs", a.s4_secs, "--docs", a.docs, "--max-attempts", 200, "--retry-backoff-ms", 100, "--op-timeout-secs", 15, "--ryw", "true", "--oplog", "true"],
                     ttl=a.s4_lease_ttl, verify=True, hooks=hooks)
 
 

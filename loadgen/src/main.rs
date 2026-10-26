@@ -35,6 +35,84 @@ struct Cli {
 enum Cmd {
     Load(LoadArgs),
     Run(Box<RunArgs>),
+    Hot(HotArgs),
+}
+
+#[derive(Args)]
+struct HotArgs {
+    #[command(flatten)]
+    common: Common,
+    /// Tenant (database) index.
+    #[arg(long, default_value_t = 49999)]
+    tenant: u64,
+    /// Client connections, each issuing operations back to back.
+    #[arg(long, default_value_t = 8)]
+    connections: usize,
+    /// Percentage of reads (100 = reads only, 0 = writes only).
+    #[arg(long, default_value_t = 100)]
+    read_pct: u32,
+    #[arg(long, default_value_t = 30)]
+    duration_secs: u64,
+    /// Warm-up seconds before the measurement starts.
+    #[arg(long, default_value_t = 3)]
+    warmup_secs: u64,
+    #[arg(long, default_value_t = 50)]
+    docs: i32,
+    #[arg(long, default_value = "hot-out.json")]
+    out: PathBuf,
+}
+
+async fn hot(a: HotArgs) -> Result<()> {
+    let uri = a.common.uris.split(',').next().unwrap().to_string();
+    let client = make_client(&uri, a.connections as u32 + 2).await?;
+    let name = tname(&a.common.prefix, a.tenant);
+    let hist = Arc::new(Mutex::new(Histogram::<u64>::new_with_bounds(1, 600_000_000, 3).unwrap()));
+    let (ops, errs) = (Arc::new(AtomicU64::new(0)), Arc::new(AtomicU64::new(0)));
+    let start = Instant::now();
+    let measure_from = start + Duration::from_secs(a.warmup_secs);
+    let end = measure_from + Duration::from_secs(a.duration_secs);
+    let mut tasks = Vec::new();
+    for w in 0..a.connections {
+        let (client, name, hist, ops, errs) = (client.clone(), name.clone(), Arc::clone(&hist), Arc::clone(&ops), Arc::clone(&errs));
+        let (read_pct, docs) = (a.read_pct, a.docs);
+        tasks.push(tokio::spawn(async move {
+            let coll = client.database(&name).collection::<Document>("c");
+            let mut rng = StdRng::seed_from_u64(w as u64 + 1);
+            let mut n = 0i64;
+            while Instant::now() < end {
+                let t0 = Instant::now();
+                let r: Result<(), mongodb::error::Error> = if rng.gen_range(0..100) < read_pct {
+                    coll.find_one(doc! { "_id": rng.gen_range(0..docs) }).await.map(|_| ())
+                } else {
+                    n += 1;
+                    coll.update_one(doc! { "_id": (w as i32) % docs }, doc! { "$set": { "hot": n } }).await.map(|_| ())
+                };
+                if t0 >= measure_from {
+                    match r {
+                        Ok(()) => {
+                            ops.fetch_add(1, Relaxed);
+                            hist.lock().unwrap().record(t0.elapsed().as_micros().max(1) as u64).ok();
+                        }
+                        Err(_) => {
+                            errs.fetch_add(1, Relaxed);
+                        }
+                    }
+                }
+            }
+        }));
+    }
+    for t in tasks {
+        let _ = t.await;
+    }
+    let h = hist.lock().unwrap();
+    let out = json!({
+        "tenant": name, "connections": a.connections, "read_pct": a.read_pct, "duration_secs": a.duration_secs,
+        "ops": ops.load(Relaxed), "errors": errs.load(Relaxed), "ops_per_sec": ops.load(Relaxed) as f64 / a.duration_secs as f64,
+        "p50_ms": h.value_at_quantile(0.5) as f64 / 1000.0, "p99_ms": h.value_at_quantile(0.99) as f64 / 1000.0, "max_ms": h.max() as f64 / 1000.0,
+    });
+    std::fs::write(&a.out, serde_json::to_string_pretty(&out)?)?;
+    println!("{}", out);
+    Ok(())
 }
 
 #[derive(Args, Clone)]
@@ -141,6 +219,13 @@ struct RunArgs {
     /// Per-attempt timeout in seconds.
     #[arg(long, default_value_t = 10)]
     op_timeout_secs: u64,
+    /// After every acknowledged write, read it back once through the other server (needs two uris): the read must
+    /// see the write or fail, never return an older value.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    ryw: bool,
+    /// Write every logical operation (tenant, start, end, ok, attempts) to ops.jsonl.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    oplog: bool,
     /// After the run, read back every tenant that received acknowledged writes and check them.
     #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     verify: bool,
@@ -308,6 +393,12 @@ struct Stats {
     misses: u64,
     retries: u64,
     acked_writes: u64,
+    ryw_checked: u64,
+    ryw_seen: u64,
+    ryw_refused: u64,
+    ryw_error: BTreeMap<String, u64>,
+    ryw_stale: u64,
+    ryw_examples: Vec<String>,
 }
 
 #[derive(Default)]
@@ -329,6 +420,7 @@ struct Shared {
     cursor: AtomicU64,
     ops_total: AtomicU64,
     stop: AtomicBool,
+    oplog: Mutex<Vec<(String, u64, u64, bool, u32)>>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -371,6 +463,8 @@ impl Shared {
     /// One logical operation with retries across the servers. Returns the client-perceived latency.
     async fn op(&self, tenant: &str, kind: Kind, rng: &mut StdRng, act: u64, seq: u64, hot_worker: Option<u32>) -> OpOutcome {
         let t0 = Instant::now();
+        let start_unix = unix_ms();
+        let mut last_ci = 0usize;
         let ver = self.ver.fetch_add(1, Relaxed) + 1;
         let id_read = rng.gen_range(0..self.a.docs.max(1)) as i32;
         let insert_id = match hot_worker {
@@ -384,7 +478,8 @@ impl Shared {
         let mut attempts = 0u32;
         loop {
             attempts += 1;
-            let client = &self.clients[rng.gen_range(0..self.clients.len())];
+            last_ci = rng.gen_range(0..self.clients.len());
+            let client = &self.clients[last_ci];
             let coll = client.database(tenant).collection::<Document>("c");
             let fut = async {
                 match kind {
@@ -458,14 +553,61 @@ impl Shared {
                     self.stats.lock().unwrap().retries += (attempts - 1) as u64;
                 }
                 self.stats.lock().unwrap().groups[hot_worker.is_some() as usize].attempts_hist.entry(attempts.min(10)).and_modify(|c| *c += 1).or_insert(1);
+                if self.a.oplog {
+                    self.oplog.lock().unwrap().push((tenant.to_string(), start_unix, unix_ms(), true, attempts));
+                }
+                if self.a.ryw && self.clients.len() > 1 && (kind == Kind::Insert || kind == Kind::Update) {
+                    let other = (last_ci + 1) % self.clients.len();
+                    self.ryw_check(other, tenant, kind, &insert_id, &update_id, ver).await;
+                }
                 return OpOutcome { micros, ok: true };
             }
             let last = !can_retry || attempts >= self.a.max_attempts || self.is_over_hard();
             self.bump_error(&class, last);
             if last {
+                if self.a.oplog {
+                    self.oplog.lock().unwrap().push((tenant.to_string(), start_unix, unix_ms(), false, attempts));
+                }
                 return OpOutcome { micros: t0.elapsed().as_micros().max(1) as u64, ok: false };
             }
             tokio::time::sleep(Duration::from_millis(self.a.retry_backoff_ms + rng.gen_range(0..self.a.retry_backoff_ms))).await;
+        }
+    }
+
+    /// One read through the other server right after an acknowledged write: it must see the write or fail.
+    async fn ryw_check(&self, ci: usize, tenant: &str, kind: Kind, insert_id: &str, update_id: &Bson, ver: u64) {
+        let coll = self.clients[ci].database(tenant).collection::<Document>("c");
+        let id: Bson = if kind == Kind::Insert { Bson::String(insert_id.to_string()) } else { update_id.clone() };
+        let r = tokio::time::timeout(Duration::from_secs(self.a.op_timeout_secs), coll.find_one(doc! { "_id": id })).await;
+        let mut s = self.stats.lock().unwrap();
+        s.ryw_checked += 1;
+        match r {
+            Ok(Ok(Some(d))) => {
+                let ok = kind == Kind::Insert || d.get_i64("last").map_or(false, |l| l as u64 >= ver);
+                if ok {
+                    s.ryw_seen += 1;
+                } else {
+                    s.ryw_stale += 1;
+                    if s.ryw_examples.len() < 20 {
+                        s.ryw_examples.push(format!("{tenant}: acked update {ver}, other server returned {:?}", d.get("last")));
+                    }
+                }
+            }
+            Ok(Ok(None)) => {
+                s.ryw_stale += 1;
+                if s.ryw_examples.len() < 20 {
+                    s.ryw_examples.push(format!("{tenant}: acked write absent on the other server ({insert_id})"));
+                }
+            }
+            Ok(Err(e)) => {
+                let c = classify(&e);
+                if c == "cmd:134" {
+                    s.ryw_refused += 1;
+                } else {
+                    *s.ryw_error.entry(c).or_default() += 1;
+                }
+            }
+            Err(_) => *s.ryw_error.entry("timeout".into()).or_default() += 1,
         }
     }
 
@@ -569,6 +711,10 @@ async fn sampler(sh: Arc<Shared>, out: PathBuf) {
                         "entries": d.get_i64("entries").unwrap_or(0), "leases_held": d.get_i64("leasesHeld").unwrap_or(0),
                         "lease_stats": { "acquired": leases.get_i64("acquired").unwrap_or(0), "takeovers": leases.get_i64("takeovers").unwrap_or(0), "refused": leases.get_i64("refused").unwrap_or(0), "renewals": leases.get_i64("renewals").unwrap_or(0), "lost": leases.get_i64("lost").unwrap_or(0) },
                         "lat": { "put": arr("put"), "get": arr("get") },
+                        "put_by_category": d.get_document("putByCategory").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
+                        "get_by_category": d.get_document("getByCategory").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
+                        "maintenance": d.get_document("maintenance").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
+                        "wake_queue": d.get_document("wakeQueue").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
                         "req": { "put": g("put"), "copy": g("copy"), "list": g("list"), "get": g("get"), "head": g("head"), "delete": g("delete"), "billed_put_tier": g("billedPutTier"), "billed_get_tier": g("billedGetTier") },
                     }));
                 }
@@ -704,6 +850,7 @@ async fn run(a: RunArgs) -> Result<()> {
         cursor: AtomicU64::new(0),
         ops_total: AtomicU64::new(0),
         stop: AtomicBool::new(false),
+        oplog: Mutex::new(Vec::new()),
         a,
     });
     let samp = tokio::spawn(sampler(Arc::clone(&sh), sh.a.out.join("samples.jsonl")));
@@ -753,6 +900,13 @@ async fn run(a: RunArgs) -> Result<()> {
     // Let the sampler take one last sample, then stop it.
     tokio::time::sleep(Duration::from_millis(300)).await;
     samp.abort();
+    if sh.a.oplog {
+        use std::io::Write;
+        let mut f = std::io::BufWriter::new(std::fs::File::create(sh.a.out.join("ops.jsonl")).unwrap());
+        for (t, s0, e0, ok, att) in sh.oplog.lock().unwrap().iter() {
+            let _ = writeln!(f, "{}", json!({ "t": t, "s": s0, "e": e0, "ok": ok, "a": att }));
+        }
+    }
     let verification = if sh.a.verify { Some(verify(&sh).await) } else { None };
     let stats = sh.stats.lock().unwrap();
     let a = &sh.a;
@@ -764,6 +918,7 @@ async fn run(a: RunArgs) -> Result<()> {
         "hot": group_json(&stats.groups[1]),
         "errors_by_code": stats.errors, "failures_by_code": stats.failures,
         "retries": stats.retries, "acknowledged_writes": stats.acked_writes, "read_misses": stats.misses,
+        "read_your_writes": { "checked": stats.ryw_checked, "seen": stats.ryw_seen, "refused_134": stats.ryw_refused, "other_errors": stats.ryw_error, "stale": stats.ryw_stale, "examples": stats.ryw_examples },
         "ops_per_sec": sh.ops_total.load(Relaxed) as f64 / run_secs,
         "verification": verification,
     });
@@ -777,12 +932,14 @@ fn main() -> Result<()> {
     let threads = match &cli.cmd {
         Cmd::Load(a) => a.common.worker_threads,
         Cmd::Run(a) => a.common.worker_threads,
+        Cmd::Hot(a) => a.common.worker_threads,
     };
     let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(threads).enable_all().build()?;
     rt.block_on(async {
         match cli.cmd {
             Cmd::Load(a) => load(a).await,
             Cmd::Run(a) => run(*a).await,
+            Cmd::Hot(a) => hot(a).await,
         }
     })
 }

@@ -43,8 +43,44 @@ pub fn marker_path(id: impl std::fmt::Display) -> Path {
     Path::from(format!("tenants/{id}/_clean"))
 }
 
+/// Requests made by the standalone compaction and GC passes (they are also counted, by object category, in the
+/// store-level counters; these totals say how many of them came from maintenance).
+#[derive(Default)]
+pub struct MaintTotals {
+    pub compact_runs: std::sync::atomic::AtomicU64,
+    pub compact_puts: std::sync::atomic::AtomicU64,
+    pub compact_gets: std::sync::atomic::AtomicU64,
+    pub gc_runs: std::sync::atomic::AtomicU64,
+    pub gc_deletes: std::sync::atomic::AtomicU64,
+    pub gc_lists: std::sync::atomic::AtomicU64,
+    pub gc_gets: std::sync::atomic::AtomicU64,
+}
+
+pub static MAINT: MaintTotals = MaintTotals {
+    compact_runs: std::sync::atomic::AtomicU64::new(0),
+    compact_puts: std::sync::atomic::AtomicU64::new(0),
+    compact_gets: std::sync::atomic::AtomicU64::new(0),
+    gc_runs: std::sync::atomic::AtomicU64::new(0),
+    gc_deletes: std::sync::atomic::AtomicU64::new(0),
+    gc_lists: std::sync::atomic::AtomicU64::new(0),
+    gc_gets: std::sync::atomic::AtomicU64::new(0),
+};
+
+/// WAL flush interval override in milliseconds (0 = slatedb's default of 100 ms).
+pub static FLUSH_INTERVAL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Acknowledge a write once it is in the memtable, before it is durable: it becomes durable at the next periodic
+/// WAL flush (at most one flush interval plus one PUT later). Off by default; a crash can lose acknowledged writes.
+pub static ACK_BEFORE_DURABLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Flush the WAL explicitly after every write batch (the baseline). When false a write waits for the next
+/// periodic flush, which batches concurrent writes into one WAL object at the cost of up to one interval of latency.
+pub static EXPLICIT_FLUSH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
+    let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
+    if ms > 0 {
+        s.flush_interval = Some(Duration::from_millis(ms));
+    }
     s.garbage_collector_options = None;
     s.compactor_options = None;
     s.manifest_poll_interval = LONG_POLL;
@@ -340,8 +376,12 @@ impl Tenant {
         }
         let handle = db.write(batch).await?;
         // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
-        db.flush().await?;
-        handle.await_durable().await?;
+        if EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) {
+            db.flush().await?;
+        }
+        if !ACK_BEFORE_DURABLE.load(std::sync::atomic::Ordering::Relaxed) {
+            handle.await_durable().await?;
+        }
         Ok(())
     }
 
@@ -468,6 +508,13 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
         admin.delete_checkpoint(cp.id).await?;
     }
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        let snap = counting.counters.snapshot();
+        MAINT.compact_runs.fetch_add(1, Relaxed);
+        MAINT.compact_puts.fetch_add(snap.put + snap.multipart_create + snap.multipart_complete, Relaxed);
+        MAINT.compact_gets.fetch_add(snap.get + snap.get_range + snap.head, Relaxed);
+    }
     Ok(Some(CompactionRecord {
         tenant: id.to_string(),
         l0_before,
@@ -490,6 +537,14 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, mi
         ..GarbageCollectorOptions::default()
     };
     Admin::builder(tenant_path(&id), store).build().run_gc_once(opts).await?;
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        let snap = counting.counters.snapshot();
+        MAINT.gc_runs.fetch_add(1, Relaxed);
+        MAINT.gc_deletes.fetch_add(snap.delete, Relaxed);
+        MAINT.gc_lists.fetch_add(snap.list, Relaxed);
+        MAINT.gc_gets.fetch_add(snap.get + snap.get_range + snap.head, Relaxed);
+    }
     Ok(GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() })
 }
 
