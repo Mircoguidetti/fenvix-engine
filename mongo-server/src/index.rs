@@ -884,16 +884,28 @@ pub fn id_enc(id: &Bson) -> Vec<u8> {
     encode_sortable(id)
 }
 
-/// TTL state of a collection's indexes: `(field, seconds)` of every single-field TTL index.
-pub fn ttl_specs(indexes: &[IndexDef]) -> Vec<(String, i64)> {
-    indexes.iter().filter(|i| i.state == State::Ready && i.ttl.is_some() && i.key.len() == 1).map(|i| (i.key[0].0.clone(), i.ttl.unwrap())).collect()
+/// A single-field TTL index: documents whose `field` date plus `secs` has passed are expired.
+#[derive(Clone, Debug)]
+pub struct TtlSpec {
+    pub field: String,
+    pub secs: i64,
+    /// Only documents matching a partial TTL index's filter expire.
+    pub partial: Option<Document>,
+}
+
+pub fn ttl_specs(indexes: &[IndexDef]) -> Vec<TtlSpec> {
+    indexes
+        .iter()
+        .filter(|i| i.state == State::Ready && i.ttl.is_some() && i.key.len() == 1)
+        .map(|i| TtlSpec { field: i.key[0].0.clone(), secs: i.ttl.unwrap(), partial: i.partial.clone() })
+        .collect()
 }
 
 /// Is the document past its expiry for any TTL index? Dates in arrays use the earliest date.
-pub fn is_expired(d: &Document, specs: &[(String, i64)], now_ms: i64) -> bool {
-    for (field, secs) in specs {
+pub fn is_expired(d: &Document, specs: &[TtlSpec], now_ms: i64) -> bool {
+    for sp in specs {
         let mut earliest: Option<i64> = None;
-        for v in path_values(d, field) {
+        for v in path_values(d, &sp.field) {
             let mut take = |x: &Bson| {
                 if let Bson::DateTime(t) = x {
                     let ms = t.timestamp_millis();
@@ -906,7 +918,12 @@ pub fn is_expired(d: &Document, specs: &[(String, i64)], now_ms: i64) -> bool {
             }
         }
         if let Some(ms) = earliest {
-            if ms.saturating_add(secs.saturating_mul(1000)) <= now_ms {
+            if ms.saturating_add(sp.secs.saturating_mul(1000)) <= now_ms {
+                if let Some(p) = &sp.partial {
+                    if !matches(d, p).unwrap_or(false) {
+                        continue;
+                    }
+                }
                 return true;
             }
         }

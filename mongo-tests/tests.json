@@ -282033,5 +282033,2011 @@ null,
 }
 }
 ]
+},
+{
+"name": "ttl.expired_docs_removed",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+},
+{
+"_id": 3,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.expire_after_zero_seconds",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.non_date_values_never_expire",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "2001-01-01"
+},
+{
+"_id": 2,
+"t": 5
+},
+{
+"_id": 3
+},
+{
+"_id": 4,
+"t": null
+},
+{
+"_id": 5,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.array_uses_earliest_date",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": [
+{
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+{
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+]
+},
+{
+"_id": 2,
+"t": [
+{
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+{
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+]
+},
+{
+"_id": 3,
+"t": [
+{
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"x"
+]
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.nested_path",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"u.exp",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"u": {
+"exp": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+},
+{
+"_id": 2,
+"u": {
+"exp": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+},
+{
+"_id": 3,
+"u": [
+{
+"exp": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+]
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.compound_index_ignores_ttl",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+],
+[
+"x",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"x": 1
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "ttl.partial_only_matching_docs_expire",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0,
+"partialFilterExpression": {
+"kind": "tmp"
+}
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"kind": "tmp"
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"kind": "keep"
+},
+{
+"_id": 3,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.relative_expiry_visible_then_gone",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 3
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$nowOffsetMs": 0
+}
+},
+{
+"_id": 2,
+"t": {
+"$nowOffsetMs": 60000
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+},
+{
+"op": "sleep",
+"secs": 7
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.inserted_after_index_expire",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 1
+}
+},
+{
+"op": "sleep",
+"secs": 1
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.index_created_on_existing_expired_docs",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.update_extends_lifetime",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$nowOffsetMs": -50000
+}
+},
+{
+"_id": 2,
+"t": {
+"$nowOffsetMs": -50000
+}
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"$set": {
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+}
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.update_to_past_expires",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"$set": {
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+}
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.replace_with_new_date",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "replace_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"v": 1
+}
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.count_distinct_aggregate_agree",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 1
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 2
+},
+{
+"_id": 3,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 0
+},
+{
+"_id": 4,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 1
+},
+{
+"_id": 5,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 2
+},
+{
+"_id": 6,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 0
+},
+{
+"_id": 7,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 1
+},
+{
+"_id": 8,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 2
+},
+{
+"_id": 9,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 0
+},
+{
+"_id": 10,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 1
+},
+{
+"_id": 11,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 2
+},
+{
+"_id": 12,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 0
+},
+{
+"_id": 13,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 1
+},
+{
+"_id": 14,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 2
+},
+{
+"_id": 15,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 0
+},
+{
+"_id": 16,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 1
+},
+{
+"_id": 17,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 2
+},
+{
+"_id": 18,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 0
+},
+{
+"_id": 19,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 1
+},
+{
+"_id": 20,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 2
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {}
+},
+{
+"op": "distinct",
+"coll": "c",
+"key": "g"
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": "$g",
+"n": {
+"$sum": 1
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "ttl.listindexes_shape",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 3600
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "ttl.survives_tenant_close",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 60
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+},
+{
+"op": "tenant_close"
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.unique_key_freed_after_expiry",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"k",
+1
+]
+],
+"opts": {
+"unique": true
+}
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": "x",
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 2,
+"k": "x",
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.id_reusable_after_expiry",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.collmod_changes_expiry",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 3600
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$nowOffsetMs": -20000
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 2
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+},
+{
+"op": "command",
+"cmd": {
+"collMod": "c",
+"index": {
+"keyPattern": {
+"t": 1
+},
+"expireAfterSeconds": 1
+}
+},
+"pick": [
+"expireAfterSeconds_old",
+"expireAfterSeconds_new",
+"ok"
+]
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "ttl.collmod_by_name",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 3600,
+"name": "tt"
+}
+},
+{
+"op": "command",
+"cmd": {
+"collMod": "c",
+"index": {
+"name": "tt",
+"expireAfterSeconds": 7200
+}
+},
+"pick": [
+"expireAfterSeconds_old",
+"expireAfterSeconds_new",
+"ok"
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "ttl.collmod_non_ttl_index_becomes_ttl",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"name": "plain"
+}
+},
+{
+"op": "command",
+"cmd": {
+"collMod": "c",
+"index": {
+"name": "plain",
+"expireAfterSeconds": 5
+}
+},
+"pick": [
+"expireAfterSeconds_old",
+"expireAfterSeconds_new",
+"ok"
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "ttl.collmod_missing_index_error",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1
+}
+],
+"ordered": true
+},
+{
+"op": "command",
+"cmd": {
+"collMod": "c",
+"index": {
+"name": "nope",
+"expireAfterSeconds": 5
+}
+},
+"pick": null
+}
+]
+},
+{
+"name": "ttl.drop_ttl_index_stops_expiry",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 3600
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$nowOffsetMs": -30000
+}
+}
+],
+"ordered": true
+},
+{
+"op": "drop_index",
+"coll": "c",
+"index": "t_1"
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 1
+}
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.delete_and_find_respect_expiry",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 1
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 1
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "delete_many",
+"coll": "c",
+"filter": {
+"g": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.update_many_skips_expired",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"g": 1
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"g": 1
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "update_many",
+"coll": "c",
+"filter": {
+"g": 1
+},
+"update": {
+"$set": {
+"z": 1
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"projection": {
+"t": 0,
+"u": 0,
+"d": 0
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "ttl.sort_limit_with_index_skips_expired",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 3,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 4,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 5,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+}
+},
+{
+"_id": 6,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+},
+{
+"_id": 7,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+},
+{
+"_id": 8,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+},
+{
+"_id": 9,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+},
+{
+"_id": 10,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"sort": {
+"t": 1,
+"_id": 1
+},
+"limit": 3,
+"projection": {
+"t": 0
+}
+}
+]
+},
+{
+"name": "ttl.lookup_foreign_respects_expiry",
+"group": "TTL indexes",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "f",
+"keys": [
+[
+"t",
+1
+]
+],
+"opts": {
+"expireAfterSeconds": 0
+}
+},
+{
+"op": "insert_many",
+"coll": "f",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": {
+"$numberLong": "978307200000"
+}
+},
+"k": 1
+},
+{
+"_id": 2,
+"t": {
+"$date": {
+"$numberLong": "4102444800000"
+}
+},
+"k": 1
+}
+],
+"ordered": true
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1
+}
+],
+"ordered": true
+},
+{
+"op": "sleep",
+"secs": 4
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$lookup": {
+"from": "f",
+"localField": "k",
+"foreignField": "k",
+"as": "m"
+}
+},
+{
+"$project": {
+"m": {
+"_id": 1
+}
+}
+}
+]
+}
+]
 }
 ]

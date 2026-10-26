@@ -8,7 +8,7 @@ use bson::{doc, Bson, Document};
 use bytes::Bytes;
 use futures::{StreamExt, TryStreamExt};
 use object_store::path::Path;
-use object_store::ObjectStore;
+use object_store::{ObjectStore, ObjectStoreExt};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicI64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
@@ -28,6 +28,7 @@ pub struct Dbs {
     pub global: Arc<tenant_bench::counting::CountingStore>,
     pub readers: Arc<AtomicI64>,
     pub writers: Arc<AtomicI64>,
+    pub ttl: Arc<crate::ttl::TtlStats>,
 }
 
 pub struct Entry {
@@ -43,6 +44,11 @@ pub struct Entry {
     pub last_used: Instant,
     pub wakes: u64,
     pub closes: u64,
+    /// A collection with a TTL index was used while this entry was open: a close writes the expiry hint.
+    pub(crate) ttl_seen: bool,
+    pub(crate) hint_written: bool,
+    /// When each collection's expired documents were last swept by a write command.
+    pub(crate) swept: HashMap<String, Instant>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -52,7 +58,41 @@ pub fn valid_db_name(name: &str) -> bool {
 
 impl Dbs {
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
-        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)) })
+        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()) })
+    }
+
+    /// Entries that currently exist (open or not).
+    pub(crate) fn entries_snapshot(&self) -> Vec<Arc<AsyncMutex<Entry>>> {
+        self.entries.lock().unwrap().values().cloned().collect()
+    }
+
+    pub(crate) fn raw_store(&self) -> Arc<dyn ObjectStore> {
+        Arc::clone(&self.raw)
+    }
+
+    /// The entry of a database without locking it.
+    pub(crate) fn lock_handle(&self, name: &str) -> Arc<AsyncMutex<Entry>> {
+        let mut m = self.entries.lock().unwrap();
+        m.entry(name.to_string())
+            .or_insert_with(|| {
+                Arc::new(AsyncMutex::new(Entry {
+                    name: name.to_string(),
+                    lc: Arc::clone(&self.lc),
+                    raw: Arc::clone(&self.raw),
+                    tenant: None,
+                    leases: Arc::clone(&self.leases),
+                    readers: Arc::clone(&self.readers),
+                    writers: Arc::clone(&self.writers),
+                    counted: 0,
+                    last_used: Instant::now(),
+                    wakes: 0,
+                    closes: 0,
+                    ttl_seen: false,
+                    hint_written: false,
+                    swept: HashMap::new(),
+                }))
+            })
+            .clone()
     }
 
     pub fn entry_count(&self) -> usize {
@@ -91,6 +131,9 @@ impl Dbs {
                         last_used: Instant::now(),
                         wakes: 0,
                         closes: 0,
+                        ttl_seen: false,
+                        hint_written: false,
+                        swept: HashMap::new(),
                     }))
                 })
                 .clone()
@@ -266,6 +309,7 @@ impl Entry {
     }
 
     pub async fn close(&mut self) -> Result<()> {
+        self.write_ttl_hint().await;
         let had = self.tenant.is_some();
         if let Some(t) = self.tenant.take() {
             let r = t.close().await;
@@ -338,6 +382,91 @@ impl Entry {
         self.lc.touched.lock().unwrap().remove(&self.name);
         self.leases.forget(&self.name);
         Ok(())
+    }
+
+    pub(crate) fn is_writer_open(&self) -> bool {
+        self.tenant.as_ref().map(|t| t.is_writer()).unwrap_or(false)
+    }
+
+    pub(crate) fn is_open(&self) -> bool {
+        self.tenant.is_some()
+    }
+
+    pub(crate) fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Earliest instant (ms) at which any document of this tenant expires, from the first date entry of each TTL index.
+    pub async fn next_expiry(&mut self) -> Result<Option<i64>> {
+        let mut best: Option<i64> = None;
+        for c in self.collections().await? {
+            for idx in self.indexes(&c).await? {
+                if idx.state != crate::index::State::Ready || idx.ttl.is_none() || idx.key.len() != 1 {
+                    continue;
+                }
+                let asc = idx.key[0].1;
+                let prefix = idx.prefix(&c);
+                let b = if asc { 10u8 } else { !10u8 };
+                let mut start = prefix.clone();
+                start.push(b);
+                let mut end = prefix.clone();
+                end.push(b + 1);
+                // first entry of the date bracket (ascending), or the last one for a descending index (smallest date)
+                let rows = self.scan_range(&start, Some(&end), !asc, Some(1), 4096).await?;
+                if let Some((k, _)) = rows.first() {
+                    if let Some(comps) = crate::index::entry_comps(k, &prefix) {
+                        if comps.len() >= 9 {
+                            let mut b = [0u8; 8];
+                            b.copy_from_slice(&comps[1..9]);
+                            if !asc {
+                                for x in b.iter_mut() {
+                                    *x = !*x;
+                                }
+                            }
+                            let ms = (u64::from_be_bytes(b) ^ (1 << 63)) as i64;
+                            let exp = ms.saturating_add(idx.ttl.unwrap().saturating_mul(1000));
+                            best = Some(best.map(|x| x.min(exp)).unwrap_or(exp));
+                        }
+                    }
+                }
+            }
+        }
+        Ok(best)
+    }
+
+    /// Record when this tenant's next document expires as a tiny object outside the tenant's prefix, so a
+    /// maintenance pass can find tenants with due documents with one LIST and no wake. Best effort.
+    async fn write_ttl_hint(&mut self) {
+        if !self.is_writer_open() || !(self.ttl_seen || self.hint_written) {
+            return;
+        }
+        let next = match self.next_expiry().await {
+            Ok(n) => n,
+            Err(e) => {
+                eprintln!("ttl hint of {}: {e:#}", self.name);
+                return;
+            }
+        };
+        let dir = Path::from(format!("ttl-hints/{}", self.name));
+        let old: Vec<Path> = match self.raw.list(Some(&dir)).map(|m| m.map(|m| m.location)).try_collect().await {
+            Ok(v) => v,
+            Err(_) => vec![],
+        };
+        let want = next.map(|ms| Path::from(format!("ttl-hints/{}/{:020}", self.name, ms.max(0))));
+        for p in old {
+            if Some(&p) != want.as_ref() {
+                let _ = self.raw.delete(&p).await;
+            }
+        }
+        if let Some(p) = want {
+            if let Err(e) = self.raw.put(&p, bytes::Bytes::new().into()).await {
+                eprintln!("ttl hint of {}: {e:#}", self.name);
+            } else {
+                self.hint_written = true;
+            }
+        } else {
+            self.hint_written = false;
+        }
     }
 
     // ---- document-level helpers --------------------------------------------------------

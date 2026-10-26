@@ -18,6 +18,21 @@ pub(crate) fn now_ms() -> i64 {
 }
 
 impl Server {
+    /// Before a write to a collection with TTL indexes, remove its expired documents (at most once a second),
+    /// so an expired document cannot hold an `_id` or a unique key.
+    pub(crate) async fn presweep(&self, g: &mut Entry, coll: &str, indexes: &[IndexDef]) -> R<()> {
+        if !indexes.iter().any(|i| i.ttl.is_some() && i.state == index::State::Ready) {
+            return Ok(());
+        }
+        if g.swept.get(coll).map(|t| t.elapsed().as_millis() < 1000).unwrap_or(false) {
+            return Ok(());
+        }
+        g.swept.insert(coll.to_string(), std::time::Instant::now());
+        let n = crate::ttl::sweep_coll(g, coll, now_ms(), 1).await?;
+        self.dbs.ttl.docs_expired.fetch_add(n as u64, std::sync::atomic::Ordering::Relaxed);
+        Ok(())
+    }
+
     /// Matching documents of `coll`: (docs, indexes) with TTL-expired documents hidden.
     pub(crate) async fn matching(&self, g: &mut Entry, db: &str, coll: &str, filter: &Document, hint: Option<&Bson>) -> R<Vec<Document>> {
         let indexes = self.load_indexes(g, db, coll).await?;
@@ -156,6 +171,7 @@ impl Server {
         let mut g = self.dbs.lock(db).await;
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
+        self.presweep(&mut g, coll, &indexes).await?;
         let mut w = Writes::new();
         let mut errors: Vec<Bson> = Vec::new();
         let mut n = 0;
@@ -218,6 +234,7 @@ impl Server {
         let mut g = self.dbs.lock(db).await;
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
+        self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
         let mut w = Writes::new();
         let mut acc = UpdAcc::default();
@@ -304,6 +321,7 @@ impl Server {
         let mut g = self.dbs.lock(db).await;
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
+        self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
         let hint = resolve_hint(&indexes, cmd.get("hint"))?;
         let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: None }).await?;
@@ -356,6 +374,7 @@ impl Server {
         let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'delete.deletes' is missing but a required field".into()))?;
         let mut g = self.dbs.lock(db).await;
         let indexes = self.load_indexes(&mut g, db, coll).await?;
+        self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
         let mut w = Writes::new();
         let mut n = 0;
@@ -390,7 +409,7 @@ struct UpdAcc {
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<IndexDef>, ttl_specs: &[(String, i64)], w: &mut Writes, spec: &Bson, i: usize, acc: &mut UpdAcc) -> R<()> {
+async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<IndexDef>, ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, i: usize, acc: &mut UpdAcc) -> R<()> {
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "update statement must be an object".into()))?;
                 let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'updates.q' is missing but a required field".into()))?;
                 let u = match spec.get("u") {
@@ -437,7 +456,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
 }
 
 
-async fn delete_stmt(g: &mut Entry, coll: &str, indexes: &[IndexDef], ttl_specs: &[(String, i64)], w: &mut Writes, spec: &Bson, n: &mut i32) -> R<()> {
+async fn delete_stmt(g: &mut Entry, coll: &str, indexes: &[IndexDef], ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, n: &mut i32) -> R<()> {
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "delete statement must be an object".into()))?;
                 let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'deletes.q' is missing but a required field".into()))?;
                 let limit = int_arg(spec.get("limit")).unwrap_or(0);
@@ -454,7 +473,7 @@ async fn delete_stmt(g: &mut Entry, coll: &str, indexes: &[IndexDef], ttl_specs:
 }
 
 /// TTL filter argument for [`FindOpts`]: `None` when the collection has no TTL index.
-pub(crate) fn ttl_ctx(specs: &[(String, i64)]) -> Option<(&[(String, i64)], i64)> {
+pub(crate) fn ttl_ctx(specs: &[index::TtlSpec]) -> Option<(&[index::TtlSpec], i64)> {
     if specs.is_empty() {
         None
     } else {

@@ -154,6 +154,9 @@ impl Server {
         if indexes.iter().any(|i| i.state != State::Ready) {
             self.resume_builds(db, coll);
         }
+        if indexes.iter().any(|i| i.ttl.is_some()) {
+            g.ttl_seen = true;
+        }
         Ok(indexes)
     }
 
@@ -265,6 +268,9 @@ impl Server {
                     }
                 }
             }
+            if idx.get("expireAfterSeconds").is_some() && key.len() > 1 {
+                return Err(MongoError::new(67, "CannotCreateIndex", format!("TTL indexes are single-field indexes, compound indexes do not support TTL. Index spec: {}", fmt_doc(&idx))));
+            }
             if let Some(v) = idx.get("expireAfterSeconds") {
                 match num_opt(v) {
                     Some(n) if n >= 0.0 && n <= 2147483647.0 => {}
@@ -336,6 +342,41 @@ impl Server {
         if !changed {
             reply.insert("note", "all indexes already exist");
         }
+        reply.insert("ok", 1.0);
+        Ok(reply)
+    }
+
+
+    pub(crate) async fn coll_mod(&self, db: &str, cmd: &Document) -> R<Document> {
+        let coll = collection_name(cmd, "collMod")?;
+        let mut g = self.dbs.lock(db).await;
+        if !g.collections().await?.iter().any(|n| n == coll) {
+            return Err(MongoError::namespace_not_found(format!("ns does not exist: {db}.{coll}")));
+        }
+        let Some(Bson::Document(spec)) = cmd.get("index") else { return Ok(ok()) };
+        let mut indexes = self.load_indexes(&mut g, db, coll).await?;
+        let pos = if let Ok(name) = spec.get_str("name") {
+            indexes.iter().position(|i| i.name == name && i.state == State::Ready)
+        } else if let Ok(kp) = spec.get_document("keyPattern") {
+            indexes.iter().position(|i| i.state == State::Ready && i.spec.get_document("key").map(|k| k == kp).unwrap_or(false))
+        } else {
+            return Err(MongoError::new(2, "BadValue", "Cannot specify both key pattern and name.".into()));
+        };
+        let Some(pos) = pos else { return Err(MongoError::new(27, "IndexNotFound", "cannot find index in ns".to_string() + &format!(" {db}.{coll} for the given spec"))) };
+        let Some(new) = spec.get("expireAfterSeconds") else { return Ok(ok()) };
+        let Some(newn) = num_opt(new).filter(|n| *n >= 0.0) else {
+            return Err(MongoError::new(2, "BadValue", "TTL index 'expireAfterSeconds' option must be within an acceptable range".into()));
+        };
+        let old = indexes[pos].spec.get("expireAfterSeconds").and_then(num_opt);
+        let mut stored = indexes[pos].to_stored();
+        stored.insert("expireAfterSeconds", if (newn as i64) <= i32::MAX as i64 { Bson::Int32(newn as i32) } else { Bson::Int64(newn as i64) });
+        indexes[pos] = IndexDef::from_stored(&stored).unwrap();
+        g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
+        let mut reply = Document::new();
+        if let Some(o) = old {
+            reply.insert("expireAfterSeconds_old", Bson::Int64(o as i64));
+        }
+        reply.insert("expireAfterSeconds_new", Bson::Int64(newn as i64));
         reply.insert("ok", 1.0);
         Ok(reply)
     }

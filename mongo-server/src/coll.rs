@@ -46,7 +46,7 @@ pub struct FindOpts<'a> {
     pub want: Option<usize>,
     pub hint: Hint,
     /// TTL indexes and the clock: expired documents are invisible.
-    pub ttl: Option<(&'a [(String, i64)], i64)>,
+    pub ttl: Option<(&'a [index::TtlSpec], i64)>,
     pub ov: Option<&'a Overlay>,
 }
 

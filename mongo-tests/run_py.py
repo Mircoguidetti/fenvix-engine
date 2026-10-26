@@ -383,12 +383,25 @@ def raw_batches(db, coll, first):
     return {"batch_sizes": sizes, "ids_sorted": ids == sorted(ids), "n": len(ids)}
 
 
+def subst_now(x):
+    """Replace {"$nowOffsetMs": n} with the current time plus n ms (TTL tests)."""
+    import datetime as _dt
+    if isinstance(x, dict):
+        if set(x) == {"$nowOffsetMs"}:
+            return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0) + _dt.timedelta(milliseconds=int(x["$nowOffsetMs"]))
+        return {k: subst_now(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [subst_now(v) for v in x]
+    return x
+
+
 def run_script(ctx, test, dbname):
     results = []
     db = ctx.client[dbname]
     ctx.asserts = []
     for step in copy.deepcopy(test["steps"]):
         try:
+            step = subst_now(step)
             r = exec_step(ctx, db, dbname, step)
             if ctx.client is not None:
                 db = ctx.client[dbname]  # a restart replaces the client

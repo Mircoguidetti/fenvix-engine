@@ -197,3 +197,49 @@ def register(g):
     t("plan_double_bounds", [ins("c", D), cix("c", [["a", 1]]), explain({"a": {"$gt": 2.5, "$lte": 6.5}})])
     t("plan_dotted_array_path_multikey", [ins("c", [{"_id": i, "items": [{"k": i % 4}, {"k": (i + 1) % 4}]} for i in range(1, 30)]), cix("c", [["items.k", 1]]), explain({"items.k": 2})])
     t("res_dotted_array_path", [ins("c", [{"_id": i, "items": [{"k": i % 4}, {"k": (i + 1) % 4}]} for i in range(1, 30)]), cix("c", [["items.k", 1]]), fs({"items.k": 2}), fs({"items.k": {"$gt": 2}}), fs({"items": {"$elemMatch": {"k": 3}}})])
+
+    # ================================================================================================
+    # TTL indexes (results7, step 3). The reference mongod runs its TTL monitor every second
+    # (--setParameter ttlMonitorSleepSecs=1); tests sleep long enough for it to have run.
+    # ================================================================================================
+    GT = "TTL indexes"
+    PAST = datetime.datetime(2001, 1, 1)
+    FUTURE = datetime.datetime(2100, 1, 1)
+    now = lambda ms: {"$nowOffsetMs": ms}
+
+    def tt(name, steps, **flags):
+        add("ttl." + name, steps, GT, **flags)
+
+    def ids(filter=None, **kw):
+        return find("c", filter or {}, projection={"t": 0, "u": 0, "d": 0}, sort={"_id": 1}, **kw)
+
+    def wait(secs=4):
+        return {"op": "sleep", "secs": secs}
+
+    tt("expired_docs_removed", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}, {"_id": 3, "t": PAST}]), wait(), ids()])
+    tt("expire_after_zero_seconds", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}]), wait(), ids()])
+    tt("non_date_values_never_expire", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": "2001-01-01"}, {"_id": 2, "t": 5}, {"_id": 3}, {"_id": 4, "t": None}, {"_id": 5, "t": PAST}]), wait(), ids()])
+    tt("array_uses_earliest_date", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": [FUTURE, PAST]}, {"_id": 2, "t": [FUTURE, FUTURE]}, {"_id": 3, "t": [PAST, "x"]}]), wait(), ids()])
+    tt("nested_path", [cix("c", [["u.exp", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "u": {"exp": PAST}}, {"_id": 2, "u": {"exp": FUTURE}}, {"_id": 3, "u": [{"exp": PAST}]}]), wait(), ids()])
+    tt("compound_index_ignores_ttl", [cix("c", [["t", 1], ["x", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST, "x": 1}]), wait(), ids(), {"op": "list_indexes", "coll": "c", "full": True}])
+    tt("partial_only_matching_docs_expire", [cix("c", [["t", 1]], expireAfterSeconds=0, partialFilterExpression={"kind": "tmp"}), ins("c", [{"_id": 1, "t": PAST, "kind": "tmp"}, {"_id": 2, "t": PAST, "kind": "keep"}, {"_id": 3, "t": PAST}]), wait(), ids()])
+    tt("relative_expiry_visible_then_gone", [cix("c", [["t", 1]], expireAfterSeconds=3), ins("c", [{"_id": 1, "t": now(0)}, {"_id": 2, "t": now(60000)}]), ids(), wait(7), ids()])
+    tt("inserted_after_index_expire", [cix("c", [["t", 1]], expireAfterSeconds=1), wait(1), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}]), wait(), ids()])
+    tt("index_created_on_existing_expired_docs", [ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}]), cix("c", [["t", 1]], expireAfterSeconds=60), wait(), ids()])
+    tt("update_extends_lifetime", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": now(-50000)}, {"_id": 2, "t": now(-50000)}]), upd("c", {"_id": 1}, {"$set": {"t": FUTURE}}), wait(), ids()])
+    tt("update_to_past_expires", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": FUTURE}]), upd("c", {"_id": 1}, {"$set": {"t": PAST}}), wait(), ids()])
+    tt("replace_with_new_date", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": FUTURE}]), upd("c", {"_id": 1}, {"t": PAST, "v": 1}, kind="replace_one"), wait(), ids()])
+    tt("count_distinct_aggregate_agree", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": i, "t": PAST if i % 2 else FUTURE, "g": i % 3} for i in range(1, 21)]), wait(), {"op": "count_documents", "coll": "c", "filter": {}}, {"op": "distinct", "coll": "c", "key": "g"}, agg("c", [{"$group": {"_id": "$g", "n": {"$sum": 1}}}, {"$sort": {"_id": 1}}])])
+    tt("listindexes_shape", [cix("c", [["t", 1]], expireAfterSeconds=3600), {"op": "list_indexes", "coll": "c", "full": True}])
+    tt("survives_tenant_close", [cix("c", [["t", 1]], expireAfterSeconds=60), ins("c", [{"_id": 1, "t": PAST}, {"_id": 2, "t": FUTURE}]), {"op": "tenant_close"}, wait(), ids(), {"op": "tenant_close"}, ids()])
+    tt("unique_key_freed_after_expiry", [cix("c", [["k", 1]], unique=True), cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "k": "x", "t": PAST}]), wait(), ins("c", [{"_id": 2, "k": "x", "t": FUTURE}]), ids()])
+    tt("id_reusable_after_expiry", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST}]), wait(), ins("c", [{"_id": 1, "t": FUTURE}]), ids()])
+    tt("collmod_changes_expiry", [cix("c", [["t", 1]], expireAfterSeconds=3600), ins("c", [{"_id": 1, "t": now(-20000)}, {"_id": 2, "t": FUTURE}]), wait(2), ids(), cmd({"collMod": "c", "index": {"keyPattern": {"t": 1}, "expireAfterSeconds": 1}}, ["expireAfterSeconds_old", "expireAfterSeconds_new", "ok"]), wait(), ids(), {"op": "list_indexes", "coll": "c", "full": True}])
+    tt("collmod_by_name", [cix("c", [["t", 1]], expireAfterSeconds=3600, name="tt"), cmd({"collMod": "c", "index": {"name": "tt", "expireAfterSeconds": 7200}}, ["expireAfterSeconds_old", "expireAfterSeconds_new", "ok"]), {"op": "list_indexes", "coll": "c", "full": True}])
+    tt("collmod_non_ttl_index_becomes_ttl", [cix("c", [["t", 1]], name="plain"), cmd({"collMod": "c", "index": {"name": "plain", "expireAfterSeconds": 5}}, ["expireAfterSeconds_old", "expireAfterSeconds_new", "ok"]), {"op": "list_indexes", "coll": "c", "full": True}])
+    tt("collmod_missing_index_error", [ins("c", [{"_id": 1}]), cmd({"collMod": "c", "index": {"name": "nope", "expireAfterSeconds": 5}}, None)])
+    tt("drop_ttl_index_stops_expiry", [cix("c", [["t", 1]], expireAfterSeconds=3600), ins("c", [{"_id": 1, "t": now(-30000)}]), {"op": "drop_index", "coll": "c", "index": "t_1"}, cix("c", [["t", 1]], expireAfterSeconds=1), wait(), ids()])
+    tt("delete_and_find_respect_expiry", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST, "g": 1}, {"_id": 2, "t": FUTURE, "g": 1}]), wait(), {"op": "delete_many", "coll": "c", "filter": {"g": 1}}, ids()])
+    tt("update_many_skips_expired", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": 1, "t": PAST, "g": 1}, {"_id": 2, "t": FUTURE, "g": 1}]), wait(), upd("c", {"g": 1}, {"$set": {"z": 1}}, kind="update_many"), ids()])
+    tt("sort_limit_with_index_skips_expired", [cix("c", [["t", 1]], expireAfterSeconds=0), ins("c", [{"_id": i, "t": PAST if i <= 5 else FUTURE} for i in range(1, 11)]), wait(), find("c", {}, sort={"t": 1, "_id": 1}, limit=3, projection={"t": 0})])
+    tt("lookup_foreign_respects_expiry", [cix("f", [["t", 1]], expireAfterSeconds=0), ins("f", [{"_id": 1, "t": PAST, "k": 1}, {"_id": 2, "t": FUTURE, "k": 1}]), ins("c", [{"_id": 1, "k": 1}]), wait(), agg("c", [{"$lookup": {"from": "f", "localField": "k", "foreignField": "k", "as": "m"}}, {"$project": {"m": {"_id": 1}}}])])

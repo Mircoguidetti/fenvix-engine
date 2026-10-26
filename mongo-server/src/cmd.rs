@@ -116,6 +116,11 @@ impl Server {
             }
             "listDatabases" => return self.list_databases(cmd).await,
             "tenantStats" => return Ok(self.tenant_stats()),
+            "ttlPass" => {
+                let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
+                self.dbs.ttl_pass(std::time::Duration::from_secs(gap), int_arg(cmd.get("maxWakes")).unwrap_or(1000) as usize).await?;
+                return Ok(ok());
+            }
             _ => {}
         }
         if !valid_db_name(db) {
@@ -135,6 +140,7 @@ impl Server {
             "drop" => self.drop_collection(db, cmd).await,
             "create" => self.create(db, cmd).await,
             "dropIndexes" => self.drop_indexes(db, cmd).await,
+            "collMod" => self.coll_mod(db, cmd).await,
             "explain" => self.explain(db, cmd).await,
             "validate" => self.validate(db, cmd).await,
             "collStats" => self.coll_stats(db, cmd).await,
@@ -248,6 +254,12 @@ impl Server {
             "entries": self.dbs.entry_count() as i64,
             "leasesHeld": self.dbs.leases.held_count() as i64,
             "leases": { "acquired": ls.acquired as i64, "takeovers": ls.takeovers as i64, "refused": ls.refused as i64, "renewals": ls.renewals as i64, "renewFailures": ls.renew_failures as i64, "lost": ls.lost as i64 },
+            "ttl": {
+                "passes": self.dbs.ttl.passes.load(Relaxed) as i64, "hintsListed": self.dbs.ttl.hints_listed.load(Relaxed) as i64,
+                "due": self.dbs.ttl.due.load(Relaxed) as i64, "skippedOpen": self.dbs.ttl.skipped_open.load(Relaxed) as i64,
+                "skippedGap": self.dbs.ttl.skipped_gap.load(Relaxed) as i64, "wakes": self.dbs.ttl.wakes.load(Relaxed) as i64,
+                "sessionSweeps": self.dbs.ttl.session_sweeps.load(Relaxed) as i64, "docsExpired": self.dbs.ttl.docs_expired.load(Relaxed) as i64,
+            },
             "requests": {
                 "put": (s.put + s.multipart_create + s.multipart_part + s.multipart_complete) as i64,
                 "copy": s.copy as i64, "list": s.list as i64,

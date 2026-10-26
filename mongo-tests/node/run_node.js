@@ -129,7 +129,18 @@ function rawOpQuery(ctx) {
   });
 }
 
+function substNow(x) {
+  if (Array.isArray(x)) return x.map(substNow);
+  if (x && typeof x === 'object' && !(x instanceof Date) && x.constructor === Object) {
+    const ks = Object.keys(x);
+    if (ks.length === 1 && ks[0] === '$nowOffsetMs') return new Date(Math.floor(Date.now() / 1000) * 1000 + Number(x.$nowOffsetMs));
+    return Object.fromEntries(ks.map((k) => [k, substNow(x[k])]));
+  }
+  return x;
+}
+
 async function execStep(ctx, db, dbname, step) {
+  step = substNow(step);
   const op = step.op;
   const coll = step.coll ? db.collection(step.coll) : null;
   switch (op) {

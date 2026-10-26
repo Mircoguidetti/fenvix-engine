@@ -18,6 +18,7 @@ mod layout;
 mod lease;
 mod query;
 mod regex;
+mod ttl;
 mod update;
 mod wire;
 
@@ -57,6 +58,21 @@ struct Args {
     /// Lease holder id (default: a unique id per process start).
     #[arg(long)]
     holder: Option<String>,
+    /// Remove expired TTL documents of tenants that are open as writers this often.
+    #[arg(long, default_value_t = 60)]
+    ttl_sweep_secs: u64,
+    /// Every this often, look for sleeping tenants with expired documents (one LIST) and wake due ones.
+    #[arg(long, default_value_t = 60)]
+    ttl_maintenance_secs: u64,
+    /// Do not wake the same sleeping tenant for expiry more often than this.
+    #[arg(long, default_value_t = 3600)]
+    ttl_min_gap_secs: u64,
+    /// At most this many sleeping tenants are woken for expiry per maintenance pass.
+    #[arg(long, default_value_t = 20)]
+    ttl_max_wakes: usize,
+    /// Do not run the TTL sweeps (expired documents stay hidden but are not removed).
+    #[arg(long)]
+    no_ttl: bool,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -122,6 +138,10 @@ async fn main() -> Result<()> {
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
     leases.spawn_renewer(lost_tx);
     dbs.spawn_lost_handler(lost_rx);
+    if !args.no_ttl {
+        dbs.spawn_ttl_session_sweeper(Duration::from_secs(args.ttl_sweep_secs));
+        dbs.spawn_ttl_maintenance(Duration::from_secs(args.ttl_maintenance_secs), Duration::from_secs(args.ttl_min_gap_secs), args.ttl_max_wakes);
+    }
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
 
     let listener = TcpListener::bind(&args.listen).await?;
