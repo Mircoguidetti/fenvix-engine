@@ -2,3 +2,4 @@ target/
 mongo-tests/.venv/
 mongo-tests/node/node_modules/
 mongo-tests/out/
+__pycache__/
