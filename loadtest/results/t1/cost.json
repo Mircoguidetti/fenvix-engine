@@ -1,0 +1,82 @@
+[
+ {
+  "config": "baseline: explicit flush per write (100 ms periodic)",
+  "scenario": "idle open readers",
+  "tenants": 200,
+  "window_secs": 60.0025839805603,
+  "open_readers_writers": [
+   200,
+   0
+  ],
+  "per_sec": {
+   "put": {
+    "wal": 0.0,
+    "manifest": 0.0,
+    "compacted_sst": 0.0,
+    "lease": 9.666250376615597,
+    "clean_marker": 0.0,
+    "other": 0.0
+   },
+   "get": {
+    "wal": 0.0,
+    "manifest": 0.0,
+    "compacted_sst": 0.0,
+    "lease": 0.0,
+    "clean_marker": 0.0,
+    "other": 0.0
+   },
+   "maintenance": {
+    "compactRuns": 0.0,
+    "compactPuts": 0.0,
+    "compactGets": 0.0,
+    "gcRuns": 0.0,
+    "gcDeletes": 0.0,
+    "gcLists": 0.0,
+    "gcGets": 0.0
+   },
+   "list": 0.0,
+   "delete": 0.0
+  },
+  "tag": "c0_idle_readers"
+ },
+ {
+  "config": "baseline: explicit flush per write (100 ms periodic)",
+  "scenario": "idle open writers",
+  "tenants": 200,
+  "window_secs": 60.00233316421509,
+  "open_readers_writers": [
+   0,
+   200
+  ],
+  "per_sec": {
+   "put": {
+    "wal": 0.0,
+    "manifest": 0.0,
+    "compacted_sst": 0.0,
+    "lease": 9.699622819785617,
+    "clean_marker": 0.0,
+    "other": 3.333203718139387
+   },
+   "get": {
+    "wal": 0.0,
+    "manifest": 36.66524089953326,
+    "compacted_sst": 0.0,
+    "lease": 0.0,
+    "clean_marker": 0.0,
+    "other": 36.66524089953326
+   },
+   "maintenance": {
+    "compactRuns": 0.0,
+    "compactPuts": 0.0,
+    "compactGets": 0.0,
+    "gcRuns": 3.333203718139387,
+    "gcDeletes": 13.332814872557549,
+    "gcLists": 23.33242602697571,
+    "gcGets": 73.33048179906652
+   },
+   "list": 23.33242602697571,
+   "delete": 13.332814872557549
+  },
+  "tag": "c0_idle_writers"
+ }
+]
