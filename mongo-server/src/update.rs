@@ -461,6 +461,39 @@ fn apply_operators(doc: &mut Document, update: &Document, upsert_insert: bool) -
                     set_path(doc, &split(path), new)?;
                 }
             }
+            "$bit" => {
+                for (path, spec) in fields {
+                    let Bson::Document(ops) = spec else {
+                        return Err(bad(format!("The $bit modifier is not compatible with a {}. You must pass in an embedded document: {{$bit: {{field: {{and/or/xor: #}}}}", type_name(spec))));
+                    };
+                    let mut cur: Option<Bson> = path_values(doc, path).first().cloned().cloned();
+                    for (name, operand) in ops {
+                        if !matches!(name.as_str(), "and" | "or" | "xor") {
+                            return Err(bad(format!("The $bit modifier only supports 'and', 'or', and 'xor', not '{name}' which is an unknown operator: {{{name}: {}}}", fmt_bson(operand))));
+                        }
+                        let (m, m_long) = match operand {
+                            Bson::Int32(i) => (*i as i64, false),
+                            Bson::Int64(i) => (*i, true),
+                            other => return Err(bad(format!("The $bit modifier field must be an Integer(32/64 bit); a '{}' is not supported here: {{{name}: {}}}", type_name(other), fmt_bson(other)))),
+                        };
+                        let (c, c_long) = match &cur {
+                            None => (0i64, false),
+                            Some(Bson::Int32(i)) => (*i as i64, false),
+                            Some(Bson::Int64(i)) => (*i, true),
+                            Some(other) => return Err(bad(format!("Cannot apply $bit to a value of non-integral type._id: {} has the field {path} of non-integer type {}", id_of(doc), type_name(other)))),
+                        };
+                        let r = match name.as_str() {
+                            "and" => c & m,
+                            "or" => c | m,
+                            _ => c ^ m,
+                        };
+                        cur = Some(if c_long || m_long { Bson::Int64(r) } else { Bson::Int32(r as i32) });
+                    }
+                    if let Some(v) = cur {
+                        set_path(doc, &split(path), v)?;
+                    }
+                }
+            }
             "$mul" => {
                 for (path, m) in fields {
                     if !crate::query::is_number(m) {

@@ -429,6 +429,44 @@ fn int_arg(arg: &Bson) -> Option<i64> {
     }
 }
 
+/// The 64-bit mask of a bitwise query operator: a non-negative integer, or an array of bit positions.
+fn bit_mask(op: &str, arg: &Bson) -> R<(u64, bool)> {
+    let whole = |v: &Bson| -> Option<i64> {
+        match v {
+            Bson::Int32(i) => Some(*i as i64),
+            Bson::Int64(i) => Some(*i),
+            Bson::Double(f) if f.fract() == 0.0 && f.is_finite() => Some(*f as i64),
+            _ => None,
+        }
+    };
+    match arg {
+        Bson::Array(a) => {
+            let mut mask = 0u64;
+            let mut beyond = false;
+            for (i, p) in a.iter().enumerate() {
+                match whole(p) {
+                    Some(n) if n >= 0 => {
+                        if n < 64 {
+                            mask |= 1 << n;
+                        } else {
+                            beyond = true; // bits past the 64th of an integer are copies of its sign
+                        }
+                    }
+                    Some(_) => return Err(bad(format!("Failed to parse bit position. Expected a non-negative number in: {i}: {}", crate::update::fmt_bson(p)))),
+                    None => return Err(bad(format!("Failed to parse bit position. Expected an integer: {i}: {}", crate::update::fmt_bson(p)))),
+                }
+            }
+            Ok((mask, beyond))
+        }
+        Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_) => match whole(arg) {
+            Some(n) if n >= 0 => Ok((n as u64, false)),
+            Some(_) => Err(MongoError::failed_to_parse(format!("Expected a non-negative number in: {op}: {}", crate::update::fmt_bson(arg)))),
+            None => Err(MongoError::failed_to_parse(format!("Expected an integer: {op}: {}", crate::update::fmt_bson(arg)))),
+        },
+        other => Err(bad(format!("a takes an Array, a number, or a BinData but received: {op}: {}", crate::update::fmt_bson(other)))),
+    }
+}
+
 fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
     Ok(match op {
         "$eq" => eq_match(vals, arg)?,
@@ -452,6 +490,25 @@ fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
                         "$lt" => o == Ordering::Less,
                         _ => o != Ordering::Greater,
                     }
+                }
+            })
+        }
+        "$bitsAllSet" | "$bitsAnySet" | "$bitsAllClear" | "$bitsAnyClear" => {
+            let (mask, beyond) = bit_mask(op, arg)?;
+            candidates(vals).iter().any(|c| {
+                let v = match c {
+                    Bson::Int32(i) => *i as i64,
+                    Bson::Int64(i) => *i,
+                    Bson::Double(f) if f.is_finite() && f.fract() == 0.0 && f.abs() < 9.2e18 => *f as i64,
+                    _ => return false,
+                };
+                let hit = (v as u64) & mask;
+                let sign = beyond && v < 0;
+                match op {
+                    "$bitsAllSet" => hit == mask && (!beyond || v < 0),
+                    "$bitsAnySet" => hit != 0 || sign,
+                    "$bitsAllClear" => hit == 0 && !sign,
+                    _ => hit != mask || (beyond && v >= 0),
                 }
             })
         }
