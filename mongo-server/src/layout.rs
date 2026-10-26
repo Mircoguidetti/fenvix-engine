@@ -10,7 +10,7 @@ use bson::Bson;
 
 pub const META_COLLECTIONS: &[u8] = b"meta/collections";
 
-fn escape_collection(name: &str) -> Vec<u8> {
+pub fn escape_collection(name: &str) -> Vec<u8> {
     let mut out = Vec::with_capacity(name.len());
     for b in name.bytes() {
         match b {
@@ -32,6 +32,14 @@ pub fn doc_prefix(collection: &str) -> Vec<u8> {
 pub fn doc_key(collection: &str, id: &Bson) -> Vec<u8> {
     let mut k = doc_prefix(collection);
     k.extend(encode_sortable(id));
+    k
+}
+
+/// Prefix of all index entries of a collection.
+pub fn idx_collection_prefix(collection: &str) -> Vec<u8> {
+    let mut k = b"idx/".to_vec();
+    k.extend(escape_collection(collection));
+    k.push(b'/');
     k
 }
 

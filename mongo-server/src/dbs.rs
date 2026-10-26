@@ -353,16 +353,33 @@ impl Entry {
         Ok(Op::Put(layout::META_COLLECTIONS.to_vec(), d.to_vec()?))
     }
 
-    /// User-created indexes of a collection (the implicit `_id_` index is not stored).
-    pub async fn indexes(&mut self, coll: &str) -> Result<Vec<Document>> {
+    /// Indexes of a collection (the implicit `_id_` index is not stored), including building ones.
+    pub async fn indexes(&mut self, coll: &str) -> Result<Vec<crate::index::IndexDef>> {
         let Some(v) = self.get(&layout::index_key(coll)).await? else { return Ok(vec![]) };
         let d = Document::from_reader(&v[..])?;
-        Ok(d.get_array("indexes")?.iter().filter_map(|b| b.as_document().cloned()).collect())
+        Ok(d.get_array("indexes")?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect())
     }
 
-    pub fn indexes_op(coll: &str, idx: &[Document]) -> Result<Op> {
-        let d = doc! { "indexes": idx.iter().map(|i| Bson::Document(i.clone())).collect::<Vec<_>>() };
+    pub fn indexes_op(coll: &str, idx: &[crate::index::IndexDef]) -> Result<Op> {
+        let d = doc! { "indexes": idx.iter().map(|i| Bson::Document(i.to_stored())).collect::<Vec<_>>() };
         Ok(Op::Put(layout::index_key(coll), d.to_vec()?))
+    }
+
+    pub async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        if !self.ensure_open().await? {
+            return Ok(vec![]);
+        }
+        self.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await
+    }
+
+    /// Point reads in parallel, in key order.
+    pub async fn get_many(&mut self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
+        if keys.is_empty() || !self.ensure_open().await? {
+            return Ok(vec![None; keys.len()]);
+        }
+        let t = self.tenant.as_ref().unwrap();
+        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
+        futures::stream::iter(futs).buffered(32).try_collect().await
     }
 
     pub async fn scan_collection(&mut self, coll: &str) -> Result<Vec<Document>> {

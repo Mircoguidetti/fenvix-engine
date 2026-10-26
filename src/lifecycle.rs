@@ -288,6 +288,35 @@ impl Tenant {
         Ok(out)
     }
 
+    /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,
+    /// ascending or descending. `read_ahead` is the bytes fetched per request (small for short index scans).
+    pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        let opts = slatedb::config::ScanOptions {
+            read_ahead_bytes: read_ahead,
+            max_fetch_tasks: 4,
+            cache_blocks: true,
+            order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
+            ..Default::default()
+        };
+        let s = start.to_vec();
+        let range = match end {
+            Some(e) => (std::ops::Bound::Included(s), std::ops::Bound::Excluded(e.to_vec())),
+            None => (std::ops::Bound::Included(s), std::ops::Bound::Unbounded),
+        };
+        let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.scan_with_options(range, &opts).await?,
+            Mode::Writer(db) => db.scan_with_options(range, &opts).await?,
+        };
+        let mut out = Vec::new();
+        while let Some(kv) = it.next().await? {
+            out.push((kv.key, kv.value));
+            if limit.map(|l| out.len() >= l).unwrap_or(false) {
+                break;
+            }
+        }
+        Ok(out)
+    }
+
     /// Apply writes as one atomic batch and wait until they are durable. Upgrades first.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
         if ops.is_empty() {

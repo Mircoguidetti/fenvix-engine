@@ -1,0 +1,858 @@
+//! Secondary indexes: definitions, entry generation, and the query planner.
+//!
+//! Entry key: `idx/{collection}/{index name}/` + one [`keyenc::component`] per key-pattern field +
+//! `{_id encoding}{u16 length of the _id encoding}`. The value is empty. Because the components are
+//! prefix-free, all entries with the same indexed values share an exact byte prefix.
+//!
+//! An index is `Ready` (queries use it, unique is enforced on writes), `Building` (writes maintain it,
+//! a backfill adds the entries of existing documents, queries ignore it) or `Dropping` (hidden, its
+//! entries are being deleted).
+
+use crate::error::MongoError;
+use crate::keyenc;
+use crate::layout::{escape_collection, encode_sortable};
+use crate::query::{matches, path_values, type_rank};
+use bson::{doc, Bson, Document};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+
+type R<T> = Result<T, MongoError>;
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum State {
+    Ready,
+    Building,
+    Dropping,
+}
+
+#[derive(Clone, Debug)]
+pub struct IndexDef {
+    pub name: String,
+    /// Key pattern with the direction (true = ascending).
+    pub key: Vec<(String, bool)>,
+    pub unique: bool,
+    pub sparse: bool,
+    pub partial: Option<Document>,
+    pub ttl: Option<i64>,
+    pub state: State,
+    pub multikey: bool,
+    /// Build cursor: the document key (inside the collection prefix) up to which existing documents are indexed.
+    pub cursor: Option<Vec<u8>>,
+    /// text / 2dsphere / hashed: recorded and listed, no entries.
+    pub special: bool,
+    /// The spec as the user gave it (plus `v`), without internal state; this is what `listIndexes` returns.
+    pub spec: Document,
+}
+
+fn num(v: &Bson) -> Option<f64> {
+    match v {
+        Bson::Int32(i) => Some(*i as f64),
+        Bson::Int64(i) => Some(*i as f64),
+        Bson::Double(f) => Some(*f),
+        _ => None,
+    }
+}
+
+impl IndexDef {
+    /// Parse a stored spec (internal fields included).
+    pub fn from_stored(stored: &Document) -> Option<IndexDef> {
+        let key_doc = stored.get_document("key").ok()?;
+        let mut key = Vec::new();
+        let mut special = false;
+        for (k, v) in key_doc {
+            match num(v) {
+                Some(n) => key.push((k.clone(), n >= 0.0)),
+                None => {
+                    special = true;
+                    key.push((k.clone(), true));
+                }
+            }
+        }
+        let flag = |n: &str| matches!(stored.get(n), Some(Bson::Boolean(true))) || stored.get(n).and_then(num).map(|x| x != 0.0).unwrap_or(false);
+        let state = if flag("dropping") {
+            State::Dropping
+        } else if flag("building") {
+            State::Building
+        } else {
+            State::Ready
+        };
+        let mut spec = stored.clone();
+        for internal in ["building", "dropping", "buildCursor", "multikey"] {
+            spec.remove(internal);
+        }
+        Some(IndexDef {
+            name: stored.get_str("name").ok()?.to_string(),
+            key,
+            unique: flag("unique"),
+            sparse: flag("sparse"),
+            partial: stored.get_document("partialFilterExpression").ok().cloned(),
+            ttl: if key_doc.len() == 1 { stored.get("expireAfterSeconds").and_then(num).map(|f| f as i64) } else { None },
+            state,
+            multikey: flag("multikey"),
+            cursor: match stored.get("buildCursor") {
+                Some(Bson::Binary(b)) => Some(b.bytes.clone()),
+                _ => None,
+            },
+            special,
+            spec,
+        })
+    }
+
+    /// The document stored in `meta/indexes/{collection}` (spec plus internal state).
+    pub fn to_stored(&self) -> Document {
+        let mut d = self.spec.clone();
+        if self.state == State::Building {
+            d.insert("building", true);
+            if let Some(c) = &self.cursor {
+                d.insert("buildCursor", Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: c.clone() }));
+            }
+        }
+        if self.state == State::Dropping {
+            d.insert("dropping", true);
+        }
+        if self.multikey {
+            d.insert("multikey", true);
+        }
+        d
+    }
+
+    pub fn key_pattern(&self) -> Document {
+        let mut d = Document::new();
+        for (f, asc) in &self.key {
+            d.insert(f.clone(), if *asc { 1 } else { -1 });
+        }
+        if self.special {
+            return self.spec.get_document("key").cloned().unwrap_or(d);
+        }
+        d
+    }
+
+    pub fn prefix(&self, coll: &str) -> Vec<u8> {
+        let mut k = b"idx/".to_vec();
+        k.extend(escape_collection(coll));
+        k.push(b'/');
+        k.extend(escape_collection(&self.name));
+        k.push(b'/');
+        k
+    }
+
+    /// Whether this index maintains entries (every state except `special`).
+    pub fn has_entries(&self) -> bool {
+        !self.special
+    }
+
+    /// Distinct entries of `d` as `component bytes -> {field: value}` (empty when the document is not in
+    /// the index), and whether any indexed path crossed an array.
+    pub fn entries(&self, d: &Document) -> R<(BTreeMap<Vec<u8>, Document>, bool)> {
+        if !self.has_entries() {
+            return Ok((BTreeMap::new(), false));
+        }
+        if let Some(p) = &self.partial {
+            if !matches(d, p)? {
+                return Ok((BTreeMap::new(), false));
+            }
+        }
+        let mut fields: Vec<(Vec<Bson>, bool)> = Vec::new();
+        let mut any_present = false;
+        let mut multikey = false;
+        let mut array_fields = 0;
+        for (path, _) in &self.key {
+            let vals = path_values(d, path);
+            let mut through_array = false;
+            let parts: Vec<&str> = path.split('.').collect();
+            for n in 1..parts.len() {
+                if path_values(d, &parts[..n].join(".")).iter().any(|v| matches!(v, Bson::Array(_))) {
+                    through_array = true;
+                }
+            }
+            if vals.is_empty() {
+                fields.push((vec![Bson::Null], through_array));
+                if through_array {
+                    array_fields += 1;
+                    multikey = true;
+                }
+                continue;
+            }
+            any_present = true;
+            let mut out = Vec::new();
+            let mut is_arr = through_array;
+            for v in vals {
+                match v {
+                    Bson::Array(a) => {
+                        is_arr = true;
+                        if a.is_empty() {
+                            out.push(Bson::Undefined);
+                        } else {
+                            out.extend(a.iter().cloned());
+                        }
+                    }
+                    other => out.push(other.clone()),
+                }
+            }
+            if is_arr {
+                array_fields += 1;
+                multikey = true;
+            }
+            fields.push((out, is_arr));
+        }
+        if self.sparse && !any_present {
+            return Ok((BTreeMap::new(), false));
+        }
+        if array_fields > 1 {
+            let names: Vec<String> = self.key.iter().zip(&fields).filter(|(_, (_, a))| *a).map(|((f, _), _)| format!("[{f}]")).collect();
+            return Err(MongoError::new(171, "CannotIndexParallelArrays", format!("cannot index parallel arrays {}", names.join(" "))));
+        }
+        let mut acc: Vec<(Vec<u8>, Document)> = vec![(Vec::new(), Document::new())];
+        for ((path, asc), (vals, _)) in self.key.iter().zip(&fields) {
+            let mut comps: BTreeMap<Vec<u8>, &Bson> = BTreeMap::new();
+            for v in vals {
+                comps.entry(keyenc::component(v, *asc)).or_insert(v);
+            }
+            let mut next = Vec::with_capacity(acc.len() * comps.len());
+            for (p, pd) in &acc {
+                for (c, v) in &comps {
+                    let mut k = p.clone();
+                    k.extend(c);
+                    let mut nd = pd.clone();
+                    nd.insert(path.clone(), match v { Bson::Undefined => Bson::Undefined, o => (*o).clone() });
+                    next.push((k, nd));
+                }
+            }
+            acc = next;
+        }
+        Ok((acc.into_iter().collect(), multikey))
+    }
+
+    /// `{field: value}` pairs of the first entry of `d`, for E11000 messages.
+    pub fn key_value(&self, d: &Document) -> Document {
+        let mut out = Document::new();
+        for (f, _) in &self.key {
+            let v = path_values(d, f).first().map(|v| match v {
+                Bson::Array(a) if !a.is_empty() => a[0].clone(),
+                other => (*other).clone(),
+            });
+            out.insert(f.clone(), v.unwrap_or(Bson::Null));
+        }
+        out
+    }
+}
+
+/// Key of one entry.
+pub fn entry_key(prefix: &[u8], comps: &[u8], id_enc: &[u8]) -> Vec<u8> {
+    let mut k = Vec::with_capacity(prefix.len() + comps.len() + id_enc.len() + 2);
+    k.extend(prefix);
+    k.extend(comps);
+    k.extend(id_enc);
+    k.extend((id_enc.len() as u16).to_be_bytes());
+    k
+}
+
+/// The `_id` encoding at the tail of an entry key.
+pub fn entry_id(key: &[u8]) -> Option<&[u8]> {
+    if key.len() < 2 {
+        return None;
+    }
+    let n = u16::from_be_bytes([key[key.len() - 2], key[key.len() - 1]]) as usize;
+    if key.len() < 2 + n {
+        return None;
+    }
+    Some(&key[key.len() - 2 - n..key.len() - 2])
+}
+
+/// The key-component bytes of an entry key (between `prefix` and the `_id` tail).
+pub fn entry_comps<'a>(key: &'a [u8], prefix: &[u8]) -> Option<&'a [u8]> {
+    let id = entry_id(key)?;
+    let end = key.len() - 2 - id.len();
+    if end < prefix.len() {
+        return None;
+    }
+    Some(&key[prefix.len()..end])
+}
+
+// ---------------------------------------------------------------------------
+// Planner
+// ---------------------------------------------------------------------------
+
+#[derive(Default, Clone, Debug)]
+pub struct Constraint {
+    /// Alternatives from equality / `$in` (all must be indexable scalars or documents).
+    pub eq: Option<Vec<Bson>>,
+    pub lo: Option<(Bson, bool)>,
+    pub hi: Option<(Bson, bool)>,
+    pub exists: bool,
+}
+
+fn bracketable(v: &Bson) -> bool {
+    match v {
+        Bson::Null | Bson::Undefined | Bson::MinKey | Bson::MaxKey | Bson::Array(_) | Bson::RegularExpression(_) => false,
+        Bson::Double(f) => !f.is_nan(),
+        _ => true,
+    }
+}
+
+fn eq_ok(v: &Bson) -> bool {
+    !matches!(v, Bson::Array(_) | Bson::RegularExpression(_) | Bson::Undefined)
+}
+
+fn is_op_doc(d: &Document) -> bool {
+    !d.is_empty() && d.keys().all(|k| k.starts_with('$'))
+}
+
+fn add_conjunct(out: &mut HashMap<String, Constraint>, path: &str, cond: &Bson) {
+    let c = out.entry(path.to_string()).or_default();
+    match cond {
+        Bson::Document(d) if is_op_doc(d) => {
+            for (op, arg) in d {
+                match op.as_str() {
+                    "$eq" if eq_ok(arg) => c.eq = Some(vec![arg.clone()]),
+                    "$in" => {
+                        if let Bson::Array(a) = arg {
+                            if a.iter().all(eq_ok) && !a.is_empty() {
+                                c.eq = Some(a.clone());
+                            }
+                        }
+                    }
+                    "$gt" | "$gte" if bracketable(arg) => c.lo = Some((arg.clone(), op == "$gte")),
+                    "$lt" | "$lte" if bracketable(arg) => c.hi = Some((arg.clone(), op == "$lte")),
+                    "$exists" => {
+                        if matches!(arg, Bson::Boolean(true)) || num(arg).map(|n| n != 0.0).unwrap_or(false) {
+                            c.exists = true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        other if eq_ok(other) => c.eq = Some(vec![other.clone()]),
+        _ => {}
+    }
+}
+
+/// Per-field constraints implied by the AND-level conjuncts of `filter` (top-level fields and `$and`).
+pub fn constraints(filter: &Document) -> HashMap<String, Constraint> {
+    let mut out = HashMap::new();
+    collect(filter, &mut out);
+    out.retain(|_, c| c.eq.is_some() || c.lo.is_some() || c.hi.is_some() || c.exists);
+    out
+}
+
+fn collect(filter: &Document, out: &mut HashMap<String, Constraint>) {
+    for (k, v) in filter {
+        match k.as_str() {
+            "$and" => {
+                if let Bson::Array(a) = v {
+                    for s in a {
+                        if let Bson::Document(d) = s {
+                            collect(d, out);
+                        }
+                    }
+                }
+            }
+            k if k.starts_with('$') => {}
+            path => add_conjunct(out, path, v),
+        }
+    }
+}
+
+/// Byte intervals relative to the index prefix: `[start, end)`, `end == None` is the end of the index.
+pub type Interval = (Vec<u8>, Option<Vec<u8>>);
+
+#[derive(Clone, Debug)]
+pub struct IxScan {
+    pub idx: usize,
+    pub intervals: Vec<Interval>,
+    pub reverse: bool,
+    /// Index order satisfies the requested sort (and no residual in-memory sort is needed).
+    pub sorted: bool,
+    /// Number of key fields that carry a bound.
+    pub bounded_fields: usize,
+    /// Human-readable bounds per key field, as `explain` prints them.
+    pub bounds: Vec<(String, Vec<String>)>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Plan {
+    Coll { reverse: bool },
+    Id(Bson),
+    Ix(IxScan),
+    Or(Vec<Plan>),
+}
+
+impl Plan {
+    pub fn is_indexed(&self) -> bool {
+        !matches!(self, Plan::Coll { .. })
+    }
+}
+
+fn comp_range(c: &Constraint, asc: bool, multikey: bool) -> Option<(Vec<u8>, Option<Vec<u8>>, String)> {
+    let (lo, hi) = (&c.lo, &c.hi);
+    let (lo, hi) = match (lo, hi) {
+        (Some((l, _)), Some((h, _))) if type_rank(l) != type_rank(h) => (lo, &None),
+        _ => (lo, hi),
+    };
+    let (lo, hi) = if multikey && lo.is_some() && hi.is_some() { (lo, &None) } else { (lo, hi) };
+    if lo.is_none() && hi.is_none() {
+        return None;
+    }
+    let rank = type_rank(&lo.as_ref().or(hi.as_ref()).unwrap().0);
+    let (lo_b, lo_incl) = match lo {
+        Some((v, i)) => (Some(keyenc::encode(v)), *i),
+        None => (None, true),
+    };
+    let (hi_b, hi_incl) = match hi {
+        Some((v, i)) => (Some(keyenc::encode(v)), *i),
+        None => (None, true),
+    };
+    let bracket_end = keyenc::prefix_end(&[rank]);
+    // Ascending byte range of the value-space interval.
+    let start_asc = match &lo_b {
+        Some(b) => if lo_incl { Some(b.clone()) } else { keyenc::prefix_end(b) },
+        None => Some(vec![rank]),
+    };
+    let end_asc = match &hi_b {
+        Some(b) => if hi_incl { keyenc::prefix_end(b) } else { Some(b.clone()) },
+        None => bracket_end.clone(),
+    };
+    let label = {
+        let l = match lo {
+            Some((v, i)) => format!("{}{}", if *i { "[" } else { "(" }, fmt_bound(v)),
+            None => format!("[{}", min_of_bracket(rank)),
+        };
+        let h = match hi {
+            Some((v, i)) => format!("{}{}", fmt_bound(v), if *i { "]" } else { ")" }),
+            None => format!("{}]", max_of_bracket(rank)),
+        };
+        if asc { format!("{l}, {h}") } else {
+            let l2 = match hi {
+                Some((v, i)) => format!("{}{}", if *i { "[" } else { "(" }, fmt_bound(v)),
+                None => format!("[{}", max_of_bracket(rank)),
+            };
+            let h2 = match lo {
+                Some((v, i)) => format!("{}{}", fmt_bound(v), if *i { "]" } else { ")" }),
+                None => format!("{}]", min_of_bracket(rank)),
+            };
+            format!("{l2}, {h2}")
+        }
+    };
+    if asc {
+        Some((start_asc?, end_asc, label))
+    } else {
+        // Descending: complement; the value interval [lo, hi] maps to [inv(hi), inv(lo)] with flipped ends.
+        let start = match &hi_b {
+            Some(b) => {
+                let mut x = b.clone();
+                keyenc::invert(&mut x);
+                if hi_incl { Some(x) } else { keyenc::prefix_end(&x) }
+            }
+            None => Some(vec![!rank]),
+        };
+        let end = match &lo_b {
+            Some(b) => {
+                let mut x = b.clone();
+                keyenc::invert(&mut x);
+                if lo_incl { keyenc::prefix_end(&x) } else { Some(x) }
+            }
+            None => keyenc::prefix_end(&[!rank]),
+        };
+        Some((start?, end, label))
+    }
+}
+
+fn min_of_bracket(rank: u8) -> String {
+    match rank {
+        3 => "-inf.0".into(),
+        4 => "\"\"".into(),
+        _ => "MinKey".into(),
+    }
+}
+
+fn max_of_bracket(rank: u8) -> String {
+    match rank {
+        3 => "inf.0".into(),
+        4 => "{}".into(),
+        _ => "MaxKey".into(),
+    }
+}
+
+pub fn fmt_bound(v: &Bson) -> String {
+    match v {
+        Bson::Int32(i) => i.to_string(),
+        Bson::Int64(i) => i.to_string(),
+        Bson::Double(f) => {
+            if f.is_infinite() { if *f > 0.0 { "inf.0".into() } else { "-inf.0".into() } } else { f.to_string() }
+        }
+        Bson::String(s) => format!("\"{s}\""),
+        Bson::Null => "null".into(),
+        Bson::MinKey => "MinKey".into(),
+        Bson::MaxKey => "MaxKey".into(),
+        Bson::Boolean(b) => b.to_string(),
+        Bson::ObjectId(o) => format!("ObjectId('{}')", o.to_hex()),
+        Bson::DateTime(d) => {
+            let s = d.try_to_rfc3339_string().unwrap_or_default();
+            format!("new Date({})", if s.is_empty() { d.timestamp_millis().to_string() } else { d.timestamp_millis().to_string() })
+        }
+        other => crate::update::fmt_bson(other),
+    }
+}
+
+fn eq_label(v: &Bson) -> String {
+    format!("[{0}, {0}]", fmt_bound(v))
+}
+
+fn merge_intervals(mut v: Vec<Interval>) -> Vec<Interval> {
+    v.sort();
+    let mut out: Vec<Interval> = Vec::new();
+    for (s, e) in v {
+        if let Some(last) = out.last_mut() {
+            let overlaps = match &last.1 {
+                None => true,
+                Some(le) => s <= *le,
+            };
+            if overlaps {
+                last.1 = match (&last.1, &e) {
+                    (None, _) | (_, None) => None,
+                    (Some(a), Some(b)) => Some(if a >= b { a.clone() } else { b.clone() }),
+                };
+                continue;
+            }
+        }
+        out.push((s, e));
+    }
+    out
+}
+
+/// Bounds of `idx` for the constraints; `None` when no key field is constrained.
+fn bounds_for(idx: &IndexDef, cs: &HashMap<String, Constraint>) -> Option<(Vec<Interval>, usize, Vec<(String, Vec<String>)>)> {
+    let mut prefixes: Vec<Vec<u8>> = vec![Vec::new()];
+    let mut bounded = 0;
+    let mut labels: Vec<(String, Vec<String>)> = Vec::new();
+    let mut ranged: Option<Vec<Interval>> = None;
+    for (field, asc) in &idx.key {
+        let c = cs.get(field);
+        if let Some(eq) = c.and_then(|c| c.eq.as_ref()) {
+            let mut comps: Vec<(Vec<u8>, &Bson)> = eq.iter().map(|v| (keyenc::component(v, *asc), v)).collect();
+            comps.sort_by(|a, b| a.0.cmp(&b.0));
+            comps.dedup_by(|a, b| a.0 == b.0);
+            let mut next = Vec::new();
+            for p in &prefixes {
+                for (c, _) in &comps {
+                    let mut k = p.clone();
+                    k.extend(c);
+                    next.push(k);
+                }
+            }
+            prefixes = next;
+            bounded += 1;
+            labels.push((field.clone(), comps.iter().map(|(_, v)| eq_label(v)).collect()));
+            continue;
+        }
+        if let Some((s, e, label)) = c.and_then(|c| comp_range(c, *asc, idx.multikey)) {
+            let mut ivs = Vec::new();
+            for p in &prefixes {
+                let mut st = p.clone();
+                st.extend(&s);
+                let en = match &e {
+                    Some(e) => {
+                        let mut x = p.clone();
+                        x.extend(e);
+                        Some(x)
+                    }
+                    None => keyenc::prefix_end(p),
+                };
+                ivs.push((st, en));
+            }
+            ranged = Some(ivs);
+            bounded += 1;
+            labels.push((field.clone(), vec![label]));
+        }
+        break;
+    }
+    if bounded == 0 {
+        return None;
+    }
+    let ivs = match ranged {
+        Some(i) => i,
+        None => prefixes.iter().map(|p| (p.clone(), keyenc::prefix_end(p))).collect(),
+    };
+    // Unconstrained trailing fields.
+    for (field, asc) in idx.key.iter().skip(labels.len()) {
+        labels.push((field.clone(), vec![if *asc { "[MinKey, MaxKey]".into() } else { "[MaxKey, MinKey]".into() }]));
+    }
+    Some((merge_intervals(ivs), bounded, labels))
+}
+
+/// Does the query guarantee that every matching document is in the (sparse/partial) index?
+fn index_covers_query(idx: &IndexDef, cs: &HashMap<String, Constraint>) -> bool {
+    if idx.sparse {
+        let implies_exists = idx.key.iter().any(|(f, _)| {
+            cs.get(f).map(|c| c.exists || c.lo.is_some() || c.hi.is_some() || c.eq.as_ref().map(|e| e.iter().all(|v| !matches!(v, Bson::Null))).unwrap_or(false)).unwrap_or(false)
+        });
+        if !implies_exists {
+            return false;
+        }
+    }
+    if let Some(p) = &idx.partial {
+        let pcs = constraints(p);
+        // every conjunct of the partial filter must be implied by the query
+        let simple = p.keys().all(|k| !k.starts_with('$') || k == "$and");
+        if !simple {
+            return false;
+        }
+        for (f, pc) in &pcs {
+            let Some(qc) = cs.get(f) else { return false };
+            if pc.exists && !(qc.exists || qc.eq.is_some() || qc.lo.is_some() || qc.hi.is_some()) {
+                return false;
+            }
+            if let Some(pe) = &pc.eq {
+                let Some(qe) = &qc.eq else { return false };
+                if !qe.iter().all(|v| pe.iter().any(|p| crate::query::equal(p, v))) {
+                    return false;
+                }
+            }
+            if let Some((pl, pincl)) = &pc.lo {
+                let ok = qc.lo.as_ref().map(|(ql, qincl)| match crate::query::compare(ql, pl) {
+                    std::cmp::Ordering::Greater => true,
+                    std::cmp::Ordering::Equal => *pincl || !*qincl,
+                    _ => false,
+                }).unwrap_or(false)
+                    || qc.eq.as_ref().map(|e| e.iter().all(|v| type_rank(v) == type_rank(pl) && match crate::query::compare(v, pl) { std::cmp::Ordering::Greater => true, std::cmp::Ordering::Equal => *pincl, _ => false })).unwrap_or(false);
+                if !ok {
+                    return false;
+                }
+            }
+            if let Some((ph, pincl)) = &pc.hi {
+                let ok = qc.hi.as_ref().map(|(qh, qincl)| match crate::query::compare(qh, ph) {
+                    std::cmp::Ordering::Less => true,
+                    std::cmp::Ordering::Equal => *pincl || !*qincl,
+                    _ => false,
+                }).unwrap_or(false)
+                    || qc.eq.as_ref().map(|e| e.iter().all(|v| type_rank(v) == type_rank(ph) && match crate::query::compare(v, ph) { std::cmp::Ordering::Less => true, std::cmp::Ordering::Equal => *pincl, _ => false })).unwrap_or(false);
+                if !ok {
+                    return false;
+                }
+            }
+        }
+        // anything in the partial filter we did not model (e.g. $type) makes the answer "no"
+        let modelled: usize = pcs.len();
+        if modelled == 0 {
+            return false;
+        }
+        if p.iter().any(|(k, v)| k != "$and" && matches!(v, Bson::Document(d) if d.keys().any(|o| !matches!(o.as_str(), "$eq" | "$gt" | "$gte" | "$lt" | "$lte" | "$exists" | "$in")))) {
+            return false;
+        }
+    }
+    true
+}
+
+/// Does the index order produce `sort`? Equality-constrained single-valued prefix fields are skipped.
+fn sort_satisfied(idx: &IndexDef, cs: &HashMap<String, Constraint>, sort: &[(String, bool)]) -> Option<bool> {
+    if sort.is_empty() || idx.multikey {
+        return None;
+    }
+    let mut i = 0;
+    let mut forward: Option<bool> = None;
+    for (field, asc) in &idx.key {
+        if i == sort.len() {
+            break;
+        }
+        let single_eq = cs.get(field).and_then(|c| c.eq.as_ref()).map(|e| e.len() == 1).unwrap_or(false);
+        if sort[i].0 == *field {
+            let same = sort[i].1 == *asc;
+            match forward {
+                None => forward = Some(same),
+                Some(f) if f != same => return None,
+                _ => {}
+            }
+            i += 1;
+        } else if single_eq && i == 0 {
+            continue;
+        } else if single_eq && forward.is_some() {
+            return None;
+        } else {
+            return None;
+        }
+    }
+    if i == sort.len() {
+        Some(forward.unwrap_or(true))
+    } else {
+        None
+    }
+}
+
+pub struct PlanInput<'a> {
+    pub indexes: &'a [IndexDef],
+    pub filter: &'a Document,
+    pub sort: &'a [(String, bool)],
+    pub has_limit: bool,
+    pub hint: Option<usize>,
+    /// Hint was `{$natural: ±1}`.
+    pub natural: Option<bool>,
+}
+
+/// Choose how to find candidate documents. The caller re-applies the full filter to every candidate,
+/// so a plan only has to return a superset of the matching documents.
+pub fn plan(inp: &PlanInput) -> Plan {
+    if let Some(asc) = inp.natural {
+        return Plan::Coll { reverse: !asc };
+    }
+    let cs = constraints(inp.filter);
+    if inp.hint.is_none() {
+        if let Some(id) = crate::query::id_equality(inp.filter) {
+            return Plan::Id(id.clone());
+        }
+    }
+    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && inp.hint.map(|h| h == i).unwrap_or(true);
+    let mut best: Option<(i64, IxScan)> = None;
+    for (i, idx) in inp.indexes.iter().enumerate() {
+        if !usable(i, idx) {
+            continue;
+        }
+        let covers = inp.hint.is_some() || index_covers_query(idx, &cs);
+        if !covers {
+            continue;
+        }
+        let b = bounds_for(idx, &cs);
+        let sorted_dir = sort_satisfied(idx, &cs, inp.sort);
+        if b.is_none() && sorted_dir.is_none() && inp.hint.is_none() {
+            continue;
+        }
+        if b.is_none() && sorted_dir.is_some() && !inp.has_limit && inp.hint.is_none() {
+            continue; // reading the whole index to avoid a sort is only worth it with a limit
+        }
+        let (intervals, bounded, bounds) = match b {
+            Some(x) => x,
+            None => (vec![(Vec::new(), None)], 0, idx.key.iter().map(|(f, asc)| (f.clone(), vec![if *asc { "[MinKey, MaxKey]".to_string() } else { "[MaxKey, MinKey]".to_string() }])).collect()),
+        };
+        let reverse = sorted_dir.map(|f| !f).unwrap_or(false);
+        let mut score = (bounded as i64) * 100 + if sorted_dir.is_some() { 30 } else { 0 };
+        if idx.unique && bounded == idx.key.len() {
+            score += 50;
+        }
+        score -= idx.key.len() as i64;
+        let scan = IxScan { idx: i, intervals, reverse, sorted: sorted_dir.is_some(), bounded_fields: bounded, bounds };
+        if best.as_ref().map(|(s, _)| score > *s).unwrap_or(true) {
+            best = Some((score, scan));
+        }
+    }
+    if let Some((_, s)) = best {
+        return Plan::Ix(s);
+    }
+    // $or: every clause must be answered by an index.
+    if inp.hint.is_none() {
+        if let Some(Bson::Array(clauses)) = inp.filter.get("$or") {
+            let mut subs = Vec::new();
+            for c in clauses {
+                let Bson::Document(cd) = c else { return Plan::Coll { reverse: false } };
+                let p = plan(&PlanInput { indexes: inp.indexes, filter: cd, sort: &[], has_limit: false, hint: None, natural: None });
+                if !p.is_indexed() {
+                    subs.clear();
+                    break;
+                }
+                subs.push(p);
+            }
+            if !subs.is_empty() {
+                return Plan::Or(subs);
+            }
+        }
+    }
+    Plan::Coll { reverse: false }
+}
+
+/// Collection-level helper: the doc key of an `_id` encoding.
+pub fn id_enc(id: &Bson) -> Vec<u8> {
+    encode_sortable(id)
+}
+
+/// TTL state of a collection's indexes: `(field, seconds)` of every single-field TTL index.
+pub fn ttl_specs(indexes: &[IndexDef]) -> Vec<(String, i64)> {
+    indexes.iter().filter(|i| i.state == State::Ready && i.ttl.is_some() && i.key.len() == 1).map(|i| (i.key[0].0.clone(), i.ttl.unwrap())).collect()
+}
+
+/// Is the document past its expiry for any TTL index? Dates in arrays use the earliest date.
+pub fn is_expired(d: &Document, specs: &[(String, i64)], now_ms: i64) -> bool {
+    for (field, secs) in specs {
+        let mut earliest: Option<i64> = None;
+        for v in path_values(d, field) {
+            let mut take = |x: &Bson| {
+                if let Bson::DateTime(t) = x {
+                    let ms = t.timestamp_millis();
+                    earliest = Some(earliest.map(|e| e.min(ms)).unwrap_or(ms));
+                }
+            };
+            match v {
+                Bson::Array(a) => a.iter().for_each(&mut take),
+                other => take(other),
+            }
+        }
+        if let Some(ms) = earliest {
+            if ms.saturating_add(secs.saturating_mul(1000)) <= now_ms {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+pub fn index_summary(idx: &IndexDef) -> Document {
+    doc! { "name": idx.name.clone() }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bson::doc;
+
+    fn def(key: Document, extra: Document) -> IndexDef {
+        let mut s = doc! { "v": 2, "key": key, "name": "i" };
+        for (k, v) in extra {
+            s.insert(k, v);
+        }
+        IndexDef::from_stored(&s).unwrap()
+    }
+
+    #[test]
+    fn multikey_entries_dedupe_and_flag() {
+        let i = def(doc! { "a": 1 }, doc! {});
+        let (e, mk) = i.entries(&doc! { "_id": 1, "a": [1, 1, 2] }).unwrap();
+        assert_eq!(e.len(), 2);
+        assert!(mk);
+    }
+
+    #[test]
+    fn parallel_arrays_rejected() {
+        let i = def(doc! { "a": 1, "b": 1 }, doc! {});
+        assert!(i.entries(&doc! { "a": [1], "b": [2] }).is_err());
+        assert_eq!(i.entries(&doc! { "a": [1, 2], "b": 3 }).unwrap().0.len(), 2);
+    }
+
+    #[test]
+    fn sparse_and_partial_skip_documents() {
+        let s = def(doc! { "a": 1 }, doc! { "sparse": true });
+        assert!(s.entries(&doc! { "b": 1 }).unwrap().0.is_empty());
+        assert_eq!(s.entries(&doc! { "a": Bson::Null }).unwrap().0.len(), 1);
+        let p = def(doc! { "a": 1 }, doc! { "partialFilterExpression": { "b": { "$gt": 5 } } });
+        assert!(p.entries(&doc! { "a": 1, "b": 1 }).unwrap().0.is_empty());
+        assert_eq!(p.entries(&doc! { "a": 1, "b": 9 }).unwrap().0.len(), 1);
+    }
+
+    #[test]
+    fn equality_prefix_then_range() {
+        let i = def(doc! { "a": 1, "b": -1 }, doc! {});
+        let cs = constraints(&doc! { "a": 5, "b": { "$gt": 1, "$lt": 9 } });
+        let (iv, bounded, _) = bounds_for(&i, &cs).unwrap();
+        assert_eq!(bounded, 2);
+        assert_eq!(iv.len(), 1);
+        let (e, _) = i.entries(&doc! { "a": 5, "b": 4 }).unwrap();
+        let k = e.into_iter().next().unwrap().0;
+        assert!(iv.iter().any(|(s, en)| k >= *s && en.as_ref().map(|en| k < *en).unwrap_or(true)));
+        let (e, _) = i.entries(&doc! { "a": 5, "b": 12 }).unwrap();
+        let k = e.into_iter().next().unwrap().0;
+        assert!(!iv.iter().any(|(s, en)| k >= *s && en.as_ref().map(|en| k < *en).unwrap_or(true)));
+    }
+
+    #[test]
+    fn entry_id_roundtrip() {
+        let k = entry_key(b"p/", b"cc", &[7, 8, 9]);
+        assert_eq!(entry_id(&k).unwrap(), &[7, 8, 9]);
+        assert_eq!(entry_comps(&k, b"p/").unwrap(), b"cc");
+    }
+}

@@ -6,9 +6,14 @@
 
 mod agg;
 mod cmd;
+mod coll;
+mod cmd_data;
+mod cmd_index;
 mod dbs;
 mod error;
 mod expr;
+mod index;
+mod keyenc;
 mod layout;
 mod lease;
 mod query;
