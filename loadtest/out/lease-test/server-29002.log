@@ -1,0 +1,22 @@
+mongo-server listening on 127.0.0.1:29002 (idle close after 600 s, holder B, lease ttl 4 s)
+shutting down: closing tenants cleanly
+mongo-server listening on 127.0.0.1:29002 (idle close after 600 s, holder B, lease ttl 4 s)
+shutting down: closing tenants cleanly
+mongo-server listening on 127.0.0.1:29002 (idle close after 600 s, holder B, lease ttl 4 s)
+LEASE acquired tenant=own1_5bbc50d1 holder=B unix_ms=1793008392090 takeover_from=-
+LEASE release_begin tenant=own1_5bbc50d1 holder=B unix_ms=1793008392294 
+LEASE release tenant=own1_5bbc50d1 holder=B unix_ms=1793008392336 ok=true
+LEASE acquired tenant=crash_5bbc50d1 holder=B unix_ms=1793008399977 takeover_from=A
+LEASE takeover_wake tenant=crash_5bbc50d1 holder=B unix_ms=1793008400329 unclean=true takeover_from=A
+LEASE acquired tenant=restart_5bbc50d1 holder=B unix_ms=1793008400434 takeover_from=-
+LEASE acquired tenant=restart_5bbc50d1 holder=B unix_ms=1793008400542 takeover_from=-
+LEASE acquired tenant=restart_5bbc50d1 holder=B unix_ms=1793008400760 takeover_from=-
+LEASE acquired tenant=restart_5bbc50d1 holder=B unix_ms=1793008400921 takeover_from=-
+LEASE acquired tenant=restart_5bbc50d1 holder=B unix_ms=1793008401160 takeover_from=- new=true
+LEASE writer_open tenant=restart_5bbc50d1 holder=B unix_ms=1793008401395 
+mongo-server listening on 127.0.0.1:29002 (idle close after 600 s, holder B, lease ttl 4 s)
+LEASE acquired tenant=restart_5bbc50d1 holder=B unix_ms=1793008402277 takeover_from=-
+LEASE takeover_wake tenant=restart_5bbc50d1 holder=B unix_ms=1793008402730 unclean=true takeover_from=-
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=restart_5bbc50d1 holder=B unix_ms=1793008406780 
+LEASE release tenant=restart_5bbc50d1 holder=B unix_ms=1793008406846 ok=true

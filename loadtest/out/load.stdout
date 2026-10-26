@@ -1,0 +1,143 @@
+loaded 394 tenants after 10 s
+loaded 845 tenants after 20 s
+loaded 1307 tenants after 30 s
+loaded 1733 tenants after 40 s
+loaded 2165 tenants after 50 s
+loaded 2596 tenants after 60 s
+loaded 3030 tenants after 70 s
+loaded 3469 tenants after 80 s
+loaded 3906 tenants after 90 s
+loaded 4335 tenants after 100 s
+loaded 4761 tenants after 110 s
+loaded 5193 tenants after 120 s
+loaded 5621 tenants after 130 s
+loaded 6038 tenants after 140 s
+loaded 6499 tenants after 150 s
+loaded 6925 tenants after 160 s
+loaded 7360 tenants after 170 s
+loaded 7769 tenants after 180 s
+loaded 8141 tenants after 190 s
+loaded 8571 tenants after 200 s
+loaded 9020 tenants after 210 s
+loaded 9448 tenants after 220 s
+loaded 9890 tenants after 230 s
+loaded 10338 tenants after 240 s
+loaded 10756 tenants after 250 s
+loaded 11209 tenants after 260 s
+loaded 11608 tenants after 270 s
+loaded 12045 tenants after 280 s
+loaded 12473 tenants after 290 s
+loaded 12901 tenants after 300 s
+loaded 13341 tenants after 310 s
+loaded 13794 tenants after 320 s
+loaded 14215 tenants after 330 s
+loaded 14666 tenants after 340 s
+loaded 15100 tenants after 350 s
+loaded 15525 tenants after 360 s
+loaded 15942 tenants after 370 s
+loaded 16350 tenants after 380 s
+loaded 16751 tenants after 390 s
+loaded 17189 tenants after 400 s
+loaded 17609 tenants after 410 s
+loaded 17980 tenants after 420 s
+loaded 18403 tenants after 430 s
+loaded 18822 tenants after 440 s
+loaded 19269 tenants after 450 s
+loaded 19695 tenants after 460 s
+loaded 20132 tenants after 470 s
+loaded 20563 tenants after 480 s
+loaded 21020 tenants after 490 s
+loaded 21415 tenants after 500 s
+loaded 21816 tenants after 510 s
+loaded 22225 tenants after 520 s
+loaded 22668 tenants after 530 s
+loaded 23100 tenants after 540 s
+loaded 23510 tenants after 550 s
+loaded 23923 tenants after 560 s
+loaded 24345 tenants after 570 s
+loaded 24755 tenants after 580 s
+loaded 25188 tenants after 590 s
+loaded 25611 tenants after 600 s
+loaded 26011 tenants after 610 s
+loaded 26378 tenants after 620 s
+loaded 26764 tenants after 630 s
+loaded 27145 tenants after 640 s
+loaded 27542 tenants after 650 s
+loaded 27959 tenants after 660 s
+loaded 28344 tenants after 670 s
+loaded 28790 tenants after 680 s
+loaded 29195 tenants after 690 s
+loaded 29612 tenants after 700 s
+loaded 30049 tenants after 710 s
+loaded 30479 tenants after 720 s
+loaded 30921 tenants after 730 s
+loaded 31328 tenants after 740 s
+loaded 31762 tenants after 750 s
+loaded 32146 tenants after 760 s
+loaded 32551 tenants after 770 s
+loaded 32951 tenants after 780 s
+loaded 33319 tenants after 790 s
+loaded 33734 tenants after 800 s
+loaded 34162 tenants after 810 s
+loaded 34533 tenants after 820 s
+loaded 34928 tenants after 830 s
+loaded 35338 tenants after 840 s
+loaded 35738 tenants after 850 s
+loaded 36138 tenants after 860 s
+loaded 36553 tenants after 870 s
+loaded 36924 tenants after 880 s
+loaded 37297 tenants after 890 s
+loaded 37696 tenants after 900 s
+loaded 38087 tenants after 910 s
+loaded 38504 tenants after 920 s
+loaded 38918 tenants after 930 s
+loaded 39327 tenants after 940 s
+loaded 39738 tenants after 950 s
+loaded 40161 tenants after 960 s
+loaded 40587 tenants after 970 s
+loaded 40968 tenants after 980 s
+loaded 41382 tenants after 990 s
+loaded 41758 tenants after 1000 s
+loaded 42144 tenants after 1010 s
+loaded 42538 tenants after 1020 s
+loaded 42930 tenants after 1030 s
+loaded 43320 tenants after 1040 s
+loaded 43706 tenants after 1050 s
+loaded 44115 tenants after 1060 s
+loaded 44509 tenants after 1070 s
+loaded 44924 tenants after 1080 s
+loaded 45338 tenants after 1090 s
+loaded 45690 tenants after 1100 s
+loaded 46076 tenants after 1110 s
+loaded 46453 tenants after 1120 s
+loaded 46828 tenants after 1130 s
+loaded 47233 tenants after 1140 s
+loaded 47592 tenants after 1150 s
+loaded 47972 tenants after 1160 s
+loaded 48392 tenants after 1170 s
+loaded 48784 tenants after 1180 s
+loaded 49152 tenants after 1190 s
+loaded 49560 tenants after 1200 s
+loaded 49963 tenants after 1210 s
+{
+  "tenants": 50000,
+  "first": 0,
+  "docs_per_tenant": 50,
+  "doc_bytes": 1000,
+  "parallel": 64,
+  "loaded": 50000,
+  "failed": 0,
+  "seconds": 1210.589891678,
+  "tenants_per_sec": 41.30217866819865,
+  "per_tenant_latency_ms": {
+    "p50": 1539.071,
+    "p99": 2004.991,
+    "max": 2643.967
+  },
+  "unix_ms_end": 1793009461044
+}
+{
+ "disk_kb": 179.10768,
+ "file_bytes": 103363.0327,
+ "objects": 8.8468
+}

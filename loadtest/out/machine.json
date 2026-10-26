@@ -1,0 +1,11 @@
+{
+ "cpus": 4,
+ "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+ "ram_mb": 16091,
+ "ram_free_mb": 14731,
+ "disk_total_gb": 252.0,
+ "disk_free_gb": 26.0,
+ "kernel": "6.18.44-fc-v153",
+ "open_file_limit": 20000,
+ "minio_pid": 715
+}

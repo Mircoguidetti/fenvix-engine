@@ -1,0 +1,212 @@
+{
+  "scenario": "s4",
+  "config": {
+    "mode": "rotate",
+    "uris": "mongodb://127.0.0.1:28001,mongodb://127.0.0.1:28002",
+    "start": 20000,
+    "pool": 10000,
+    "active": 1000,
+    "lifetime_secs": 60,
+    "ramp_secs": 60,
+    "hold_secs": 120,
+    "rate": 1.0,
+    "read_pct": 80,
+    "duration_secs": 300,
+    "hot_tenant": -1,
+    "hot_rate": 500.0,
+    "hot_workers": 16,
+    "pool_size": 256,
+    "max_attempts": 200
+  },
+  "start_unix_ms": 1793036640092,
+  "end_unix_ms": 1793036952967,
+  "seconds": 312.875629453,
+  "normal": {
+    "activations": 6339,
+    "ops": 51358,
+    "late_ticks": 0,
+    "all_ops": {
+      "count": 51358,
+      "mean_ms": 5669.314892032404,
+      "p50_ms": 2066.431,
+      "p90_ms": 13852.671,
+      "p99_ms": 50757.631,
+      "p999_ms": 87621.631,
+      "max_ms": 147455.999
+    },
+    "steady_ops": {
+      "count": 45907,
+      "mean_ms": 4163.44457483608,
+      "p50_ms": 1627.135,
+      "p90_ms": 11132.927,
+      "p99_ms": 35192.831,
+      "p999_ms": 71499.775,
+      "max_ms": 147455.999
+    },
+    "by_type": {
+      "find_by_id": {
+        "count": 20973,
+        "mean_ms": 5196.78020049587,
+        "p50_ms": 1829.887,
+        "p90_ms": 12992.511,
+        "p99_ms": 48857.087,
+        "p999_ms": 85852.159,
+        "max_ms": 108658.687
+      },
+      "find_filter": {
+        "count": 21287,
+        "mean_ms": 5115.354041715603,
+        "p50_ms": 1820.671,
+        "p90_ms": 12664.831,
+        "p99_ms": 50003.967,
+        "p999_ms": 85655.551,
+        "max_ms": 108986.367
+      },
+      "insert": {
+        "count": 4534,
+        "mean_ms": 7821.216995147776,
+        "p50_ms": 4669.439,
+        "p90_ms": 17940.479,
+        "p99_ms": 57573.375,
+        "p999_ms": 92536.831,
+        "max_ms": 114753.535
+      },
+      "update": {
+        "count": 4564,
+        "mean_ms": 8286.736138913238,
+        "p50_ms": 4960.255,
+        "p90_ms": 19185.663,
+        "p99_ms": 59441.151,
+        "p999_ms": 98107.391,
+        "max_ms": 147455.999
+      }
+    },
+    "steady_by_type": {
+      "find_by_id": {
+        "count": 18264,
+        "mean_ms": 3203.6938331690753,
+        "p50_ms": 1374.207,
+        "p90_ms": 8749.055,
+        "p99_ms": 25739.263,
+        "p999_ms": 46104.575,
+        "max_ms": 88211.455
+      },
+      "find_filter": {
+        "count": 18545,
+        "mean_ms": 3199.6184596387084,
+        "p50_ms": 1363.967,
+        "p90_ms": 8691.711,
+        "p99_ms": 26460.159,
+        "p999_ms": 44892.159,
+        "max_ms": 63406.079
+      },
+      "insert": {
+        "count": 4534,
+        "mean_ms": 7821.216995147776,
+        "p50_ms": 4669.439,
+        "p90_ms": 17940.479,
+        "p99_ms": 57573.375,
+        "p999_ms": 92536.831,
+        "max_ms": 114753.535
+      },
+      "update": {
+        "count": 4564,
+        "mean_ms": 8286.736138913238,
+        "p50_ms": 4960.255,
+        "p90_ms": 19185.663,
+        "p99_ms": 59441.151,
+        "p999_ms": 98107.391,
+        "max_ms": 147455.999
+      }
+    },
+    "wake": {
+      "count": 5451,
+      "mean_ms": 18351.389493303966,
+      "p50_ms": 10600.447,
+      "p90_ms": 43548.671,
+      "p99_ms": 77004.799,
+      "p999_ms": 101318.655,
+      "max_ms": 108986.367
+    },
+    "wake_by_type": {
+      "find_by_id": {
+        "count": 2709,
+        "mean_ms": 18634.111102251787,
+        "p50_ms": 11157.503,
+        "p90_ms": 43515.903,
+        "p99_ms": 73924.607,
+        "p999_ms": 97976.319,
+        "max_ms": 108658.687
+      },
+      "find_filter": {
+        "count": 2742,
+        "mean_ms": 18072.070442013144,
+        "p50_ms": 10067.967,
+        "p90_ms": 43745.279,
+        "p99_ms": 80805.887,
+        "p999_ms": 106561.535,
+        "max_ms": 108986.367
+      }
+    },
+    "attempts": {
+      "1": 24889,
+      "10": 409,
+      "2": 12066,
+      "3": 6600,
+      "4": 3384,
+      "5": 1865,
+      "6": 1028,
+      "7": 568,
+      "8": 327,
+      "9": 222
+    }
+  },
+  "hot": {
+    "activations": 0,
+    "ops": 0,
+    "late_ticks": 0,
+    "all_ops": {
+      "count": 0,
+      "mean_ms": 0.0,
+      "p50_ms": 0.0,
+      "p90_ms": 0.0,
+      "p99_ms": 0.0,
+      "p999_ms": 0.0,
+      "max_ms": 0.0
+    },
+    "steady_ops": {
+      "count": 0,
+      "mean_ms": 0.0,
+      "p50_ms": 0.0,
+      "p90_ms": 0.0,
+      "p99_ms": 0.0,
+      "p999_ms": 0.0,
+      "max_ms": 0.0
+    },
+    "by_type": {},
+    "steady_by_type": {},
+    "wake": null,
+    "wake_by_type": {},
+    "attempts": {}
+  },
+  "errors_by_code": {
+    "cmd:134": 50337,
+    "io": 2331,
+    "pool_cleared": 2676,
+    "timeout": 4622
+  },
+  "failures_by_code": {},
+  "retries": 59966,
+  "acknowledged_writes": 9098,
+  "read_misses": 0,
+  "ops_per_sec": 164.1482914146721,
+  "verification": {
+    "tenants_checked": 3694,
+    "acknowledged_inserts": 4534,
+    "acknowledged_update_docs": 2675,
+    "missing_inserts": 0,
+    "stale_updates": 0,
+    "unreadable_tenants": 0,
+    "examples": []
+  }
+}

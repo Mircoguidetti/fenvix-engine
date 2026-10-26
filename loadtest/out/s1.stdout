@@ -1,0 +1,2 @@
++ /home/user/test5/target/release/loadgen run --name s1 --uris mongodb://127.0.0.1:28001 --out /home/user/test5/loadtest/out/s1 --pool-size 256 --worker-threads 2 --sample-secs 5 --proc minio=715 --mode rotate --start 0 --pool 20000 --active 1000 --lifetime-secs 60 --rate 1.0 --duration-secs 600 --docs 50
+s1: loadgen exit 0

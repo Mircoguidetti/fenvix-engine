@@ -1,0 +1,17 @@
+{
+  "tenants": 50000,
+  "first": 0,
+  "docs_per_tenant": 50,
+  "doc_bytes": 1000,
+  "parallel": 64,
+  "loaded": 50000,
+  "failed": 0,
+  "seconds": 1210.589891678,
+  "tenants_per_sec": 41.30217866819865,
+  "per_tenant_latency_ms": {
+    "p50": 1539.071,
+    "p99": 2004.991,
+    "max": 2643.967
+  },
+  "unix_ms_end": 1793009461044
+}

@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
+OUT = os.environ.get("LOAD_OUT", os.path.join(os.path.dirname(os.path.abspath(__file__)), "results"))
 
 
 def load(name):
