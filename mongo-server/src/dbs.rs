@@ -16,6 +16,9 @@ use std::time::{Duration, Instant};
 use tenant_bench::lifecycle::{Lifecycle, Op, Tenant};
 use tokio::sync::{Mutex as AsyncMutex, OwnedMutexGuard};
 
+/// Idle and shutdown closes that may run at once.
+const CLOSE_CONCURRENCY: usize = 64;
+
 pub struct Dbs {
     lc: Arc<Lifecycle>,
     raw: Arc<dyn ObjectStore>,
@@ -102,21 +105,37 @@ impl Dbs {
         (s.billed_put_tier(), s.billed_get_tier(), s.delete)
     }
 
-    /// Close tenants that have been idle for `idle`. Runs until the process exits.
+    /// Close tenants that have been idle for `idle`. Runs until the process exits. Closes run concurrently
+    /// (a close flushes, writes the clean marker and releases the lease, so tens of milliseconds each: one at a
+    /// time cannot keep up with a few tenants going idle per second).
     pub fn spawn_reaper(self: &Arc<Self>) {
         let me = Arc::clone(self);
+        let permits = Arc::new(tokio::sync::Semaphore::new(CLOSE_CONCURRENCY));
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_millis(500)).await;
                 let entries: Vec<Arc<AsyncMutex<Entry>>> = me.entries.lock().unwrap().values().cloned().collect();
                 for e in entries {
-                    if let Ok(mut g) = e.try_lock() {
-                        if g.tenant.is_some() && g.last_used.elapsed() >= me.idle {
-                            if let Err(err) = g.close().await {
-                                eprintln!("idle close of {} failed: {err:#}", g.name);
+                    // Cheap pre-check without waiting: skip entries in use or not idle yet.
+                    let due = match e.try_lock() {
+                        Ok(g) => g.tenant.is_some() && g.last_used.elapsed() >= me.idle,
+                        Err(_) => false,
+                    };
+                    if !due {
+                        continue;
+                    }
+                    let Ok(permit) = Arc::clone(&permits).try_acquire_owned() else { break };
+                    let idle = me.idle;
+                    tokio::spawn(async move {
+                        let _p = permit;
+                        if let Ok(mut g) = e.try_lock_owned() {
+                            if g.tenant.is_some() && g.last_used.elapsed() >= idle {
+                                if let Err(err) = g.close().await {
+                                    eprintln!("idle close of {} failed: {err:#}", g.name);
+                                }
                             }
                         }
-                    }
+                    });
                 }
             }
         });
@@ -124,12 +143,14 @@ impl Dbs {
 
     pub async fn close_all(&self) {
         let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
-        for e in entries {
-            let mut g = e.lock().await;
-            if let Err(err) = g.close().await {
-                eprintln!("close of {} failed: {err:#}", g.name);
-            }
-        }
+        futures::stream::iter(entries)
+            .for_each_concurrent(CLOSE_CONCURRENCY, |e| async move {
+                let mut g = e.lock().await;
+                if let Err(err) = g.close().await {
+                    eprintln!("close of {} failed: {err:#}", g.name);
+                }
+            })
+            .await;
     }
 
     /// Database names (tenants) present in object storage.

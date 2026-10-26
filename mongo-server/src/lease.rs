@@ -41,6 +41,9 @@ struct Held {
     version: Option<String>,
     /// Local monotonic time until which this process may still act as the owner.
     valid_until: Instant,
+    /// When this lease is next renewed. Leases are renewed individually, a third of a ttl after they were
+    /// last written, so the renewals of thousands of tenants spread out instead of arriving in one burst.
+    renew_at: Instant,
     seq: u64,
 }
 
@@ -167,18 +170,43 @@ impl Leases {
 
     fn record(&self, id: &str, etag: Option<String>, version: Option<String>, started: Instant, seq: u64) {
         self.denied.lock().unwrap().remove(id);
-        self.held.lock().unwrap().insert(id.to_string(), Held { etag, version, valid_until: started + self.ttl, seq });
+        self.held.lock().unwrap().insert(id.to_string(), Held { etag, version, valid_until: started + self.ttl, renew_at: started + self.ttl / 3, seq });
         self.stats.lock().unwrap().acquired += 1;
     }
 
     /// Release at clean close: expire the lease with a conditional update (there is no conditional delete).
+    /// If the update loses a race with an in-flight renewal (the etag moved), read the lease again and, while
+    /// it is still ours, retry: a renewal that landed after the release would otherwise keep the tenant
+    /// locked for a whole ttl.
     pub async fn release(&self, id: &str) {
         let Some(h) = self.held.lock().unwrap().remove(id) else { return };
         // Logged before the write: after this line the process no longer acts as the owner.
         log("release_begin", id, &self.holder, "");
-        let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: h.etag, version: h.version }), ..Default::default() };
-        let r = self.store.put_opts(&lease_path(id), PutPayload::from(body("", 0, h.seq + 1)), opts).await;
-        log("release", id, &self.holder, &format!("ok={}", r.is_ok()));
+        let path = lease_path(id);
+        let (mut etag, mut version, mut seq) = (h.etag, h.version, h.seq);
+        let mut ok = false;
+        for _ in 0..4 {
+            let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: etag.clone(), version: version.clone() }), ..Default::default() };
+            match self.store.put_opts(&path, PutPayload::from(body("", 0, seq + 1)), opts).await {
+                Ok(_) => {
+                    ok = true;
+                    break;
+                }
+                Err(object_store::Error::Precondition { .. }) => match self.store.get(&path).await {
+                    Ok(got) => {
+                        etag = got.meta.e_tag.clone();
+                        version = got.meta.version.clone();
+                        match got.bytes().await.ok().and_then(|b| parse(&b).ok()) {
+                            Some((holder, exp, s)) if holder == self.holder && exp > 0 => seq = s,
+                            _ => break, // someone else owns it now, or it is already free
+                        }
+                    }
+                    Err(_) => break,
+                },
+                Err(_) => break,
+            }
+        }
+        log("release", id, &self.holder, &format!("ok={ok}"));
     }
 
     /// Forget a lease without touching storage (the tenant never existed, or ownership was lost).
@@ -192,29 +220,36 @@ impl Leases {
         let _ = self.store.delete(&lease_path(id)).await;
     }
 
-    /// Renew every held lease every `ttl / 3`. Returns the tenants whose lease could not be renewed
-    /// (taken over by another process) so the server can abandon them.
+    /// Renew each held lease `ttl / 3` after it was last written. Returns (through `lost`) the tenants whose lease
+    /// could not be renewed because another process took them over, so the server can abandon them.
     pub fn spawn_renewer(self: &Arc<Self>, lost: tokio::sync::mpsc::UnboundedSender<String>) {
         let me = Arc::clone(self);
         tokio::spawn(async move {
-            let mut tick = tokio::time::interval(me.ttl / 3);
-            tick.tick().await;
+            let sem = Arc::new(tokio::sync::Semaphore::new(32));
+            let mut tick = tokio::time::interval(Duration::from_millis(200));
             loop {
                 tick.tick().await;
-                let ids: Vec<String> = me.held.lock().unwrap().keys().cloned().collect();
-                let sem = Arc::new(tokio::sync::Semaphore::new(32));
-                let mut tasks = Vec::new();
-                for id in ids {
+                let now = Instant::now();
+                let due: Vec<String> = {
+                    let mut held = me.held.lock().unwrap();
+                    let mut due = Vec::new();
+                    for (id, h) in held.iter_mut() {
+                        if h.renew_at <= now {
+                            // Pushed out so a slow renewal is not started twice; success sets the real next time.
+                            h.renew_at = now + me.ttl / 12;
+                            due.push(id.clone());
+                        }
+                    }
+                    due
+                };
+                for id in due {
                     let me = Arc::clone(&me);
                     let lost = lost.clone();
-                    let permit = Arc::clone(&sem).acquire_owned().await.unwrap();
-                    tasks.push(tokio::spawn(async move {
+                    let Ok(permit) = Arc::clone(&sem).acquire_owned().await else { break };
+                    tokio::spawn(async move {
                         let _p = permit;
                         me.renew_one(&id, &lost).await;
-                    }));
-                }
-                for t in tasks {
-                    let _ = t.await;
+                    });
                 }
             }
         });
@@ -234,15 +269,41 @@ impl Leases {
                     h.etag = r.e_tag;
                     h.version = r.version;
                     h.valid_until = started + self.ttl;
+                    h.renew_at = started + self.ttl / 3;
                     h.seq = seq + 1;
                 }
                 self.stats.lock().unwrap().renewals += 1;
             }
             Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) => {
-                self.held.lock().unwrap().remove(id);
-                self.stats.lock().unwrap().lost += 1;
-                log("lost", id, &self.holder, "");
-                let _ = lost.send(id.to_string());
+                // The etag moved. That is a lost lease only if someone else now holds it; our own release or
+                // re-acquire racing with this renewal also moves it.
+                let still_mine = match self.store.get(&lease_path(id)).await {
+                    Ok(got) => {
+                        let (e, v) = (got.meta.e_tag.clone(), got.meta.version.clone());
+                        match got.bytes().await.ok().and_then(|b| parse(&b).ok()) {
+                            Some((holder, exp, s)) if holder == self.holder && exp > 0 => Some((e, v, s)),
+                            _ => None,
+                        }
+                    }
+                    Err(_) => None,
+                };
+                let mut held = self.held.lock().unwrap();
+                match (held.get_mut(id), still_mine) {
+                    (Some(h), Some((e, v, s))) => {
+                        // Adopt the lease as it stands; the next tick renews it with the right etag.
+                        h.etag = e;
+                        h.version = v;
+                        h.seq = s;
+                    }
+                    (Some(_), None) => {
+                        held.remove(id);
+                        drop(held);
+                        self.stats.lock().unwrap().lost += 1;
+                        log("lost", id, &self.holder, "");
+                        let _ = lost.send(id.to_string());
+                    }
+                    (None, _) => {} // released meanwhile
+                }
             }
             Err(e) => {
                 // Transient store error: keep the lease, it simply stops being renewed (and becomes invalid

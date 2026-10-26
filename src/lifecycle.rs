@@ -10,6 +10,7 @@
 
 use crate::counting::{CountingStore, Snapshot};
 use anyhow::{anyhow, Context, Result};
+use futures::StreamExt;
 use bytes::Bytes;
 use object_store::path::Path;
 use object_store::{ObjectStore, ObjectStoreExt, PutPayload};
@@ -30,6 +31,8 @@ pub const L0_COMPACT_THRESHOLD: usize = 4;
 /// `Settings::l0_max_ssts` default is 8; a writer whose memtable flush would exceed it blocks.
 /// Wait for compaction before writing when a tenant is already this close.
 pub const L0_GUARD: usize = 6;
+/// Tenants garbage-collected at once by the maintenance loop.
+pub const GC_CONCURRENCY: usize = 16;
 const LONG_POLL: Duration = Duration::from_secs(3600);
 
 pub fn tenant_path(id: impl std::fmt::Display) -> String {
@@ -529,14 +532,21 @@ impl Maintenance {
                         }
                         due
                     };
-                    for id in due {
-                        let lock = maint_lock(&locks, &id);
-                        let _held = lock.lock().await;
-                        match gc_tenant(&s3, &id, gc_min_age).await {
-                            Ok(rec) => log.lock().unwrap().gcs.push(rec),
-                            Err(e) => log.lock().unwrap().errors.push(format!("gc {id}: {e:#}")),
-                        }
-                    }
+                    // Concurrent: a pass costs several LIST and DELETE round trips, so one at a time cannot keep up
+                    // when tens of tenants a second go idle (the backlog then grows without bound).
+                    futures::stream::iter(due)
+                        .for_each_concurrent(GC_CONCURRENCY, |id| {
+                            let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
+                            async move {
+                                let lock = maint_lock(&locks, &id);
+                                let _held = lock.lock().await;
+                                match gc_tenant(&s3, &id, gc_min_age).await {
+                                    Ok(rec) => log.lock().unwrap().gcs.push(rec),
+                                    Err(e) => log.lock().unwrap().errors.push(format!("gc {id}: {e:#}")),
+                                }
+                            }
+                        })
+                        .await;
                 }
             })
         };

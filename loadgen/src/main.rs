@@ -561,11 +561,14 @@ async fn sampler(sh: Arc<Shared>, out: PathBuf) {
                     let req = d.get_document("requests").cloned().unwrap_or_default();
                     let g = |k: &str| req.get_i64(k).unwrap_or(0);
                     let leases = d.get_document("leases").cloned().unwrap_or_default();
+                    let lat = d.get_document("lat").cloned().unwrap_or_default();
+                    let arr = |k: &str| -> Vec<i64> { lat.get_array(k).map(|a| a.iter().filter_map(|x| x.as_i64()).collect()).unwrap_or_default() };
                     servers.push(json!({
                         "uri": sh.uris[i], "up": true, "pid": pid, "cpu_s": cpu_s, "rss_mb": rss_mb,
                         "open_readers": d.get_i64("openReaders").unwrap_or(0), "open_writers": d.get_i64("openWriters").unwrap_or(0),
                         "entries": d.get_i64("entries").unwrap_or(0), "leases_held": d.get_i64("leasesHeld").unwrap_or(0),
                         "lease_stats": { "acquired": leases.get_i64("acquired").unwrap_or(0), "takeovers": leases.get_i64("takeovers").unwrap_or(0), "refused": leases.get_i64("refused").unwrap_or(0), "renewals": leases.get_i64("renewals").unwrap_or(0), "lost": leases.get_i64("lost").unwrap_or(0) },
+                        "lat": { "put": arr("put"), "get": arr("get") },
                         "req": { "put": g("put"), "copy": g("copy"), "list": g("list"), "get": g("get"), "head": g("head"), "delete": g("delete"), "billed_put_tier": g("billedPutTier"), "billed_get_tier": g("billedGetTier") },
                     }));
                 }

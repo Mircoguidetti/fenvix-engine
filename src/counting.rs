@@ -17,8 +17,35 @@ use std::time::Instant;
 /// S3 returns at most 1000 keys per LIST page.
 const LIST_PAGE_SIZE: u64 = 1000;
 
+/// Latency of object-store calls in power-of-two microsecond buckets (bucket `i` counts calls that took
+/// less than `2^i` microseconds and at least `2^(i-1)`): enough to see where tail latency comes from.
+#[derive(Debug)]
+pub struct LatBuckets {
+    pub b: [AtomicU64; 32],
+}
+
+impl Default for LatBuckets {
+    fn default() -> Self {
+        Self { b: std::array::from_fn(|_| AtomicU64::new(0)) }
+    }
+}
+
+impl LatBuckets {
+    pub fn record(&self, d: std::time::Duration) {
+        let us = d.as_micros() as u64;
+        let i = (64 - us.leading_zeros() as usize).min(31);
+        self.b[i].fetch_add(1, Relaxed);
+    }
+
+    pub fn snapshot(&self) -> Vec<u64> {
+        self.b.iter().map(|x| x.load(Relaxed)).collect()
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Counters {
+    pub lat_put: LatBuckets,
+    pub lat_get: LatBuckets,
     pub put: AtomicU64,
     pub multipart_create: AtomicU64,
     pub multipart_part: AtomicU64,
@@ -276,7 +303,9 @@ impl ObjectStore for CountingStore {
         };
         let token = self.trace.begin(op, location.as_ref());
         let bytes = payload.content_length() as u64;
+        let t0 = Instant::now();
         let res = self.inner.put_opts(location, payload, opts).await;
+        self.counters.lat_put.record(t0.elapsed());
         self.trace.end(token, bytes);
         res
     }
@@ -310,7 +339,9 @@ impl ObjectStore for CountingStore {
             "GET"
         };
         let token = self.trace.begin(op, location.as_ref());
+        let t0 = Instant::now();
         let mut res = self.inner.get_opts(location, options).await;
+        self.counters.lat_get.record(t0.elapsed());
         if token.is_some() {
             // Read the body inside the timed window so the duration covers the
             // whole transfer, not just the response headers.

@@ -21,6 +21,9 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BIN = os.path.join(ROOT, "target", "release")
 OUT = os.path.join(ROOT, "loadtest", "out")
+# MinIO reached on its container address: through the published port every request also crosses docker-proxy,
+# a userland proxy that used a noticeable share of the CPU in the first run.
+ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://172.18.0.2:9000")
 
 
 def now_ms():
@@ -51,9 +54,15 @@ class Server:
         self.proc = None
 
     def start(self):
+        import socket
+        try:
+            socket.create_connection(("127.0.0.1", self.port), timeout=0.2).close()
+            raise RuntimeError(f"port {self.port} is already in use (a stray server?)")
+        except OSError:
+            pass
         f = open(self.log, "ab")
         self.proc = subprocess.Popen(
-            [os.path.join(BIN, "mongo-server"), "--listen", f"127.0.0.1:{self.port}", "--idle-secs", str(self.idle), "--holder", self.holder, "--lease-ttl-secs", str(self.ttl)] + self.extra,
+            [os.path.join(BIN, "mongo-server"), "--listen", f"127.0.0.1:{self.port}", "--idle-secs", str(self.idle), "--holder", self.holder, "--lease-ttl-secs", str(self.ttl), "--endpoint", ENDPOINT] + self.extra,
             stdout=f, stderr=f, cwd=ROOT)
         for _ in range(100):
             try:

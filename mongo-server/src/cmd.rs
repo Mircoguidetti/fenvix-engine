@@ -126,7 +126,13 @@ impl Server {
         if self.log_commands {
             eprintln!("CMD {name} db={db}");
         }
-        match self.dispatch(db, &name, &cmd, conn_id).await {
+        let t0 = std::time::Instant::now();
+        let r = self.dispatch(db, &name, &cmd, conn_id).await;
+        let ms = t0.elapsed().as_millis();
+        if ms >= 500 {
+            eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
+        }
+        match r {
             Ok(d) => d,
             Err(e) => e.to_reply(),
         }
@@ -382,6 +388,10 @@ impl Server {
                 "copy": s.copy as i64, "list": s.list as i64,
                 "get": (s.get + s.get_range) as i64, "head": s.head as i64, "delete": s.delete as i64,
                 "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
+            },
+            "lat": {
+                "put": self.dbs.global.counters.lat_put.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),
+                "get": self.dbs.global.counters.lat_get.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),
             },
             "ok": 1.0
         }
