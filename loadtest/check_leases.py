@@ -51,12 +51,12 @@ def intervals(ev, kills, open_kinds, close_kinds):
                 open_.setdefault(holder, t)
             elif kind in close_kinds:
                 if holder in open_:
-                    out[tenant].append((holder, open_.pop(holder), t))
+                    out[tenant].append((holder, open_.pop(holder), t, kind))
             elif kind == "kill":
                 if holder in open_:
-                    out[tenant].append((holder, open_.pop(holder), t))
+                    out[tenant].append((holder, open_.pop(holder), t, "kill"))
         for holder, s in open_.items():
-            out[tenant].append((holder, s, inf))
+            out[tenant].append((holder, s, inf, "open"))
     return out
 
 
@@ -75,6 +75,7 @@ def overlaps(iv):
 
 def main(outdir):
     ev, kills = parse(outdir)
+    from collections import Counter
     lease_iv = intervals(ev, kills, {"acquired"}, {"release_begin", "lost", "invalid"})
     writer_iv = intervals(ev, kills, {"writer_open"}, {"writer_close"})
     lb, wb = overlaps(lease_iv), overlaps(writer_iv)
@@ -84,7 +85,7 @@ def main(outdir):
     # Maximum number of holders with the tenant open as a writer at any instant.
     max_writers = 0
     for tenant, items in writer_iv.items():
-        pts = sorted([(s, 1) for _, s, e in items] + [(e, -1) for _, s, e in items if e != float("inf")], key=lambda x: (x[0], x[1]))
+        pts = sorted([(s, 1) for _, s, e, _k in items] + [(e, -1) for _, s, e, _k in items if e != float("inf")], key=lambda x: (x[0], x[1]))
         cur = 0
         for _, d in pts:
             cur += d
@@ -102,6 +103,9 @@ def main(outdir):
         "wakes_after_takeover_or_crash": len(unclean),
         "unclean_wal_replay_wakes": sum("unclean=true" in r for _, _, _, r in unclean),
         "takeover_wakes_not_unclean": sum("unclean=false" in r and "takeover_from=-" not in r for _, _, _, r in unclean),
+        "lease_overlaps_by_how_the_earlier_holder_ended": dict(Counter(a[3] for _, a, b in lb)),
+        "lease_overlap_max_ms": max([min(a[2], b[2]) - b[1] for _, a, b in lb] or [0]),
+        "lease_overlap_median_ms": sorted([min(a[2], b[2]) - b[1] for _, a, b in lb] or [0])[len(lb) // 2],
         "examples": [list(map(str, x)) for x in (lb + wb)[:5]],
     }
     print(json.dumps(res, indent=1))
