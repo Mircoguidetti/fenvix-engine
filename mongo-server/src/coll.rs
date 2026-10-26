@@ -261,9 +261,10 @@ pub async fn find_docs(g: &mut Entry, coll: &str, indexes: &[IndexDef], o: &Find
             let want = early.unwrap();
             let mut c = IxCursor::new(coll, &indexes[s.idx], s);
             let mut seen: HashSet<Vec<u8>> = HashSet::new();
-            let batch = (want * 2).max(64);
+            let mut batch = want.max(1);
             'ix: loop {
                 let b = c.next_batch(g, batch).await?;
+                batch = (batch * 2).min(4096);
                 if b.is_empty() {
                     break;
                 }

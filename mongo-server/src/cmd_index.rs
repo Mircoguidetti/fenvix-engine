@@ -269,7 +269,7 @@ impl Server {
                 match num_opt(v) {
                     Some(n) if n >= 0.0 && n <= 2147483647.0 => {}
                     Some(_) => return Err(MongoError::new(67, "CannotCreateIndex", "TTL index 'expireAfterSeconds' option must be within an acceptable range, try a different number than ".to_string() + &fmt_doc(&doc! {"v": v.clone()}).replace("{ v: ", "").replace(" }", ""))),
-                    None => return Err(MongoError::new(14, "TypeMismatch", "TTL index 'expireAfterSeconds' option must be numeric, but received a type of ".to_string() + crate::update::type_name(v))),
+                    None => return Err(MongoError::new(67, "CannotCreateIndex", format!("TTL index 'expireAfterSeconds' option must be numeric, but received a type of '{}'. Index spec: {}", crate::update::type_name(v), fmt_doc(&idx)))),
                 }
                 if key.contains_key("_id") && key.len() == 1 {
                     return Err(MongoError::new(67, "CannotCreateIndex", "The field 'expireAfterSeconds' is not valid for an _id index specification.".into()));
@@ -471,10 +471,10 @@ impl Server {
                 "executionStats",
                 doc! {
                     "executionSuccess": true,
-                    "nReturned": n as i64,
-                    "executionTimeMillis": 0_i64,
-                    "totalKeysExamined": if matches!(plan, Plan::Coll { .. }) { 0 } else { stats.keys as i64 },
-                    "totalDocsExamined": stats.docs as i64,
+                    "nReturned": n as i32,
+                    "executionTimeMillis": 0,
+                    "totalKeysExamined": if matches!(plan, Plan::Coll { .. }) { 0 } else { stats.keys as i32 },
+                    "totalDocsExamined": stats.docs as i32,
                     "executionStages": winning,
                 },
             );
@@ -583,7 +583,7 @@ impl Server {
         let _ = db;
         Ok(doc! {
             "size": size as i64,
-            "count": count,
+            "count": rows.len() as i32,
             "avgObjSize": if count > 0 { size as i64 / count } else { 0 },
             "storageSize": size as i64,
             "freeStorageSize": 0_i64,
@@ -617,7 +617,7 @@ impl Server {
         let (mut objects, mut data, mut indexes_n, mut index_size) = (0_i64, 0_i64, 0_i64, 0_i64);
         for c in &names {
             let s = self.storage_stats(&mut g, db, c).await?;
-            objects += s.get_i64("count").unwrap_or(0);
+            objects += s.get_i32("count").unwrap_or(0) as i64;
             data += s.get_i64("size").unwrap_or(0);
             indexes_n += s.get_i32("nindexes").unwrap_or(0) as i64;
             index_size += s.get_i64("totalIndexSize").unwrap_or(0);
@@ -680,6 +680,23 @@ fn validate_partial(p: &Document) -> R<()> {
 
 // ---- explain plan trees ----------------------------------------------------------------------
 
+/// `"[a, b)"` read backwards is `"(b, a]"`.
+fn mirror(l: &str) -> String {
+    let flip = |c: char| match c {
+        '[' => ']',
+        ']' => '[',
+        '(' => ')',
+        ')' => '(',
+        o => o,
+    };
+    let (open, close) = (l.chars().next().unwrap_or('['), l.chars().last().unwrap_or(']'));
+    let inner = &l[open.len_utf8()..l.len() - close.len_utf8()];
+    match inner.split_once(", ") {
+        Some((a, b)) => format!("{}{b}, {a}{}", flip(close), flip(open)),
+        None => l.to_string(),
+    }
+}
+
 fn ix_stage(idx: &IndexDef, s: &index::IxScan) -> Document {
     let mut mk_paths = Document::new();
     for (f, _) in &idx.key {
@@ -687,7 +704,11 @@ fn ix_stage(idx: &IndexDef, s: &index::IxScan) -> Document {
     }
     let mut bounds = Document::new();
     for (f, labels) in &s.bounds {
-        bounds.insert(f.clone(), labels.iter().map(|l| Bson::String(l.clone())).collect::<Vec<_>>());
+        let mut ls: Vec<String> = labels.clone();
+        if s.reverse {
+            ls = ls.iter().rev().map(|l| mirror(l)).collect();
+        }
+        bounds.insert(f.clone(), ls.into_iter().map(Bson::String).collect::<Vec<_>>());
     }
     doc! {
         "stage": "IXSCAN",
@@ -708,15 +729,15 @@ fn ix_stage(idx: &IndexDef, s: &index::IxScan) -> Document {
 fn winning_plan(plan: &Plan, indexes: &[IndexDef], filter: &Document, sort: &[(String, bool)], limit: i64, skip: i64, projection: Option<&Document>, exec: &Option<(usize, crate::coll::Stats)>) -> Document {
     let counts = |d: &mut Document, keys: usize, docs: usize, n: usize| {
         if exec.is_some() {
-            d.insert("nReturned", n as i64);
-            d.insert("executionTimeMillisEstimate", 0_i64);
-            d.insert("works", n as i64 + 1);
-            d.insert("advanced", n as i64);
+            d.insert("nReturned", n as i32);
+            d.insert("executionTimeMillisEstimate", 0);
+            d.insert("works", n as i32 + 1);
+            d.insert("advanced", n as i32);
             if keys > 0 {
-                d.insert("keysExamined", keys as i64);
+                d.insert("keysExamined", keys as i32);
             }
             if docs > 0 {
-                d.insert("docsExamined", docs as i64);
+                d.insert("docsExamined", docs as i32);
             }
         }
     };
@@ -757,6 +778,12 @@ fn winning_plan(plan: &Plan, indexes: &[IndexDef], filter: &Document, sort: &[(S
         }
     };
     let provided = matches!(plan, Plan::Ix(s) if s.sorted);
+    if filter.len() == 1 && filter.contains_key("$or") {
+        let mut d = doc! { "stage": "SUBPLAN" };
+        counts(&mut d, 0, 0, nret);
+        d.insert("inputStage", node);
+        node = d;
+    }
     if !sort.is_empty() && !provided {
         let mut sp = Document::new();
         for (f, asc) in sort {
@@ -766,12 +793,12 @@ fn winning_plan(plan: &Plan, indexes: &[IndexDef], filter: &Document, sort: &[(S
         if limit > 0 {
             d.insert("limitAmount", limit + skip.max(0));
         }
-        d.insert("type", if limit > 0 { "default" } else { "simple" });
+        d.insert("type", "simple");
         counts(&mut d, 0, 0, nret);
         d.insert("inputStage", node);
         node = d;
     }
-    if limit > 0 {
+    if limit > 0 && sort.is_empty() || (limit > 0 && provided) {
         let mut d = doc! { "stage": "LIMIT", "limitAmount": limit };
         counts(&mut d, 0, 0, nret);
         d.insert("inputStage", node);

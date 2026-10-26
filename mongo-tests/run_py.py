@@ -86,7 +86,35 @@ def err_result(e, cmp_msg):
     return {"__exception__": type(e).__name__, "text": str(e)[:200]}
 
 
-def pick(doc, keys):
+def _shape(plan):
+    if not isinstance(plan, dict):
+        return None
+    ins = plan.get("inputStages") or ([plan["inputStage"]] if "inputStage" in plan else [])
+    s = {"stage": plan.get("stage")}
+    if ins:
+        s["in"] = [_shape(i) for i in ins]
+    if plan.get("stage") == "IXSCAN":
+        for k in ("indexName", "direction", "isMultiKey", "isUnique", "isSparse", "isPartial", "keyPattern", "indexBounds"):
+            if k in plan:
+                s[k] = plan[k]
+    return s
+
+
+def reduce_explain(doc, stats):
+    out = {"plan": _shape(doc["queryPlanner"]["winningPlan"])}
+    if stats:
+        es = doc["executionStats"]
+        out["stats"] = {k: es[k] for k in ("nReturned", "totalKeysExamined", "totalDocsExamined") if k in es}
+    return out
+
+
+def pick(doc, keys, reduce=None):
+    if reduce == "collstats":
+        return {"nindexes": doc["nindexes"], "count": doc["count"], "indexNames": sorted(doc["indexSizes"].keys()), "ok": doc["ok"]}
+    if reduce == "explain":
+        return reduce_explain(doc, False)
+    if reduce == "explain_stats":
+        return reduce_explain(doc, True)
     if keys is None:
         return {k: v for k, v in doc.items() if k not in ("operationTime", "$clusterTime", "localTime", "connectionId", "topologyVersion", "$db")}
     return {k: doc[k] for k in keys if k in doc}
@@ -111,6 +139,9 @@ def exec_step(ctx, db, dbname, step):
                 kw[k_dst] = step[k_src]
         if "sort" in step:
             kw["sort"] = pairs(step["sort"])
+        if "hint" in step:
+            h = step["hint"]
+            kw["hint"] = h if isinstance(h, str) else pairs(h)
         if op == "find_one":
             kw.pop("limit", None)
             d = coll.find_one(step.get("filter", {}), **kw)
@@ -163,14 +194,18 @@ def exec_step(ctx, db, dbname, step):
         return sorted([{"name": c["name"], "type": c["type"]} for c in db.list_collections(filter=flt)], key=lambda c: c["name"])
     if op == "create_index":
         kw = {k: step[k] for k in ("unique", "name") if k in step}
+        kw.update(step.get("opts", {}))
         return coll.create_index([tuple(k) for k in step["keys"]], **kw)
+    if op == "drop_index":
+        coll.drop_index(step["index"] if isinstance(step["index"], str) else [tuple(k) for k in step["index"]])
+        return "ok"
     if op == "list_indexes":
         out = []
         for i in coll.list_indexes():
-            out.append({k: i[k] for k in ("v", "key", "name", "unique") if k in i})
+            out.append(dict(i) if step.get("full") else {k: i[k] for k in ("v", "key", "name", "unique") if k in i})
         return out
     if op in ("command", "command_raw"):
-        return pick(db.command(swap_db(step["cmd"], dbname)), step.get("pick"))
+        return pick(db.command(swap_db(step["cmd"], dbname)), step.get("pick"), step.get("reduce"))
     if op == "admin_command":
         return pick(ctx.client.admin.command(swap_db(step["cmd"], dbname)), step.get("pick"))
     if op == "db_in_list":

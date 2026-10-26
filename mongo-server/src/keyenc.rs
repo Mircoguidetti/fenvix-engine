@@ -58,8 +58,8 @@ fn number(v: &Bson, out: &mut Vec<u8>) {
 fn body(v: &Bson, out: &mut Vec<u8>) {
     match v {
         Bson::MinKey | Bson::MaxKey => {}
-        Bson::Null => out.push(0),
-        Bson::Undefined => out.push(1),
+        Bson::Undefined => out.push(0),
+        Bson::Null => out.push(1),
         Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_) | Bson::Decimal128(_) => number(v, out),
         Bson::String(s) | Bson::Symbol(s) => escaped(s.as_bytes(), out),
         Bson::Document(d) => {

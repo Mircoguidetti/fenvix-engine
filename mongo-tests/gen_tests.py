@@ -1350,6 +1350,9 @@ gt("accumulator_two_keys_error", {"_id": "$k", "x": {"$sum": 1, "$max": 1}}, pos
 add("group.then_unwind_then_group", [ins("c", GD), agg("c", [{"$unwind": "$tags"}, {"$group": {"_id": "$tags", "n": {"$sum": 1}, "ks": {"$push": "$k"}}}, {"$sort": {"_id": 1}}])], "aggregate: $group with expressions")
 add("group.pipeline_orders_report", [ins("orders", ORDERS), agg("orders", [{"$addFields": {"total": {"$multiply": [{"$ifNull": ["$amt", 0]}, "$qty"]}}}, {"$group": {"_id": "$cust", "revenue": {"$sum": "$total"}, "n": {"$sum": 1}}}, {"$sort": {"revenue": -1, "_id": 1}}, {"$project": {"_id": 0, "customer": "$_id", "revenue": 1, "n": 1}}])], "aggregate: $group with expressions")
 
+import gen_tests_indexes
+gen_tests_indexes.register(globals())
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "tests.json"
     names = [t["name"] for t in TESTS]

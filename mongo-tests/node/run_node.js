@@ -70,7 +70,23 @@ function errResult(e, cmpMsg) {
   return { __exception__: name, text: String(e.message).slice(0, 200) };
 }
 
-const pick = (doc, keys) => {
+function shape(plan) {
+  if (!plan || typeof plan !== 'object') return null;
+  const ins = plan.inputStages ?? (plan.inputStage ? [plan.inputStage] : []);
+  const s = { stage: plan.stage };
+  if (ins.length) s.in = ins.map(shape);
+  if (plan.stage === 'IXSCAN') for (const k of ['indexName', 'direction', 'isMultiKey', 'isUnique', 'isSparse', 'isPartial', 'keyPattern', 'indexBounds']) if (k in plan) s[k] = plan[k];
+  return s;
+}
+function reduceExplain(doc, stats) {
+  const out = { plan: shape(doc.queryPlanner.winningPlan) };
+  if (stats) { const es = doc.executionStats; out.stats = {}; for (const k of ['nReturned', 'totalKeysExamined', 'totalDocsExamined']) if (k in es) out.stats[k] = es[k]; }
+  return out;
+}
+const pick = (doc, keys, reduce) => {
+  if (reduce === 'collstats') return { nindexes: doc.nindexes, count: doc.count, indexNames: Object.keys(doc.indexSizes).sort(), ok: doc.ok };
+  if (reduce === 'explain') return reduceExplain(doc, false);
+  if (reduce === 'explain_stats') return reduceExplain(doc, true);
   if (!keys) { const o = { ...doc }; for (const k of ['operationTime', '$clusterTime', 'localTime', 'connectionId', 'topologyVersion', '$db']) delete o[k]; return o; }
   return Object.fromEntries(keys.filter((k) => k in doc).map((k) => [k, doc[k]]));
 };
@@ -128,6 +144,7 @@ async function execStep(ctx, db, dbname, step) {
       const o = {};
       if (step.projection) o.projection = step.projection;
       if (step.sort) o.sort = step.sort;
+      if (step.hint !== undefined) o.hint = step.hint;
       if (step.skip !== undefined) o.skip = num(step.skip);
       if (step.limit !== undefined) o.limit = num(step.limit);
       if (step.batch_size !== undefined) o.batchSize = num(step.batch_size);
@@ -182,10 +199,12 @@ async function execStep(ctx, db, dbname, step) {
       const o = {};
       if (step.unique !== undefined) o.unique = step.unique;
       if (step.name !== undefined) o.name = step.name;
+      Object.assign(o, step.opts ?? {});
       return await coll.createIndex(keys, o);
     }
-    case 'list_indexes': return (await coll.listIndexes().toArray()).map((i) => Object.fromEntries(['v', 'key', 'name', 'unique'].filter((k) => k in i).map((k) => [k, i[k]])));
-    case 'command': case 'command_raw': return pick(await db.command(swapDb(step.cmd, dbname)), step.pick);
+    case 'drop_index': await coll.dropIndex(typeof step.index === 'string' ? step.index : Object.fromEntries(step.index.map(([k, d]) => [k, d]))); return 'ok';
+    case 'list_indexes': return (await coll.listIndexes().toArray()).map((i) => (step.full ? i : Object.fromEntries(['v', 'key', 'name', 'unique'].filter((k) => k in i).map((k) => [k, i[k]]))));
+    case 'command': case 'command_raw': return pick(await db.command(swapDb(step.cmd, dbname)), step.pick, step.reduce);
     case 'admin_command': return pick(await ctx.client.db('admin').command(swapDb(step.cmd, dbname)), step.pick);
     case 'db_in_list': return (await ctx.client.db().admin().listDatabases({ nameOnly: true })).databases.some((d) => d.name === dbname);
     case 'db_in_list_command': return (await ctx.client.db('admin').command({ listDatabases: 1, nameOnly: true })).databases.some((d) => d.name === dbname);

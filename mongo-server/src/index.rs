@@ -198,7 +198,8 @@ impl IndexDef {
             return Ok((BTreeMap::new(), false));
         }
         if array_fields > 1 {
-            let names: Vec<String> = self.key.iter().zip(&fields).filter(|(_, (_, a))| *a).map(|((f, _), _)| format!("[{f}]")).collect();
+            let mut names: Vec<String> = self.key.iter().zip(&fields).filter(|(_, (_, a))| *a).map(|((f, _), _)| format!("[{f}]")).collect();
+            names.reverse();
             return Err(MongoError::new(171, "CannotIndexParallelArrays", format!("cannot index parallel arrays {}", names.join(" "))));
         }
         let mut acc: Vec<(Vec<u8>, Document)> = vec![(Vec::new(), Document::new())];
@@ -279,6 +280,11 @@ pub struct Constraint {
     pub lo: Option<(Bson, bool)>,
     pub hi: Option<(Bson, bool)>,
     pub exists: bool,
+    pub exists_false: bool,
+    /// `$ne` / `$nin` scalar operands.
+    pub ne: Vec<Bson>,
+    /// Anchored literal prefix of a `$regex` / regex literal, and the regex value itself.
+    pub regex_prefix: Option<(String, Bson)>,
 }
 
 fn bracketable(v: &Bson) -> bool {
@@ -316,22 +322,73 @@ fn add_conjunct(out: &mut HashMap<String, Constraint>, path: &str, cond: &Bson) 
                     "$exists" => {
                         if matches!(arg, Bson::Boolean(true)) || num(arg).map(|n| n != 0.0).unwrap_or(false) {
                             c.exists = true;
+                        } else {
+                            c.exists_false = true;
+                        }
+                    }
+                    "$ne" if eq_ok(arg) && !matches!(arg, Bson::Document(_)) && !matches!(arg, Bson::Double(f) if f.is_nan()) => c.ne = vec![arg.clone()],
+                    "$nin" => {
+                        if let Bson::Array(a) = arg {
+                            if !a.is_empty() && a.iter().all(|v| eq_ok(v) && !matches!(v, Bson::Document(_)) && !matches!(v, Bson::Double(f) if f.is_nan())) {
+                                c.ne = a.clone();
+                            }
+                        }
+                    }
+                    "$regex" => {
+                        let opts = d.get("$options").and_then(|o| o.as_str()).unwrap_or("");
+                        match arg {
+                            Bson::String(p) => c.regex_prefix = regex_prefix(p, opts),
+                            Bson::RegularExpression(r) => c.regex_prefix = regex_prefix(r.pattern.as_str(), if opts.is_empty() { r.options.as_str() } else { opts }),
+                            _ => {}
                         }
                     }
                     _ => {}
                 }
             }
         }
+        Bson::RegularExpression(r) => c.regex_prefix = regex_prefix(r.pattern.as_str(), r.options.as_str()),
         other if eq_ok(other) => c.eq = Some(vec![other.clone()]),
         _ => {}
     }
+}
+
+/// Literal prefix of a `^`-anchored regex without case folding or multiline mode.
+fn regex_prefix(pattern: &str, options: &str) -> Option<(String, Bson)> {
+    if options.chars().any(|c| matches!(c, 'i' | 'm' | 'x')) || !pattern.starts_with('^') || pattern.contains('|') {
+        return None;
+    }
+    let mut prefix = String::new();
+    let rest: Vec<char> = pattern[1..].chars().collect();
+    let mut i = 0;
+    while i < rest.len() {
+        let c = rest[i];
+        if "\\.[](){}*+?^$|".contains(c) {
+            if c == '\\' && i + 1 < rest.len() && !rest[i + 1].is_alphanumeric() {
+                prefix.push(rest[i + 1]);
+                i += 2;
+                continue;
+            }
+            break;
+        }
+        // a quantifier makes the previous literal optional
+        if matches!(rest.get(i + 1), Some('*') | Some('?') | Some('{')) {
+            break;
+        }
+        prefix.push(c);
+        i += 1;
+    }
+    if prefix.is_empty() {
+        return None;
+    }
+    let re = Bson::RegularExpression(bson::Regex { pattern: pattern.to_string().try_into().ok()?, options: bson::raw::CString::try_from(options.to_string()).ok()? });
+    Some((prefix, re))
 }
 
 /// Per-field constraints implied by the AND-level conjuncts of `filter` (top-level fields and `$and`).
 pub fn constraints(filter: &Document) -> HashMap<String, Constraint> {
     let mut out = HashMap::new();
     collect(filter, &mut out);
-    out.retain(|_, c| c.eq.is_some() || c.lo.is_some() || c.hi.is_some() || c.exists);
+    out.retain(|_, c| c.eq.is_some() || c.lo.is_some() || c.hi.is_some() || c.exists || c.exists_false || !c.ne.is_empty() || c.regex_prefix.is_some());
     out
 }
 
@@ -383,78 +440,130 @@ impl Plan {
     }
 }
 
-fn comp_range(c: &Constraint, asc: bool, multikey: bool) -> Option<(Vec<u8>, Option<Vec<u8>>, String)> {
-    let (lo, hi) = (&c.lo, &c.hi);
-    let (lo, hi) = match (lo, hi) {
-        (Some((l, _)), Some((h, _))) if type_rank(l) != type_rank(h) => (lo, &None),
-        _ => (lo, hi),
-    };
-    let (lo, hi) = if multikey && lo.is_some() && hi.is_some() { (lo, &None) } else { (lo, hi) };
-    if lo.is_none() && hi.is_none() {
-        return None;
-    }
-    let rank = type_rank(&lo.as_ref().or(hi.as_ref()).unwrap().0);
-    let (lo_b, lo_incl) = match lo {
-        Some((v, i)) => (Some(keyenc::encode(v)), *i),
-        None => (None, true),
-    };
-    let (hi_b, hi_incl) = match hi {
-        Some((v, i)) => (Some(keyenc::encode(v)), *i),
-        None => (None, true),
-    };
-    let bracket_end = keyenc::prefix_end(&[rank]);
-    // Ascending byte range of the value-space interval.
-    let start_asc = match &lo_b {
-        Some(b) => if lo_incl { Some(b.clone()) } else { keyenc::prefix_end(b) },
-        None => Some(vec![rank]),
-    };
-    let end_asc = match &hi_b {
-        Some(b) => if hi_incl { keyenc::prefix_end(b) } else { Some(b.clone()) },
-        None => bracket_end.clone(),
-    };
-    let label = {
-        let l = match lo {
-            Some((v, i)) => format!("{}{}", if *i { "[" } else { "(" }, fmt_bound(v)),
-            None => format!("[{}", min_of_bracket(rank)),
-        };
-        let h = match hi {
-            Some((v, i)) => format!("{}{}", fmt_bound(v), if *i { "]" } else { ")" }),
-            None => format!("{}]", max_of_bracket(rank)),
-        };
-        if asc { format!("{l}, {h}") } else {
-            let l2 = match hi {
-                Some((v, i)) => format!("{}{}", if *i { "[" } else { "(" }, fmt_bound(v)),
-                None => format!("[{}", max_of_bracket(rank)),
+/// Endpoint of a value-space interval.
+enum Ep {
+    /// Unbounded (not limited to the type bracket).
+    Open,
+    /// The edge of the type bracket of `rank`.
+    Bracket,
+    Val(Vec<u8>, bool),
+}
+
+struct VI {
+    lo: Ep,
+    hi: Ep,
+    rank: u8,
+    lo_s: String,
+    hi_s: String,
+    lo_incl: bool,
+    hi_incl: bool,
+}
+
+impl VI {
+    /// Byte range of this interval on a key component of the given direction, and its `explain` label.
+    fn map_dir(&self, asc: bool) -> Option<(Vec<u8>, Option<Vec<u8>>, String)> {
+        let rank = self.rank;
+        if asc {
+            let start = match &self.lo {
+                Ep::Open => Vec::new(),
+                Ep::Bracket => vec![rank],
+                Ep::Val(b, incl) => if *incl { b.clone() } else { keyenc::prefix_end(b)? },
             };
-            let h2 = match lo {
-                Some((v, i)) => format!("{}{}", fmt_bound(v), if *i { "]" } else { ")" }),
-                None => format!("{}]", min_of_bracket(rank)),
+            let end = match &self.hi {
+                Ep::Open => None,
+                Ep::Bracket => keyenc::prefix_end(&[rank]),
+                Ep::Val(b, incl) => if *incl { keyenc::prefix_end(b) } else { Some(b.clone()) },
             };
-            format!("{l2}, {h2}")
+            let label = format!("{}{}, {}{}", if self.lo_incl { "[" } else { "(" }, self.lo_s, self.hi_s, if self.hi_incl { "]" } else { ")" });
+            Some((start, end, label))
+        } else {
+            let start = match &self.hi {
+                Ep::Open => Vec::new(),
+                Ep::Bracket => vec![!rank],
+                Ep::Val(b, incl) => {
+                    let mut x = b.clone();
+                    keyenc::invert(&mut x);
+                    if *incl { x } else { keyenc::prefix_end(&x)? }
+                }
+            };
+            let end = match &self.lo {
+                Ep::Open => None,
+                Ep::Bracket => keyenc::prefix_end(&[!rank]),
+                Ep::Val(b, incl) => {
+                    let mut x = b.clone();
+                    keyenc::invert(&mut x);
+                    if *incl { keyenc::prefix_end(&x) } else { Some(x) }
+                }
+            };
+            let label = format!("{}{}, {}{}", if self.hi_incl { "[" } else { "(" }, self.hi_s, self.lo_s, if self.lo_incl { "]" } else { ")" });
+            Some((start, end, label))
         }
-    };
-    if asc {
-        Some((start_asc?, end_asc, label))
-    } else {
-        // Descending: complement; the value interval [lo, hi] maps to [inv(hi), inv(lo)] with flipped ends.
-        let start = match &hi_b {
-            Some(b) => {
-                let mut x = b.clone();
-                keyenc::invert(&mut x);
-                if hi_incl { Some(x) } else { keyenc::prefix_end(&x) }
-            }
-            None => Some(vec![!rank]),
-        };
-        let end = match &lo_b {
-            Some(b) => {
-                let mut x = b.clone();
-                keyenc::invert(&mut x);
-                if lo_incl { keyenc::prefix_end(&x) } else { Some(x) }
-            }
-            None => keyenc::prefix_end(&[!rank]),
-        };
-        Some((start?, end, label))
     }
+}
+
+fn val_ep(v: &Bson) -> (Ep, String) {
+    let b = keyenc::encode(v);
+    (Ep::Val(b, true), fmt_bound(v))
+}
+
+/// Value-space intervals implied by a non-equality constraint (a range, regex prefix, `$ne`/`$nin`, `$exists: false`).
+fn value_intervals(c: &Constraint, multikey: bool) -> Vec<VI> {
+    let (lo, hi) = (&c.lo, &c.hi);
+    if lo.is_some() || hi.is_some() {
+        let (lo, hi) = match (lo, hi) {
+            (Some((l, _)), Some((h, _))) if type_rank(l) != type_rank(h) => (lo, &None),
+            _ => (lo, hi),
+        };
+        let (lo, hi) = if multikey && lo.is_some() && hi.is_some() { (lo, &None) } else { (lo, hi) };
+        let rank = type_rank(&lo.as_ref().or(hi.as_ref()).unwrap().0);
+        let (lo_ep, lo_s, lo_i) = match lo {
+            Some((v, i)) => (Ep::Val(keyenc::encode(v), *i), fmt_bound(v), *i),
+            None => (Ep::Bracket, min_of_bracket(rank), true),
+        };
+        let (hi_ep, hi_s, hi_i) = match hi {
+            Some((v, i)) => (Ep::Val(keyenc::encode(v), *i), fmt_bound(v), *i),
+            None => (Ep::Bracket, max_of_bracket(rank), true),
+        };
+        return vec![VI { lo: lo_ep, hi: hi_ep, rank, lo_s, hi_s, lo_incl: lo_i, hi_incl: hi_i }];
+    }
+    if let Some((prefix, re)) = &c.regex_prefix {
+        let mut e = vec![4u8];
+        for &b in prefix.as_bytes() {
+            e.push(b);
+            if b == 0 {
+                e.push(0xFF);
+            }
+        }
+        let mut hi_label = prefix.clone();
+        if let Some(last) = hi_label.pop() {
+            hi_label.push(char::from_u32(last as u32 + 1).unwrap_or(last));
+        }
+        let (re_ep, re_s) = val_ep(re);
+        let Ep::Val(re_b, _) = &re_ep else { unreachable!() };
+        return vec![
+            VI { lo: Ep::Val(keyenc::encode(&Bson::String(prefix.clone())), true), hi: match keyenc::prefix_end(&e) { Some(x) => Ep::Val(x, false), None => Ep::Open }, rank: 4, lo_s: format!("\"{prefix}\""), hi_s: format!("\"{hi_label}\""), lo_incl: true, hi_incl: false },
+            VI { lo: Ep::Val(re_b.clone(), true), hi: Ep::Val(re_b.clone(), true), rank: 12, lo_s: re_s.clone(), hi_s: re_s, lo_incl: true, hi_incl: true },
+        ];
+    }
+    if !c.ne.is_empty() {
+        let mut vals = c.ne.clone();
+        vals.sort_by(crate::query::compare);
+        vals.dedup_by(|a, b| crate::query::equal(a, b));
+        let mut out = Vec::new();
+        let n = vals.len();
+        for i in 0..=n {
+            let (lo, lo_s, lo_i) = if i == 0 { (Ep::Open, "MinKey".to_string(), true) } else { (Ep::Val(keyenc::encode(&vals[i - 1]), false), fmt_bound(&vals[i - 1]), false) };
+            let (hi, hi_s, hi_i) = if i == n { (Ep::Open, "MaxKey".to_string(), true) } else { (Ep::Val(keyenc::encode(&vals[i]), false), fmt_bound(&vals[i]), false) };
+            out.push(VI { lo, hi, rank: 1, lo_s, hi_s, lo_incl: lo_i, hi_incl: hi_i });
+        }
+        return out;
+    }
+    if c.exists_false {
+        let (ep, s) = val_ep(&Bson::Null);
+        let Ep::Val(b, _) = &ep else { unreachable!() };
+        return vec![VI { lo: Ep::Val(b.clone(), true), hi: Ep::Val(b.clone(), true), rank: 2, lo_s: s.clone(), hi_s: s, lo_incl: true, hi_incl: true }];
+    }
+    Vec::new()
 }
 
 fn min_of_bracket(rank: u8) -> String {
@@ -482,6 +591,8 @@ pub fn fmt_bound(v: &Bson) -> String {
         }
         Bson::String(s) => format!("\"{s}\""),
         Bson::Null => "null".into(),
+        Bson::Undefined => "undefined".into(),
+        Bson::RegularExpression(r) => format!("/{}/{}", r.pattern.as_str(), r.options.as_str()),
         Bson::MinKey => "MinKey".into(),
         Bson::MaxKey => "MaxKey".into(),
         Bson::Boolean(b) => b.to_string(),
@@ -529,7 +640,14 @@ fn bounds_for(idx: &IndexDef, cs: &HashMap<String, Constraint>) -> Option<(Vec<I
     for (field, asc) in &idx.key {
         let c = cs.get(field);
         if let Some(eq) = c.and_then(|c| c.eq.as_ref()) {
-            let mut comps: Vec<(Vec<u8>, &Bson)> = eq.iter().map(|v| (keyenc::component(v, *asc), v)).collect();
+            let undefined = Bson::Undefined;
+            let mut comps: Vec<(Vec<u8>, &Bson)> = Vec::new();
+            for v in eq {
+                comps.push((keyenc::component(v, *asc), v));
+                if matches!(v, Bson::Null) {
+                    comps.push((keyenc::component(&undefined, *asc), &undefined));
+                }
+            }
             comps.sort_by(|a, b| a.0.cmp(&b.0));
             comps.dedup_by(|a, b| a.0 == b.0);
             let mut next = Vec::new();
@@ -545,24 +663,28 @@ fn bounds_for(idx: &IndexDef, cs: &HashMap<String, Constraint>) -> Option<(Vec<I
             labels.push((field.clone(), comps.iter().map(|(_, v)| eq_label(v)).collect()));
             continue;
         }
-        if let Some((s, e, label)) = c.and_then(|c| comp_range(c, *asc, idx.multikey)) {
+        let mut trip: Vec<(Vec<u8>, Option<Vec<u8>>, String)> = c.map(|c| value_intervals(c, idx.multikey)).unwrap_or_default().iter().filter_map(|vi| vi.map_dir(*asc)).collect();
+        if !trip.is_empty() {
+            trip.sort();
             let mut ivs = Vec::new();
             for p in &prefixes {
-                let mut st = p.clone();
-                st.extend(&s);
-                let en = match &e {
-                    Some(e) => {
-                        let mut x = p.clone();
-                        x.extend(e);
-                        Some(x)
-                    }
-                    None => keyenc::prefix_end(p),
-                };
-                ivs.push((st, en));
+                for (s, e, _) in &trip {
+                    let mut st = p.clone();
+                    st.extend(s);
+                    let en = match e {
+                        Some(e) => {
+                            let mut x = p.clone();
+                            x.extend(e);
+                            Some(x)
+                        }
+                        None => keyenc::prefix_end(p),
+                    };
+                    ivs.push((st, en));
+                }
             }
             ranged = Some(ivs);
             bounded += 1;
-            labels.push((field.clone(), vec![label]));
+            labels.push((field.clone(), trip.into_iter().map(|t| t.2).collect()));
         }
         break;
     }
