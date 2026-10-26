@@ -27,6 +27,7 @@ pub struct Server {
     /// Print every command name and database (used to discover what drivers send on connect).
     pub log_commands: bool,
     cursors: Mutex<HashMap<i64, Cursor>>,
+    pub(crate) change_cursors: Mutex<HashMap<i64, crate::cmd_changes::ChangeCursor>>,
     next_conn: AtomicI64,
 }
 
@@ -80,7 +81,7 @@ pub(crate) fn write_error(index: usize, code: i32, msg: String) -> Document {
 
 impl Server {
     pub fn new(dbs: Arc<Dbs>, log_commands: bool) -> Arc<Self> {
-        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1) })
+        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1) })
     }
 
     pub fn new_connection_id(&self) -> i64 {
@@ -141,7 +142,7 @@ impl Server {
         match name {
             "insert" => self.insert(db, cmd, tx).await,
             "find" => self.find(db, cmd, tx).await,
-            "getMore" => self.get_more(db, cmd),
+            "getMore" => self.get_more(db, cmd).await,
             "killCursors" => self.kill_cursors(cmd),
             "update" => self.update(db, cmd, tx).await,
             "delete" => self.delete(db, cmd, tx).await,
@@ -161,7 +162,11 @@ impl Server {
             "listIndexes" => self.list_indexes(db, cmd).await,
             "listCollections" => self.list_collections(db, cmd).await,
             "dropDatabase" => {
+                let colls = self.dbs.lock(db).await.collections().await?;
                 self.dbs.lock(db).await.drop_database().await?;
+                let mut evs: Vec<crate::changes::EvSpec> = colls.into_iter().map(|c| crate::changes::EvSpec { db: db.to_string(), coll: Some(c), op: "drop", doc_key: None, full: None, desc: None, txn: None }).collect();
+                evs.push(crate::changes::EvSpec { db: db.to_string(), coll: None, op: "dropDatabase", doc_key: None, full: None, desc: None, txn: None });
+                self.dbs.changes.publish(evs);
                 Ok(doc! { "dropped": db, "ok": 1.0 })
             }
             "tenantAdmin" => self.tenant_admin(db, cmd).await,
@@ -328,8 +333,11 @@ impl Server {
         }
     }
 
-    pub(crate) fn get_more(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn get_more(&self, db: &str, cmd: &Document) -> R<Document> {
         let id = int_arg(cmd.get("getMore")).ok_or_else(|| MongoError::new(14, "TypeMismatch", "getMore's cursor id must be a long".into()))?;
+        if self.change_cursors.lock().unwrap().contains_key(&id) {
+            return self.change_get_more(id, cmd).await;
+        }
         let batch = int_arg(cmd.get("batchSize")).map(|b| b as usize);
         let mut cursors = self.cursors.lock().unwrap();
         let c = cursors.get_mut(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
@@ -350,7 +358,7 @@ impl Server {
         let mut not_found = Vec::new();
         let mut cursors = self.cursors.lock().unwrap();
         for id in ids.iter().filter_map(|b| int_arg(Some(b))) {
-            if cursors.remove(&id).is_some() { killed.push(Bson::Int64(id)) } else { not_found.push(Bson::Int64(id)) }
+            if cursors.remove(&id).is_some() || self.change_cursors.lock().unwrap().remove(&id).is_some() { killed.push(Bson::Int64(id)) } else { not_found.push(Bson::Int64(id)) }
         }
         Ok(doc! { "cursorsKilled": killed, "cursorsNotFound": not_found, "cursorsAlive": [], "cursorsUnknown": [], "ok": 1.0 })
     }

@@ -120,6 +120,51 @@ def pick(doc, keys, reduce=None):
     return {k: doc[k] for k in keys if k in doc}
 
 
+def _strip_event(e):
+    e = dict(e)
+    for k in ("_id", "clusterTime", "wallTime"):
+        e.pop(k, None)
+    if "txnNumber" in e:
+        e["txnNumber"], e["lsid"] = "<n>", "<lsid>"
+    return e
+
+
+def _collect(st, n):
+    out = []
+    for _ in range(8):
+        if len(out) >= n:
+            break
+        e = st.try_next()
+        if e is not None:
+            out.append(_strip_event(e))
+        elif len(out) >= n:
+            break
+    return out
+
+
+def run_watch(ctx, db, dbname, step, coll):
+    """Open a change stream, run `actions`, collect `expect` events; optionally resume after the last event."""
+    target = ctx.client if step.get("cluster") else (coll if coll is not None else db)
+    if step.get("cluster"):
+        target = ctx.client
+    opts = dict(step.get("options", {}))
+    st = target.watch(step.get("pipeline", []), **opts)
+    for a in step.get("actions", []):
+        exec_step(ctx, db, dbname, dict(a))
+    first = _collect(st, step.get("expect", 0))
+    if "resume_actions" not in step:
+        st.close()
+        return first
+    token = st.resume_token
+    st.close()
+    for a in step["resume_actions"]:
+        exec_step(ctx, db, dbname, dict(a))
+    st2 = target.watch(step.get("pipeline", []), **{**opts, step.get("resume_with", "resume_after"): token})
+    second = _collect(st2, step.get("resume_expect", 0))
+    st2.close()
+    return {"first": first, "resumed": second}
+
+
 def exec_step(ctx, db, dbname, step):
     op = step["op"]
     coll = db[step["coll"]] if "coll" in step else None
@@ -127,6 +172,8 @@ def exec_step(ctx, db, dbname, step):
         ctx.sessions = {}
     ses = ctx.sessions.get(step["session"]) if "session" in step else None
     skw = {"session": ses} if ses is not None else {}
+    if op == "watch":
+        return run_watch(ctx, db, dbname, step, coll)
     if op == "txn_start":
         s = ctx.client.start_session()
         s.start_transaction()

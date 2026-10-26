@@ -327,11 +327,15 @@ pub struct Writes {
     /// Transaction: write counter at its snapshot; writing a document that changed since is a write conflict.
     pub snap_seq: Option<u64>,
     pub txn_id: Option<u64>,
+    /// Change-stream events of this write set, published when it is applied.
+    pub events: Vec<crate::changes::EvSpec>,
+    /// The update document of the next `put` (an operator update); `None` for inserts and replacements.
+    pub pending_update: Option<Document>,
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None }
     }
 
     /// Current version of a document: this write set first, then the store.
@@ -441,10 +445,17 @@ impl Writes {
         let k = doc_key(coll, &id);
         self.ops.push(Op::Put(k.clone(), new.to_vec()?));
         self.ov.insert(k, Some(new.clone()));
+        let db = ns.split('.').next().unwrap_or("").to_string();
+        let spec = match (old, self.pending_update.take()) {
+            (None, _) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "insert", doc_key: Some(id.clone()), full: Some(new.clone()), desc: None, txn: None },
+            (Some(o), Some(u)) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "update", doc_key: Some(id.clone()), full: None, desc: Some(crate::changes::update_description(o, new, &u)), txn: None },
+            (Some(_), None) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "replace", doc_key: Some(id.clone()), full: Some(new.clone()), desc: None, txn: None },
+        };
+        self.events.push(spec);
         Ok(())
     }
 
-    pub fn delete(&mut self, g: &mut Entry, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
+    pub fn delete(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
         let id = old.get("_id").cloned().unwrap_or(Bson::Null);
         self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
@@ -462,6 +473,7 @@ impl Writes {
         let k = doc_key(coll, &id);
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);
+        self.events.push(crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "delete", doc_key: Some(id), full: None, desc: None, txn: None });
         Ok(())
     }
 }

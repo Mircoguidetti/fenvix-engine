@@ -131,8 +131,11 @@ impl Server {
     }
 
     pub(crate) async fn aggregate(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
-        let coll = collection_name(cmd, "aggregate")?;
         let pipeline = cmd.get_array("pipeline").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'aggregate.pipeline' is missing but a required field".into()))?;
+        if let Some(Bson::Document(spec)) = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get("$changeStream")) {
+            return self.open_change_stream(db, cmd, spec, &pipeline[1..]).await;
+        }
+        let coll = collection_name(cmd, "aggregate")?;
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
         let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
         let first_match = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
@@ -169,8 +172,10 @@ impl Server {
             t.w = w;
             return Ok(());
         }
+        let events = std::mem::take(&mut w.events);
         let ops = w.final_ops()?;
         g.apply(ops).await?;
+        self.dbs.changes.publish(events);
         Ok(())
     }
 
@@ -355,7 +360,7 @@ impl Server {
             return Ok(match hit {
                 None => doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 },
                 Some(old) => {
-                    w.delete(&mut g, coll, &indexes, &old)?;
+                    w.delete(&mut g, db, coll, &indexes, &old)?;
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                     doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old)), "ok": 1.0 }
                 }
@@ -366,6 +371,7 @@ impl Server {
             Some(old) => {
                 let new = apply_update(&old, u)?;
                 if new.to_vec()? != old.to_vec()? {
+                    w.pending_update = u.keys().any(|k| k.starts_with('$')).then(|| u.clone());
                     w.put(&mut g, coll, &ns, &mut indexes, &new, Some(&old)).await?;
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                 }
@@ -405,7 +411,7 @@ impl Server {
         let mut errors: Vec<Bson> = Vec::new();
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         for (i, spec) in specs.iter().enumerate() {
-            let res: R<()> = delete_stmt(&mut g, coll, &indexes, &ttl_specs, &mut w, spec, &mut n).await;
+            let res: R<()> = delete_stmt(&mut g, db, coll, &indexes, &ttl_specs, &mut w, spec, &mut n).await;
             if let Err(e) = res {
                 if e.code == 112 {
                     return Err(e);
@@ -475,6 +481,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     if new.to_vec()? == old.to_vec()? {
                         continue;
                     }
+                    w.pending_update = u.keys().any(|k| k.starts_with('$')).then(|| u.clone());
                     w.put(g, coll, ns, indexes, &new, Some(&old)).await?;
                     acc.n_modified += 1;
                 }
@@ -482,19 +489,22 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
 }
 
 
-async fn delete_stmt(g: &mut Entry, coll: &str, indexes: &[IndexDef], ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, n: &mut i32) -> R<()> {
+async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, n: &mut i32) -> R<()> {
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "delete statement must be an object".into()))?;
                 let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'deletes.q' is missing but a required field".into()))?;
                 let limit = int_arg(spec.get("limit")).unwrap_or(0);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
+                let ev_start = w.events.len();
                 let (mut found, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if limit == 0 { None } else { Some(limit as usize) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
                 if limit > 0 {
                     found.truncate(limit as usize);
                 }
                 for d in found {
-                    w.delete(g, coll, indexes, &d)?;
+                    w.delete(g, db, coll, indexes, &d)?;
                     *n += 1;
                 }
+                // MongoDB's oplog (and so a change stream) lists the documents of one delete statement last-first.
+                w.events[ev_start..].reverse();
                 Ok(())
 }
 

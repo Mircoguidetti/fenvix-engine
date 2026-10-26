@@ -29,6 +29,7 @@ pub struct Dbs {
     pub readers: Arc<AtomicI64>,
     pub writers: Arc<AtomicI64>,
     pub ttl: Arc<crate::ttl::TtlStats>,
+    pub changes: Arc<crate::changes::ChangeLog>,
 }
 
 pub struct Entry {
@@ -57,6 +58,7 @@ pub struct Entry {
     pub(crate) active_txns: usize,
     /// Document keys written by open transactions -> transaction id (a second writer gets a write conflict at once).
     pub(crate) locks: HashMap<Vec<u8>, u64>,
+    pub(crate) changes: Arc<crate::changes::ChangeLog>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -66,7 +68,7 @@ pub fn valid_db_name(name: &str) -> bool {
 
 impl Dbs {
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
-        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()) })
+        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default() })
     }
 
     /// Entries that currently exist (open or not).
@@ -103,6 +105,7 @@ impl Dbs {
                     modified: HashMap::new(),
                     active_txns: 0,
                     locks: HashMap::new(),
+                    changes: Arc::clone(&self.changes),
                 }))
             })
             .clone()
@@ -152,6 +155,7 @@ impl Dbs {
                     modified: HashMap::new(),
                     active_txns: 0,
                     locks: HashMap::new(),
+                    changes: Arc::clone(&self.changes),
                     }))
                 })
                 .clone()

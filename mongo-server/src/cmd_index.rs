@@ -208,6 +208,7 @@ impl Server {
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
+        self.dbs.changes.publish(vec![crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "drop", doc_key: None, full: None, desc: None, txn: None }]);
         Ok(doc! { "nIndexesWas": n_indexes, "ns": format!("{db}.{coll}"), "ok": 1.0 })
     }
 

@@ -139,8 +139,30 @@ function substNow(x) {
   return x;
 }
 
+const WATCH_OPT = { full_document: 'fullDocument', resume_after: 'resumeAfter', start_after: 'startAfter', show_expanded_events: 'showExpandedEvents' };
+function stripEvent(e) { const o = { ...e }; for (const k of ['_id', 'clusterTime', 'wallTime']) delete o[k]; if ('txnNumber' in o) { o.txnNumber = '<n>'; o.lsid = '<lsid>'; } return o; }
+async function collect(st, n) {
+  const out = [];
+  for (let i = 0; i < 8 && out.length < n; i++) { const e = await st.tryNext(); if (e) out.push(stripEvent(e)); }
+  return out;
+}
+async function runWatch(ctx, db, dbname, step) {
+  const target = step.cluster ? ctx.client : (step.coll ? db.collection(step.coll) : db);
+  const opts = {}; for (const [k, v] of Object.entries(step.options ?? {})) opts[WATCH_OPT[k] ?? k] = v;
+  const st = target.watch(step.pipeline ?? [], opts);
+  for (const a of step.actions ?? []) await execStep(ctx, db, dbname, { ...a });
+  const first = await collect(st, step.expect ?? 0);
+  if (!step.resume_actions) { await st.close(); return first; }
+  const token = st.resumeToken; await st.close();
+  for (const a of step.resume_actions) await execStep(ctx, db, dbname, { ...a });
+  const st2 = target.watch(step.pipeline ?? [], { ...opts, [WATCH_OPT[step.resume_with ?? 'resume_after']]: token });
+  const second = await collect(st2, step.resume_expect ?? 0); await st2.close();
+  return { first, resumed: second };
+}
+
 async function execStep(ctx, db, dbname, step) {
   step = substNow(step);
+  if (step.op === 'watch') return await runWatch(ctx, db, dbname, step);
   ctx.sessions = ctx.sessions ?? {};
   const ses = step.session !== undefined ? ctx.sessions[step.session] : undefined;
   const so = ses ? { session: ses } : {};

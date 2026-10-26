@@ -18,6 +18,7 @@ pub const TXN_LIFETIME: Duration = Duration::from_secs(60);
 
 pub struct Txn {
     pub id: u64,
+    pub lsid_doc: Document,
     pub db: String,
     pub number: i64,
     pub w: Writes,
@@ -45,6 +46,7 @@ pub struct Sessions {
 
 pub struct TxnCtx {
     pub lsid: String,
+    pub lsid_doc: Document,
     pub number: i64,
     pub start: bool,
 }
@@ -67,7 +69,7 @@ pub fn parse(cmd: &Document) -> R<Option<TxnCtx>> {
     }
     let number = int_arg(cmd.get("txnNumber")).ok_or_else(|| MongoError::new(72, "InvalidOptions", "Transaction number is required for a multi-document transaction".into()))?;
     let lsid = lsid_of(cmd).ok_or_else(|| MongoError::new(72, "InvalidOptions", "A multi-document transaction needs a session id".into()))?;
-    Ok(Some(TxnCtx { lsid, number, start: matches!(cmd.get("startTransaction"), Some(Bson::Boolean(true))) }))
+    Ok(Some(TxnCtx { lsid, lsid_doc: cmd.get_document("lsid").cloned().unwrap_or_default(), number, start: matches!(cmd.get("startTransaction"), Some(Bson::Boolean(true))) }))
 }
 
 pub fn attach(g: &mut Entry, tx: &Option<Txn>) {
@@ -144,7 +146,7 @@ impl Server {
             w.snap_seq = Some(seq);
             let id = self.next_txn_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             w.txn_id = Some(id);
-            Ok::<_, MongoError>(Txn { id, db: db.to_string(), number: tc.number, w, snap, seq, started: Instant::now() })
+            Ok::<_, MongoError>(Txn { id, lsid_doc: tc.lsid_doc.clone(), db: db.to_string(), number: tc.number, w, snap, seq, started: Instant::now() })
         }
         .await;
         match started {
@@ -202,13 +204,22 @@ impl Server {
             }
         };
         let txn_id = txn.id;
+        let mut txn = txn;
+        let mut events = std::mem::take(&mut txn.w.events);
+        let mut lsid = txn.lsid_doc.clone();
+        if !lsid.contains_key("uid") {
+            lsid.insert("uid", Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: vec![0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55] }));
+        }
+        for e in events.iter_mut() {
+            e.txn = Some((txn.number, lsid.clone()));
+        }
         let mut g = self.dbs.lock(&txn.db).await;
         let conflict = txn.w.ov.keys().any(|k| g.modified_after(k, txn.seq));
         let result = if conflict {
             Err(MongoError::write_conflict())
         } else {
             match txn.w.final_ops() {
-                Ok(ops) => g.apply(ops).await.map_err(MongoError::from),
+                Ok(ops) => g.apply(ops).await.map_err(MongoError::from).map(|_| self.dbs.changes.publish(events)),
                 Err(e) => Err(e),
             }
         };
@@ -315,7 +326,7 @@ impl Server {
         let r = match name {
             "insert" => self.insert(db, cmd, &mut tx).await,
             "find" => self.find(db, cmd, &mut tx).await,
-            "getMore" => self.get_more(db, cmd),
+            "getMore" => self.get_more(db, cmd).await,
             "update" => self.update(db, cmd, &mut tx).await,
             "delete" => self.delete(db, cmd, &mut tx).await,
             "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd, &mut tx).await,
