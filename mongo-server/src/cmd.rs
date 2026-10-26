@@ -145,6 +145,7 @@ impl Server {
                 return Ok(doc! { "authInfo": { "authenticatedUsers": [], "authenticatedUserRoles": [], "authenticatedUserPrivileges": [] }, "ok": 1.0 })
             }
             "listDatabases" => return self.list_databases(cmd).await,
+            "tenantStats" => return Ok(self.tenant_stats()),
             _ => {}
         }
         if !valid_db_name(db) {
@@ -361,6 +362,29 @@ impl Server {
         }
         reply.insert("ok", 1.0);
         Ok(reply)
+    }
+
+    /// Process-wide gauges and counters for the load tests: open tenants and every object-store request.
+    fn tenant_stats(&self) -> Document {
+        use std::sync::atomic::Ordering::Relaxed;
+        let s = self.dbs.global.counters.snapshot();
+        let ls = self.dbs.leases.stats.lock().unwrap().clone();
+        doc! {
+            "holder": self.dbs.leases.holder.clone(),
+            "pid": std::process::id() as i64,
+            "openReaders": self.dbs.readers.load(Relaxed),
+            "openWriters": self.dbs.writers.load(Relaxed),
+            "entries": self.dbs.entry_count() as i64,
+            "leasesHeld": self.dbs.leases.held_count() as i64,
+            "leases": { "acquired": ls.acquired as i64, "takeovers": ls.takeovers as i64, "refused": ls.refused as i64, "renewals": ls.renewals as i64, "renewFailures": ls.renew_failures as i64, "lost": ls.lost as i64 },
+            "requests": {
+                "put": (s.put + s.multipart_create + s.multipart_part + s.multipart_complete) as i64,
+                "copy": s.copy as i64, "list": s.list as i64,
+                "get": (s.get + s.get_range) as i64, "head": s.head as i64, "delete": s.delete as i64,
+                "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
+            },
+            "ok": 1.0
+        }
     }
 
     async fn tenant_admin(&self, db: &str, cmd: &Document) -> R<Document> {

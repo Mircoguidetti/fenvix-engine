@@ -82,6 +82,13 @@ impl std::error::Error for MongoError {}
 
 impl From<anyhow::Error> for MongoError {
     fn from(e: anyhow::Error) -> Self {
+        if let Some(h) = e.downcast_ref::<crate::lease::LeaseHeld>() {
+            // 134 is on the drivers' retryable-read list and is not a state-change code, so it does not
+            // make them mark the server unknown and clear their connection pools.
+            let mut m = MongoError::new(134, "TenantLeaseHeld", h.to_string());
+            m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+            return m;
+        }
         MongoError::internal(format!("{e:#}"))
     }
 }

@@ -2,6 +2,7 @@
 //! upgrade to a writer on the first write, clean close after an idle period.
 
 use crate::layout;
+use crate::lease::{self, Leases};
 use anyhow::{bail, Result};
 use bson::{doc, Bson, Document};
 use bytes::Bytes;
@@ -9,6 +10,7 @@ use futures::{StreamExt, TryStreamExt};
 use object_store::path::Path;
 use object_store::ObjectStore;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicI64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tenant_bench::lifecycle::{Lifecycle, Op, Tenant};
@@ -19,6 +21,10 @@ pub struct Dbs {
     raw: Arc<dyn ObjectStore>,
     entries: Mutex<HashMap<String, Arc<AsyncMutex<Entry>>>>,
     idle: Duration,
+    pub leases: Arc<Leases>,
+    pub global: Arc<tenant_bench::counting::CountingStore>,
+    pub readers: Arc<AtomicI64>,
+    pub writers: Arc<AtomicI64>,
 }
 
 pub struct Entry {
@@ -26,6 +32,11 @@ pub struct Entry {
     lc: Arc<Lifecycle>,
     raw: Arc<dyn ObjectStore>,
     tenant: Option<Tenant>,
+    leases: Arc<Leases>,
+    readers: Arc<AtomicI64>,
+    writers: Arc<AtomicI64>,
+    /// 0 closed, 1 reader, 2 writer: what this entry currently contributes to the open-tenant gauges.
+    counted: u8,
     pub last_used: Instant,
     pub wakes: u64,
     pub closes: u64,
@@ -37,8 +48,26 @@ pub fn valid_db_name(name: &str) -> bool {
 }
 
 impl Dbs {
-    pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration) -> Arc<Self> {
-        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle })
+    pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
+        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)) })
+    }
+
+    pub fn entry_count(&self) -> usize {
+        self.entries.lock().unwrap().len()
+    }
+
+    /// Abandon tenants whose lease was lost (another process took them over).
+    pub fn spawn_lost_handler(self: &Arc<Self>, mut rx: tokio::sync::mpsc::UnboundedReceiver<String>) {
+        let me = Arc::clone(self);
+        tokio::spawn(async move {
+            while let Some(id) = rx.recv().await {
+                let e = me.entries.lock().unwrap().get(&id).cloned();
+                if let Some(e) = e {
+                    let mut g = e.lock().await;
+                    g.abandon().await;
+                }
+            }
+        });
     }
 
     /// Lock a database's entry. Commands on one database run one at a time.
@@ -52,6 +81,10 @@ impl Dbs {
                         lc: Arc::clone(&self.lc),
                         raw: Arc::clone(&self.raw),
                         tenant: None,
+                        leases: Arc::clone(&self.leases),
+                        readers: Arc::clone(&self.readers),
+                        writers: Arc::clone(&self.writers),
+                        counted: 0,
                         last_used: Instant::now(),
                         wakes: 0,
                         closes: 0,
@@ -128,32 +161,99 @@ impl Entry {
 
     async fn db_exists(&self) -> Result<bool> {
         let prefix = Path::from(format!("tenants/{}", self.name));
-        Ok(self.raw.list(Some(&prefix)).next().await.is_some())
+        let mut it = self.raw.list(Some(&prefix));
+        while let Some(m) = it.next().await {
+            let name = m?.location.filename().unwrap_or("").to_string();
+            if name != "_lease" && name != "_clean" {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn sync_gauges(&mut self) {
+        let now = match &self.tenant {
+            None => 0,
+            Some(t) if t.is_writer() => 2,
+            Some(_) => 1,
+        };
+        if now != self.counted {
+            match self.counted {
+                1 => drop(self.readers.fetch_sub(1, Relaxed)),
+                2 => drop(self.writers.fetch_sub(1, Relaxed)),
+                _ => {}
+            }
+            match now {
+                1 => drop(self.readers.fetch_add(1, Relaxed)),
+                2 => {
+                    self.writers.fetch_add(1, Relaxed);
+                    lease::log("writer_open", &self.name, &self.leases.holder, "");
+                }
+                _ => {}
+            }
+            if self.counted == 2 && now != 2 {
+                lease::log("writer_close", &self.name, &self.leases.holder, "");
+            }
+            self.counted = now;
+        }
+    }
+
+    /// Drop the tenant without clean-close bookkeeping (its lease was lost).
+    pub async fn abandon(&mut self) {
+        if let Some(t) = self.tenant.take() {
+            t.abandon().await;
+            self.closes += 1;
+        }
+        self.leases.forget(&self.name);
+        self.sync_gauges();
     }
 
     /// Wake the tenant as a reader if it is closed. `Ok(false)` if the database does not exist.
+    /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
         self.last_used = Instant::now();
         if self.tenant.is_some() {
-            return Ok(true);
+            if self.leases.valid(&self.name) {
+                return Ok(true);
+            }
+            // The lease lapsed (not renewed in time) or was lost: stop acting as the owner.
+            lease::log("invalid", &self.name, &self.leases.holder, "");
+            self.abandon().await;
         }
+        let took = self.leases.acquire(&self.name).await?;
+        lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
         match self.lc.wake(&self.name).await {
             Ok(t) => {
+                if took.is_some() || t.unclean {
+                    lease::log("takeover_wake", &self.name, &self.leases.holder, &format!("unclean={} takeover_from={}", t.unclean, took.as_deref().unwrap_or("-")));
+                }
                 self.tenant = Some(t);
                 self.wakes += 1;
+                self.sync_gauges();
                 Ok(true)
             }
             Err(e) => {
-                if self.db_exists().await? { Err(e) } else { Ok(false) }
+                if self.db_exists().await? {
+                    self.leases.release(&self.name).await;
+                    Err(e)
+                } else {
+                    self.leases.discard(&self.name).await;
+                    Ok(false)
+                }
             }
         }
     }
 
     pub async fn close(&mut self) -> Result<()> {
+        let had = self.tenant.is_some();
         if let Some(t) = self.tenant.take() {
-            t.close().await?;
+            let r = t.close().await;
             self.closes += 1;
+            self.sync_gauges();
+            self.leases.release(&self.name).await;
+            r?;
         }
+        let _ = had;
         Ok(())
     }
 
@@ -177,11 +277,16 @@ impl Entry {
             return Ok(());
         }
         if !self.ensure_open().await? {
+            self.leases.acquire(&self.name).await?;
+            lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.wakes += 1;
+            self.sync_gauges();
         }
         self.last_used = Instant::now();
-        self.tenant.as_mut().unwrap().apply(ops).await
+        let r = self.tenant.as_mut().unwrap().apply(ops).await;
+        self.sync_gauges();
+        r
     }
 
     /// Close the tenant and delete every object of the database. Holds the tenant's maintenance
@@ -190,7 +295,14 @@ impl Entry {
     pub async fn drop_database(&mut self) -> Result<()> {
         let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
         let _held = lock.lock().await;
-        self.close().await?;
+        if !self.leases.is_held(&self.name) {
+            self.leases.acquire(&self.name).await?;
+        }
+        if let Some(t) = self.tenant.take() {
+            t.close().await?;
+            self.closes += 1;
+            self.sync_gauges();
+        }
         let prefix = Path::from(format!("tenants/{}", self.name));
         for _ in 0..5 {
             let objs: Vec<Path> = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).try_collect().await?;
@@ -203,6 +315,7 @@ impl Entry {
             }
         }
         self.lc.touched.lock().unwrap().remove(&self.name);
+        self.leases.forget(&self.name);
         Ok(())
     }
 

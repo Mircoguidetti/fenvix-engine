@@ -312,6 +312,20 @@ impl Tenant {
         Ok(db.put(key, value).await?)
     }
 
+    /// Give the tenant up without any of the clean-close bookkeeping (no marker, no compaction request):
+    /// used when ownership was lost, where flushing would only be fenced anyway.
+    pub async fn abandon(mut self) {
+        match self.mode.take() {
+            Some(Mode::Reader(r)) => {
+                let _ = r.close().await;
+            }
+            Some(Mode::Writer(db)) => {
+                let _ = db.close().await;
+            }
+            None => {}
+        }
+    }
+
     /// Close. A writer flushes its memtable, then the marker is written, and the tenant is
     /// queued for compaction if it now holds enough L0 SSTs. A reader just closes.
     pub async fn close(mut self) -> Result<()> {

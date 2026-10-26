@@ -10,6 +10,7 @@ mod dbs;
 mod error;
 mod expr;
 mod layout;
+mod lease;
 mod query;
 mod regex;
 mod update;
@@ -44,6 +45,13 @@ struct Args {
     /// Do not run the background compaction and GC loops (also disables the L0 guard).
     #[arg(long)]
     no_maintenance: bool,
+    /// Tenant lease time-to-live; leases of open tenants are renewed every third of it, and a crashed
+    /// process's tenants can be taken over once it has passed.
+    #[arg(long, default_value_t = 30)]
+    lease_ttl_secs: u64,
+    /// Lease holder id (default: a unique id per process start).
+    #[arg(long)]
+    holder: Option<String>,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -89,6 +97,9 @@ async fn main() -> Result<()> {
             .with_secret_access_key("minioadmin")
             .build()?,
     );
+    // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
+    let global = Arc::new(CountingStore::new(s3));
+    let s3: Arc<dyn ObjectStore> = global.clone();
     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
     let (queue, rx) = CompactionQueue::new();
     let lc = if args.no_maintenance {
@@ -99,12 +110,17 @@ async fn main() -> Result<()> {
     let maintenance = (!args.no_maintenance).then(|| {
         Maintenance::start(Arc::clone(&s3), Arc::clone(&s3), queue, rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 2, Duration::from_secs(30), Duration::from_secs(15))
     });
-    let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs));
+    let holder = args.holder.clone().unwrap_or_else(|| format!("{}-{:08x}", std::process::id(), rand::random::<u32>()));
+    let leases = lease::Leases::new(Arc::clone(&lc.store), holder.clone(), Duration::from_secs(args.lease_ttl_secs));
+    let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
+    let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
+    leases.spawn_renewer(lost_tx);
+    dbs.spawn_lost_handler(lost_rx);
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
 
     let listener = TcpListener::bind(&args.listen).await?;
-    eprintln!("mongo-server listening on {} (idle close after {} s)", args.listen, args.idle_secs);
+    eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
     loop {
         tokio::select! {
