@@ -26,6 +26,14 @@ const swapDb = (v, db) => {
   if (v && typeof v === 'object' && !v._bsontype && !(v instanceof Date)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swapDb(x, db)]));
   return v;
 };
+// Undo gen_tests' escaping of the legacy `$regex`/`$options` keys (the EJSON parser would turn them into regex values).
+const unescape = (v) => {
+  if (Array.isArray(v)) return v.map(unescape);
+  if (v && typeof v === 'object' && !v._bsontype && !(v instanceof Date) && !Buffer.isBuffer(v)) {
+    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k === '@@regex' ? '$regex' : k === '@@options' ? '$options' : k, unescape(x)]));
+  }
+  return v;
+};
 const clone = (v) => EJSON.parse(EJSON.stringify(v, { relaxed: false }), { relaxed: false });
 const num = (v) => (v && typeof v.valueOf === 'function' ? Number(v.valueOf()) : v);
 
@@ -149,7 +157,19 @@ async function execStep(ctx, db, dbname, step) {
     }
     case 'delete_one': return { deleted: (await coll.deleteOne(step.filter)).deletedCount };
     case 'delete_many': return { deleted: (await coll.deleteMany(step.filter)).deletedCount };
-    case 'find_one_and_update': return await coll.findOneAndUpdate(step.filter, step.update);
+    case 'find_one_and_update': case 'find_one_and_replace': case 'find_one_and_delete': {
+      const o = {};
+      if (step.projection) o.projection = step.projection;
+      if (step.sort) o.sort = step.sort;
+      if (op !== 'find_one_and_delete') {
+        o.upsert = step.upsert ?? false;
+        o.returnDocument = step.return_document === 'after' ? 'after' : 'before';
+      }
+      if (step.array_filters) o.arrayFilters = step.array_filters;
+      if (op === 'find_one_and_delete') return await coll.findOneAndDelete(step.filter, o);
+      const fn = op === 'find_one_and_update' ? 'findOneAndUpdate' : 'findOneAndReplace';
+      return await coll[fn](step.filter, step.update, o);
+    }
     case 'create_collection': await db.createCollection(step.coll); return 'ok';
     case 'drop_collection': await coll.drop(); return 'ok';
     case 'list_collection_names': return (await db.listCollections({}, { nameOnly: true }).toArray()).map((c) => c.name).sort();
@@ -268,7 +288,7 @@ async function execStep(ctx, db, dbname, step) {
 async function runScript(ctx, test, dbname) {
   const results = [];
   ctx.asserts = [];
-  for (const step of clone(test.steps)) {
+  for (const step of unescape(clone(test.steps))) {
     let r;
     try { r = await execStep(ctx, ctx.client.db(dbname), dbname, step); } catch (e) { r = errResult(e, step.cmp_msg ?? false); }
     if (r !== SKIP) results.push(r);

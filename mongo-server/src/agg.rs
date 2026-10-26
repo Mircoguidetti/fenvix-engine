@@ -33,33 +33,7 @@ fn int(v: &Bson) -> i64 {
 
 /// Evaluate an aggregation expression against a document; `None` means "missing".
 fn eval(expr: &Bson, doc: &Document) -> R<Option<Bson>> {
-    Ok(match expr {
-        Bson::String(s) if s.starts_with("$$") => {
-            return Err(MongoError::new(2, "BadValue", format!("aggregation variables are not supported: {s}")));
-        }
-        Bson::String(s) if s.starts_with('$') => path_values(doc, &s[1..]).first().cloned().cloned(),
-        Bson::Document(d) => {
-            if d.keys().next().map(|k| k.starts_with('$')).unwrap_or(false) {
-                let op = d.keys().next().unwrap();
-                return Err(MongoError::new(168, "InvalidPipelineOperator", format!("Unrecognized expression '{op}'")));
-            }
-            let mut out = Document::new();
-            for (k, v) in d {
-                if let Some(x) = eval(v, doc)? {
-                    out.insert(k.clone(), x);
-                }
-            }
-            Some(Bson::Document(out))
-        }
-        Bson::Array(a) => {
-            let mut out = Vec::new();
-            for v in a {
-                out.push(eval(v, doc)?.unwrap_or(Bson::Null));
-            }
-            Some(Bson::Array(out))
-        }
-        other => Some(other.clone()),
-    })
+    crate::expr::eval(expr, &crate::expr::Scope::new(doc))
 }
 
 enum Acc {
@@ -71,6 +45,7 @@ enum Acc {
     First(Option<Bson>, bool),
     Last(Bson),
     Push(Vec<Bson>),
+    AddToSet(Vec<Bson>),
 }
 
 struct AccSpec {
@@ -85,11 +60,17 @@ fn parse_accumulators(spec: &Document) -> R<Vec<AccSpec>> {
         if name == "_id" {
             continue;
         }
-        let d = v.as_document().filter(|d| d.len() == 1).ok_or_else(|| {
+        if name.contains('.') {
+            return Err(MongoError::new(40235, "Location40235", format!("The field name '{name}' cannot contain '.'")));
+        }
+        let d = v.as_document().ok_or_else(|| {
             MongoError::new(40234, "Location40234", format!("The field '{name}' must be an accumulator object"))
         })?;
+        if d.len() != 1 {
+            return Err(MongoError::new(40238, "Location40238", format!("The field '{name}' must specify one accumulator")));
+        }
         let (op, expr) = d.iter().next().unwrap();
-        if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push") {
+        if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push" | "$addToSet") {
             return Err(MongoError::new(15952, "Location15952", format!("unknown group operator '{op}'")));
         }
         out.push(AccSpec { name: name.clone(), op: op.clone(), expr: expr.clone() });
@@ -106,6 +87,7 @@ fn init(op: &str) -> Acc {
         "$count" => Acc::Count(0),
         "$first" => Acc::First(None, false),
         "$last" => Acc::Last(Bson::Null),
+        "$addToSet" => Acc::AddToSet(Vec::new()),
         _ => Acc::Push(Vec::new()),
     }
 }
@@ -151,6 +133,13 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
                 v.push(x);
             }
         }
+        Acc::AddToSet(v) => {
+            if let Some(x) = val {
+                if !v.iter().any(|e| query::equal(e, &x)) {
+                    v.push(x);
+                }
+            }
+        }
     }
     Ok(())
 }
@@ -165,11 +154,18 @@ fn finish(acc: Acc) -> Bson {
         Acc::Count(n) => Bson::Int32(n as i32),
         Acc::First(v, _) => v.unwrap_or(Bson::Null),
         Acc::Last(v) => v,
-        Acc::Push(v) => Bson::Array(v),
+        Acc::Push(v) | Acc::AddToSet(v) => Bson::Array(v),
     }
 }
 
 fn group(docs: Vec<Document>, spec: &Document) -> R<Vec<Document>> {
+    for (_, v) in spec {
+        let e = match v {
+            Bson::Document(d) if d.len() == 1 => d.values().next().unwrap(),
+            other => other,
+        };
+        crate::expr::validate(e)?;
+    }
     let id_expr = spec.get("_id").ok_or_else(|| MongoError::new(15955, "Location15955", "a group specification must include an _id".into()))?;
     let accs = parse_accumulators(spec)?;
     let mut order: Vec<Vec<u8>> = Vec::new();
@@ -199,46 +195,523 @@ fn group(docs: Vec<Document>, spec: &Document) -> R<Vec<Document>> {
     Ok(out)
 }
 
-fn computed_projection(docs: Vec<Document>, spec: &Document) -> R<Vec<Document>> {
-    let mut out = Vec::with_capacity(docs.len());
-    for d in docs {
-        let mut r = Document::new();
-        let id_off = matches!(spec.get("_id"), Some(Bson::Int32(0)) | Some(Bson::Boolean(false)) | Some(Bson::Int64(0)));
-        if !id_off {
-            if let Some(id) = d.get("_id") {
-                r.insert("_id", id.clone());
-            }
+// ---------------------------------------------------------------------------
+// $project / $addFields / $set
+// ---------------------------------------------------------------------------
+
+enum Node {
+    Include,
+    Exclude,
+    Computed(Bson),
+    Sub(Vec<(String, Node)>),
+}
+
+fn is_expr_doc(d: &Document) -> bool {
+    d.keys().any(|k| k.starts_with('$'))
+}
+
+fn insert_node(nodes: &mut Vec<(String, Node)>, path: &[&str], leaf: Node, full: &str, project: bool) -> R<()> {
+    let collision = |deeper: bool| {
+        if project {
+            let code = if deeper { 31249 } else { 31250 };
+            MongoError::new(code, Box::leak(format!("Location{code}").into_boxed_str()), format!("Invalid $project :: caused by :: Path collision at {full}"))
+        } else {
+            MongoError::new(40176, "Location40176", format!("specification contains two conflicting paths. Cannot specify both '{}' and '{full}'", path[0]))
         }
-        for (k, v) in spec {
-            if k == "_id" {
+    };
+    let pos = nodes.iter().position(|(k, _)| k == path[0]);
+    if path.len() == 1 {
+        if pos.is_some() {
+            return Err(collision(false));
+        }
+        nodes.push((path[0].to_string(), leaf));
+        return Ok(());
+    }
+    match pos {
+        Some(i) => match &mut nodes[i].1 {
+            Node::Sub(ch) => insert_node(ch, &path[1..], leaf, full, project),
+            _ => Err(collision(true)),
+        },
+        None => {
+            let mut ch = Vec::new();
+            insert_node(&mut ch, &path[1..], leaf, full, project)?;
+            nodes.push((path[0].to_string(), Node::Sub(ch)));
+            Ok(())
+        }
+    }
+}
+
+fn build_tree(spec: &Document, project: bool, prefix: &str, nodes: &mut Vec<(String, Node)>) -> R<()> {
+    for (k, v) in spec {
+        let full = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
+        let parts: Vec<&str> = k.split('.').collect();
+        let leaf = match v {
+            Bson::Document(d) if project && d.is_empty() => {
+                return Err(MongoError::new(51270, "Location51270", format!("Invalid $project :: caused by :: An empty sub-projection is not a valid value. Found empty object at path {full}")));
+            }
+            Bson::Document(d) if !is_expr_doc(d) && !d.is_empty() => {
+                // A nested specification: build it as its own subtree and graft it in.
+                let mut sub = Vec::new();
+                build_tree(d, project, &full, &mut sub)?;
+                let mut tmp = Vec::new();
+                insert_node(&mut tmp, &parts, Node::Sub(sub), &full, project)?;
+                merge_into(nodes, tmp, &full, project)?;
                 continue;
             }
-            match v {
-                Bson::String(s) if s.starts_with('$') => {
-                    if let Some(x) = eval(v, &d)? {
-                        r.insert(k.clone(), x);
+            Bson::Boolean(b) if project => if *b { Node::Include } else { Node::Exclude },
+            n if project && query::is_number(n) => if query::as_f64(n) != 0.0 { Node::Include } else { Node::Exclude },
+            other => Node::Computed(other.clone()),
+        };
+        insert_node(nodes, &parts, leaf, &full, project)?;
+    }
+    Ok(())
+}
+
+fn merge_into(dst: &mut Vec<(String, Node)>, src: Vec<(String, Node)>, full: &str, project: bool) -> R<()> {
+    for (k, n) in src {
+        match dst.iter().position(|(dk, _)| *dk == k) {
+            None => dst.push((k, n)),
+            Some(i) => match (&mut dst[i].1, n) {
+                (Node::Sub(a), Node::Sub(b)) => merge_into(a, b, full, project)?,
+                _ => {
+                    return Err(if project {
+                        MongoError::new(31249, "Location31249", format!("Invalid $project :: caused by :: Path collision at {full}"))
+                    } else {
+                        MongoError::new(40176, "Location40176", format!("specification contains two conflicting paths. Cannot specify both '{k}' and '{full}'"))
+                    })
+                }
+            },
+        }
+    }
+    Ok(())
+}
+
+fn has_computed(nodes: &[(String, Node)]) -> bool {
+    nodes.iter().any(|(_, n)| match n {
+        Node::Computed(_) => true,
+        Node::Sub(c) => has_computed(c),
+        _ => false,
+    })
+}
+
+fn has_exclude(nodes: &[(String, Node)]) -> Option<String> {
+    for (k, n) in nodes {
+        match n {
+            Node::Exclude => return Some(k.clone()),
+            Node::Sub(c) => {
+                if let Some(x) = has_exclude(c) {
+                    return Some(format!("{k}.{x}"));
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn apply_inclusion(d: &Document, nodes: &[(String, Node)], root: &Document) -> R<Document> {
+    let mut out = Document::new();
+    let mut emitted: Vec<&str> = Vec::new();
+    for (k, v) in d {
+        let Some((_, node)) = nodes.iter().find(|(nk, _)| nk == k) else { continue };
+        emitted.push(k);
+        match node {
+            Node::Include => {
+                out.insert(k.clone(), v.clone());
+            }
+            Node::Exclude | Node::Computed(_) => {}
+            Node::Sub(ch) => match v {
+                Bson::Document(vd) => {
+                    out.insert(k.clone(), Bson::Document(apply_inclusion(vd, ch, root)?));
+                }
+                Bson::Array(a) => {
+                    let mut arr = Vec::new();
+                    for e in a {
+                        if let Bson::Document(ed) = e {
+                            arr.push(Bson::Document(apply_inclusion(ed, ch, root)?));
+                        } else if has_computed(ch) {
+                            arr.push(Bson::Document(apply_inclusion(&Document::new(), ch, root)?));
+                        }
+                    }
+                    out.insert(k.clone(), Bson::Array(arr));
+                }
+                _ => {
+                    if has_computed(ch) {
+                        out.insert(k.clone(), Bson::Document(apply_inclusion(&Document::new(), ch, root)?));
                     }
                 }
-                Bson::Document(_) => {
-                    if let Some(x) = eval(v, &d)? {
-                        r.insert(k.clone(), x);
-                    }
+            },
+        }
+    }
+    // Computed fields come after the included ones, in specification order.
+    for (k, node) in nodes {
+        match node {
+            Node::Computed(e) => {
+                if let Some(x) = eval(e, root)? {
+                    out.insert(k.clone(), x);
                 }
-                other if is_number(other) || matches!(other, Bson::Boolean(_)) => {
-                    let keep = match other {
-                        Bson::Boolean(b) => *b,
-                        o => query::as_f64(o) != 0.0,
-                    };
-                    if keep {
-                        if let Some(x) = path_values(&d, k).first() {
-                            r.insert(k.clone(), (*x).clone());
+            }
+            Node::Sub(ch) if has_computed(ch) && !emitted.contains(&k.as_str()) => {
+                let sub = apply_inclusion(&Document::new(), ch, root)?;
+                out.insert(k.clone(), Bson::Document(sub));
+            }
+            _ => {}
+        }
+    }
+    Ok(out)
+}
+
+fn flatten(nodes: &[(String, Node)], prefix: &str, out: &mut Document) {
+    for (k, n) in nodes {
+        let p = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
+        match n {
+            Node::Include => {
+                out.insert(p, 1);
+            }
+            Node::Exclude => {
+                out.insert(p, 0);
+            }
+            Node::Sub(c) => flatten(c, &p, out),
+            Node::Computed(_) => {}
+        }
+    }
+}
+
+fn check_project_shapes(nodes: &[(String, Node)]) -> R<()> {
+    for (_, n) in nodes {
+        match n {
+            Node::Computed(e) => {
+                crate::expr::check_single_operator(e, 16410, "FieldPath field names may not start with '$'. Consider using $getField or $setField. Found:")?;
+                if let Bson::Document(d) = e {
+                    if let Some((k, _)) = d.iter().next() {
+                        if k.starts_with('$') && !crate::expr::is_known_operator(k) {
+                            return Err(MongoError::new(31325, "Location31325", format!("Invalid $project :: caused by :: Unknown expression {k}")));
                         }
                     }
                 }
-                other => r.insert(k.clone(), other.clone()).map(|_| ()).unwrap_or(()),
+            }
+            Node::Sub(c) => check_project_shapes(c)?,
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+fn validate_tree(nodes: &[(String, Node)]) -> R<()> {
+    for (_, n) in nodes {
+        match n {
+            Node::Computed(e) => crate::expr::validate(e)?,
+            Node::Sub(c) => validate_tree(c)?,
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+fn project_stage(docs: Vec<Document>, spec: &Document) -> R<Vec<Document>> {
+    if spec.is_empty() {
+        return Err(MongoError::new(51272, "Location51272", "Invalid $project :: caused by :: projection specification must have at least one field".into()));
+    }
+    let mut tree = Vec::new();
+    build_tree(spec, true, "", &mut tree)?;
+    if !has_computed(&tree) {
+        let mut flat = Document::new();
+        flatten(&tree, "", &mut flat);
+        return Ok(match parse_projection(&flat)? {
+            Some(p) => docs.iter().map(|d| project(d, &p)).collect(),
+            None => docs,
+        });
+    }
+    check_project_shapes(&tree)?;
+    validate_tree(&tree)?;
+    // A computed `_id` is an ordinary computed field; otherwise `_id` leads the output unless excluded.
+    let id_computed = matches!(tree.iter().find(|(k, _)| k == "_id"), Some((_, Node::Computed(_))));
+    let id_node = if id_computed { None } else { tree.iter().position(|(k, _)| k == "_id").map(|i| tree.remove(i).1) };
+    if let Some(x) = has_exclude(&tree) {
+        return Err(MongoError::new(31254, "Location31254", format!("Invalid $project :: caused by :: Cannot do exclusion on field {x} in inclusion projection")));
+    }
+    let mut out = Vec::with_capacity(docs.len());
+    for d in docs {
+        let mut r = Document::new();
+        match &id_node {
+            Some(Node::Exclude) => {}
+            _ if id_computed => {}
+            _ => {
+                if let Some(id) = d.get("_id") {
+                    r.insert("_id", id.clone());
+                }
             }
         }
+        for (k, v) in apply_inclusion(&d, &tree, &d)? {
+            r.insert(k, v);
+        }
         out.push(r);
+    }
+    Ok(out)
+}
+
+fn add_fields_doc(d: &Document, nodes: &[(String, Node)], root: &Document) -> R<Document> {
+    let mut out = d.clone();
+    for (k, node) in nodes {
+        match node {
+            Node::Computed(e) => match eval(e, root)? {
+                Some(x) => {
+                    out.insert(k.clone(), x);
+                }
+                None => {
+                    out.remove(k);
+                }
+            },
+            Node::Sub(ch) => {
+                let new = add_fields_value(out.get(k), ch, root)?;
+                out.insert(k.clone(), new);
+            }
+            _ => {}
+        }
+    }
+    Ok(out)
+}
+
+/// A nested `$addFields` specification applied to an existing value: documents are merged into,
+/// arrays are applied element by element, anything else is replaced by a fresh document.
+fn add_fields_value(cur: Option<&Bson>, ch: &[(String, Node)], root: &Document) -> R<Bson> {
+    Ok(match cur {
+        Some(Bson::Document(vd)) => Bson::Document(add_fields_doc(vd, ch, root)?),
+        Some(Bson::Array(a)) => {
+            let mut arr = Vec::with_capacity(a.len());
+            for e in a {
+                arr.push(add_fields_value(Some(e), ch, root)?);
+            }
+            Bson::Array(arr)
+        }
+        _ => Bson::Document(add_fields_doc(&Document::new(), ch, root)?),
+    })
+}
+
+fn add_fields_stage(docs: Vec<Document>, spec: &Document, name: &str) -> R<Vec<Document>> {
+    let mut tree = Vec::new();
+    build_tree(spec, false, "", &mut tree)?;
+    validate_tree(&tree)?;
+    for (_, n) in &tree {
+        if let Node::Computed(e) = n {
+            crate::expr::check_single_operator(e, 40181, &format!("an expression specification must contain exactly one field, the name of the expression. Found several fields in (stage {name}):"))?;
+        }
+    }
+    let mut out = Vec::with_capacity(docs.len());
+    for d in &docs {
+        out.push(add_fields_doc(d, &tree, d)?);
+    }
+    Ok(out)
+}
+
+// ---------------------------------------------------------------------------
+// $unwind
+// ---------------------------------------------------------------------------
+
+fn loc(code: i32, msg: impl Into<String>) -> MongoError {
+    // The server reports these as "Location<code>".
+    MongoError::new(code, Box::leak(format!("Location{code}").into_boxed_str()), msg.into())
+}
+
+fn get_exact<'a>(doc: &'a Document, parts: &[&str]) -> Option<&'a Bson> {
+    let mut cur = doc.get(parts[0])?;
+    for p in &parts[1..] {
+        cur = match cur {
+            Bson::Document(d) => d.get(*p)?,
+            _ => return None,
+        };
+    }
+    Some(cur)
+}
+
+fn unwind(docs: Vec<Document>, arg: &Bson) -> R<Vec<Document>> {
+    let (path, idx, preserve) = match arg {
+        Bson::String(s) => (s.clone(), None, false),
+        Bson::Document(d) => {
+            let mut path = None;
+            let mut idx = None;
+            let mut preserve = false;
+            for (k, v) in d {
+                match k.as_str() {
+                    "path" => match v {
+                        Bson::String(s) => path = Some(s.clone()),
+                        _ => return Err(loc(28808, "expected a string as the path for $unwind stage, got ".to_string() + crate::update::type_name(v))),
+                    },
+                    "includeArrayIndex" => match v {
+                        Bson::String(s) => {
+                            if s.starts_with('$') {
+                                return Err(loc(28822, format!("includeArrayIndex option to $unwind stage should not be prefixed with a '$': {s}")));
+                            }
+                            idx = Some(s.clone());
+                        }
+                        _ => return Err(loc(28810, format!("expected a non-empty string for the includeArrayIndex option to $unwind stage, got {}", crate::update::type_name(v)))),
+                    },
+                    "preserveNullAndEmptyArrays" => match v {
+                        Bson::Boolean(b) => preserve = *b,
+                        _ => return Err(loc(28809, format!("expected a boolean for the preserveNullAndEmptyArrays option to $unwind stage, got {}", crate::update::type_name(v)))),
+                    },
+                    other => return Err(loc(28811, format!("unrecognized option to $unwind stage: {other}"))),
+                }
+            }
+            (path.ok_or_else(|| loc(28812, "no path specified to $unwind stage"))?, idx, preserve)
+        }
+        _ => return Err(loc(15981, "expected either a string or an object as specification for $unwind stage, got ".to_string() + crate::update::type_name(arg))),
+    };
+    let Some(path) = path.strip_prefix('$').map(str::to_string) else {
+        return Err(loc(28818, format!("path option to $unwind stage should be prefixed with a '$': {path}")));
+    };
+    if path.is_empty() {
+        return Err(loc(40352, "FieldPath cannot be constructed with empty string"));
+    }
+    if path.ends_with('.') && !path.ends_with("..") {
+        return Err(loc(40353, "FieldPath must not end with a '.'."));
+    }
+    if path.split('.').any(str::is_empty) {
+        return Err(loc(15998, "FieldPath field names may not be empty strings."));
+    }
+    let parts: Vec<&str> = path.split('.').collect();
+    let mut out = Vec::new();
+    for d in docs {
+        let cur = get_exact(&d, &parts).cloned();
+        let set_idx = |doc: &mut Document, v: Bson| -> R<()> {
+            if let Some(i) = &idx {
+                crate::update::set_path(doc, &i.split('.').collect::<Vec<_>>(), v)?;
+            }
+            Ok(())
+        };
+        match cur {
+            Some(Bson::Array(a)) if !a.is_empty() => {
+                for (i, e) in a.into_iter().enumerate() {
+                    let mut nd = d.clone();
+                    crate::update::set_path(&mut nd, &parts, e)?;
+                    set_idx(&mut nd, Bson::Int64(i as i64))?;
+                    out.push(nd);
+                }
+            }
+            Some(Bson::Array(_)) => {
+                if preserve {
+                    let mut nd = d.clone();
+                    crate::update::unset_path(&mut nd, &parts);
+                    set_idx(&mut nd, Bson::Null)?;
+                    out.push(nd);
+                }
+            }
+            None | Some(Bson::Null) | Some(Bson::Undefined) => {
+                if preserve {
+                    let mut nd = d.clone();
+                    set_idx(&mut nd, Bson::Null)?;
+                    out.push(nd);
+                }
+            }
+            Some(_) => {
+                let mut nd = d.clone();
+                set_idx(&mut nd, Bson::Null)?;
+                out.push(nd);
+            }
+        }
+    }
+    Ok(out)
+}
+
+// ---------------------------------------------------------------------------
+// $lookup
+// ---------------------------------------------------------------------------
+
+pub type Foreign = HashMap<String, Vec<Document>>;
+
+/// Names of the collections `$lookup` stages in `pipeline` read from (the caller preloads them).
+pub fn lookup_collections(pipeline: &[Bson]) -> Vec<String> {
+    let mut out = Vec::new();
+    for st in pipeline {
+        if let Some(Bson::Document(d)) = st.as_document().and_then(|d| d.get("$lookup")) {
+            if let Some(Bson::String(f)) = d.get("from") {
+                if !out.contains(f) {
+                    out.push(f.clone());
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Values a `$lookup` local field offers: the aggregation field-path value; an array contributes its
+/// elements, and a missing field or an empty array counts as null.
+fn local_values(doc: &Document, path: &str) -> Vec<Bson> {
+    match crate::expr::field_path(doc, path) {
+        None => vec![Bson::Null],
+        Some(Bson::Array(a)) if a.is_empty() => vec![Bson::Null],
+        Some(Bson::Array(a)) => a,
+        Some(v) => vec![v],
+    }
+}
+
+/// Values a foreign document can be matched on: the field-path value, plus the elements of an array.
+fn foreign_values(doc: &Document, path: &str) -> Vec<Bson> {
+    match crate::expr::field_path(doc, path) {
+        None => vec![Bson::Null],
+        Some(Bson::Array(a)) => {
+            let mut out = vec![Bson::Array(a.clone())];
+            out.extend(a);
+            out
+        }
+        Some(v) => vec![v],
+    }
+}
+
+fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>> {
+    let spec = arg.as_document().ok_or_else(|| MongoError::failed_to_parse("the $lookup specification must be a non-empty object".into()))?;
+    let mut from = None;
+    let (mut lf, mut ff, mut as_) = (None, None, None);
+    for (k, v) in spec {
+        let s = |v: &Bson| -> R<String> {
+            v.as_str().map(str::to_string).ok_or_else(|| MongoError::failed_to_parse(format!("$lookup argument '{k}' must be a string, found {k}: {}", crate::update::fmt_bson(v))))
+        };
+        match k.as_str() {
+            "from" => from = Some(s(v)?),
+            "localField" => lf = Some(s(v)?),
+            "foreignField" => ff = Some(s(v)?),
+            "as" => as_ = Some(s(v)?),
+            "let" | "pipeline" => {
+                return Err(MongoError::new(238, "NotImplemented", format!("$lookup with '{k}' is not supported by this server")));
+            }
+            other => return Err(MongoError::failed_to_parse(format!("unknown argument to $lookup: {other}"))),
+        }
+    }
+    let as_ = as_.ok_or_else(|| MongoError::failed_to_parse("must specify 'as' field for a $lookup".into()))?;
+    let from = from.ok_or_else(|| MongoError::failed_to_parse("must specify 'from' field for a $lookup".into()))?;
+    let (lf, ff) = match (lf, ff) {
+        (Some(l), Some(f)) => (l, f),
+        (None, None) => return Err(MongoError::failed_to_parse("$lookup requires either 'pipeline' or both 'localField' and 'foreignField' to be specified".into())),
+        (Some(_), None) => return Err(MongoError::failed_to_parse("$lookup requires both or neither of 'localField' and 'foreignField' to be specified".into())),
+        (None, Some(_)) => return Err(MongoError::failed_to_parse("$lookup requires both or neither of 'localField' and 'foreignField' to be specified".into())),
+    };
+    let empty = Vec::new();
+    let fdocs = foreign.get(&from).unwrap_or(&empty);
+    let mut index: HashMap<Vec<u8>, Vec<usize>> = HashMap::new();
+    for (i, fd) in fdocs.iter().enumerate() {
+        let mut seen: Vec<Vec<u8>> = Vec::new();
+        for v in foreign_values(fd, &ff) {
+            let k = encode_sortable(&v);
+            if !seen.contains(&k) {
+                index.entry(k.clone()).or_default().push(i);
+                seen.push(k);
+            }
+        }
+    }
+    let as_parts: Vec<&str> = as_.split('.').collect();
+    let mut out = Vec::with_capacity(docs.len());
+    for mut d in docs {
+        let mut hits: Vec<usize> = Vec::new();
+        for v in local_values(&d, &lf) {
+            if let Some(ix) = index.get(&encode_sortable(&v)) {
+                hits.extend(ix);
+            }
+        }
+        hits.sort_unstable();
+        hits.dedup();
+        let arr: Vec<Bson> = hits.into_iter().map(|i| Bson::Document(fdocs[i].clone())).collect();
+        crate::update::set_path(&mut d, &as_parts, Bson::Array(arr))?;
+        out.push(d);
     }
     Ok(out)
 }
@@ -262,7 +735,7 @@ fn positive_int(v: &Bson, stage: &str) -> R<usize> {
     Ok(n as usize)
 }
 
-pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson]) -> R<Vec<Document>> {
+pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreign) -> R<Vec<Document>> {
     for stage in pipeline {
         let sd = stage.as_document().filter(|d| d.len() == 1).ok_or_else(|| {
             MongoError::new(40323, "Location40323", "A pipeline stage specification object must contain exactly one field.".into())
@@ -290,13 +763,14 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson]) -> R<Vec<Documen
             }
             "$project" => {
                 let spec = arg.as_document().ok_or_else(|| MongoError::new(15969, "Location15969", "$project specification must be an object".into()))?;
-                let computed = spec.values().any(|v| matches!(v, Bson::String(s) if s.starts_with('$')) || matches!(v, Bson::Document(_)));
-                if computed {
-                    docs = computed_projection(docs, spec)?;
-                } else if let Some(p) = parse_projection(spec)? {
-                    docs = docs.iter().map(|d| project(d, &p)).collect();
-                }
+                docs = project_stage(docs, spec)?;
             }
+            "$addFields" | "$set" => {
+                let spec = arg.as_document().ok_or_else(|| MongoError::new(40272, "Location40272", format!("{name} specification stage must be an object, got {}", crate::update::type_name(arg))))?;
+                docs = add_fields_stage(docs, spec, name)?;
+            }
+            "$unwind" => docs = unwind(docs, arg)?,
+            "$lookup" => docs = lookup(docs, arg, foreign)?,
             "$group" => {
                 let spec = arg.as_document().ok_or_else(|| MongoError::new(15947, "Location15947", "a group's fields must be specified in an object".into()))?;
                 docs = group(docs, spec)?;
@@ -322,7 +796,7 @@ mod tests {
     use bson::doc;
 
     fn run(docs: Vec<Document>, p: Vec<Document>) -> Vec<Document> {
-        run_pipeline(docs, &p.into_iter().map(Bson::Document).collect::<Vec<_>>()).unwrap()
+        run_pipeline(docs, &p.into_iter().map(Bson::Document).collect::<Vec<_>>(), &Foreign::new()).unwrap()
     }
 
     #[test]
@@ -331,6 +805,23 @@ mod tests {
         let out = run(docs, vec![doc! {"$group": {"_id": "$k", "s": {"$sum": "$v"}, "n": {"$sum": 1}, "a": {"$avg": "$v"}, "mn": {"$min": "$v"}, "mx": {"$max": "$v"}, "c": {"$count": {}}}}]);
         assert_eq!(out[0], doc! {"_id": "a", "s": 4, "n": 2, "a": 2.0, "mn": 1, "mx": 3, "c": 2});
         assert_eq!(out[1], doc! {"_id": "b", "s": 5, "n": 2, "a": 5.0, "mn": 5, "mx": 5, "c": 2});
+    }
+
+    #[test]
+    fn project_add_fields_unwind_lookup() {
+        let docs = vec![doc! {"_id": 1, "a": 2, "arr": [1, 2]}, doc! {"_id": 2, "a": 3, "arr": []}];
+        let out = run(docs.clone(), vec![doc! {"$project": {"b": {"$add": ["$a", 1]}, "a": 1}}]);
+        assert_eq!(out[0], doc! {"_id": 1, "a": 2, "b": 3});
+        let out = run(docs.clone(), vec![doc! {"$addFields": {"c": {"$size": "$arr"}}}]);
+        assert_eq!(out[1], doc! {"_id": 2, "a": 3, "arr": [], "c": 0});
+        let out = run(docs.clone(), vec![doc! {"$unwind": {"path": "$arr", "includeArrayIndex": "i"}}]);
+        assert_eq!(out, vec![doc! {"_id": 1, "a": 2, "arr": 1, "i": 0_i64}, doc! {"_id": 1, "a": 2, "arr": 2, "i": 1_i64}]);
+        let mut foreign = Foreign::new();
+        foreign.insert("f".into(), vec![doc! {"_id": 9, "k": 2}, doc! {"_id": 8, "k": 5}]);
+        let p: Vec<Bson> = vec![Bson::Document(doc! {"$lookup": {"from": "f", "localField": "a", "foreignField": "k", "as": "m"}})];
+        let out = run_pipeline(docs, &p, &foreign).unwrap();
+        assert_eq!(out[0].get_array("m").unwrap().len(), 1);
+        assert_eq!(out[1].get_array("m").unwrap().len(), 0);
     }
 
     #[test]

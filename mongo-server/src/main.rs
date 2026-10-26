@@ -8,8 +8,10 @@ mod agg;
 mod cmd;
 mod dbs;
 mod error;
+mod expr;
 mod layout;
 mod query;
+mod regex;
 mod update;
 mod wire;
 

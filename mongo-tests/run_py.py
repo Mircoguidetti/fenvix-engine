@@ -135,8 +135,21 @@ def exec_step(ctx, db, dbname, step):
         return {"matched": r.matched_count, "modified": r.modified_count, "upserted_id": r.upserted_id}
     if op in ("delete_one", "delete_many"):
         return {"deleted": getattr(coll, op)(step["filter"]).deleted_count}
-    if op == "find_one_and_update":
-        return coll.find_one_and_update(step["filter"], step["update"])
+    if op in ("find_one_and_update", "find_one_and_replace", "find_one_and_delete"):
+        from pymongo import ReturnDocument
+        kw = {}
+        if "projection" in step:
+            kw["projection"] = step["projection"]
+        if "sort" in step:
+            kw["sort"] = pairs(step["sort"])
+        if op != "find_one_and_delete":
+            kw["upsert"] = step.get("upsert", False)
+            kw["return_document"] = ReturnDocument.AFTER if step.get("return_document") == "after" else ReturnDocument.BEFORE
+        if "array_filters" in step:
+            kw["array_filters"] = step["array_filters"]
+        if op == "find_one_and_delete":
+            return coll.find_one_and_delete(step["filter"], **kw)
+        return getattr(coll, op)(step["filter"], step["update"], **kw)
     if op == "create_collection":
         db.create_collection(step["coll"])
         return "ok"
@@ -308,6 +321,15 @@ def raw_op_query(ctx):
     return {"opcode": opcode, "response_to": response_to, "response_flags": flags, "cursor_id": cursor_id, "starting_from": starting_from, "number_returned": n_returned, "doc": {k: doc[k] for k in keep if k in doc}}
 
 
+def unescape(x):
+    """Undo gen_tests' escaping of the legacy `$regex`/`$options` keys."""
+    if isinstance(x, dict):
+        return {("$" + k[2:] if k in ("@@regex", "@@options") else k): unescape(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [unescape(v) for v in x]
+    return x
+
+
 def run_threads(fn, n):
     ts = [threading.Thread(target=fn, args=(i,)) for i in range(n)]
     [t.start() for t in ts]
@@ -386,7 +408,7 @@ def main():
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     server_script = os.path.join(HERE, "server.sh")
-    tests = json_util.loads(open(a.tests).read())
+    tests = unescape(json_util.loads(open(a.tests).read()))
     if a.only:
         tests = [t for t in tests if a.only in t["name"]]
     if a.category:

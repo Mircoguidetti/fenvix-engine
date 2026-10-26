@@ -157,6 +157,7 @@ impl Server {
             "killCursors" => self.kill_cursors(cmd),
             "update" => self.update(db, cmd).await,
             "delete" => self.delete(db, cmd).await,
+            "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd).await,
             "count" => self.count(db, cmd).await,
             "distinct" => self.distinct(db, cmd).await,
             "aggregate" => self.aggregate(db, cmd).await,
@@ -522,7 +523,15 @@ impl Server {
             let mut g = self.dbs.lock(db).await;
             g.scan_collection(coll).await?
         };
-        let out = run_pipeline(docs, pipeline)?;
+        let mut foreign = crate::agg::Foreign::new();
+        for from in crate::agg::lookup_collections(pipeline) {
+            let fd = {
+                let mut g = self.dbs.lock(db).await;
+                g.scan_collection(&from).await?
+            };
+            foreign.insert(from, fd);
+        }
+        let out = run_pipeline(docs, pipeline, &foreign)?;
         Ok(self.cursor_reply(format!("{db}.{coll}"), out.into(), batch, false))
     }
 
@@ -631,9 +640,14 @@ impl Server {
                 let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'updates.q' is missing but a required field".into()))?;
                 let u = match spec.get("u") {
                     Some(Bson::Document(u)) => u,
-                    Some(Bson::Array(_)) => return Err(MongoError::new(2, "BadValue", "pipeline-style updates are not supported by this server".into())),
+                    Some(Bson::Array(_)) => return Err(MongoError::new(238, "NotImplemented", "pipeline-style updates are not supported by this server".into())),
                     _ => return Err(MongoError::new(40414, "Location40414", "BSON field 'updates.u' is missing but a required field".into())),
                 };
+                if let Some(Bson::Array(a)) = spec.get("arrayFilters") {
+                    if !a.is_empty() {
+                        return Err(MongoError::new(238, "NotImplemented", "arrayFilters are not supported by this server".into()));
+                    }
+                }
                 let multi = bool_arg(spec.get("multi"), false);
                 let upsert = bool_arg(spec.get("upsert"), false);
                 let mut matched = Vec::new();
@@ -724,6 +738,131 @@ impl Server {
         }
         reply.insert("ok", 1.0);
         Ok(reply)
+    }
+
+    async fn find_and_modify(&self, db: &str, cmd: &Document) -> R<Document> {
+        let key = cmd.keys().next().cloned().unwrap_or_default();
+        let coll = collection_name(cmd, &key)?;
+        let ns = format!("{db}.{coll}");
+        let q = match cmd.get("query") {
+            None | Some(Bson::Null) => Document::new(),
+            Some(Bson::Document(d)) => d.clone(),
+            Some(_) => return Err(MongoError::type_mismatch("BSON field 'findAndModify.query' is the wrong type, expected object".into())),
+        };
+        let sort = match cmd.get("sort") {
+            Some(Bson::Document(s)) => parse_sort(s)?,
+            _ => vec![],
+        };
+        let remove = bool_arg(cmd.get("remove"), false);
+        let want_new = bool_arg(cmd.get("new"), false);
+        let upsert = bool_arg(cmd.get("upsert"), false);
+        let projection = match cmd.get("fields") {
+            Some(Bson::Document(p)) => parse_projection(p)?,
+            _ => None,
+        };
+        if let Some(Bson::Array(a)) = cmd.get("arrayFilters") {
+            if !a.is_empty() {
+                return Err(MongoError::new(238, "NotImplemented", "arrayFilters are not supported by this server".into()));
+            }
+        }
+        let u = match cmd.get("update") {
+            None => None,
+            Some(Bson::Document(u)) => Some(u),
+            Some(Bson::Array(_)) => return Err(MongoError::new(238, "NotImplemented", "pipeline-style updates are not supported by this server".into())),
+            Some(_) => return Err(MongoError::new(14, "TypeMismatch", "BSON field 'findAndModify.update' is the wrong type, expected object or array".into())),
+        };
+        if remove && u.is_some() {
+            return Err(MongoError::failed_to_parse("Cannot specify both an update and remove=true".into()));
+        }
+        if remove && upsert {
+            return Err(MongoError::failed_to_parse("Cannot specify both upsert=true and remove=true".into()));
+        }
+        if remove && want_new {
+            return Err(MongoError::failed_to_parse("Cannot specify both new=true and remove=true; 'remove' always returns the deleted document".into()));
+        }
+        if !remove && u.is_none() {
+            return Err(MongoError::failed_to_parse("Either an update or remove=true must be specified".into()));
+        }
+        let shape = |d: Option<Document>| -> Bson {
+            match d {
+                None => Bson::Null,
+                Some(d) => Bson::Document(match &projection {
+                    Some(p) => project(&d, p),
+                    None => d,
+                }),
+            }
+        };
+        let mut g = self.dbs.lock(db).await;
+        let mut names = g.collections().await?;
+        let mut docs = g.scan_collection(coll).await?;
+        let mut matched: Vec<usize> = Vec::new();
+        for (pos, d) in docs.iter().enumerate() {
+            if matches(d, &q)? {
+                matched.push(pos);
+            }
+        }
+        if !sort.is_empty() && matched.len() > 1 {
+            let mut m: Vec<Document> = matched.iter().map(|p| docs[*p].clone()).collect();
+            sort_docs(&mut m, &sort);
+            let id = |d: &Document| encode_sortable(d.get("_id").unwrap_or(&Bson::Null));
+            let first = id(&m[0]);
+            matched = vec![docs.iter().position(|d| id(d) == first).unwrap()];
+        }
+        let hit = matched.first().copied();
+        if remove {
+            return Ok(match hit {
+                None => doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 },
+                Some(pos) => {
+                    let old = docs.remove(pos);
+                    g.apply(vec![Entry::delete_doc_op(coll, old.get("_id").unwrap_or(&Bson::Null))]).await?;
+                    doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old)), "ok": 1.0 }
+                }
+            });
+        }
+        let u = u.unwrap();
+        let indexes = g.indexes(coll).await?;
+        let uniques = unique_indexes(&indexes, &docs);
+        let check = |nd: &Document, own: Option<&Document>| -> R<()> {
+            let idb = encode_sortable(nd.get("_id").unwrap_or(&Bson::Null));
+            if own.is_none() && docs.iter().any(|d| encode_sortable(d.get("_id").unwrap_or(&Bson::Null)) == idb) {
+                return Err(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": nd.get("_id").cloned().unwrap_or(Bson::Null) }));
+            }
+            for un in &uniques {
+                let (b, v) = index_entry(nd, &un.pattern);
+                if let Some(owner) = un.owners.get(&b) {
+                    if *owner != idb {
+                        return Err(MongoError::duplicate_key(&ns, &un.name, &un.pattern, &v));
+                    }
+                }
+            }
+            Ok(())
+        };
+        match hit {
+            Some(pos) => {
+                let old = docs[pos].clone();
+                let new = apply_update(&old, u)?;
+                if new.to_vec()? != old.to_vec()? {
+                    check(&new, Some(&old))?;
+                    g.apply(vec![Entry::put_doc_op(coll, &new)?]).await?;
+                }
+                let value = shape(Some(if want_new { new } else { old }));
+                Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": true }, "value": value, "ok": 1.0 })
+            }
+            None if upsert => {
+                let nd = upsert_document(&q, u)?;
+                check(&nd, None)?;
+                let id = nd.get("_id").cloned().unwrap();
+                let mut ops = vec![Entry::put_doc_op(coll, &nd)?];
+                if !names.iter().any(|x| x == coll) {
+                    names.push(coll.to_string());
+                    ops.push(Entry::collections_op(&names)?);
+                }
+                g.apply(ops).await?;
+                let value = if want_new { shape(Some(nd)) } else { Bson::Null };
+                Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": false, "upserted": id }, "value": value, "ok": 1.0 })
+            }
+            None => Ok(doc! { "lastErrorObject": { "n": 0, "updatedExisting": false }, "value": Bson::Null, "ok": 1.0 }),
+        }
     }
 
     async fn delete(&self, db: &str, cmd: &Document) -> R<Document> {
