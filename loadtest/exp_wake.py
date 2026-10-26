@@ -166,5 +166,22 @@ def limit():
         json.dump(res, open(os.path.join(RES, "limit.json"), "w"), indent=1)
 
 
+def overload():
+    """5,000 cold tenants all within 10 s (about 500 wakes per second, more than the server can do): without a limit and
+    with limits at the throughput plateau of the knee test (32) and at the p99 rule's choice (128)."""
+    res = {}
+    for label, flags in [("unlimited", []), ("limit 32", ["--max-concurrent-wakes", "32"]), ("limit 128", ["--max-concurrent-wakes", "128"])]:
+        prefetch(32000, 36999)
+        p = start(flags, idle=30)
+        try:
+            s = burst(5000, 32000, "overload_" + label.replace(" ", "_"), flags, ramp=10, hold=30, duration=60)
+            st = MongoClient(URI).admin.command("tenantStats")
+        finally:
+            stop(p)
+        res[label] = {"wake": s["normal"]["wake"], "all_ops": s["normal"]["all_ops"], "errors": s["errors_by_code"], "failures": s["failures_by_code"], "ops": s["normal"]["ops"], "wake_queue": st["wakeQueue"], "seconds": s["seconds"]}
+        print(label, json.dumps({k: v for k, v in res[label].items() if k != "wake"}), json.dumps(s["normal"]["wake"]), flush=True)
+        json.dump(res, open(os.path.join(RES, "overload.json"), "w"), indent=1)
+
+
 if __name__ == "__main__":
-    {"trace": trace, "knee": knee, "limit": limit}[sys.argv[1]]()
+    {"trace": trace, "knee": knee, "limit": limit, "overload": overload}[sys.argv[1]]()
