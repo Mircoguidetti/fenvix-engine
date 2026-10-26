@@ -711,6 +711,10 @@ async fn sampler(sh: Arc<Shared>, out: PathBuf) {
                         "entries": d.get_i64("entries").unwrap_or(0), "leases_held": d.get_i64("leasesHeld").unwrap_or(0),
                         "lease_stats": { "acquired": leases.get_i64("acquired").unwrap_or(0), "takeovers": leases.get_i64("takeovers").unwrap_or(0), "refused": leases.get_i64("refused").unwrap_or(0), "renewals": leases.get_i64("renewals").unwrap_or(0), "lost": leases.get_i64("lost").unwrap_or(0) },
                         "lat": { "put": arr("put"), "get": arr("get") },
+                        "put_by_category": d.get_document("putByCategory").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
+                        "get_by_category": d.get_document("getByCategory").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
+                        "maintenance": d.get_document("maintenance").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
+                        "wake_queue": d.get_document("wakeQueue").map(|x| serde_json::to_value(x).unwrap_or_default()).unwrap_or_default(),
                         "req": { "put": g("put"), "copy": g("copy"), "list": g("list"), "get": g("get"), "head": g("head"), "delete": g("delete"), "billed_put_tier": g("billedPutTier"), "billed_get_tier": g("billedGetTier") },
                     }));
                 }

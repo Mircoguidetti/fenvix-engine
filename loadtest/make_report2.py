@@ -180,6 +180,7 @@ else:
 tr = jl("t4", "trace.json")
 knee = jl("t4", "knee.json")
 lim = jl("t4", "limit.json")
+ov = jl("t4", "overload.json")
 w("## Task 4 — Wake breakdown and wake concurrency")
 w("")
 if tr:
@@ -213,6 +214,19 @@ if lim:
     w("\n".join(lr))
     w("")
 
+if ov:
+    w("**Overload: the same 5,000 tenants in 10 s instead of 60 s** (about 500 first requests per second, more than the server completes), same warmed disk, 30 s hold at 1 op/s, client timeout 10 s. Limits tried: 32 (throughput plateau of the knee table) and 128 (the p99 rule's choice). The unlimited configuration was run twice to show the run-to-run spread.")
+    w("")
+    orow = ["| | Wake p50 / p99 / max (ms) | Timeouts (10 s) of 5,000 first requests | Max queued wakes | Mean wait in queue (ms) |", "|---|---|---|---|---|"]
+    for lab, x in ov.items():
+        q = x["wake_queue"]
+        wt = x["wake"]
+        orow.append(f"| {lab} | {wt['p50_ms']:.0f} / {wt['p99_ms']:.0f} / {wt['max_ms']:.0f} | {x['errors'].get('timeout', 0)} | {q['maxQueued']} | {(q['waitMs'] / q['waits']) if q['waits'] else 0:.0f} |")
+    w("\n".join(orow))
+    w("")
+    u = [x["errors"].get("timeout", 0) for l, x in ov.items() if l.startswith("unlimited")]
+    w(f"Reading: the two unlimited runs timed out {min(u)} and {max(u)} first requests, so the run-to-run spread is about {max(u) - min(u)}; limits 32 and 128 timed out fewer, but this is one run per limit and the difference between 32 and 128 is inside that spread. A limit with a queue lowers the timeouts and the wake p50; it does not remove them: when arrivals exceed the server's wake rate for longer than the client's timeout, requests waiting in the queue time out at the client. The queue only turns an unbounded pile of simultaneous wakes into an ordered one; capacity (or load shedding with a retryable error) is still needed above the sustained wake rate.")
+    w("")
 # ------------------------------------------------------------------ Task 5
 hot = jl("t5", "hot.json")
 w("## Task 5 — The hot tenant")

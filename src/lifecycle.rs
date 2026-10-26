@@ -68,6 +68,9 @@ pub static MAINT: MaintTotals = MaintTotals {
 
 /// WAL flush interval override in milliseconds (0 = slatedb's default of 100 ms).
 pub static FLUSH_INTERVAL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Acknowledge a write once it is in the memtable, before it is durable: it becomes durable at the next periodic
+/// WAL flush (at most one flush interval plus one PUT later). Off by default; a crash can lose acknowledged writes.
+pub static ACK_BEFORE_DURABLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Flush the WAL explicitly after every write batch (the baseline). When false a write waits for the next
 /// periodic flush, which batches concurrent writes into one WAL object at the cost of up to one interval of latency.
 pub static EXPLICIT_FLUSH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
@@ -340,7 +343,9 @@ impl Tenant {
         if EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) {
             db.flush().await?;
         }
-        handle.await_durable().await?;
+        if !ACK_BEFORE_DURABLE.load(std::sync::atomic::Ordering::Relaxed) {
+            handle.await_durable().await?;
+        }
         Ok(())
     }
 

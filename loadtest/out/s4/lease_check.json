@@ -4,49 +4,48 @@
   "S1"
  ],
  "kills": 10,
- "tenants_with_lease_events": 5451,
- "lease_intervals": 15857,
- "writer_intervals": 4340,
- "lease_overlaps_between_different_holders": 466,
+ "tenants_with_lease_events": 5908,
+ "lease_intervals": 18442,
+ "writer_intervals": 8525,
+ "lease_overlaps_between_different_holders": 52,
  "writer_overlaps_between_different_holders": 0,
  "max_concurrent_writer_intervals_per_tenant": 1,
- "takeovers_of_expired_leases": 1726,
- "wakes_after_takeover_or_crash": 4880,
- "unclean_wal_replay_wakes": 4087,
- "takeover_wakes_not_unclean": 793,
+ "takeovers_of_expired_leases": 1370,
+ "wakes_after_takeover_or_crash": 10425,
+ "unclean_wal_replay_wakes": 10173,
+ "takeover_wakes_not_unclean": 252,
  "lease_overlaps_by_how_the_earlier_holder_ended": {
-  "lost": 333,
-  "kill": 110,
-  "invalid": 17,
-  "release_begin": 6
+  "lost": 50,
+  "kill": 1,
+  "invalid": 1
  },
- "lease_overlap_max_ms": 10517,
- "lease_overlap_median_ms": 1337,
+ "lease_overlap_max_ms": 3688,
+ "lease_overlap_median_ms": 704,
  "examples": [
   [
-   "t020775",
-   "('S0', 1793036641075, 1793036665109, 'lost')",
-   "('S1', 1793036665069, 1793036669252, 'lost')"
+   "t021054",
+   "('S1', 1793042122844, 1793042164861, 'lost')",
+   "('S0', 1793042164097, 1793042169350, 'kill')"
   ],
   [
-   "t020775",
-   "('S1', 1793036665069, 1793036669252, 'lost')",
-   "('S0', 1793036668918, 1793036694531, 'kill')"
+   "t021165",
+   "('S1', 1793042127466, 1793042167521, 'lost')",
+   "('S0', 1793042166964, 1793042169350, 'kill')"
   ],
   [
-   "t020098",
-   "('S1', 1793036672195, 1793036692815, 'lost')",
-   "('S0', 1793036692014, 1793036694531, 'kill')"
+   "t021160",
+   "('S0', 1793042142707, 1793042167868, 'lost')",
+   "('S1', 1793042167399, 1793042195879, 'kill')"
   ],
   [
-   "t020708",
-   "('S1', 1793036641154, 1793036664825, 'lost')",
-   "('S0', 1793036664822, 1793036665150, 'kill')"
+   "t021226",
+   "('S1', 1793042130284, 1793042164274, 'lost')",
+   "('S0', 1793042163000, 1793042169350, 'kill')"
   ],
   [
-   "t020374",
-   "('S1', 1793036641171, 1793036658955, 'lost')",
-   "('S0', 1793036658908, 1793036665150, 'kill')"
+   "t021628",
+   "('S1', 1793042155067, 1793042168321, 'lost')",
+   "('S0', 1793042167347, 1793042169350, 'kill')"
   ]
  ]
 }
