@@ -58,6 +58,10 @@ struct Args {
     /// the next flush, up to one interval later, and concurrent writes to a tenant share one WAL object.
     #[arg(long, default_value_t = 0)]
     wal_flush_ms: u64,
+    /// Acknowledge writes before they are durable (they become durable at the next periodic flush). Unsafe: a crash
+    /// can lose acknowledged writes. For measuring the durability trade-off only; use with --wal-flush-ms.
+    #[arg(long)]
+    ack_before_durable: bool,
     /// Object store: `s3` (the endpoint above), `local` (a directory, see --local-dir) or `memory`.
     #[arg(long, default_value = "s3")]
     store: String,
@@ -69,9 +73,13 @@ struct Args {
     /// Test control only: never treat a lease as expired or lost. Demonstrates what the ownership checks prevent.
     #[arg(long)]
     unsafe_skip_ownership_checks: bool,
-    /// Let reads of one tenant run concurrently (a shared lock) instead of one command per tenant at a time.
+    /// Run reads of one tenant one at a time like writes (the behaviour before concurrent reads). By default reads of
+    /// one tenant share the entry lock and run concurrently; writes and tenant state changes are exclusive.
     #[arg(long)]
-    shared_reads: bool,
+    serialize_reads: bool,
+    /// Do not use leases (single process only; for stores without conditional update, e.g. --store local).
+    #[arg(long)]
+    no_leases: bool,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -126,9 +134,10 @@ async fn main() -> Result<()> {
         other => anyhow::bail!("unknown --store {other}"),
     };
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
-    dbs::SHARED_READS.store(args.shared_reads, std::sync::atomic::Ordering::Relaxed);
+    dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
     let s3: Arc<dyn ObjectStore> = global.clone();
@@ -144,6 +153,7 @@ async fn main() -> Result<()> {
     });
     let holder = args.holder.clone().unwrap_or_else(|| format!("{}-{:08x}", std::process::id(), rand::random::<u32>()));
     let leases = lease::Leases::new(Arc::clone(&lc.store), holder.clone(), Duration::from_secs(args.lease_ttl_secs));
+    leases.disabled.store(args.no_leases, std::sync::atomic::Ordering::Relaxed);
     leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
@@ -169,8 +179,10 @@ async fn main() -> Result<()> {
     }
     eprintln!("shutting down: closing tenants cleanly");
     dbs.close_all().await;
+    eprintln!("tenants closed; stopping maintenance");
     if let Some(m) = maintenance {
         m.shutdown().await;
     }
+    eprintln!("maintenance stopped");
     Ok(())
 }

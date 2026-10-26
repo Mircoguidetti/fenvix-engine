@@ -31,8 +31,8 @@ pub static WAKE_WAIT_MS: AtomicU64 = AtomicU64::new(0);
 pub static WAKE_MAX_QUEUED: AtomicI64 = AtomicI64::new(0);
 
 /// Reads of one tenant share the entry lock (true) or take it exclusively like writes (false: the behaviour
-/// before concurrent reads, one command per tenant at a time).
-pub static SHARED_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// before concurrent reads, one command per tenant at a time; `--serialize-reads`).
+pub static SHARED_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
 pub fn set_wake_limit(n: usize) {
     let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });

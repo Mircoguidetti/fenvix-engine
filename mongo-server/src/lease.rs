@@ -59,6 +59,8 @@ pub struct Leases {
     pub stats: Mutex<LeaseStats>,
     /// Test control only: never treat a lease as expired or lost (`--unsafe-skip-ownership-checks`).
     pub unsafe_skip: std::sync::atomic::AtomicBool,
+    /// No leases at all (single process, for object stores without conditional update such as the local-directory store).
+    pub disabled: std::sync::atomic::AtomicBool,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -96,7 +98,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), disabled: std::sync::atomic::AtomicBool::new(false) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -126,6 +128,10 @@ impl Leases {
 
     /// Take (or renew) the lease. Returns the previous holder when an expired lease was taken over.
     pub async fn acquire(&self, id: &str) -> Result<Option<String>> {
+        if self.disabled.load(std::sync::atomic::Ordering::Relaxed) {
+            self.record(id, None, None, Instant::now() + Duration::from_secs(86400 * 365), 0);
+            return Ok(None);
+        }
         let path = lease_path(id);
         if let Some((until, holder, remaining)) = self.denied.lock().unwrap().get(id).cloned() {
             if Instant::now() < until {
@@ -194,6 +200,9 @@ impl Leases {
     /// locked for a whole ttl.
     pub async fn release(&self, id: &str) {
         let Some(h) = self.held.lock().unwrap().remove(id) else { return };
+        if self.disabled.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
         // Logged before the write: after this line the process no longer acts as the owner.
         log("release_begin", id, &self.holder, "");
         let path = lease_path(id);
@@ -231,6 +240,9 @@ impl Leases {
     /// Delete the lease object of a tenant that turned out not to exist.
     pub async fn discard(&self, id: &str) {
         self.forget(id);
+        if self.disabled.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
         let _ = self.store.delete(&lease_path(id)).await;
     }
 
