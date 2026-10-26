@@ -75,6 +75,7 @@ pub struct Entry {
     last_used_ms: AtomicU64,
     pub wakes: u64,
     pub closes: u64,
+    last_compaction_request: Option<Instant>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -123,6 +124,7 @@ impl Dbs {
                         last_used_ms: AtomicU64::new(now_ms()),
                         wakes: 0,
                         closes: 0,
+                        last_compaction_request: None,
                     }))
                 })
                 .clone()
@@ -290,6 +292,21 @@ impl Entry {
         }
     }
 
+    /// A writer has no compactor of its own (it would poll the manifest on every idle tenant), so ask the maintenance
+    /// queue for a compaction while the tenant is open once its L0 reaches the compaction threshold; without it a
+    /// tenant written for a few minutes fills its L0 and stalls (see `WRITER_POLL_SECS`). At most one request per
+    /// `COMPACTION_REQUEST_EVERY`.
+    fn request_compaction_if_needed(&mut self) {
+        const COMPACTION_REQUEST_EVERY: Duration = Duration::from_secs(10);
+        let (Some(t), Some(q)) = (self.tenant.as_ref(), self.lc.queue.as_ref()) else { return };
+        if t.writer_l0().map_or(false, |n| n >= tenant_bench::lifecycle::L0_COMPACT_THRESHOLD)
+            && self.last_compaction_request.map_or(true, |at| at.elapsed() >= COMPACTION_REQUEST_EVERY)
+        {
+            self.last_compaction_request = Some(Instant::now());
+            q.request(&self.name, None);
+        }
+    }
+
     /// Drop the tenant without clean-close bookkeeping (its lease was lost).
     pub async fn abandon(&mut self) {
         if let Some(t) = self.tenant.take() {
@@ -391,6 +408,7 @@ impl Entry {
         self.touch();
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
+        self.request_compaction_if_needed();
         let Some(commit) = staged? else { return Ok(()) };
         let mut slot = Some(commit);
         if GROUP_COMMIT.load(Relaxed) {

@@ -84,6 +84,10 @@ struct Args {
     /// object per write). By default writes arriving while a flush is in flight share the next WAL object.
     #[arg(long)]
     no_group_commit: bool,
+    /// Seconds between manifest reads of an open writer (it learns of compactions, and retries a memtable flush that
+    /// stalled on a full L0, at this pace). One GET per open writer per interval.
+    #[arg(long, default_value_t = 30)]
+    writer_poll_secs: u64,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -141,6 +145,7 @@ async fn main() -> Result<()> {
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
+    tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
     dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).

@@ -75,6 +75,14 @@ pub static ACK_BEFORE_DURABLE: std::sync::atomic::AtomicBool = std::sync::atomic
 /// periodic flush, which batches concurrent writes into one WAL object at the cost of up to one interval of latency.
 pub static EXPLICIT_FLUSH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
+/// How often an open writer re-reads the manifest, in seconds. A writer learns of compactions only this way, and a
+/// memtable flush that stalled on a full L0 (`l0_max_ssts`) retries only this often: with the old 1 h value a tenant
+/// written for a few minutes filled its L0 and never recovered (the WAL piled up and `Db::close` never returned).
+pub static WRITER_POLL_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(30);
+/// How long `Tenant::close` waits for the final flush before closing without it (the WAL is durable; the next
+/// wake replays it because no clean marker is written).
+pub const CLOSE_FLUSH_TIMEOUT: Duration = Duration::from_secs(20);
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
     let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
@@ -83,7 +91,7 @@ pub fn writer_settings() -> Settings {
     }
     s.garbage_collector_options = None;
     s.compactor_options = None;
-    s.manifest_poll_interval = LONG_POLL;
+    s.manifest_poll_interval = Duration::from_secs(WRITER_POLL_SECS.load(std::sync::atomic::Ordering::Relaxed));
     s
 }
 
@@ -268,6 +276,14 @@ pub struct Tenant {
 }
 
 impl Tenant {
+    /// L0 SSTs of the writer's local manifest view (None for a reader).
+    pub fn writer_l0(&self) -> Option<usize> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db.manifest().l0().len()),
+            _ => None,
+        }
+    }
+
     pub fn is_writer(&self) -> bool {
         matches!(self.mode, Some(Mode::Writer(_)))
     }
@@ -399,7 +415,16 @@ impl Tenant {
         match self.mode.take() {
             Some(Mode::Reader(r)) => r.close().await?,
             Some(Mode::Writer(db)) => {
-                db.close().await?;
+                match tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, db.close()).await {
+                    Ok(r) => r?,
+                    Err(_) => {
+                        // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
+                        // durable WAL objects: close without the flush and leave no marker, so the next wake replays them.
+                        eprintln!("close of tenant {}: final flush did not finish in {:?}; closing without it (unclean)", self.id, CLOSE_FLUSH_TIMEOUT);
+                        let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
+                        return Err(anyhow!("final flush timed out"));
+                    }
+                }
                 let l0 = db.manifest().l0().len();
                 self.lc
                     .store
