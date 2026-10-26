@@ -259,6 +259,10 @@ impl Server {
             let mut idx = doc! { "v": 2, "key": key.clone(), "name": name.clone() };
             for (k, v) in spec {
                 if !matches!(k.as_str(), "key" | "name" | "v") {
+                    // `unique: false` and `sparse: false` are the defaults and are not stored
+                    if matches!(k.as_str(), "unique" | "sparse") && !bool_arg(Some(v), false) {
+                        continue;
+                    }
                     idx.insert(k.clone(), v.clone());
                 }
             }

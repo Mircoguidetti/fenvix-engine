@@ -11,6 +11,8 @@ bson = { version = "=3.1.0", features = ["serde", "serde_json-1"] }
 fancy-regex = "=0.20.0"
 rquickjs = "0.14.0"
 serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+chrono-tz = "0.10"
 tokio = { version = "=1.54.1", features = ["full"] }
 anyhow = "1"
 bytes = "1"

@@ -46,7 +46,16 @@ enum Acc {
     Last(Bson),
     Push(Vec<Bson>),
     AddToSet(Vec<Bson>),
+    Merge(Document),
+    Std { n: i64, mean: f64, m2: f64 },
+    /// `$firstN`, `$lastN`, `$maxN`, `$minN`
+    NList(Vec<Bson>),
+    /// `$top`, `$bottom`, `$topN`, `$bottomN`: (original document with the output under a hidden key)
+    Top(Vec<Document>),
+    Js(Bson),
 }
+
+const OUT_KEY: &str = "\u{1}out";
 
 struct AccSpec {
     name: String,
@@ -70,7 +79,7 @@ fn parse_accumulators(spec: &Document) -> R<Vec<AccSpec>> {
             return Err(MongoError::new(40238, "Location40238", format!("The field '{name}' must specify one accumulator")));
         }
         let (op, expr) = d.iter().next().unwrap();
-        if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push" | "$addToSet") {
+        if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push" | "$addToSet" | "$mergeObjects" | "$stdDevPop" | "$stdDevSamp" | "$firstN" | "$lastN" | "$maxN" | "$minN" | "$top" | "$bottom" | "$topN" | "$bottomN" | "$accumulator") {
             return Err(MongoError::new(15952, "Location15952", format!("unknown group operator '{op}'")));
         }
         out.push(AccSpec { name: name.clone(), op: op.clone(), expr: expr.clone() });
@@ -88,13 +97,81 @@ fn init(op: &str) -> Acc {
         "$first" => Acc::First(None, false),
         "$last" => Acc::Last(Bson::Null),
         "$addToSet" => Acc::AddToSet(Vec::new()),
+        "$mergeObjects" => Acc::Merge(Document::new()),
+        "$stdDevPop" | "$stdDevSamp" => Acc::Std { n: 0, mean: 0.0, m2: 0.0 },
+        "$firstN" | "$lastN" | "$maxN" | "$minN" => Acc::NList(Vec::new()),
+        "$top" | "$bottom" | "$topN" | "$bottomN" => Acc::Top(Vec::new()),
+        "$accumulator" => Acc::Js(Bson::Null),
         _ => Acc::Push(Vec::new()),
     }
 }
 
+fn arg_doc<'a>(spec: &'a AccSpec) -> R<&'a Document> {
+    spec.expr.as_document().ok_or_else(|| MongoError::new(5787900, "Location5787900", format!("specification of {} must be an object", spec.op)))
+}
+
 fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
+    match (spec.op.as_str(), &mut *acc) {
+        ("$firstN" | "$lastN" | "$maxN" | "$minN", Acc::NList(v)) => {
+            let d = arg_doc(spec)?;
+            if let Some(x) = eval(d.get("input").unwrap_or(&Bson::Null), doc)? {
+                v.push(x);
+            }
+            return Ok(());
+        }
+        ("$top" | "$bottom" | "$topN" | "$bottomN", Acc::Top(v)) => {
+            let d = arg_doc(spec)?;
+            let mut item = doc.clone();
+            item.insert(OUT_KEY, eval(d.get("output").unwrap_or(&Bson::Null), doc)?.unwrap_or(Bson::Null));
+            v.push(item);
+            return Ok(());
+        }
+        ("$accumulator", Acc::Js(state)) => {
+            let d = arg_doc(spec)?;
+            let body = |k: &str| -> R<String> {
+                match d.get(k) {
+                    Some(Bson::String(s)) => Ok(s.clone()),
+                    Some(Bson::JavaScriptCode(c)) => Ok(c.clone()),
+                    _ => Err(MongoError::new(4544712, "Location4544712", format!("$accumulator requires '{k}'"))),
+                }
+            };
+            let args = |k: &str, doc: &Document| -> R<Vec<Bson>> {
+                match d.get(k) {
+                    Some(Bson::Array(a)) => a.iter().map(|e| Ok(eval(e, doc)?.unwrap_or(Bson::Null))).collect(),
+                    _ => Ok(vec![]),
+                }
+            };
+            if matches!(state, Bson::Null) {
+                *state = crate::js::call_function(&body("init")?, &args("initArgs", &Document::new())?)?;
+            }
+            let mut call_args = vec![state.clone()];
+            call_args.extend(args("accumulateArgs", doc)?);
+            *state = crate::js::call_function(&body("accumulate")?, &call_args)?;
+            return Ok(());
+        }
+        _ => {}
+    }
     let val = if spec.op == "$count" { None } else { eval(&spec.expr, doc)? };
     match acc {
+        Acc::Merge(m) => match val {
+            Some(Bson::Document(d)) => {
+                for (k, v) in d {
+                    m.insert(k, v);
+                }
+            }
+            None | Some(Bson::Null) | Some(Bson::Undefined) => {}
+            Some(o) => return Err(MongoError::new(40400, "Location40400", format!("$mergeObjects requires object inputs, but input {} is of type {}", crate::update::fmt_bson(&o), crate::update::type_name(&o)))),
+        },
+        Acc::Std { n, mean, m2 } => {
+            if let Some(v) = val.filter(is_number) {
+                let x = query::as_f64(&v);
+                *n += 1;
+                let delta = x - *mean;
+                *mean += delta / *n as f64;
+                *m2 += delta * (x - *mean);
+            }
+        }
+        Acc::NList(_) | Acc::Top(_) | Acc::Js(_) => {}
         Acc::Sum(s) => {
             if let Some(v) = val.filter(is_number) {
                 *s = add_numbers(s, &v);
@@ -144,8 +221,76 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
     Ok(())
 }
 
+fn finish_spec(acc: Acc, spec: &AccSpec) -> R<Bson> {
+    Ok(match (spec.op.as_str(), acc) {
+        ("$stdDevPop", Acc::Std { n, m2, .. }) => if n == 0 { Bson::Null } else { Bson::Double((m2 / n as f64).sqrt()) },
+        ("$stdDevSamp", Acc::Std { n, m2, .. }) => if n < 2 { Bson::Null } else { Bson::Double((m2 / (n - 1) as f64).sqrt()) },
+        ("$firstN" | "$lastN" | "$maxN" | "$minN", Acc::NList(mut v)) => {
+            let d = arg_doc(spec)?;
+            let n = match d.get("n").map(|e| eval(e, &Document::new())).transpose()?.flatten() {
+                Some(Bson::Int32(i)) if i > 0 => i as usize,
+                Some(Bson::Int64(i)) if i > 0 => i as usize,
+                Some(Bson::Double(f)) if f > 0.0 && f.fract() == 0.0 => f as usize,
+                Some(Bson::Int32(_) | Bson::Int64(_)) => return Err(MongoError::new(5787908, "Location5787908", "'n' must be greater than 0".into())),
+                _ => return Err(MongoError::new(5787902, "Location5787902", "Value for 'n' must be of integral type".into())),
+            };
+            match spec.op.as_str() {
+                "$firstN" => v.truncate(n),
+                "$lastN" => {
+                    let skip = v.len().saturating_sub(n);
+                    v = v.split_off(skip);
+                }
+                op => {
+                    v.retain(|x| !matches!(x, Bson::Null | Bson::Undefined));
+                    v.sort_by(compare);
+                    if op == "$maxN" {
+                        v.reverse();
+                    }
+                    v.truncate(n);
+                }
+            }
+            Bson::Array(v)
+        }
+        ("$top" | "$bottom" | "$topN" | "$bottomN", Acc::Top(mut docs)) => {
+            let d = arg_doc(spec)?;
+            let sort = d.get_document("sortBy").map_err(|_| MongoError::new(5788001, "Location5788001", "sortBy must be an object".into()))?;
+            sort_docs(&mut docs, &parse_sort(sort)?);
+            let outs: Vec<Bson> = docs.iter().map(|x| x.get(OUT_KEY).cloned().unwrap_or(Bson::Null)).collect();
+            match spec.op.as_str() {
+                "$top" => outs.into_iter().next().unwrap_or(Bson::Null),
+                "$bottom" => outs.into_iter().last().unwrap_or(Bson::Null),
+                op => {
+                    let n = match d.get("n").map(|e| eval(e, &Document::new())).transpose()?.flatten() {
+                        Some(Bson::Int32(i)) if i > 0 => i as usize,
+                        Some(Bson::Int64(i)) if i > 0 => i as usize,
+                        _ => return Err(MongoError::new(5787902, "Location5787902", "Value for 'n' must be of integral type and greater than 0".into())),
+                    };
+                    if op == "$topN" {
+                        Bson::Array(outs.into_iter().take(n).collect())
+                    } else {
+                        let skip = outs.len().saturating_sub(n);
+                        Bson::Array(outs.into_iter().skip(skip).collect())
+                    }
+                }
+            }
+        }
+        ("$accumulator", Acc::Js(state)) => {
+            let d = arg_doc(spec)?;
+            match d.get("finalize") {
+                Some(Bson::String(f)) => crate::js::call_function(f, &[state])?,
+                Some(Bson::JavaScriptCode(f)) => crate::js::call_function(f, &[state])?,
+                _ => state,
+            }
+        }
+        (_, acc) => finish(acc),
+    })
+}
+
 fn finish(acc: Acc) -> Bson {
     match acc {
+        Acc::Merge(m) => Bson::Document(m),
+        Acc::Std { .. } | Acc::NList(_) | Acc::Top(_) => Bson::Null,
+        Acc::Js(s) => s,
         Acc::Sum(s) => s,
         Acc::Avg(sum, n) => {
             if n == 0 { Bson::Null } else { Bson::Double(sum / n as f64) }
@@ -188,7 +333,7 @@ fn group(docs: Vec<Document>, spec: &Document) -> R<Vec<Document>> {
         let mut d = Document::new();
         d.insert("_id", key);
         for (acc, spec) in state.into_iter().zip(&accs) {
-            d.insert(spec.name.clone(), finish(acc));
+            d.insert(spec.name.clone(), finish_spec(acc, spec)?);
         }
         out.push(d);
     }
@@ -621,14 +766,12 @@ pub type Foreign = HashMap<String, Vec<Document>>;
 
 /// Names of the collections `$lookup` stages in `pipeline` read from (the caller preloads them).
 pub fn lookup_collections(pipeline: &[Bson]) -> Vec<String> {
-    let mut out = Vec::new();
-    for st in pipeline {
-        if let Some(Bson::Document(d)) = st.as_document().and_then(|d| d.get("$lookup")) {
-            if let Some(Bson::String(f)) = d.get("from") {
-                if !out.contains(f) {
-                    out.push(f.clone());
-                }
-            }
+    let mut all = Vec::new();
+    crate::agg_ext::extra_collections(pipeline, &mut all);
+    let mut out: Vec<String> = Vec::new();
+    for c in all {
+        if !out.contains(&c) {
+            out.push(c);
         }
     }
     out
@@ -662,6 +805,8 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
     let spec = arg.as_document().ok_or_else(|| MongoError::failed_to_parse("the $lookup specification must be a non-empty object".into()))?;
     let mut from = None;
     let (mut lf, mut ff, mut as_) = (None, None, None);
+    let mut let_spec: Option<Document> = None;
+    let mut pipeline: Option<Vec<Bson>> = None;
     for (k, v) in spec {
         let s = |v: &Bson| -> R<String> {
             v.as_str().map(str::to_string).ok_or_else(|| MongoError::failed_to_parse(format!("$lookup argument '{k}' must be a string, found {k}: {}", crate::update::fmt_bson(v))))
@@ -671,14 +816,50 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
             "localField" => lf = Some(s(v)?),
             "foreignField" => ff = Some(s(v)?),
             "as" => as_ = Some(s(v)?),
-            "let" | "pipeline" => {
-                return Err(MongoError::new(238, "NotImplemented", format!("$lookup with '{k}' is not supported by this server")));
+            "let" => {
+                let_spec = Some(v.as_document().cloned().ok_or_else(|| MongoError::failed_to_parse("$lookup: 'let' must be an object".into()))?);
+            }
+            "pipeline" => {
+                pipeline = Some(match v {
+                    Bson::Array(p) => p.clone(),
+                    _ => return Err(MongoError::failed_to_parse("$lookup: 'pipeline' must be an array".into())),
+                });
             }
             other => return Err(MongoError::failed_to_parse(format!("unknown argument to $lookup: {other}"))),
         }
     }
     let as_ = as_.ok_or_else(|| MongoError::failed_to_parse("must specify 'as' field for a $lookup".into()))?;
     let from = from.ok_or_else(|| MongoError::failed_to_parse("must specify 'from' field for a $lookup".into()))?;
+    if let Some(p) = pipeline {
+        let (lf, ff) = match (lf, ff) {
+            (Some(l), Some(f)) => (Some(l), Some(f)),
+            (None, None) => (None, None),
+            _ => return Err(MongoError::failed_to_parse("$lookup requires both or neither of 'localField' and 'foreignField' to be specified".into())),
+        };
+        let empty = Vec::new();
+        let fdocs = foreign.get(&from).unwrap_or(&empty);
+        let as_parts: Vec<&str> = as_.split('.').collect();
+        let mut out = Vec::with_capacity(docs.len());
+        for mut d in docs {
+            let mut vars: Vec<(String, Bson)> = Vec::new();
+            if let Some(ls) = &let_spec {
+                for (name, e) in ls {
+                    vars.push((name.clone(), eval(e, &d)?.unwrap_or(Bson::Null)));
+                }
+            }
+            let candidates: Vec<Document> = match (&lf, &ff) {
+                (Some(l), Some(f)) => {
+                    let keys: Vec<Vec<u8>> = local_values(&d, l).iter().map(encode_sortable).collect();
+                    fdocs.iter().filter(|fd| foreign_values(fd, f).iter().any(|v| keys.contains(&encode_sortable(v)))).cloned().collect()
+                }
+                _ => fdocs.clone(),
+            };
+            let res = crate::expr::with_ambient(vars, || run_pipeline(candidates, &p, foreign))?;
+            crate::update::set_path(&mut d, &as_parts, Bson::Array(res.into_iter().map(Bson::Document).collect()))?;
+            out.push(d);
+        }
+        return Ok(out);
+    }
     let (lf, ff) = match (lf, ff) {
         (Some(l), Some(f)) => (l, f),
         (None, None) => return Err(MongoError::failed_to_parse("$lookup requires either 'pipeline' or both 'localField' and 'foreignField' to be specified".into())),
@@ -797,9 +978,10 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
                 let n = docs.len();
                 docs = if n == 0 { vec![] } else { vec![bson::doc! { field: Bson::Int32(n as i32) }] };
             }
-            other => {
-                return Err(MongoError::new(40324, "Location40324", format!("Unrecognized pipeline stage name: '{other}'")));
-            }
+            other => match crate::agg_ext::run_stage(other, arg, std::mem::take(&mut docs), foreign)? {
+                Some(d) => docs = d,
+                None => return Err(MongoError::new(40324, "Location40324", format!("Unrecognized pipeline stage name: '{other}'"))),
+            },
         }
     }
     Ok(docs)

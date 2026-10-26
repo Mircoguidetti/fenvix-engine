@@ -138,25 +138,242 @@ impl Server {
         let coll = collection_name(cmd, "aggregate")?;
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
         let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
-        let first_match = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
-        // The pipeline's own $match rejects $where; do not run it here as a plain find filter.
-        let first_match = if first_match.contains_key("$where") || format!("{first_match:?}").contains("$where") { Document::new() } else { first_match };
-        let docs = {
+        let stage_name = |s: &Bson| s.as_document().and_then(|d| d.keys().next().cloned()).unwrap_or_default();
+        for (i, s) in pipeline.iter().enumerate() {
+            let n = stage_name(s);
+            if (n == "$collStats" || n == "$indexStats") && i != 0 {
+                return Err(MongoError::new(40602, "Location40602", format!("{n} is only valid as the first stage in a pipeline.")));
+            }
+            if (n == "$out" || n == "$merge") && i + 1 != pipeline.len() {
+                return Err(MongoError::new(40601, "Location40601", format!("{n} can only be the final stage in the pipeline")));
+            }
+        }
+        let (body, tail): (&[Bson], Option<&Bson>) = match pipeline.last() {
+            Some(l) if matches!(stage_name(l).as_str(), "$out" | "$merge") => (&pipeline[..pipeline.len() - 1], Some(l)),
+            _ => (&pipeline[..], None),
+        };
+        let first = body.first().and_then(|s| s.as_document());
+        let docs = if let Some(spec) = first.and_then(|d| d.get("$collStats")) {
             let mut g = self.dbs.lock(db).await;
-        attach(&mut g, tx);
+            attach(&mut g, tx);
+            self.coll_stats_stage(&mut g, db, coll, spec).await?
+        } else if first.map(|d| d.contains_key("$indexStats")).unwrap_or(false) {
+            let mut g = self.dbs.lock(db).await;
+            attach(&mut g, tx);
+            self.index_stats_stage(&mut g, db, coll).await?
+        } else {
+            let first_match = first.and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
+            // The pipeline's own $match rejects $where; do not run it here as a plain find filter.
+            let first_match = if format!("{first_match:?}").contains("$where") { Document::new() } else { first_match };
+            let mut g = self.dbs.lock(db).await;
+            attach(&mut g, tx);
             self.matching(&mut g, db, coll, &first_match, cmd.get("hint"), tx_ov(tx)).await?
         };
+        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats")).unwrap_or(false) { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
-        for from in crate::agg::lookup_collections(pipeline) {
+        for from in crate::agg::lookup_collections(body_rest) {
             let fd = {
                 let mut g = self.dbs.lock(db).await;
-        attach(&mut g, tx);
+                attach(&mut g, tx);
                 self.scan_visible(&mut g, db, &from).await?
             };
             foreign.insert(from, fd);
         }
-        let out = run_pipeline(docs, pipeline, &foreign)?;
+        let out = run_pipeline(docs, body_rest, &foreign)?;
+        if let Some(t) = tail {
+            self.agg_write_stage(db, t, out, tx).await?;
+            return Ok(self.cursor_reply(format!("{db}.{coll}"), VecDeque::new(), batch, false));
+        }
         Ok(self.cursor_reply(format!("{db}.{coll}"), out.into(), batch, false))
+    }
+
+    /// The documents of a `$collStats` stage.
+    async fn coll_stats_stage(&self, g: &mut Entry, db: &str, coll: &str, spec: &Bson) -> R<Vec<Document>> {
+        let spec = spec.as_document().ok_or_else(|| MongoError::new(5447000, "Location5447000", "$collStats must take a nested object but found".to_string()))?;
+        for k in spec.keys() {
+            if !matches!(k.as_str(), "latencyStats" | "storageStats" | "count" | "queryExecStats") {
+                return Err(MongoError::new(40415, "IDLUnknownField", format!("BSON field '$collStats.{k}' is an unknown field.")));
+            }
+        }
+        if !g.collections().await?.iter().any(|n| n == coll) {
+            return Err(MongoError::new(26, "NamespaceNotFound", format!("Unable to retrieve storageStats in $collStats stage :: caused by :: Collection [{db}.{coll}] not found.")));
+        }
+        let mut d = doc! { "ns": format!("{db}.{coll}"), "host": "mongo-server", "localTime": bson::DateTime::now() };
+        if spec.contains_key("latencyStats") {
+            d.insert("latencyStats", doc! { "reads": { "latency": 0_i64, "ops": 0_i64 }, "writes": { "latency": 0_i64, "ops": 0_i64 }, "commands": { "latency": 0_i64, "ops": 0_i64 }, "transactions": { "latency": 0_i64, "ops": 0_i64 } });
+        }
+        if spec.contains_key("storageStats") {
+            let mut st = self.storage_stats(g, db, coll).await?;
+            st.remove("nindexes_unused");
+            d.insert("storageStats", st);
+        }
+        if spec.contains_key("count") {
+            let n = self.storage_stats(g, db, coll).await?.get_i32("count").unwrap_or(0);
+            d.insert("count", n);
+        }
+        Ok(vec![d])
+    }
+
+    async fn index_stats_stage(&self, g: &mut Entry, db: &str, coll: &str) -> R<Vec<Document>> {
+        let _ = db;
+        let indexes = g.indexes(coll).await?;
+        let now = bson::DateTime::now();
+        let mut out = vec![doc! { "name": "_id_", "key": { "_id": 1 }, "host": "mongo-server", "accesses": { "ops": 0_i64, "since": now }, "spec": { "v": 2, "key": { "_id": 1 }, "name": "_id_" } }];
+        for i in indexes.iter().filter(|i| i.state == index::State::Ready) {
+            out.push(doc! { "name": i.name.clone(), "key": i.key_pattern(), "host": "mongo-server", "accesses": { "ops": 0_i64, "since": now }, "spec": i.spec.clone() });
+        }
+        Ok(out)
+    }
+
+    /// `$out` / `$merge`: write the pipeline's output into a collection of the same database.
+    async fn agg_write_stage(&self, db: &str, stage: &Bson, docs: Vec<Document>, tx: &mut Option<Txn>) -> R<()> {
+        let sd = stage.as_document().unwrap();
+        let (name, spec) = sd.iter().next().unwrap();
+        let target_of = |v: &Bson| -> R<String> {
+            match v {
+                Bson::String(s) => Ok(s.clone()),
+                Bson::Document(d) => {
+                    if let Ok(dbn) = d.get_str("db") {
+                        if dbn != db {
+                            return Err(MongoError::new(238, "NotImplemented", "writing to another database is not supported by this server".into()));
+                        }
+                    }
+                    d.get_str("coll").map(str::to_string).map_err(|_| MongoError::new(40414, "Location40414", format!("{name} requires 'coll'")))
+                }
+                _ => Err(MongoError::new(16990, "Location16990", format!("{name} requires a string or object argument"))),
+            }
+        };
+        let mut g = self.dbs.lock(db).await;
+        attach(&mut g, tx);
+        let ns_names = g.collections().await?;
+        if name == "$out" {
+            let target = target_of(spec)?;
+            let ns = format!("{db}.{target}");
+            let mut indexes = self.load_indexes(&mut g, db, &target).await?;
+            let mut w = take_writes(tx);
+            let existing = {
+                let (docs, _, _) = find_docs(&mut g, &target, &indexes, &FindOpts { filter: &Document::new(), sort: &[], want: None, hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?;
+                docs
+            };
+            for d in &existing {
+                w.delete(&mut g, db, &target, &indexes, d)?;
+            }
+            for mut d in docs {
+                if !d.contains_key("_id") {
+                    let mut with_id = doc! { "_id": ObjectId::new() };
+                    for (k, v) in d {
+                        with_id.insert(k, v);
+                    }
+                    d = with_id;
+                }
+                w.put(&mut g, &target, &ns, &mut indexes, &d, None).await?;
+            }
+            let names = w.names.clone().unwrap_or(ns_names.clone());
+            let new_coll = (!names.iter().any(|n| *n == target)).then(|| {
+                let mut v = names.clone();
+                v.push(target.clone());
+                v
+            });
+            return self.commit(&mut g, &target, w, &indexes, new_coll, tx).await;
+        }
+        // $merge
+        let (into, on, when_matched, when_not) = match spec {
+            Bson::String(_) => (target_of(spec)?, vec!["_id".to_string()], Bson::String("merge".into()), "insert".to_string()),
+            Bson::Document(d) => {
+                let into = target_of(d.get("into").ok_or_else(|| MongoError::new(40414, "Location40414", "$merge requires 'into'".into()))?)?;
+                let on = match d.get("on") {
+                    None => vec!["_id".to_string()],
+                    Some(Bson::String(s)) => vec![s.clone()],
+                    Some(Bson::Array(a)) => a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect(),
+                    _ => return Err(MongoError::new(51186, "Location51186", "$merge 'on' must be a string or an array of strings".into())),
+                };
+                (into, on, d.get("whenMatched").cloned().unwrap_or(Bson::String("merge".into())), d.get_str("whenNotMatched").unwrap_or("insert").to_string())
+            }
+            _ => return Err(MongoError::new(51182, "Location51182", "$merge requires a string or object argument".into())),
+        };
+        let ns = format!("{db}.{into}");
+        let mut indexes = self.load_indexes(&mut g, db, &into).await?;
+        let mut w = take_writes(tx);
+        // Merging and keep-existing are executed as `$set`-style upserts: new fields are applied in name order.
+        let sorted_mode = on == ["_id".to_string()] && matches!(&when_matched, Bson::String(m) if m == "merge" || m == "keepExisting");
+        for d in docs {
+            let mut filter = Document::new();
+            for f in &on {
+                match crate::expr::field_path(&d, f) {
+                    Some(v) => {
+                        filter.insert(f.clone(), v);
+                    }
+                    None => return Err(MongoError::new(51132, "Location51132", format!("$merge write error: 'on' field '{f}' is missing from a document")))
+                }
+            }
+            let (found, _, _) = find_docs(&mut g, &into, &indexes, &FindOpts { filter: &filter, sort: &[], want: Some(1), hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?;
+            match found.into_iter().next() {
+                Some(old) => {
+                    let new = match &when_matched {
+                        Bson::String(m) if m == "merge" => {
+                            let mut n = old.clone();
+                            let mut keys: Vec<&String> = d.keys().filter(|k| *k != "_id").collect();
+                            keys.sort();
+                            for k in keys {
+                                n.insert(k.clone(), d.get(k).cloned().unwrap());
+                            }
+                            n
+                        }
+                        Bson::String(m) if m == "replace" => {
+                            let mut n = d.clone();
+                            n.insert("_id", old.get("_id").cloned().unwrap_or(Bson::Null));
+                            let mut ordered = doc! { "_id": old.get("_id").cloned().unwrap_or(Bson::Null) };
+                            for (k, v) in n {
+                                ordered.insert(k, v);
+                            }
+                            ordered
+                        }
+                        Bson::String(m) if m == "keepExisting" => continue,
+                        Bson::String(m) if m == "fail" => return Err(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": old.get("_id").cloned().unwrap_or(Bson::Null) })),
+                        Bson::Array(p) => {
+                            let mut r = crate::expr::with_ambient(vec![("new".to_string(), Bson::Document(d.clone()))], || run_pipeline(vec![old.clone()], p, &crate::agg::Foreign::new()))?;
+                            r.pop().unwrap_or_else(|| old.clone())
+                        }
+                        _ => return Err(MongoError::new(51181, "Location51181", "unsupported whenMatched mode".into())),
+                    };
+                    if new != old {
+                        w.put(&mut g, &into, &ns, &mut indexes, &new, Some(&old)).await?;
+                    }
+                }
+                None => match when_not.as_str() {
+                    "insert" => {
+                        // A $merge that creates the target collection inserts the documents with their top-level fields
+                        // in name order, `_id` first; into an existing collection the source order is kept.
+                        let mut n = d.clone();
+                        if sorted_mode {
+                            let mut keys: Vec<String> = d.keys().filter(|k| *k != "_id").cloned().collect();
+                            keys.sort();
+                            n = doc! { "_id": d.get("_id").cloned().unwrap_or_else(|| Bson::ObjectId(ObjectId::new())) };
+                            for k in keys {
+                                n.insert(k.clone(), d.get(&k).cloned().unwrap());
+                            }
+                        } else if !n.contains_key("_id") {
+                            let mut with_id = doc! { "_id": ObjectId::new() };
+                            for (k, v) in n {
+                                with_id.insert(k, v);
+                            }
+                            n = with_id;
+                        }
+                        w.put(&mut g, &into, &ns, &mut indexes, &n, None).await?;
+                    }
+                    "discard" => {}
+                    "fail" => return Err(MongoError::new(13113, "MergeStageNoMatchingDocument", "$merge could not find a matching document in the target collection for at least one document in the source collection".into())),
+                    _ => return Err(MongoError::new(51181, "Location51181", "unsupported whenNotMatched mode".into())),
+                },
+            }
+        }
+        let names = w.names.clone().unwrap_or(ns_names.clone());
+        let new_coll = (!names.iter().any(|n| *n == into)).then(|| {
+            let mut v = names.clone();
+            v.push(into.clone());
+            v
+        });
+        self.commit(&mut g, &into, w, &indexes, new_coll, tx).await
     }
 
     // ---- writes ----------------------------------------------------------------------------

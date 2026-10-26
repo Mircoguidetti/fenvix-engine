@@ -9,7 +9,28 @@ use crate::query::{as_f64, compare, equal, is_number};
 use bson::{Bson, DateTime, Document};
 use std::cmp::Ordering;
 
+mod dates;
+mod ops;
+
 type R<T> = Result<T, MongoError>;
+
+thread_local! {
+    /// Variables of the enclosing `$lookup` `let` (visible to its sub-pipeline).
+    static AMBIENT: std::cell::RefCell<Vec<(String, Bson)>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// Run `f` with extra variables visible to every expression it evaluates.
+pub fn with_ambient<T>(vars: Vec<(String, Bson)>, f: impl FnOnce() -> T) -> T {
+    let n = vars.len();
+    AMBIENT.with(|a| a.borrow_mut().extend(vars));
+    let r = f();
+    AMBIENT.with(|a| {
+        let mut a = a.borrow_mut();
+        let keep = a.len() - n;
+        a.truncate(keep);
+    });
+    r
+}
 
 #[derive(Clone)]
 pub struct Scope<'a> {
@@ -115,6 +136,9 @@ fn variable(sc: &Scope, name_and_path: &str) -> R<Option<Bson>> {
                     return Ok(if rest.is_empty() { Some(v.clone()) } else { get_path(v, &rest) });
                 }
             }
+            if let Some(v) = AMBIENT.with(|a| a.borrow().iter().rev().find(|(n, _)| n == name).map(|(_, v)| v.clone())) {
+                return Ok(if rest.is_empty() { Some(v) } else { get_path(&v, &rest) });
+            }
             Err(err(17276, format!("Use of undefined variable: {name}")))
         }
     }
@@ -128,6 +152,11 @@ pub fn is_known_operator(name: &str) -> bool {
     matches!(
         name,
         "$literal" | "$cond" | "$ifNull" | "$eq" | "$ne" | "$gt" | "$gte" | "$lt" | "$lte" | "$and" | "$or" | "$not" | "$in" | "$add" | "$subtract" | "$multiply" | "$divide" | "$mod" | "$concat" | "$toLower" | "$toUpper" | "$size" | "$isArray" | "$arrayElemAt" | "$concatArrays" | "$setUnion" | "$filter" | "$map" | "$dateToString" | "$slice"
+            | "$let" | "$switch" | "$mergeObjects" | "$reduce" | "$objectToArray" | "$arrayToObject" | "$getField" | "$setField" | "$unsetField" | "$range" | "$reverseArray" | "$indexOfArray" | "$first" | "$last" | "$firstN" | "$lastN" | "$maxN" | "$minN"
+            | "$sortArray" | "$zip" | "$isNumber" | "$setIntersection" | "$setDifference" | "$setEquals" | "$setIsSubset" | "$anyElementTrue" | "$allElementsTrue" | "$max" | "$min" | "$sum" | "$avg" | "$cmp" | "$type" | "$bsonSize" | "$binarySize"
+            | "$abs" | "$ceil" | "$floor" | "$sqrt" | "$exp" | "$ln" | "$log10" | "$trunc" | "$round" | "$pow" | "$log" | "$substr" | "$substrBytes" | "$substrCP" | "$strLenBytes" | "$strLenCP" | "$strcasecmp" | "$trim" | "$ltrim" | "$rtrim" | "$split"
+            | "$indexOfBytes" | "$indexOfCP" | "$replaceOne" | "$replaceAll" | "$regexMatch" | "$regexFind" | "$regexFindAll" | "$convert" | "$toInt" | "$toLong" | "$toDouble" | "$toDecimal" | "$toBool" | "$toDate" | "$toString" | "$toObjectId" | "$function"
+            | "$year" | "$month" | "$dayOfMonth" | "$hour" | "$minute" | "$second" | "$millisecond" | "$dayOfWeek" | "$dayOfYear" | "$week" | "$isoWeek" | "$isoWeekYear" | "$isoDayOfWeek" | "$dateToParts" | "$dateFromParts" | "$dateFromString" | "$dateAdd" | "$dateSubtract" | "$dateDiff" | "$dateTrunc"
     )
 }
 
@@ -553,8 +582,10 @@ fn operator(name: &str, arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
         "$slice" => slice(arg, sc),
         "$filter" => filter(arg, sc),
         "$map" => map(arg, sc),
-        "$dateToString" => date_to_string(arg, sc),
-        other => Err(err(168, format!("Unrecognized expression '{other}'"))),
+        other => match ops::operator_ext(other, arg, sc)? {
+            Some(v) => Ok(v),
+            None => Err(err(168, format!("Unrecognized expression '{other}'"))),
+        },
     }
 }
 

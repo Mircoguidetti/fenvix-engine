@@ -109,6 +109,8 @@ def reduce_explain(doc, stats):
 
 
 def pick(doc, keys, reduce=None):
+    if reduce == "collstats_stage":
+        return doc
     if reduce == "collstats":
         return {"nindexes": doc["nindexes"], "count": doc["count"], "indexNames": sorted(doc["indexSizes"].keys()), "ok": doc["ok"]}
     if reduce == "explain":

@@ -5,6 +5,7 @@
 //! standalone compaction and GC).
 
 mod agg;
+mod agg_ext;
 mod changes;
 mod cmd;
 mod cmd_changes;
