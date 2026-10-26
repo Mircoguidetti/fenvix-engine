@@ -80,6 +80,10 @@ struct Args {
     /// Do not use leases (single process only; for stores without conditional update, e.g. --store local).
     #[arg(long)]
     no_leases: bool,
+    /// Wait for each write's own flush while holding the tenant lock (the behaviour before group commit: one WAL
+    /// object per write). By default writes arriving while a flush is in flight share the next WAL object.
+    #[arg(long)]
+    no_group_commit: bool,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -137,6 +141,7 @@ async fn main() -> Result<()> {
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
+    dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));

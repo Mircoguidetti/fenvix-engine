@@ -127,7 +127,19 @@ impl Server {
             eprintln!("CMD {name} db={db}");
         }
         let t0 = std::time::Instant::now();
-        let r = self.dispatch(db, &name, &cmd, conn_id).await;
+        // Writes staged by the command become durable here, after its locks were released; the reply waits for it.
+        let (mut r, mut commits) = crate::dbs::PENDING
+            .scope(Default::default(), async {
+                let r = self.dispatch(db, &name, &cmd, conn_id).await;
+                (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())))
+            })
+            .await;
+        if let Some(last) = commits.pop() {
+            // Later commits flush after earlier ones, so waiting for the last covers all of them.
+            if let Err(e) = last.wait().await {
+                r = Err(e.into());
+            }
+        }
         let ms = t0.elapsed().as_millis();
         if ms >= 500 {
             eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());

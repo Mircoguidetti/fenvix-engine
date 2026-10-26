@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicI64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tenant_bench::lifecycle::{Lifecycle, Op, Tenant};
+use tenant_bench::lifecycle::{Commit, Lifecycle, Op, Tenant};
 use std::sync::atomic::AtomicU64;
 use tokio::sync::{OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock as AsyncMutex, Semaphore};
 
@@ -33,6 +33,16 @@ pub static WAKE_MAX_QUEUED: AtomicI64 = AtomicI64::new(0);
 /// Reads of one tenant share the entry lock (true) or take it exclusively like writes (false: the behaviour
 /// before concurrent reads, one command per tenant at a time; `--serialize-reads`).
 pub static SHARED_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Group commit: a write is staged under the tenant's exclusive lock and made durable after the lock is released
+/// (by the server's `handle`, before the reply is sent), so writes that arrive while a flush is in flight share
+/// the next WAL object. False (`--no-group-commit`): the write waits for its own flush under the lock.
+pub static GROUP_COMMIT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+tokio::task_local! {
+    /// Commits staged by the command being handled on this task, awaited before its reply is sent.
+    pub static PENDING: std::cell::RefCell<Vec<Commit>>;
+}
 
 pub fn set_wake_limit(n: usize) {
     let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });
@@ -379,9 +389,17 @@ impl Entry {
             self.sync_gauges();
         }
         self.touch();
-        let r = self.tenant.as_mut().unwrap().apply(ops).await;
+        let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
-        r
+        let Some(commit) = staged? else { return Ok(()) };
+        let mut slot = Some(commit);
+        if GROUP_COMMIT.load(Relaxed) {
+            let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
+        }
+        match slot {
+            Some(commit) => commit.wait().await,
+            None => Ok(()),
+        }
     }
 
     /// Close the tenant and delete every object of the database. Holds the tenant's maintenance

@@ -237,6 +237,27 @@ enum Mode {
     Writer(Db),
 }
 
+/// A staged write batch waiting to become durable.
+pub struct Commit {
+    db: Db,
+    handle: WriteHandle,
+}
+
+impl Commit {
+    /// Wait until the batch is in a durable WAL object. Writes staged while a flush is in flight are flushed
+    /// together by the next one.
+    pub async fn wait(self) -> Result<()> {
+        // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
+        if EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) {
+            self.db.flush().await?;
+        }
+        if !ACK_BEFORE_DURABLE.load(std::sync::atomic::Ordering::Relaxed) {
+            self.handle.await_durable().await?;
+        }
+        Ok(())
+    }
+}
+
 pub struct Tenant {
     lc: Arc<Lifecycle>,
     pub id: String,
@@ -326,8 +347,18 @@ impl Tenant {
 
     /// Apply writes as one atomic batch and wait until they are durable. Upgrades first.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
+        match self.stage(ops).await? {
+            Some(commit) => commit.wait().await,
+            None => Ok(()),
+        }
+    }
+
+    /// Put writes into the database as one atomic batch (visible to reads, ordered after earlier batches) and return
+    /// the [`Commit`] that waits for them to be durable. The write is not acknowledged until `Commit::wait` returns,
+    /// so callers can release their locks first and let concurrent writes share the next WAL object (group commit).
+    pub async fn stage(&mut self, ops: Vec<Op>) -> Result<Option<Commit>> {
         if ops.is_empty() {
-            return Ok(());
+            return Ok(None);
         }
         self.upgrade().await?;
         let Some(Mode::Writer(db)) = self.mode.as_ref() else { unreachable!() };
@@ -339,14 +370,7 @@ impl Tenant {
             }
         }
         let handle = db.write(batch).await?;
-        // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
-        if EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) {
-            db.flush().await?;
-        }
-        if !ACK_BEFORE_DURABLE.load(std::sync::atomic::Ordering::Relaxed) {
-            handle.await_durable().await?;
-        }
-        Ok(())
+        Ok(Some(Commit { db: db.clone(), handle }))
     }
 
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {
