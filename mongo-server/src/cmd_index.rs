@@ -300,6 +300,10 @@ impl Server {
                 if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&ex.spec, &idx) {
                     continue;
                 }
+                let without_ttl = |d: &Document| { let mut d = d.clone(); d.remove("expireAfterSeconds"); d };
+                if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&without_ttl(&ex.spec), &without_ttl(&idx)) {
+                    return Err(MongoError::new(85, "IndexOptionsConflict", format!("An equivalent index already exists with the same name but different options. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
+                }
                 return Err(MongoError::new(86, "IndexKeySpecsConflict", format!("An existing index has the same name as the requested index. When index names are not specified, they are auto generated and can cause conflicts. Please refer to our documentation. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
             }
             if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| k == key).unwrap_or(false)) {
