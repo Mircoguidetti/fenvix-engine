@@ -1,0 +1,40 @@
+run1 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049082053 
+tenants closed; stopping maintenance
+maintenance stopped
+run2 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049237141 
+tenants closed; stopping maintenance
+maintenance stopped
+run3 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049392185 
+tenants closed; stopping maintenance
+maintenance stopped
+run4 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049547240 
+tenants closed; stopping maintenance
+maintenance stopped
+run5 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049702278 
+tenants closed; stopping maintenance
+maintenance stopped
+run6 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049857333 
+tenants closed; stopping maintenance
+maintenance stopped
+run7 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793050012384 
+tenants closed; stopping maintenance
+maintenance stopped
+run8 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793050167452 
+tenants closed; stopping maintenance
+maintenance stopped
+run9 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793050322512 
+tenants closed; stopping maintenance
+maintenance stopped
+run10 exited after 2s
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793050477552 
+tenants closed; stopping maintenance
+maintenance stopped

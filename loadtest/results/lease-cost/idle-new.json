@@ -1,0 +1,58 @@
+[
+ {
+  "process_lease": "off",
+  "tenants_open": 100,
+  "window_s": 120.0,
+  "ttl_s": 30,
+  "lease_puts": 1101,
+  "all_puts": 1201,
+  "all_gets": 3000,
+  "lease_puts_per_tenant_hour": 330.3,
+  "all_puts_per_tenant_hour": 360.3,
+  "gets_per_tenant_hour": 900.0,
+  "put_by_category": {
+   "wal": 0,
+   "manifest": 0,
+   "compacted_sst": 0,
+   "lease": 1101,
+   "clean_marker": 0,
+   "other": 100
+  },
+  "get_by_category": {
+   "wal": 0,
+   "manifest": 1500,
+   "compacted_sst": 0,
+   "lease": 0,
+   "clean_marker": 0,
+   "other": 1500
+  }
+ },
+ {
+  "process_lease": "on",
+  "tenants_open": 100,
+  "window_s": 120.0,
+  "ttl_s": 30,
+  "lease_puts": 11,
+  "all_puts": 111,
+  "all_gets": 3000,
+  "lease_puts_per_tenant_hour": 3.3,
+  "all_puts_per_tenant_hour": 33.3,
+  "gets_per_tenant_hour": 900.0,
+  "put_by_category": {
+   "wal": 0,
+   "manifest": 0,
+   "compacted_sst": 0,
+   "lease": 11,
+   "clean_marker": 0,
+   "other": 100
+  },
+  "get_by_category": {
+   "wal": 0,
+   "manifest": 1500,
+   "compacted_sst": 0,
+   "lease": 0,
+   "clean_marker": 0,
+   "other": 1500
+  }
+ }
+]

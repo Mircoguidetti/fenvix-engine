@@ -1,0 +1,21 @@
+{
+ "holders": [
+  "S0",
+  "S1"
+ ],
+ "kills": 8,
+ "tenants_with_lease_events": 996,
+ "lease_intervals": 2221,
+ "writer_intervals": 1338,
+ "lease_overlaps_between_different_holders": 0,
+ "writer_overlaps_between_different_holders": 0,
+ "max_concurrent_writer_intervals_per_tenant": 1,
+ "takeovers_of_expired_leases": 136,
+ "wakes_after_takeover_or_crash": 1370,
+ "unclean_wal_replay_wakes": 1370,
+ "takeover_wakes_not_unclean": 0,
+ "lease_overlaps_by_how_the_earlier_holder_ended": {},
+ "lease_overlap_max_ms": 0,
+ "lease_overlap_median_ms": 0,
+ "examples": []
+}

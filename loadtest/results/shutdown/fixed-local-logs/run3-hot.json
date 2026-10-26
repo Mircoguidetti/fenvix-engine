@@ -1,0 +1,12 @@
+{
+  "tenant": "h000000",
+  "connections": 64,
+  "read_pct": 90,
+  "duration_secs": 150,
+  "ops": 609318,
+  "errors": 0,
+  "ops_per_sec": 4062.12,
+  "p50_ms": 14.679,
+  "p99_ms": 37.151,
+  "max_ms": 71.103
+}
