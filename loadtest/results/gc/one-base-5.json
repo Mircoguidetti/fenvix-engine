@@ -1,0 +1,28 @@
+[
+ {
+  "tenant": "gone-base-5s31x000000",
+  "connections": 1,
+  "read_pct": 0,
+  "duration_secs": 15,
+  "ops": 3879,
+  "errors": 0,
+  "ops_per_sec": 258.6,
+  "p50_ms": 3.649,
+  "p99_ms": 7.195,
+  "max_ms": 316.671,
+  "label": "one-base-5",
+  "store": "s3",
+  "wal_puts": 3879,
+  "total_puts": 3880,
+  "wal_puts_per_write": 1.0,
+  "total_puts_per_write": 1.0,
+  "put_by_category": {
+   "wal": 3879,
+   "manifest": 0,
+   "compacted_sst": 0,
+   "lease": 1,
+   "clean_marker": 0,
+   "other": 0
+  }
+ }
+]

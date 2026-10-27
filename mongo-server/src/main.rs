@@ -97,6 +97,10 @@ struct Args {
     /// then stay until the tenant has been idle and is collected as a whole).
     #[arg(long, default_value_t = 20)]
     wal_gc_secs: u64,
+    /// Group commit window in milliseconds (fractions allowed): the first write of a group waits this long before
+    /// flushing so that more writes can share the WAL object. 0 (default) flushes at once.
+    #[arg(long, default_value_t = 0.0)]
+    group_commit_window_ms: f64,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -156,6 +160,7 @@ async fn main() -> Result<()> {
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
     dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).

@@ -211,7 +211,7 @@ impl Lifecycle {
         let db = Db::builder(tenant_path(&id), Arc::clone(&self.store)).with_settings(writer_settings()).build().await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         OPEN_WRITERS.lock().unwrap().insert(id.clone());
-        Ok(Tenant { lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
     }
 
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
@@ -249,7 +249,7 @@ impl Lifecycle {
             self.stats.lock().unwrap().unclean_wakes += 1;
         }
         let l0_at_wake = reader.manifest().l0().len();
-        Ok(Tenant { lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake })
     }
 }
 
@@ -264,21 +264,52 @@ enum Mode {
     Writer(Db),
 }
 
+/// Per-writer state of group commit: one flush at a time, led by whichever waiting write gets the lock first; a write
+/// whose sequence number an earlier flush already covered just returns.
+#[derive(Default)]
+pub struct GroupFlush {
+    lock: tokio::sync::Mutex<()>,
+    /// Highest sequence number staged into the WAL buffer.
+    staged_seq: std::sync::atomic::AtomicU64,
+    /// Highest sequence number known to be in a durable WAL object.
+    flushed_seq: std::sync::atomic::AtomicU64,
+}
+
+/// Microseconds the leader of a group waits before flushing so that more writes can join (0 = flush at once).
+pub static GROUP_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Writes waited for (`commits`) and flushes issued for them (`flushes`): writes per WAL object = commits / flushes.
+pub static GROUP_COMMITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static GROUP_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// A staged write batch waiting to become durable.
 pub struct Commit {
     db: Db,
     handle: WriteHandle,
+    group: Arc<GroupFlush>,
 }
 
 impl Commit {
     /// Wait until the batch is in a durable WAL object. Writes staged while a flush is in flight are flushed
     /// together by the next one.
     pub async fn wait(self) -> Result<()> {
+        use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+        GROUP_COMMITS.fetch_add(1, Relaxed);
+        let seq = self.handle.seqnum();
         // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
-        if EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) {
-            self.db.flush().await?;
+        if EXPLICIT_FLUSH.load(Relaxed) && self.group.flushed_seq.load(Acquire) < seq {
+            let _lead = self.group.lock.lock().await;
+            if self.group.flushed_seq.load(Acquire) < seq {
+                let window = GROUP_WINDOW_US.load(Relaxed);
+                if window > 0 {
+                    tokio::time::sleep(Duration::from_micros(window)).await;
+                }
+                let target = self.group.staged_seq.load(Acquire);
+                self.db.flush().await?;
+                GROUP_FLUSHES.fetch_add(1, Relaxed);
+                self.group.flushed_seq.fetch_max(target, Release);
+            }
         }
-        if !ACK_BEFORE_DURABLE.load(std::sync::atomic::Ordering::Relaxed) {
+        if !ACK_BEFORE_DURABLE.load(Relaxed) {
             self.handle.await_durable().await?;
         }
         Ok(())
@@ -286,6 +317,7 @@ impl Commit {
 }
 
 pub struct Tenant {
+    group: Arc<GroupFlush>,
     lc: Arc<Lifecycle>,
     pub id: String,
     mode: Option<Mode>,
@@ -406,7 +438,8 @@ impl Tenant {
             }
         }
         let handle = db.write(batch).await?;
-        Ok(Some(Commit { db: db.clone(), handle }))
+        self.group.staged_seq.fetch_max(handle.seqnum(), std::sync::atomic::Ordering::Release);
+        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group) }))
     }
 
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {
