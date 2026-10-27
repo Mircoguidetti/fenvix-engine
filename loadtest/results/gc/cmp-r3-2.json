@@ -1,0 +1,80 @@
+[
+ {
+  "tenant": "gcmp-r3-2s31x000000",
+  "connections": 1,
+  "read_pct": 0,
+  "duration_secs": 15,
+  "ops": 3934,
+  "errors": 0,
+  "ops_per_sec": 262.26666666666665,
+  "p50_ms": 3.731,
+  "p99_ms": 6.511,
+  "max_ms": 115.967,
+  "label": "cmp-r3-2",
+  "store": "s3",
+  "wal_puts": 3934,
+  "total_puts": 3935,
+  "wal_puts_per_write": 1.0,
+  "total_puts_per_write": 1.0,
+  "put_by_category": {
+   "wal": 3934,
+   "manifest": 0,
+   "compacted_sst": 0,
+   "lease": 1,
+   "clean_marker": 0,
+   "other": 0
+  }
+ },
+ {
+  "tenant": "gcmp-r3-2s38x000000",
+  "connections": 8,
+  "read_pct": 0,
+  "duration_secs": 15,
+  "ops": 7109,
+  "errors": 0,
+  "ops_per_sec": 473.93333333333334,
+  "p50_ms": 17.327,
+  "p99_ms": 26.111,
+  "max_ms": 42.175,
+  "label": "cmp-r3-2",
+  "store": "s3",
+  "wal_puts": 6569,
+  "total_puts": 6572,
+  "wal_puts_per_write": 0.924,
+  "total_puts_per_write": 0.924,
+  "put_by_category": {
+   "wal": 6569,
+   "manifest": 1,
+   "compacted_sst": 1,
+   "lease": 1,
+   "clean_marker": 0,
+   "other": 0
+  }
+ },
+ {
+  "tenant": "gcmp-r3-2s364x000000",
+  "connections": 64,
+  "read_pct": 0,
+  "duration_secs": 15,
+  "ops": 9284,
+  "errors": 0,
+  "ops_per_sec": 618.9333333333333,
+  "p50_ms": 111.679,
+  "p99_ms": 188.671,
+  "max_ms": 204.543,
+  "label": "cmp-r3-2",
+  "store": "s3",
+  "wal_puts": 5999,
+  "total_puts": 6002,
+  "wal_puts_per_write": 0.646,
+  "total_puts_per_write": 0.646,
+  "put_by_category": {
+   "wal": 5999,
+   "manifest": 1,
+   "compacted_sst": 1,
+   "lease": 1,
+   "clean_marker": 0,
+   "other": 0
+  }
+ }
+]

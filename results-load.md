@@ -470,3 +470,110 @@ The extra tests are the out-of-scope features and failed in the earlier rounds t
 - Recovery of the data after the shutdown safety net's unclean close.
 - Whether `--writer-poll-secs 30` is the right value for S3 prices at very large numbers of open writers (the cost is 240 GETs per open writer-hour; no sweep was run).
 <!-- round3:end -->
+
+<!-- round4:start -->
+## Round 4 — branch `engine-cost`: WAL growth, shutdown-fallback recovery, durable reads, batch window, one connection, the extra PUT
+
+Same rules as round 3: every number comes from a file in `loadtest/results/` (`wal/`, `gc/`, `fallback/`, `durable-reads/`, `lease-cost/idle-r4.json`, `suites/`), same machine, MinIO (built from source, local disk) with the load generator and the server sharing 4 vCPUs. One commit per change; after each commit-worthy change the differential suites were rerun (summaries in `suites/*-summary.txt`):
+
+| Change (commit) | pymongo core / extra | Node.js core / extra |
+|---|---|---|
+| WAL GC of open writers | 1081/1081, 25/49 | 1081/1081, 25/49 |
+| Group-commit leader and window | 1081/1081, 25/49 | 1081/1081, 24/49 |
+| Durable reads | 1081/1081, 25/49 | 1081/1081, 25/49 |
+| Test control `--l0-max-ssts` | 1081/1081, 24/49 | 1081/1081, 25/49 |
+
+The "extra" count (out-of-scope features) wanders between 24 and 25 from run to run because of the `$addToSet` order test noted in round 3; the in-scope count never moved.
+
+### 1. WAL objects of a hot writer (fixed: bounded, with a cost)
+
+**Fix.** The maintenance loop runs a WAL-only garbage-collection pass (`gc_tenant_wal`: only the `wal/` directory, never manifests, SSTs or compactions, because the writer is live) every `--wal-gc-secs` (default 20) over writers that were written in the last minute, deleting WAL objects before the latest manifest's `replay_after_wal_id` (it advances each time slatedb flushes the memtable to an L0 SST). The whole-tenant pass is skipped for a tenant that is still open. slatedb does not allow flushing the memtable more often than every 4,096 WAL objects (`max_wal_flushes_before_l0_flush` must be at least 4096; I tried 1,024 and the server refuses to open the tenant), so that is the floor of the bound.
+
+**One tenant on MinIO, 8 connections, writes only, 10 minutes** (`exp_wal_growth.py`, WAL objects counted in MinIO's data directory every 10 s; "before" = the round-3 binary, "after" = this change):
+
+| Seconds into the run | 0 | 60 | 120 | 180 | 240 | 300 | 360 | 420 | 480 | 540 | 590 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| WAL objects before | 2 | 18,744 | 45,048 | 69,285 | 93,217 | 116,514 | 141,995 | 166,425 | 192,411 | 216,440 | 236,301 |
+| WAL objects after | 2 | 9,181 | 7,625 | 10,151 | 9,367 | 8,860 | 8,353 | 9,087 | 11,412 | 13,273 | 7,915 |
+
+**Maximum seen over the 10-minute run: 236,301 before (239,108 at the kill), 14,088 after (11,490 at the kill)**; mean over the samples 116,129 and 9,378. Maxima over the 1 and 5 minute runs: before 12,816 and 108,444, after 11,406 and 10,854. Writes done: before 27,198 / 137,217 / 286,369 (1 / 5 / 10 min), after 23,118 / 104,104 / 243,481.
+
+**Recovery after SIGKILL** (new server on the same bucket, time from process start to the first successful read of the tenant, which takes the unclean WAL-replay path): before 1.58 / 0.63 / 0.97 s after 1 / 5 / 10 minutes, after 1.60 / 1.56 / 1.11 s. **Recovery did not depend on the number of WAL objects before this change either**: slatedb replays only the objects after `replay_after_wal_id`, so with 239,108 objects present the replay was already limited to the tail (at most about 4,096 objects plus what was written since the last memtable flush). The change bounds storage and the size of the `wal/` listing, not recovery time; I did not find a configuration where the "before" recovery was long. (The three recoveries differ by up to a second in both columns, so the table does not show a difference between before and after.)
+
+**Cost.** Throughput of the same runs: before 453 / 457 / 477 ops/s, after 385 / 347 / 406 ops/s (1 / 5 / 10 min), i.e. 15 to 24% lower, one run per cell. The deletes of one object per WAL object (thousands per pass) compete with the writes on MinIO; I did not measure which part (DELETEs, the LISTs, or the compaction requests of an open writer that came with the round-3 fix) costs how much. Lengthening `--wal-gc-secs` would trade storage for throughput; not measured.
+
+**Not collected while the tenant is open:** compacted SSTs (at the kill: 6 / 27 / 79 after, 7 / 46 / 99 before, growing with the run) and old manifests. They go with the whole-tenant pass when the tenant closes. I kept the pass WAL-only because slatedb protects freshly uploaded SSTs from GC by an age (24 h by default) and I did not want to shorten it for a live writer without a test; the growth is small (about 3 SSTs per minute of 51 KB each here) but unbounded for a tenant that stays open for days.
+
+**Durability with the GC running** (`test_group_commit.py --secs 60`, 32 threads inserting and updating, SIGKILL after 60 s so several memtable flushes and GC passes had happened, MinIO): 4 trials, **25,006 acknowledged documents (about 50,000 acknowledged writes), 0 lost inserts, 0 lost updates**. **Negative control** (`--ack-before-durable`): 2 trials, 13,194 acknowledged documents, **42 lost inserts and 39 lost updates**.
+
+### 2. Recovery after the shutdown fallback (proved)
+
+`test_fallback_recovery.py`: the stall is real, not simulated. The server runs with `--no-maintenance --writer-poll-secs 3600` (nothing compacts or re-reads the manifest) and `--l0-max-ssts 1` (a new test-control flag; slatedb's limit of 8 would need 8 x 4,096 WAL objects, which Python writers cannot produce in a reasonable time), 96 threads insert documents and update each once for 130 s, then SIGTERM is sent *while they are still writing*; after the exit a normal server is started on the same bucket and every acknowledged document and update is compared with what is read back.
+
+| | Result |
+|---|---|
+| Trials in which the fallback fired ("closing without it" in the log) | **10 of 10** |
+| Server exit after SIGTERM | 21.0 to 22.1 s |
+| Acknowledged documents / acknowledged updates | 86,483 / 86,041 |
+| **Lost inserts / lost updates** | **0 / 0** |
+| Documents found beyond the acknowledged ones (written, durable, reply not delivered) | 1 to 7 per trial |
+| First full read after the restart | 1.6 to 2.2 s |
+
+Limits: the stall was forced with `--l0-max-ssts 1`, not by 8 real SSTs; no separate negative control for this test (its comparison code is the one used by the durability tests above, whose control loses data).
+
+### 3. Reads see only durable data (changed, default on)
+
+`--durable-reads` (default true): read commands read a writer with slatedb's `DurabilityLevel::Remote`, so a batch that is staged and waiting for its group flush is invisible to them; commands that write still read their own staged data to decide (duplicate keys, unique indexes), under the exclusive lock. The acknowledged-write path is unchanged.
+
+**Throughput** (`exp_groupcommit.py` with `READ_PCT`, one tenant, closed loop, 15 s per cell; cells: ops/s (p50 / p99 ms); "staged visible" = `--durable-reads false`, the behaviour of round 3 and of the first part of this round):
+
+| Mix | Connections | Staged visible | Durable reads | Change |
+|---|---|---|---|---|
+| writes only | 1 | 272 (3.6 / 6.4) | 292 (3.3 / 5.9) | +7% |
+| writes only | 8 | 677 (10.7 / 26.7) | 699 (10.8 / 25.4) | +3% |
+| writes only | 64 | 729 (84.0 / 173.4) | 731 (79.9 / 200.6) | 0% |
+| 90% reads | 1 | 2,002 (0.15 / 4.4) | 2,205 (0.13 / 3.9) | +10% |
+| 90% reads | 8 | 5,274 (0.56 / 8.6) | 5,293 (0.56 / 8.7) | 0% |
+| 90% reads | 64 | 5,736 (10.0 / 29.4) | 5,712 (10.1 / 29.5) | -0.4% |
+| reads only | 1 | 8,556 (0.106 / 0.25) | 8,542 (0.107 / 0.26) | -0.2% |
+| reads only | 8 | 34,354 (0.218 / 0.58) | 33,439 (0.224 / 0.60) | -2.7% |
+| reads only | 64 | 46,611 (1.32 / 2.84) | 44,084 (1.39 / 3.02) | **-5.4%** |
+
+The worst cell is -5.4%, under the 10% limit, so durable reads are the default; one run per cell, so differences of a few percent are inside the run-to-run spread (the +7% and +10% at one connection are noise in the other direction).
+
+**Test** (`test_durable_reads.py`: 16 writers insert increasing ids, 16 readers poll for the id each writer is inserting right now; a document a reader saw *before its insert was acknowledged* must exist after SIGKILL and restart): default flags, 8 trials: 37,954 acknowledged, 8,482 documents seen before their ack, **0 of them lost**. Negative control `--durable-reads false`: 12,185 seen early, **1 lost**: the window between staging and durability is only about 3 ms, so the control is weak. With `--group-commit-window-ms 10` widening the window: durable reads 5,917 seen early, **0 lost**; control 19,643 seen early, **18 lost**. So the test detects reads of non-durable data, and with durable reads on none occurred.
+
+**What the flag off means (the risk):** with `--durable-reads false` a read can return a document, or a new value, that is only staged; if the process dies before the group flush (a few ms, up to the window), that value disappears although a client saw it, and it was never acknowledged to its writer. Acknowledged data is not affected in either setting.
+
+### 4. PUTs per write: why group commit barely helped, and the batch window
+
+**Why.** The write step of one tenant is serialized under the lock (scan, decide, stage: about 1.5 ms on this machine) and a flush takes about 2.5 to 3.4 ms (1 / flushes per second: 2.47 ms at 8 connections, 3.08 ms at 64, 3.39 ms at 1, all with window 0). A batch can only collect the writes staged during the previous flush, so at most about two: measured writes per flush at window 0: **1.00 (1 connection), 1.65 (8), 1.56 (64)**, and WAL PUTs per write 1.00, 0.617, 0.507. The "0.93" of round 3 came from the old design, where every queued write sent its own flush request to slatedb: with the leader/follower flush of this round (one flush at a time, later writes whose sequence number a flush already covered return at once) the same 8 connections give 0.575 to 0.598 PUTs per write and 623 to 649 ops/s against 467 to 474 ops/s (+33 to 37%) for the round-3 binary measured in the same session; 64 connections 704 to 722 against 619 to 640 ops/s (+11 to 14%), PUTs per write 0.49 to 0.51 against 0.62 to 0.65; one connection unchanged (261 to 263 against 256 to 262).
+
+**Batch window** (`--group-commit-window-ms W`: the leader waits W ms after getting the flush lock before flushing; MinIO, writes only, 15 s per cell, one run per cell; cells: ops/s (p50 / p99 ms), WAL PUTs per write, writes per flush):
+
+| Window | 1 connection | 8 connections | 64 connections |
+|---|---|---|---|
+| 0 ms (default) | 295 (3.2 / 5.8), 1.00, 1.0 | 667 (11.1 / 26.1), 0.617, 1.65 | 649 (92.5 / 192.1), 0.507, 1.56 |
+| 2 ms | 157 (6.3 / 8.7), 1.00, 1.0 | 521 (13.7 / 41.4), 0.348, 3.01 | 531 (134.7 / 240.3), 0.297, 2.73 |
+| 5 ms | 107 (9.3 / 12.2), 1.00, 1.0 | 497 (16.9 / 35.3), 0.238, 4.53 | 516 (116.5 / 252.8), 0.210, 3.98 |
+| 10 ms | 66 (15.0 / 22.4), 1.00, 1.0 | 451 (15.3 / 31.6), 0.166, 6.59 | 605 (107.2 / 207.4), 0.130, 6.72 |
+
+A window lowers PUTs per write (0.617 to 0.166 at 8 connections, 0.507 to 0.130 at 64) and costs throughput and latency everywhere except the 64-connection, 10 ms cell (605 against 649 ops/s, p50 107 against 92 ms); at one connection it is pure added latency because there is nothing to batch. **The default stays 0**: at the saturation point of this machine the window never raises throughput, and it only pays for itself when the store charges per PUT and latency does not matter (a 5 ms window at 8 connections saves 61% of the PUTs for 25% of the throughput). A window that is skipped when no other write is queued (so a lone writer does not wait) was not tried.
+
+### 5. One connection: 285 to 265 ops/s (not reproducible, nothing to fix)
+
+Five runs of 15 s each of the unmodified binary, the round-3 group-commit binary, this round's WAL-GC binary and the leader-flush binary (`one-*-N.json`, interleaved): ops/s mean (sd), min to max: unmodified **264.5 (5.4)**, 258.6 to 272.9; round-3 **272.3 (6.3)**, 266.3 to 281.3; WAL-GC **270.9 (8.6)**, 260.4 to 284.2; leader flush **272.6 (7.3)**, 265.5 to 281.8; p50 3.5 to 3.6 ms and p99 6.6 to 6.9 ms in all four. The group-commit builds are about 3% faster than the unmodified one, not slower; the 285 of round 3 was above the maximum of five runs of the same binary today, so it was a high outlier of the baseline (MinIO's disk state differs from run to run), not a regression. I found no cause because there is no effect.
+
+### 6. The extra PUT (found, removed)
+
+It is `gc/manifest.boundary`, written by the whole-tenant GC pass 30 s after a tenant that was written is opened (the maintenance loop collected every tenant 30 s after its last write, including tenants that were still open): MinIO's data directory shows the object appearing at 06:37:01 for a tenant opened at 06:36:31. The whole-tenant pass is now skipped for tenants that are still open (it runs when they close). Idle 50 open tenants, 150 s, lease per tenant (`idle-r4.json`): PUTs by category **lease 700, other 0, all 700** (was 100 "other" per 100 tenants per window); GETs unchanged. The boundary object is still written by the pass at close; whether it can be skipped there was not examined.
+
+### Not done / not measured in this round
+
+- Recovery time did not change, because it was never proportional to the WAL; a replay of the maximum tail (just under 4,096 objects) on a slow store was not measured, and there is no setting to shorten it below 4,096 (slatedb's limit).
+- The 15 to 24% throughput cost of the WAL GC: cause split and a cheaper schedule not measured.
+- Compacted SSTs and manifests of an open writer still accumulate (see 1).
+- The shutdown fallback was proved with `--l0-max-ssts 1`, not with eight real SSTs.
+- A window that adapts to the number of waiting writes; a window on the local-directory store; all window and durable-read numbers are one 15 s run per cell on one machine.
+- `compat-indexes`: not available here, so the interaction with indexes written in the same batch was not tested (the batch is still one `WriteBatch`, unchanged).
+<!-- round4:end -->

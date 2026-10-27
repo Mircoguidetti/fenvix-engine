@@ -1,0 +1,3 @@
+win2 s3 1 157.4 ops/s p50 6.287 p99 8.735 errors 0 writes/flush 1.0 wal PUT/write 1.0 all PUT/write 1.0
+win2 s3 8 520.6 ops/s p50 13.719 p99 41.375 errors 0 writes/flush 3.01 wal PUT/write 0.348 all PUT/write 0.348
+win2 s3 64 530.9 ops/s p50 134.655 p99 240.255 errors 0 writes/flush 2.73 wal PUT/write 0.297 all PUT/write 0.297
