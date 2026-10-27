@@ -1,0 +1,135 @@
+{
+ "label": "tab1-slatedb-c1-r2",
+ "seconds": 120.0,
+ "connections": 1,
+ "read_pct": 0,
+ "extra_args": [
+  "--wal-gc-mode",
+  "slatedb"
+ ],
+ "ops": 25243,
+ "ops_per_sec": 210.35833333333332,
+ "errors": 0,
+ "p50_ms": 4.499,
+ "p99_ms": 10.271,
+ "objects_final": {
+  "wal": 6162,
+  "compacted": 7,
+  "manifest": 12,
+  "compactions": 8
+ },
+ "objects_max": {
+  "wal": 7415,
+  "compacted": 6,
+  "manifest": 11,
+  "compactions": 8
+ },
+ "samples": [
+  [
+   0,
+   2,
+   0,
+   2,
+   0
+  ],
+  [
+   10,
+   2467,
+   0,
+   2,
+   0
+  ],
+  [
+   20,
+   4600,
+   1,
+   3,
+   0
+  ],
+  [
+   30,
+   5227,
+   1,
+   3,
+   0
+  ],
+  [
+   40,
+   7415,
+   2,
+   4,
+   0
+  ],
+  [
+   50,
+   4729,
+   2,
+   4,
+   0
+  ],
+  [
+   60,
+   6838,
+   3,
+   5,
+   0
+  ],
+  [
+   70,
+   4377,
+   3,
+   5,
+   0
+  ],
+  [
+   80,
+   6465,
+   5,
+   10,
+   8
+  ],
+  [
+   90,
+   4168,
+   5,
+   10,
+   8
+  ],
+  [
+   100,
+   6229,
+   6,
+   11,
+   8
+  ],
+  [
+   110,
+   4129,
+   6,
+   11,
+   8
+  ]
+ ],
+ "server_cpu_s": 53.7,
+ "minio_cpu_s": 79.2,
+ "wall_s": 120.0,
+ "requests": {
+  "put": 25279,
+  "get": 161,
+  "list": 76,
+  "head": 0,
+  "delete": 19083
+ },
+ "walGc": {
+  "passes": 5,
+  "deleted": 0,
+  "listUs": 0,
+  "deleteUs": 0,
+  "totalUs": 12018821
+ },
+ "sstGc": {
+  "passes": 0,
+  "deletedSsts": 0,
+  "deletedManifests": 0
+ }
+}
