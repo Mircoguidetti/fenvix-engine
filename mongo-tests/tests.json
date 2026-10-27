@@ -535791,5 +535791,18193 @@ null
 }
 }
 ]
+},
+{
+"name": "tail.bucket_auto_7_in_2",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_7_in_3",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_7_in_4",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 4
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_7_in_5",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_10_in_2",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_10_in_3",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_10_in_4",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 4
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_10_in_5",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_11_in_2",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_11_in_3",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_11_in_4",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 4
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_11_in_5",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_13_in_2",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+},
+{
+"_id": 11,
+"v": 11
+},
+{
+"_id": 12,
+"v": 12
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_13_in_3",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+},
+{
+"_id": 11,
+"v": 11
+},
+{
+"_id": 12,
+"v": 12
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_13_in_4",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+},
+{
+"_id": 11,
+"v": 11
+},
+{
+"_id": 12,
+"v": 12
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 4
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_13_in_5",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+},
+{
+"_id": 11,
+"v": 11
+},
+{
+"_id": 12,
+"v": 12
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_ties",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 1
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 1
+},
+{
+"_id": 3,
+"v": 2
+},
+{
+"_id": 4,
+"v": 2
+},
+{
+"_id": 5,
+"v": 3
+},
+{
+"_id": 6,
+"v": 4
+},
+{
+"_id": 7,
+"v": 5
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_all_equal",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 1
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 1
+},
+{
+"_id": 3,
+"v": 1
+},
+{
+"_id": 4,
+"v": 1
+},
+{
+"_id": 5,
+"v": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_mixed_types",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 5
+},
+{
+"_id": 1,
+"v": "a"
+},
+{
+"_id": 2,
+"v": null
+},
+{
+"_id": 3,
+"v": 2.5
+},
+{
+"_id": 4,
+"v": true
+},
+{
+"_id": 5,
+"v": [
+1
+]
+},
+{
+"_id": 6,
+"v": {
+"x": 1
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_missing_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_output",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"output": {
+"n": {
+"$sum": 1
+},
+"m": {
+"$max": "$k"
+},
+"items": {
+"$push": "$_id"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_output_empty",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"output": {}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_expression_key",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": {
+"$multiply": [
+"$k",
+10
+]
+},
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_empty_collection",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"_id": 9
+}
+},
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_more_buckets_than_docs",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 10
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_one_bucket",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_pow2",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+},
+{
+"_id": 4,
+"v": 4
+},
+{
+"_id": 5,
+"v": 5
+},
+{
+"_id": 6,
+"v": 6
+},
+{
+"_id": 7,
+"v": 7
+},
+{
+"_id": 8,
+"v": 8
+},
+{
+"_id": 9,
+"v": 9
+},
+{
+"_id": 10,
+"v": 10
+},
+{
+"_id": 11,
+"v": 11
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3,
+"granularity": "POWERSOF2"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_pow2_zero",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 0
+},
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2
+},
+{
+"_id": 3,
+"v": 3
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"granularity": "POWERSOF2"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_125",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 1
+},
+{
+"_id": 1,
+"v": 2
+},
+{
+"_id": 2,
+"v": 3
+},
+{
+"_id": 3,
+"v": 4
+},
+{
+"_id": 4,
+"v": 5
+},
+{
+"_id": 5,
+"v": 6
+},
+{
+"_id": 6,
+"v": 7
+},
+{
+"_id": 7,
+"v": 8
+},
+{
+"_id": 8,
+"v": 9
+},
+{
+"_id": 9,
+"v": 10
+},
+{
+"_id": 10,
+"v": 11
+},
+{
+"_id": 11,
+"v": 100
+},
+{
+"_id": 12,
+"v": 250
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 3,
+"granularity": "1-2-5"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_granularity_negative_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": -1
+},
+{
+"_id": 2,
+"v": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"granularity": "POWERSOF2"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_granularity_string_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": "a"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"granularity": "POWERSOF2"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_zero_buckets",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 0
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_negative_buckets",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": -1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_string_buckets",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": "a"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_no_group_by",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"buckets": 2
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_no_buckets",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_unknown_option",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"bogus": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_output_not_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": {
+"groupBy": "$v",
+"buckets": 2,
+"output": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.bucket_auto_error_not_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$bucketAuto": 5
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_full",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_partition",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"partitionByFields": [
+"g"
+],
+"range": {
+"step": 2,
+"bounds": "partition"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_explicit",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 2,
+"bounds": [
+0,
+5
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_explicit_partitioned",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"partitionByFields": [
+"g"
+],
+"range": {
+"step": 2,
+"bounds": [
+0,
+5
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_explicit_beyond",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 3,
+"bounds": [
+-2,
+9
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_full_partitioned",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"partitionByFields": [
+"g"
+],
+"range": {
+"step": 2,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_float_step",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1.5,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_big_step",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 100,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_empty",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"_id": 5
+}
+},
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_missing_field_docs",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"w": 2
+},
+{
+"_id": 3,
+"v": 3
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dotted",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": {
+"b": 1
+}
+},
+{
+"_id": 2,
+"a": {
+"b": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "a.b",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_unsorted_input",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 5
+},
+{
+"_id": 2,
+"v": 1
+},
+{
+"_id": 3,
+"v": 3
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_duplicates",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 1
+},
+{
+"_id": 3,
+"v": 3
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_off_grid_values",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 0
+},
+{
+"_id": 2,
+"v": 2.5
+},
+{
+"_id": 3,
+"v": 6
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 2,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dates_day",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-01T00:00:00Z"
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": "2020-01-04T00:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"unit": "day",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dates_hour_step",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-01T00:00:00Z"
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": "2020-01-01T10:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 4,
+"unit": "hour",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dates_month_clamp",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-31T00:00:00Z"
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": "2020-05-01T00:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"unit": "month",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dates_year",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2018-06-01T00:00:00Z"
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": "2021-06-01T00:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"unit": "year",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dates_week",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-01T00:00:00Z"
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": "2020-02-01T00:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"unit": "week",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_dates_explicit",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-02T00:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"unit": "day",
+"bounds": [
+{
+"$date": "2020-01-01T00:00:00Z"
+},
+{
+"$date": "2020-01-04T00:00:00Z"
+}
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_date_without_unit_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-01T00:00:00Z"
+}
+},
+{
+"_id": 2,
+"t": {
+"$date": "2020-01-04T00:00:00Z"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_number_with_unit_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"unit": "day",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_non_numeric_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": "x"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_step_zero",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 0,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_step_negative",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": -1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_bad_bounds_string",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "x"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_no_range",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_no_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"range": {
+"step": 1,
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_bounds_reversed",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": [
+5,
+0
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_bounds_len",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": [
+5
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_unknown_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"step": 1,
+"bounds": "full"
+},
+"bogus": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_no_step",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "v",
+"range": {
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.densify_error_bad_unit",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1,
+"g": "a"
+},
+{
+"_id": 2,
+"v": 4,
+"g": "a"
+},
+{
+"_id": 3,
+"v": 2,
+"g": "b"
+},
+{
+"_id": 4,
+"v": 6,
+"g": "b"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$densify": {
+"field": "t",
+"range": {
+"step": 1,
+"unit": "fortnight",
+"bounds": "full"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_locf",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "locf"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_linear",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "linear"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_value",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"v": {
+"value": 0
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_value_expression",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"v": {
+"value": {
+"$add": [
+"$t",
+100
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_partition_by_fields",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"partitionByFields": [
+"g"
+],
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "locf"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_partition_by_expr",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"partitionBy": "$g",
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "locf"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_linear_partitioned",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"partitionByFields": [
+"g"
+],
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "linear"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_two_outputs",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "locf"
+},
+"z": {
+"value": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_locf_without_sort",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"v": {
+"method": "locf"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_sorted_descending",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": -1
+},
+"output": {
+"v": {
+"method": "locf"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_new_field_value",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"nf": {
+"value": "x"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_unsorted_input",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": 3,
+"v": 3
+},
+{
+"_id": 2,
+"t": 1,
+"v": 1
+},
+{
+"_id": 3,
+"t": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "linear"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_linear_dates",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$date": "2020-01-01T00:00:00Z"
+},
+"v": 0
+},
+{
+"_id": 2,
+"t": {
+"$date": "2020-01-02T00:00:00Z"
+}
+},
+{
+"_id": 3,
+"t": {
+"$date": "2020-01-05T00:00:00Z"
+},
+"v": 8
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "linear"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_bad_method",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "bogus"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_both",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"v": {
+"method": "locf",
+"value": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_empty_output",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+},
+"output": {}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_no_output",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"sortBy": {
+"t": 1
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_neither",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"v": {}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_partition_both",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"partitionBy": "$g",
+"partitionByFields": [
+"g"
+],
+"output": {
+"v": {
+"value": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_linear_no_sort",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"v": {
+"method": "linear"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_unknown_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": {
+"v": {
+"value": 1
+}
+},
+"bogus": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.fill_error_output_not_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": null,
+"g": "a",
+"t": 1
+},
+{
+"_id": 2,
+"v": 3,
+"g": "a",
+"t": 2
+},
+{
+"_id": 3,
+"g": "a",
+"t": 3
+},
+{
+"_id": 4,
+"v": 7,
+"g": "b",
+"t": 4
+},
+{
+"_id": 5,
+"v": null,
+"g": "b",
+"t": 5
+},
+{
+"_id": 6,
+"g": "b",
+"t": 6
+},
+{
+"_id": 7,
+"v": 9,
+"g": "b",
+"t": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$fill": {
+"output": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_running_sum",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"run": {
+"$sum": "$v",
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_whole_partition",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"partitionBy": "$g",
+"output": {
+"total": {
+"$sum": "$v"
+},
+"avg": {
+"$avg": "$v"
+},
+"c": {
+"$count": {}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_sliding",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"m": {
+"$avg": "$v",
+"window": {
+"documents": [
+-1,
+1
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_following",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"m": {
+"$max": "$v",
+"window": {
+"documents": [
+"current",
+2
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_partitioned_running",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"partitionBy": "$g",
+"sortBy": {
+"_id": 1
+},
+"output": {
+"run": {
+"$sum": "$v",
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_range",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"s": {
+"$sum": "$v",
+"window": {
+"range": [
+-20,
+0
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_range_unbounded",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"s": {
+"$sum": "$v",
+"window": {
+"range": [
+"unbounded",
+10
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_push_addtoset",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"p": {
+"$push": "$n",
+"window": {
+"documents": [
+-1,
+0
+]
+}
+},
+"a": {
+"$addToSet": "$n",
+"window": {
+"documents": [
+-2,
+0
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_first_last",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"f": {
+"$first": "$v",
+"window": {
+"documents": [
+-2,
+2
+]
+}
+},
+"l": {
+"$last": "$v",
+"window": {
+"documents": [
+-2,
+2
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_min_max",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"mn": {
+"$min": "$n",
+"window": {
+"documents": [
+-2,
+0
+]
+}
+},
+"mx": {
+"$max": "$n",
+"window": {
+"documents": [
+-2,
+0
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_stddev",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"sp": {
+"$stdDevPop": "$v",
+"window": {
+"documents": [
+-2,
+0
+]
+}
+},
+"ss": {
+"$stdDevSamp": "$v",
+"window": {
+"documents": [
+-2,
+0
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_rank",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"n": 1
+},
+"output": {
+"r": {
+"$rank": {}
+},
+"d": {
+"$denseRank": {}
+},
+"dn": {
+"$documentNumber": {}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_rank_partitioned",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"partitionBy": "$g",
+"sortBy": {
+"n": -1
+},
+"output": {
+"r": {
+"$rank": {}
+},
+"d": {
+"$denseRank": {}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_shift",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"nx": {
+"$shift": {
+"output": "$v",
+"by": 1,
+"default": -1
+}
+},
+"pv": {
+"$shift": {
+"output": "$v",
+"by": -1
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_ema",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"e": {
+"$expMovingAvg": {
+"input": "$v",
+"N": 3
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_ema_alpha",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"e": {
+"$expMovingAvg": {
+"input": "$v",
+"alpha": 0.5
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_derivative",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"d": {
+"$derivative": {
+"input": "$v"
+},
+"window": {
+"documents": [
+-1,
+0
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_integral",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"t": 1
+},
+"output": {
+"i": {
+"$integral": {
+"input": "$v"
+},
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_median",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+},
+"window": {
+"documents": [
+-2,
+2
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_percentile",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+0.25,
+0.75
+],
+"method": "approximate"
+},
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_locf",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": null
+},
+{
+"_id": 3
+},
+{
+"_id": 4,
+"v": 4
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"f": {
+"$locf": "$v"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_linear_fill",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": null
+},
+{
+"_id": 3
+},
+{
+"_id": 4,
+"v": 4
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"f": {
+"$linearFill": "$v"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_multiple_outputs",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"partitionBy": "$g",
+"sortBy": {
+"_id": 1
+},
+"output": {
+"a": {
+"$sum": 1,
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+},
+"b": {
+"$rank": {}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_then_match",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"run": {
+"$sum": "$v",
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+}
+}
+}
+},
+{
+"$match": {
+"run": {
+"$gt": 20
+}
+}
+},
+{
+"$project": {
+"run": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_no_sort_whole",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"output": {
+"mx": {
+"$max": "$v"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_expr_partition",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"partitionBy": {
+"$mod": [
+"$_id",
+2
+]
+},
+"sortBy": {
+"_id": 1
+},
+"output": {
+"c": {
+"$sum": 1,
+"window": {
+"documents": [
+"unbounded",
+"current"
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_empty_collection",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"_id": 5
+}
+},
+{
+"$setWindowFields": {
+"output": {
+"x": {
+"$sum": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_no_output",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_unknown_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"output": {
+"x": {
+"$sum": 1
+}
+},
+"bogus": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_output_not_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"output": 5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_rank_without_sort",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"output": {
+"r": {
+"$rank": {}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_bad_window",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"x": {
+"$sum": 1,
+"window": {
+"documents": [
+1
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_bad_bound",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"x": {
+"$sum": 1,
+"window": {
+"documents": [
+"x",
+1
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_unknown_operator",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"sortBy": {
+"_id": 1
+},
+"output": {
+"x": {
+"$bogus": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.window_error_range_without_sort",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": "a",
+"n": 2,
+"v": {
+"$numberDouble": "1.0"
+},
+"t": 10
+},
+{
+"_id": 2,
+"g": "a",
+"n": 4,
+"v": {
+"$numberDouble": "2.0"
+},
+"t": 20
+},
+{
+"_id": 3,
+"g": "a",
+"n": 1,
+"v": {
+"$numberDouble": "3.0"
+},
+"t": 30
+},
+{
+"_id": 4,
+"g": "a",
+"n": 3,
+"v": {
+"$numberDouble": "4.0"
+},
+"t": 40
+},
+{
+"_id": 5,
+"g": "a",
+"n": 0,
+"v": {
+"$numberDouble": "5.0"
+},
+"t": 50
+},
+{
+"_id": 6,
+"g": "b",
+"n": 2,
+"v": {
+"$numberDouble": "6.0"
+},
+"t": 60
+},
+{
+"_id": 7,
+"g": "b",
+"n": 4,
+"v": {
+"$numberDouble": "7.0"
+},
+"t": 70
+},
+{
+"_id": 8,
+"g": "b",
+"n": 1,
+"v": {
+"$numberDouble": "8.0"
+},
+"t": 80
+},
+{
+"_id": 9,
+"g": "b",
+"n": 3,
+"v": {
+"$numberDouble": "9.0"
+},
+"t": 90
+},
+{
+"_id": 10,
+"g": "b",
+"n": 0,
+"v": {
+"$numberDouble": "10.0"
+},
+"t": 100
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$setWindowFields": {
+"output": {
+"x": {
+"$sum": 1,
+"window": {
+"range": [
+-1,
+1
+]
+}
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_up",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$parent",
+"connectFromField": "parent",
+"connectToField": "_id",
+"as": "up"
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_down",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$_id",
+"connectFromField": "_id",
+"connectToField": "parent",
+"as": "up"
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_max_depth",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$_id",
+"connectFromField": "_id",
+"connectToField": "parent",
+"as": "up",
+"maxDepth": 1
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_max_depth_zero",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$_id",
+"connectFromField": "_id",
+"connectToField": "parent",
+"as": "up",
+"maxDepth": 0
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_depth_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$parent",
+"connectFromField": "parent",
+"connectToField": "_id",
+"as": "up",
+"depthField": "d"
+}
+},
+{
+"$match": {
+"_id": 6
+}
+},
+{
+"$unwind": "$up"
+},
+{
+"$sort": {
+"up.d": 1
+}
+},
+{
+"$project": {
+"n": "$up.name",
+"d": "$up.d"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_restrict",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$_id",
+"connectFromField": "_id",
+"connectToField": "parent",
+"as": "up",
+"restrictSearchWithMatch": {
+"name": {
+"$ne": "a1"
+}
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_start_array",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": [
+2,
+3
+],
+"connectFromField": "_id",
+"connectToField": "parent",
+"as": "up"
+}
+},
+{
+"$match": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_start_missing",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$nope",
+"connectFromField": "_id",
+"connectToField": "parent",
+"as": "up"
+}
+},
+{
+"$match": {
+"_id": 1
+}
+},
+{
+"$project": {
+"name": 1,
+"up": {
+"$sortArray": {
+"input": "$up.name",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_cycle",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"next": 2
+},
+{
+"_id": 2,
+"next": 3
+},
+{
+"_id": 3,
+"next": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$next",
+"connectFromField": "next",
+"connectToField": "_id",
+"as": "r"
+}
+},
+{
+"$project": {
+"n": {
+"$size": "$r"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_array_connect_field",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"to": [
+2,
+3
+]
+},
+{
+"_id": 2,
+"to": [
+4
+]
+},
+{
+"_id": 3,
+"to": []
+},
+{
+"_id": 4,
+"to": [
+1
+]
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"_id": 1
+}
+},
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$to",
+"connectFromField": "to",
+"connectToField": "_id",
+"as": "r"
+}
+},
+{
+"$project": {
+"ids": {
+"$sortArray": {
+"input": "$r._id",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_other_collection",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"s": "x"
+}
+],
+"ordered": true
+},
+{
+"op": "insert_many",
+"coll": "e",
+"docs": [
+{
+"_id": "x",
+"n": "y"
+},
+{
+"_id": "y",
+"n": null
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "e",
+"startWith": "$s",
+"connectFromField": "n",
+"connectToField": "_id",
+"as": "r"
+}
+},
+{
+"$project": {
+"ids": {
+"$sortArray": {
+"input": "$r._id",
+"sortBy": 1
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_error_missing_from",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"startWith": "$parent",
+"connectFromField": "parent",
+"connectToField": "_id",
+"as": "up"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_error_unknown_option",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$parent",
+"connectFromField": "parent",
+"connectToField": "_id",
+"as": "up",
+"bogus": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_error_negative_depth",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": {
+"from": "c",
+"startWith": "$parent",
+"connectFromField": "parent",
+"connectToField": "_id",
+"as": "up",
+"maxDepth": -1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.graph_error_not_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "root",
+"parent": null
+},
+{
+"_id": 2,
+"name": "a",
+"parent": 1
+},
+{
+"_id": 3,
+"name": "b",
+"parent": 1
+},
+{
+"_id": 4,
+"name": "a1",
+"parent": 2
+},
+{
+"_id": 5,
+"name": "a2",
+"parent": 2
+},
+{
+"_id": 6,
+"name": "a11",
+"parent": 4
+},
+{
+"_id": 7,
+"name": "lonely",
+"parent": 99
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$graphLookup": 5
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_keep_prune",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": {
+"$cond": [
+{
+"$gt": [
+"$level",
+2
+]
+},
+"$$PRUNE",
+"$$KEEP"
+]
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_descend",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": {
+"$cond": [
+{
+"$lte": [
+"$level",
+3
+]
+},
+"$$DESCEND",
+"$$PRUNE"
+]
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_always_keep",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": "$$KEEP"
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_always_prune",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": "$$PRUNE"
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_always_descend",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": "$$DESCEND"
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_switch",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": {
+"$switch": {
+"branches": [
+{
+"case": {
+"$eq": [
+"$level",
+1
+]
+},
+"then": "$$DESCEND"
+},
+{
+"case": {
+"$eq": [
+"$level",
+3
+]
+},
+"then": "$$KEEP"
+}
+],
+"default": "$$PRUNE"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_bad_value_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": "keep"
+}
+]
+}
+]
+},
+{
+"name": "tail.redact_number_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"level": 1,
+"body": "a",
+"sub": {
+"level": 1,
+"x": 1
+},
+"list": [
+{
+"level": 1,
+"y": 1
+},
+{
+"level": 5,
+"y": 2
+}
+]
+},
+{
+"_id": 2,
+"level": 5,
+"body": "b"
+},
+{
+"_id": 3,
+"level": 3,
+"sub": {
+"level": 9,
+"x": 3
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$redact": 5
+}
+]
+}
+]
+},
+{
+"name": "tail.documents_basic",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": [
+{
+"a": 1
+},
+{
+"a": 2
+}
+]
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_pipeline",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": [
+{
+"a": 1,
+"b": 2
+},
+{
+"a": 3,
+"b": 4
+},
+{
+"a": 5,
+"b": 6
+}
+]
+},
+{
+"$match": {
+"a": {
+"$gt": 1
+}
+}
+},
+{
+"$project": {
+"s": {
+"$add": [
+"$a",
+"$b"
+]
+}
+}
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_empty",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": []
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_expression",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": [
+{
+"a": {
+"$add": [
+1,
+2
+]
+}
+},
+{
+"a": {
+"$literal": "$x"
+}
+}
+]
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_group",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": [
+{
+"k": 1,
+"v": 2
+},
+{
+"k": 1,
+"v": 3
+},
+{
+"k": 2,
+"v": 4
+}
+]
+},
+{
+"$group": {
+"_id": "$k",
+"s": {
+"$sum": "$v"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_not_first_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$match": {}
+},
+{
+"$documents": [
+{
+"a": 1
+}
+]
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_non_object_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": [
+1,
+2
+]
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_not_array_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$documents": "x"
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.documents_on_collection_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$documents": [
+{
+"a": 1
+}
+]
+}
+]
+}
+]
+},
+{
+"name": "tail.database_aggregate_without_documents_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "command",
+"cmd": {
+"aggregate": 1,
+"pipeline": [
+{
+"$match": {}
+}
+],
+"cursor": {}
+},
+"pick": null
+}
+]
+},
+{
+"name": "tail.plan_cache_stats_fresh",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$planCacheStats": {}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_group",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+0.5,
+0.9
+],
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_group_by",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": "$k",
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+0,
+0.25,
+0.5,
+0.75,
+1
+],
+"method": "approximate"
+}
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_group",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": "$k",
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+}
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_odd_count",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_floats",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"v": 1.5
+},
+{
+"_id": 1,
+"v": 2.5
+},
+{
+"_id": 2,
+"v": 0.5
+},
+{
+"_id": 3,
+"v": 9.25
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_ignores_non_numeric",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": "x"
+},
+{
+"_id": 3,
+"v": null
+},
+{
+"_id": 4
+},
+{
+"_id": 5,
+"v": 3
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_no_numbers",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": "x"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+}
+},
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+0.5
+],
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_mixed_int_double",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"v": 1
+},
+{
+"_id": 2,
+"v": 2.5
+},
+{
+"_id": 3,
+"v": {
+"$numberLong": "7"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v",
+"method": "approximate"
+}
+},
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+0.1,
+0.99
+],
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_expression",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": [
+3,
+1,
+2,
+10,
+7
+]
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"p": {
+"$percentile": {
+"input": "$a",
+"p": [
+0.2,
+0.8
+],
+"method": "approximate"
+}
+},
+"m": {
+"$median": {
+"input": "$a",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_expression_empty_array",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": []
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"m": {
+"$median": {
+"input": "$a",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_expression_scalar_input",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": 5
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"m": {
+"$median": {
+"input": "$a",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_bad_p_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+1.5
+],
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_empty_p_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [],
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_no_p_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"p": {
+"$percentile": {
+"input": "$v",
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.percentile_bad_method_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"p": {
+"$percentile": {
+"input": "$v",
+"p": [
+0.5
+],
+"method": "exact"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_no_method_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.median_with_p_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 0,
+"k": 0,
+"v": 5
+},
+{
+"_id": 1,
+"k": 1,
+"v": 1
+},
+{
+"_id": 2,
+"k": 0,
+"v": 9
+},
+{
+"_id": 3,
+"k": 1,
+"v": 3
+},
+{
+"_id": 4,
+"k": 0,
+"v": 7
+},
+{
+"_id": 5,
+"k": 1,
+"v": 2
+},
+{
+"_id": 6,
+"k": 0,
+"v": 8
+},
+{
+"_id": 7,
+"k": 1,
+"v": 4
+},
+{
+"_id": 8,
+"k": 0,
+"v": 6
+},
+{
+"_id": 9,
+"k": 1,
+"v": 10
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": null,
+"m": {
+"$median": {
+"input": "$v",
+"p": [
+0.5
+],
+"method": "approximate"
+}
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.rand_range",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"r": {
+"$rand": {}
+}
+}
+},
+{
+"$match": {
+"r": {
+"$gte": 0,
+"$lt": 1
+}
+}
+},
+{
+"$count": "n"
+}
+]
+}
+]
+},
+{
+"name": "tail.rand_in_match_expr",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$expr": {
+"$lt": [
+{
+"$rand": {}
+},
+2
+]
+}
+}
+},
+{
+"$count": "n"
+}
+]
+}
+]
+},
+{
+"name": "tail.rand_varies",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"r": {
+"$rand": {}
+}
+}
+},
+{
+"$group": {
+"_id": null,
+"d": {
+"$addToSet": "$r"
+}
+}
+},
+{
+"$project": {
+"many": {
+"$gt": [
+{
+"$size": "$d"
+},
+5
+]
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.rand_args_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"r": {
+"$rand": 1
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.sample_rate_all",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$sampleRate": {
+"$numberDouble": "1.0"
+}
+}
+},
+{
+"$count": "n"
+}
+]
+}
+]
+},
+{
+"name": "tail.sample_rate_none",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$sampleRate": 0
+}
+},
+{
+"$count": "n"
+}
+]
+}
+]
+},
+{
+"name": "tail.sample_rate_find_all",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "find_count",
+"coll": "c",
+"filter": {
+"$sampleRate": 1
+}
+}
+]
+},
+{
+"name": "tail.sample_rate_range_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$sampleRate": 1.5
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.sample_rate_type_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"k": 1,
+"v": 1.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 2,
+"k": 2,
+"v": {
+"$numberDouble": "3.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 3,
+"k": 0,
+"v": 4.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 4,
+"k": 1,
+"v": {
+"$numberDouble": "6.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 5,
+"k": 2,
+"v": 7.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 6,
+"k": 0,
+"v": {
+"$numberDouble": "9.0"
+},
+"s": "s0",
+"lvl": 2
+},
+{
+"_id": 7,
+"k": 1,
+"v": 10.5,
+"s": "s1",
+"lvl": 3
+},
+{
+"_id": 8,
+"k": 2,
+"v": {
+"$numberDouble": "12.0"
+},
+"s": "s0",
+"lvl": 0
+},
+{
+"_id": 9,
+"k": 0,
+"v": 13.5,
+"s": "s1",
+"lvl": 1
+},
+{
+"_id": 10,
+"k": 1,
+"v": {
+"$numberDouble": "15.0"
+},
+"s": "s0",
+"lvl": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$sampleRate": "x"
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.json_schema_required",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"required": [
+"name"
+]
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_bson_type",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "double"
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_bson_number",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "number"
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_bson_array_of_types",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": [
+"int",
+"long"
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_json_type",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"type": "number"
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_minimum",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "number",
+"minimum": 5
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_exclusive_minimum",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "number",
+"minimum": 5,
+"exclusiveMinimum": true
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_maximum",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "number",
+"maximum": 9
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_multiple_of",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "number",
+"multipleOf": 5
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_min_length",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"name": {
+"minLength": 2
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_max_length",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"name": {
+"maxLength": 1
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_pattern",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"addr": {
+"properties": {
+"zip": {
+"pattern": "^[0-9]+$"
+}
+}
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_enum",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"name": {
+"enum": [
+"a",
+"e",
+null
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_min_items",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"tags": {
+"minItems": 1
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_max_items",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"tags": {
+"maxItems": 1
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_unique_items",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"tags": {
+"uniqueItems": true
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_items",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"tags": {
+"items": {
+"enum": [
+"x"
+]
+}
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_items_tuple",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"tags": {
+"items": [
+{
+"enum": [
+"x"
+]
+},
+{
+"enum": [
+"y"
+]
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_additional_false",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"_id": {},
+"name": {},
+"n": {}
+},
+"additionalProperties": false
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_additional_schema",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"_id": {}
+},
+"additionalProperties": {
+"bsonType": [
+"string",
+"double",
+"null",
+"array",
+"object",
+"long",
+"int"
+]
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_all_of",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"allOf": [
+{
+"required": [
+"n"
+]
+},
+{
+"required": [
+"tags"
+]
+}
+]
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_any_of",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"anyOf": [
+{
+"required": [
+"extra"
+]
+},
+{
+"properties": {
+"n": {
+"bsonType": "int"
+}
+},
+"required": [
+"n"
+]
+}
+]
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_one_of",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"oneOf": [
+{
+"required": [
+"name"
+]
+},
+{
+"required": [
+"tags"
+]
+}
+]
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_not",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"not": {
+"required": [
+"name"
+]
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_min_properties",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"minProperties": 5
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_max_properties",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"maxProperties": 3
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_pattern_properties",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"patternProperties": {
+"^na": {
+"bsonType": "string"
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_nested_properties",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"addr": {
+"bsonType": "object",
+"required": [
+"zip"
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_title_description",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"title": "t",
+"description": "d",
+"required": [
+"n"
+]
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_empty",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_dependencies",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"dependencies": {
+"extra": [
+"name"
+]
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_type_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"type": "object"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_error_unknown_keyword",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"bogus": 1
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_error_bad_type_name",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"bsonType": "nope"
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_error_required_not_array",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"required": "name"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_error_properties_not_object",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": 5
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_error_all_of_empty",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"allOf": []
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_error_enum_not_array",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"properties": {
+"n": {
+"enum": 5
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_not_object_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$jsonSchema": 5
+}
+}
+]
+},
+{
+"name": "tail.json_schema_in_aggregate_match",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$jsonSchema": {
+"required": [
+"name"
+]
+}
+}
+},
+{
+"$count": "n"
+}
+]
+}
+]
+},
+{
+"name": "tail.json_schema_with_other_conditions",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"n": {
+"$gt": 4
+},
+"$jsonSchema": {
+"required": [
+"name"
+]
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_in_or",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$or": [
+{
+"$jsonSchema": {
+"required": [
+"extra"
+]
+}
+},
+{
+"_id": 1
+}
+]
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.json_schema_update_filter",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "a",
+"n": 5,
+"tags": [
+"x",
+"y"
+],
+"addr": {
+"zip": "123"
+}
+},
+{
+"_id": 2,
+"name": "bb",
+"n": 15.5,
+"tags": [],
+"addr": {
+"zip": "x"
+}
+},
+{
+"_id": 3,
+"n": "s"
+},
+{
+"_id": 4,
+"name": null,
+"n": 2,
+"tags": [
+"x",
+"x"
+]
+},
+{
+"_id": 5,
+"name": "e",
+"n": {
+"$numberLong": "9"
+},
+"extra": true
+}
+],
+"ordered": true
+},
+{
+"op": "update_many",
+"coll": "c",
+"filter": {
+"$jsonSchema": {
+"required": [
+"tags"
+]
+}
+},
+"update": {
+"$set": {
+"z": 1
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"z": 1
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.to_decimal",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": 1.5
+},
+{
+"_id": 2,
+"d": {
+"$numberDouble": "3.0"
+}
+},
+{
+"_id": 3,
+"d": 0.1
+},
+{
+"_id": 4,
+"d": 123456.789
+},
+{
+"_id": 5,
+"d": {
+"$numberDouble": "1e+20"
+}
+},
+{
+"_id": 6,
+"d": -2.5
+},
+{
+"_id": 7,
+"d": {
+"$numberDouble": "0.0"
+}
+},
+{
+"_id": 8,
+"d": 7
+},
+{
+"_id": 9,
+"d": {
+"$numberLong": "12345678901234567"
+}
+},
+{
+"_id": 10,
+"d": "3.14159265358979323846"
+},
+{
+"_id": 11,
+"d": true
+},
+{
+"_id": 12,
+"d": {
+"$date": "1970-01-02T00:00:00Z"
+}
+},
+{
+"_id": 13,
+"d": null
+},
+{
+"_id": 14
+},
+{
+"_id": 15,
+"d": {
+"$numberDecimal": "9.99"
+}
+},
+{
+"_id": 16,
+"d": 1.0000000000000002
+},
+{
+"_id": 17,
+"d": {
+"$numberDouble": "9007199254740992.0"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"x": {
+"$toDecimal": "$d"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.to_decimal_type",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": 1.5
+},
+{
+"_id": 2,
+"d": {
+"$numberDouble": "3.0"
+}
+},
+{
+"_id": 3,
+"d": 0.1
+},
+{
+"_id": 4,
+"d": 123456.789
+},
+{
+"_id": 5,
+"d": {
+"$numberDouble": "1e+20"
+}
+},
+{
+"_id": 6,
+"d": -2.5
+},
+{
+"_id": 7,
+"d": {
+"$numberDouble": "0.0"
+}
+},
+{
+"_id": 8,
+"d": 7
+},
+{
+"_id": 9,
+"d": {
+"$numberLong": "12345678901234567"
+}
+},
+{
+"_id": 10,
+"d": "3.14159265358979323846"
+},
+{
+"_id": 11,
+"d": true
+},
+{
+"_id": 12,
+"d": {
+"$date": "1970-01-02T00:00:00Z"
+}
+},
+{
+"_id": 13,
+"d": null
+},
+{
+"_id": 14
+},
+{
+"_id": 15,
+"d": {
+"$numberDecimal": "9.99"
+}
+},
+{
+"_id": 16,
+"d": 1.0000000000000002
+},
+{
+"_id": 17,
+"d": {
+"$numberDouble": "9007199254740992.0"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"x": {
+"$type": {
+"$toDecimal": "$d"
+}
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.to_decimal_back_to_double",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": 1.5
+},
+{
+"_id": 2,
+"d": {
+"$numberDouble": "3.0"
+}
+},
+{
+"_id": 3,
+"d": 0.1
+},
+{
+"_id": 4,
+"d": 123456.789
+},
+{
+"_id": 5,
+"d": {
+"$numberDouble": "1e+20"
+}
+},
+{
+"_id": 6,
+"d": -2.5
+},
+{
+"_id": 7,
+"d": {
+"$numberDouble": "0.0"
+}
+},
+{
+"_id": 8,
+"d": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"x": {
+"$toDouble": {
+"$toDecimal": "$d"
+}
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.convert_to_decimal",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": 1.5
+},
+{
+"_id": 2,
+"d": {
+"$numberDouble": "3.0"
+}
+},
+{
+"_id": 3,
+"d": 0.1
+},
+{
+"_id": 4,
+"d": 123456.789
+},
+{
+"_id": 5,
+"d": {
+"$numberDouble": "1e+20"
+}
+},
+{
+"_id": 6,
+"d": -2.5
+},
+{
+"_id": 7,
+"d": {
+"$numberDouble": "0.0"
+}
+},
+{
+"_id": 8,
+"d": 7
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"x": {
+"$convert": {
+"input": "$d",
+"to": "decimal"
+}
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.decimal_compare_in_find",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": {
+"$numberDecimal": "1.5"
+}
+},
+{
+"_id": 2,
+"d": 2
+},
+{
+"_id": 3,
+"d": {
+"$numberDecimal": "2.5"
+}
+},
+{
+"_id": 4,
+"d": 0.5
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"d": {
+"$gt": 1
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"d": 2
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"sort": {
+"d": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.decimal_eq_across_types",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": {
+"$numberDecimal": "2"
+}
+},
+{
+"_id": 2,
+"d": 2
+},
+{
+"_id": 3,
+"d": {
+"$numberDouble": "2.0"
+}
+},
+{
+"_id": 4,
+"d": {
+"$numberLong": "2"
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"d": 2
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"d": {
+"$numberDecimal": "2.0"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "tail.decimal_group_sort",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"d": {
+"$numberDecimal": "1.5"
+}
+},
+{
+"_id": 2,
+"d": {
+"$numberDecimal": "1.50"
+}
+},
+{
+"_id": 3,
+"d": 1.5
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$group": {
+"_id": "$d",
+"n": {
+"$sum": 1
+}
+}
+},
+{
+"$count": "groups"
+}
+]
+}
+]
+},
+{
+"name": "tail.ts_second_increment",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$timestamp": {
+"t": 1000,
+"i": 7
+}
+}
+},
+{
+"_id": 2,
+"t": {
+"$timestamp": {
+"t": 4294967295,
+"i": 4294967295
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"s": {
+"$tsSecond": "$t"
+},
+"i": {
+"$tsIncrement": "$t"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.ts_null_missing",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 3,
+"t": null
+},
+{
+"_id": 4
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"s": {
+"$tsSecond": "$t"
+},
+"i": {
+"$tsIncrement": "$t"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.ts_wrong_type_error",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 5,
+"t": 5
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"s": {
+"$tsSecond": "$t"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "tail.ts_second_type",
+"group": "aggregation tail",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": {
+"$timestamp": {
+"t": 1000,
+"i": 7
+}
+}
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"s": {
+"$type": {
+"$tsSecond": "$t"
+}
+},
+"i": {
+"$type": {
+"$tsIncrement": "$t"
+}
+}
+}
+}
+]
+}
+]
 }
 ]

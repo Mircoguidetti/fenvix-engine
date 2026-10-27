@@ -213,6 +213,20 @@ pub fn matches(doc: &Document, filter: &Document) -> R<bool> {
                 }
             }
             "$comment" => true,
+            "$sampleRate" => {
+                let r = match v {
+                    x if is_numeric(x) => as_f64(x),
+                    _ => return Err(MongoError::new(2, "BadValue", "numeric argument expected for $sampleRate".to_string())),
+                };
+                if !(0.0..=1.0).contains(&r) {
+                    return Err(MongoError::new(2, "BadValue", "numeric argument to $sampleRate must be in the range [0, 1]".to_string()));
+                }
+                rand::random::<f64>() < r
+            }
+            "$jsonSchema" => match v {
+                Bson::Document(schema) => crate::json_schema::validate(&Bson::Document(doc.clone()), schema)?,
+                _ => return Err(MongoError::new(14, "TypeMismatch", "$jsonSchema must be an object".to_string())),
+            },
             "$text" => crate::text::matches_operand(v, doc)?,
             "$where" => crate::js::eval_where(v, doc)?,
             "$expr" => {
@@ -446,7 +460,7 @@ fn match_elem(e: &Bson, arg: &Document) -> R<bool> {
     }
 }
 
-fn int_arg(arg: &Bson) -> Option<i64> {
+pub fn int_arg(arg: &Bson) -> Option<i64> {
     match arg {
         Bson::Int32(i) => Some(*i as i64),
         Bson::Int64(i) => Some(*i),

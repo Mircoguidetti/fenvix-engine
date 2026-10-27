@@ -26,6 +26,11 @@ pub fn extra_collections(pipeline: &[Bson], out: &mut Vec<String>) {
                         extra_collections(p, out);
                     }
                 }
+                ("$graphLookup", Bson::Document(g)) => {
+                    if let Some(Bson::String(from)) = g.get("from") {
+                        out.push(from.clone());
+                    }
+                }
                 ("$unionWith", Bson::String(c)) => out.push(c.clone()),
                 ("$unionWith", Bson::Document(u)) => {
                     if let Some(Bson::String(c)) = u.get("coll") {
@@ -161,6 +166,13 @@ pub fn run_stage(name: &str, arg: &Bson, docs: Vec<Document>, foreign: &Foreign)
             docs.extend(run_pipeline(other, &pipeline, foreign)?);
             docs
         }
+        "$documents" => return Err(MongoError::new(73, "InvalidNamespace", "$documents is only valid as the first stage of a database-level aggregate ({aggregate: 1})".to_string())),
+        "$bucketAuto" => crate::agg_more::bucket_auto(arg, docs, foreign)?,
+        "$densify" => crate::agg_more::densify(arg, docs)?,
+        "$fill" => crate::agg_more::fill(arg, docs)?,
+        "$setWindowFields" => crate::agg_more::set_window_fields(arg, docs, foreign)?,
+        "$graphLookup" => crate::agg_more::graph_lookup(arg, docs, foreign)?,
+        "$redact" => crate::agg_more::redact(arg, docs)?,
         _ => return Ok(None),
     }))
 }

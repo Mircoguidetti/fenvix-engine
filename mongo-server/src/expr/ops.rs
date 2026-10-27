@@ -189,6 +189,31 @@ pub(super) fn operator_ext(name: &str, arg: &Bson, sc: &Scope) -> Out {
             Ok(Some(Some(convert(&v.unwrap(), &to.to_ascii_lowercase(), name)?)))
         }
         "$function" => function(arg, sc),
+        "$rand" => {
+            match arg {
+                Bson::Document(d) if d.is_empty() => {}
+                _ => return Err(err(10065, "invalid parameter: expected an object ($rand)")),
+            }
+            some(Bson::Double(rand::random::<f64>()))
+        }
+        "$tsSecond" | "$tsIncrement" => {
+            let a = exact_args(name, arg, 1)?;
+            match ev(a[0], sc)? {
+                None | Some(Bson::Null) => null(),
+                Some(Bson::Timestamp(t)) => some(Bson::Int64(if name == "$tsSecond" { t.time as i64 } else { t.increment as i64 })),
+                Some(o) => Err(err(5687301, format!("{name} expects argument of type timestamp, but got {}", type_name(&o)))),
+            }
+        }
+        "$median" | "$percentile" => {
+            let (input, ps, multi) = crate::agg_more::percentile_spec(name, arg)?;
+            let vals = match ev(&input, sc)? {
+                Some(Bson::Array(a)) => a,
+                Some(Bson::Null) | None => vec![],
+                Some(o) => vec![o],
+            };
+            let r = crate::agg_more::percentiles(&vals, &ps);
+            if multi { some(Bson::Array(r)) } else { some(r.into_iter().next().unwrap_or(Bson::Null)) }
+        }
         _ => dates::date_operator(name, arg, sc),
     }
 }
@@ -1151,7 +1176,7 @@ pub(super) fn convert(v: &Bson, to: &str, name: &str) -> R<Bson> {
             let s = match v {
                 Bson::Int32(i) => i.to_string(),
                 Bson::Int64(i) => i.to_string(),
-                Bson::Double(f) => f64_string(*f),
+                Bson::Double(f) => double_to_decimal_string(*f),
                 Bson::Boolean(b) => (*b as i32).to_string(),
                 Bson::String(s) => s.clone(),
                 Bson::DateTime(d) => d.timestamp_millis().to_string(),
@@ -1277,4 +1302,25 @@ fn function(arg: &Bson, sc: &Scope) -> Out {
 #[allow(dead_code)]
 fn _rank(v: &Bson) -> u8 {
     type_rank(v)
+}
+
+/// A double as MongoDB converts it to Decimal128: rounded to 15 significant digits, trailing zeros kept.
+fn double_to_decimal_string(f: f64) -> String {
+    if f.is_nan() {
+        return "NaN".into();
+    }
+    if f.is_infinite() {
+        return if f > 0.0 { "Infinity".into() } else { "-Infinity".into() };
+    }
+    if f == 0.0 {
+        return "0".into();
+    }
+    let e = format!("{:.14e}", f);
+    let exp: i32 = e.split('e').nth(1).and_then(|x| x.parse().ok()).unwrap_or(0);
+    let decimals = 14 - exp;
+    if (0..=33).contains(&decimals) {
+        format!("{:.*}", decimals as usize, f)
+    } else {
+        e.replace('e', "E")
+    }
 }

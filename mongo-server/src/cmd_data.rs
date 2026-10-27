@@ -158,6 +158,9 @@ impl Server {
         if let Some(Bson::Document(spec)) = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get("$changeStream")) {
             return self.open_change_stream(db, cmd, spec, &pipeline[1..]).await;
         }
+        if matches!(cmd.get("aggregate"), Some(Bson::Int32(1) | Bson::Int64(1) | Bson::Double(1.0))) {
+            return self.aggregate_database(db, cmd, pipeline);
+        }
         let coll = collection_name(cmd, "aggregate")?;
         // empty leading $match stages are optimized away, which lets a following $geoNear be first
         let lead = pipeline.iter().take_while(|s| matches!(s.as_document().and_then(|d| d.get_document("$match").ok()), Some(m) if m.is_empty() && s.as_document().map(|d| d.len()) == Some(1))).count();
@@ -196,6 +199,8 @@ impl Server {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
             self.index_stats_stage(&mut g, db, coll).await?
+        } else if first.map(|d| d.contains_key("$planCacheStats")).unwrap_or(false) {
+            Vec::new()
         } else if let Some((sname, sspec)) = first.and_then(|d| d.iter().find(|(k, _)| matches!(k.as_str(), "$search" | "$searchMeta"))) {
             let all = if tx.is_none() {
                 let mut g = self.dbs.read(db).await?;
@@ -233,7 +238,7 @@ impl Server {
         };
         let first_is_text_match = first.and_then(|d| d.get_document("$match").ok()).map(crate::text::has_text).unwrap_or(false);
         let first_is_text_match = first_is_text_match || first.map(|d| d.contains_key("$search") || d.contains_key("$searchMeta")).unwrap_or(false);
-        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$geoNear")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
+        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$geoNear") || d.contains_key("$planCacheStats")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
             let fd = if tx.is_none() {
@@ -1016,4 +1021,30 @@ pub(crate) fn geo_near_pure(docs: Vec<Document>, spec: &Bson, geo: &[(String, bo
     let mut out = crate::coll::order_by_near(hits, &path, &n, None);
     apply_geo_near_fields(&mut out, &st)?;
     Ok(out)
+}
+
+impl Server {
+    /// `aggregate: 1`: a database-level pipeline, which has to start with `$documents`.
+    fn aggregate_database(&self, db: &str, cmd: &Document, pipeline: &[Bson]) -> R<Document> {
+        let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
+        let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
+        let first = pipeline.first().and_then(|s| s.as_document());
+        let Some(spec) = first.and_then(|d| d.get("$documents")) else {
+            return Err(MongoError::new(73, "InvalidNamespace", "{aggregate: 1} is not valid for this pipeline stage; the first stage must be $documents".to_string()));
+        };
+        for (i, s) in pipeline.iter().enumerate().skip(1) {
+            if s.as_document().map(|d| d.contains_key("$documents")).unwrap_or(false) {
+                return Err(MongoError::new(40602, "Location40602", format!("$documents is only valid as the first stage in a pipeline.{i}")));
+            }
+        }
+        let docs = match crate::expr::eval(spec, &crate::expr::Scope::new(&Document::new()))? {
+            Some(Bson::Array(a)) => a.into_iter().map(|x| match x {
+                Bson::Document(d) => Ok(d),
+                other => Err(MongoError::new(40228, "Location40228", format!("$documents elements must be objects, found: {}", crate::update::type_name(&other)))),
+            }).collect::<R<Vec<Document>>>()?,
+            _ => return Err(MongoError::new(5858203, "Location5858203", "an array expression is expected".to_string())),
+        };
+        let out = run_pipeline(docs, &pipeline[1..], &crate::agg::Foreign::new())?;
+        Ok(self.cursor_reply(format!("{db}.$cmd.aggregate"), out.into(), batch, false))
+    }
 }

@@ -79,7 +79,7 @@ fn parse_accumulators(spec: &Document) -> R<Vec<AccSpec>> {
             return Err(MongoError::new(40238, "Location40238", format!("The field '{name}' must specify one accumulator")));
         }
         let (op, expr) = d.iter().next().unwrap();
-        if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push" | "$addToSet" | "$mergeObjects" | "$stdDevPop" | "$stdDevSamp" | "$firstN" | "$lastN" | "$maxN" | "$minN" | "$top" | "$bottom" | "$topN" | "$bottomN" | "$accumulator") {
+        if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push" | "$addToSet" | "$mergeObjects" | "$stdDevPop" | "$stdDevSamp" | "$firstN" | "$lastN" | "$maxN" | "$minN" | "$top" | "$bottom" | "$topN" | "$bottomN" | "$accumulator" | "$median" | "$percentile") {
             return Err(MongoError::new(15952, "Location15952", format!("unknown group operator '{op}'")));
         }
         out.push(AccSpec { name: name.clone(), op: op.clone(), expr: expr.clone() });
@@ -110,8 +110,29 @@ fn arg_doc<'a>(spec: &'a AccSpec) -> R<&'a Document> {
     spec.expr.as_document().ok_or_else(|| MongoError::new(5787900, "Location5787900", format!("specification of {} must be an object", spec.op)))
 }
 
+/// Run one accumulator over a list of documents (used by window functions).
+pub fn accumulate(op: &str, expr: &Bson, docs: &[Document]) -> R<Bson> {
+    let known = ["$sum", "$avg", "$min", "$max", "$count", "$first", "$last", "$push", "$addToSet", "$mergeObjects", "$stdDevPop", "$stdDevSamp", "$median", "$percentile"];
+    if !known.contains(&op) {
+        return Err(MongoError::new(15952, "Location15952", format!("unknown window operator '{op}'")));
+    }
+    let spec = AccSpec { name: String::new(), op: op.to_string(), expr: expr.clone() };
+    let mut acc = init(op);
+    for d in docs {
+        update_acc(&mut acc, &spec, d)?;
+    }
+    finish_spec(acc, &spec)
+}
+
 fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
     match (spec.op.as_str(), &mut *acc) {
+        ("$median" | "$percentile", Acc::Push(v)) => {
+            let d = arg_doc(spec)?;
+            if let Some(x) = eval(d.get("input").unwrap_or(&Bson::Null), doc)? {
+                v.push(x);
+            }
+            return Ok(());
+        }
         ("$firstN" | "$lastN" | "$maxN" | "$minN", Acc::NList(v)) => {
             let d = arg_doc(spec)?;
             if let Some(x) = eval(d.get("input").unwrap_or(&Bson::Null), doc)? {
@@ -273,6 +294,11 @@ fn finish_spec(acc: Acc, spec: &AccSpec) -> R<Bson> {
                     }
                 }
             }
+        }
+        ("$median" | "$percentile", Acc::Push(v)) => {
+            let (_, ps, multi) = crate::agg_more::percentile_spec(&spec.op, &spec.expr)?;
+            let r = crate::agg_more::percentiles(&v, &ps);
+            if multi { Bson::Array(r) } else { r.into_iter().next().unwrap_or(Bson::Null) }
         }
         ("$accumulator", Acc::Js(state)) => {
             let d = arg_doc(spec)?;

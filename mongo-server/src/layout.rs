@@ -82,6 +82,15 @@ pub fn encode_sortable(v: &Bson) -> Vec<u8> {
                 out.extend([0u8; 8]);
             }
         }
+        Bson::Decimal128(_) => {
+            let f = crate::query::as_f64(v);
+            out.extend(sortable_f64(f));
+            if f.is_finite() && f.fract() == 0.0 && f.abs() < 9.2e18 {
+                out.extend(sortable_i64(f as i64));
+            } else {
+                out.extend([0u8; 8]);
+            }
+        }
         Bson::String(s) | Bson::Symbol(s) => out.extend(s.as_bytes()),
         Bson::ObjectId(o) => out.extend(o.bytes()),
         Bson::Boolean(b) => out.push(*b as u8),

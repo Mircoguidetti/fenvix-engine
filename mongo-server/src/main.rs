@@ -6,6 +6,8 @@
 
 mod agg;
 mod agg_ext;
+mod agg_more;
+mod json_schema;
 mod changes;
 mod cmd;
 mod cmd_changes;

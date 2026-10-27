@@ -129,6 +129,7 @@ fn variable(sc: &Scope, name_and_path: &str) -> R<Option<Bson>> {
     match name {
         "ROOT" | "CURRENT" => Ok(if rest.is_empty() { Some(Bson::Document(sc.root.clone())) } else { get_path_doc(sc.root, &rest) }),
         "REMOVE" => Ok(None),
+        "KEEP" | "PRUNE" | "DESCEND" if rest.is_empty() && !sc.vars.iter().any(|(n, _)| n == name) => Ok(Some(Bson::String(name.to_ascii_lowercase()))),
         "NOW" => Ok(if rest.is_empty() { Some(Bson::DateTime(bson::DateTime::now())) } else { None }),
         _ => {
             for (n, v) in sc.vars.iter().rev() {
@@ -156,6 +157,7 @@ pub fn is_known_operator(name: &str) -> bool {
             | "$sortArray" | "$zip" | "$isNumber" | "$setIntersection" | "$setDifference" | "$setEquals" | "$setIsSubset" | "$anyElementTrue" | "$allElementsTrue" | "$max" | "$min" | "$sum" | "$avg" | "$cmp" | "$type" | "$bsonSize" | "$binarySize"
             | "$abs" | "$ceil" | "$floor" | "$sqrt" | "$exp" | "$ln" | "$log10" | "$trunc" | "$round" | "$pow" | "$log" | "$substr" | "$substrBytes" | "$substrCP" | "$strLenBytes" | "$strLenCP" | "$strcasecmp" | "$trim" | "$ltrim" | "$rtrim" | "$split"
             | "$indexOfBytes" | "$indexOfCP" | "$replaceOne" | "$replaceAll" | "$regexMatch" | "$regexFind" | "$regexFindAll" | "$convert" | "$toInt" | "$toLong" | "$toDouble" | "$toDecimal" | "$toBool" | "$toDate" | "$toString" | "$toObjectId" | "$function"
+            | "$rand" | "$tsSecond" | "$tsIncrement" | "$median" | "$percentile"
             | "$year" | "$month" | "$dayOfMonth" | "$hour" | "$minute" | "$second" | "$millisecond" | "$dayOfWeek" | "$dayOfYear" | "$week" | "$isoWeek" | "$isoWeekYear" | "$isoDayOfWeek" | "$dateToParts" | "$dateFromParts" | "$dateFromString" | "$dateAdd" | "$dateSubtract" | "$dateDiff" | "$dateTrunc"
     )
 }
