@@ -1,4 +1,4 @@
-use bson::{doc, Document};
+use bson::{doc, Bson, Document};
 
 /// A MongoDB command error: `{ok: 0, errmsg, code, codeName}`.
 #[derive(Debug, Clone)]
@@ -46,12 +46,40 @@ impl MongoError {
 
     /// E11000 duplicate key error for `index` on `ns`; `value` is the offending `{field: value}` pair(s).
     pub fn duplicate_key(ns: &str, index: &str, pattern: &Document, value: &Document) -> Self {
-        let mut e = Self::new(
-            11000,
-            "DuplicateKey",
-            format!("E11000 duplicate key error collection: {ns} index: {index} dup key: {}", crate::update::fmt_doc(value)),
-        );
-        e.extra = Some(doc! { "keyPattern": pattern.clone(), "keyValue": value.clone() });
+        Self::duplicate_key_c(ns, index, pattern, value, None)
+    }
+
+    /// E11000 for an index with a collation: the strings of the key are shown (and reported in `keyValue`) as their hex
+    /// collation keys, and the collation is part of the message and of the error document.
+    pub fn duplicate_key_c(ns: &str, index: &str, pattern: &Document, value: &Document, c: Option<&crate::collation::Collation>) -> Self {
+        let Some(c) = c else {
+            let mut e = Self::new(11000, "DuplicateKey", format!("E11000 duplicate key error collection: {ns} index: {index} dup key: {}", crate::update::fmt_doc(value)));
+            e.extra = Some(doc! { "keyPattern": pattern.clone(), "keyValue": value.clone() });
+            return e;
+        };
+        let mut shown = Document::new();
+        let mut key_value = Document::new();
+        let mut hex: Vec<Bson> = Vec::new();
+        for (k, v) in value {
+            match v {
+                Bson::String(s) => {
+                    let mut kb = Vec::new();
+                    c.sort_key(s, &mut kb);
+                    let h: String = kb.iter().map(|b| format!("{b:02x}")).collect();
+                    shown.insert(k.clone(), format!("CollationKey(0x{h})"));
+                    key_value.insert(k.clone(), h);
+                    hex.push(Bson::Boolean(true));
+                }
+                other => {
+                    shown.insert(k.clone(), other.clone());
+                    key_value.insert(k.clone(), other.clone());
+                    hex.push(Bson::Boolean(false));
+                }
+            }
+        }
+        let cd = c.to_doc();
+        let mut e = Self::new(11000, "DuplicateKey", format!("E11000 duplicate key error collection: {ns} index: {index} collation: {} dup key: {}", crate::update::fmt_doc(&cd), crate::update::fmt_doc(&shown)));
+        e.extra = Some(doc! { "keyPattern": pattern.clone(), "keyValue": key_value, "hexEncoded": hex, "collation": cd });
         e
     }
 

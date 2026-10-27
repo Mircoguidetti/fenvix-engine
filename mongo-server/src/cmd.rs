@@ -30,6 +30,7 @@ pub struct Server {
     pub(crate) change_cursors: Mutex<HashMap<i64, crate::cmd_changes::ChangeCursor>>,
     next_conn: AtomicI64,
     pub(crate) auth: crate::auth::AuthState,
+    pub(crate) retry: crate::retry::Registry,
 }
 
 struct Cursor {
@@ -82,7 +83,7 @@ pub(crate) fn write_error(index: usize, code: i32, msg: String) -> Document {
 
 impl Server {
     pub fn new(dbs: Arc<Dbs>, log_commands: bool) -> Arc<Self> {
-        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1), auth: Default::default() })
+        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1), auth: Default::default(), retry: Default::default() })
     }
 
     pub fn new_connection_id(&self) -> i64 {
@@ -147,7 +148,7 @@ impl Server {
             "connectionStatus" => return self.connection_status(conn_id, cmd).await,
             "listDatabases" => return self.list_databases(cmd, conn_id).await,
             "tenantStats" => return Ok(self.tenant_stats()),
-            "renameCollection" => return self.rename_collection(cmd).await,
+            "renameCollection" => return self.rename_collection(db, cmd).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
                 self.dbs.ttl_pass(std::time::Duration::from_secs(gap), int_arg(cmd.get("maxWakes")).unwrap_or(1000) as usize).await?;
@@ -158,9 +159,33 @@ impl Server {
         if !valid_db_name(db) {
             return Err(MongoError::new(73, "InvalidNamespace", format!("Invalid database name: '{db}'")));
         }
+        self.check_txn_number(name, cmd)?;
         if let Some(tc) = crate::txn::parse(cmd)? {
             return self.run_in_txn(db, name, cmd, &tc).await;
         }
+        let col = if matches!(name, "find" | "aggregate" | "count" | "distinct" | "findAndModify" | "findandmodify" | "mapReduce" | "mapreduce") {
+            crate::collation::of_command(name, cmd)?
+        } else if name == "explain" {
+            // the collation of the command that is explained
+            match cmd.get_document("explain").ok().and_then(|e| e.iter().next().map(|(k, _)| (k.clone(), e))) {
+                Some((inner, e)) if matches!(inner.as_str(), "update" | "delete") => {
+                    // the collation of the first statement
+                    let stmts = e.get_array("updates").or_else(|_| e.get_array("deletes")).ok();
+                    match stmts.and_then(|a| a.first()).and_then(|s| s.as_document()) {
+                        Some(st) => crate::collation::of_statement(&inner, st)?.ok().flatten(),
+                        None => None,
+                    }
+                }
+                Some((inner, e)) => crate::collation::of_command(&inner, e)?,
+                None => None,
+            }
+        } else {
+            None
+        };
+        crate::collation::scope(col, self.route(db, name, cmd)).await
+    }
+
+    async fn route(&self, db: &str, name: &str, cmd: &Document) -> R<Document> {
         let mut no_tx: Option<crate::txn::Txn> = None;
         let tx = &mut no_tx;
         match name {
@@ -257,14 +282,28 @@ impl Server {
         let filter = cmd.get_document("filter").cloned().unwrap_or_default();
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
-        drop(g);
         names.sort();
+        let mut collations: HashMap<String, Document> = HashMap::new();
+        if !name_only {
+            for n in &names {
+                if let Some(c) = g.coll_opts(n).await?.and_then(|o| o.collation.clone()) {
+                    collations.insert(n.clone(), c.to_doc());
+                }
+            }
+        }
+        drop(g);
         let mut docs = VecDeque::new();
         for n in names {
             let d = if name_only {
                 doc! { "name": n, "type": "collection" }
             } else {
-                doc! { "name": n, "type": "collection", "options": {}, "info": { "readOnly": false }, "idIndex": { "v": 2, "key": { "_id": 1 }, "name": "_id_" } }
+                let mut options = Document::new();
+                let mut id_index = doc! { "v": 2, "key": { "_id": 1 }, "name": "_id_" };
+                if let Some(c) = collations.get(&n) {
+                    options.insert("collation", c.clone());
+                    id_index.insert("collation", c.clone());
+                }
+                doc! { "name": n, "type": "collection", "options": options, "info": { "readOnly": false }, "idIndex": id_index }
             };
             if matches(&d, &filter)? {
                 docs.push_back(d);
@@ -276,21 +315,36 @@ impl Server {
 
     async fn create(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "create")?;
+        let collation = match cmd.get("collation") {
+            Some(v) => crate::collation::of_create(v)?,
+            None => None,
+        };
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         if names.iter().any(|n| n == coll) {
-            // MongoDB 7.0: creating an existing collection with the same (default) options succeeds.
+            // MongoDB 7.0: creating an existing collection with the same options succeeds.
+            let existing = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
             let has_options = cmd.iter().any(|(k, v)| {
-                !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference")
+                !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference" | "collation")
                     && !(k == "capped" && matches!(v, Bson::Boolean(false)))
             });
             if has_options {
                 return Err(MongoError::namespace_exists(format!("Collection already exists. NS: {db}.{coll}")));
             }
+            if !crate::collation::same(&existing, &collation) {
+                let tail = existing.as_ref().map(|c| format!(", collation: {}", crate::update::fmt_doc(&c.to_doc()))).unwrap_or_default();
+                return Err(MongoError::namespace_exists(format!("namespace {db}.{coll} already exists, but with different options: {{ uuid: UUID(\"{}\"){tail} }}", fake_uuid())));
+            }
             return Ok(ok());
         }
         names.push(coll.to_string());
-        g.apply(vec![Entry::collections_op(&names)?]).await?;
+        let mut ops = vec![Entry::collections_op(&names)?];
+        if let Some(c) = &collation {
+            let raw = doc! { "collation": c.to_doc() };
+            ops.push(Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?));
+            g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
+        }
+        g.apply(ops).await?;
         Ok(ok())
     }
 

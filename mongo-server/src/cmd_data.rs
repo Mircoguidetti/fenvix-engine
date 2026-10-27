@@ -194,6 +194,9 @@ impl Server {
             if (n == "$out" || n == "$merge") && i + 1 != pipeline.len() {
                 return Err(MongoError::new(40601, "Location40601", format!("{n} can only be the final stage in the pipeline")));
             }
+            if let Some(arg) = s.as_document().and_then(|d| d.get(n.as_str())).filter(|_| n == "$out" || n == "$merge") {
+                if n == "$out" { crate::xdb::parse_out(arg, db)?; } else { crate::xdb::parse_merge(arg, db)?; }
+            }
         }
         let (body, tail): (&[Bson], Option<&Bson>) = match pipeline.last() {
             Some(l) if matches!(stage_name(l).as_str(), "$out" | "$merge") => (&pipeline[..pipeline.len() - 1], Some(l)),
@@ -325,34 +328,24 @@ impl Server {
     pub(crate) async fn agg_write_stage(&self, db: &str, stage: &Bson, docs: Vec<Document>, tx: &mut Option<Txn>) -> R<()> {
         let sd = stage.as_document().unwrap();
         let (name, spec) = sd.iter().next().unwrap();
-        let target_of = |v: &Bson| -> R<String> {
-            match v {
-                Bson::String(s) => Ok(s.clone()),
-                Bson::Document(d) => {
-                    if let Ok(dbn) = d.get_str("db") {
-                        if dbn != db {
-                            return Err(MongoError::new(238, "NotImplemented", "writing to another database is not supported by this server".into()));
-                        }
-                    }
-                    d.get_str("coll").map(str::to_string).map_err(|_| MongoError::new(40414, "Location40414", format!("{name} requires 'coll'")))
-                }
-                _ => Err(MongoError::new(16990, "Location16990", format!("{name} requires a string or object argument"))),
-            }
-        };
-        let mut g = self.dbs.lock(db).await;
-        attach(&mut g, tx);
-        let ns_names = g.collections().await?;
         if name == "$out" {
-            let target = target_of(spec)?;
-            let ns = format!("{db}.{target}");
-            let mut indexes = self.load_indexes(&mut g, db, &target).await?;
+            let t = crate::xdb::parse_out(spec, db)?;
+            let (tdb, target) = (t.db, t.coll);
+            let mut g = self.dbs.lock(&tdb).await;
+            if tdb == db {
+                attach(&mut g, tx);
+            }
+            let ns_names = g.collections().await?;
+            // (the dup-key messages of mongod name the temporary collection the results are first written to)
+            let ns = format!("{tdb}.tmp.agg_out.{}", crate::cmd::fake_uuid());
+            let mut indexes = self.load_indexes(&mut g, &tdb, &target).await?;
             let mut w = take_writes(tx);
             let existing = {
                 let (docs, _, _) = find_docs(&mut g, &target, &indexes, &FindOpts { filter: &Document::new(), sort: &[], want: None, hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?;
                 docs
             };
             for d in &existing {
-                w.delete(&mut g, db, &target, &indexes, d).await?;
+                w.delete(&mut g, &tdb, &target, &indexes, d).await?;
             }
             for mut d in docs {
                 if !d.contains_key("_id") {
@@ -373,36 +366,35 @@ impl Server {
             return self.commit(&mut g, &target, w, &indexes, new_coll, tx).await;
         }
         // $merge
-        let (into, on, when_matched, when_not) = match spec {
-            Bson::String(_) => (target_of(spec)?, vec!["_id".to_string()], Bson::String("merge".into()), "insert".to_string()),
-            Bson::Document(d) => {
-                let into = target_of(d.get("into").ok_or_else(|| MongoError::new(40414, "Location40414", "$merge requires 'into'".into()))?)?;
-                let on = match d.get("on") {
-                    None => vec!["_id".to_string()],
-                    Some(Bson::String(s)) => vec![s.clone()],
-                    Some(Bson::Array(a)) => a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect(),
-                    _ => return Err(MongoError::new(51186, "Location51186", "$merge 'on' must be a string or an array of strings".into())),
-                };
-                (into, on, d.get("whenMatched").cloned().unwrap_or(Bson::String("merge".into())), d.get_str("whenNotMatched").unwrap_or("insert").to_string())
-            }
-            _ => return Err(MongoError::new(51182, "Location51182", "$merge requires a string or object argument".into())),
-        };
-        let ns = format!("{db}.{into}");
-        let mut indexes = self.load_indexes(&mut g, db, &into).await?;
+        let m = crate::xdb::parse_merge(spec, db)?;
+        let (tdb, into, on, when_matched, when_not) = (m.target.db, m.target.coll, m.on, m.when_matched, m.when_not_matched);
+        let lets = m.lets;
+        let mut g = self.dbs.lock(&tdb).await;
+        if tdb == db {
+            attach(&mut g, tx);
+        }
+        let ns_names = g.collections().await?;
+        let ns = format!("{tdb}.{into}");
+        let mut indexes = self.load_indexes(&mut g, &tdb, &into).await?;
+        crate::xdb::check_merge_on(&on, ns_names.iter().any(|n| *n == into), &indexes, g.collation_of(&into).is_some())?;
         let mut w = take_writes(tx);
         // Merging and keep-existing are executed as `$set`-style upserts: new fields are applied in name order.
         let sorted_mode = on == ["_id".to_string()] && matches!(&when_matched, Bson::String(m) if m == "merge" || m == "keepExisting");
         for d in docs {
             let mut filter = Document::new();
+            let mut no_match = false;
             for f in &on {
                 match crate::expr::field_path(&d, f) {
-                    Some(v) => {
+                    Some(Bson::Array(_)) => return Err(MongoError::new(51185, "Location51185", format!("$merge write error: 'on' field '{f}' is an array"))),
+                    Some(v) if !matches!(v, Bson::Null | Bson::Undefined) => {
                         filter.insert(f.clone(), v);
                     }
-                    None => return Err(MongoError::new(51132, "Location51132", format!("$merge write error: 'on' field '{f}' is missing from a document")))
+                    // a document without `_id` is inserted with a new one
+                    None if f == "_id" => no_match = true,
+                    _ => return Err(MongoError::new(51132, "Location51132", format!("$merge write error: 'on' field '{f}' cannot be missing, null, undefined or an array")))
                 }
             }
-            let (found, _, _) = find_docs(&mut g, &into, &indexes, &FindOpts { filter: &filter, sort: &[], want: Some(1), hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?;
+            let found = if no_match { Vec::new() } else { find_docs(&mut g, &into, &indexes, &FindOpts { filter: &filter, sort: &[], want: Some(1), hint: Hint::None, ttl: None, ov: Some(&w.ov) }).await?.0 };
             match found.into_iter().next() {
                 Some(old) => {
                     let new = match &when_matched {
@@ -425,9 +417,20 @@ impl Server {
                             ordered
                         }
                         Bson::String(m) if m == "keepExisting" => continue,
-                        Bson::String(m) if m == "fail" => return Err(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": old.get("_id").cloned().unwrap_or(Bson::Null) })),
+                        Bson::String(m) if m == "fail" => {
+                            let mut e = MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": old.get("_id").cloned().unwrap_or(Bson::Null) }, g.collation_of(&into).as_deref());
+                            e.msg = format!("$merge with whenMatched: fail found an existing document with the same values for the 'on' fields :: caused by :: {}", e.msg);
+                            return Err(e);
+                        }
                         Bson::Array(p) => {
-                            let mut r = crate::expr::with_ambient(vec![("new".to_string(), Bson::Document(d.clone()))], || run_pipeline(vec![old.clone()], p, &crate::agg::Foreign::new()))?;
+                            let mut vars = vec![("new".to_string(), Bson::Document(d.clone()))];
+                            if let Some(l) = &lets {
+                                for (k, e) in l {
+                                    let v = crate::expr::eval(e, &crate::expr::Scope::new(&d))?.unwrap_or(Bson::Null);
+                                    vars.push((k.clone(), v));
+                                }
+                            }
+                            let mut r = crate::expr::with_ambient(vars, || run_pipeline(vec![old.clone()], p, &crate::agg::Foreign::new()))?;
                             r.pop().unwrap_or_else(|| old.clone())
                         }
                         _ => return Err(MongoError::new(51181, "Location51181", "unsupported whenMatched mode".into())),
@@ -464,7 +467,8 @@ impl Server {
             }
         }
         let names = w.names.clone().unwrap_or(ns_names.clone());
-        let new_coll = (!names.iter().any(|n| *n == into)).then(|| {
+        // (a $merge that writes nothing, such as one that discards what does not match, does not create the target)
+        let new_coll = (!names.iter().any(|n| *n == into) && !w.ops.is_empty()).then(|| {
             let mut v = names.clone();
             v.push(into.clone());
             v
@@ -499,6 +503,7 @@ impl Server {
         let docs = cmd.get_array("documents").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'insert.documents' is missing but a required field".into()))?;
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
+        let mut rr = self.retry_begin(db, cmd, docs.len(), "insert").await?;
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
         let names = g.collections().await?;
@@ -508,7 +513,15 @@ impl Server {
         let names = w.names.clone().unwrap_or(names);
         let mut errors: Vec<Bson> = Vec::new();
         let mut n = 0;
+        let mut replayed = 0;
         for (i, raw) in docs.iter().enumerate() {
+            if let Some(b) = rr.as_mut() {
+                if b.run.is_retried(i) {
+                    b.run.stored(i);
+                    replayed += 1;
+                    continue;
+                }
+            }
             let Some(d) = raw.as_document() else {
                 errors.push(Bson::Document(write_error(i, 14, "document to insert must be an object".into())));
                 if ordered { break } else { continue }
@@ -536,7 +549,7 @@ impl Server {
             }
             // An expired-but-not-yet-removed document still holds its _id and its unique keys.
             if w.exists(&mut g, coll, &id).await? {
-                errors.push(Bson::Document(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }).to_write_error(i)));
+                errors.push(Bson::Document(MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }, g.collation_of(coll).as_deref()).to_write_error(i)));
                 if ordered { break } else { continue }
             }
             if let Err(e) = w.put(&mut g, coll, &ns, &mut indexes, &d, None).await {
@@ -547,16 +560,30 @@ impl Server {
                 if ordered { break } else { continue }
             }
             n += 1;
+            if let Some(b) = rr.as_mut() {
+                b.run.record_insert(i);
+            }
         }
         let new_coll = (!names.iter().any(|x| x == coll) && n > 0).then(|| {
             let mut v = names.clone();
             v.push(coll.to_string());
             v
         });
+        if let Some(b) = &rr {
+            b.run.stage(&mut w, &b.key);
+        }
         self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
-        let mut reply = doc! { "n": n as i32 };
+        if let Some(b) = rr.as_mut() {
+            b.run.apply();
+        }
+        let mut reply = doc! { "n": (n + replayed) as i32 };
         if !errors.is_empty() {
             reply.insert("writeErrors", errors);
+        }
+        if let Some(b) = &rr {
+            if replayed > 0 {
+                reply.insert("retriedStmtIds", b.run.retried_ids());
+            }
         }
         reply.insert("ok", 1.0);
         Ok(reply)
@@ -575,6 +602,8 @@ impl Server {
                 }
             }
         }
+        let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("update", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
+        let mut rr = self.retry_begin(db, cmd, specs.len(), "update").await?;
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
         let names = g.collections().await?;
@@ -587,7 +616,39 @@ impl Server {
         let mut errors: Vec<Bson> = Vec::new();
 
         'specs: for (i, spec) in specs.iter().enumerate() {
-            let step: R<()> = update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc).await;
+            if let Some(b) = rr.as_mut() {
+                if b.run.is_retried(i) {
+                    let d = b.run.stored(i).unwrap_or_default();
+                    acc.n += 1;
+                    acc.n_modified += d.get_i32("m").unwrap_or(0);
+                    if let Some(id) = d.get("up") {
+                        acc.upserted.push(Bson::Document(doc! { "index": i as i32, "_id": id.clone() }));
+                    }
+                    continue;
+                }
+                if spec.as_document().and_then(|s| s.get("multi")) == Some(&Bson::Boolean(true)) {
+                    errors.push(Bson::Document(write_error(i, 72, "Cannot use (or request) retryable writes with multi=true".into())));
+                    if ordered {
+                        break 'specs;
+                    }
+                    continue;
+                }
+            }
+            let before = (acc.n, acc.n_modified, acc.upserted.len());
+            let step: R<()> = match &cols[i] { Err(e) => Err(e.clone()), Ok(None) => update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc).await, Ok(Some(c)) => crate::collation::scope(Some(c.clone()), update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc)).await };
+            if step.is_ok() {
+                if let Some(b) = rr.as_mut() {
+                    let modified = acc.n_modified - before.1;
+                    let up = (acc.upserted.len() > before.2).then(|| acc.upserted.last().and_then(|u| u.as_document()).and_then(|u| u.get("_id").cloned())).flatten();
+                    if modified > 0 || up.is_some() {
+                        let mut d = doc! { "t": "u", "m": modified };
+                        if let Some(id) = up {
+                            d.insert("up", id);
+                        }
+                        b.run.record(i, d);
+                    }
+                }
+            }
             if let Err(e) = step {
                 if e.code == 112 {
                     return Err(e);
@@ -603,11 +664,23 @@ impl Server {
             v.push(coll.to_string());
             v
         });
+        if let Some(b) = &rr {
+            b.run.stage(&mut w, &b.key);
+        }
         self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
-        let mut reply = doc! { "n": acc.n, "nModified": acc.n_modified };
+        if let Some(b) = rr.as_mut() {
+            b.run.apply();
+        }
+        let mut reply = doc! { "n": acc.n };
+        if let Some(b) = &rr {
+            if !b.run.retried.is_empty() {
+                reply.insert("retriedStmtIds", b.run.retried_ids());
+            }
+        }
         if !acc.upserted.is_empty() {
             reply.insert("upserted", acc.upserted);
         }
+        reply.insert("nModified", acc.n_modified);
         if !errors.is_empty() {
             reply.insert("writeErrors", errors);
         }
@@ -664,6 +737,22 @@ impl Server {
                 }),
             })
         };
+        let mut rr = self.retry_begin(db, cmd, 1, "findAndModify").await?;
+        if let Some(b) = rr.as_mut() {
+            if b.run.is_retried(0) {
+                let id = b.run.id(0);
+                let stored = b.run.stored(0).unwrap_or_default();
+                let mut lo = stored.get_document("lo").cloned().unwrap_or_default();
+                if lo.is_empty() {
+                    lo = doc! { "n": 1 };
+                }
+                let image = match stored.get("v") {
+                    Some(Bson::Document(d)) => Some(d.clone()),
+                    _ => None,
+                };
+                return Ok(doc! { "lastErrorObject": lo, "value": image.map(Bson::Document).unwrap_or(Bson::Null), "retriedStmtId": id, "ok": 1.0 });
+            }
+        }
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
         let names = g.collections().await?;
@@ -682,7 +771,14 @@ impl Server {
                 None => doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 },
                 Some(old) => {
                     w.delete(&mut g, db, coll, &indexes, &old).await?;
+                    if let Some(b) = rr.as_mut() {
+                        b.run.record(0, doc! { "t": "f", "lo": { "n": 1 }, "v": old.clone() });
+                        b.run.stage(&mut w, &b.key);
+                    }
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
+                    if let Some(b) = rr.as_mut() {
+                        b.run.apply();
+                    }
                     doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old))?, "ok": 1.0 }
                 }
             });
@@ -694,7 +790,14 @@ impl Server {
                 if u.take_forced() || new.to_vec()? != old.to_vec()? {
                     w.pending_update = u.operators().cloned();
                     w.put(&mut g, coll, &ns, &mut indexes, &new, Some(&old)).await?;
+                    if let Some(b) = rr.as_mut() {
+                        b.run.record(0, doc! { "t": "f", "lo": { "n": 1, "updatedExisting": true }, "v": if want_new { new.clone() } else { old.clone() } });
+                        b.run.stage(&mut w, &b.key);
+                    }
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
+                    if let Some(b) = rr.as_mut() {
+                        b.run.apply();
+                    }
                 }
                 let value = shape(Some(if want_new { new } else { old }))?;
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": true }, "value": value, "ok": 1.0 })
@@ -703,7 +806,7 @@ impl Server {
                 let nd = u.upsert()?;
                 let id = nd.get("_id").cloned().unwrap();
                 if w.exists(&mut g, coll, &id).await? {
-                    return Err(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": nd.get("_id").cloned().unwrap_or(Bson::Null) }));
+                    return Err(MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": nd.get("_id").cloned().unwrap_or(Bson::Null) }, g.collation_of(coll).as_deref()));
                 }
                 w.put(&mut g, coll, &ns, &mut indexes, &nd, None).await?;
                 let new_coll = (!names.iter().any(|x| x == coll)).then(|| {
@@ -711,7 +814,18 @@ impl Server {
                     v.push(coll.to_string());
                     v
                 });
+                if let Some(b) = rr.as_mut() {
+                    let mut d = doc! { "t": "f", "lo": { "n": 1, "updatedExisting": false, "upserted": id.clone() } };
+                    if want_new {
+                        d.insert("v", nd.clone());
+                    }
+                    b.run.record(0, d);
+                    b.run.stage(&mut w, &b.key);
+                }
                 self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
+                if let Some(b) = rr.as_mut() {
+                    b.run.apply();
+                }
                 let value = if want_new { shape(Some(nd))? } else { Bson::Null };
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": false, "upserted": id }, "value": value, "ok": 1.0 })
             }
@@ -722,6 +836,8 @@ impl Server {
     pub(crate) async fn delete(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "delete")?;
         let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'delete.deletes' is missing but a required field".into()))?;
+        let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("delete", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
+        let mut rr = self.retry_begin(db, cmd, specs.len(), "delete").await?;
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
         let indexes = self.load_indexes(&mut g, db, coll).await?;
@@ -732,7 +848,27 @@ impl Server {
         let mut errors: Vec<Bson> = Vec::new();
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         for (i, spec) in specs.iter().enumerate() {
-            let res: R<()> = delete_stmt(&mut g, db, coll, &indexes, &ttl_specs, &mut w, spec, &mut n).await;
+            if let Some(b) = rr.as_mut() {
+                if b.run.is_retried(i) {
+                    b.run.stored(i);
+                    n += 1;
+                    continue;
+                }
+                if spec.as_document().and_then(|s| s.get("limit")).map(|l| matches!(l, Bson::Int32(0) | Bson::Int64(0)) || matches!(l, Bson::Double(f) if *f == 0.0)).unwrap_or(false) {
+                    errors.push(Bson::Document(write_error(i, 72, "Cannot use (or request) retryable writes with limit=0".into())));
+                    if ordered {
+                        break;
+                    }
+                    continue;
+                }
+            }
+            let n_before = n;
+            let res: R<()> = match &cols[i] { Err(e) => Err(e.clone()), Ok(None) => delete_stmt(&mut g, db, coll, &indexes, &ttl_specs, &mut w, spec, &mut n).await, Ok(Some(c)) => crate::collation::scope(Some(c.clone()), delete_stmt(&mut g, db, coll, &indexes, &ttl_specs, &mut w, spec, &mut n)).await };
+            if res.is_ok() && n > n_before {
+                if let Some(b) = rr.as_mut() {
+                    b.run.record(i, doc! { "t": "d" });
+                }
+            }
             if let Err(e) = res {
                 if e.code == 112 {
                     return Err(e);
@@ -743,10 +879,21 @@ impl Server {
                 }
             }
         }
+        if let Some(b) = &rr {
+            b.run.stage(&mut w, &b.key);
+        }
         self.commit(&mut g, coll, w, &indexes, None, tx).await?;
+        if let Some(b) = rr.as_mut() {
+            b.run.apply();
+        }
         let mut reply = doc! { "n": n };
         if !errors.is_empty() {
             reply.insert("writeErrors", errors);
+        }
+        if let Some(b) = &rr {
+            if !b.run.retried.is_empty() {
+                reply.insert("retriedStmtIds", b.run.retried_ids());
+            }
         }
         reply.insert("ok", 1.0);
         Ok(reply)
@@ -784,7 +931,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     let nd = u.upsert()?;
                     let id = nd.get("_id").cloned().unwrap();
                     if w.exists(g, coll, &id).await? {
-                        return Err(MongoError::duplicate_key(ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }));
+                        return Err(MongoError::duplicate_key_c(ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }, g.collation_of(coll).as_deref()));
                     }
                     w.put(g, coll, ns, indexes, &nd, None).await?;
                     acc.upserted.push(Bson::Document(doc! { "index": i as i32, "_id": id }));

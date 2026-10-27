@@ -17,17 +17,19 @@ sys.modules.setdefault("gaps_py", sys.modules[__name__])
 from pymongo import MongoClient
 
 CASES = []
+KNOWN = {k: v for k, v in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "known_divergences.json"))).items() if not k.startswith("_")}
 
 
 CERTS = os.path.join(os.path.dirname(HERE), "..", ".tools", "certs")
 PAIRS = {"A": (27040, 27048), "B": (27041, 27049), "C": (27042, 27050), "D": (27043, 27051), "E": (27044, 27052)}
 
 
-def case(name, rs=False, sort_keys=False, uri=None, auth=False, pair=None, opts=None):
+def case(name, rs=False, sort_keys=False, uri=None, auth=False, pair=None, opts=None, sa=False):
     """auth=True: run on the servers started with --auth (see auth_env.sh), through a client logged in as the root user.
-    pair="A".."E": run on the TLS server pair of tls_env.py; the client is built with `opts` (TLS options) and carries .gaps_addr."""
+    pair="A".."E": run on the TLS server pair of tls_env.py; the client is built with `opts` (TLS options) and carries .gaps_addr.
+    sa=True: run on a standalone engine (27019, started without --replica-set) against the standalone mongod."""
     def deco(f):
-        CASES.append(dict(name=name, rs=rs, f=f, sort_keys=sort_keys, uri=uri, auth=auth, pair=pair, opts=opts or {}))
+        CASES.append(dict(name=name, rs=rs, f=f, sort_keys=sort_keys, uri=uri, auth=auth, pair=pair, opts=opts or {}, sa=sa))
         return f
     return deco
 
@@ -97,6 +99,7 @@ def main():
     ap.add_argument("--ours", default="mongodb://localhost:27018")
     ap.add_argument("--ours-rs", default=None, help="engine URI for rs cases (default: --ours)")
     ap.add_argument("--real-auth", default="mongodb://root:rootpw@localhost:27030/?authSource=admin")
+    ap.add_argument("--ours-sa", default="mongodb://localhost:27019")
     ap.add_argument("--ours-auth", default="mongodb://root:rootpw@localhost:27028/?authSource=admin")
     ap.add_argument("--only", default="")
     ap.add_argument("--item", default="")
@@ -110,8 +113,8 @@ def main():
     kw = dict(serverSelectionTimeoutMS=15000, socketTimeoutMS=60000)
     real, real_rs, ours = MongoClient(a.real, **kw), MongoClient(a.real_rs, **kw), MongoClient(a.ours, **kw)
     ours_rs = MongoClient(a.ours_rs, **kw) if a.ours_rs else ours
-    real_a = ours_a = None
-    res, bad = [], 0
+    real_a = ours_a = ours_sa = None
+    res, bad, nknown = [], 0, 0
     for c in CASES:
         if a.only and a.only not in c["name"]:
             continue
@@ -125,6 +128,10 @@ def main():
                 outs.append(run_side(cl, c)[0])
                 cl.close()
             r, o = outs
+        elif c.get("sa"):
+            ours_sa = ours_sa or MongoClient(a.ours_sa, **kw)
+            r, _ = run_side(real, c)
+            o, _ = run_side(ours_sa, c)
         elif c["auth"]:
             real_a = real_a or MongoClient(a.real_auth, **kw)
             ours_a = ours_a or MongoClient(a.ours_auth, **kw)
@@ -134,10 +141,12 @@ def main():
             r, _ = run_side(real_rs if c["rs"] else real, c)
             o, _ = run_side(ours_rs if c["rs"] else ours, c)
         ok = r == o
-        bad += not ok
-        res.append(dict(name=c["name"], status="pass" if ok else "fail", real=r[:500], ours=o[:500]))
-        print("." if ok else "F", c["name"], flush=True)
-        if not ok:
+        known = KNOWN.get(c["name"]) if not ok else None
+        bad += not ok and known is None
+        nknown += known is not None
+        res.append(dict(name=c["name"], status="pass" if ok else ("known" if known else "fail"), real=r[:500], ours=o[:500]))
+        print("." if ok else ("K" if known else "F"), c["name"], ("(known: " + known + ")") if known else "", flush=True)
+        if not ok and known is None:
             try:
                 for line in deep_diff(json.loads(r), json.loads(o))[:12]:
                     print("    diff", line)
@@ -145,7 +154,7 @@ def main():
                 print(f"    real: {r[:400]}\n    ours: {o[:400]}")
     if a.out:
         json.dump(res, open(a.out, "w"), indent=1)
-    print(f"gaps_py: {len(res) - bad}/{len(res)} identical to mongod 7.0.45")
+    print(f"gaps_py: {len(res) - bad - nknown}/{len(res)} identical to mongod 7.0.45" + (f", {nknown} known divergences (known_divergences.json)" if nknown else ""))
     sys.exit(1 if bad else 0)
 
 

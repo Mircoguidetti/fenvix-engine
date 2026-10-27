@@ -78,7 +78,7 @@ pub fn compare(a: &Bson, b: &Bson) -> Ordering {
     }
     match (a, b) {
         (x, y) if is_numeric(x) && is_numeric(y) => cmp_numbers(x, y),
-        (Bson::String(x) | Bson::Symbol(x), Bson::String(y) | Bson::Symbol(y)) => x.as_bytes().cmp(y.as_bytes()),
+        (Bson::String(x) | Bson::Symbol(x), Bson::String(y) | Bson::Symbol(y)) => crate::collation::cmp_current(x, y).unwrap_or_else(|| x.as_bytes().cmp(y.as_bytes())),
         (Bson::Document(x), Bson::Document(y)) => {
             let mut xi = x.iter();
             let mut yi = y.iter();
@@ -249,8 +249,30 @@ fn is_operator_doc(d: &Document) -> bool {
     !d.is_empty() && d.keys().all(|k| k.starts_with('$'))
 }
 
+/// Does every value of `path` come out of an array by position (`a.0` where `a[0]` is itself an array)? Such an array is
+/// the value as it is: its elements are not candidates of their own.
+fn reached_by_position(doc: &Document, path: &str, vals: &[&Bson]) -> bool {
+    let Some((parent, last)) = path.rsplit_once('.') else { return false };
+    if vals.is_empty() || last.is_empty() || !last.bytes().all(|b| b.is_ascii_digit()) {
+        return false;
+    }
+    let parents = path_values(doc, parent);
+    vals.iter().all(|v| matches!(v, Bson::Array(_)) && parents.iter().any(|p| matches!(p, Bson::Array(a) if a.iter().any(|e| std::ptr::eq(e, *v)))))
+}
+
 fn match_field(doc: &Document, path: &str, cond: &Bson) -> R<bool> {
     let vals = path_values(doc, path);
+    if reached_by_position(doc, path, &vals) {
+        let prev = EXPAND.with(|x| x.replace(false));
+        let r = match_field_vals(&vals, cond);
+        EXPAND.with(|x| x.set(prev));
+        return r;
+    }
+    match_field_vals(&vals, cond)
+}
+
+fn match_field_vals(vals: &[&Bson], cond: &Bson) -> R<bool> {
+    let vals = vals.to_vec();
     if let Bson::Document(d) = cond {
         if crate::geo_query::has_geo_cond(d) {
             if !crate::geo_query::match_field(&vals, d)? {

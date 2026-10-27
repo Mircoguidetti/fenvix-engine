@@ -109,6 +109,16 @@ fn start(rt: &Runtime) -> R<Context> {
                 }
             }))?,
         ))?;
+        // grouping of the keys `emit` gets follows the collation in force (the key of a string under it; the string itself without one)
+        native(g.set(
+            "__collkey",
+            native(Function::new(c.clone(), |s: String| -> String {
+                match crate::collation::sort_key_current(&s) {
+                    Some(k) => k.iter().map(|b| format!("{b:02x}")).collect(),
+                    None => s,
+                }
+            }))?,
+        ))?;
         native(g.set(
             "__md5",
             native(Function::new(c.clone(), |s: String| -> String {

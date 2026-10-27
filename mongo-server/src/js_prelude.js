@@ -476,7 +476,7 @@
     if (k === null || k === undefined) return 'z';
     switch (typeof k) {
       case 'number': return 'n' + (k === 0 ? 0 : k);
-      case 'string': return 's' + JSON.stringify(k);
+      case 'string': return 's' + JSON.stringify(__collkey(k));
       case 'boolean': return k ? 'T' : 'F';
       case 'function': return 'f' + k.toString();
     }

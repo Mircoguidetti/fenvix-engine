@@ -61,7 +61,11 @@ fn body(v: &Bson, out: &mut Vec<u8>) {
         Bson::Undefined => out.push(0),
         Bson::Null => out.push(1),
         Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_) | Bson::Decimal128(_) => number(v, out),
-        Bson::String(s) | Bson::Symbol(s) => escaped(s.as_bytes(), out),
+        Bson::String(s) | Bson::Symbol(s) => match crate::collation::sort_key_current(s) {
+            // an index with a collation holds the collation keys of its strings
+            Some(k) => escaped(&k, out),
+            None => escaped(s.as_bytes(), out),
+        },
         Bson::Document(d) => {
             for (k, val) in d {
                 out.push(type_rank(val));

@@ -16,6 +16,7 @@ use crate::query::matches;
 use bson::{Bson, Document};
 use bytes::Bytes;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use tenant_bench::lifecycle::Op;
 
 type R<T> = Result<T, MongoError>;
@@ -30,6 +31,8 @@ pub trait Rd: Send {
     fn indexes(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Vec<IndexDef>>> + Send;
     /// A collection with a TTL index was read: a close of this tenant writes the expiry hint.
     fn note_ttl(&self);
+    /// The options of a collection (its default collation).
+    fn coll_opts(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Option<Arc<crate::collopts::CollOpts>>>> + Send;
 }
 
 impl Rd for Entry {
@@ -50,6 +53,9 @@ impl Rd for Entry {
     }
     fn note_ttl(&self) {
         self.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+    async fn coll_opts(&mut self, coll: &str) -> anyhow::Result<Option<Arc<crate::collopts::CollOpts>>> {
+        Entry::coll_opts(self, coll).await
     }
 }
 
@@ -72,6 +78,9 @@ impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
     fn note_ttl(&self) {
         self.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
     }
+    async fn coll_opts(&mut self, coll: &str) -> anyhow::Result<Option<Arc<crate::collopts::CollOpts>>> {
+        Entry::coll_opts(self, coll).await
+    }
 }
 
 impl Rd for ReadView {
@@ -92,6 +101,9 @@ impl Rd for ReadView {
     }
     fn note_ttl(&self) {
         ReadView::note_ttl(self)
+    }
+    async fn coll_opts(&mut self, coll: &str) -> anyhow::Result<Option<Arc<crate::collopts::CollOpts>>> {
+        ReadView::coll_opts(self, coll).await
     }
 }
 
@@ -335,13 +347,61 @@ async fn docs_by_scan(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>]) -> R<Vec<
 
 const FETCH_CHUNK: usize = 20_000;
 
+
+/// How an `_id` equality is looked up in a collection that may have a default collation.
+enum IdRes {
+    /// The document key of the value itself (no collation involved).
+    Direct,
+    /// The `_id` is stored under this encoding.
+    Found(Vec<u8>),
+    /// No document has an `_id` equal to it.
+    Absent,
+    /// The query's collation is not the one that decides which `_id`s are equal: every document is a candidate.
+    Scan,
+}
+
+async fn resolve_id(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>) -> R<IdRes> {
+    if !crate::collopts::has_string(id) {
+        return Ok(IdRes::Direct);
+    }
+    let Some(eff) = crate::collation::current() else { return Ok(IdRes::Direct) };
+    let coll_c = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
+    if !crate::collation::same(&Some(eff.clone()), &coll_c) {
+        return Ok(IdRes::Scan);
+    }
+    let ck = crate::collopts::idc_key(coll, &eff, id);
+    if let Some(v) = ov.and_then(|m| m.get(&ck)) {
+        return Ok(match v {
+            Some(_) => {
+                // written in this transaction: the stored encoding is in the pending ops, the value itself is the best guess
+                IdRes::Direct
+            }
+            None => IdRes::Absent,
+        });
+    }
+    Ok(match g.get(&ck).await? {
+        Some(v) => IdRes::Found(v.to_vec()),
+        None => IdRes::Absent,
+    })
+}
+
 /// Candidate documents of `plan` (index order), still to be filtered.
 async fn plan_docs_ids(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan: &Plan, stats: &mut Stats) -> R<Vec<Vec<u8>>> {
     let mut ids = Vec::new();
     let mut stack = vec![plan];
     while let Some(p) = stack.pop() {
         match p {
-            Plan::Id(id) => ids.push(encode_sortable(id)),
+            Plan::Id(id) => match resolve_id(g, coll, id, None).await? {
+                IdRes::Direct => ids.push(encode_sortable(id)),
+                IdRes::Found(enc) => ids.push(enc),
+                IdRes::Absent => {}
+                IdRes::Scan => {
+                    let prefix = doc_prefix(coll);
+                    for (k, _) in g.scan_range(&prefix, prefix_end(&prefix).as_deref(), false, None, DOC_READ_AHEAD).await? {
+                        ids.push(k[prefix.len()..].to_vec());
+                    }
+                }
+            },
             Plan::Ix(s) => {
                 let mut c = IxCursor::new(coll, &indexes[s.idx], s);
                 loop {
@@ -606,7 +666,17 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
 }
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    let plan = plan_for(indexes, o);
+    let mut plan = plan_for(indexes, o);
+    let mut id_lookup: Option<Vec<u8>> = None;
+    let mut id_absent = false;
+    if let Plan::Id(id) = &plan {
+        match resolve_id(g, coll, id, o.ov).await? {
+            IdRes::Direct => {}
+            IdRes::Found(enc) => id_lookup = Some(enc),
+            IdRes::Absent => id_absent = true,
+            IdRes::Scan => plan = Plan::Coll { reverse: false },
+        }
+    }
     let mut stats = Stats::default();
     let prefix = doc_prefix(coll);
     let ov_coll: Vec<(&Vec<u8>, &Option<Document>)> = o.ov.map(|m| m.iter().filter(|(k, _)| k.starts_with(&prefix)).collect()).unwrap_or_default();
@@ -617,9 +687,17 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
     let mut ov_done: HashSet<Vec<u8>> = HashSet::new();
 
     match &plan {
+        Plan::Id(_) if id_absent => {}
         Plan::Id(id) => {
             stats.keys = 1;
-            let k = doc_key(coll, id);
+            let k = match &id_lookup {
+                Some(enc) => {
+                    let mut k = prefix.clone();
+                    k.extend(enc);
+                    k
+                }
+                None => doc_key(coll, id),
+            };
             if !ov_keys.contains(&k) {
                 if let Some(v) = g.get(&k).await? {
                     stats.docs = 1;
@@ -803,11 +881,13 @@ pub struct Writes {
     pub pending_update: Option<Document>,
     /// Insertion sequence numbers (see `natural.rs`) of the documents written by this set, by document key.
     seqs: HashMap<Vec<u8>, u64>,
+    /// Extra store operations applied in the same batch (the retryable-write record of the session).
+    pub extra: Vec<Op>,
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new() }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new() }
     }
 
     /// Current version of a document: this write set first, then the store.
@@ -828,7 +908,18 @@ impl Writes {
         if let Some(v) = self.ov.get(&k) {
             return Ok(v.is_some());
         }
-        Ok(g.get_live(&k).await?.is_some())
+        if g.get_live(&k).await?.is_some() {
+            return Ok(true);
+        }
+        // a collection with a default collation: an `_id` equal to this one under the collation
+        if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(id)) {
+            let ck = crate::collopts::idc_key(coll, &c, id);
+            if let Some(v) = self.ov.get(&ck) {
+                return Ok(v.is_some());
+            }
+            return Ok(g.get_live(&ck).await?.is_some());
+        }
+        Ok(false)
     }
 
     /// All ops to apply at commit: the document and index writes, changed index definitions, the collection list.
@@ -840,6 +931,7 @@ impl Writes {
         if let Some(names) = &self.names {
             ops.push(Entry::collections_op(names)?);
         }
+        ops.append(&mut self.extra);
         Ok(ops)
     }
 
@@ -874,7 +966,7 @@ impl Writes {
             let rem: Vec<Vec<u8>> = old_e.keys().filter(|k| !new_e.contains_key(*k)).cloned().collect();
             if idx.unique && idx.state == State::Ready {
                 for c in &add {
-                    let dup = || MongoError::duplicate_key(ns, &idx.name, &idx.key_pattern(), new_e.get(c).unwrap());
+                    let dup = || MongoError::duplicate_key_c(ns, &idx.name, &idx.key_pattern(), new_e.get(c).unwrap(), idx.collation.as_deref());
                     if let Some(owner) = self.claims.get(&(i, c.clone())) {
                         if *owner != id_enc {
                             return Err(dup());
@@ -896,6 +988,21 @@ impl Writes {
             plans.push((i, add, rem, mk));
         }
         let k = doc_key(coll, &id);
+        if old.is_none() {
+            if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
+                let ck = crate::collopts::idc_key(coll, &c, &id);
+                // (callers check `exists` first; this one also guards the paths that do not)
+                let taken = match self.ov.get(&ck) {
+                    Some(v) => v.is_some(),
+                    None => g.get_live(&ck).await?.map(|v| v.as_ref() != id_enc.as_slice()).unwrap_or(false),
+                };
+                if taken {
+                    return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, Some(&c)));
+                }
+                self.ops.push(Op::Put(ck.clone(), id_enc.clone()));
+                self.ov.insert(ck, Some(Document::new()));
+            }
+        }
         let mut bytes = new.to_vec()?;
         let seq = match old {
             None => {
@@ -968,6 +1075,11 @@ impl Writes {
             }
         }
         let k = doc_key(coll, &id);
+        if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
+            let ck = crate::collopts::idc_key(coll, &c, &id);
+            self.ops.push(Op::Delete(ck.clone()));
+            self.ov.insert(ck, None);
+        }
         let seq = match self.seqs.remove(&k) {
             Some(s) => Some(s),
             None => crate::natural::stored_seq(g, &k).await?,

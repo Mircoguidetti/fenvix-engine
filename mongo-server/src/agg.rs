@@ -2,7 +2,7 @@
 //! $sort, $limit, $skip, $project, $count. Stages run over documents already in memory.
 
 use crate::error::MongoError;
-use crate::layout::encode_sortable;
+use crate::layout::encode_group_key;
 use crate::query::{self, compare, is_number, matches, parse_projection, parse_sort, path_values, project, sort_docs};
 use bson::{Bson, Document};
 use std::collections::HashMap;
@@ -254,14 +254,14 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
         }
         Acc::Min(cur) => {
             if let Some(v) = val.filter(|v| !matches!(v, Bson::Null | Bson::Undefined)) {
-                if cur.as_ref().map(|c| compare(&v, c).is_lt()).unwrap_or(true) {
+                if cur.as_ref().map(|c| compare(&v, c).is_le()).unwrap_or(true) {
                     *cur = Some(v);
                 }
             }
         }
         Acc::Max(cur) => {
             if let Some(v) = val.filter(|v| !matches!(v, Bson::Null | Bson::Undefined)) {
-                if cur.as_ref().map(|c| compare(&v, c).is_gt()).unwrap_or(true) {
+                if cur.as_ref().map(|c| compare(&v, c).is_ge()).unwrap_or(true) {
                     *cur = Some(v);
                 }
             }
@@ -392,7 +392,7 @@ fn group(docs: Vec<Document>, spec: &Document) -> R<Vec<Document>> {
     let mut groups: HashMap<Vec<u8>, (Bson, Vec<Acc>)> = HashMap::new();
     for d in &docs {
         let key = eval(id_expr, d)?.unwrap_or(Bson::Null);
-        let kb = encode_sortable(&key);
+        let kb = encode_group_key(&key);
         if !groups.contains_key(&kb) {
             order.push(kb.clone());
             groups.insert(kb.clone(), (key, accs.iter().map(|a| init(&a.op)).collect()));
@@ -963,8 +963,8 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
             }
             let candidates: Vec<Document> = match (&lf, &ff) {
                 (Some(l), Some(f)) => {
-                    let keys: Vec<Vec<u8>> = local_values(&d, l).iter().map(encode_sortable).collect();
-                    fdocs.iter().filter(|fd| foreign_values(fd, f).iter().any(|v| keys.contains(&encode_sortable(v)))).cloned().collect()
+                    let keys: Vec<Vec<u8>> = local_values(&d, l).iter().map(encode_group_key).collect();
+                    fdocs.iter().filter(|fd| foreign_values(fd, f).iter().any(|v| keys.contains(&encode_group_key(v)))).cloned().collect()
                 }
                 _ => fdocs.clone(),
             };
@@ -993,7 +993,7 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
     for (i, fd) in fdocs.iter().enumerate() {
         let mut seen: Vec<Vec<u8>> = Vec::new();
         for v in foreign_values(fd, &ff) {
-            let k = encode_sortable(&v);
+            let k = encode_group_key(&v);
             if !seen.contains(&k) {
                 index.entry(k.clone()).or_default().push(i);
                 seen.push(k);
@@ -1005,7 +1005,7 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
     for mut d in docs {
         let mut hits: Vec<usize> = Vec::new();
         for v in local_values(&d, &lf) {
-            if let Some(ix) = index.get(&encode_sortable(&v)) {
+            if let Some(ix) = index.get(&encode_group_key(&v)) {
                 hits.extend(ix);
             }
         }
@@ -1050,7 +1050,14 @@ fn has_where(f: &Document) -> bool {
 }
 
 pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreign) -> R<Vec<Document>> {
+    // mongod orders the output of `$group` followed (through stages that keep the groups as they are) by `$sort: { _id }`
+    // by the whole `_id` value; an array key is not replaced by its smallest element as in every other sort.
+    let mut grouped = false;
     for stage in pipeline {
+        let was_grouped = grouped;
+        if let Some((n, _)) = stage.as_document().and_then(|d| d.iter().next()) {
+            grouped = n == "$group" || (grouped && matches!(n.as_str(), "$limit" | "$skip" | "$addFields" | "$set" | "$match"));
+        }
         let sd = stage.as_document().filter(|d| d.len() == 1).ok_or_else(|| {
             MongoError::new(40323, "Location40323", "A pipeline stage specification object must contain exactly one field.".into())
         })?;
@@ -1082,7 +1089,16 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
             }
             "$sort" => {
                 let spec = arg.as_document().ok_or_else(|| MongoError::new(15973, "Location15973", "the $sort key specification must be an object".into()))?;
-                sort_docs(&mut docs, &parse_sort(spec)?);
+                let sort = parse_sort(spec)?;
+                if was_grouped && sort.len() == 1 && sort[0].0 == "_id" {
+                    let asc = sort[0].1;
+                    docs.sort_by(|a, b| {
+                        let o = compare(a.get("_id").unwrap_or(&Bson::Null), b.get("_id").unwrap_or(&Bson::Null));
+                        if asc { o } else { o.reverse() }
+                    });
+                } else {
+                    sort_docs(&mut docs, &sort);
+                }
             }
             "$limit" => docs.truncate(positive_int(arg, "$limit")?),
             "$skip" => {

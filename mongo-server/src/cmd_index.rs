@@ -83,7 +83,7 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
                     }
                 };
                 if dup {
-                    let mut e = MongoError::duplicate_key(&ns, &idx.name, &idx.key_pattern(), &kv);
+                    let mut e = MongoError::duplicate_key_c(&ns, &idx.name, &idx.key_pattern(), &kv, idx.collation.as_deref());
                     e.msg = format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: {}", fake_uuid(), fake_uuid(), e.msg);
                     failure = Some(e);
                     break 'docs;
@@ -299,6 +299,8 @@ impl Server {
     pub(crate) async fn load_indexes(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str) -> R<Vec<IndexDef>> {
         tenant_bench::counting::set_phase(4);
         let indexes = g.indexes(coll).await?;
+        let opts = g.coll_opts(coll).await?;
+        crate::collation::note_default(opts.and_then(|o| o.collation.clone()));
         tenant_bench::counting::set_phase(0);
         if indexes.iter().any(|i| i.state != State::Ready) {
             self.resume_builds(db, coll);
@@ -348,16 +350,18 @@ impl Server {
         };
         let n_indexes = 1 + g.indexes(coll).await?.iter().filter(|i| i.state == State::Ready).count() as i32;
         let mut ops: Vec<Op> = Vec::new();
-        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll)] {
+        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll)] {
             for (k, _) in g.scan(&prefix).await? {
                 ops.push(Op::Delete(k.to_vec()));
             }
         }
         ops.push(Op::Delete(index_key(coll)));
         ops.push(Op::Delete(crate::natural::meta_key(coll)));
+        ops.push(Op::Delete(crate::collopts::meta_key(coll)));
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
+        g.set_coll_opts(coll, None);
         self.dbs.changes.publish(vec![crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "drop", doc_key: None, full: None, desc: None, txn: None }]);
         Ok(doc! { "nIndexesWas": n_indexes, "ns": format!("{db}.{coll}"), "ok": 1.0 })
     }
@@ -365,34 +369,18 @@ impl Server {
     /// `renameCollection` within one database (a database is one tenant; a rename across databases would have to
     /// copy between two tenants and is not supported). One atomic batch moves the documents, the index entries and the
     /// index metadata to the new name, so a crash leaves either the old or the new collection.
-    pub(crate) async fn rename_collection(&self, cmd: &Document) -> R<Document> {
-        let split = |field: &str| -> R<(String, String)> {
-            let ns = cmd.get_str(field).map_err(|_| MongoError::new(40414, "IDLFailedToParse", format!("BSON field '{field}' is missing but a required field")))?;
-            match ns.split_once('.') {
-                Some((d, c)) if !d.is_empty() && !c.is_empty() => Ok((d.to_string(), c.to_string())),
-                _ => Err(MongoError::new(73, "InvalidNamespace", format!("Invalid namespace specified '{ns}'"))),
-            }
-        };
-        let (from_db, from) = split("renameCollection")?;
-        let (to_db, to) = split("to")?;
-        let drop_target = bool_arg(cmd.get("dropTarget"), false);
-        if from_db != to_db {
-            return Err(MongoError::new(238, "NotImplemented", "renameCollection across databases is not supported by this server".into()));
+    pub(crate) async fn rename_collection(&self, cmd_db: &str, cmd: &Document) -> R<Document> {
+        let r = crate::xdb::parse_rename(cmd_db, cmd)?;
+        if r.from_db != r.to_db {
+            return self.rename_across(&r).await;
         }
-        if !valid_db_name(&from_db) {
-            return Err(MongoError::new(73, "InvalidNamespace", format!("Invalid database name: '{from_db}'")));
-        }
-        if to.contains('$') || to.contains('\0') || to.starts_with("system.") || from.starts_with("system.") {
-            return Err(MongoError::new(20, "IllegalOperation", format!("Invalid target namespace: {to_db}.{to}")));
-        }
+        let (from_db, from, to_db, to, drop_target) = (r.from_db, r.from, r.to_db, r.to, r.drop_target);
+        let _ = &to_db;
         let db = from_db.as_str();
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         if !names.iter().any(|n| *n == from) {
-            return Err(MongoError::namespace_not_found(format!("Source collection {db}.{from} does not exist")));
-        }
-        if from == to {
-            return Err(MongoError::new(20, "IllegalOperation", "Can't rename a collection to itself".into()));
+            return Err(MongoError::namespace_not_found("source namespace does not exist".into()));
         }
         let target_exists = names.iter().any(|n| *n == to);
         if target_exists && !drop_target {
@@ -404,15 +392,16 @@ impl Server {
         }
         let mut ops: Vec<Op> = Vec::new();
         if target_exists {
-            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to)] {
+            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to), crate::collopts::idc_prefix(&to)] {
                 for (k, _) in g.scan(&prefix).await? {
                     ops.push(Op::Delete(k.to_vec()));
                 }
             }
             ops.push(Op::Delete(index_key(&to)));
             ops.push(Op::Delete(crate::natural::meta_key(&to)));
+            ops.push(Op::Delete(crate::collopts::meta_key(&to)));
         }
-        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to))] {
+        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to))] {
             for (k, v) in g.scan(&old_prefix).await? {
                 let mut nk = new_prefix.clone();
                 nk.extend_from_slice(&k[old_prefix.len()..]);
@@ -431,6 +420,12 @@ impl Server {
             ops.push(Op::Put(crate::natural::meta_key(&to), v.to_vec()));
             ops.push(Op::Delete(crate::natural::meta_key(&from)));
         }
+        if let Some(v) = g.get(&crate::collopts::meta_key(&from)).await? {
+            ops.push(Op::Put(crate::collopts::meta_key(&to), v.to_vec()));
+            ops.push(Op::Delete(crate::collopts::meta_key(&from)));
+        }
+        g.forget_coll_opts(&from);
+        g.forget_coll_opts(&to);
         names.retain(|n| *n != from && *n != to);
         names.push(to.clone());
         ops.push(Entry::collections_op(&names)?);
@@ -445,8 +440,12 @@ impl Server {
             return Err(MongoError::namespace_not_found(format!("ns does not exist: {db}.{coll}")));
         }
         let mut docs: VecDeque<Document> = VecDeque::new();
-        docs.push_back(doc! { "v": 2, "key": { "_id": 1 }, "name": "_id_" });
         let indexes = self.load_indexes(&mut g, db, coll).await?;
+        let mut id_spec = doc! { "v": 2, "key": { "_id": 1 }, "name": "_id_" };
+        if let Some(c) = g.collation_of(coll) {
+            id_spec.insert("collation", c.to_doc());
+        }
+        docs.push_back(id_spec);
         docs.extend(indexes.iter().filter(|i| i.state == State::Ready).map(|i| i.spec.clone()));
         drop(g);
         let batch = cmd.get_document("cursor").ok().and_then(|c| int_arg(c.get("batchSize"))).map(|b| b as usize);
@@ -467,6 +466,7 @@ impl Server {
             g = self.dbs.lock(db).await;
             indexes = g.indexes(coll).await?;
         }
+        let default_collation = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
         let before = 1 + indexes.len() as i32;
         let has_docs = existed && !g.scan_range(&doc_prefix(coll), prefix_end(&doc_prefix(coll)).as_deref(), false, Some(1), 4096).await?.is_empty();
         let mut changed = false;
@@ -509,7 +509,7 @@ impl Server {
                 if geo_idx.is_some() && matches!(k.as_str(), "bits" | "min" | "max" | "2dsphereIndexVersion" | "coarsestIndexedLevel" | "finestIndexedLevel") {
                     continue;
                 }
-                if !matches!(k.as_str(), "key" | "name" | "v") {
+                if !matches!(k.as_str(), "key" | "name" | "v" | "collation") {
                     // `unique: false` and `sparse: false` are the defaults and are not stored
                     if matches!(k.as_str(), "unique" | "sparse") && !bool_arg(Some(v), false) {
                         continue;
@@ -559,6 +559,35 @@ impl Server {
                     return Err(MongoError::new(67, "CannotCreateIndex", "cannot mix \"partialFilterExpression\" and \"sparse\" options".into()));
                 }
             }
+            // The collation: the one named, or the default of the collection; it ends the specification.
+            let index_collation = match spec.get("collation") {
+                None => default_collation.clone(),
+                Some(v) if !matches!(v, Bson::Document(_)) => {
+                    return Err(MongoError::new(14, "TypeMismatch", format!("Error in specification {} :: caused by :: The field 'collation' must be an object, but got {}", fmt_doc(spec), crate::update::type_name(v))));
+                }
+                Some(Bson::Document(d)) if d.is_empty() => {
+                    return Err(MongoError::new(2, "BadValue", format!("Error in specification {} :: caused by :: The field 'collation' cannot be an empty object.", fmt_doc(spec))));
+                }
+                Some(v) => match crate::collation::for_index(v) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        let mut shown = spec.clone();
+                        shown.insert("v", 2);
+                        return Err(MongoError::new(2, "BadValue", format!("failed to add collation information to index spec for index creation: {} :: caused by :: {}", fmt_doc(&shown), e.msg)));
+                    }
+                },
+            };
+            if let Some(c) = &index_collation {
+                if text_idx.is_some() {
+                    let mut shown: Document = spec.iter().filter(|(k, _)| k.as_str() != "collation").map(|(k, v)| (k.clone(), v.clone())).collect();
+                    if !shown.contains_key("v") {
+                        shown.insert("v", 2);
+                    }
+                    shown.insert("collation", c.to_doc());
+                    return Err(MongoError::new(67, "CannotCreateIndex", format!("Error in specification {} :: caused by :: Index type 'text' does not support collation: {}", fmt_doc(&shown), fmt_doc(&c.to_doc()))));
+                }
+                idx.insert("collation", c.to_doc());
+            }
             let wanted = IndexDef::from_stored(&idx).ok_or_else(|| MongoError::new(67, "CannotCreateIndex", "bad index specification".into()))?;
             if let Some(ex) = indexes.iter().find(|i| i.name == name) {
                 if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&ex.spec, &idx) {
@@ -574,7 +603,7 @@ impl Server {
                 }
                 return Err(MongoError::new(86, "IndexKeySpecsConflict", format!("An existing index has the same name as the requested index. When index names are not specified, they are auto generated and can cause conflicts. Please refer to our documentation. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
             }
-            if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| k == key).unwrap_or(false)) {
+            if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| k == key).unwrap_or(false) && crate::collation::same(&i.collation, &index_collation)) {
                 if same_options(&ex.spec, &idx) {
                     return Err(MongoError::new(85, "IndexOptionsConflict", format!("Index already exists with a different name: {}", ex.name)));
                 }
@@ -644,6 +673,9 @@ impl Server {
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Err(MongoError::namespace_not_found(format!("ns does not exist: {db}.{coll}")));
+        }
+        if cmd.contains_key("collation") {
+            return Err(MongoError::new(40415, "IDLUnknownField", "BSON field 'collMod.collation' is an unknown field.".into()));
         }
         let Some(Bson::Document(spec)) = cmd.get("index") else { return Ok(ok()) };
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
@@ -797,7 +829,18 @@ impl Server {
             "winningPlan": winning.clone(),
             "rejectedPlans": [],
         };
-        let _ = &mut qp;
+        if let Some(c) = crate::collation::current() {
+            // (after parsedQuery, as mongod lists it)
+            let mut with: Document = Document::new();
+            for (k, v) in qp {
+                let after_parsed = k == "parsedQuery";
+                with.insert(k, v);
+                if after_parsed {
+                    with.insert("collation", c.to_doc());
+                }
+            }
+            qp = with;
+        }
         let mut out = doc! { "explainVersion": "1", "queryPlanner": qp };
         if let Some((n, stats)) = exec {
             out.insert(
@@ -1043,10 +1086,15 @@ fn ix_stage(idx: &IndexDef, s: &index::IxScan) -> Document {
         }
         bounds.insert(f.clone(), ls.into_iter().map(Bson::String).collect::<Vec<_>>());
     }
-    doc! {
+    let mut stage = doc! {
         "stage": "IXSCAN",
         "keyPattern": idx.key_pattern(),
         "indexName": idx.name.clone(),
+    };
+    if let Some(c) = &idx.collation {
+        stage.insert("collation", c.to_doc());
+    }
+    stage.extend(doc! {
         "isMultiKey": idx.multikey,
         "multiKeyPaths": mk_paths,
         "isUnique": idx.unique,
@@ -1055,7 +1103,8 @@ fn ix_stage(idx: &IndexDef, s: &index::IxScan) -> Document {
         "indexVersion": 2,
         "direction": if s.reverse { "backward" } else { "forward" },
         "indexBounds": bounds,
-    }
+    });
+    stage
 }
 
 #[allow(clippy::too_many_arguments)]

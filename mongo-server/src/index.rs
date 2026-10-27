@@ -55,6 +55,8 @@ pub struct IndexDef {
     pub text_key: Option<Document>,
     /// The spec as the user gave it (plus `v`), without internal state; this is what `listIndexes` returns.
     pub spec: Document,
+    /// The collation of the index (its entries are the collation keys of the strings); `None` is the simple collation.
+    pub collation: Option<std::sync::Arc<crate::collation::Collation>>,
 }
 
 /// Numeric value of an int / long / double.
@@ -152,6 +154,7 @@ impl IndexDef {
             special,
             kind,
             text_key,
+            collation: stored.get("collation").and_then(|c| crate::collation::parse(c).ok().flatten()),
             spec,
         })
     }
@@ -205,6 +208,11 @@ impl IndexDef {
     /// Distinct entries of `d` as `component bytes -> {field: value}` (empty when the document is not in
     /// the index), and whether any indexed path crossed an array.
     pub fn entries(&self, d: &Document) -> R<(BTreeMap<Vec<u8>, Document>, bool)> {
+        // the entries (and the partial filter) are computed under the index's own collation, whatever the command uses
+        crate::collation::sync_scope(self.collation.clone(), || self.entries_in_scope(d))
+    }
+
+    fn entries_in_scope(&self, d: &Document) -> R<(BTreeMap<Vec<u8>, Document>, bool)> {
         if !self.has_entries() {
             return Ok((BTreeMap::new(), false));
         }
@@ -694,6 +702,10 @@ fn value_intervals(c: &Constraint, multikey: bool) -> Vec<VI> {
         return vec![VI { lo: lo_ep, hi: hi_ep, rank, lo_s, hi_s, lo_incl: lo_i, hi_incl: hi_i }];
     }
     if let Some((prefix, re)) = &c.regex_prefix {
+        // the order of collation keys is not the order of the bytes of the strings: no prefix range
+        if crate::collation::current().is_some() {
+            return Vec::new();
+        }
         let mut e = vec![4u8];
         for &b in prefix.as_bytes() {
             e.push(b);
@@ -997,7 +1009,9 @@ pub fn plan(inp: &PlanInput) -> Plan {
     if let Some(scan) = geo_scan(inp.indexes, inp.filter, &cs, inp.hint) {
         return Plan::Ix(scan);
     }
-    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular | Kind::Hashed(_)) && inp.hint.map(|h| h == i).unwrap_or(true);
+    // an index serves a query only under the collation of its strings: the query's own, or its collection's default
+    let query_collation = crate::collation::current();
+    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular | Kind::Hashed(_)) && inp.hint.map(|h| h == i).unwrap_or(true) && crate::collation::same(&idx.collation, &query_collation);
     let mut best: Option<(i64, IxScan)> = None;
     for (i, idx) in inp.indexes.iter().enumerate() {
         if !usable(i, idx) {
@@ -1007,14 +1021,13 @@ pub fn plan(inp: &PlanInput) -> Plan {
         if !covers {
             continue;
         }
-        let hashed_cs;
-        let (b, sorted_dir) = match &idx.kind {
+        let (b, sorted_dir) = crate::collation::sync_scope(idx.collation.clone(), || match &idx.kind {
             Kind::Hashed(pos) => {
-                hashed_cs = crate::wild::hashed_constraints(&cs, &idx.key[*pos].0);
+                let hashed_cs = crate::wild::hashed_constraints(&cs, &idx.key[*pos].0);
                 (bounds_for(idx, &hashed_cs), None)
             }
             _ => (bounds_for(idx, &cs), sort_satisfied(idx, &cs, inp.sort)),
-        };
+        });
         if b.is_none() && sorted_dir.is_none() && inp.hint.is_none() {
             continue;
         }

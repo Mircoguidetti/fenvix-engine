@@ -103,6 +103,9 @@ impl Server {
             let Some(s) = m.get_mut(&tc.lsid) else {
                 return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is -1", tc.number)));
             };
+            if s.number > tc.number {
+                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
+            }
             if s.number != tc.number {
                 return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is {}", tc.number, s.number)));
             }
@@ -119,6 +122,7 @@ impl Server {
                 }
             };
         }
+        self.retry_txn_start(&tc.lsid, &tc.lsid_doc, tc.number).await?;
         // Start: abort an older transaction of the session first.
         let old = {
             let mut m = self.sessions.m.lock().unwrap();
@@ -187,6 +191,9 @@ impl Server {
             let Some(s) = m.get_mut(&tc.lsid) else {
                 return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is -1", tc.number)));
             };
+            if s.number > tc.number {
+                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
+            }
             if s.number != tc.number {
                 return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is {}", tc.number, s.number)));
             }
@@ -241,6 +248,9 @@ impl Server {
             let Some(s) = m.get_mut(&tc.lsid) else {
                 return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is -1", tc.number)));
             };
+            if s.number > tc.number {
+                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
+            }
             if s.number != tc.number {
                 return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is {}", tc.number, s.number)));
             }
