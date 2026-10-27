@@ -19,6 +19,11 @@ thread_local! {
     static AMBIENT: std::cell::RefCell<Vec<(String, Bson)>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
+/// Stored for a variable whose expression evaluated to "missing" (it reads back as missing, not null).
+pub fn missing_var() -> Bson {
+    Bson::Symbol("\u{1}missing".to_string())
+}
+
 /// Run `f` with extra variables visible to every expression it evaluates.
 pub fn with_ambient<T>(vars: Vec<(String, Bson)>, f: impl FnOnce() -> T) -> T {
     let n = vars.len();
@@ -134,10 +139,12 @@ fn variable(sc: &Scope, name_and_path: &str) -> R<Option<Bson>> {
         _ => {
             for (n, v) in sc.vars.iter().rev() {
                 if n == name {
+                    if matches!(v, Bson::Symbol(x) if x == "\u{1}missing") { return Ok(None); }
                     return Ok(if rest.is_empty() { Some(v.clone()) } else { get_path(v, &rest) });
                 }
             }
             if let Some(v) = AMBIENT.with(|a| a.borrow().iter().rev().find(|(n, _)| n == name).map(|(_, v)| v.clone())) {
+                if matches!(&v, Bson::Symbol(x) if x == "\u{1}missing") { return Ok(None); }
                 return Ok(if rest.is_empty() { Some(v) } else { get_path(&v, &rest) });
             }
             Err(err(17276, format!("Use of undefined variable: {name}")))

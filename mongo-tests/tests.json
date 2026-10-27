@@ -24435,6 +24435,16 @@ null,
 }
 },
 {
+"$set": {
+"s": {
+"$sortArray": {
+"input": "$s",
+"sortBy": 1
+}
+}
+}
+},
+{
 "$sort": {
 "_id": 1
 }
@@ -31895,153 +31905,6 @@ null,
 ]
 },
 {
-"name": "update.extra.current_date",
-"group": "update operators outside the supported set",
-"category": "extra",
-"steps": [
-{
-"op": "insert_many",
-"coll": "people",
-"docs": [
-{
-"_id": 1,
-"name": "alice",
-"age": 30,
-"city": "Paris",
-"tags": [
-"a",
-"b"
-],
-"addr": {
-"zip": "75001",
-"geo": {
-"lat": 48.8
-}
-},
-"scores": [
-10,
-20,
-30
-]
-},
-{
-"_id": 2,
-"name": "bob",
-"age": 25,
-"city": "Rome",
-"tags": [
-"b",
-"c"
-],
-"addr": {
-"zip": "00100"
-},
-"scores": [
-5
-]
-},
-{
-"_id": 3,
-"name": "carol",
-"age": 35,
-"city": "Paris",
-"tags": [],
-"addr": null,
-"scores": []
-},
-{
-"_id": 4,
-"name": "dave",
-"age": null,
-"city": "Berlin",
-"tags": [
-"a"
-],
-"scores": [
-1,
-2,
-3,
-4
-]
-},
-{
-"_id": 5,
-"name": "eve",
-"city": "Rome",
-"tags": [
-"c",
-"d",
-"a"
-],
-"addr": {
-"zip": "00100",
-"geo": {
-"lat": 41.9
-}
-}
-},
-{
-"_id": 6,
-"name": "frank",
-"age": "forty",
-"city": null,
-"tags": "a"
-},
-{
-"_id": 7,
-"name": "grace",
-"age": 25.5,
-"city": "Paris",
-"items": [
-{
-"sku": "x",
-"qty": 1
-},
-{
-"sku": "y",
-"qty": 5
-}
-]
-},
-{
-"_id": 8,
-"name": "heidi",
-"age": {
-"$numberLong": "30"
-},
-"city": "paris",
-"items": [
-{
-"sku": "x",
-"qty": 10
-}
-]
-}
-],
-"ordered": true
-},
-{
-"op": "update_one",
-"coll": "people",
-"filter": {
-"_id": 1
-},
-"update": {
-"$currentDate": {
-"ts": true
-}
-}
-},
-{
-"op": "find",
-"coll": "people",
-"filter": {
-"_id": 1
-}
-}
-]
-},
-{
 "name": "update.extra.pop",
 "group": "update operators outside the supported set",
 "category": "extra",
@@ -32331,6 +32194,162 @@ null,
 "coll": "people",
 "filter": {
 "_id": 1
+}
+}
+]
+},
+{
+"name": "update.extra.current_date",
+"group": "update operators outside the supported set",
+"category": "extra",
+"steps": [
+{
+"op": "insert_many",
+"coll": "people",
+"docs": [
+{
+"_id": 1,
+"name": "alice",
+"age": 30,
+"city": "Paris",
+"tags": [
+"a",
+"b"
+],
+"addr": {
+"zip": "75001",
+"geo": {
+"lat": 48.8
+}
+},
+"scores": [
+10,
+20,
+30
+]
+},
+{
+"_id": 2,
+"name": "bob",
+"age": 25,
+"city": "Rome",
+"tags": [
+"b",
+"c"
+],
+"addr": {
+"zip": "00100"
+},
+"scores": [
+5
+]
+},
+{
+"_id": 3,
+"name": "carol",
+"age": 35,
+"city": "Paris",
+"tags": [],
+"addr": null,
+"scores": []
+},
+{
+"_id": 4,
+"name": "dave",
+"age": null,
+"city": "Berlin",
+"tags": [
+"a"
+],
+"scores": [
+1,
+2,
+3,
+4
+]
+},
+{
+"_id": 5,
+"name": "eve",
+"city": "Rome",
+"tags": [
+"c",
+"d",
+"a"
+],
+"addr": {
+"zip": "00100",
+"geo": {
+"lat": 41.9
+}
+}
+},
+{
+"_id": 6,
+"name": "frank",
+"age": "forty",
+"city": null,
+"tags": "a"
+},
+{
+"_id": 7,
+"name": "grace",
+"age": 25.5,
+"city": "Paris",
+"items": [
+{
+"sku": "x",
+"qty": 1
+},
+{
+"sku": "y",
+"qty": 5
+}
+]
+},
+{
+"_id": 8,
+"name": "heidi",
+"age": {
+"$numberLong": "30"
+},
+"city": "paris",
+"items": [
+{
+"sku": "x",
+"qty": 10
+}
+]
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "people",
+"filter": {
+"_id": 1
+},
+"update": {
+"$currentDate": {
+"ts": true
+}
+}
+},
+{
+"op": "count_documents",
+"coll": "people",
+"filter": {
+"_id": 1,
+"ts": {
+"$type": "date",
+"$gt": {
+"$date": "2020-01-01T00:00:00Z"
+},
+"$lt": {
+"$date": "2100-01-01T00:00:00Z"
+}
+}
 }
 }
 ]

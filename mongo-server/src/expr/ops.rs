@@ -236,7 +236,7 @@ fn let_op(arg: &Bson, sc: &Scope) -> Out {
             return Err(err(9, format!("'{name}' starts with an invalid character for a user variable name")));
         }
         // variables are evaluated in the outer scope: they cannot see each other
-        let v = ev(e, sc)?.unwrap_or(Bson::Null);
+        let v = ev(e, sc)?.unwrap_or_else(missing_var);
         inner = inner.with(name, v);
     }
     Ok(Some(ev(body, &inner)?))

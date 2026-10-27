@@ -870,7 +870,7 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
             let mut vars: Vec<(String, Bson)> = Vec::new();
             if let Some(ls) = &let_spec {
                 for (name, e) in ls {
-                    vars.push((name.clone(), eval(e, &d)?.unwrap_or(Bson::Null)));
+                    vars.push((name.clone(), eval(e, &d)?.unwrap_or_else(crate::expr::missing_var)));
                 }
             }
             let candidates: Vec<Document> = match (&lf, &ff) {
