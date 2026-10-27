@@ -224,3 +224,28 @@ def register(g):
     # The same place written as longitude 180 and -180.
     add("geo.near_antimeridian_twins", [ins("c", [{"_id": 1, "loc": {"type": "Point", "coordinates": [180.0, 0.0]}}, {"_id": 2, "loc": {"type": "Point", "coordinates": [-180.0, 0.0]}}, {"_id": 3, "loc": {"type": "Point", "coordinates": [100.0, 0.0]}}]),
                                        {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(-179.9, 10)}}}, limit=3)], "geo: nearest-first, equal distances")
+
+
+def register_knife(g):
+    """Knife-edge geometry: the (offset, query, operator) answers of knife_cases.py on which mongo:7.0 and our server agree
+    (knife_matched.json, written by geo_knife_battery.py). The other answers are listed in results10.md."""
+    import json, os
+    from knife_cases import OFFS, build
+    add, ins, find = g["add"], g["ins"], g["find"]
+    matched = set(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "knife_matched.json"))))
+    for (ox, oy, s) in OFFS:
+        stored, queries = build(ox, oy, s)
+        docs = [dict(_id=i + 1, name=n, g=stored[n]) for i, n in enumerate(stored)]
+        steps = [ins("c", docs)]
+        for qn, geom in queries.items():
+            for op in ("$geoIntersects", "$geoWithin"):
+                if f"{ox},{oy},{s}|{qn}|{op}" in matched:
+                    steps.append(find("c", {"g": {op: {"$geometry": geom}}}, sort={"_id": 1}, projection={"name": 1}))
+        add(f"geo.knife_edge_{ox}_{oy}_{s}".replace("-", "m"), steps, "geo: knife-edge shared boundaries")
+    lines = [{"_id": 1, "g": {"type": "LineString", "coordinates": [[170, 0], [-170, 0]]}}, {"_id": 2, "g": {"type": "LineString", "coordinates": [[170, 10], [-170, 10]]}},
+             {"_id": 3, "g": {"type": "LineString", "coordinates": [[80, 0], [100, 0]]}}, {"_id": 4, "g": {"type": "LineString", "coordinates": [[0, 70], [0, 90]]}},
+             {"_id": 5, "g": {"type": "LineString", "coordinates": [[-100, 0], [-80, 0]]}}, {"_id": 6, "g": {"type": "LineString", "coordinates": [[0, -10], [0, 10]]}},
+             {"_id": 7, "g": {"type": "LineString", "coordinates": [[40, 40], [50, 50]]}}]
+    pts = [(180, 0), (175, 0), (-175, 0), (-90, 0), (0, 0), (0, 5), (0, -5), (0, 75), (0, 80), (45, 45), (45, 45.0001), (175, 10), (180, 10), (170, 0), (-170, 0), (100, 0), (80, 0), (85, 0), (90, 0)]
+    add("geo.knife_point_on_stored_line", [ins("c", lines)] + [find("c", {"g": {"$geoIntersects": {"$geometry": {"type": "Point", "coordinates": [x, y]}}}}, sort={"_id": 1}, projection={"_id": 1}) for x, y in pts],
+        "geo: points on stored lines on S2 face boundaries")

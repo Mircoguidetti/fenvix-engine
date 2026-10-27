@@ -1373,6 +1373,7 @@ import gen_tests_hashed
 gen_tests_hashed.register(globals())
 import gen_tests_round10
 gen_tests_round10.register(globals())
+gen_tests_round10.register_knife(globals())
 import gen_tests_js
 gen_tests_js.register(globals())
 import gen_tests_tail

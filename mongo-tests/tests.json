@@ -663360,6 +663360,23933 @@ null
 ]
 },
 {
+"name": "geo.knife_edge_0_0_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+0
+],
+[
+2,
+0
+],
+[
+2,
+2
+],
+[
+0,
+2
+],
+[
+0,
+0
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+0.5
+],
+[
+2,
+0.5
+],
+[
+2,
+1.5
+],
+[
+0,
+1.5
+],
+[
+0,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+4,
+0
+],
+[
+6,
+0
+],
+[
+6,
+2
+],
+[
+4,
+2
+],
+[
+4,
+0
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+2
+],
+[
+4,
+2
+],
+[
+4,
+4
+],
+[
+2,
+4
+],
+[
+2,
+2
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-2
+],
+[
+4,
+-2
+],
+[
+4,
+0
+],
+[
+2,
+0
+],
+[
+2,
+-2
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+2
+],
+[
+2,
+2
+],
+[
+2,
+4
+],
+[
+0,
+4
+],
+[
+0,
+2
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+1,
+2
+],
+[
+2,
+2
+],
+[
+1.5,
+3
+],
+[
+1,
+2
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+0
+],
+[
+4,
+0
+],
+[
+4,
+2
+],
+[
+2,
+2
+],
+[
+2,
+0
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+0
+],
+[
+3,
+0
+],
+[
+3,
+1
+],
+[
+2,
+1
+],
+[
+2,
+0
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+3,
+0.5
+],
+[
+4,
+0.5
+],
+[
+4,
+1.5
+],
+[
+3,
+1.5
+],
+[
+3,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+1
+],
+[
+3.5,
+1
+],
+[
+3.5,
+2
+],
+[
+2.5,
+2
+],
+[
+2.5,
+1
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+0
+],
+[
+3.5,
+0
+],
+[
+3.5,
+1
+],
+[
+2.5,
+1
+],
+[
+2.5,
+0
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+0.5
+],
+[
+3.5,
+0.5
+],
+[
+3.5,
+1.5
+],
+[
+2.5,
+1.5
+],
+[
+2.5,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+1,
+-1
+],
+[
+5,
+-1
+],
+[
+5,
+3
+],
+[
+1,
+3
+],
+[
+1,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-1
+],
+[
+5,
+-1
+],
+[
+5,
+3
+],
+[
+2,
+3
+],
+[
+2,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+3,
+1
+],
+[
+5,
+1
+],
+[
+5,
+3
+],
+[
+3,
+3
+],
+[
+3,
+1
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+0
+],
+[
+2,
+2
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+1
+],
+[
+2,
+1
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+1
+],
+[
+3,
+1
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+2,
+2
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0.5
+],
+[
+2,
+1.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-1
+],
+[
+2,
+1
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-1
+],
+[
+2,
+3
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+4,
+0
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+0
+],
+[
+3.5,
+0
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+0.5
+],
+[
+4,
+1.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+2
+],
+[
+3.5,
+2
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+2
+],
+[
+4,
+2
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+2,
+2
+],
+[
+4,
+2
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+0.5
+],
+[
+3.5,
+1.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+1
+],
+[
+5,
+1
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-1
+],
+[
+2,
+-0.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+2
+],
+[
+1,
+3
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+2,
+2
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+4,
+0
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+2,
+1
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+4,
+1
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+2
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+0
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+1
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+1,
+1
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+2,
+2
+],
+[
+9,
+9
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+0
+],
+[
+4,
+0
+],
+[
+4,
+2
+],
+[
+2,
+2
+],
+[
+2,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+2,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+2,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-1
+],
+[
+2,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-1
+],
+[
+2,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0.5
+],
+[
+2,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0.5
+],
+[
+2,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+4,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+0
+],
+[
+4,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+2
+],
+[
+3.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+2
+],
+[
+3.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+0
+],
+[
+4,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+0
+],
+[
+4,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+0
+],
+[
+2,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+0
+],
+[
+2,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+0.5
+],
+[
+3.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+0.5
+],
+[
+3.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+0
+],
+[
+2,
+0
+],
+[
+2,
+2
+],
+[
+0,
+2
+],
+[
+0,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+0
+],
+[
+2,
+0
+],
+[
+2,
+2
+],
+[
+0,
+2
+],
+[
+0,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+0
+],
+[
+3,
+0
+],
+[
+3,
+1
+],
+[
+2,
+1
+],
+[
+2,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+0
+],
+[
+3,
+0
+],
+[
+3,
+1
+],
+[
+2,
+1
+],
+[
+2,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-1
+],
+[
+5,
+-1
+],
+[
+5,
+3
+],
+[
+2,
+3
+],
+[
+2,
+-1
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-1
+],
+[
+5,
+-1
+],
+[
+5,
+3
+],
+[
+2,
+3
+],
+[
+2,
+-1
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+4,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+4,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_0_0_0.01",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+],
+[
+{
+"$numberDouble": "0.0"
+},
+0.02
+],
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "0.0"
+},
+0.005
+],
+[
+0.02,
+0.005
+],
+[
+0.02,
+0.015
+],
+[
+{
+"$numberDouble": "0.0"
+},
+0.015
+],
+[
+{
+"$numberDouble": "0.0"
+},
+0.005
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.06,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.06,
+0.02
+],
+[
+0.04,
+0.02
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+0.02
+],
+[
+0.04,
+0.02
+],
+[
+0.04,
+0.04
+],
+[
+0.02,
+0.04
+],
+[
+0.02,
+0.02
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+-0.02
+],
+[
+0.04,
+-0.02
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+-0.02
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "0.0"
+},
+0.02
+],
+[
+0.02,
+0.02
+],
+[
+0.02,
+0.04
+],
+[
+{
+"$numberDouble": "0.0"
+},
+0.04
+],
+[
+{
+"$numberDouble": "0.0"
+},
+0.02
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.01,
+0.02
+],
+[
+0.02,
+0.02
+],
+[
+0.015,
+0.03
+],
+[
+0.01,
+0.02
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+0.02
+],
+[
+0.02,
+0.02
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.03,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.03,
+0.01
+],
+[
+0.02,
+0.01
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.03,
+0.005
+],
+[
+0.04,
+0.005
+],
+[
+0.04,
+0.015
+],
+[
+0.03,
+0.015
+],
+[
+0.03,
+0.005
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.025,
+0.01
+],
+[
+0.035,
+0.01
+],
+[
+0.035,
+0.02
+],
+[
+0.025,
+0.02
+],
+[
+0.025,
+0.01
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.025,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.035,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.035,
+0.01
+],
+[
+0.025,
+0.01
+],
+[
+0.025,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.025,
+0.005
+],
+[
+0.035,
+0.005
+],
+[
+0.035,
+0.015
+],
+[
+0.025,
+0.015
+],
+[
+0.025,
+0.005
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.01,
+-0.01
+],
+[
+0.05,
+-0.01
+],
+[
+0.05,
+0.03
+],
+[
+0.01,
+0.03
+],
+[
+0.01,
+-0.01
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+-0.01
+],
+[
+0.05,
+-0.01
+],
+[
+0.05,
+0.03
+],
+[
+0.02,
+0.03
+],
+[
+0.02,
+-0.01
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.03,
+0.01
+],
+[
+0.05,
+0.01
+],
+[
+0.05,
+0.03
+],
+[
+0.03,
+0.03
+],
+[
+0.03,
+0.01
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.01,
+0.01
+],
+[
+0.02,
+0.01
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.01,
+0.01
+],
+[
+0.03,
+0.01
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+0.005
+],
+[
+0.02,
+0.015
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+-0.01
+],
+[
+0.02,
+0.01
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+-0.01
+],
+[
+0.02,
+0.03
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.035,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.04,
+0.005
+],
+[
+0.04,
+0.015
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+0.02
+],
+[
+0.035,
+0.02
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+0.02
+],
+[
+0.04,
+0.02
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+],
+[
+0.04,
+0.02
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+0.005
+],
+[
+0.035,
+0.015
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.01,
+0.01
+],
+[
+0.05,
+0.01
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+-0.01
+],
+[
+0.02,
+-0.005
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+0.02
+],
+[
+0.01,
+0.03
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+0.02,
+0.02
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+0.04,
+{
+"$numberDouble": "0.0"
+}
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+0.02,
+0.01
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+0.04,
+0.01
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+0.03,
+0.02
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+0.03,
+{
+"$numberDouble": "0.0"
+}
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+0.03,
+0.01
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+0.01,
+0.01
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+0.02,
+0.02
+],
+[
+0.09,
+0.09
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+0.02
+],
+[
+0.02,
+0.02
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+-0.01
+],
+[
+0.02,
+0.01
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+-0.01
+],
+[
+0.02,
+0.01
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+0.005
+],
+[
+0.02,
+0.015
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+0.005
+],
+[
+0.02,
+0.015
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+0.02
+],
+[
+0.035,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+0.02
+],
+[
+0.035,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.04,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.04,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+0.005
+],
+[
+0.035,
+0.015
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0.025,
+0.005
+],
+[
+0.035,
+0.015
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.02,
+0.02
+],
+[
+{
+"$numberDouble": "0.0"
+},
+0.02
+],
+[
+{
+"$numberDouble": "0.0"
+},
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.03,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.03,
+0.01
+],
+[
+0.02,
+0.01
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.03,
+{
+"$numberDouble": "0.0"
+}
+],
+[
+0.03,
+0.01
+],
+[
+0.02,
+0.01
+],
+[
+0.02,
+{
+"$numberDouble": "0.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.02,
+0.02
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.02,
+0.02
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.02,
+0.01
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.02,
+0.01
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.03,
+{
+"$numberDouble": "0.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.03,
+{
+"$numberDouble": "0.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.03,
+0.02
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.03,
+0.02
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.04,
+0.01
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0.04,
+0.01
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_88_0_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+88,
+0
+],
+[
+90,
+0
+],
+[
+90,
+2
+],
+[
+88,
+2
+],
+[
+88,
+0
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+88,
+0.5
+],
+[
+90,
+0.5
+],
+[
+90,
+1.5
+],
+[
+88,
+1.5
+],
+[
+88,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+92,
+0
+],
+[
+94,
+0
+],
+[
+94,
+2
+],
+[
+92,
+2
+],
+[
+92,
+0
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+2
+],
+[
+92,
+2
+],
+[
+92,
+4
+],
+[
+90,
+4
+],
+[
+90,
+2
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+-2
+],
+[
+92,
+-2
+],
+[
+92,
+0
+],
+[
+90,
+0
+],
+[
+90,
+-2
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+88,
+2
+],
+[
+90,
+2
+],
+[
+90,
+4
+],
+[
+88,
+4
+],
+[
+88,
+2
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+89,
+2
+],
+[
+90,
+2
+],
+[
+89.5,
+3
+],
+[
+89,
+2
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+0
+],
+[
+92,
+0
+],
+[
+92,
+2
+],
+[
+90,
+2
+],
+[
+90,
+0
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+0
+],
+[
+91,
+0
+],
+[
+91,
+1
+],
+[
+90,
+1
+],
+[
+90,
+0
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+91,
+0.5
+],
+[
+92,
+0.5
+],
+[
+92,
+1.5
+],
+[
+91,
+1.5
+],
+[
+91,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90.5,
+1
+],
+[
+91.5,
+1
+],
+[
+91.5,
+2
+],
+[
+90.5,
+2
+],
+[
+90.5,
+1
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90.5,
+0
+],
+[
+91.5,
+0
+],
+[
+91.5,
+1
+],
+[
+90.5,
+1
+],
+[
+90.5,
+0
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90.5,
+0.5
+],
+[
+91.5,
+0.5
+],
+[
+91.5,
+1.5
+],
+[
+90.5,
+1.5
+],
+[
+90.5,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+89,
+-1
+],
+[
+93,
+-1
+],
+[
+93,
+3
+],
+[
+89,
+3
+],
+[
+89,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+-1
+],
+[
+93,
+-1
+],
+[
+93,
+3
+],
+[
+90,
+3
+],
+[
+90,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+91,
+1
+],
+[
+93,
+1
+],
+[
+93,
+3
+],
+[
+91,
+3
+],
+[
+91,
+1
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+88,
+0
+],
+[
+90,
+2
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+89,
+1
+],
+[
+90,
+1
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+89,
+1
+],
+[
+91,
+1
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0
+],
+[
+90,
+2
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0.5
+],
+[
+90,
+1.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+-1
+],
+[
+90,
+1
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+-1
+],
+[
+90,
+3
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0
+],
+[
+92,
+0
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+0
+],
+[
+91.5,
+0
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+92,
+0.5
+],
+[
+92,
+1.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+2
+],
+[
+91.5,
+2
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+2
+],
+[
+92,
+2
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0
+],
+[
+90,
+2
+],
+[
+92,
+2
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+0.5
+],
+[
+91.5,
+1.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+89,
+1
+],
+[
+93,
+1
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+-1
+],
+[
+90,
+-0.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+2
+],
+[
+89,
+3
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+90,
+2
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+92,
+0
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+90,
+1
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+92,
+1
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+91,
+2
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+91,
+0
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+91,
+1
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+89,
+1
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+90,
+2
+],
+[
+97,
+9
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+0
+],
+[
+92,
+0
+],
+[
+92,
+2
+],
+[
+90,
+2
+],
+[
+90,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0
+],
+[
+90,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+-1
+],
+[
+90,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0.5
+],
+[
+90,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0
+],
+[
+92,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90,
+0
+],
+[
+92,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+2
+],
+[
+91.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+2
+],
+[
+91.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+92,
+0
+],
+[
+92,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+92,
+0
+],
+[
+92,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+88,
+0
+],
+[
+90,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+0.5
+],
+[
+91.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+90.5,
+0.5
+],
+[
+91.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+88,
+0
+],
+[
+90,
+0
+],
+[
+90,
+2
+],
+[
+88,
+2
+],
+[
+88,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+0
+],
+[
+91,
+0
+],
+[
+91,
+1
+],
+[
+90,
+1
+],
+[
+90,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+-1
+],
+[
+93,
+-1
+],
+[
+93,
+3
+],
+[
+90,
+3
+],
+[
+90,
+-1
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+90,
+-1
+],
+[
+93,
+-1
+],
+[
+93,
+3
+],
+[
+90,
+3
+],
+[
+90,
+-1
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+90,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+90,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+91,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+91,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+91,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+91,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+92,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+92,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_m92_0_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-92,
+0
+],
+[
+-90,
+0
+],
+[
+-90,
+2
+],
+[
+-92,
+2
+],
+[
+-92,
+0
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-92,
+0.5
+],
+[
+-90,
+0.5
+],
+[
+-90,
+1.5
+],
+[
+-92,
+1.5
+],
+[
+-92,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-88,
+0
+],
+[
+-86,
+0
+],
+[
+-86,
+2
+],
+[
+-88,
+2
+],
+[
+-88,
+0
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+2
+],
+[
+-88,
+2
+],
+[
+-88,
+4
+],
+[
+-90,
+4
+],
+[
+-90,
+2
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+-2
+],
+[
+-88,
+-2
+],
+[
+-88,
+0
+],
+[
+-90,
+0
+],
+[
+-90,
+-2
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-92,
+2
+],
+[
+-90,
+2
+],
+[
+-90,
+4
+],
+[
+-92,
+4
+],
+[
+-92,
+2
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-91,
+2
+],
+[
+-90,
+2
+],
+[
+-90.5,
+3
+],
+[
+-91,
+2
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+0
+],
+[
+-88,
+0
+],
+[
+-88,
+2
+],
+[
+-90,
+2
+],
+[
+-90,
+0
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+0
+],
+[
+-89,
+0
+],
+[
+-89,
+1
+],
+[
+-90,
+1
+],
+[
+-90,
+0
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-89,
+0.5
+],
+[
+-88,
+0.5
+],
+[
+-88,
+1.5
+],
+[
+-89,
+1.5
+],
+[
+-89,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-89.5,
+1
+],
+[
+-88.5,
+1
+],
+[
+-88.5,
+2
+],
+[
+-89.5,
+2
+],
+[
+-89.5,
+1
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-89.5,
+0
+],
+[
+-88.5,
+0
+],
+[
+-88.5,
+1
+],
+[
+-89.5,
+1
+],
+[
+-89.5,
+0
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-89.5,
+0.5
+],
+[
+-88.5,
+0.5
+],
+[
+-88.5,
+1.5
+],
+[
+-89.5,
+1.5
+],
+[
+-89.5,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-91,
+-1
+],
+[
+-87,
+-1
+],
+[
+-87,
+3
+],
+[
+-91,
+3
+],
+[
+-91,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+-1
+],
+[
+-87,
+-1
+],
+[
+-87,
+3
+],
+[
+-90,
+3
+],
+[
+-90,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-89,
+1
+],
+[
+-87,
+1
+],
+[
+-87,
+3
+],
+[
+-89,
+3
+],
+[
+-89,
+1
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-92,
+0
+],
+[
+-90,
+2
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-91,
+1
+],
+[
+-90,
+1
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-91,
+1
+],
+[
+-89,
+1
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0
+],
+[
+-90,
+2
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0.5
+],
+[
+-90,
+1.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+-1
+],
+[
+-90,
+1
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+-1
+],
+[
+-90,
+3
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0
+],
+[
+-88,
+0
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+0
+],
+[
+-88.5,
+0
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-88,
+0.5
+],
+[
+-88,
+1.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+2
+],
+[
+-88.5,
+2
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+2
+],
+[
+-88,
+2
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0
+],
+[
+-90,
+2
+],
+[
+-88,
+2
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+0.5
+],
+[
+-88.5,
+1.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-91,
+1
+],
+[
+-87,
+1
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+-1
+],
+[
+-90,
+-0.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+2
+],
+[
+-91,
+3
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+-90,
+2
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+-88,
+0
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+-90,
+1
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+-88,
+1
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+-89,
+2
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+-89,
+0
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+-89,
+1
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+-91,
+1
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+-90,
+2
+],
+[
+-83,
+9
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+0
+],
+[
+-88,
+0
+],
+[
+-88,
+2
+],
+[
+-90,
+2
+],
+[
+-90,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0
+],
+[
+-90,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+-1
+],
+[
+-90,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+-1
+],
+[
+-90,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0.5
+],
+[
+-90,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0
+],
+[
+-88,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-90,
+0
+],
+[
+-88,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+2
+],
+[
+-88.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+2
+],
+[
+-88.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-88,
+0
+],
+[
+-88,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-88,
+0
+],
+[
+-88,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-92,
+0
+],
+[
+-90,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-92,
+0
+],
+[
+-90,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+0.5
+],
+[
+-88.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-89.5,
+0.5
+],
+[
+-88.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-92,
+0
+],
+[
+-90,
+0
+],
+[
+-90,
+2
+],
+[
+-92,
+2
+],
+[
+-92,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+0
+],
+[
+-89,
+0
+],
+[
+-89,
+1
+],
+[
+-90,
+1
+],
+[
+-90,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-90,
+-1
+],
+[
+-87,
+-1
+],
+[
+-87,
+3
+],
+[
+-90,
+3
+],
+[
+-90,
+-1
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-90,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-90,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-90,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-90,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-89,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-89,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-89,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-89,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-88,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-88,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_172_0_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+172,
+0
+],
+[
+174,
+0
+],
+[
+174,
+2
+],
+[
+172,
+2
+],
+[
+172,
+0
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+172,
+0.5
+],
+[
+174,
+0.5
+],
+[
+174,
+1.5
+],
+[
+172,
+1.5
+],
+[
+172,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+176,
+0
+],
+[
+178,
+0
+],
+[
+178,
+2
+],
+[
+176,
+2
+],
+[
+176,
+0
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+2
+],
+[
+176,
+2
+],
+[
+176,
+4
+],
+[
+174,
+4
+],
+[
+174,
+2
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+-2
+],
+[
+176,
+-2
+],
+[
+176,
+0
+],
+[
+174,
+0
+],
+[
+174,
+-2
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+172,
+2
+],
+[
+174,
+2
+],
+[
+174,
+4
+],
+[
+172,
+4
+],
+[
+172,
+2
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+173,
+2
+],
+[
+174,
+2
+],
+[
+173.5,
+3
+],
+[
+173,
+2
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+0
+],
+[
+176,
+0
+],
+[
+176,
+2
+],
+[
+174,
+2
+],
+[
+174,
+0
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+0
+],
+[
+175,
+0
+],
+[
+175,
+1
+],
+[
+174,
+1
+],
+[
+174,
+0
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+175,
+0.5
+],
+[
+176,
+0.5
+],
+[
+176,
+1.5
+],
+[
+175,
+1.5
+],
+[
+175,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174.5,
+1
+],
+[
+175.5,
+1
+],
+[
+175.5,
+2
+],
+[
+174.5,
+2
+],
+[
+174.5,
+1
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174.5,
+0
+],
+[
+175.5,
+0
+],
+[
+175.5,
+1
+],
+[
+174.5,
+1
+],
+[
+174.5,
+0
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174.5,
+0.5
+],
+[
+175.5,
+0.5
+],
+[
+175.5,
+1.5
+],
+[
+174.5,
+1.5
+],
+[
+174.5,
+0.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+173,
+-1
+],
+[
+177,
+-1
+],
+[
+177,
+3
+],
+[
+173,
+3
+],
+[
+173,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+-1
+],
+[
+177,
+-1
+],
+[
+177,
+3
+],
+[
+174,
+3
+],
+[
+174,
+-1
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+175,
+1
+],
+[
+177,
+1
+],
+[
+177,
+3
+],
+[
+175,
+3
+],
+[
+175,
+1
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+172,
+0
+],
+[
+174,
+2
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+173,
+1
+],
+[
+174,
+1
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+173,
+1
+],
+[
+175,
+1
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+174,
+2
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0.5
+],
+[
+174,
+1.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+-1
+],
+[
+174,
+1
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+-1
+],
+[
+174,
+3
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+176,
+0
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+0
+],
+[
+175.5,
+0
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+176,
+0.5
+],
+[
+176,
+1.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+2
+],
+[
+175.5,
+2
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+2
+],
+[
+176,
+2
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+174,
+2
+],
+[
+176,
+2
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+0.5
+],
+[
+175.5,
+1.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+173,
+1
+],
+[
+177,
+1
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+-1
+],
+[
+174,
+-0.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+2
+],
+[
+173,
+3
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+174,
+2
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+176,
+0
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+174,
+1
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+176,
+1
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+175,
+2
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+175,
+0
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+175,
+1
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+173,
+1
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+174,
+2
+],
+[
+181,
+9
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+174,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+174,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+-1
+],
+[
+174,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+-1
+],
+[
+174,
+1
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0.5
+],
+[
+174,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0.5
+],
+[
+174,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+176,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174,
+0
+],
+[
+176,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+2
+],
+[
+175.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+2
+],
+[
+175.5,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+176,
+0
+],
+[
+176,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+172,
+0
+],
+[
+174,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+172,
+0
+],
+[
+174,
+2
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+0.5
+],
+[
+175.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+174.5,
+0.5
+],
+[
+175.5,
+1.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+172,
+0
+],
+[
+174,
+0
+],
+[
+174,
+2
+],
+[
+172,
+2
+],
+[
+172,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+172,
+0
+],
+[
+174,
+0
+],
+[
+174,
+2
+],
+[
+172,
+2
+],
+[
+172,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+0
+],
+[
+175,
+0
+],
+[
+175,
+1
+],
+[
+174,
+1
+],
+[
+174,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+174,
+0
+],
+[
+175,
+0
+],
+[
+175,
+1
+],
+[
+174,
+1
+],
+[
+174,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+174,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+174,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+174,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+174,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+175,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+175,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+175,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+175,
+2
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+176,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+176,
+1
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_0_60_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+60
+],
+[
+2,
+60
+],
+[
+2,
+62
+],
+[
+0,
+62
+],
+[
+0,
+60
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+60.5
+],
+[
+2,
+60.5
+],
+[
+2,
+61.5
+],
+[
+0,
+61.5
+],
+[
+0,
+60.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+4,
+60
+],
+[
+6,
+60
+],
+[
+6,
+62
+],
+[
+4,
+62
+],
+[
+4,
+60
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+62
+],
+[
+4,
+62
+],
+[
+4,
+64
+],
+[
+2,
+64
+],
+[
+2,
+62
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+58
+],
+[
+4,
+58
+],
+[
+4,
+60
+],
+[
+2,
+60
+],
+[
+2,
+58
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+62
+],
+[
+2,
+62
+],
+[
+2,
+64
+],
+[
+0,
+64
+],
+[
+0,
+62
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+1,
+62
+],
+[
+2,
+62
+],
+[
+1.5,
+63
+],
+[
+1,
+62
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+60
+],
+[
+4,
+60
+],
+[
+4,
+62
+],
+[
+2,
+62
+],
+[
+2,
+60
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+60
+],
+[
+3,
+60
+],
+[
+3,
+61
+],
+[
+2,
+61
+],
+[
+2,
+60
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+3,
+60.5
+],
+[
+4,
+60.5
+],
+[
+4,
+61.5
+],
+[
+3,
+61.5
+],
+[
+3,
+60.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+61
+],
+[
+3.5,
+61
+],
+[
+3.5,
+62
+],
+[
+2.5,
+62
+],
+[
+2.5,
+61
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+60
+],
+[
+3.5,
+60
+],
+[
+3.5,
+61
+],
+[
+2.5,
+61
+],
+[
+2.5,
+60
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+60.5
+],
+[
+3.5,
+60.5
+],
+[
+3.5,
+61.5
+],
+[
+2.5,
+61.5
+],
+[
+2.5,
+60.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+1,
+59
+],
+[
+5,
+59
+],
+[
+5,
+63
+],
+[
+1,
+63
+],
+[
+1,
+59
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+59
+],
+[
+5,
+59
+],
+[
+5,
+63
+],
+[
+2,
+63
+],
+[
+2,
+59
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+3,
+61
+],
+[
+5,
+61
+],
+[
+5,
+63
+],
+[
+3,
+63
+],
+[
+3,
+61
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+60
+],
+[
+2,
+62
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+61
+],
+[
+2,
+61
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+61
+],
+[
+3,
+61
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+2,
+62
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60.5
+],
+[
+2,
+61.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+59
+],
+[
+2,
+61
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+59
+],
+[
+2,
+63
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+4,
+60
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+60
+],
+[
+3.5,
+60
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+60.5
+],
+[
+4,
+61.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+62
+],
+[
+3.5,
+62
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+62
+],
+[
+4,
+62
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+2,
+62
+],
+[
+4,
+62
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+60.5
+],
+[
+3.5,
+61.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+61
+],
+[
+5,
+61
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+59
+],
+[
+2,
+59.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+62
+],
+[
+1,
+63
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+2,
+62
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+4,
+60
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+2,
+61
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+4,
+61
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+62
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+60
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+61
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+1,
+61
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+2,
+62
+],
+[
+9,
+69
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+60
+],
+[
+4,
+60
+],
+[
+4,
+62
+],
+[
+2,
+62
+],
+[
+2,
+60
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+2,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+2,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+59
+],
+[
+2,
+61
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+59
+],
+[
+2,
+61
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60.5
+],
+[
+2,
+61.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60.5
+],
+[
+2,
+61.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+4,
+60
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+60
+],
+[
+4,
+60
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+62
+],
+[
+3.5,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+62
+],
+[
+3.5,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+60
+],
+[
+4,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+60
+],
+[
+4,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+60
+],
+[
+2,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+60
+],
+[
+2,
+62
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+60.5
+],
+[
+3.5,
+61.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+60.5
+],
+[
+3.5,
+61.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+60
+],
+[
+2,
+60
+],
+[
+2,
+62
+],
+[
+0,
+62
+],
+[
+0,
+60
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+60
+],
+[
+2,
+60
+],
+[
+2,
+62
+],
+[
+0,
+62
+],
+[
+0,
+60
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+60
+],
+[
+3,
+60
+],
+[
+3,
+61
+],
+[
+2,
+61
+],
+[
+2,
+60
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+60
+],
+[
+3,
+60
+],
+[
+3,
+61
+],
+[
+2,
+61
+],
+[
+2,
+60
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+59
+],
+[
+5,
+59
+],
+[
+5,
+63
+],
+[
+2,
+63
+],
+[
+2,
+59
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+62
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+62
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+61
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+61
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+60
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+60
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+62
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+62
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+4,
+61
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+4,
+61
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_0_m70_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+-70
+],
+[
+2,
+-70
+],
+[
+2,
+-68
+],
+[
+0,
+-68
+],
+[
+0,
+-70
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+-69.5
+],
+[
+2,
+-69.5
+],
+[
+2,
+-68.5
+],
+[
+0,
+-68.5
+],
+[
+0,
+-69.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+4,
+-70
+],
+[
+6,
+-70
+],
+[
+6,
+-68
+],
+[
+4,
+-68
+],
+[
+4,
+-70
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-68
+],
+[
+4,
+-68
+],
+[
+4,
+-66
+],
+[
+2,
+-66
+],
+[
+2,
+-68
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-72
+],
+[
+4,
+-72
+],
+[
+4,
+-70
+],
+[
+2,
+-70
+],
+[
+2,
+-72
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+-68
+],
+[
+2,
+-68
+],
+[
+2,
+-66
+],
+[
+0,
+-66
+],
+[
+0,
+-68
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+1,
+-68
+],
+[
+2,
+-68
+],
+[
+1.5,
+-67
+],
+[
+1,
+-68
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-70
+],
+[
+4,
+-70
+],
+[
+4,
+-68
+],
+[
+2,
+-68
+],
+[
+2,
+-70
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-70
+],
+[
+3,
+-70
+],
+[
+3,
+-69
+],
+[
+2,
+-69
+],
+[
+2,
+-70
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+3,
+-69.5
+],
+[
+4,
+-69.5
+],
+[
+4,
+-68.5
+],
+[
+3,
+-68.5
+],
+[
+3,
+-69.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+-69
+],
+[
+3.5,
+-69
+],
+[
+3.5,
+-68
+],
+[
+2.5,
+-68
+],
+[
+2.5,
+-69
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+-70
+],
+[
+3.5,
+-70
+],
+[
+3.5,
+-69
+],
+[
+2.5,
+-69
+],
+[
+2.5,
+-70
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2.5,
+-69.5
+],
+[
+3.5,
+-69.5
+],
+[
+3.5,
+-68.5
+],
+[
+2.5,
+-68.5
+],
+[
+2.5,
+-69.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+1,
+-71
+],
+[
+5,
+-71
+],
+[
+5,
+-67
+],
+[
+1,
+-67
+],
+[
+1,
+-71
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-71
+],
+[
+5,
+-71
+],
+[
+5,
+-67
+],
+[
+2,
+-67
+],
+[
+2,
+-71
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+3,
+-69
+],
+[
+5,
+-69
+],
+[
+5,
+-67
+],
+[
+3,
+-67
+],
+[
+3,
+-69
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+-70
+],
+[
+2,
+-68
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+-69
+],
+[
+2,
+-69
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+-69
+],
+[
+3,
+-69
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+2,
+-68
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-69.5
+],
+[
+2,
+-68.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-71
+],
+[
+2,
+-69
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-71
+],
+[
+2,
+-67
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+4,
+-70
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-70
+],
+[
+3.5,
+-70
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+-69.5
+],
+[
+4,
+-68.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-68
+],
+[
+3.5,
+-68
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-68
+],
+[
+4,
+-68
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+2,
+-68
+],
+[
+4,
+-68
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-69.5
+],
+[
+3.5,
+-68.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+1,
+-69
+],
+[
+5,
+-69
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-71
+],
+[
+2,
+-70.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-68
+],
+[
+1,
+-67
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+2,
+-68
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+4,
+-70
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+2,
+-69
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+4,
+-69
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+-68
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+-70
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+3,
+-69
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+1,
+-69
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+2,
+-68
+],
+[
+9,
+-61
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-70
+],
+[
+4,
+-70
+],
+[
+4,
+-68
+],
+[
+2,
+-68
+],
+[
+2,
+-70
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+2,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+2,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-71
+],
+[
+2,
+-69
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-71
+],
+[
+2,
+-69
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-69.5
+],
+[
+2,
+-68.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-69.5
+],
+[
+2,
+-68.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+4,
+-70
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2,
+-70
+],
+[
+4,
+-70
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-68
+],
+[
+3.5,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-68
+],
+[
+3.5,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+-70
+],
+[
+4,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+4,
+-70
+],
+[
+4,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+-70
+],
+[
+2,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+-70
+],
+[
+2,
+-68
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-69.5
+],
+[
+3.5,
+-68.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+2.5,
+-69.5
+],
+[
+3.5,
+-68.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+-70
+],
+[
+2,
+-70
+],
+[
+2,
+-68
+],
+[
+0,
+-68
+],
+[
+0,
+-70
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+-70
+],
+[
+2,
+-70
+],
+[
+2,
+-68
+],
+[
+0,
+-68
+],
+[
+0,
+-70
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-70
+],
+[
+3,
+-70
+],
+[
+3,
+-69
+],
+[
+2,
+-69
+],
+[
+2,
+-70
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-70
+],
+[
+3,
+-70
+],
+[
+3,
+-69
+],
+[
+2,
+-69
+],
+[
+2,
+-70
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+2,
+-71
+],
+[
+5,
+-71
+],
+[
+5,
+-67
+],
+[
+2,
+-67
+],
+[
+2,
+-71
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+-68
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+-68
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+-69
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+2,
+-69
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+-70
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+-70
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+-68
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+3,
+-68
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+4,
+-69
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+4,
+-69
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_45_45_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+45,
+45
+],
+[
+47,
+45
+],
+[
+47,
+47
+],
+[
+45,
+47
+],
+[
+45,
+45
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+45,
+45.5
+],
+[
+47,
+45.5
+],
+[
+47,
+46.5
+],
+[
+45,
+46.5
+],
+[
+45,
+45.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+49,
+45
+],
+[
+51,
+45
+],
+[
+51,
+47
+],
+[
+49,
+47
+],
+[
+49,
+45
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+47
+],
+[
+49,
+47
+],
+[
+49,
+49
+],
+[
+47,
+49
+],
+[
+47,
+47
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+43
+],
+[
+49,
+43
+],
+[
+49,
+45
+],
+[
+47,
+45
+],
+[
+47,
+43
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+45,
+47
+],
+[
+47,
+47
+],
+[
+47,
+49
+],
+[
+45,
+49
+],
+[
+45,
+47
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+46,
+47
+],
+[
+47,
+47
+],
+[
+46.5,
+48
+],
+[
+46,
+47
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+45
+],
+[
+49,
+45
+],
+[
+49,
+47
+],
+[
+47,
+47
+],
+[
+47,
+45
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+45
+],
+[
+48,
+45
+],
+[
+48,
+46
+],
+[
+47,
+46
+],
+[
+47,
+45
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+48,
+45.5
+],
+[
+49,
+45.5
+],
+[
+49,
+46.5
+],
+[
+48,
+46.5
+],
+[
+48,
+45.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47.5,
+46
+],
+[
+48.5,
+46
+],
+[
+48.5,
+47
+],
+[
+47.5,
+47
+],
+[
+47.5,
+46
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47.5,
+45
+],
+[
+48.5,
+45
+],
+[
+48.5,
+46
+],
+[
+47.5,
+46
+],
+[
+47.5,
+45
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47.5,
+45.5
+],
+[
+48.5,
+45.5
+],
+[
+48.5,
+46.5
+],
+[
+47.5,
+46.5
+],
+[
+47.5,
+45.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+46,
+44
+],
+[
+50,
+44
+],
+[
+50,
+48
+],
+[
+46,
+48
+],
+[
+46,
+44
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+44
+],
+[
+50,
+44
+],
+[
+50,
+48
+],
+[
+47,
+48
+],
+[
+47,
+44
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+48,
+46
+],
+[
+50,
+46
+],
+[
+50,
+48
+],
+[
+48,
+48
+],
+[
+48,
+46
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+45,
+45
+],
+[
+47,
+47
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+46,
+46
+],
+[
+47,
+46
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+46,
+46
+],
+[
+48,
+46
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+47,
+47
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45.5
+],
+[
+47,
+46.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+44
+],
+[
+47,
+46
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+44
+],
+[
+47,
+48
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+49,
+45
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+45
+],
+[
+48.5,
+45
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+49,
+45.5
+],
+[
+49,
+46.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+47
+],
+[
+48.5,
+47
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+47
+],
+[
+49,
+47
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+47,
+47
+],
+[
+49,
+47
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+45.5
+],
+[
+48.5,
+46.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+46,
+46
+],
+[
+50,
+46
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+44
+],
+[
+47,
+44.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+47
+],
+[
+46,
+48
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+47,
+47
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+49,
+45
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+47,
+46
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+49,
+46
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+48,
+47
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+48,
+45
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+48,
+46
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+46,
+46
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+47,
+47
+],
+[
+54,
+54
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+47,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+47,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+44
+],
+[
+47,
+46
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45.5
+],
+[
+47,
+46.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+49,
+45
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47,
+45
+],
+[
+49,
+45
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+47
+],
+[
+48.5,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+47
+],
+[
+48.5,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+49,
+45
+],
+[
+49,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+49,
+45
+],
+[
+49,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+45,
+45
+],
+[
+47,
+47
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+45.5
+],
+[
+48.5,
+46.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+47.5,
+45.5
+],
+[
+48.5,
+46.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+45
+],
+[
+48,
+45
+],
+[
+48,
+46
+],
+[
+47,
+46
+],
+[
+47,
+45
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+47,
+45
+],
+[
+48,
+45
+],
+[
+48,
+46
+],
+[
+47,
+46
+],
+[
+47,
+45
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+47,
+47
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+47,
+47
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+47,
+46
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+47,
+46
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+48,
+45
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+48,
+45
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+48,
+47
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+48,
+47
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+49,
+46
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+49,
+46
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_135_m35_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+135,
+-35
+],
+[
+137,
+-35
+],
+[
+137,
+-33
+],
+[
+135,
+-33
+],
+[
+135,
+-35
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+135,
+-34.5
+],
+[
+137,
+-34.5
+],
+[
+137,
+-33.5
+],
+[
+135,
+-33.5
+],
+[
+135,
+-34.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+139,
+-35
+],
+[
+141,
+-35
+],
+[
+141,
+-33
+],
+[
+139,
+-33
+],
+[
+139,
+-35
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-33
+],
+[
+139,
+-33
+],
+[
+139,
+-31
+],
+[
+137,
+-31
+],
+[
+137,
+-33
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-37
+],
+[
+139,
+-37
+],
+[
+139,
+-35
+],
+[
+137,
+-35
+],
+[
+137,
+-37
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+135,
+-33
+],
+[
+137,
+-33
+],
+[
+137,
+-31
+],
+[
+135,
+-31
+],
+[
+135,
+-33
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+136,
+-33
+],
+[
+137,
+-33
+],
+[
+136.5,
+-32
+],
+[
+136,
+-33
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-35
+],
+[
+139,
+-35
+],
+[
+139,
+-33
+],
+[
+137,
+-33
+],
+[
+137,
+-35
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-35
+],
+[
+138,
+-35
+],
+[
+138,
+-34
+],
+[
+137,
+-34
+],
+[
+137,
+-35
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+138,
+-34.5
+],
+[
+139,
+-34.5
+],
+[
+139,
+-33.5
+],
+[
+138,
+-33.5
+],
+[
+138,
+-34.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137.5,
+-34
+],
+[
+138.5,
+-34
+],
+[
+138.5,
+-33
+],
+[
+137.5,
+-33
+],
+[
+137.5,
+-34
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137.5,
+-35
+],
+[
+138.5,
+-35
+],
+[
+138.5,
+-34
+],
+[
+137.5,
+-34
+],
+[
+137.5,
+-35
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137.5,
+-34.5
+],
+[
+138.5,
+-34.5
+],
+[
+138.5,
+-33.5
+],
+[
+137.5,
+-33.5
+],
+[
+137.5,
+-34.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+136,
+-36
+],
+[
+140,
+-36
+],
+[
+140,
+-32
+],
+[
+136,
+-32
+],
+[
+136,
+-36
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-36
+],
+[
+140,
+-36
+],
+[
+140,
+-32
+],
+[
+137,
+-32
+],
+[
+137,
+-36
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+138,
+-34
+],
+[
+140,
+-34
+],
+[
+140,
+-32
+],
+[
+138,
+-32
+],
+[
+138,
+-34
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+135,
+-35
+],
+[
+137,
+-33
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+136,
+-34
+],
+[
+137,
+-34
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+136,
+-34
+],
+[
+138,
+-34
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-35
+],
+[
+137,
+-33
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-34.5
+],
+[
+137,
+-33.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-36
+],
+[
+137,
+-34
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-36
+],
+[
+137,
+-32
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-35
+],
+[
+139,
+-35
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-35
+],
+[
+138.5,
+-35
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+139,
+-34.5
+],
+[
+139,
+-33.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-33
+],
+[
+138.5,
+-33
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-33
+],
+[
+139,
+-33
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-35
+],
+[
+137,
+-33
+],
+[
+139,
+-33
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-34.5
+],
+[
+138.5,
+-33.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+136,
+-34
+],
+[
+140,
+-34
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-36
+],
+[
+137,
+-35.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-33
+],
+[
+136,
+-32
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+137,
+-33
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+139,
+-35
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+137,
+-34
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+139,
+-34
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+138,
+-33
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+138,
+-35
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+138,
+-34
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+136,
+-34
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+137,
+-33
+],
+[
+144,
+-26
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-35
+],
+[
+139,
+-35
+],
+[
+139,
+-33
+],
+[
+137,
+-33
+],
+[
+137,
+-35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-35
+],
+[
+139,
+-35
+],
+[
+139,
+-33
+],
+[
+137,
+-33
+],
+[
+137,
+-35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-35
+],
+[
+137,
+-33
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-36
+],
+[
+137,
+-34
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-36
+],
+[
+137,
+-34
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-34.5
+],
+[
+137,
+-33.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-34.5
+],
+[
+137,
+-33.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-35
+],
+[
+139,
+-35
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137,
+-35
+],
+[
+139,
+-35
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-33
+],
+[
+138.5,
+-33
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-33
+],
+[
+138.5,
+-33
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+139,
+-35
+],
+[
+139,
+-33
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+139,
+-35
+],
+[
+139,
+-33
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+135,
+-35
+],
+[
+137,
+-33
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-34.5
+],
+[
+138.5,
+-33.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+137.5,
+-34.5
+],
+[
+138.5,
+-33.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+135,
+-35
+],
+[
+137,
+-35
+],
+[
+137,
+-33
+],
+[
+135,
+-33
+],
+[
+135,
+-35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+135,
+-35
+],
+[
+137,
+-35
+],
+[
+137,
+-33
+],
+[
+135,
+-33
+],
+[
+135,
+-35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-35
+],
+[
+138,
+-35
+],
+[
+138,
+-34
+],
+[
+137,
+-34
+],
+[
+137,
+-35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+137,
+-35
+],
+[
+138,
+-35
+],
+[
+138,
+-34
+],
+[
+137,
+-34
+],
+[
+137,
+-35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+137,
+-33
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+137,
+-33
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+137,
+-34
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+137,
+-34
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+138,
+-35
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+138,
+-35
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+138,
+-33
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+138,
+-33
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+139,
+-34
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+139,
+-34
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_m135_35_1",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-135,
+35
+],
+[
+-133,
+35
+],
+[
+-133,
+37
+],
+[
+-135,
+37
+],
+[
+-135,
+35
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-135,
+35.5
+],
+[
+-133,
+35.5
+],
+[
+-133,
+36.5
+],
+[
+-135,
+36.5
+],
+[
+-135,
+35.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-131,
+35
+],
+[
+-129,
+35
+],
+[
+-129,
+37
+],
+[
+-131,
+37
+],
+[
+-131,
+35
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+37
+],
+[
+-131,
+37
+],
+[
+-131,
+39
+],
+[
+-133,
+39
+],
+[
+-133,
+37
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+33
+],
+[
+-131,
+33
+],
+[
+-131,
+35
+],
+[
+-133,
+35
+],
+[
+-133,
+33
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-135,
+37
+],
+[
+-133,
+37
+],
+[
+-133,
+39
+],
+[
+-135,
+39
+],
+[
+-135,
+37
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-134,
+37
+],
+[
+-133,
+37
+],
+[
+-133.5,
+38
+],
+[
+-134,
+37
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+35
+],
+[
+-131,
+35
+],
+[
+-131,
+37
+],
+[
+-133,
+37
+],
+[
+-133,
+35
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+35
+],
+[
+-132,
+35
+],
+[
+-132,
+36
+],
+[
+-133,
+36
+],
+[
+-133,
+35
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-132,
+35.5
+],
+[
+-131,
+35.5
+],
+[
+-131,
+36.5
+],
+[
+-132,
+36.5
+],
+[
+-132,
+35.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-132.5,
+36
+],
+[
+-131.5,
+36
+],
+[
+-131.5,
+37
+],
+[
+-132.5,
+37
+],
+[
+-132.5,
+36
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-132.5,
+35
+],
+[
+-131.5,
+35
+],
+[
+-131.5,
+36
+],
+[
+-132.5,
+36
+],
+[
+-132.5,
+35
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-132.5,
+35.5
+],
+[
+-131.5,
+35.5
+],
+[
+-131.5,
+36.5
+],
+[
+-132.5,
+36.5
+],
+[
+-132.5,
+35.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-134,
+34
+],
+[
+-130,
+34
+],
+[
+-130,
+38
+],
+[
+-134,
+38
+],
+[
+-134,
+34
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+34
+],
+[
+-130,
+34
+],
+[
+-130,
+38
+],
+[
+-133,
+38
+],
+[
+-133,
+34
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-132,
+36
+],
+[
+-130,
+36
+],
+[
+-130,
+38
+],
+[
+-132,
+38
+],
+[
+-132,
+36
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-135,
+35
+],
+[
+-133,
+37
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-134,
+36
+],
+[
+-133,
+36
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-134,
+36
+],
+[
+-132,
+36
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-133,
+37
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35.5
+],
+[
+-133,
+36.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+34
+],
+[
+-133,
+36
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+34
+],
+[
+-133,
+38
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-131,
+35
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+35
+],
+[
+-131.5,
+35
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-131,
+35.5
+],
+[
+-131,
+36.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+37
+],
+[
+-131.5,
+37
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+37
+],
+[
+-131,
+37
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-133,
+37
+],
+[
+-131,
+37
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+35.5
+],
+[
+-131.5,
+36.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-134,
+36
+],
+[
+-130,
+36
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+34
+],
+[
+-133,
+34.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+37
+],
+[
+-134,
+38
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+-133,
+37
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+-131,
+35
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+-133,
+36
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+-131,
+36
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+-132,
+37
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+-132,
+35
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+-132,
+36
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+-134,
+36
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+-133,
+37
+],
+[
+-126,
+44
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-133,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-133,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+34
+],
+[
+-133,
+36
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35.5
+],
+[
+-133,
+36.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-131,
+35
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-133,
+35
+],
+[
+-131,
+35
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+37
+],
+[
+-131.5,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+37
+],
+[
+-131.5,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-131,
+35
+],
+[
+-131,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-131,
+35
+],
+[
+-131,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-135,
+35
+],
+[
+-133,
+37
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+35.5
+],
+[
+-131.5,
+36.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+-132.5,
+35.5
+],
+[
+-131.5,
+36.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+35
+],
+[
+-132,
+35
+],
+[
+-132,
+36
+],
+[
+-133,
+36
+],
+[
+-133,
+35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+-133,
+35
+],
+[
+-132,
+35
+],
+[
+-132,
+36
+],
+[
+-133,
+36
+],
+[
+-133,
+35
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-133,
+37
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-133,
+37
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-133,
+36
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-133,
+36
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-132,
+35
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-132,
+35
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-132,
+37
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-132,
+37
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-131,
+36
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-131,
+36
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_10_80_0.5",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "10.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.75
+],
+[
+{
+"$numberDouble": "10.0"
+},
+80.75
+],
+[
+{
+"$numberDouble": "10.0"
+},
+80.25
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "13.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "13.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "82.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "82.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "79.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "79.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "79.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "82.0"
+}
+],
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "82.0"
+}
+],
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+10.5,
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+10.75,
+81.5
+],
+[
+10.5,
+{
+"$numberDouble": "81.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.5,
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.5,
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+11.5,
+80.25
+],
+[
+{
+"$numberDouble": "12.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "12.0"
+},
+80.75
+],
+[
+11.5,
+80.75
+],
+[
+11.5,
+80.25
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+11.25,
+80.5
+],
+[
+11.75,
+80.5
+],
+[
+11.75,
+{
+"$numberDouble": "81.0"
+}
+],
+[
+11.25,
+{
+"$numberDouble": "81.0"
+}
+],
+[
+11.25,
+80.5
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+11.25,
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.75,
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.75,
+80.5
+],
+[
+11.25,
+80.5
+],
+[
+11.25,
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+11.25,
+80.25
+],
+[
+11.75,
+80.25
+],
+[
+11.75,
+80.75
+],
+[
+11.25,
+80.75
+],
+[
+11.25,
+80.25
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+10.5,
+79.5
+],
+[
+12.5,
+79.5
+],
+[
+12.5,
+81.5
+],
+[
+10.5,
+81.5
+],
+[
+10.5,
+79.5
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+],
+[
+12.5,
+79.5
+],
+[
+12.5,
+81.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+81.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+11.5,
+80.5
+],
+[
+12.5,
+80.5
+],
+[
+12.5,
+81.5
+],
+[
+11.5,
+81.5
+],
+[
+11.5,
+80.5
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+10.5,
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.5
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+10.5,
+80.5
+],
+[
+11.5,
+80.5
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.75
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.5
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+81.5
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.75,
+{
+"$numberDouble": "80.0"
+}
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "12.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "12.0"
+},
+80.75
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+{
+"$numberDouble": "81.0"
+}
+],
+[
+11.75,
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+80.25
+],
+[
+11.75,
+80.75
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+10.5,
+80.5
+],
+[
+12.5,
+80.5
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+79.75
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+10.5,
+81.5
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "11.0"
+},
+80.5
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "12.0"
+},
+80.5
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+11.5,
+{
+"$numberDouble": "81.0"
+}
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+11.5,
+{
+"$numberDouble": "80.0"
+}
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+11.5,
+80.5
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+10.5,
+80.5
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+14.5,
+84.5
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.75
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+80.25
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.75
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+{
+"$numberDouble": "81.0"
+}
+],
+[
+11.75,
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+{
+"$numberDouble": "81.0"
+}
+],
+[
+11.75,
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "12.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+80.25
+],
+[
+11.75,
+80.75
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+11.25,
+80.25
+],
+[
+11.75,
+80.75
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "81.0"
+}
+],
+[
+{
+"$numberDouble": "10.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.5,
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.5,
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.5,
+{
+"$numberDouble": "80.0"
+}
+],
+[
+11.5,
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+80.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "80.0"
+}
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+],
+[
+12.5,
+79.5
+],
+[
+12.5,
+81.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+81.5
+],
+[
+{
+"$numberDouble": "11.0"
+},
+79.5
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "11.0"
+},
+{
+"$numberDouble": "81.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "11.0"
+},
+80.5
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "11.0"
+},
+80.5
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+11.5,
+{
+"$numberDouble": "80.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+11.5,
+{
+"$numberDouble": "80.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+11.5,
+{
+"$numberDouble": "81.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+11.5,
+{
+"$numberDouble": "81.0"
+}
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "12.0"
+},
+80.5
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+{
+"$numberDouble": "12.0"
+},
+80.5
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_0_0_10",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+0
+],
+[
+20,
+0
+],
+[
+20,
+20
+],
+[
+0,
+20
+],
+[
+0,
+0
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+20,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+20,
+{
+"$numberDouble": "15.0"
+}
+],
+[
+0,
+{
+"$numberDouble": "15.0"
+}
+],
+[
+0,
+{
+"$numberDouble": "5.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+40,
+0
+],
+[
+60,
+0
+],
+[
+60,
+20
+],
+[
+40,
+20
+],
+[
+40,
+0
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+20
+],
+[
+40,
+20
+],
+[
+40,
+40
+],
+[
+20,
+40
+],
+[
+20,
+20
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+-20
+],
+[
+40,
+-20
+],
+[
+40,
+0
+],
+[
+20,
+0
+],
+[
+20,
+-20
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+20
+],
+[
+20,
+20
+],
+[
+20,
+40
+],
+[
+0,
+40
+],
+[
+0,
+20
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+10,
+20
+],
+[
+20,
+20
+],
+[
+{
+"$numberDouble": "15.0"
+},
+30
+],
+[
+10,
+20
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+0
+],
+[
+40,
+0
+],
+[
+40,
+20
+],
+[
+20,
+20
+],
+[
+20,
+0
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+0
+],
+[
+30,
+0
+],
+[
+30,
+10
+],
+[
+20,
+10
+],
+[
+20,
+0
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+40,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+40,
+{
+"$numberDouble": "15.0"
+}
+],
+[
+30,
+{
+"$numberDouble": "15.0"
+}
+],
+[
+30,
+{
+"$numberDouble": "5.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "25.0"
+},
+10
+],
+[
+{
+"$numberDouble": "35.0"
+},
+10
+],
+[
+{
+"$numberDouble": "35.0"
+},
+20
+],
+[
+{
+"$numberDouble": "25.0"
+},
+20
+],
+[
+{
+"$numberDouble": "25.0"
+},
+10
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "25.0"
+},
+0
+],
+[
+{
+"$numberDouble": "35.0"
+},
+0
+],
+[
+{
+"$numberDouble": "35.0"
+},
+10
+],
+[
+{
+"$numberDouble": "25.0"
+},
+10
+],
+[
+{
+"$numberDouble": "25.0"
+},
+0
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+{
+"$numberDouble": "25.0"
+},
+{
+"$numberDouble": "5.0"
+}
+],
+[
+{
+"$numberDouble": "35.0"
+},
+{
+"$numberDouble": "5.0"
+}
+],
+[
+{
+"$numberDouble": "35.0"
+},
+{
+"$numberDouble": "15.0"
+}
+],
+[
+{
+"$numberDouble": "25.0"
+},
+{
+"$numberDouble": "15.0"
+}
+],
+[
+{
+"$numberDouble": "25.0"
+},
+{
+"$numberDouble": "5.0"
+}
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+10,
+-10
+],
+[
+50,
+-10
+],
+[
+50,
+30
+],
+[
+10,
+30
+],
+[
+10,
+-10
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+-10
+],
+[
+50,
+-10
+],
+[
+50,
+30
+],
+[
+20,
+30
+],
+[
+20,
+-10
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+10
+],
+[
+50,
+10
+],
+[
+50,
+30
+],
+[
+30,
+30
+],
+[
+30,
+10
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+0
+],
+[
+20,
+20
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+10,
+10
+],
+[
+20,
+10
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+10,
+10
+],
+[
+30,
+10
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+0
+],
+[
+20,
+20
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+20,
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+-10
+],
+[
+20,
+10
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+-10
+],
+[
+20,
+30
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+0
+],
+[
+40,
+0
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+0
+],
+[
+{
+"$numberDouble": "35.0"
+},
+0
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+40,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+40,
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+20
+],
+[
+{
+"$numberDouble": "35.0"
+},
+20
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+20
+],
+[
+40,
+20
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+0
+],
+[
+20,
+20
+],
+[
+40,
+20
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+{
+"$numberDouble": "5.0"
+}
+],
+[
+{
+"$numberDouble": "35.0"
+},
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+10,
+10
+],
+[
+50,
+10
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+-10
+],
+[
+20,
+{
+"$numberDouble": "-5.0"
+}
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+20
+],
+[
+10,
+30
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+20,
+20
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+40,
+0
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+20,
+10
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+40,
+10
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+30,
+20
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+30,
+0
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+30,
+10
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+10,
+10
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+20,
+20
+],
+[
+90,
+90
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+0
+],
+[
+40,
+0
+],
+[
+40,
+20
+],
+[
+20,
+20
+],
+[
+20,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+0
+],
+[
+20,
+20
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+-10
+],
+[
+20,
+10
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+20,
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+{
+"$numberDouble": "5.0"
+}
+],
+[
+20,
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+0
+],
+[
+40,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+20,
+0
+],
+[
+40,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+20
+],
+[
+{
+"$numberDouble": "35.0"
+},
+20
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+20
+],
+[
+{
+"$numberDouble": "35.0"
+},
+20
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+40,
+0
+],
+[
+40,
+20
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+0
+],
+[
+20,
+20
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+{
+"$numberDouble": "5.0"
+}
+],
+[
+{
+"$numberDouble": "35.0"
+},
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+{
+"$numberDouble": "25.0"
+},
+{
+"$numberDouble": "5.0"
+}
+],
+[
+{
+"$numberDouble": "35.0"
+},
+{
+"$numberDouble": "15.0"
+}
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+0,
+0
+],
+[
+20,
+0
+],
+[
+20,
+20
+],
+[
+0,
+20
+],
+[
+0,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20,
+0
+],
+[
+30,
+0
+],
+[
+30,
+10
+],
+[
+20,
+10
+],
+[
+20,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+20,
+20
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+20,
+20
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+20,
+10
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+20,
+10
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+30,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+30,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+30,
+20
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+30,
+20
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+40,
+10
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+40,
+10
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_edge_30_0_3",
+"group": "geo: knife-edge shared boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"name": "poly_shared_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+0
+],
+[
+36,
+0
+],
+[
+36,
+6
+],
+[
+30,
+6
+],
+[
+30,
+0
+]
+]
+]
+}
+},
+{
+"_id": 2,
+"name": "poly_shared_partial_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+1.5
+],
+[
+36,
+1.5
+],
+[
+36,
+4.5
+],
+[
+30,
+4.5
+],
+[
+30,
+1.5
+]
+]
+]
+}
+},
+{
+"_id": 3,
+"name": "poly_shared_edge_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+42,
+0
+],
+[
+48,
+0
+],
+[
+48,
+6
+],
+[
+42,
+6
+],
+[
+42,
+0
+]
+]
+]
+}
+},
+{
+"_id": 4,
+"name": "poly_shared_edge_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+6
+],
+[
+42,
+6
+],
+[
+42,
+12
+],
+[
+36,
+12
+],
+[
+36,
+6
+]
+]
+]
+}
+},
+{
+"_id": 5,
+"name": "poly_shared_edge_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+-6
+],
+[
+42,
+-6
+],
+[
+42,
+0
+],
+[
+36,
+0
+],
+[
+36,
+-6
+]
+]
+]
+}
+},
+{
+"_id": 6,
+"name": "poly_vertex_touch",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+6
+],
+[
+36,
+6
+],
+[
+36,
+12
+],
+[
+30,
+12
+],
+[
+30,
+6
+]
+]
+]
+}
+},
+{
+"_id": 7,
+"name": "poly_corner_only",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+33,
+6
+],
+[
+36,
+6
+],
+[
+34.5,
+9
+],
+[
+33,
+6
+]
+]
+]
+}
+},
+{
+"_id": 8,
+"name": "poly_identical",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+0
+],
+[
+42,
+0
+],
+[
+42,
+6
+],
+[
+36,
+6
+],
+[
+36,
+0
+]
+]
+]
+}
+},
+{
+"_id": 9,
+"name": "poly_inside_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+0
+],
+[
+39,
+0
+],
+[
+39,
+3
+],
+[
+36,
+3
+],
+[
+36,
+0
+]
+]
+]
+}
+},
+{
+"_id": 10,
+"name": "poly_inside_sharing_east",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+39,
+1.5
+],
+[
+42,
+1.5
+],
+[
+42,
+4.5
+],
+[
+39,
+4.5
+],
+[
+39,
+1.5
+]
+]
+]
+}
+},
+{
+"_id": 11,
+"name": "poly_inside_sharing_north",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+37.5,
+3
+],
+[
+40.5,
+3
+],
+[
+40.5,
+6
+],
+[
+37.5,
+6
+],
+[
+37.5,
+3
+]
+]
+]
+}
+},
+{
+"_id": 12,
+"name": "poly_inside_sharing_south",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+37.5,
+0
+],
+[
+40.5,
+0
+],
+[
+40.5,
+3
+],
+[
+37.5,
+3
+],
+[
+37.5,
+0
+]
+]
+]
+}
+},
+{
+"_id": 13,
+"name": "poly_inside",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+37.5,
+1.5
+],
+[
+40.5,
+1.5
+],
+[
+40.5,
+4.5
+],
+[
+37.5,
+4.5
+],
+[
+37.5,
+1.5
+]
+]
+]
+}
+},
+{
+"_id": 14,
+"name": "poly_contains_q",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+33,
+-3
+],
+[
+45,
+-3
+],
+[
+45,
+9
+],
+[
+33,
+9
+],
+[
+33,
+-3
+]
+]
+]
+}
+},
+{
+"_id": 15,
+"name": "poly_contains_sharing_edge",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+-3
+],
+[
+45,
+-3
+],
+[
+45,
+9
+],
+[
+36,
+9
+],
+[
+36,
+-3
+]
+]
+]
+}
+},
+{
+"_id": 16,
+"name": "poly_overlap",
+"g": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+39,
+3
+],
+[
+45,
+3
+],
+[
+45,
+9
+],
+[
+39,
+9
+],
+[
+39,
+3
+]
+]
+]
+}
+},
+{
+"_id": 17,
+"name": "line_touch_vertex_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+30,
+0
+],
+[
+36,
+6
+]
+]
+}
+},
+{
+"_id": 18,
+"name": "line_touch_edge_from_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+33,
+3
+],
+[
+36,
+3
+]
+]
+}
+},
+{
+"_id": 19,
+"name": "line_ends_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+33,
+3
+],
+[
+39,
+3
+]
+]
+}
+},
+{
+"_id": 20,
+"name": "line_along_west_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+36,
+6
+]
+]
+}
+},
+{
+"_id": 21,
+"name": "line_along_west_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+1.5
+],
+[
+36,
+4.5
+]
+]
+}
+},
+{
+"_id": 22,
+"name": "line_along_west_extends",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+-3
+],
+[
+36,
+3
+]
+]
+}
+},
+{
+"_id": 23,
+"name": "line_along_west_extends_both",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+-3
+],
+[
+36,
+9
+]
+]
+}
+},
+{
+"_id": 24,
+"name": "line_along_south_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+42,
+0
+]
+]
+}
+},
+{
+"_id": 25,
+"name": "line_along_south_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+0
+],
+[
+40.5,
+0
+]
+]
+}
+},
+{
+"_id": 26,
+"name": "line_along_east_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+42,
+1.5
+],
+[
+42,
+4.5
+]
+]
+}
+},
+{
+"_id": 27,
+"name": "line_along_north_partial",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+6
+],
+[
+40.5,
+6
+]
+]
+}
+},
+{
+"_id": 28,
+"name": "line_along_north_full",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+6
+],
+[
+42,
+6
+]
+]
+}
+},
+{
+"_id": 29,
+"name": "line_two_edges",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+36,
+6
+],
+[
+42,
+6
+]
+]
+}
+},
+{
+"_id": 30,
+"name": "line_inside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+1.5
+],
+[
+40.5,
+4.5
+]
+]
+}
+},
+{
+"_id": 31,
+"name": "line_crossing",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+33,
+3
+],
+[
+45,
+3
+]
+]
+}
+},
+{
+"_id": 32,
+"name": "line_collinear_outside",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+-3
+],
+[
+36,
+-1.5
+]
+]
+}
+},
+{
+"_id": 33,
+"name": "line_touch_vertex_inside_out",
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+6
+],
+[
+33,
+9
+]
+]
+}
+},
+{
+"_id": 34,
+"name": "point_vertex",
+"g": {
+"type": "Point",
+"coordinates": [
+36,
+6
+]
+}
+},
+{
+"_id": 35,
+"name": "point_vertex2",
+"g": {
+"type": "Point",
+"coordinates": [
+42,
+0
+]
+}
+},
+{
+"_id": 36,
+"name": "point_edge_w",
+"g": {
+"type": "Point",
+"coordinates": [
+36,
+3
+]
+}
+},
+{
+"_id": 37,
+"name": "point_edge_e",
+"g": {
+"type": "Point",
+"coordinates": [
+42,
+3
+]
+}
+},
+{
+"_id": 38,
+"name": "point_edge_n",
+"g": {
+"type": "Point",
+"coordinates": [
+39,
+6
+]
+}
+},
+{
+"_id": 39,
+"name": "point_edge_s",
+"g": {
+"type": "Point",
+"coordinates": [
+39,
+0
+]
+}
+},
+{
+"_id": 40,
+"name": "point_inside",
+"g": {
+"type": "Point",
+"coordinates": [
+39,
+3
+]
+}
+},
+{
+"_id": 41,
+"name": "point_outside",
+"g": {
+"type": "Point",
+"coordinates": [
+33,
+3
+]
+}
+},
+{
+"_id": 42,
+"name": "multipoint_vertex",
+"g": {
+"type": "MultiPoint",
+"coordinates": [
+[
+36,
+6
+],
+[
+57,
+27
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+0
+],
+[
+42,
+0
+],
+[
+42,
+6
+],
+[
+36,
+6
+],
+[
+36,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+36,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+36,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+-3
+],
+[
+36,
+3
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+-3
+],
+[
+36,
+3
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+1.5
+],
+[
+36,
+4.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+42,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+36,
+0
+],
+[
+42,
+0
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+6
+],
+[
+40.5,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+6
+],
+[
+40.5,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+42,
+0
+],
+[
+42,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+42,
+0
+],
+[
+42,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+30,
+0
+],
+[
+36,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+30,
+0
+],
+[
+36,
+6
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+1.5
+],
+[
+40.5,
+4.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "LineString",
+"coordinates": [
+[
+37.5,
+1.5
+],
+[
+40.5,
+4.5
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+0
+],
+[
+36,
+0
+],
+[
+36,
+6
+],
+[
+30,
+6
+],
+[
+30,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+30,
+0
+],
+[
+36,
+0
+],
+[
+36,
+6
+],
+[
+30,
+6
+],
+[
+30,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+0
+],
+[
+39,
+0
+],
+[
+39,
+3
+],
+[
+36,
+3
+],
+[
+36,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+0
+],
+[
+39,
+0
+],
+[
+39,
+3
+],
+[
+36,
+3
+],
+[
+36,
+0
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+36,
+-3
+],
+[
+45,
+-3
+],
+[
+45,
+9
+],
+[
+36,
+9
+],
+[
+36,
+-3
+]
+]
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+36,
+6
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+36,
+6
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+36,
+3
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+36,
+3
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+39,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+39,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+39,
+6
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+39,
+6
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+42,
+3
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoWithin": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+42,
+3
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"name": 1
+}
+}
+]
+},
+{
+"name": "geo.knife_point_on_stored_line",
+"group": "geo: points on stored lines on S2 face boundaries",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+170,
+0
+],
+[
+-170,
+0
+]
+]
+}
+},
+{
+"_id": 2,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+170,
+10
+],
+[
+-170,
+10
+]
+]
+}
+},
+{
+"_id": 3,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+80,
+0
+],
+[
+100,
+0
+]
+]
+}
+},
+{
+"_id": 4,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+70
+],
+[
+0,
+90
+]
+]
+}
+},
+{
+"_id": 5,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+-100,
+0
+],
+[
+-80,
+0
+]
+]
+}
+},
+{
+"_id": 6,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+0,
+-10
+],
+[
+0,
+10
+]
+]
+}
+},
+{
+"_id": 7,
+"g": {
+"type": "LineString",
+"coordinates": [
+[
+40,
+40
+],
+[
+50,
+50
+]
+]
+}
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+180,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+175,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-175,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-90,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0,
+5
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0,
+-5
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0,
+75
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+0,
+80
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+45,
+45
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+45,
+45.0001
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+175,
+10
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+180,
+10
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+170,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+-170,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+100,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+80,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+85,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"g": {
+"$geoIntersects": {
+"$geometry": {
+"type": "Point",
+"coordinates": [
+90,
+0
+]
+}
+}
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
 "name": "js.globals_00",
 "group": "server-side JavaScript",
 "category": "core",
