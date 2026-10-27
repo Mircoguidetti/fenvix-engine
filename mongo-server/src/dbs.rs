@@ -44,6 +44,11 @@ tokio::task_local! {
     pub static PENDING: std::cell::RefCell<Vec<Commit>>;
 }
 
+/// Reads (find, count, distinct, aggregate) see only durable data: a write that is staged and waiting for its group
+/// flush is invisible to them until its flush is done. Commands that write still see their own staged data, which
+/// they need to decide (duplicate keys, unique indexes). False (`--durable-reads false`) lets reads see staged data.
+pub static DURABLE_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
 pub fn set_wake_limit(n: usize) {
     let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });
 }
@@ -533,13 +538,15 @@ impl ReadView {
 
     pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
-        let r = g.tenant.as_ref().unwrap().scan_prefix(prefix).await?;
+        let t = g.tenant.as_ref().unwrap();
+        let r = if DURABLE_READS.load(Relaxed) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
         self.done(r)
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
-        let r = g.tenant.as_ref().unwrap().get(key).await?;
+        let t = g.tenant.as_ref().unwrap();
+        let r = if DURABLE_READS.load(Relaxed) { t.get_durable(key).await? } else { t.get(key).await? };
         self.done(r)
     }
 

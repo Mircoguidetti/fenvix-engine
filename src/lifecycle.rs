@@ -346,6 +346,18 @@ impl Tenant {
         })
     }
 
+    /// Like [`Tenant::get`], but a writer only returns data that is already in a durable WAL object or SST, not
+    /// writes that are staged and waiting for their flush (a reader's data is always durable).
+    pub async fn get_durable<K: AsRef<[u8]> + Send>(&self, key: K) -> Result<Option<Bytes>> {
+        Ok(match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {
+            Mode::Reader(r) => r.get(key).await?,
+            Mode::Writer(db) => {
+                let opts = slatedb::config::ReadOptions { durability_filter: slatedb::config::DurabilityLevel::Remote, ..Default::default() };
+                db.get_with_options(key, &opts).await?
+            }
+        })
+    }
+
     /// Close the reader and open a writer. The marker is deleted concurrently with the
     /// writer open and always before the first `put` is accepted, so a crash at any
     /// point after a write was acknowledged leaves the marker missing.
@@ -393,6 +405,15 @@ impl Tenant {
 
     /// All key/value pairs whose key starts with `prefix`, in key order.
     pub async fn scan_prefix(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        self.scan_prefix_at(prefix, false).await
+    }
+
+    /// Like [`Tenant::scan_prefix`], but a writer only returns durable data (see [`Tenant::get_durable`]).
+    pub async fn scan_prefix_durable(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        self.scan_prefix_at(prefix, true).await
+    }
+
+    async fn scan_prefix_at(&self, prefix: &[u8], durable: bool) -> Result<Vec<(Bytes, Bytes)>> {
         // slatedb's scan defaults fetch one 4 KiB block per request, one at a time, and do not cache
         // the blocks: a 1 MB scan costs ~250 sequential GETs every time. Read ahead in large
         // requests, fetch in parallel, and keep the blocks.
@@ -400,6 +421,7 @@ impl Tenant {
             read_ahead_bytes: 4 << 20,
             max_fetch_tasks: 4,
             cache_blocks: true,
+            durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
             ..Default::default()
         };
         let mut it = match self.mode.as_ref().ok_or_else(|| anyhow!("closed"))? {

@@ -1,0 +1,59 @@
+{
+ "flags": "--group-commit-window-ms 10",
+ "trials": [
+  {
+   "acked": 2904,
+   "seen_before_ack": 563,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4014,
+   "seen_before_ack": 759,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 2919,
+   "seen_before_ack": 597,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4364,
+   "seen_before_ack": 901,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4340,
+   "seen_before_ack": 861,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 3840,
+   "seen_before_ack": 737,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 3205,
+   "seen_before_ack": 593,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4654,
+   "seen_before_ack": 906,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  }
+ ],
+ "total": {
+  "acked": 30240,
+  "seen_before_ack": 5917,
+  "lost_acked": 0,
+  "seen_before_ack_but_lost": 0
+ }
+}

@@ -1,0 +1,59 @@
+{
+ "flags": "",
+ "trials": [
+  {
+   "acked": 4313,
+   "seen_before_ack": 943,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 5017,
+   "seen_before_ack": 1162,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4038,
+   "seen_before_ack": 901,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 5001,
+   "seen_before_ack": 1115,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 5594,
+   "seen_before_ack": 1262,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4824,
+   "seen_before_ack": 1100,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 5044,
+   "seen_before_ack": 1079,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4123,
+   "seen_before_ack": 920,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  }
+ ],
+ "total": {
+  "acked": 37954,
+  "seen_before_ack": 8482,
+  "lost_acked": 0,
+  "seen_before_ack_but_lost": 0
+ }
+}
