@@ -75,10 +75,13 @@ def main():
     p2.terminate()
     try: p2.wait(60)
     except Exception: p2.kill()
-    res = {"label": label, "minutes": minutes, "connections": conns, "extra_args": extra, "writes": r["ops"], "ops_per_sec": r["ops_per_sec"], "errors": r["errors"],
+    shutil_rm = os.environ.get("KEEP_DATA") is None
+    res = {"p50_ms": r["p50_ms"], "p99_ms": r["p99_ms"], "label": label, "minutes": minutes, "connections": conns, "extra_args": extra, "writes": r["ops"], "ops_per_sec": r["ops_per_sec"], "errors": r["errors"],
            "wal_samples": samples, "wal_max": max(n for _, n in samples), "wal_at_kill": wal_at_kill, "compacted_ssts_at_kill": comp,
            "restart_to_ping_s": round(t_up, 2), "recovery_s": round(t_read, 2), "docs_after": n_docs, "doc0_ok": bool(d)}
     json.dump(res, open(os.path.join(RES, f"{tag}.json"), "w"), indent=1)
+    if shutil_rm:  # keep the disk free: the objects of a 10-minute run without cleanup take GBs (not part of the timing)
+        subprocess.run(["rm", "-rf", f"{DATA}/{name}"])
     print({k: v for k, v in res.items() if k != "wal_samples"}, flush=True)
 
 

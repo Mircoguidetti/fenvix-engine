@@ -650,7 +650,7 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, mi
 /// Delete the WAL objects of an open writer that its latest manifest no longer needs (everything before
 /// `replay_after_wal_id`, which advances each time the writer flushes its memtable to an L0 SST). Only the WAL
 /// directory is touched: the writer is live, so manifests, SSTs and compactions are left alone.
-pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
+async fn gc_tenant_wal_slatedb(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
     let opts = GarbageCollectorOptions {
@@ -670,6 +670,106 @@ pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display
         MAINT.gc_gets.fetch_add(snap.get + snap.get_range + snap.head, Relaxed);
     }
     Ok(GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() })
+}
+
+/// How the WAL-only pass of an open writer works (`--wal-gc-mode`): 0 slatedb's own pass (lists the whole `wal/`
+/// directory every time and sends one DELETE per object), 1 the same listing without deleting (profiling only),
+/// 2 incremental with one DELETE request per object, 3 incremental with bulk deletes (default).
+pub static WAL_GC_MODE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(3);
+/// Passes made, objects deleted and microseconds spent (listing, deleting, whole pass), for `tenantStats`.
+pub static WAL_GC_PASSES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static WAL_GC_DELETED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static WAL_GC_LIST_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static WAL_GC_DELETE_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static WAL_GC_TOTAL_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Per tenant: the first WAL id that may still exist (everything below was deleted by an earlier pass).
+static WAL_FLOOR: std::sync::LazyLock<Mutex<HashMap<String, u64>>> = std::sync::LazyLock::new(Default::default);
+
+fn wal_object_path(id: &str, n: u64) -> Path {
+    Path::from(format!("{}/wal/{:020}.sst", tenant_path(id), n))
+}
+
+/// Delete the WAL objects of an open writer that its latest manifest no longer needs (every id below
+/// `replay_after_wal_id`, which advances each time the writer flushes its memtable to an L0 SST). Only the WAL
+/// directory is touched: the writer is live, so manifests, SSTs and compactions are left alone. The default pass
+/// remembers where the last one stopped, so it neither lists the directory nor deletes object by object.
+pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let t0 = Instant::now();
+    let mode = WAL_GC_MODE.load(Relaxed);
+    let rec = if mode == 0 {
+        gc_tenant_wal_slatedb(s3, &id, min_age).await?
+    } else {
+        let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
+        let store: Arc<dyn ObjectStore> = counting.clone();
+        gc_wal_incremental(&store, &id.to_string(), mode).await?;
+        GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() }
+    };
+    WAL_GC_PASSES.fetch_add(1, Relaxed);
+    WAL_GC_TOTAL_US.fetch_add(t0.elapsed().as_micros() as u64, Relaxed);
+    Ok(rec)
+}
+
+async fn gc_wal_incremental(store: &Arc<dyn ObjectStore>, id: &str, mode: u8) -> Result<()> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(()) };
+    // A checkpoint pins the WAL objects its manifest needs; this process takes none (the standalone compactor's are
+    // gone when its pass ends, and passes are serialized by the tenant's maintenance lock), so skip if one exists.
+    if !admin.list_checkpoints(None).await?.is_empty() {
+        return Ok(());
+    }
+    // slatedb keeps the boundary id itself; everything below it is covered by L0 SSTs.
+    let boundary = m.replay_after_wal_id();
+    let wal_dir = Path::from(format!("{}/wal", tenant_path(id)));
+    let list_min = || async {
+        let t = Instant::now();
+        let mut min = u64::MAX;
+        let mut it = store.list(Some(&wal_dir));
+        while let Some(meta) = it.next().await {
+            let meta = meta?;
+            if let Some(n) = meta.location.filename().and_then(|f| f.strip_suffix(".sst")).and_then(|f| f.parse::<u64>().ok()) {
+                min = min.min(n);
+            }
+        }
+        WAL_GC_LIST_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
+        Ok::<u64, anyhow::Error>(min)
+    };
+    if mode == 1 {
+        list_min().await?;
+        return Ok(());
+    }
+    let known = WAL_FLOOR.lock().unwrap().get(id).copied();
+    let floor = match known {
+        Some(f) => f,
+        // First pass for this tenant in this process: one listing to find the oldest object that still exists.
+        None => list_min().await?.min(boundary),
+    };
+    if floor < boundary {
+        let paths: Vec<Path> = (floor..boundary).map(|n| wal_object_path(id, n)).collect();
+        let t = Instant::now();
+        let n = paths.len() as u64;
+        if mode == 2 {
+            futures::stream::iter(paths)
+                .for_each_concurrent(8, |p| async move {
+                    let _ = store.delete(&p).await;
+                })
+                .await;
+        } else {
+            let mut del = store.delete_stream(futures::stream::iter(paths.into_iter().map(Ok)).boxed());
+            while let Some(r) = del.next().await {
+                match r {
+                    Ok(_) | Err(object_store::Error::NotFound { .. }) => {}
+                    Err(e) => return Err(e.into()),
+                }
+            }
+        }
+        WAL_GC_DELETED.fetch_add(n, Relaxed);
+        WAL_GC_DELETE_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
+    }
+    WAL_FLOOR.lock().unwrap().insert(id.to_string(), boundary.max(floor));
+    Ok(())
 }
 
 #[derive(Default)]
