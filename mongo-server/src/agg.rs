@@ -37,8 +37,8 @@ fn eval(expr: &Bson, doc: &Document) -> R<Option<Bson>> {
 }
 
 enum Acc {
-    Sum(Bson),
-    Avg(f64, i64),
+    Sum(crate::dsum::DSum),
+    Avg(crate::dsum::DSum, i64),
     Min(Option<Bson>),
     Max(Option<Bson>),
     Count(i64),
@@ -137,8 +137,8 @@ fn validate_js_accumulator(expr: &Bson) -> R<()> {
 
 fn init(op: &str) -> Acc {
     match op {
-        "$sum" => Acc::Sum(Bson::Int32(0)),
-        "$avg" => Acc::Avg(0.0, 0),
+        "$sum" => Acc::Sum(crate::dsum::DSum::new()),
+        "$avg" => Acc::Avg(crate::dsum::DSum::new(), 0),
         "$min" => Acc::Min(None),
         "$max" => Acc::Max(None),
         "$count" => Acc::Count(0),
@@ -243,12 +243,12 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
         Acc::NList(_) | Acc::Top(_) | Acc::Js(_) => {}
         Acc::Sum(s) => {
             if let Some(v) = val.filter(is_number) {
-                *s = add_numbers(s, &v);
+                s.add(&v);
             }
         }
         Acc::Avg(sum, n) => {
             if let Some(v) = val.filter(is_number) {
-                *sum += query::as_f64(&v);
+                sum.add(&v);
                 *n += 1;
             }
         }
@@ -366,9 +366,9 @@ fn finish(acc: Acc) -> Bson {
         Acc::Merge(m) => Bson::Document(m),
         Acc::Std { .. } | Acc::NList(_) | Acc::Top(_) => Bson::Null,
         Acc::Js(s) => s.unwrap_or(Bson::Null),
-        Acc::Sum(s) => s,
+        Acc::Sum(s) => s.value(),
         Acc::Avg(sum, n) => {
-            if n == 0 { Bson::Null } else { Bson::Double(sum / n as f64) }
+            if n == 0 { Bson::Null } else { Bson::Double(sum.total() / n as f64) }
         }
         Acc::Min(v) | Acc::Max(v) => v.unwrap_or(Bson::Null),
         Acc::Count(n) => Bson::Int32(n as i32),
@@ -876,6 +876,20 @@ fn foreign_values(doc: &Document, path: &str) -> Vec<Bson> {
     }
 }
 
+/// Names of user variables (`$let`, `$lookup` `let`): a lowercase ASCII letter or a non-ASCII character first, then letters, digits, `_`.
+pub(crate) fn check_variable_name(name: &str) -> R<()> {
+    let mut chars = name.chars();
+    match chars.next() {
+        None => return Err(MongoError::failed_to_parse("empty variable names are not allowed".into())),
+        Some(c) if c.is_ascii_lowercase() || !c.is_ascii() => {}
+        Some(_) => return Err(MongoError::failed_to_parse(format!("'{name}' starts with an invalid character for a user variable name"))),
+    }
+    if let Some(c) = name.chars().find(|c| !(c.is_ascii_alphanumeric() || *c == '_' || !c.is_ascii())) {
+        return Err(MongoError::failed_to_parse(format!("'{name}' contains an invalid character for a variable name: '{c}'")));
+    }
+    Ok(())
+}
+
 fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>> {
     let spec = arg.as_document().ok_or_else(|| MongoError::failed_to_parse("the $lookup specification must be a non-empty object".into()))?;
     let mut from = None;
@@ -892,12 +906,16 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
             "foreignField" => ff = Some(s(v)?),
             "as" => as_ = Some(s(v)?),
             "let" => {
-                let_spec = Some(v.as_document().cloned().ok_or_else(|| MongoError::failed_to_parse("$lookup: 'let' must be an object".into()))?);
+                let ls = v.as_document().cloned().ok_or_else(|| MongoError::failed_to_parse("$lookup: 'let' must be an object".into()))?;
+                for name in ls.keys() {
+                    check_variable_name(name)?;
+                }
+                let_spec = Some(ls);
             }
             "pipeline" => {
                 pipeline = Some(match v {
                     Bson::Array(p) => p.clone(),
-                    _ => return Err(MongoError::failed_to_parse("$lookup: 'pipeline' must be an array".into())),
+                    _ => return Err(MongoError::type_mismatch("BSON field '$lookup.pipeline' is the wrong type, expected array".into())),
                 });
             }
             other => return Err(MongoError::failed_to_parse(format!("unknown argument to $lookup: {other}"))),
@@ -906,6 +924,13 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
     let as_ = as_.ok_or_else(|| MongoError::failed_to_parse("must specify 'as' field for a $lookup".into()))?;
     let from = from.ok_or_else(|| MongoError::failed_to_parse("must specify 'from' field for a $lookup".into()))?;
     if let Some(p) = pipeline {
+        for st in &p {
+            if let Some(name) = st.as_document().and_then(|d| d.keys().next()) {
+                if name == "$out" || name == "$merge" {
+                    return Err(MongoError::new(51047, "Location51047", format!("{name} is not allowed within a $lookup's sub-pipeline")));
+                }
+            }
+        }
         let (lf, ff) = match (lf, ff) {
             (Some(l), Some(f)) => (Some(l), Some(f)),
             (None, None) => (None, None),
@@ -921,6 +946,20 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
                 for (name, e) in ls {
                     vars.push((name.clone(), eval(e, &d)?.unwrap_or_else(crate::expr::missing_var)));
                 }
+            }
+            // `$documents` as the first stage of the sub-pipeline replaces the collection by literal documents
+            if let Some(Bson::Array(lit)) = p.first().and_then(|st| st.as_document()).and_then(|st| st.get("$documents")) {
+                let mut generated = Vec::new();
+                for item in lit {
+                    match crate::expr::with_ambient(vars.clone(), || eval(item, &Document::new()))? {
+                        Some(Bson::Document(x)) => generated.push(x),
+                        _ => return Err(MongoError::new(40228, "Location40228", "$documents elements must be objects".into())),
+                    }
+                }
+                let res = crate::expr::with_ambient(vars, || run_pipeline(generated, &p[1..], foreign))?;
+                crate::update::set_path(&mut d, &as_parts, Bson::Array(res.into_iter().map(Bson::Document).collect()))?;
+                out.push(d);
+                continue;
             }
             let candidates: Vec<Document> = match (&lf, &ff) {
                 (Some(l), Some(f)) => {

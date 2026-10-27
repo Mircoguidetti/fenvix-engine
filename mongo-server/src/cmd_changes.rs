@@ -57,7 +57,20 @@ impl Server {
             None => format!("{db}.$cmd.aggregate"),
         };
         let batch = cmd.get_document("cursor").ok().and_then(|c| int_arg(c.get("batchSize")));
-        let cur = ChangeCursor { scope, last: start, rest: rest.to_vec(), full, ns: ns.clone(), closed: false };
+        // `$changeStreamSplitLargeEvent` (last stage only) splits events over 16 MB; no event here is that large, so it passes events through
+        let mut rest_stages = rest.to_vec();
+        for (i, st) in rest.iter().enumerate() {
+            if let Some(sp) = st.as_document().and_then(|d| d.get("$changeStreamSplitLargeEvent")) {
+                if !matches!(sp, Bson::Document(d) if d.is_empty()) {
+                    return Err(MongoError::new(7182800, "Location7182800", "$changeStreamSplitLargeEvent spec should be an empty object".into()));
+                }
+                if i + 1 != rest.len() {
+                    return Err(MongoError::new(7182802, "Location7182802", "$changeStreamSplitLargeEvent must be the last stage in the pipeline".into()));
+                }
+                rest_stages.pop();
+            }
+        }
+        let cur = ChangeCursor { scope, last: start, rest: rest_stages, full, ns: ns.clone(), closed: false };
         let id = self.store_change_cursor(cur);
         let _ = batch;
         Ok(doc! { "cursor": { "firstBatch": Vec::<Bson>::new(), "postBatchResumeToken": { "_data": log.token(start) }, "id": id, "ns": ns }, "ok": 1.0 })

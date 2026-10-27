@@ -11,6 +11,7 @@ use std::cmp::Ordering;
 
 mod dates;
 mod ops;
+mod trig;
 
 type R<T> = Result<T, MongoError>;
 
@@ -166,6 +167,8 @@ pub fn is_known_operator(name: &str) -> bool {
             | "$abs" | "$ceil" | "$floor" | "$sqrt" | "$exp" | "$ln" | "$log10" | "$trunc" | "$round" | "$pow" | "$log" | "$substr" | "$substrBytes" | "$substrCP" | "$strLenBytes" | "$strLenCP" | "$strcasecmp" | "$trim" | "$ltrim" | "$rtrim" | "$split"
             | "$indexOfBytes" | "$indexOfCP" | "$replaceOne" | "$replaceAll" | "$regexMatch" | "$regexFind" | "$regexFindAll" | "$convert" | "$toInt" | "$toLong" | "$toDouble" | "$toDecimal" | "$toBool" | "$toDate" | "$toString" | "$toObjectId" | "$function" | "$toHashedIndexKey"
             | "$rand" | "$tsSecond" | "$tsIncrement" | "$median" | "$percentile"
+            | "$sin" | "$cos" | "$tan" | "$asin" | "$acos" | "$atan" | "$atan2" | "$sinh" | "$cosh" | "$tanh" | "$asinh" | "$acosh" | "$atanh" | "$degreesToRadians" | "$radiansToDegrees"
+            | "$bitAnd" | "$bitOr" | "$bitXor" | "$bitNot" | "$stdDevPop" | "$stdDevSamp"
             | "$year" | "$month" | "$dayOfMonth" | "$hour" | "$minute" | "$second" | "$millisecond" | "$dayOfWeek" | "$dayOfYear" | "$week" | "$isoWeek" | "$isoWeekYear" | "$isoDayOfWeek" | "$dateToParts" | "$dateFromParts" | "$dateFromString" | "$dateAdd" | "$dateSubtract" | "$dateDiff" | "$dateTrunc"
     )
 }
@@ -610,7 +613,10 @@ fn operator(name: &str, arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
         "$map" => map(arg, sc),
         other => match ops::operator_ext(other, arg, sc)? {
             Some(v) => Ok(v),
-            None => Err(err(168, format!("Unrecognized expression '{other}'"))),
+            None => match trig::operator(other, arg, sc)? {
+                Some(v) => Ok(v),
+                None => Err(err(168, format!("Unrecognized expression '{other}'"))),
+            },
         },
     }
 }

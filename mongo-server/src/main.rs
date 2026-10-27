@@ -20,6 +20,7 @@ mod cmd_data;
 mod cmd_index;
 mod cmd_mapreduce;
 mod dbs;
+mod dsum;
 mod error;
 mod expr;
 mod index;

@@ -166,6 +166,12 @@ pub fn run_stage(name: &str, arg: &Bson, docs: Vec<Document>, foreign: &Foreign)
             docs.extend(run_pipeline(other, &pipeline, foreign)?);
             docs
         }
+        "$changeStreamSplitLargeEvent" => {
+            if !matches!(arg, Bson::Document(d) if d.is_empty()) {
+                return Err(MongoError::new(7182800, "Location7182800", "$changeStreamSplitLargeEvent spec should be an empty object".into()));
+            }
+            return Err(MongoError::new(20, "IllegalOperation", "$changeStreamSplitLargeEvent can only be used in a $changeStream pipeline".into()));
+        }
         "$documents" => return Err(MongoError::new(73, "InvalidNamespace", "$documents is only valid as the first stage of a database-level aggregate ({aggregate: 1})".to_string())),
         "$bucketAuto" => crate::agg_more::bucket_auto(arg, docs, foreign)?,
         "$densify" => crate::agg_more::densify(arg, docs)?,
