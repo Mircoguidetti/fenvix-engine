@@ -60,6 +60,10 @@ FEATURE_TESTS["arrayFilters"] = r"^upd8\.filtered_"
 FEATURE_TESTS["positional update path ($, $[], $[id])"] = r"^upd8\.(pos_|all_|filtered_)"
 FEATURE_TESTS["pipeline-style update"] = r"^upd8\.pipe_"
 FEATURE_TESTS["renameCollection"] = r"^upd8\.rename_"
+# results9
+FEATURE_TESTS["$meta|query"] = r"^(text\.|geo\.near_projection|geo\.near_sort|geo\.meta_)"
+FEATURE_TESTS["$sampleRate|expression"] = r"^tail\.sample_rate"
+FEATURE_TESTS["$jsonSchema|query"] = r"^tail\.json_schema"
 NEW8 = {"arrayFilters", "positional update path ($, $[], $[id])", "pipeline-style update", "renameCollection"}
 # index options that results5 only recorded; they are honoured now and have passing differential tests
 INDEX_TESTS = {
@@ -69,6 +73,9 @@ INDEX_TESTS = {
     "index: compound": r"^idx\.(plan_compound|res_compound|unique_compound|backfill_3000|compound)",
     "index: unique": r"^idx\.unique",
     "index: any definition": r"^idx\.",
+    "index: text": r"^text\.",
+    "index: 2dsphere / 2d (geo)": r"^geo\.",
+    "index: hashed / wildcard": r"^(hashed|wild)\.",
 }
 STAGE_NAMES = set("match group sort limit skip project count addFields set unset unwind lookup facet collStats indexStats replaceRoot replaceWith sortByCount bucket sample unionWith out merge changeStream".split())
 ACC_NAMES = set("sum avg min max first last push addToSet count mergeObjects stdDevPop stdDevSamp firstN lastN maxN minN top bottom topN bottomN accumulator".split())
@@ -182,7 +189,7 @@ def _auto_supported():
         return set(), {}
     users = {}
     for t in tests:
-        if t["category"] == "extra" or not re.match(r"^(op|bits|stage7|where|cs|txn|idx|ttl|expr_op|expr|stage|group|lookup|query|upd|regex|fam|find|agg)", t["name"]):
+        if t["category"] == "extra" or not re.match(r"^(op|bits|stage7|where|cs|txn|idx|ttl|expr_op|expr|stage|group|lookup|query|upd|regex|fam|find|agg|text|geo|hashed|wild|tail)", t["name"]):
             continue
         ok = py.get(t["name"], {}).get("status") == "pass" and nd.get(t["name"], {}).get("status") == "pass"
         for key in _operators_of_test(t):
@@ -232,6 +239,20 @@ try:
         EVIDENCE[_k] = (len(_ok), len(_names))
         if _names and len(_ok) == len(_names):
             INDEX_SUPPORTED.add(_k)
+except OSError:
+    pass
+
+
+# $search / $searchMeta have no reference server (mongo:7.0 has no Atlas Search): their tests check the documented
+# semantics (mongo-tests/search_test.py, output in mongo-tests/out/search_test.txt)
+try:
+    _st = open(os.path.join(HERE, "..", "..", "mongo-tests", "out", "search_test.txt")).read()
+    import re as _re2
+    _m = _re2.search(r"(\d+) passed, (\d+) failed", _st)
+    if _m:
+        EVIDENCE["$searchMeta|stage"] = (int(_m.group(1)), int(_m.group(1)) + int(_m.group(2)))
+        if int(_m.group(2)) == 0:
+            AFTER_SUPPORTED.add("$searchMeta|stage")
 except OSError:
     pass
 

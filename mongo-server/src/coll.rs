@@ -292,6 +292,9 @@ async fn docs_by_scan(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>]) -> R<Vec<
         }
         let mut k = rows.last().unwrap().0.to_vec();
         k.push(0);
+        if k >= stop {
+            break; // the chunk ended on the last wanted key: nothing is left (an empty range would panic the store)
+        }
         start = k;
     }
     Ok(ids.iter().filter_map(|i| found.get(i).cloned()).collect())

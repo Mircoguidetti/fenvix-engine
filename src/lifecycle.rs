@@ -352,6 +352,11 @@ impl Tenant {
             order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
             ..Default::default()
         };
+        if let Some(e) = end {
+            if start >= e {
+                return Ok(Vec::new()); // an empty range would panic the store
+            }
+        }
         let s = start.to_vec();
         let range = match end {
             Some(e) => (std::ops::Bound::Included(s), std::ops::Bound::Excluded(e.to_vec())),

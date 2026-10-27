@@ -1,0 +1,314 @@
+{
+ "run": "6290",
+ "samples": 7,
+ "results": {
+  "10000_no_index": {
+   "load_seconds": 0.6,
+   "text_rare_term": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "text_common_term": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "text_phrase_regex_scan": {
+    "results_median": 14,
+    "cold": {
+     "gets": 10,
+     "bytes": 2947758,
+     "ms": 64.3
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 42.9
+    }
+   },
+   "search_stage_scan": {
+    "results_median": 14,
+    "cold": {
+     "gets": 10,
+     "bytes": 2947758,
+     "ms": 153.9
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 117.4
+    }
+   },
+   "geo_within_small_polygon": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "geo_near_100km": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "geo_near_limit10": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "geo_within_scan_centersphere": {
+    "results_median": 0,
+    "cold": {
+     "gets": 10,
+     "bytes": 2947758,
+     "ms": 75.7
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 58.5
+    }
+   }
+  },
+  "10000_indexed": {
+   "load_seconds": 0.8,
+   "text_rare_term": {
+    "results_median": 14,
+    "cold": {
+     "gets": 13,
+     "bytes": 2556709,
+     "ms": 41.1
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 18.6
+    }
+   },
+   "text_common_term": {
+    "results_median": 2888,
+    "cold": {
+     "gets": 14,
+     "bytes": 3218303,
+     "ms": 111.9
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 87.7
+    }
+   },
+   "text_phrase_regex_scan": {
+    "results_median": 14,
+    "cold": {
+     "gets": 12,
+     "bytes": 3108137,
+     "ms": 66.8
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 40.9
+    }
+   },
+   "search_stage_scan": {
+    "results_median": 14,
+    "cold": {
+     "gets": 12,
+     "bytes": 3108137,
+     "ms": 127.2
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 111.0
+    }
+   },
+   "geo_within_small_polygon": {
+    "results_median": 1,
+    "cold": {
+     "gets": 14,
+     "bytes": 1837207,
+     "ms": 35.0
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 13.8
+    }
+   },
+   "geo_near_100km": {
+    "results_median": 0,
+    "cold": {
+     "gets": 13,
+     "bytes": 192629,
+     "ms": 22.2
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1.8
+    }
+   },
+   "geo_near_limit10": {
+    "results_median": 10,
+    "cold": {
+     "gets": 21,
+     "bytes": 3667067,
+     "ms": 198.2
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 181.8
+    }
+   },
+   "geo_within_scan_centersphere": {
+    "results_median": 0,
+    "cold": {
+     "gets": 15,
+     "bytes": 200798,
+     "ms": 23.3
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1.9
+    }
+   }
+  },
+  "100000_no_index": {
+   "load_seconds": 4.4,
+   "text_rare_term": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "text_common_term": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "text_phrase_regex_scan": {
+    "results_median": 136,
+    "cold": {
+     "gets": 16,
+     "bytes": 29406483,
+     "ms": 428.8
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 417.2
+    }
+   },
+   "search_stage_scan": {
+    "results_median": 136,
+    "cold": {
+     "gets": 16,
+     "bytes": 29406483,
+     "ms": 1226.7
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1234.4
+    }
+   },
+   "geo_within_small_polygon": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "geo_near_100km": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "geo_near_limit10": "not possible without the index (the server answers with an error, as MongoDB does)",
+   "geo_within_scan_centersphere": {
+    "results_median": 6,
+    "cold": {
+     "gets": 16,
+     "bytes": 29406483,
+     "ms": 585.4
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 513.9
+    }
+   }
+  },
+  "100000_indexed": {
+   "load_seconds": 11.7,
+   "text_rare_term": {
+    "results_median": 136,
+    "cold": {
+     "gets": 22,
+     "bytes": 30292241,
+     "ms": 284.3
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 258.6
+    }
+   },
+   "text_common_term": {
+    "results_median": 29169,
+    "cold": {
+     "gets": 37,
+     "bytes": 31785693,
+     "ms": 1012.5
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1231.9
+    }
+   },
+   "text_phrase_regex_scan": {
+    "results_median": 136,
+    "cold": {
+     "gets": 20,
+     "bytes": 30692190,
+     "ms": 507.3
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 466.9
+    }
+   },
+   "search_stage_scan": {
+    "results_median": 136,
+    "cold": {
+     "gets": 20,
+     "bytes": 30692190,
+     "ms": 1291.9
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 1214.8
+    }
+   },
+   "geo_within_small_polygon": {
+    "results_median": 25,
+    "cold": {
+     "gets": 73,
+     "bytes": 2044063,
+     "ms": 69.4
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 6.2
+    }
+   },
+   "geo_near_100km": {
+    "results_median": 4,
+    "cold": {
+     "gets": 24,
+     "bytes": 1844093,
+     "ms": 34.2
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 3.3
+    }
+   },
+   "geo_near_limit10": {
+    "results_median": 10,
+    "cold": {
+     "gets": 101,
+     "bytes": 36226233,
+     "ms": 2611.9
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 2692.4
+    }
+   },
+   "geo_within_scan_centersphere": {
+    "results_median": 6,
+    "cold": {
+     "gets": 35,
+     "bytes": 1888979,
+     "ms": 44.6
+    },
+    "warm": {
+     "gets": 0,
+     "bytes": 0,
+     "ms": 3.6
+    }
+   }
+  }
+ }
+}
