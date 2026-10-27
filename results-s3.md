@@ -57,7 +57,7 @@ Il punto debole del piano di partenza era "quante richieste al secondo può gene
 - Massimo tra due letture del guard: 2 processi × 300 req/s × (10 s + ~25 s per fermare e spegnere) × $0,0054/1.000 ≈ **$0,11**. Il margine di 0,5 $ lo copre.
 - Se il guard muore (doppio guasto): il watchdog se ne accorge dopo al massimo ~130 s (90 s di battito vecchio + 30 s di ciclo + terminazione): 600 req/s × 130 s × $5,4e-6 ≈ **$0,42**, quindi al peggio ~4,9 $ lordi in quel caso.
 - Cintura in più: ogni processo del motore esce da solo (codice 86) se da solo supera 4 $ di richieste.
-- **Registro:** il blocco scatta quando la somma *supera* 30 $. Un run in corso può quindi portarla fino a ~35 $. È una conseguenza della regola come l'hai scritta; la cambio se vuoi (es. bloccare se somma + 5 > 30).
+- **Registro:** un run parte solo se somma registrata + 5 $ (tetto di un run) non supera 30 $, quindi il totale registrato non supera 30 $. Limite residuo: il registro conta il costo lordo calcolato dai contatori; un run senza contatori recuperabili è registrato a tetto + ore di istanza.
 
 Questo vale **se** il limitatore funziona (provato in locale: test unitari e prova contro un S3 finto, §7) e **se** i prezzi e le classi di richiesta sono giusti. Non è una garanzia di AWS.
 
