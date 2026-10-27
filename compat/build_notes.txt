@@ -1,0 +1,18 @@
+cmd:isMaster: no command page in the 7.0 manual; kept in scope (sent by every driver); docs_url is the page on the same mechanism
+cmd:saslContinue: no command page in the 7.0 manual; kept in scope (sent by every driver); docs_url is the page on the same mechanism
+cmd:saslStart: no command page in the 7.0 manual; kept in scope (sent by every driver); docs_url is the page on the same mechanism
+$comment: no 7.0 page at https://www.mongodb.com/docs/v7.0/reference/command/find.md (not added from docs; checked against server separately)
+expr:$add listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$subtract listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$objectToArray listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$dateFromString listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$dateToString listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$toDate listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$toString listed twice in v7.0/reference/mql/expressions.md (also under another heading); counted once
+expr:$unsetField: page exists and the server accepts it, but the 7.0 expressions landing table omits it; added
+command options: collMod: page has no parsable Field/Type table; options not inventoried (review)
+command options: hello: page has no parsable Field/Type table; options not inventoried (review)
+command options: commitTransaction: page has no parsable Field/Type table; options not inventoried (review)
+command options: abortTransaction: page has no parsable Field/Type table; options not inventoried (review)
+command options: endSessions: page has no parsable Field/Type table; options not inventoried (review)
+command options: startSession: page has no parsable Field/Type table; options not inventoried (review)

@@ -1,0 +1,1113 @@
+[
+ {
+  "name": "update.extra.current_date",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "fail",
+  "detail": {
+   "step": 2,
+   "op": "find",
+   "real": "[{\"_id\": {\"$numberInt\": \"1\"}, \"name\": \"alice\", \"age\": {\"$numberInt\": \"30\"}, \"city\": \"Paris\", \"tags\": [\"a\", \"b\"], \"addr\": {\"zip\": \"75001\", \"geo\": {\"lat\": {\"$numberDouble\": \"48.8\"}}}, \"scores\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"30\"}], \"ts\": {\"$date\": {\"$numberLong\": \"1793103356276\"}}}]",
+   "ours": "[{\"_id\": {\"$numberInt\": \"1\"}, \"name\": \"alice\", \"age\": {\"$numberInt\": \"30\"}, \"city\": \"Paris\", \"tags\": [\"a\", \"b\"], \"addr\": {\"zip\": \"75001\", \"geo\": {\"lat\": {\"$numberDouble\": \"48.8\"}}}, \"scores\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"30\"}], \"ts\": {\"$date\": {\"$numberLong\": \"1793103356440\"}}}]"
+  },
+  "secs": 0.28
+ },
+ {
+  "name": "persist.idle_close_then_read",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 12.25
+ },
+ {
+  "name": "persist.idle_close_then_write_upgrades",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 24.45
+ },
+ {
+  "name": "persist.read_only_wake_stays_reader",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.36
+ },
+ {
+  "name": "persist.forced_close_cycles",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 2.34
+ },
+ {
+  "name": "persist.1000_docs_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.57
+ },
+ {
+  "name": "persist.indexes_and_collections_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.35
+ },
+ {
+  "name": "persist.drop_after_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.45
+ },
+ {
+  "name": "persist.id_types_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.33
+ },
+ {
+  "name": "persist.restart_server_graceful",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.43
+ },
+ {
+  "name": "persist.restart_server_sigkill",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 5.04
+ },
+ {
+  "name": "persist.drop_database",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.47
+ },
+ {
+  "name": "persist.drop_database_races_background_compaction",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 6.37
+ },
+ {
+  "name": "persist.many_collections",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.68
+ },
+ {
+  "name": "lookup.extra_let_pipeline_form",
+  "group": "aggregate: $lookup",
+  "category": "extra",
+  "status": "fail",
+  "detail": {
+   "step": 2,
+   "op": "aggregate",
+   "real": "[{\"_id\": {\"$numberInt\": \"1\"}, \"cust\": \"a\", \"n\": {\"$numberInt\": \"1\"}, \"w\": [{\"_id\": {\"$numberInt\": \"13\"}, \"name\": \"DupA\", \"k\": \"a\"}, {\"_id\": \"a\", \"name\": \"Alice\", \"k\": \"a\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"cust\": \"b\", \"n\": {\"$numberInt\": \"2\"}, \"w\": [{\"_id\": \"b\", \"name\": \"Bob\", \"k\": \"b\"}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"cust\": \"zz\", \"n\": {\"$numberInt\": \"3\"}, \"w\": []}, {\"_id\": {\"$numberInt\": \"4\"}, \"n\": {\"$numberInt\": \"4\"}, \"w\": [{\"_id\": {\"$numberInt\": \"10\"}, \"name\": \"NoKey\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"cust\": null, \"n\": {\"$numberInt\": \"5\"}, \"w\": [{\"_id\": {\"$numberInt\": \"11\"}, \"name\": \"NullKe",
+   "ours": "[{\"_id\": {\"$numberInt\": \"1\"}, \"cust\": \"a\", \"n\": {\"$numberInt\": \"1\"}, \"w\": [{\"_id\": {\"$numberInt\": \"13\"}, \"name\": \"DupA\", \"k\": \"a\"}, {\"_id\": \"a\", \"name\": \"Alice\", \"k\": \"a\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"cust\": \"b\", \"n\": {\"$numberInt\": \"2\"}, \"w\": [{\"_id\": \"b\", \"name\": \"Bob\", \"k\": \"b\"}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"cust\": \"zz\", \"n\": {\"$numberInt\": \"3\"}, \"w\": []}, {\"_id\": {\"$numberInt\": \"4\"}, \"n\": {\"$numberInt\": \"4\"}, \"w\": [{\"_id\": {\"$numberInt\": \"11\"}, \"name\": \"NullKey\", \"k\": null}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"cust\": null, \"n\": {\"$numberInt\": \"5\"}, \"w\": [{\"_id\": {\"$numberInt\": \"11\"}, \"n"
+  },
+  "secs": 0.27
+ },
+ {
+  "name": "idx.persist_index_survives_tenant_close",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.76
+ },
+ {
+  "name": "ttl.expired_docs_removed",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.expire_after_zero_seconds",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.non_date_values_never_expire",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.array_uses_earliest_date",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.nested_path",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.partial_only_matching_docs_expire",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.relative_expiry_visible_then_gone",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 14.27
+ },
+ {
+  "name": "ttl.inserted_after_index_expire",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 10.29
+ },
+ {
+  "name": "ttl.index_created_on_existing_expired_docs",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.48
+ },
+ {
+  "name": "ttl.update_to_past_expires",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.replace_with_new_date",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.count_distinct_aggregate_agree",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.survives_tenant_close",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.34
+ },
+ {
+  "name": "ttl.unique_key_freed_after_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.34
+ },
+ {
+  "name": "ttl.id_reusable_after_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.collmod_changes_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 12.28
+ },
+ {
+  "name": "ttl.drop_ttl_index_stops_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.39
+ },
+ {
+  "name": "ttl.delete_and_find_respect_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.update_many_skips_expired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.sort_limit_with_index_skips_expired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.17
+ },
+ {
+  "name": "ttl.lookup_foreign_respects_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.array_of_subdocuments_path",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "ttl.relative_boundary",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.26
+ },
+ {
+  "name": "ttl.large_batch",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.sparse_ttl_index",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.26
+ },
+ {
+  "name": "ttl.aggregate_match_group_after_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.21
+ },
+ {
+  "name": "ttl.find_one_and_update_skips_expired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.two_ttl_indexes_either_expires",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.17
+ },
+ {
+  "name": "ttl.dates_before_1970",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.count_documents_only_unexpired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.drop_and_recreate_ttl_index",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.37
+ },
+ {
+  "name": "ttl.expiry_removes_index_entries",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.28
+ },
+ {
+  "name": "txn.commit_makes_inserts_visible",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.abort_discards_inserts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.read_your_own_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.uncommitted_invisible_to_others_until_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.update_in_txn_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.update_in_txn_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.delete_in_txn_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.delete_in_txn_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "txn.replace_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "txn.upsert_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "txn.find_one_and_update_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "txn.find_one_and_delete_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.multi_collection_atomic_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "txn.multi_collection_abort_creates_nothing",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "txn.delete_then_reinsert_same_id",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "txn.dup_id_in_txn_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "txn.unique_violation_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.unique_within_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.unique_key_freed_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.snapshot_isolation_reads",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.snapshot_isolation_index_reads",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "txn.write_conflict_second_writer",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.write_conflict_after_concurrent_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.write_conflict_with_non_txn_commit_before_write",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "txn.no_conflict_different_documents",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.concurrent_insert_same_id_conflicts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.increment_in_two_sequential_txns",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.with_transaction_commits",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.with_transaction_error_aborts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "txn.find_sort_limit_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.aggregate_sees_txn_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.distinct_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.indexed_find_in_txn_sees_own_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.28
+ },
+ {
+  "name": "txn.index_entries_after_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.index_entries_after_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.large_txn_500_inserts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.unordered_insert_error_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.drop_not_allowed_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 60.16
+ },
+ {
+  "name": "txn.commit_empty_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.1
+ },
+ {
+  "name": "txn.txn_after_failed_txn_works",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.aborted_txn_rejects_further_ops",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "txn.ttl_collection_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.insert",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.insert_many_in_order",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.insert_default_has_no_full_document_on_update",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.update_set",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.update_inc",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.28
+ },
+ {
+  "name": "cs.update_unset",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_set_nested_existing",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_set_nested_new",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_set_whole_subdoc",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_push_append",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.28
+ },
+ {
+  "name": "cs.update_push_each",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.update_pull",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_pop",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "cs.update_addtoset",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "cs.update_array_index",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_rename",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_noop_emits_nothing",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.update_many_one_event_per_doc",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.replace",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.delete",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.delete_many",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.upsert_is_insert",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "cs.find_one_and_update",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "cs.find_one_and_delete",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.update_lookup_returns_current_document",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.update_lookup_null_when_deleted_later",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.update_lookup_sees_later_update",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.only_events_after_open",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.other_collections_not_seen",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.match_operation_type",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.match_full_document_field",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.project_stage",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.addfields_stage",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.string_and_compound_ids",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.many_inserts_keep_order",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.database_level_sees_all_collections",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.database_level_drop_event",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "cs.collection_drop_then_invalidate",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "cs.resume_after_token",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "cs.start_after_token",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.resume_with_match",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.transaction_events_at_commit",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.29
+ },
+ {
+  "name": "cs.aborted_transaction_emits_nothing",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.unordered_insert_partial_events",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "cs.ttl_delete_event",
+  "group": "change streams",
+  "category": "replset",
+  "status": "fail",
+  "detail": {
+   "step": 1,
+   "op": "watch",
+   "real": "[{\"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"t\": {\"$date\": {\"$numberLong\": \"978307200000\"}}}, \"ns\": {\"db\": \"dt134_f50ce10e\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"operationType\": \"delete\", \"ns\": {\"db\": \"dt134_f50ce10e\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}]",
+   "ours": "[{\"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"t\": {\"$date\": {\"$numberLong\": \"978307200000\"}}}, \"ns\": {\"db\": \"dt134_f50ce10e\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}]"
+  },
+  "secs": 6.26
+ },
+ {
+  "name": "cs.update_double_and_long_values",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cs.date_and_oid_in_documents",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ }
+]

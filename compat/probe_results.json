@@ -1,0 +1,2934 @@
+{
+ "acc:$accumulator": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$accumulator expects an object as an argument; found: string, full error: {'ok': 0.0, 'errmsg': '$accumulator expects an object as an argument; found: string', "
+ },
+ "acc:$addToSet": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$avg": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$bottom": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $bottom: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $bottom: \"$a\"', 'code': 5788001,"
+ },
+ "acc:$bottomN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $bottomN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $bottomN: \"$a\"', 'code': 578800"
+ },
+ "acc:$count": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$count takes no arguments, i.e. $count:{}, full error: {'ok': 0.0, 'errmsg': '$count takes no arguments, i.e. $count:{}', 'code': 14, 'codeName': 'TypeMismatch'"
+ },
+ "acc:$first": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$firstN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $firstN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $firstN: \"$a\"', 'code': 5787801,"
+ },
+ "acc:$last": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$lastN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $lastN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $lastN: \"$a\"', 'code': 5787801, '"
+ },
+ "acc:$max": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$maxN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $maxN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $maxN: \"$a\"', 'code': 5787900, 'co"
+ },
+ "acc:$median": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $median: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $median: \"$a\"', 'code': 7436100,"
+ },
+ "acc:$mergeObjects": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$min": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$minN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $minN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $minN: \"$a\"', 'code': 5787900, 'co"
+ },
+ "acc:$percentile": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $percentile: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $percentile: \"$a\"', 'code': "
+ },
+ "acc:$push": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$stdDevPop": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$stdDevSamp": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$sum": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "acc:$top": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $top: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $top: \"$a\"', 'code': 5788001, 'code"
+ },
+ "acc:$topN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $topN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $topN: \"$a\"', 'code': 5788001, 'co"
+ },
+ "cmd:_addShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_addShard', full error: {'ok': 0.0, 'errmsg': \"no such command: '_addShard'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_configsvrAbortReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrAbortReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrAbortReshardCollection'\", 'code': 59, 'codeN"
+ },
+ "cmd:_configsvrAddShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrAddShard', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrAddShard'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_configsvrAddShardToZone": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrAddShardToZone', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrAddShardToZone'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:_configsvrBalancerCollectionStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrBalancerCollectionStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrBalancerCollectionStatus'\", 'code': 59, 'c"
+ },
+ "cmd:_configsvrBalancerStart": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrBalancerStart', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrBalancerStart'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:_configsvrBalancerStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrBalancerStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrBalancerStatus'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:_configsvrBalancerStop": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrBalancerStop', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrBalancerStop'\", 'code': 59, 'codeName': 'CommandNotFou"
+ },
+ "cmd:_configsvrCheckClusterMetadataConsistency": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCheckClusterMetadataConsistency', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCheckClusterMetadataConsistency'\", "
+ },
+ "cmd:_configsvrCheckMetadataConsistency": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCheckMetadataConsistency', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCheckMetadataConsistency'\", 'code': 59, 'c"
+ },
+ "cmd:_configsvrCleanupReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCleanupReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCleanupReshardCollection'\", 'code': 59, 'c"
+ },
+ "cmd:_configsvrClearJumboFlag": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrClearJumboFlag', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrClearJumboFlag'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:_configsvrCollMod": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCollMod', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCollMod'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_configsvrCommitChunkMigration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitChunkMigration', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitChunkMigration'\", 'code': 59, 'codeName'"
+ },
+ "cmd:_configsvrCommitChunkSplit": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitChunkSplit', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitChunkSplit'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:_configsvrCommitChunksMerge": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitChunksMerge', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitChunksMerge'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:_configsvrCommitIndex": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitIndex', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitIndex'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:_configsvrCommitMergeAllChunksOnShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitMergeAllChunksOnShard', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitMergeAllChunksOnShard'\", 'code': "
+ },
+ "cmd:_configsvrCommitMovePrimary": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitMovePrimary', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitMovePrimary'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:_configsvrCommitReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCommitReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCommitReshardCollection'\", 'code': 59, 'cod"
+ },
+ "cmd:_configsvrConfigureCollectionBalancing": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrConfigureCollectionBalancing', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrConfigureCollectionBalancing'\", 'code'"
+ },
+ "cmd:_configsvrCreateDatabase": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrCreateDatabase', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrCreateDatabase'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:_configsvrDropIndexCatalogEntry": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrDropIndexCatalogEntry', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrDropIndexCatalogEntry'\", 'code': 59, 'codeNam"
+ },
+ "cmd:_configsvrEnsureChunkVersionIsGreaterThan": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrEnsureChunkVersionIsGreaterThan', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrEnsureChunkVersionIsGreaterThan'\", "
+ },
+ "cmd:_configsvrGetHistoricalPlacement": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrGetHistoricalPlacement', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrGetHistoricalPlacement'\", 'code': 59, 'codeN"
+ },
+ "cmd:_configsvrMoveRange": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrMoveRange', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrMoveRange'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_configsvrRefineCollectionShardKey": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRefineCollectionShardKey', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRefineCollectionShardKey'\", 'code': 59, 'c"
+ },
+ "cmd:_configsvrRemoveChunks": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRemoveChunks', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRemoveChunks'\", 'code': 59, 'codeName': 'CommandNotFou"
+ },
+ "cmd:_configsvrRemoveShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRemoveShard', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRemoveShard'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:_configsvrRemoveShardFromZone": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRemoveShardFromZone', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRemoveShardFromZone'\", 'code': 59, 'codeName': "
+ },
+ "cmd:_configsvrRemoveTags": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRemoveTags', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRemoveTags'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_configsvrRenameCollectionMetadata": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRenameCollectionMetadata', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRenameCollectionMetadata'\", 'code': 59, 'c"
+ },
+ "cmd:_configsvrRepairShardedCollectionChunksHistory": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRepairShardedCollectionChunksHistory', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRepairShardedCollectionChunksH"
+ },
+ "cmd:_configsvrResetPlacementHistory": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrResetPlacementHistory', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrResetPlacementHistory'\", 'code': 59, 'codeNam"
+ },
+ "cmd:_configsvrReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrReshardCollection'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:_configsvrRunRestore": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrRunRestore', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrRunRestore'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_configsvrSetAllowMigrations": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrSetAllowMigrations', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrSetAllowMigrations'\", 'code': 59, 'codeName': 'C"
+ },
+ "cmd:_configsvrSetClusterParameter": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrSetClusterParameter', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrSetClusterParameter'\", 'code': 59, 'codeName': "
+ },
+ "cmd:_configsvrSetUserWriteBlockMode": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrSetUserWriteBlockMode', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrSetUserWriteBlockMode'\", 'code': 59, 'codeNam"
+ },
+ "cmd:_configsvrTransitionToDedicatedConfigServer": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrTransitionToDedicatedConfigServer', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrTransitionToDedicatedConfigServer"
+ },
+ "cmd:_configsvrUpdateZoneKeyRange": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_configsvrUpdateZoneKeyRange', full error: {'ok': 0.0, 'errmsg': \"no such command: '_configsvrUpdateZoneKeyRange'\", 'code': 59, 'codeName': 'C"
+ },
+ "cmd:_flushDatabaseCacheUpdates": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_flushDatabaseCacheUpdates', full error: {'ok': 0.0, 'errmsg': \"no such command: '_flushDatabaseCacheUpdates'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:_flushDatabaseCacheUpdatesWithWriteConcern": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_flushDatabaseCacheUpdatesWithWriteConcern', full error: {'ok': 0.0, 'errmsg': \"no such command: '_flushDatabaseCacheUpdatesWithWriteConcern'\""
+ },
+ "cmd:_flushReshardingStateChange": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_flushReshardingStateChange', full error: {'ok': 0.0, 'errmsg': \"no such command: '_flushReshardingStateChange'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:_flushRoutingTableCacheUpdates": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_flushRoutingTableCacheUpdates', full error: {'ok': 0.0, 'errmsg': \"no such command: '_flushRoutingTableCacheUpdates'\", 'code': 59, 'codeName'"
+ },
+ "cmd:_flushRoutingTableCacheUpdatesWithWriteConcern": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_flushRoutingTableCacheUpdatesWithWriteConcern', full error: {'ok': 0.0, 'errmsg': \"no such command: '_flushRoutingTableCacheUpdatesWithWriteC"
+ },
+ "cmd:_getNextSessionMods": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_getNextSessionMods', full error: {'ok': 0.0, 'errmsg': \"no such command: '_getNextSessionMods'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_getUserCacheGeneration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_getUserCacheGeneration', full error: {'ok': 0.0, 'errmsg': \"no such command: '_getUserCacheGeneration'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:_isSelf": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_isSelf', full error: {'ok': 0.0, 'errmsg': \"no such command: '_isSelf'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_killOperations": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_killOperations', full error: {'ok': 0.0, 'errmsg': \"no such command: '_killOperations'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_mergeAuthzCollections": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_mergeAuthzCollections', full error: {'ok': 0.0, 'errmsg': \"no such command: '_mergeAuthzCollections'\", 'code': 59, 'codeName': 'CommandNotFou"
+ },
+ "cmd:_migrateClone": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_migrateClone', full error: {'ok': 0.0, 'errmsg': \"no such command: '_migrateClone'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_recvChunkAbort": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_recvChunkAbort', full error: {'ok': 0.0, 'errmsg': \"no such command: '_recvChunkAbort'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_recvChunkCommit": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_recvChunkCommit', full error: {'ok': 0.0, 'errmsg': \"no such command: '_recvChunkCommit'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_recvChunkReleaseCritSec": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_recvChunkReleaseCritSec', full error: {'ok': 0.0, 'errmsg': \"no such command: '_recvChunkReleaseCritSec'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:_recvChunkStart": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_recvChunkStart', full error: {'ok': 0.0, 'errmsg': \"no such command: '_recvChunkStart'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_recvChunkStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_recvChunkStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: '_recvChunkStatus'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_refreshQueryAnalyzerConfiguration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_refreshQueryAnalyzerConfiguration', full error: {'ok': 0.0, 'errmsg': \"no such command: '_refreshQueryAnalyzerConfiguration'\", 'code': 59, 'c"
+ },
+ "cmd:_shardsvrAbortReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrAbortReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrAbortReshardCollection'\", 'code': 59, 'codeNam"
+ },
+ "cmd:_shardsvrCheckMetadataConsistency": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCheckMetadataConsistency', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCheckMetadataConsistency'\", 'code': 59, 'cod"
+ },
+ "cmd:_shardsvrCheckMetadataConsistencyParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCheckMetadataConsistencyParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCheckMetadataConsistencyParticipa"
+ },
+ "cmd:_shardsvrCleanupReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCleanupReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCleanupReshardCollection'\", 'code': 59, 'cod"
+ },
+ "cmd:_shardsvrCloneCatalogData": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCloneCatalogData', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCloneCatalogData'\", 'code': 59, 'codeName': 'Command"
+ },
+ "cmd:_shardsvrCollMod": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCollMod', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCollMod'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_shardsvrCollModParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCollModParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCollModParticipant'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:_shardsvrCommitIndexParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCommitIndexParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCommitIndexParticipant'\", 'code': 59, 'codeNam"
+ },
+ "cmd:_shardsvrCommitReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCommitReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCommitReshardCollection'\", 'code': 59, 'codeN"
+ },
+ "cmd:_shardsvrCompactStructuredEncryptionData": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCompactStructuredEncryptionData', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCompactStructuredEncryptionData'\", 'c"
+ },
+ "cmd:_shardsvrCreateCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCreateCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCreateCollection'\", 'code': 59, 'codeName': 'Command"
+ },
+ "cmd:_shardsvrCreateCollectionParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrCreateCollectionParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrCreateCollectionParticipant'\", 'code': 59"
+ },
+ "cmd:_shardsvrDropCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropCollection'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:_shardsvrDropCollectionIfUUIDNotMatching": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropCollectionIfUUIDNotMatching', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropCollectionIfUUIDNotMatching'\", 'c"
+ },
+ "cmd:_shardsvrDropCollectionIfUUIDNotMatchingWithWriteConcern": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropCollectionIfUUIDNotMatchingWithWriteConcern', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropCollectionIfUUIDN"
+ },
+ "cmd:_shardsvrDropCollectionParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropCollectionParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropCollectionParticipant'\", 'code': 59, 'c"
+ },
+ "cmd:_shardsvrDropDatabase": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropDatabase', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropDatabase'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:_shardsvrDropDatabaseParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropDatabaseParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropDatabaseParticipant'\", 'code': 59, 'codeN"
+ },
+ "cmd:_shardsvrDropIndexCatalogEntryParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropIndexCatalogEntryParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropIndexCatalogEntryParticipant'\", "
+ },
+ "cmd:_shardsvrDropIndexes": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrDropIndexes', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrDropIndexes'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_shardsvrGetStatsForBalancing": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrGetStatsForBalancing', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrGetStatsForBalancing'\", 'code': 59, 'codeName': "
+ },
+ "cmd:_shardsvrJoinMigrations": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrJoinMigrations', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrJoinMigrations'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:_shardsvrMergeAllChunksOnShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrMergeAllChunksOnShard', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrMergeAllChunksOnShard'\", 'code': 59, 'codeName'"
+ },
+ "cmd:_shardsvrMovePrimary": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrMovePrimary', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrMovePrimary'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_shardsvrMovePrimaryEnterCriticalSection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrMovePrimaryEnterCriticalSection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrMovePrimaryEnterCriticalSection'\", 'c"
+ },
+ "cmd:_shardsvrMovePrimaryExitCriticalSection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrMovePrimaryExitCriticalSection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrMovePrimaryExitCriticalSection'\", 'cod"
+ },
+ "cmd:_shardsvrMoveRange": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrMoveRange', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrMoveRange'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:_shardsvrNotifyShardingEvent": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrNotifyShardingEvent', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrNotifyShardingEvent'\", 'code': 59, 'codeName': 'C"
+ },
+ "cmd:_shardsvrParticipantBlock": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrParticipantBlock', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrParticipantBlock'\", 'code': 59, 'codeName': 'Command"
+ },
+ "cmd:_shardsvrRefineCollectionShardKey": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrRefineCollectionShardKey', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrRefineCollectionShardKey'\", 'code': 59, 'cod"
+ },
+ "cmd:_shardsvrRenameCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrRenameCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrRenameCollection'\", 'code': 59, 'codeName': 'Command"
+ },
+ "cmd:_shardsvrRenameCollectionParticipant": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrRenameCollectionParticipant', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrRenameCollectionParticipant'\", 'code': 59"
+ },
+ "cmd:_shardsvrRenameCollectionParticipantUnblock": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrRenameCollectionParticipantUnblock', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrRenameCollectionParticipantUnblock"
+ },
+ "cmd:_shardsvrRenameIndexMetadata": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrRenameIndexMetadata', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrRenameIndexMetadata'\", 'code': 59, 'codeName': 'C"
+ },
+ "cmd:_shardsvrReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrReshardCollection'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:_shardsvrReshardingOperationTime": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrReshardingOperationTime', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrReshardingOperationTime'\", 'code': 59, 'codeN"
+ },
+ "cmd:_shardsvrSetAllowMigrations": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrSetAllowMigrations', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrSetAllowMigrations'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:_shardsvrSetClusterParameter": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrSetClusterParameter', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrSetClusterParameter'\", 'code': 59, 'codeName': 'C"
+ },
+ "cmd:_shardsvrSetUserWriteBlockMode": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrSetUserWriteBlockMode', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrSetUserWriteBlockMode'\", 'code': 59, 'codeName'"
+ },
+ "cmd:_shardsvrValidateShardKeyCandidate": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_shardsvrValidateShardKeyCandidate', full error: {'ok': 0.0, 'errmsg': \"no such command: '_shardsvrValidateShardKeyCandidate'\", 'code': 59, 'c"
+ },
+ "cmd:_transferMods": {
+  "ours": "unknown",
+  "ours_msg": "no such command: '_transferMods', full error: {'ok': 0.0, 'errmsg': \"no such command: '_transferMods'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:abortShardSplit": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'abortShardSplit', full error: {'ok': 0.0, 'errmsg': \"no such command: 'abortShardSplit'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:abortTransaction": {
+  "ours": "handled",
+  "ours_msg": "abortTransaction needs autocommit: false, full error: {'ok': 0.0, 'errmsg': 'abortTransaction needs autocommit: false', 'code': 72, 'codeName': 'InvalidOptions'"
+ },
+ "cmd:addShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'addShard', full error: {'ok': 0.0, 'errmsg': \"no such command: 'addShard'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:addShardToZone": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'addShardToZone', full error: {'ok': 0.0, 'errmsg': \"no such command: 'addShardToZone'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:aggregate": {
+  "ours": "handled",
+  "ours_msg": "BSON field 'aggregate.pipeline' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field 'aggregate.pipeline' is missing but a required fi"
+ },
+ "cmd:analyze": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'analyze', full error: {'ok': 0.0, 'errmsg': \"no such command: 'analyze'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:analyzeShardKey": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'analyzeShardKey', full error: {'ok': 0.0, 'errmsg': \"no such command: 'analyzeShardKey'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:appendOplogNote": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'appendOplogNote', full error: {'ok': 0.0, 'errmsg': \"no such command: 'appendOplogNote'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:applyOps": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'applyOps', full error: {'ok': 0.0, 'errmsg': \"no such command: 'applyOps'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:authenticate": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'authenticate', full error: {'ok': 0.0, 'errmsg': \"no such command: 'authenticate'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:autoSplitVector": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'autoSplitVector', full error: {'ok': 0.0, 'errmsg': \"no such command: 'autoSplitVector'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:balancerCollectionStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'balancerCollectionStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: 'balancerCollectionStatus'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:balancerStart": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'balancerStart', full error: {'ok': 0.0, 'errmsg': \"no such command: 'balancerStart'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:balancerStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'balancerStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: 'balancerStatus'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:balancerStop": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'balancerStop', full error: {'ok': 0.0, 'errmsg': \"no such command: 'balancerStop'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:buildInfo": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:bulkWrite": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'bulkWrite', full error: {'ok': 0.0, 'errmsg': \"no such command: 'bulkWrite'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:checkMetadataConsistency": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'checkMetadataConsistency', full error: {'ok': 0.0, 'errmsg': \"no such command: 'checkMetadataConsistency'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:checkShardingIndex": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'checkShardingIndex', full error: {'ok': 0.0, 'errmsg': \"no such command: 'checkShardingIndex'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:cleanupOrphaned": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'cleanupOrphaned', full error: {'ok': 0.0, 'errmsg': \"no such command: 'cleanupOrphaned'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:cleanupReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'cleanupReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: 'cleanupReshardCollection'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:clearJumboFlag": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clearJumboFlag', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clearJumboFlag'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:cloneCollectionAsCapped": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'cloneCollectionAsCapped', full error: {'ok': 0.0, 'errmsg': \"no such command: 'cloneCollectionAsCapped'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:clusterAbortTransaction": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterAbortTransaction', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterAbortTransaction'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:clusterAggregate": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterAggregate', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterAggregate'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:clusterCommitTransaction": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterCommitTransaction', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterCommitTransaction'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:clusterCount": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterCount', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterCount'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:clusterDelete": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterDelete', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterDelete'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:clusterFind": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterFind', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterFind'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:clusterGetMore": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterGetMore', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterGetMore'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:clusterInsert": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterInsert', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterInsert'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:clusterUpdate": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'clusterUpdate', full error: {'ok': 0.0, 'errmsg': \"no such command: 'clusterUpdate'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:collMod": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:collStats": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:commitReshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'commitReshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: 'commitReshardCollection'\", 'code': 59, 'codeName': 'CommandNotF"
+ },
+ "cmd:commitShardSplit": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'commitShardSplit', full error: {'ok': 0.0, 'errmsg': \"no such command: 'commitShardSplit'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:commitTransaction": {
+  "ours": "handled",
+  "ours_msg": "commitTransaction needs autocommit: false, full error: {'ok': 0.0, 'errmsg': 'commitTransaction needs autocommit: false', 'code': 72, 'codeName': 'InvalidOption"
+ },
+ "cmd:compact": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'compact', full error: {'ok': 0.0, 'errmsg': \"no such command: 'compact'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:compactStructuredEncryptionData": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'compactStructuredEncryptionData', full error: {'ok': 0.0, 'errmsg': \"no such command: 'compactStructuredEncryptionData'\", 'code': 59, 'codeNam"
+ },
+ "cmd:configureCollectionBalancing": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'configureCollectionBalancing', full error: {'ok': 0.0, 'errmsg': \"no such command: 'configureCollectionBalancing'\", 'code': 59, 'codeName': 'C"
+ },
+ "cmd:configureQueryAnalyzer": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'configureQueryAnalyzer', full error: {'ok': 0.0, 'errmsg': \"no such command: 'configureQueryAnalyzer'\", 'code': 59, 'codeName': 'CommandNotFou"
+ },
+ "cmd:connPoolStats": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'connPoolStats', full error: {'ok': 0.0, 'errmsg': \"no such command: 'connPoolStats'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:connPoolSync": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'connPoolSync', full error: {'ok': 0.0, 'errmsg': \"no such command: 'connPoolSync'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:connectionStatus": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:convertToCapped": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'convertToCapped', full error: {'ok': 0.0, 'errmsg': \"no such command: 'convertToCapped'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:coordinateCommitTransaction": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'coordinateCommitTransaction', full error: {'ok': 0.0, 'errmsg': \"no such command: 'coordinateCommitTransaction'\", 'code': 59, 'codeName': 'Com"
+ },
+ "cmd:count": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:create": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:createIndexes": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:createRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'createRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'createRole'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:createSearchIndexes": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'createSearchIndexes', full error: {'ok': 0.0, 'errmsg': \"no such command: 'createSearchIndexes'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:createUser": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'createUser', full error: {'ok': 0.0, 'errmsg': \"no such command: 'createUser'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:currentOp": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'currentOp', full error: {'ok': 0.0, 'errmsg': \"no such command: 'currentOp'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dataSize": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dataSize', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dataSize'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dbCheck": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dbCheck', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dbCheck'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dbHash": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dbHash', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dbHash'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dbStats": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:delete": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:distinct": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:donorAbortMigration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'donorAbortMigration', full error: {'ok': 0.0, 'errmsg': \"no such command: 'donorAbortMigration'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:donorForgetMigration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'donorForgetMigration', full error: {'ok': 0.0, 'errmsg': \"no such command: 'donorForgetMigration'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:donorStartMigration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'donorStartMigration', full error: {'ok': 0.0, 'errmsg': \"no such command: 'donorStartMigration'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:drop": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:dropAllRolesFromDatabase": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dropAllRolesFromDatabase', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dropAllRolesFromDatabase'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:dropAllUsersFromDatabase": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dropAllUsersFromDatabase', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dropAllUsersFromDatabase'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:dropConnections": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dropConnections', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dropConnections'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dropDatabase": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:dropIndexes": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:dropRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dropRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dropRole'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dropSearchIndex": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dropSearchIndex', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dropSearchIndex'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:dropUser": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'dropUser', full error: {'ok': 0.0, 'errmsg': \"no such command: 'dropUser'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:enableSharding": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'enableSharding', full error: {'ok': 0.0, 'errmsg': \"no such command: 'enableSharding'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:endSessions": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:explain": {
+  "ours": "handled",
+  "ours_msg": "BSON field 'explain.explain' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field 'explain.explain' is missing but a required field\", "
+ },
+ "cmd:features": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'features', full error: {'ok': 0.0, 'errmsg': \"no such command: 'features'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:filemd5": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'filemd5', full error: {'ok': 0.0, 'errmsg': \"no such command: 'filemd5'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:find": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:findAndModify": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:flushRouterConfig": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'flushRouterConfig', full error: {'ok': 0.0, 'errmsg': \"no such command: 'flushRouterConfig'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:forgetShardSplit": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'forgetShardSplit', full error: {'ok': 0.0, 'errmsg': \"no such command: 'forgetShardSplit'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:fsync": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'fsync', full error: {'ok': 0.0, 'errmsg': \"no such command: 'fsync'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:fsyncUnlock": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'fsyncUnlock', full error: {'ok': 0.0, 'errmsg': \"no such command: 'fsyncUnlock'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getAuditConfig": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getAuditConfig', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getAuditConfig'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getChangeStreamState": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getChangeStreamState', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getChangeStreamState'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getClusterParameter": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getClusterParameter', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getClusterParameter'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getCmdLineOpts": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getCmdLineOpts', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getCmdLineOpts'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getDatabaseVersion": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getDatabaseVersion', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getDatabaseVersion'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getDefaultRWConcern": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getDefaultRWConcern', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getDefaultRWConcern'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getDiagnosticData": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getDiagnosticData', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getDiagnosticData'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getLog": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getLog', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getLog'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getMore": {
+  "ours": "handled",
+  "ours_msg": "cursor id 1 not found, full error: {'ok': 0.0, 'errmsg': 'cursor id 1 not found', 'code': 43, 'codeName': 'CursorNotFound'}"
+ },
+ "cmd:getParameter": {
+  "ours": "handled",
+  "ours_msg": "no option found to get, full error: {'ok': 0.0, 'errmsg': 'no option found to get', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:getQueryableEncryptionCountInfo": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getQueryableEncryptionCountInfo', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getQueryableEncryptionCountInfo'\", 'code': 59, 'codeNam"
+ },
+ "cmd:getShardMap": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getShardMap', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getShardMap'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:getShardVersion": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'getShardVersion', full error: {'ok': 0.0, 'errmsg': \"no such command: 'getShardVersion'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:grantPrivilegesToRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'grantPrivilegesToRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'grantPrivilegesToRole'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:grantRolesToRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'grantRolesToRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'grantRolesToRole'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:grantRolesToUser": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'grantRolesToUser', full error: {'ok': 0.0, 'errmsg': \"no such command: 'grantRolesToUser'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:hello": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:hostInfo": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'hostInfo', full error: {'ok': 0.0, 'errmsg': \"no such command: 'hostInfo'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:insert": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:internalRenameIfOptionsAndIndexesMatch": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'internalRenameIfOptionsAndIndexesMatch', full error: {'ok': 0.0, 'errmsg': \"no such command: 'internalRenameIfOptionsAndIndexesMatch'\", 'code'"
+ },
+ "cmd:invalidateUserCache": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'invalidateUserCache', full error: {'ok': 0.0, 'errmsg': \"no such command: 'invalidateUserCache'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:isMaster": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:isdbgrid": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'isdbgrid', full error: {'ok': 0.0, 'errmsg': \"no such command: 'isdbgrid'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:killAllSessions": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'killAllSessions', full error: {'ok': 0.0, 'errmsg': \"no such command: 'killAllSessions'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:killAllSessionsByPattern": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'killAllSessionsByPattern', full error: {'ok': 0.0, 'errmsg': \"no such command: 'killAllSessionsByPattern'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:killCursors": {
+  "ours": "handled",
+  "ours_msg": "BSON field 'killCursors.cursors' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field 'killCursors.cursors' is missing but a required "
+ },
+ "cmd:killOp": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'killOp', full error: {'ok': 0.0, 'errmsg': \"no such command: 'killOp'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:killSessions": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:listCollections": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:listCommands": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'listCommands', full error: {'ok': 0.0, 'errmsg': \"no such command: 'listCommands'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:listDatabases": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:listDatabasesForAllTenants": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'listDatabasesForAllTenants', full error: {'ok': 0.0, 'errmsg': \"no such command: 'listDatabasesForAllTenants'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:listIndexes": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:listShards": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'listShards', full error: {'ok': 0.0, 'errmsg': \"no such command: 'listShards'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:lockInfo": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'lockInfo', full error: {'ok': 0.0, 'errmsg': \"no such command: 'lockInfo'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:logApplicationMessage": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'logApplicationMessage', full error: {'ok': 0.0, 'errmsg': \"no such command: 'logApplicationMessage'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:logRotate": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'logRotate', full error: {'ok': 0.0, 'errmsg': \"no such command: 'logRotate'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:logout": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'logout', full error: {'ok': 0.0, 'errmsg': \"no such command: 'logout'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:mapReduce": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'mapReduce', full error: {'ok': 0.0, 'errmsg': \"no such command: 'mapReduce'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:mergeAllChunksOnShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'mergeAllChunksOnShard', full error: {'ok': 0.0, 'errmsg': \"no such command: 'mergeAllChunksOnShard'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:mergeChunks": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'mergeChunks', full error: {'ok': 0.0, 'errmsg': \"no such command: 'mergeChunks'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:moveChunk": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'moveChunk', full error: {'ok': 0.0, 'errmsg': \"no such command: 'moveChunk'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:movePrimary": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'movePrimary', full error: {'ok': 0.0, 'errmsg': \"no such command: 'movePrimary'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:moveRange": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'moveRange', full error: {'ok': 0.0, 'errmsg': \"no such command: 'moveRange'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:ping": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:planCacheClear": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'planCacheClear', full error: {'ok': 0.0, 'errmsg': \"no such command: 'planCacheClear'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:planCacheClearFilters": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'planCacheClearFilters', full error: {'ok': 0.0, 'errmsg': \"no such command: 'planCacheClearFilters'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:planCacheListFilters": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'planCacheListFilters', full error: {'ok': 0.0, 'errmsg': \"no such command: 'planCacheListFilters'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:planCacheSetFilter": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'planCacheSetFilter', full error: {'ok': 0.0, 'errmsg': \"no such command: 'planCacheSetFilter'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:prepareTransaction": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'prepareTransaction', full error: {'ok': 0.0, 'errmsg': \"no such command: 'prepareTransaction'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:profile": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'profile', full error: {'ok': 0.0, 'errmsg': \"no such command: 'profile'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:reIndex": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'reIndex', full error: {'ok': 0.0, 'errmsg': \"no such command: 'reIndex'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:recipientForgetMigration": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'recipientForgetMigration', full error: {'ok': 0.0, 'errmsg': \"no such command: 'recipientForgetMigration'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:recipientSyncData": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'recipientSyncData', full error: {'ok': 0.0, 'errmsg': \"no such command: 'recipientSyncData'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:recipientVoteImportedFiles": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'recipientVoteImportedFiles', full error: {'ok': 0.0, 'errmsg': \"no such command: 'recipientVoteImportedFiles'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:refineCollectionShardKey": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'refineCollectionShardKey', full error: {'ok': 0.0, 'errmsg': \"no such command: 'refineCollectionShardKey'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:refreshSessions": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "cmd:removeShard": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'removeShard', full error: {'ok': 0.0, 'errmsg': \"no such command: 'removeShard'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:removeShardFromZone": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'removeShardFromZone', full error: {'ok': 0.0, 'errmsg': \"no such command: 'removeShardFromZone'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:renameCollection": {
+  "ours": "handled",
+  "ours_msg": "BSON field 'renameCollection' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field 'renameCollection' is missing but a required field\""
+ },
+ "cmd:replSetAbortPrimaryCatchUp": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetAbortPrimaryCatchUp', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetAbortPrimaryCatchUp'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:replSetFreeze": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetFreeze', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetFreeze'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetGetConfig": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetGetConfig', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetGetConfig'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetGetRBID": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetGetRBID', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetGetRBID'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetGetStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetGetStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetGetStatus'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetHeartbeat": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetHeartbeat', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetHeartbeat'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetInitiate": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetInitiate', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetInitiate'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetMaintenance": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetMaintenance', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetMaintenance'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetReconfig": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetReconfig', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetReconfig'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetRequestVotes": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetRequestVotes', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetRequestVotes'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetResizeOplog": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetResizeOplog', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetResizeOplog'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetStepDown": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetStepDown', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetStepDown'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetStepUp": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetStepUp', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetStepUp'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetSyncFrom": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetSyncFrom', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetSyncFrom'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:replSetUpdatePosition": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'replSetUpdatePosition', full error: {'ok': 0.0, 'errmsg': \"no such command: 'replSetUpdatePosition'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:reshardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'reshardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: 'reshardCollection'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:revokePrivilegesFromRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'revokePrivilegesFromRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'revokePrivilegesFromRole'\", 'code': 59, 'codeName': 'CommandNo"
+ },
+ "cmd:revokeRolesFromRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'revokeRolesFromRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'revokeRolesFromRole'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:revokeRolesFromUser": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'revokeRolesFromUser', full error: {'ok': 0.0, 'errmsg': \"no such command: 'revokeRolesFromUser'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:rolesInfo": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'rolesInfo', full error: {'ok': 0.0, 'errmsg': \"no such command: 'rolesInfo'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:rotateCertificates": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'rotateCertificates', full error: {'ok': 0.0, 'errmsg': \"no such command: 'rotateCertificates'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:saslContinue": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'saslContinue', full error: {'ok': 0.0, 'errmsg': \"no such command: 'saslContinue'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:saslStart": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'saslStart', full error: {'ok': 0.0, 'errmsg': \"no such command: 'saslStart'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:serverStatus": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'serverStatus', full error: {'ok': 0.0, 'errmsg': \"no such command: 'serverStatus'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setAllowMigrations": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setAllowMigrations', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setAllowMigrations'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setAuditConfig": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setAuditConfig', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setAuditConfig'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setChangeStreamState": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setChangeStreamState', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setChangeStreamState'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setClusterParameter": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setClusterParameter', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setClusterParameter'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setDefaultRWConcern": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setDefaultRWConcern', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setDefaultRWConcern'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setFeatureCompatibilityVersion": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setFeatureCompatibilityVersion', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setFeatureCompatibilityVersion'\", 'code': 59, 'codeName'"
+ },
+ "cmd:setIndexCommitQuorum": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setIndexCommitQuorum', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setIndexCommitQuorum'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setParameter": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setParameter', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setParameter'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:setProfilingFilterGlobally": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setProfilingFilterGlobally', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setProfilingFilterGlobally'\", 'code': 59, 'codeName': 'Comma"
+ },
+ "cmd:setUserWriteBlockMode": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'setUserWriteBlockMode', full error: {'ok': 0.0, 'errmsg': \"no such command: 'setUserWriteBlockMode'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:shardCollection": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'shardCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: 'shardCollection'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:shardConnPoolStats": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'shardConnPoolStats', full error: {'ok': 0.0, 'errmsg': \"no such command: 'shardConnPoolStats'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:shardingState": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'shardingState', full error: {'ok': 0.0, 'errmsg': \"no such command: 'shardingState'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:shutdown": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'shutdown', full error: {'ok': 0.0, 'errmsg': \"no such command: 'shutdown'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:split": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'split', full error: {'ok': 0.0, 'errmsg': \"no such command: 'split'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:splitChunk": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'splitChunk', full error: {'ok': 0.0, 'errmsg': \"no such command: 'splitChunk'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:splitVector": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'splitVector', full error: {'ok': 0.0, 'errmsg': \"no such command: 'splitVector'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:startRecordingTraffic": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'startRecordingTraffic', full error: {'ok': 0.0, 'errmsg': \"no such command: 'startRecordingTraffic'\", 'code': 59, 'codeName': 'CommandNotFound"
+ },
+ "cmd:startSession": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'startSession', full error: {'ok': 0.0, 'errmsg': \"no such command: 'startSession'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:stopRecordingTraffic": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'stopRecordingTraffic', full error: {'ok': 0.0, 'errmsg': \"no such command: 'stopRecordingTraffic'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:top": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'top', full error: {'ok': 0.0, 'errmsg': \"no such command: 'top'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:unsetSharding": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'unsetSharding', full error: {'ok': 0.0, 'errmsg': \"no such command: 'unsetSharding'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:update": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:updateRole": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'updateRole', full error: {'ok': 0.0, 'errmsg': \"no such command: 'updateRole'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:updateSearchIndex": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'updateSearchIndex', full error: {'ok': 0.0, 'errmsg': \"no such command: 'updateSearchIndex'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:updateUser": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'updateUser', full error: {'ok': 0.0, 'errmsg': \"no such command: 'updateUser'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:updateZoneKeyRange": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'updateZoneKeyRange', full error: {'ok': 0.0, 'errmsg': \"no such command: 'updateZoneKeyRange'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:usersInfo": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'usersInfo', full error: {'ok': 0.0, 'errmsg': \"no such command: 'usersInfo'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:validate": {
+  "ours": "handled",
+  "ours_msg": "collection name has invalid type int, full error: {'ok': 0.0, 'errmsg': 'collection name has invalid type int', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "cmd:validateDBMetadata": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'validateDBMetadata', full error: {'ok': 0.0, 'errmsg': \"no such command: 'validateDBMetadata'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:voteCommitIndexBuild": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'voteCommitIndexBuild', full error: {'ok': 0.0, 'errmsg': \"no such command: 'voteCommitIndexBuild'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:waitForFailPoint": {
+  "ours": "unknown",
+  "ours_msg": "no such command: 'waitForFailPoint', full error: {'ok': 0.0, 'errmsg': \"no such command: 'waitForFailPoint'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+ },
+ "cmd:whatsmyuri": {
+  "ours": "handled",
+  "ours_msg": "ok"
+ },
+ "expr:$abs": {
+  "ours": "handled",
+  "ours_msg": "Expression $abs takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $abs takes exactly 1 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $abs takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$accumulator": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$accumulator', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$accumulator'\", 'code': 168, 'codeName': 'InvalidPipelineOpe",
+  "real": "unknown",
+  "real_msg": "Invalid $addFields :: caused by :: Unrecognized expression '$accumulator', full error: {'ok': 0.0, 'errmsg': \"Invalid $addFields :: caused by :: Unrecognized ex"
+ },
+ "expr:$acos": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$acos', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$acos'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $acos takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$acosh": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$acosh', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$acosh'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $acosh takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$add": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$allElementsTrue": {
+  "ours": "handled",
+  "ours_msg": "Expression $allElementsTrue takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $allElementsTrue takes exactly 1 argumen",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $allElementsTrue takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFiel"
+ },
+ "expr:$and": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$anyElementTrue": {
+  "ours": "handled",
+  "ours_msg": "Expression $anyElementTrue takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $anyElementTrue takes exactly 1 arguments",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $anyElementTrue takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addField"
+ },
+ "expr:$arrayElemAt": {
+  "ours": "handled",
+  "ours_msg": "Expression $arrayElemAt takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $arrayElemAt takes exactly 2 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $arrayElemAt takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$arrayToObject": {
+  "ours": "handled",
+  "ours_msg": "Expression $arrayToObject takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $arrayToObject takes exactly 1 arguments. ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $arrayToObject takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields"
+ },
+ "expr:$asin": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$asin', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$asin'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $asin takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$asinh": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$asinh', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$asinh'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $asinh takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$atan": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$atan', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$atan'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $atan takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$atan2": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$atan2', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$atan2'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $atan2 takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$atanh": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$atanh', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$atanh'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $atanh takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$avg": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$binarySize": {
+  "ours": "handled",
+  "ours_msg": "Expression $binarySize takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $binarySize takes exactly 1 arguments. 0 were",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $binarySize takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields ::"
+ },
+ "expr:$bitAnd": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$bitAnd', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$bitAnd'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$bitNot": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$bitNot', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$bitNot'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $bitNot takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cau"
+ },
+ "expr:$bitOr": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$bitOr', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$bitOr'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$bitXor": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$bitXor', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$bitXor'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$bsonSize": {
+  "ours": "handled",
+  "ours_msg": "Expression $bsonSize takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $bsonSize takes exactly 1 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $bsonSize takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$ceil": {
+  "ours": "handled",
+  "ours_msg": "Expression $ceil takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $ceil takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $ceil takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$cmp": {
+  "ours": "handled",
+  "ours_msg": "Expression $cmp takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $cmp takes exactly 2 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $cmp takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$concat": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$concatArrays": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$cond": {
+  "ours": "handled",
+  "ours_msg": "Expression $cond takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $cond takes exactly 3 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $cond takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$convert": {
+  "ours": "handled",
+  "ours_msg": "$convert only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$convert only supports an object as its argument', 'code': 4, 'codeName': '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $convert expects an object of named arguments but found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$cos": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$cos', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$cos'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $cos takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$cosh": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$cosh', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$cosh'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $cosh takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$dateAdd": {
+  "ours": "handled",
+  "ours_msg": "$dateAdd only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateAdd only supports an object as its argument', 'code': 40536, 'codeName",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateAdd expects an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $dateAdd ex"
+ },
+ "expr:$dateDiff": {
+  "ours": "handled",
+  "ours_msg": "$dateDiff only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateDiff only supports an object as its argument', 'code': 40536, 'codeNa",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateDiff only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $dat"
+ },
+ "expr:$dateFromParts": {
+  "ours": "handled",
+  "ours_msg": "$dateFromParts only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateFromParts only supports an object as its argument', 'code': 4053",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateFromParts only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by ::"
+ },
+ "expr:$dateFromString": {
+  "ours": "handled",
+  "ours_msg": "$dateFromString only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateFromString only supports an object as its argument', 'code': 40",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateFromString only supports an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$dateSubtract": {
+  "ours": "handled",
+  "ours_msg": "$dateSubtract only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateSubtract only supports an object as its argument', 'code': 40536,",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateSubtract expects an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $dateS"
+ },
+ "expr:$dateToParts": {
+  "ours": "handled",
+  "ours_msg": "$dateToParts only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateToParts only supports an object as its argument', 'code': 40536, '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateToParts only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $"
+ },
+ "expr:$dateToString": {
+  "ours": "handled",
+  "ours_msg": "$dateToString only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateToString only supports an object as its argument', 'code': 18629,",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateToString only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: "
+ },
+ "expr:$dateTrunc": {
+  "ours": "handled",
+  "ours_msg": "$dateTrunc only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$dateTrunc only supports an object as its argument', 'code': 40536, 'code",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dateTrunc only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $da"
+ },
+ "expr:$dayOfMonth": {
+  "ours": "handled",
+  "ours_msg": "Expression $dayOfMonth takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $dayOfMonth takes exactly 1 arguments. 0 were",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dayOfMonth accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addF"
+ },
+ "expr:$dayOfWeek": {
+  "ours": "handled",
+  "ours_msg": "Expression $dayOfWeek takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $dayOfWeek takes exactly 1 arguments. 0 were p",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dayOfWeek accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFi"
+ },
+ "expr:$dayOfYear": {
+  "ours": "handled",
+  "ours_msg": "Expression $dayOfYear takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $dayOfYear takes exactly 1 arguments. 0 were p",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $dayOfYear accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFi"
+ },
+ "expr:$degreesToRadians": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$degreesToRadians', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$degreesToRadians'\", 'code': 168, 'codeName': 'InvalidP",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $degreesToRadians takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFie"
+ },
+ "expr:$divide": {
+  "ours": "handled",
+  "ours_msg": "Expression $divide takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $divide takes exactly 2 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $divide takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cau"
+ },
+ "expr:$eq": {
+  "ours": "handled",
+  "ours_msg": "Expression $eq takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $eq takes exactly 2 arguments. 0 were passed in.', 'c",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $eq takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$exp": {
+  "ours": "handled",
+  "ours_msg": "Expression $exp takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $exp takes exactly 1 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $exp takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$filter": {
+  "ours": "handled",
+  "ours_msg": "$filter only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$filter only supports an object as its argument', 'code': 28646, 'codeName':",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $filter only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $filte"
+ },
+ "expr:$first": {
+  "ours": "handled",
+  "ours_msg": "Expression $first takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $first takes exactly 1 arguments. 0 were passed in",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $first takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$firstN": {
+  "ours": "handled",
+  "ours_msg": "$firstN only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$firstN only supports an object as its argument', 'code': 5787900, 'codeName",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: specification must be an object; found $firstN: [], full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: spe"
+ },
+ "expr:$floor": {
+  "ours": "handled",
+  "ours_msg": "Expression $floor takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $floor takes exactly 1 arguments. 0 were passed in",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $floor takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$function": {
+  "ours": "handled",
+  "ours_msg": "$function only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$function only supports an object as its argument', 'code': 31260, 'codeNa",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $function requires an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by"
+ },
+ "expr:$getField": {
+  "ours": "handled",
+  "ours_msg": "$getField requires 'field' to evaluate to a constant string, but got array, full error: {'ok': 0.0, 'errmsg': \"$getField requires 'field' to evaluate to a const",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $getField requires 'field' to evaluate to a constant, but got a non-constant argument, full error: {'ok': 0.0, 'errmsg': \"Inv"
+ },
+ "expr:$gt": {
+  "ours": "handled",
+  "ours_msg": "Expression $gt takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $gt takes exactly 2 arguments. 0 were passed in.', 'c",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $gt takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$gte": {
+  "ours": "handled",
+  "ours_msg": "Expression $gte takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $gte takes exactly 2 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $gte takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$hour": {
+  "ours": "handled",
+  "ours_msg": "Expression $hour takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $hour takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $hour accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields "
+ },
+ "expr:$ifNull": {
+  "ours": "handled",
+  "ours_msg": "Expression $ifNull needs at least two arguments, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $ifNull needs at least two arguments, but ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $ifNull needs at least two arguments, had: 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $ifNull n"
+ },
+ "expr:$in": {
+  "ours": "handled",
+  "ours_msg": "Expression $in takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $in takes exactly 2 arguments. 0 were passed in.', 'c",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $in takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$indexOfArray": {
+  "ours": "handled",
+  "ours_msg": "Expression $indexOfArray takes at least 2 arguments, and at most 4, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $indexOfArray takes at ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $indexOfArray takes at least 2 arguments, and at most 4, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': "
+ },
+ "expr:$indexOfBytes": {
+  "ours": "handled",
+  "ours_msg": "Expression $indexOfBytes takes at least 2 arguments, and at most 4, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $indexOfBytes takes at ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $indexOfBytes takes at least 2 arguments, and at most 4, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': "
+ },
+ "expr:$indexOfCP": {
+  "ours": "handled",
+  "ours_msg": "Expression $indexOfCP takes at least 2 arguments, and at most 4, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $indexOfCP takes at least ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $indexOfCP takes at least 2 arguments, and at most 4, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'In"
+ },
+ "expr:$isArray": {
+  "ours": "handled",
+  "ours_msg": "Expression $isArray takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $isArray takes exactly 1 arguments. 0 were passe",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $isArray takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: ca"
+ },
+ "expr:$isNumber": {
+  "ours": "handled",
+  "ours_msg": "Expression $isNumber takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $isNumber takes exactly 1 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $isNumber takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$isoDayOfWeek": {
+  "ours": "handled",
+  "ours_msg": "Expression $isoDayOfWeek takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $isoDayOfWeek takes exactly 1 arguments. 0 ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $isoDayOfWeek accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $ad"
+ },
+ "expr:$isoWeek": {
+  "ours": "handled",
+  "ours_msg": "Expression $isoWeek takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $isoWeek takes exactly 1 arguments. 0 were passe",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $isoWeek accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFiel"
+ },
+ "expr:$isoWeekYear": {
+  "ours": "handled",
+  "ours_msg": "Expression $isoWeekYear takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $isoWeekYear takes exactly 1 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $isoWeekYear accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $add"
+ },
+ "expr:$last": {
+  "ours": "handled",
+  "ours_msg": "Expression $last takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $last takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $last takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$lastN": {
+  "ours": "handled",
+  "ours_msg": "$lastN only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$lastN only supports an object as its argument', 'code': 5787900, 'codeName':",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: specification must be an object; found $lastN: [], full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: spec"
+ },
+ "expr:$let": {
+  "ours": "handled",
+  "ours_msg": "$let only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$let only supports an object as its argument', 'code': 16874, 'codeName': 'Loca",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $let only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $let only"
+ },
+ "expr:$literal": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$ln": {
+  "ours": "handled",
+  "ours_msg": "Expression $ln takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $ln takes exactly 1 arguments. 0 were passed in.', 'c",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $ln takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$log": {
+  "ours": "handled",
+  "ours_msg": "Expression $log takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $log takes exactly 2 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $log takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$log10": {
+  "ours": "handled",
+  "ours_msg": "Expression $log10 takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $log10 takes exactly 1 arguments. 0 were passed in",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $log10 takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$lt": {
+  "ours": "handled",
+  "ours_msg": "Expression $lt takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $lt takes exactly 2 arguments. 0 were passed in.', 'c",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $lt takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$lte": {
+  "ours": "handled",
+  "ours_msg": "Expression $lte takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $lte takes exactly 2 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $lte takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$ltrim": {
+  "ours": "handled",
+  "ours_msg": "$ltrim only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$ltrim only supports an object as its argument', 'code': 50696, 'codeName': '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $ltrim only supports an object as an argument, found array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused b"
+ },
+ "expr:$map": {
+  "ours": "handled",
+  "ours_msg": "$map only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$map only supports an object as its argument', 'code': 16878, 'codeName': 'Loca",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $map only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $map only"
+ },
+ "expr:$max": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$maxN": {
+  "ours": "handled",
+  "ours_msg": "$maxN only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$maxN only supports an object as its argument', 'code': 5787900, 'codeName': '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: specification must be an object; found $maxN: [], full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: speci"
+ },
+ "expr:$median": {
+  "ours": "handled",
+  "ours_msg": "$median requires an object as its argument, full error: {'ok': 0.0, 'errmsg': '$median requires an object as its argument', 'code': 7429513, 'codeName': 'Locati",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: specification must be an object; found $median: [], full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: spe"
+ },
+ "expr:$mergeObjects": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$meta": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $meta only supports string arguments, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $meta only suppor"
+ },
+ "expr:$millisecond": {
+  "ours": "handled",
+  "ours_msg": "Expression $millisecond takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $millisecond takes exactly 1 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $millisecond accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $add"
+ },
+ "expr:$min": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$minN": {
+  "ours": "handled",
+  "ours_msg": "$minN only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$minN only supports an object as its argument', 'code': 5787900, 'codeName': '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: specification must be an object; found $minN: [], full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: speci"
+ },
+ "expr:$minute": {
+  "ours": "handled",
+  "ours_msg": "Expression $minute takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $minute takes exactly 1 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $minute accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addField"
+ },
+ "expr:$mod": {
+  "ours": "handled",
+  "ours_msg": "Expression $mod takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $mod takes exactly 2 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $mod takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$month": {
+  "ours": "handled",
+  "ours_msg": "Expression $month takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $month takes exactly 1 arguments. 0 were passed in",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $month accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields"
+ },
+ "expr:$multiply": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$ne": {
+  "ours": "handled",
+  "ours_msg": "Expression $ne takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $ne takes exactly 2 arguments. 0 were passed in.', 'c",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $ne takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$not": {
+  "ours": "handled",
+  "ours_msg": "Expression $not takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $not takes exactly 1 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $not takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$objectToArray": {
+  "ours": "handled",
+  "ours_msg": "Expression $objectToArray takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $objectToArray takes exactly 1 arguments. ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $objectToArray takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields"
+ },
+ "expr:$or": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$percentile": {
+  "ours": "handled",
+  "ours_msg": "$percentile requires an object as its argument, full error: {'ok': 0.0, 'errmsg': '$percentile requires an object as its argument', 'code': 7429513, 'codeName':",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: specification must be an object; found $percentile: [], full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by ::"
+ },
+ "expr:$pow": {
+  "ours": "handled",
+  "ours_msg": "Expression $pow takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $pow takes exactly 2 arguments. 0 were passed in.', ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $pow takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$radiansToDegrees": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$radiansToDegrees', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$radiansToDegrees'\", 'code': 168, 'codeName': 'InvalidP",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $radiansToDegrees takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFie"
+ },
+ "expr:$rand": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$range": {
+  "ours": "handled",
+  "ours_msg": "Expression $range takes at least 2 arguments, and at most 3, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $range takes at least 2 argume",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $range takes at least 2 arguments, and at most 3, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invali"
+ },
+ "expr:$reduce": {
+  "ours": "handled",
+  "ours_msg": "$reduce only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$reduce only supports an object as its argument', 'code': 40075, 'codeName':",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $reduce requires an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :"
+ },
+ "expr:$regexFind": {
+  "ours": "handled",
+  "ours_msg": "$regexFind only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$regexFind only supports an object as its argument', 'code': 51103, 'code",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $regexFind expects an object of named arguments but found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: ca"
+ },
+ "expr:$regexFindAll": {
+  "ours": "handled",
+  "ours_msg": "$regexFindAll only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$regexFindAll only supports an object as its argument', 'code': 51103,",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $regexFindAll expects an object of named arguments but found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields ::"
+ },
+ "expr:$regexMatch": {
+  "ours": "handled",
+  "ours_msg": "$regexMatch only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$regexMatch only supports an object as its argument', 'code': 51103, 'co",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $regexMatch expects an object of named arguments but found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$replaceAll": {
+  "ours": "handled",
+  "ours_msg": "$replaceAll only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$replaceAll only supports an object as its argument', 'code': 51751, 'co",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $replaceAll requires an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$replaceOne": {
+  "ours": "handled",
+  "ours_msg": "$replaceOne only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$replaceOne only supports an object as its argument', 'code': 51751, 'co",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $replaceOne requires an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused "
+ },
+ "expr:$reverseArray": {
+  "ours": "handled",
+  "ours_msg": "Expression $reverseArray takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $reverseArray takes exactly 1 arguments. 0 ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $reverseArray takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields "
+ },
+ "expr:$round": {
+  "ours": "handled",
+  "ours_msg": "Expression $round takes at least 1 arguments, and at most 2, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $round takes at least 1 argume",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $round takes at least 1 arguments, and at most 2, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invali"
+ },
+ "expr:$rtrim": {
+  "ours": "handled",
+  "ours_msg": "$rtrim only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$rtrim only supports an object as its argument', 'code': 50696, 'codeName': '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $rtrim only supports an object as an argument, found array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused b"
+ },
+ "expr:$sampleRate": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$sampleRate', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$sampleRate'\", 'code': 168, 'codeName': 'InvalidPipelineOpera",
+  "real": "unknown",
+  "real_msg": "Invalid $addFields :: caused by :: Unrecognized expression '$sampleRate', full error: {'ok': 0.0, 'errmsg': \"Invalid $addFields :: caused by :: Unrecognized exp"
+ },
+ "expr:$second": {
+  "ours": "handled",
+  "ours_msg": "Expression $second takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $second takes exactly 1 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $second accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addField"
+ },
+ "expr:$setDifference": {
+  "ours": "handled",
+  "ours_msg": "Expression $setDifference takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $setDifference takes exactly 2 arguments. ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $setDifference takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields"
+ },
+ "expr:$setEquals": {
+  "ours": "handled",
+  "ours_msg": "$setEquals needs at least two arguments had: 0, full error: {'ok': 0.0, 'errmsg': '$setEquals needs at least two arguments had: 0', 'code': 17045, 'codeName': '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $setEquals needs at least two arguments had: 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $setEqu"
+ },
+ "expr:$setField": {
+  "ours": "handled",
+  "ours_msg": "$setField only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$setField only supports an object as its argument', 'code': 4161100, 'code",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $setField only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $set"
+ },
+ "expr:$setIntersection": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$setIsSubset": {
+  "ours": "handled",
+  "ours_msg": "Expression $setIsSubset takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $setIsSubset takes exactly 2 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $setIsSubset takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$setUnion": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$sin": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$sin', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$sin'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $sin takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$sinh": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$sinh', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$sinh'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $sinh takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$size": {
+  "ours": "handled",
+  "ours_msg": "Expression $size takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $size takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $size takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$slice": {
+  "ours": "handled",
+  "ours_msg": "Expression $slice takes at least 2 arguments, and at most 3, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $slice takes at least 2 argume",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $slice takes at least 2 arguments, and at most 3, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invali"
+ },
+ "expr:$sortArray": {
+  "ours": "handled",
+  "ours_msg": "$sortArray only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$sortArray only supports an object as its argument', 'code': 2942500, 'co",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $sortArray requires an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused b"
+ },
+ "expr:$split": {
+  "ours": "handled",
+  "ours_msg": "Expression $split takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $split takes exactly 2 arguments. 0 were passed in",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $split takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caus"
+ },
+ "expr:$sqrt": {
+  "ours": "handled",
+  "ours_msg": "Expression $sqrt takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $sqrt takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $sqrt takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$stdDevPop": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$stdDevPop', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$stdDevPop'\", 'code': 168, 'codeName': 'InvalidPipelineOperato",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$strLenBytes": {
+  "ours": "handled",
+  "ours_msg": "Expression $strLenBytes takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $strLenBytes takes exactly 1 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $strLenBytes takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$strLenCP": {
+  "ours": "handled",
+  "ours_msg": "Expression $strLenCP takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $strLenCP takes exactly 1 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $strLenCP takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$strcasecmp": {
+  "ours": "handled",
+  "ours_msg": "Expression $strcasecmp takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $strcasecmp takes exactly 2 arguments. 0 were",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $strcasecmp takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields ::"
+ },
+ "expr:$substr": {
+  "ours": "handled",
+  "ours_msg": "Expression $substr takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $substr takes exactly 3 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $substrBytes takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$substrBytes": {
+  "ours": "handled",
+  "ours_msg": "Expression $substrBytes takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $substrBytes takes exactly 3 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $substrBytes takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$substrCP": {
+  "ours": "handled",
+  "ours_msg": "Expression $substrCP takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $substrCP takes exactly 3 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $substrCP takes exactly 3 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$subtract": {
+  "ours": "handled",
+  "ours_msg": "Expression $subtract takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $subtract takes exactly 2 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $subtract takes exactly 2 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$switch": {
+  "ours": "handled",
+  "ours_msg": "$switch only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$switch only supports an object as its argument', 'code': 40060, 'codeName':",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $switch requires an object as an argument, found: array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :"
+ },
+ "expr:$tan": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$tan', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$tan'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $tan takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused"
+ },
+ "expr:$tanh": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$tanh', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$tanh'\", 'code': 168, 'codeName': 'InvalidPipelineOperator'}",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $tanh takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$toBool": {
+  "ours": "handled",
+  "ours_msg": "Expression $toBool takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toBool takes exactly 1 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toBool requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toBool requ"
+ },
+ "expr:$toDate": {
+  "ours": "handled",
+  "ours_msg": "Expression $toDate takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toDate takes exactly 1 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toDate requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toDate requ"
+ },
+ "expr:$toDecimal": {
+  "ours": "handled",
+  "ours_msg": "Expression $toDecimal takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toDecimal takes exactly 1 arguments. 0 were p",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toDecimal requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toDecima"
+ },
+ "expr:$toDouble": {
+  "ours": "handled",
+  "ours_msg": "Expression $toDouble takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toDouble takes exactly 1 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toDouble requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toDouble "
+ },
+ "expr:$toHashedIndexKey": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized expression '$toHashedIndexKey', full error: {'ok': 0.0, 'errmsg': \"Unrecognized expression '$toHashedIndexKey'\", 'code': 168, 'codeName': 'InvalidP",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "expr:$toInt": {
+  "ours": "handled",
+  "ours_msg": "Expression $toInt takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toInt takes exactly 1 arguments. 0 were passed in",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toInt requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toInt requir"
+ },
+ "expr:$toLong": {
+  "ours": "handled",
+  "ours_msg": "Expression $toLong takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toLong takes exactly 1 arguments. 0 were passed ",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toLong requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toLong requ"
+ },
+ "expr:$toLower": {
+  "ours": "handled",
+  "ours_msg": "Expression $toLower takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toLower takes exactly 1 arguments. 0 were passe",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $toLower takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: ca"
+ },
+ "expr:$toObjectId": {
+  "ours": "handled",
+  "ours_msg": "Expression $toObjectId takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toObjectId takes exactly 1 arguments. 0 were",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toObjectId requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toObjec"
+ },
+ "expr:$toString": {
+  "ours": "handled",
+  "ours_msg": "Expression $toString takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toString takes exactly 1 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $toString requires a single argument, got 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $toString "
+ },
+ "expr:$toUpper": {
+  "ours": "handled",
+  "ours_msg": "Expression $toUpper takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $toUpper takes exactly 1 arguments. 0 were passe",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $toUpper takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: ca"
+ },
+ "expr:$trim": {
+  "ours": "handled",
+  "ours_msg": "$trim only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$trim only supports an object as its argument', 'code': 50696, 'codeName': 'Lo",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $trim only supports an object as an argument, found array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by"
+ },
+ "expr:$trunc": {
+  "ours": "handled",
+  "ours_msg": "Expression $trunc takes at least 1 arguments, and at most 2, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $trunc takes at least 1 argume",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $trunc takes at least 1 arguments, and at most 2, but 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invali"
+ },
+ "expr:$tsIncrement": {
+  "ours": "handled",
+  "ours_msg": "Expression $tsIncrement takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $tsIncrement takes exactly 1 arguments. 0 we",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $tsIncrement takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :"
+ },
+ "expr:$tsSecond": {
+  "ours": "handled",
+  "ours_msg": "Expression $tsSecond takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $tsSecond takes exactly 1 arguments. 0 were pas",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $tsSecond takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: c"
+ },
+ "expr:$type": {
+  "ours": "handled",
+  "ours_msg": "Expression $type takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $type takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: Expression $type takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: cause"
+ },
+ "expr:$unsetField": {
+  "ours": "handled",
+  "ours_msg": "$unsetField only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$unsetField only supports an object as its argument', 'code': 4161100, '",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $unsetField only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by :: $u"
+ },
+ "expr:$week": {
+  "ours": "handled",
+  "ours_msg": "Expression $week takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $week takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $week accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields "
+ },
+ "expr:$year": {
+  "ours": "handled",
+  "ours_msg": "Expression $year takes exactly 1 arguments. 0 were passed in., full error: {'ok': 0.0, 'errmsg': 'Expression $year takes exactly 1 arguments. 0 were passed in.'",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $year accepts exactly one argument if given an array, but was given 0, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields "
+ },
+ "expr:$zip": {
+  "ours": "handled",
+  "ours_msg": "$zip only supports an object as its argument, full error: {'ok': 0.0, 'errmsg': '$zip only supports an object as its argument', 'code': 34460, 'codeName': 'Loca",
+  "real": "handled",
+  "real_msg": "Invalid $addFields :: caused by :: $zip only supports an object as an argument, found array, full error: {'ok': 0.0, 'errmsg': 'Invalid $addFields :: caused by "
+ },
+ "qop:$all": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$all needs an array, full error: {'ok': 0.0, 'errmsg': '$all needs an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$and": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$and must be an array, full error: {'ok': 0.0, 'errmsg': '$and must be an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$bitsAllClear": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$bitsAllSet": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$bitsAnyClear": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$bitsAnySet": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$box": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $box, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $box', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$center": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $center, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $center', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$centerSphere": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $centerSphere, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $centerSphere', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$elemMatch": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$elemMatch needs an Object, full error: {'ok': 0.0, 'errmsg': '$elemMatch needs an Object', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$eq": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$exists": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$expr": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$geoIntersects": {
+  "ours": "handled",
+  "ours_msg": "$geoIntersect not supported with provided geometry: { $geoIntersects: 1 }, full error: {'ok': 0.0, 'errmsg': '$geoIntersect not supported with provided geometry",
+  "real": "handled",
+  "real_msg": "geometry must be an object, full error: {'ok': 0.0, 'errmsg': 'geometry must be an object', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$geoWithin": {
+  "ours": "handled",
+  "ours_msg": "$geoWithin not supported with provided geometry, full error: {'ok': 0.0, 'errmsg': '$geoWithin not supported with provided geometry', 'code': 2, 'codeName': 'Ba",
+  "real": "handled",
+  "real_msg": "geometry must be an object, full error: {'ok': 0.0, 'errmsg': 'geometry must be an object', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$geometry": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $geometry, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $geometry', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$gt": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$gte": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$in": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$in needs an array, full error: {'ok': 0.0, 'errmsg': '$in needs an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$jsonSchema": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$jsonSchema must be an object, full error: {'ok': 0.0, 'errmsg': '$jsonSchema must be an object', 'code': 14, 'codeName': 'TypeMismatch'}"
+ },
+ "qop:$lt": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$lte": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$maxDistance": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $maxDistance, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $maxDistance', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$minDistance": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $minDistance, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $minDistance', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$mod": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "malformed mod, needs to be an array, full error: {'ok': 0.0, 'errmsg': 'malformed mod, needs to be an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$ne": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$near": {
+  "ours": "handled",
+  "ours_msg": "near must be first in: { $near: [x, y] }, full error: {'ok': 0.0, 'errmsg': 'near must be first in: { $near: [x, y] }', 'code': 2, 'codeName': 'BadValue'}",
+  "real": "handled",
+  "real_msg": "near must be first in: { $near: 1 }, full error: {'ok': 0.0, 'errmsg': 'near must be first in: { $near: 1 }', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$nearSphere": {
+  "ours": "handled",
+  "ours_msg": "near must be first in: { $near: [x, y] }, full error: {'ok': 0.0, 'errmsg': 'near must be first in: { $near: [x, y] }', 'code': 2, 'codeName': 'BadValue'}",
+  "real": "handled",
+  "real_msg": "near must be first in: { $nearSphere: 1 }, full error: {'ok': 0.0, 'errmsg': 'near must be first in: { $nearSphere: 1 }', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$nin": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$nin needs an array, full error: {'ok': 0.0, 'errmsg': '$nin needs an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$nor": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$nor must be an array, full error: {'ok': 0.0, 'errmsg': '$nor must be an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$not": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$not needs a regex or a document, full error: {'ok': 0.0, 'errmsg': '$not needs a regex or a document', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$or": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$or must be an array, full error: {'ok': 0.0, 'errmsg': '$or must be an array', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$polygon": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "unknown",
+  "real_msg": "unknown operator: $polygon, full error: {'ok': 0.0, 'errmsg': 'unknown operator: $polygon', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$regex": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$regex has to be a string, full error: {'ok': 0.0, 'errmsg': '$regex has to be a string', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$size": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$text": {
+  "ours": "handled",
+  "ours_msg": "$text expects an object, full error: {'ok': 0.0, 'errmsg': '$text expects an object', 'code': 2, 'codeName': 'BadValue'}",
+  "real": "handled",
+  "real_msg": "$text expects an object, full error: {'ok': 0.0, 'errmsg': '$text expects an object', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "qop:$type": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "qop:$where": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$where got bad type, full error: {'ok': 0.0, 'errmsg': '$where got bad type', 'code': 2, 'codeName': 'BadValue'}"
+ },
+ "stage:$addFields": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$bucket": {
+  "ours": "handled",
+  "ours_msg": "$bucket requires 'groupBy' and 'boundaries' to be specified., full error: {'ok': 0.0, 'errmsg': \"$bucket requires 'groupBy' and 'boundaries' to be specified.\", ",
+  "real": "handled",
+  "real_msg": "$bucket requires 'groupBy' and 'boundaries' to be specified., full error: {'ok': 0.0, 'errmsg': \"$bucket requires 'groupBy' and 'boundaries' to be specified.\", "
+ },
+ "stage:$bucketAuto": {
+  "ours": "handled",
+  "ours_msg": "$bucketAuto requires 'groupBy' and 'buckets' to be specified, full error: {'ok': 0.0, 'errmsg': \"$bucketAuto requires 'groupBy' and 'buckets' to be specified\", ",
+  "real": "handled",
+  "real_msg": "$bucketAuto requires 'groupBy' and 'buckets' to be specified, full error: {'ok': 0.0, 'errmsg': \"$bucketAuto requires 'groupBy' and 'buckets' to be specified\", "
+ },
+ "stage:$collStats": {
+  "ours": "handled",
+  "ours_msg": "Unable to retrieve storageStats in $collStats stage :: caused by :: Collection [compat_probe.x] not found., full error: {'ok': 0.0, 'errmsg': 'Unable to retriev",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$count": {
+  "ours": "handled",
+  "ours_msg": "the count field must be a non-empty string, full error: {'ok': 0.0, 'errmsg': 'the count field must be a non-empty string', 'code': 40156, 'codeName': 'Location",
+  "real": "handled",
+  "real_msg": "the count field must be a non-empty string, full error: {'ok': 0.0, 'errmsg': 'the count field must be a non-empty string', 'code': 40156, 'codeName': 'Location"
+ },
+ "stage:$currentOp": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$currentOp', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$currentOp'\", 'code': 40324, 'codeName': '",
+  "real": "handled",
+  "real_msg": "$currentOp must be run against the 'admin' database with {aggregate: 1}, full error: {'ok': 0.0, 'errmsg': \"$currentOp must be run against the 'admin' database "
+ },
+ "stage:$densify": {
+  "ours": "handled",
+  "ours_msg": "BSON field '$densify.field' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$densify.field' is missing but a required field\", 'c",
+  "real": "handled",
+  "real_msg": "BSON field '$densify.field' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$densify.field' is missing but a required field\", 'c"
+ },
+ "stage:$documents": {
+  "ours": "handled",
+  "ours_msg": "$documents is only valid as the first stage of a database-level aggregate ({aggregate: 1}), full error: {'ok': 0.0, 'errmsg': '$documents is only valid as the f",
+  "real": "handled",
+  "real_msg": "Invalid $documents :: caused by :: An empty sub-projection is not a valid value. Found empty object at path, full error: {'ok': 0.0, 'errmsg': 'Invalid $documen"
+ },
+ "stage:$facet": {
+  "ours": "handled",
+  "ours_msg": "the $facet specification must be a non-empty object, but found: {}, full error: {'ok': 0.0, 'errmsg': 'the $facet specification must be a non-empty object, but ",
+  "real": "handled",
+  "real_msg": "the $facet specification must be a non-empty object, but found: $facet: {}, full error: {'ok': 0.0, 'errmsg': 'the $facet specification must be a non-empty obje"
+ },
+ "stage:$fill": {
+  "ours": "handled",
+  "ours_msg": "BSON field '$fill.output' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$fill.output' is missing but a required field\", 'code'",
+  "real": "handled",
+  "real_msg": "BSON field '$fill.output' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$fill.output' is missing but a required field\", 'code'"
+ },
+ "stage:$geoNear": {
+  "ours": "handled",
+  "ours_msg": "$geoNear requires a 'near' argument, full error: {'ok': 0.0, 'errmsg': \"$geoNear requires a 'near' argument\", 'code': 5860400, 'codeName': 'Location5860400'}",
+  "real": "handled",
+  "real_msg": "$geoNear requires a 'near' argument, full error: {'ok': 0.0, 'errmsg': \"$geoNear requires a 'near' argument\", 'code': 5860400, 'codeName': 'Location5860400'}"
+ },
+ "stage:$graphLookup": {
+  "ours": "handled",
+  "ours_msg": "$graphLookup requires 'from', 'startWith', 'connectFromField', 'connectToField' and 'as', full error: {'ok': 0.0, 'errmsg': \"$graphLookup requires 'from', 'star",
+  "real": "handled",
+  "real_msg": "missing 'from' option to $graphLookup stage specification: {}, full error: {'ok': 0.0, 'errmsg': \"missing 'from' option to $graphLookup stage specification: {}\""
+ },
+ "stage:$group": {
+  "ours": "handled",
+  "ours_msg": "a group specification must include an _id, full error: {'ok': 0.0, 'errmsg': 'a group specification must include an _id', 'code': 15955, 'codeName': 'Location15",
+  "real": "handled",
+  "real_msg": "a group specification must include an _id, full error: {'ok': 0.0, 'errmsg': 'a group specification must include an _id', 'code': 15955, 'codeName': 'Location15"
+ },
+ "stage:$indexStats": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$limit": {
+  "ours": "handled",
+  "ours_msg": "invalid argument to $limit stage: Expected a number in: $limit: {}, full error: {'ok': 0.0, 'errmsg': 'invalid argument to $limit stage: Expected a number in: $",
+  "real": "handled",
+  "real_msg": "invalid argument to $limit stage: Expected a number in: $limit: {}, full error: {'ok': 0.0, 'errmsg': 'invalid argument to $limit stage: Expected a number in: $"
+ },
+ "stage:$listLocalSessions": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$listLocalSessions', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$listLocalSessions'\", 'code': 4032",
+  "real": "handled",
+  "real_msg": "$listLocalSessions must be run against the database with {aggregate: 1}, not a collection, full error: {'ok': 0.0, 'errmsg': '$listLocalSessions must be run aga"
+ },
+ "stage:$listSampledQueries": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$listSampledQueries', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$listSampledQueries'\", 'code': 40",
+  "real": "handled",
+  "real_msg": "$listSampledQueries is not supported on a standalone mongod, full error: {'ok': 0.0, 'errmsg': '$listSampledQueries is not supported on a standalone mongod', 'c"
+ },
+ "stage:$listSearchIndexes": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$listSearchIndexes', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$listSearchIndexes'\", 'code': 4032",
+  "real": "handled",
+  "real_msg": "$listSearchIndexes stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$listSearchIndexes stage is only allowed on MongoDB Atlas', 'code'"
+ },
+ "stage:$listSessions": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$listSessions', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$listSessions'\", 'code': 40324, 'codeNa",
+  "real": "handled",
+  "real_msg": "$listSessions may only be run against config.system.sessions, full error: {'ok': 0.0, 'errmsg': '$listSessions may only be run against config.system.sessions', "
+ },
+ "stage:$lookup": {
+  "ours": "handled",
+  "ours_msg": "must specify 'as' field for a $lookup, full error: {'ok': 0.0, 'errmsg': \"must specify 'as' field for a $lookup\", 'code': 9, 'codeName': 'FailedToParse'}",
+  "real": "handled",
+  "real_msg": "must specify 'pipeline' when 'from' is empty, full error: {'ok': 0.0, 'errmsg': \"must specify 'pipeline' when 'from' is empty\", 'code': 9, 'codeName': 'FailedTo"
+ },
+ "stage:$match": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$merge": {
+  "ours": "handled",
+  "ours_msg": "$merge requires 'into', full error: {'ok': 0.0, 'errmsg': \"$merge requires 'into'\", 'code': 40414, 'codeName': 'Location40414'}",
+  "real": "handled",
+  "real_msg": "BSON field '$merge.into' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$merge.into' is missing but a required field\", 'code': "
+ },
+ "stage:$out": {
+  "ours": "handled",
+  "ours_msg": "$out requires 'coll', full error: {'ok': 0.0, 'errmsg': \"$out requires 'coll'\", 'code': 40414, 'codeName': 'Location40414'}",
+  "real": "handled",
+  "real_msg": "BSON field '$out.coll' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$out.coll' is missing but a required field\", 'code': 4041"
+ },
+ "stage:$planCacheStats": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$project": {
+  "ours": "handled",
+  "ours_msg": "Invalid $project :: caused by :: projection specification must have at least one field, full error: {'ok': 0.0, 'errmsg': 'Invalid $project :: caused by :: proj",
+  "real": "handled",
+  "real_msg": "Invalid $project :: caused by :: projection specification must have at least one field, full error: {'ok': 0.0, 'errmsg': 'Invalid $project :: caused by :: proj"
+ },
+ "stage:$queryStats": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$queryStats', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$queryStats'\", 'code': 40324, 'codeName':",
+  "real": "handled",
+  "real_msg": "$queryStats must be run against the 'admin' database with {aggregate: 1}, full error: {'ok': 0.0, 'errmsg': \"$queryStats must be run against the 'admin' databas"
+ },
+ "stage:$redact": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "PlanExecutor error during aggregation :: caused by :: $redact's expression should not return anything aside from the variables $$KEEP, $$DESCEND, and $$PRUNE, b"
+ },
+ "stage:$replaceRoot": {
+  "ours": "handled",
+  "ours_msg": "BSON field '$replaceRoot.newRoot' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$replaceRoot.newRoot' is missing but a require",
+  "real": "handled",
+  "real_msg": "BSON field '$replaceRoot.newRoot' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$replaceRoot.newRoot' is missing but a require"
+ },
+ "stage:$replaceWith": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$sample": {
+  "ours": "handled",
+  "ours_msg": "size argument to $sample must not be negative, full error: {'ok': 0.0, 'errmsg': 'size argument to $sample must not be negative', 'code': 28747, 'codeName': 'Lo",
+  "real": "handled",
+  "real_msg": "$sample stage must specify a size, full error: {'ok': 0.0, 'errmsg': '$sample stage must specify a size', 'code': 28749, 'codeName': 'Location28749'}"
+ },
+ "stage:$search": {
+  "ours": "handled",
+  "ours_msg": "$search requires an operator, full error: {'ok': 0.0, 'errmsg': '$search requires an operator', 'code': 2, 'codeName': 'BadValue'}",
+  "real": "handled",
+  "real_msg": "$search stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$search stage is only allowed on MongoDB Atlas', 'code': 6047401, 'codeName':"
+ },
+ "stage:$searchMeta": {
+  "ours": "handled",
+  "ours_msg": "$searchMeta requires an operator, full error: {'ok': 0.0, 'errmsg': '$searchMeta requires an operator', 'code': 2, 'codeName': 'BadValue'}",
+  "real": "handled",
+  "real_msg": "$searchMeta stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$searchMeta stage is only allowed on MongoDB Atlas', 'code': 6047401, 'co"
+ },
+ "stage:$set": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "stage:$setWindowFields": {
+  "ours": "handled",
+  "ours_msg": "BSON field '$setWindowFields.output' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$setWindowFields.output' is missing but a r",
+  "real": "handled",
+  "real_msg": "BSON field '$setWindowFields.output' is missing but a required field, full error: {'ok': 0.0, 'errmsg': \"BSON field '$setWindowFields.output' is missing but a r"
+ },
+ "stage:$shardedDataDistribution": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$shardedDataDistribution', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$shardedDataDistribution'\", ",
+  "real": "handled",
+  "real_msg": "The $shardedDataDistribution stage can only be run on mongoS, full error: {'ok': 0.0, 'errmsg': 'The $shardedDataDistribution stage can only be run on mongoS', "
+ },
+ "stage:$skip": {
+  "ours": "handled",
+  "ours_msg": "invalid argument to $skip stage: Expected a number in: $skip: {}, full error: {'ok': 0.0, 'errmsg': 'invalid argument to $skip stage: Expected a number in: $ski",
+  "real": "handled",
+  "real_msg": "invalid argument to $skip stage: Expected a number in: $skip: {}, full error: {'ok': 0.0, 'errmsg': 'invalid argument to $skip stage: Expected a number in: $ski"
+ },
+ "stage:$sort": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$sort stage must have at least one sort key, full error: {'ok': 0.0, 'errmsg': '$sort stage must have at least one sort key', 'code': 15976, 'codeName': 'Locati"
+ },
+ "stage:$sortByCount": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "the sortByCount field must be defined as a $-prefixed path or an expression inside an object, full error: {'ok': 0.0, 'errmsg': 'the sortByCount field must be d"
+ },
+ "stage:$unionWith": {
+  "ours": "handled",
+  "ours_msg": "$unionWith requires 'coll', full error: {'ok': 0.0, 'errmsg': \"$unionWith requires 'coll'\", 'code': 40415, 'codeName': 'Location40415'}",
+  "real": "handled",
+  "real_msg": "$unionWith stage without explicit collection must have a pipeline with $documents as first stage, full error: {'ok': 0.0, 'errmsg': '$unionWith stage without ex"
+ },
+ "stage:$unset": {
+  "ours": "handled",
+  "ours_msg": "$unset specification must be a string or an array, full error: {'ok': 0.0, 'errmsg': '$unset specification must be a string or an array', 'code': 31002, 'codeNa",
+  "real": "handled",
+  "real_msg": "$unset specification must be a string or an array, full error: {'ok': 0.0, 'errmsg': '$unset specification must be a string or an array', 'code': 31002, 'codeNa"
+ },
+ "stage:$unwind": {
+  "ours": "handled",
+  "ours_msg": "no path specified to $unwind stage, full error: {'ok': 0.0, 'errmsg': 'no path specified to $unwind stage', 'code': 28812, 'codeName': 'Location28812'}",
+  "real": "handled",
+  "real_msg": "no path specified to $unwind stage, full error: {'ok': 0.0, 'errmsg': 'no path specified to $unwind stage', 'code': 28812, 'codeName': 'Location28812'}"
+ },
+ "stage:$vectorSearch": {
+  "ours": "unknown",
+  "ours_msg": "Unrecognized pipeline stage name: '$vectorSearch', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$vectorSearch'\", 'code': 40324, 'codeNa",
+  "real": "handled",
+  "real_msg": "$vectorSearch stage is only allowed on MongoDB Atlas, full error: {'ok': 0.0, 'errmsg': '$vectorSearch stage is only allowed on MongoDB Atlas', 'code': 6047401,"
+ },
+ "upd:$addToSet": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "Cannot apply $addToSet to non-array field. Field named 'a' has non-array type int, full error: {'index': 0, 'code': 2, 'errmsg': \"Cannot apply $addToSet to non-"
+ },
+ "upd:$bit": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "The $bit modifier is not compatible with a int. You must pass in an embedded document: {$bit: {field: {and/or/xor: #}}, full error: {'index': 0, 'code': 2, 'err"
+ },
+ "upd:$currentDate": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "int is not valid type for $currentDate. Please use a boolean ('true') or a $type expression ({$type: 'timestamp/date'})., full error: {'index': 0, 'code': 2, 'e"
+ },
+ "upd:$inc": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "upd:$max": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "upd:$min": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "upd:$mul": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "upd:$pop": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "Path 'a' contains an element of non-array type 'int', full error: {'index': 0, 'code': 14, 'errmsg': \"Path 'a' contains an element of non-array type 'int'\"}"
+ },
+ "upd:$pull": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "Cannot apply $pull to a non-array value, full error: {'index': 0, 'code': 2, 'errmsg': 'Cannot apply $pull to a non-array value'}"
+ },
+ "upd:$pullAll": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$pullAll requires an array argument but was given a int, full error: {'index': 0, 'code': 2, 'errmsg': '$pullAll requires an array argument but was given a int'"
+ },
+ "upd:$push": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "The field 'a' must be an array but is of type int in document {_id: 1}, full error: {'index': 0, 'code': 2, 'errmsg': \"The field 'a' must be an array but is of "
+ },
+ "upd:$rename": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "The 'to' field for $rename must be a string: a: 1, full error: {'index': 0, 'code': 2, 'errmsg': \"The 'to' field for $rename must be a string: a: 1\"}"
+ },
+ "upd:$set": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "upd:$setOnInsert": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "upd:$unset": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$addToSet": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$avg": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$bottom": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $bottom: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $bottom: \"$a\"', 'code': 5788001,"
+ },
+ "win:$bottomN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $bottomN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $bottomN: \"$a\"', 'code': 578800"
+ },
+ "win:$count": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "$count only accepts an empty object as input, full error: {'ok': 0.0, 'errmsg': '$count only accepts an empty object as input', 'code': 9, 'codeName': 'FailedTo"
+ },
+ "win:$first": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$firstN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $firstN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $firstN: \"$a\"', 'code': 5787801,"
+ },
+ "win:$last": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$lastN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $lastN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $lastN: \"$a\"', 'code': 5787801, '"
+ },
+ "win:$max": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$maxN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $maxN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $maxN: \"$a\"', 'code': 5787900, 'co"
+ },
+ "win:$median": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $median: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $median: \"$a\"', 'code': 7436100,"
+ },
+ "win:$min": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$minN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $minN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $minN: \"$a\"', 'code': 5787900, 'co"
+ },
+ "win:$percentile": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $percentile: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $percentile: \"$a\"', 'code': "
+ },
+ "win:$push": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$stdDevPop": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$stdDevSamp": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$sum": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "ok"
+ },
+ "win:$top": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $top: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $top: \"$a\"', 'code': 5788001, 'code"
+ },
+ "win:$topN": {
+  "ours": "handled",
+  "ours_msg": "ok",
+  "real": "handled",
+  "real_msg": "specification must be an object; found $topN: \"$a\", full error: {'ok': 0.0, 'errmsg': 'specification must be an object; found $topN: \"$a\"', 'code': 5788001, 'co"
+ }
+}
