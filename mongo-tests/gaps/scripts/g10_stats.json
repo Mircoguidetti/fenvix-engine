@@ -865,90 +865,95 @@
    {
     "validate": "t",
     "__strip": [
-     "wiredTiger",
-     "keysPerIndex",
-     "indexDetails",
-     "nrecords",
-     "nIndexes",
-     "uuid",
-     "repaired",
-     "advice"
+     "warnings"
     ]
    },
    {
     "validate": "t",
-    "full": true,
     "__strip": [
-     "wiredTiger",
-     "keysPerIndex",
-     "indexDetails",
-     "nrecords",
-     "nIndexes",
-     "uuid",
-     "repaired",
-     "advice"
-    ]
+     "warnings"
+    ],
+    "full": true
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "metadata": true
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "metadata": true,
     "full": true
    },
    {
     "validate": "t",
-    "checkBSONConformance": true,
     "__strip": [
-     "wiredTiger",
-     "keysPerIndex",
-     "indexDetails",
-     "nrecords",
-     "nIndexes",
-     "uuid",
-     "repaired",
-     "advice"
-    ]
+     "warnings"
+    ],
+    "metadata": true,
+    "full": false
    },
    {
     "validate": "t",
-    "background": true
+    "__strip": [
+     "warnings"
+    ],
+    "metadata": true,
+    "checkBSONConformance": true
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
+    "checkBSONConformance": true
+   },
+   {
+    "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "background": true,
     "full": true
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "repair": true
    },
    {
     "validate": "t",
-    "fixMultikey": true,
     "__strip": [
-     "wiredTiger",
-     "keysPerIndex",
-     "indexDetails",
-     "nrecords",
-     "nIndexes",
-     "uuid",
-     "repaired",
-     "advice"
-    ]
+     "warnings"
+    ],
+    "fixMultikey": true
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "full": "x"
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "metadata": "x"
    },
    {
     "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
     "bogus": 1
    },
    {
@@ -960,23 +965,54 @@
    },
    {
     "validate": "t",
-    "enforceFastCount": true,
     "__strip": [
-     "wiredTiger",
-     "keysPerIndex",
-     "indexDetails",
-     "nrecords",
-     "nIndexes",
-     "uuid",
-     "repaired",
-     "advice"
-    ]
+     "warnings"
+    ],
+    "enforceFastCount": true
+   },
+   {
+    "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
+    "full": false,
+    "metadata": false
+   },
+   {
+    "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
+    "full": 0
+   },
+   {
+    "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
+    "full": 2
+   },
+   {
+    "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
+    "full": null
+   },
+   {
+    "validate": "t",
+    "__strip": [
+     "warnings"
+    ],
+    "full": {
+     "a": 1
+    }
    },
    {
     "validate": "t",
     "__shape": true,
     "__strip": [
-     "wiredTiger"
+     "warnings"
     ]
    },
    {
@@ -984,8 +1020,138 @@
     "full": true,
     "__shape": true,
     "__strip": [
-     "wiredTiger"
+     "warnings"
     ]
+   },
+   {
+    "validate": 1
+   },
+   {
+    "validate": "system.views"
+   },
+   {
+    "validate": "t",
+    "checkBSONConformance": "x"
+   },
+   {
+    "insert": "v",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "v",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1",
+      "partialFilterExpression": {
+       "a": {
+        "$gt": 5
+       }
+      }
+     },
+     {
+      "key": {
+       "z": 1
+      },
+      "name": "z_1",
+      "sparse": true
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "validate": "v",
+    "__strip": [
+     "warnings"
+    ]
+   },
+   {
+    "createIndexes": "w",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "w",
+    "documents": [
+     {
+      "_id": 0,
+      "a": 0
+     },
+     {
+      "_id": 1,
+      "a": 1
+     },
+     {
+      "_id": 2,
+      "a": 2
+     },
+     {
+      "_id": 3,
+      "a": 3
+     },
+     {
+      "_id": 4,
+      "a": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "collMod": "w",
+    "validator": {
+     "a": {
+      "$gte": 3
+     }
+    },
+    "validationLevel": "moderate",
+    "__skip": true
+   },
+   {
+    "validate": "w",
+    "__strip": [
+     "warnings"
+    ]
+   },
+   {
+    "validate": "w"
+   },
+   {
+    "collMod": "w",
+    "validationLevel": "off"
+   },
+   {
+    "validate": "w"
+   },
+   {
+    "collMod": "w",
+    "validationLevel": "strict",
+    "validationAction": "warn"
+   },
+   {
+    "validate": "w"
+   },
+   {
+    "validate": "w",
+    "metadata": true
+   },
+   {
+    "validate": "w",
+    "background": true
    }
   ]
  },

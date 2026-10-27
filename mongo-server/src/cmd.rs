@@ -84,6 +84,15 @@ pub(crate) fn write_error(index: usize, code: i32, msg: String) -> Document {
 }
 
 
+/// Commands that write (they get a new cluster time when they published no change event).
+fn is_write_command(name: &str) -> bool {
+    matches!(
+        name,
+        "insert" | "update" | "delete" | "findAndModify" | "findandmodify" | "create" | "drop" | "dropDatabase" | "createIndexes" | "dropIndexes" | "collMod" | "renameCollection" | "convertToCapped" | "cloneCollectionAsCapped" | "mapReduce" | "mapreduce" | "createUser"
+            | "updateUser" | "dropUser" | "createRole" | "updateRole" | "dropRole" | "commitTransaction"
+    )
+}
+
 impl Server {
     pub fn new(dbs: Arc<Dbs>, log_commands: bool) -> Arc<Self> {
         Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1), auth: Default::default(), retry: Default::default(), diag: Default::default() })
@@ -103,6 +112,43 @@ impl Server {
         let t0 = std::time::Instant::now();
         let (opid, kill) = self.diag.begin(conn_id, db, &name, &cmd);
         let killable = crate::diag::killable(&name);
+        let is_rs = self.rs.lock().unwrap().is_some();
+        if is_rs {
+            if let Some(Bson::Timestamp(ts)) = cmd.get_document("$clusterTime").ok().and_then(|c| c.get("clusterTime")) {
+                self.dbs.changes.advance(*ts);
+            }
+        }
+        let (r, op_time) = crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) }).await;
+        let r: R<Document> = r;
+        let micros = t0.elapsed().as_micros() as i64;
+        self.diag.end(opid, db, &name, &cmd, &r, micros);
+        self.profile_record(db, &name, &cmd, &r, micros, conn_id).await;
+        let ms = t0.elapsed().as_millis();
+        if ms >= 500 {
+            eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
+        }
+        let mut reply = match r {
+            Ok(d) => d,
+            Err(e) => e.to_reply(),
+        };
+        if is_rs {
+            let log = &self.dbs.changes;
+            let op = match op_time {
+                Some((t, i)) => bson::Timestamp { time: t, increment: i },
+                None if is_write_command(&name) => log.tick(),
+                None => log.cluster_now(),
+            };
+            let now = log.cluster_now();
+            let now = if (now.time, now.increment) < (op.time, op.increment) { op } else { now };
+            reply.insert("$clusterTime", doc! { "clusterTime": Bson::Timestamp(now), "signature": { "hash": Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: vec![0; 20] }), "keyId": 0_i64 } });
+            reply.insert("operationTime", Bson::Timestamp(op));
+        }
+        reply
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn run_command(self: &Arc<Self>, db: &str, name: &str, cmd: &Document, conn_id: i64, opid: i64, kill: Arc<tokio::sync::Notify>, killable: bool) -> R<Document> {
+        let name = name.to_string();
         let r = if crate::diag::needs_js(&name, &cmd) {
             // a command that runs JavaScript blocks its thread: all of them run on one thread of their own (the engines and their
             // per-database scopes are per thread), the connections that run no JavaScript go on
@@ -111,17 +157,7 @@ impl Server {
         } else {
             crate::diag::as_op(opid, self.diag.guarded(kill, killable, crate::js::scoped(db, self.dispatch(db, &name, &cmd, conn_id)))).await
         };
-        let micros = t0.elapsed().as_micros() as i64;
-        self.diag.end(opid, db, &name, &cmd, &r, micros);
-        self.profile_record(db, &name, &cmd, &r, micros, conn_id).await;
-        let ms = t0.elapsed().as_millis();
-        if ms >= 500 {
-            eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
-        }
-        match r {
-            Ok(d) => d,
-            Err(e) => e.to_reply(),
-        }
+        r
     }
 
     async fn dispatch(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
@@ -187,7 +223,7 @@ impl Server {
             "abortTransaction" => return self.abort_txn(cmd).await,
             "whatsmyuri" => return Ok(doc! { "you": "127.0.0.1:0", "ok": 1.0 }),
             "connectionStatus" => return self.connection_status(conn_id, cmd).await,
-            "listDatabases" => return self.list_databases(cmd, conn_id).await,
+            "listDatabases" => return self.list_databases(db, cmd, conn_id).await,
             "tenantStats" => return Ok(self.tenant_stats()),
             "renameCollection" => return self.rename_collection(db, cmd).await,
             "ttlPass" => {
@@ -315,14 +351,35 @@ impl Server {
 
     // ---- databases and collections ---------------------------------------------------------
 
-    async fn list_databases(&self, cmd: &Document, conn_id: i64) -> R<Document> {
+    async fn list_databases(&self, db: &str, cmd: &Document, conn_id: i64) -> R<Document> {
+        if db != "admin" {
+            return Err(MongoError::new(13, "Unauthorized", "listDatabases may only be run against the admin database.".into()));
+        }
+        let wrong = |f: &str, v: &Bson, want: &str| MongoError::type_mismatch(format!("BSON field 'listDatabases.{f}' is the wrong type '{}', expected {want}", crate::update::type_name(v)));
+        for f in ["nameOnly", "authorizedDatabases"] {
+            if let Some(v) = cmd.get(f) {
+                if !matches!(v, Bson::Boolean(_) | Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_) | Bson::Decimal128(_)) {
+                    return Err(wrong(f, v, "types '[bool, long, int, decimal, double']"));
+                }
+            }
+        }
+        let filter = match cmd.get("filter") {
+            Some(Bson::Document(f)) => f.clone(),
+            Some(v) => return Err(wrong("filter", v, "type 'object'")),
+            None => Document::new(),
+        };
+        crate::query::probe_filter(&filter)?;
         let name_only = bool_arg(cmd.get("nameOnly"), false);
         let names = self.dbs.list_databases().await?;
         let names = self.visible_databases(conn_id, names).await?;
-        let dbs: Vec<Bson> = names
-            .into_iter()
-            .map(|n| if name_only { Bson::Document(doc! { "name": n }) } else { Bson::Document(doc! { "name": n, "sizeOnDisk": 0_i64, "empty": false }) })
-            .collect();
+        let mut dbs: Vec<Bson> = Vec::new();
+        for n in names {
+            let full = doc! { "name": n, "sizeOnDisk": 0_i64, "empty": false };
+            if !matches(&full, &filter)? {
+                continue;
+            }
+            dbs.push(Bson::Document(if name_only { doc! { "name": full.get_str("name").unwrap_or_default() } } else { full }));
+        }
         let mut d = doc! { "databases": dbs };
         if !name_only {
             d.insert("totalSize", 0_i64);

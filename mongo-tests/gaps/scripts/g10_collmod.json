@@ -242,7 +242,8 @@
      "maxScansToExplodeReached",
      "namespace",
      "optimizationTimeMillis",
-     "command"
+     "command",
+     "filter"
     ]
    },
    {
@@ -274,7 +275,8 @@
      "maxScansToExplodeReached",
      "namespace",
      "optimizationTimeMillis",
-     "command"
+     "command",
+     "filter"
     ]
    },
    {
@@ -283,6 +285,122 @@
      "name": "a_1",
      "hidden": true
     }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1",
+      "hidden": true
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1",
+      "hidden": true
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1"
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1",
+      "hidden": false
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_other"
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "d": 1
+      },
+      "name": "d_1",
+      "hidden": "x"
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_",
+      "hidden": true
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "e": 1
+      },
+      "name": "e_1",
+      "hidden": true,
+      "unique": true
+     }
+    ]
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 500,
+      "e": 1
+     },
+     {
+      "_id": 501,
+      "e": 1
+     }
+    ]
+   },
+   {
+    "dropIndexes": "t",
+    "index": "c_1"
    }
   ]
  },

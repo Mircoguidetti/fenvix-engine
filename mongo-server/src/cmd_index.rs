@@ -465,10 +465,50 @@ impl Server {
         Ok(self.cursor_reply(format!("{db}.{coll}"), docs, batch, false))
     }
 
+    /// The `commitQuorum` of `createIndexes`: only a replica set takes one (the engine is a single data-bearing member).
+    fn commit_quorum(&self, v: Option<&Bson>) -> R<Option<Bson>> {
+        let Some(v) = v else { return Ok(None) };
+        let n = match v {
+            Bson::String(_) => None,
+            Bson::Int32(i) => Some(*i as f64),
+            Bson::Int64(i) => Some(*i as f64),
+            Bson::Double(f) => Some(*f),
+            Bson::Decimal128(d) => d.to_string().parse::<f64>().ok(),
+            other => {
+                return Err(MongoError::type_mismatch(format!("BSON field 'createIndexes.commitQuorum' is the wrong type '{}', expected types '[long, int, decimal, double, string']", crate::update::type_name(other))));
+            }
+        };
+        if matches!(n, Some(n) if !(0.0..=50.0).contains(&n)) {
+            return Err(MongoError::failed_to_parse("commitQuorum has to be a non-negative number and not greater than 50".into()));
+        }
+        if self.rs.lock().unwrap().is_none() {
+            return Err(MongoError::bad_value("Standalones can't specify commitQuorum".into()));
+        }
+        match (v, n) {
+            (Bson::String(s), _) => {
+                if s != "votingMembers" && s != "majority" {
+                    return Err(MongoError::new(79, "UnknownReplWriteConcern", format!("No write concern mode named '{s}' found in replica set configuration")));
+                }
+                Ok(Some(v.clone()))
+            }
+            (_, Some(n)) => {
+                if !(0.0..=50.0).contains(&n) {
+                    return Err(MongoError::failed_to_parse("commitQuorum has to be a non-negative number and not greater than 50".into()));
+                }
+                if n >= 2.0 {
+                    return Err(MongoError::new(278, "UnsatisfiableCommitQuorum", "Not enough data-bearing nodes to satisfy commit quorum".into()));
+                }
+                Ok(Some(Bson::Int32(n as i32)))
+            }
+            _ => Ok(None),
+        }
+    }
+
     pub(crate) async fn create_indexes(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "createIndexes")?;
         let specs = cmd.get_array("indexes").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'createIndexes.indexes' is missing but a required field".into()))?;
         let ns = format!("{db}.{coll}");
+        let commit_quorum = self.commit_quorum(cmd.get("commitQuorum"))?;
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         let existed = names.iter().any(|n| n == coll);
@@ -494,6 +534,11 @@ impl Server {
             }
             let name = spec.get_str("name").map(str::to_string).unwrap_or_else(|_| spec_name(key));
             if name == "_id_" || (key.len() == 1 && matches!(key.get("_id"), Some(Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_)))) {
+                if spec.contains_key("hidden") {
+                    let mut shown = spec.clone();
+                    shown.insert("v", 2);
+                    return Err(MongoError::new(197, "InvalidIndexSpecificationOption", format!("The field 'hidden' is not valid for an _id index specification. Specification: {}", fmt_doc(&shown))));
+                }
                 continue; // the implicit _id index
             }
             crate::wild::plugin_conflicts(spec, key)?;
@@ -543,12 +588,28 @@ impl Server {
                     }
                 }
             }
+            if let Some(v) = idx.get("hidden") {
+                if !matches!(v, Bson::Boolean(_)) && num_opt(v).is_none() {
+                    // (mongod names the field 'name' in this message)
+                    return Err(MongoError::new(14, "TypeMismatch", format!("Error in specification {} :: caused by :: The field 'name' must be a bool, but got {}", fmt_doc(spec), crate::update::type_name(v))));
+                }
+                if key.len() == 1 && key.contains_key("_id") {
+                    let mut shown = spec.clone();
+                    shown.insert("v", 2);
+                    return Err(MongoError::new(197, "InvalidIndexSpecificationOption", format!("The field 'hidden' is not valid for an _id index specification. Specification: {}", fmt_doc(&shown))));
+                }
+            }
             for opt in ["unique", "sparse"] {
                 if let Some(v) = idx.get(opt) {
                     if !matches!(v, Bson::Boolean(_)) && num_opt(v).is_none() {
                         return Err(MongoError::new(14, "TypeMismatch", format!("The field '{opt}' must be a boolean or number")));
                     }
                 }
+            }
+            if bool_arg(idx.get("unique"), false) && bool_arg(idx.get("prepareUnique"), false) {
+                let mut shown = idx.clone();
+                shown.remove("v");
+                return Err(MongoError::new(67, "CannotCreateIndex", format!("Error in specification {} :: caused by :: Invalid index specification {}; cannot create an index with the 'unique' option and the 'prepareUnique' option", fmt_doc(&shown), fmt_doc(&shown))));
             }
             if idx.get("expireAfterSeconds").is_some() && g.cap_of(coll).is_some() {
                 return Err(MongoError::new(67, "CannotCreateIndex", "Cannot create a TTL index on a capped collection".into()));
@@ -615,7 +676,8 @@ impl Server {
             }
             let wanted = IndexDef::from_stored(&idx).ok_or_else(|| MongoError::new(67, "CannotCreateIndex", "bad index specification".into()))?;
             if let Some(ex) = indexes.iter().find(|i| i.name == name) {
-                if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&ex.spec, &idx) {
+                let no_hidden = |d: &Document| { let mut d = d.clone(); d.remove("hidden"); d };
+                if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&no_hidden(&ex.spec), &no_hidden(&idx)) {
                     if new_names.contains(&name) {
                         return Err(MongoError::new(96, "OperationFailed", format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: Cannot build two identical indexes. Try again without duplicate indexes.", fake_uuid(), fake_uuid())));
                     }
@@ -697,6 +759,9 @@ impl Server {
         if changed {
             reply.insert("createdCollectionAutomatically", !existed);
         }
+        if let Some(q) = commit_quorum {
+            reply.insert("commitQuorum", q);
+        }
         if !changed {
             reply.insert("note", "all indexes already exist");
         } else if skipped_existing {
@@ -728,32 +793,8 @@ impl Server {
         if cmd.contains_key("cappedSize") || cmd.contains_key("cappedMax") {
             self.coll_mod_capped(&mut g, coll, cmd).await?;
         }
-        let Some(Bson::Document(spec)) = cmd.get("index") else { return Ok(ok()) };
-        let mut indexes = self.load_indexes(&mut g, db, coll).await?;
-        let pos = if let Ok(name) = spec.get_str("name") {
-            indexes.iter().position(|i| i.name == name && i.state == State::Ready)
-        } else if let Ok(kp) = spec.get_document("keyPattern") {
-            indexes.iter().position(|i| i.state == State::Ready && i.spec.get_document("key").map(|k| k == kp).unwrap_or(false))
-        } else {
-            return Err(MongoError::new(2, "BadValue", "Cannot specify both key pattern and name.".into()));
-        };
-        let Some(pos) = pos else { return Err(MongoError::new(27, "IndexNotFound", "cannot find index in ns".to_string() + &format!(" {db}.{coll} for the given spec"))) };
-        let Some(new) = spec.get("expireAfterSeconds") else { return Ok(ok()) };
-        let Some(newn) = num_opt(new).filter(|n| *n >= 0.0) else {
-            return Err(MongoError::new(2, "BadValue", "TTL index 'expireAfterSeconds' option must be within an acceptable range".into()));
-        };
-        let old = indexes[pos].spec.get("expireAfterSeconds").and_then(num_opt);
-        let mut stored = indexes[pos].to_stored();
-        stored.insert("expireAfterSeconds", if (newn as i64) <= i32::MAX as i64 { Bson::Int32(newn as i32) } else { Bson::Int64(newn as i64) });
-        indexes[pos] = IndexDef::from_stored(&stored).unwrap();
-        g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
-        let mut reply = Document::new();
-        if let Some(o) = old {
-            reply.insert("expireAfterSeconds_old", Bson::Int64(o as i64));
-        }
-        reply.insert("expireAfterSeconds_new", Bson::Int64(newn as i64));
-        reply.insert("ok", 1.0);
-        Ok(reply)
+        let Some(spec) = cmd.get("index") else { return Ok(ok()) };
+        self.coll_mod_index(&mut g, db, coll, spec).await
     }
 
     pub(crate) async fn drop_indexes(&self, db: &str, cmd: &Document) -> R<Document> {
@@ -954,16 +995,42 @@ impl Server {
     /// `validate`: every document has exactly its entries in every ready/building index and no entry points to a
     /// missing document.
     pub(crate) async fn validate(&self, db: &str, cmd: &Document) -> R<Document> {
+        if let Some(v) = cmd.get("validate").filter(|v| !matches!(v, Bson::String(_))) {
+            return Err(MongoError::new(73, "InvalidNamespace", format!("collection name has invalid type {}", crate::update::type_name(v))));
+        }
         let coll = collection_name(cmd, "validate")?;
+        let truthy = |k: &str| match cmd.get(k) {
+            None | Some(Bson::Null) | Some(Bson::Boolean(false)) | Some(Bson::Undefined) => false,
+            Some(v) => num_opt(v).map(|n| n != 0.0).unwrap_or(true),
+        };
+        let (metadata, background, full) = (truthy("metadata"), truthy("background"), truthy("full"));
+        if metadata && ["full", "background", "checkBSONConformance", "repair", "fixMultikey", "enforceFastCount"].iter().any(|k| truthy(k)) {
+            return Err(MongoError::new(72, "InvalidOptions", "Running the validate command with { metadata: true } is not supported with any other options".into()));
+        }
+        if background && full {
+            return Err(MongoError::new(72, "InvalidOptions", "Running the validate command with both { background: true } and { full: true } is not supported.".into()));
+        }
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Err(MongoError::namespace_not_found(format!("Collection '{db}.{coll}' does not exist to validate.")));
+        }
+        let uuid = Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: g.collection_uuid(coll).await? });
+        if metadata || background {
+            let mut warnings: Vec<Bson> = Vec::new();
+            if background {
+                warnings.push(Bson::String("Collection validation with {background: true} validates the latest checkpoint (data in a snapshot written to disk in a consistent way across all data files). During this validation, some tables have not yet been checkpointed.".into()));
+            }
+            return Ok(doc! {
+                "ns": format!("{db}.{coll}"), "uuid": uuid, "valid": true, "repaired": false, "warnings": warnings, "errors": [],
+                "extraIndexEntries": [], "missingIndexEntries": [], "corruptRecords": [], "ok": 1.0,
+            });
         }
         let indexes = g.indexes(coll).await?;
         let dp = doc_prefix(coll);
         let rows = g.scan(&dp).await?;
         let mut errors: Vec<Bson> = Vec::new();
-        let mut keys_per_index = Document::new();
+        let mut keys_per_index = doc! { "_id_": rows.len() as i32 };
+        let mut bad_indexes: HashSet<String> = HashSet::new();
         let mut missing_total = 0_i64;
         let mut extra_total = 0_i64;
         let mut docs: Vec<(Vec<u8>, Document)> = Vec::new();
@@ -977,7 +1044,7 @@ impl Server {
             }
             let prefix = idx.prefix(coll);
             let stored = g.scan(&prefix).await?;
-            keys_per_index.insert(idx.name.clone(), stored.len() as i64);
+            keys_per_index.insert(idx.name.clone(), stored.len() as i32);
             let mut have: HashSet<Vec<u8>> = stored.iter().map(|(k, _)| k.to_vec()).collect();
             // Documents behind the build cursor must be fully indexed; a building index only covers the part before its cursor
             // plus whatever concurrent writes added, so only check completeness for ready indexes.
@@ -988,6 +1055,7 @@ impl Server {
                     let key = entry_key(&prefix, c, id);
                     if !have.remove(&key) && check_missing {
                         missing_total += 1;
+                        bad_indexes.insert(idx.name.clone());
                         if errors.len() < 20 {
                             errors.push(Bson::String(format!("index {} is missing an entry for document {}", idx.name, fmt_doc(&doc! {"_id": d.get("_id").cloned().unwrap_or(Bson::Null)}))));
                         }
@@ -1001,6 +1069,7 @@ impl Server {
                 if let Some(id) = entry_id(&k) {
                     let doc_exists = ids.contains(id);
                     extra_total += 1;
+                    bad_indexes.insert(idx.name.clone());
                     if errors.len() < 20 {
                         errors.push(Bson::String(format!("index {} has an entry that {} (extra key)", idx.name, if doc_exists { "does not match its document" } else { "points to a missing document" })));
                     }
@@ -1008,18 +1077,37 @@ impl Server {
             }
         }
         ids.clear();
+        let mut details = doc! { "_id_": { "valid": true } };
+        for idx in indexes.iter().filter(|i| i.has_entries() && i.state != State::Dropping) {
+            details.insert(idx.name.clone(), doc! { "valid": !bad_indexes.contains(&idx.name) });
+        }
+        let validator = g.validator_of(coll).filter(|v| v.level != crate::validation::Level::Off);
+        let mut non_compliant = 0_i32;
+        if let Some(v) = &validator {
+            for (_, d) in &docs {
+                if !crate::validation::satisfies(d, v)? {
+                    non_compliant += 1;
+                }
+            }
+        }
+        let warnings: Vec<Bson> = if non_compliant > 0 { vec![Bson::String("Detected one or more documents not compliant with the collection's schema. Check logs for log id 5363500.".into())] } else { vec![] };
+        let _ = (missing_total, extra_total);
         Ok(doc! {
             "ns": format!("{db}.{coll}"),
-            "nrecords": docs.len() as i64,
+            "uuid": uuid,
+            "nInvalidDocuments": 0,
+            "nNonCompliantDocuments": non_compliant,
+            "nrecords": docs.len() as i32,
             "nIndexes": 1 + indexes.iter().filter(|i| i.state == State::Ready).count() as i32,
             "keysPerIndex": keys_per_index,
-            "missingEntries": missing_total,
-            "extraEntries": extra_total,
+            "indexDetails": details,
             "valid": errors.is_empty(),
-            "warnings": [],
+            "repaired": false,
+            "warnings": warnings,
             "errors": errors,
             "extraIndexEntries": [],
             "missingIndexEntries": [],
+            "corruptRecords": [],
             "ok": 1.0,
         })
     }
@@ -1049,6 +1137,7 @@ impl Server {
             "size": crate::capped::n32(size as i64),
             "count": rows.len() as i32,
             "avgObjSize": crate::capped::n32(if count > 0 { size as i64 / count } else { 0 }),
+            "numOrphanDocs": 0,
             "storageSize": size as i64,
             "freeStorageSize": 0_i64,
             "capped": cap.is_some(),
@@ -1063,8 +1152,8 @@ impl Server {
             "indexDetails": {},
             "indexBuilds": [],
             "totalIndexSize": total,
-            "totalSize": size as i64 + total,
             "indexSizes": sizes,
+            "totalSize": size as i64 + total,
             "scaleFactor": 1,
         });
         Ok(out)
@@ -1072,18 +1161,21 @@ impl Server {
 
     pub(crate) async fn coll_stats(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "collStats")?;
+        let scale = crate::stats_scale::scale_arg("collStats.scale", cmd.get("scale"), false)?;
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Err(MongoError::namespace_not_found(format!("Collection [{db}.{coll}] not found.")));
         }
         let mut st = self.storage_stats(&mut g, db, coll).await?;
+        crate::stats_scale::scale_collection(&mut st, scale);
         let mut out = doc! { "ns": format!("{db}.{coll}") };
         out.extend(std::mem::take(&mut st));
         out.insert("ok", 1.0);
         Ok(out)
     }
 
-    pub(crate) async fn db_stats(&self, db: &str, _cmd: &Document) -> R<Document> {
+    pub(crate) async fn db_stats(&self, db: &str, cmd: &Document) -> R<Document> {
+        let scale = crate::stats_scale::scale_arg("dbStats.scale", cmd.get("scale"), true)?;
         let views = self.view_count(db).await?;
         let mut g = self.dbs.lock(db).await;
         let names = g.collections().await?;
@@ -1095,10 +1187,17 @@ impl Server {
             indexes_n += s.get_i32("nindexes").unwrap_or(0) as i64;
             index_size += s.get_i64("totalIndexSize").unwrap_or(0);
         }
-        Ok(doc! {
+        let mut out = doc! {
             "db": db, "collections": names.len() as i64, "views": views, "objects": objects, "avgObjSize": if objects > 0 { data as f64 / objects as f64 } else { 0.0 },
-            "dataSize": data, "storageSize": data, "indexes": indexes_n, "indexSize": index_size, "totalSize": data + index_size, "scaleFactor": 1_i64, "fsUsedSize": 0.0, "fsTotalSize": 0.0, "ok": 1.0,
-        })
+            "dataSize": data, "storageSize": data, "indexes": indexes_n, "indexSize": index_size, "totalSize": data + index_size,
+        };
+        if bool_arg(cmd.get("freeStorage"), false) {
+            out.extend(doc! { "freeStorageSize": 0_i64, "indexFreeStorageSize": 0_i64, "totalFreeStorageSize": 0_i64 });
+        }
+        out.extend(doc! { "scaleFactor": 1_i64, "fsUsedSize": 0.0, "fsTotalSize": 0.0 });
+        crate::stats_scale::scale_database(&mut out, scale);
+        out.insert("ok", 1.0);
+        Ok(out)
     }
 }
 

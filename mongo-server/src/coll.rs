@@ -145,7 +145,7 @@ pub fn resolve_hint(indexes: &[IndexDef], hint: Option<&Bson>) -> R<Hint> {
             if name == "_id_" {
                 return Ok(Hint::None);
             }
-            indexes.iter().position(|i| i.name == *name && i.state == State::Ready).map(Hint::Index).ok_or_else(bad)
+            indexes.iter().position(|i| i.name == *name && i.state == State::Ready && !i.hidden).map(Hint::Index).ok_or_else(bad)
         }
         Some(Bson::Document(d)) => {
             if let Some(n) = d.get("$natural") {
@@ -155,7 +155,7 @@ pub fn resolve_hint(indexes: &[IndexDef], hint: Option<&Bson>) -> R<Hint> {
             if d.len() == 1 && d.contains_key("_id") {
                 return Ok(Hint::None);
             }
-            indexes.iter().position(|i| i.state == State::Ready && i.key_pattern() == *d).map(Hint::Index).ok_or_else(bad)
+            indexes.iter().position(|i| i.state == State::Ready && !i.hidden && i.key_pattern() == *d).map(Hint::Index).ok_or_else(bad)
         }
         Some(_) => Err(MongoError::new(2, "BadValue", "hint must be either a string or a document".into())),
     }
@@ -998,7 +998,7 @@ impl Writes {
             };
             let add: Vec<Vec<u8>> = new_e.keys().filter(|k| !old_e.contains_key(*k)).cloned().collect();
             let rem: Vec<Vec<u8>> = old_e.keys().filter(|k| !new_e.contains_key(*k)).cloned().collect();
-            if idx.unique && idx.state == State::Ready {
+            if (idx.unique || idx.prepare_unique) && idx.state == State::Ready {
                 for c in &add {
                     let dup = || MongoError::duplicate_key_c(ns, &idx.name, &idx.key_pattern(), new_e.get(c).unwrap(), idx.collation.as_deref());
                     if let Some(owner) = self.claims.get(&(i, c.clone())) {

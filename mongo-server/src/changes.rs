@@ -11,6 +11,11 @@ use tokio::sync::Notify;
 
 const RETAINED: usize = 100_000;
 
+tokio::task_local! {
+    /// The cluster time of the last event that the running command published (its operation time).
+    pub static OP_TIME: std::cell::Cell<Option<(u32, u32)>>;
+}
+
 /// What a writer reports.
 #[derive(Clone, Debug)]
 pub struct EvSpec {
@@ -78,6 +83,7 @@ impl ChangeLog {
             for s in specs {
                 let (ts, inc) = if g.last_time.0 == secs { (secs, g.last_time.1 + 1) } else { (secs.max(g.last_time.0), 1) };
                 g.last_time = (ts, inc);
+                let _ = OP_TIME.try_with(|c| c.set(Some((ts, inc))));
                 let seq = g.next_seq;
                 g.next_seq += 1;
                 g.events.push_back(Arc::new(Ev { seq, time: Timestamp { time: ts, increment: inc }, wall: now, spec: s }));
@@ -87,6 +93,33 @@ impl ChangeLog {
             }
         }
         self.notify.notify_waiters();
+    }
+
+    /// The cluster time now: the time of the last write, or the wall clock when that is later (a replica set keeps the
+    /// time moving with a no-op write of its own).
+    pub fn cluster_now(&self) -> Timestamp {
+        let g = self.inner.lock().unwrap();
+        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
+        let (t, i) = if secs > g.last_time.0 { (secs, 1) } else { g.last_time };
+        Timestamp { time: t, increment: i }
+    }
+
+    /// A new cluster time for a write that published no event.
+    pub fn tick(&self) -> Timestamp {
+        let mut g = self.inner.lock().unwrap();
+        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
+        let (ts, inc) = if g.last_time.0 >= secs { (g.last_time.0, g.last_time.1 + 1) } else { (secs, 1) };
+        g.last_time = (ts, inc);
+        Timestamp { time: ts, increment: inc }
+    }
+
+    /// Move the cluster time forward to one that a client has seen.
+    pub fn advance(&self, ts: Timestamp) {
+        let mut g = self.inner.lock().unwrap();
+        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
+        if ts.time <= secs.saturating_add(365 * 24 * 3600) && (ts.time, ts.increment) > g.last_time {
+            g.last_time = (ts.time, ts.increment);
+        }
     }
 
     pub fn token(&self, seq: u64) -> String {

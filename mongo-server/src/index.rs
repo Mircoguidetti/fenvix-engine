@@ -41,6 +41,10 @@ pub struct IndexDef {
     /// Key pattern with the direction (true = ascending).
     pub key: Vec<(String, bool)>,
     pub unique: bool,
+    /// `prepareUnique`: writes may not add a duplicate key, though the index may still hold existing duplicates.
+    pub prepare_unique: bool,
+    /// `hidden`: maintained like any index, but the planner does not use it.
+    pub hidden: bool,
     pub sparse: bool,
     pub partial: Option<Document>,
     pub ttl: Option<i64>,
@@ -142,6 +146,8 @@ impl IndexDef {
             name: stored.get_str("name").ok()?.to_string(),
             key,
             unique: flag("unique"),
+            prepare_unique: flag("prepareUnique"),
+            hidden: flag("hidden"),
             sparse: flag("sparse"),
             partial: stored.get_document("partialFilterExpression").ok().cloned(),
             ttl: if key_doc.len() == 1 { stored.get("expireAfterSeconds").and_then(num).map(|f| f as i64) } else { None },
@@ -992,6 +998,11 @@ pub struct PlanInput<'a> {
 /// Choose how to find candidate documents. The caller re-applies the full filter to every candidate,
 /// so a plan only has to return a superset of the matching documents.
 pub fn plan(inp: &PlanInput) -> Plan {
+    if inp.indexes.iter().any(|i| i.hidden && i.state == State::Ready) {
+        // hidden indexes are not candidates: mark them as not usable, keeping the positions of the others
+        let vis: Vec<IndexDef> = inp.indexes.iter().map(|i| if i.hidden { IndexDef { state: State::Dropping, ..i.clone() } } else { i.clone() }).collect();
+        return plan(&PlanInput { indexes: &vis, ..*inp });
+    }
     if let Some(asc) = inp.natural {
         return Plan::Coll { reverse: !asc };
     }

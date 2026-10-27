@@ -116,11 +116,11 @@ impl Server {
             }
         } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await?
+            self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?
         } else {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
-            self.find_part(&mut *g, db, coll, &filter, &sort, want, hint_arg, tx_ov(tx)).await?
+            self.find_part(&mut *g, db, coll, &filter, &sort, want, hint_arg, tx_ov(tx)).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?
         };
         sort_docs(&mut docs, &sort);
         let mut docs: VecDeque<Document> = docs.into_iter().skip(skip).collect();
@@ -375,7 +375,9 @@ impl Server {
             d.insert("latencyStats", doc! { "reads": { "latency": 0_i64, "ops": 0_i64 }, "writes": { "latency": 0_i64, "ops": 0_i64 }, "commands": { "latency": 0_i64, "ops": 0_i64 }, "transactions": { "latency": 0_i64, "ops": 0_i64 } });
         }
         if spec.contains_key("storageStats") {
+            let scale = crate::stats_scale::scale_arg("$collStats.storageStats.scale", spec.get_document("storageStats").ok().and_then(|s| s.get("scale")), false)?;
             let mut st = self.storage_stats(g, db, coll).await?;
+            crate::stats_scale::scale_collection(&mut st, scale);
             st.remove("nindexes_unused");
             d.insert("storageStats", st);
         }
