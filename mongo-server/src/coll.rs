@@ -161,6 +161,7 @@ pub fn plan_for(indexes: &[IndexDef], o: &FindOpts) -> Plan {
 /// Walks the byte intervals of an index scan in batches.
 struct IxCursor {
     prefix: Vec<u8>,
+    pending: Vec<Bytes>,
     ivs: Vec<(Vec<u8>, Vec<u8>)>,
     reverse: bool,
     i: usize,
@@ -191,24 +192,29 @@ impl IxCursor {
         if scan.reverse {
             ivs.reverse();
         }
-        IxCursor { prefix, ivs, reverse: scan.reverse, i: 0, resume: None }
+        IxCursor { prefix, pending: Vec::new(), ivs, reverse: scan.reverse, i: 0, resume: None }
     }
 
-    /// Entries (full keys) of the next batch of at most `n`; empty when exhausted.
+    /// Entries (full keys) of the next batch of at most `n`; empty when exhausted. Runs of equal keys are completed
+    /// and put into insertion order; what exceeds `n` is kept for the next call.
     async fn next_batch(&mut self, g: &mut impl Rd, n: usize) -> R<Vec<Bytes>> {
         tenant_bench::counting::set_phase(1);
+        if !self.pending.is_empty() {
+            let take = n.min(self.pending.len());
+            return Ok(self.pending.drain(..take).collect());
+        }
         let mut out: Vec<Bytes> = Vec::new();
         while out.is_empty() && self.i < self.ivs.len() {
             let (s, e) = &self.ivs[self.i];
-            let rows = if self.reverse {
+            let mut rows = if self.reverse {
                 let end = self.resume.clone().unwrap_or_else(|| e.clone());
                 g.scan_range(s, Some(&end), true, Some(n), INDEX_READ_AHEAD).await?
             } else {
                 let start = self.resume.clone().unwrap_or_else(|| s.clone());
                 g.scan_range(&start, Some(e), false, Some(n), INDEX_READ_AHEAD).await?
             };
-            let mut rows = rows;
-            if rows.len() >= n {
+            let fetched = rows.len();
+            if fetched >= n {
                 // complete the last run of equal keys so that it can be put into insertion order
                 loop {
                     let last = rows.last().unwrap().0.to_vec();
@@ -229,7 +235,7 @@ impl IxCursor {
             }
             let scan_last = rows.last().map(|(k, _)| k.to_vec());
             crate::natural::reorder_ties(&mut rows, &self.prefix, self.reverse);
-            if rows.len() < n {
+            if fetched < n {
                 self.i += 1;
                 self.resume = None;
             } else if let Some(last) = scan_last {
@@ -241,7 +247,11 @@ impl IxCursor {
                     k
                 });
             }
-            out.extend(rows.into_iter().map(|(k, _)| k));
+            let mut keys: Vec<Bytes> = rows.into_iter().map(|(k, _)| k).collect();
+            if keys.len() > n {
+                self.pending = keys.split_off(n);
+            }
+            out.extend(keys);
         }
         Ok(out)
     }
@@ -609,6 +619,15 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
             }
         }
     }
+    let mut ov_coll = ov_coll;
+    if let Some(m) = o.ov {
+        let seq_of = |k: &Vec<u8>| {
+            let mut sk = b"oseq/".to_vec();
+            sk.extend(k);
+            m.get(&sk).and_then(|d| d.as_ref()).and_then(|d| d.get_i64("s").ok()).unwrap_or(i64::MAX)
+        };
+        ov_coll.sort_by_key(|(k, _)| seq_of(k));
+    }
     for (k, v) in ov_coll {
         if ov_done.contains(k) {
             continue;
@@ -777,6 +796,9 @@ impl Writes {
         if let Some(s) = seq {
             bytes = crate::natural::with_seq(bytes, s);
             self.seqs.insert(k.clone(), s);
+            let mut sk = b"oseq/".to_vec();
+            sk.extend(&k);
+            self.ov.insert(sk, Some(bson::doc! { "s": s as i64 })); // lets readers of the overlay list new documents in insertion order
         }
         self.ops.push(Op::Put(k.clone(), bytes));
         self.ov.insert(k, Some(new.clone()));
