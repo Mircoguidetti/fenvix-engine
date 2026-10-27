@@ -2001,6 +2001,7 @@ name = "mongo-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bson 3.1.0",
  "bytes",
  "chrono",

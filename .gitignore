@@ -5,3 +5,5 @@ mongo-tests/out/
 __pycache__/
 loadtest/out/*
 !loadtest/out/.gitkeep
+ctl-tests/out/
+.pytest_cache/
