@@ -252,6 +252,12 @@ def scan_repo(root: str) -> dict:
     index_kinds = collections.defaultdict(zero)
     files = {"scanned_app": 0, "scanned_test": 0, "skipped_large_or_minified": 0}
     repo_files = collections.defaultdict(lambda: {"app": set(), "test": set()})
+    locations = collections.defaultdict(list)  # key -> ["file:line", ...] of application-code hits (results9)
+
+    def note(key, text, pos, rel, kind):
+        if kind == "app" and len(locations[key]) < 400:
+            locations[key].append(f"{rel}:{text.count(chr(10), 0, pos) + 1}")
+
     for dp, dns, fns in os.walk(root):
         dns[:] = [d for d in dns if d not in PRUNE_DIRS]
         for fn in fns:
@@ -284,31 +290,43 @@ def scan_repo(root: str) -> dict:
                         if name in KNOWN_OPS:
                             ops[f"${name}|{role_of(name, text, m.start())}"][kind] += 1
                             repo_files[f"${name}|{role_of(name, text, m.start())}"][kind].add(rel)
+                            note(f"${name}|{role_of(name, text, m.start())}", text, m.start(), rel, kind)
             hinted = bool(MONGO_HINT.search(text))
             # (b) methods
             if hinted:
                 for name, rx in METHOD_RX:
-                    c = len(rx.findall(text))
+                    hits = [m.start() for m in rx.finditer(text)]
+                    c = len(hits)
                     if c:
                         methods[name][kind] += c
                         repo_files[name][kind].add(rel)
+                        for h in hits:
+                            note(name, text, h, rel, kind)
             # (c) indexes
             if hinted and ("index" in low or "unique" in low or "expire" in low):
                 for name, rx in INDEX_KINDS:
-                    c = len(rx.findall(text))
+                    hits = [m.start() for m in rx.finditer(text)]
+                    c = len(hits)
                     if c:
                         index_kinds[name][kind] += c
                         repo_files[name][kind].add(rel)
+                        for h in hits:
+                            note(name, text, h, rel, kind)
                 typed = collections.Counter()
                 for m in INDEX_CALL.finditer(text):
                     seg = call_args(text, m.end())
                     for name, rx in TYPED_INDEX:
                         if rx.search(seg):
                             typed[name] += 1
+                            note(name, text, m.start(), rel, kind)
                 for m in FIELD_INDEX_OPTION.finditer(text):
-                    typed[{"text": "index: text", "hashed": "index: hashed / wildcard"}.get(m.group(1), "index: 2dsphere / 2d (geo)")] += 1
+                    k2 = {"text": "index: text", "hashed": "index: hashed / wildcard"}.get(m.group(1), "index: 2dsphere / 2d (geo)")
+                    typed[k2] += 1
+                    note(k2, text, m.start(), rel, kind)
                 for name, rx in ANNOTATION_INDEX:
                     typed[name] += len(rx.findall(text))
+                    for m in rx.finditer(text):
+                        note(name, text, m.start(), rel, kind)
                 for name, c in typed.items():
                     if c:
                         index_kinds[name][kind] += c
@@ -322,7 +340,7 @@ def scan_repo(root: str) -> dict:
                     index_kinds["index: any definition"][kind] += c
                     repo_files["index: any definition"][kind].add(rel)
     examples = {k: {"app": sorted(v["app"])[:3], "test": sorted(v["test"])[:2]} for k, v in repo_files.items() if v["app"] or v["test"]}
-    return {"files": files, "operators": dict(ops), "methods": dict(methods), "indexes": dict(index_kinds), "examples": examples}
+    return {"files": files, "operators": dict(ops), "methods": dict(methods), "indexes": dict(index_kinds), "examples": examples, "locations": dict(locations)}
 
 
 def run_one(url: str, tmp: str) -> dict:
