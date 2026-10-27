@@ -21,6 +21,7 @@ echo "gross cost of this run: $gross USD ($note)"
 echo "$gross" > $OUT/gross_usd.txt
 python3 -I $H/ledger.py add results/s3-test/ledger.json "$GITHUB_RUN_ID" "$(jq -r '.tests|map(tostring)|join(",")' s3-test/run.json)" "$gross" "$put" "$get" "$secs" "$note" $unknown
 mkdir -p results/s3-test/runs/$GITHUB_RUN_ID; cp -r $OUT/*.jsonl $OUT/*.log $OUT/*.txt $OUT/*.cost $OUT/*.reason $OUT/instance results/s3-test/runs/$GITHUB_RUN_ID/ 2>/dev/null
+touch $OUT/errors.jsonl
 jq -s '.' $OUT/errors.jsonl > results/s3-test/runs/$GITHUB_RUN_ID/errors.json 2>/dev/null
 jq -r -s 'if length==0 then "No permission or step errors recorded." else ("| step | IAM action needed | resource | AWS says |\n|---|---|---|---|\n" + (map("| \(.step) | \(.iam_action) | \(.resource) | \(.reported_by_aws // "") |") | join("\n"))) end' $OUT/errors.jsonl > results/s3-test/runs/$GITHUB_RUN_ID/missing-permissions.md
 cd results && git add -A && git -c user.name=github-actions -c user.email=actions@users.noreply.github.com commit -qm "s3-test run $GITHUB_RUN_ID: gross $gross USD" && git push origin HEAD:s3-test-results
