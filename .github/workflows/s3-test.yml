@@ -88,5 +88,5 @@ jobs:
             echo "gross cost: $(cat run-out/gross_usd.txt 2>/dev/null || echo unknown) USD"
             echo; echo "### Missing permissions / failed steps"
             cat results/s3-test/runs/${{ github.run_id }}/missing-permissions.md 2>/dev/null || echo "(none recorded)"
-            echo; echo "### Steps"; echo '```'; cat run-out/steps.jsonl 2>/dev/null; echo '```'
+            echo; echo "### Steps"; echo '```'; cat run-out/steps.jsonl 2>/dev/null || true; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

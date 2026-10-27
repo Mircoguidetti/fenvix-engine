@@ -6,7 +6,7 @@ cd "${GITHUB_WORKSPACE:-.}"; OUT=run-out; mkdir -p "$OUT/bundle/bin" "$OUT/bundl
 git apply --check s3-test/patches/0001-s3-aws-instance-profile.patch
 git apply s3-test/patches/0001-s3-aws-instance-profile.patch
 docker run --rm -v "$PWD":/w -w /w public.ecr.aws/amazonlinux/amazonlinux:2023 bash -ec '
-  dnf install -y gcc gcc-c++ make cmake perl-core openssl-devel pkgconfig curl git >/dev/null
+  dnf install -y gcc gcc-c++ make cmake perl-core openssl-devel pkgconfig git >/dev/null
   curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal >/dev/null
   . $HOME/.cargo/env
   export CARGO_TARGET_DIR=/w/run-out/target
