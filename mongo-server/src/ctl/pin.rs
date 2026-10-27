@@ -85,6 +85,7 @@ pub async fn set(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
         m["keep_awake_since_ms"] = json!(since);
     })
     .await?;
+    known_insert(db, _mine);
     drop(_op);
     wake(ctl, db).await;
     let mut d = meta::describe(ctl, db, false).await?;
@@ -99,6 +100,7 @@ pub async fn unset(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
         return Err(ApiError::not_found(format!("database {db} does not exist")));
     }
     rec::delete(&ctl.store, &pin_path(db)).await?;
+    known_remove(db);
     meta::modify(ctl, db, |m| {
         m["keep_awake"] = json!(false);
         m["keep_awake_since_ms"] = Value::Null;
@@ -146,10 +148,23 @@ struct Known {
     mine: bool,
 }
 
+/// The pinned databases this process knows of. Shared so that pinning and unpinning through the API take effect at once
+/// (the agent would otherwise go on touching or re-waking an unpinned database until its next listing).
+static KNOWN: std::sync::Mutex<Option<HashMap<String, Known>>> = std::sync::Mutex::new(None);
+
+fn known_insert(db: &str, mine: bool) {
+    KNOWN.lock().unwrap().get_or_insert_with(HashMap::new).insert(db.to_string(), Known { next_lease: Instant::now() + Duration::from_millis(500), mine });
+}
+
+fn known_remove(db: &str) {
+    if let Some(m) = KNOWN.lock().unwrap().as_mut() {
+        m.remove(db);
+    }
+}
+
 pub fn spawn_agent(ctl: &Arc<Ctl>) {
     let ctl = Arc::clone(ctl);
     tokio::spawn(async move {
-        let mut known: HashMap<String, Known> = HashMap::new();
         let mut next_list = Instant::now();
         let refresh = Duration::from_millis((ctl.args.pin_lease_ttl_secs.max(1) * 1000 / 3).clamp(1000, 10_000));
         let mut tick = tokio::time::interval(Duration::from_millis(500));
@@ -160,43 +175,60 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
                 next_list = now + refresh;
                 let listed: Vec<Path> = ctl.store.list(Some(&rec::path(&["control", "pins"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
                 let names: Vec<String> = listed.iter().filter_map(|p| p.filename().map(|s| s.to_string())).collect();
+                let mut g = KNOWN.lock().unwrap();
+                let known = g.get_or_insert_with(HashMap::new);
                 known.retain(|k, _| names.contains(k));
                 for n in names {
                     known.entry(n).or_insert(Known { next_lease: now, mine: false });
                 }
             }
-            for (db, k) in known.iter_mut() {
-                let open = touch(&ctl, db);
-                if now >= k.next_lease {
-                    let Some(_op) = ctl.ops.try_lock(db) else { continue };
-                    match take(&ctl, db, false).await {
-                        Ok(Some((p, mine))) => {
-                            k.mine = mine;
-                            k.next_lease = now + Duration::from_millis(if mine { ttl_ms(&ctl) as u64 / 3 } else { 1000 });
+            // work on a copy of the table: nothing is held across an await
+            let todo: Vec<(String, bool, Instant)> = KNOWN.lock().unwrap().as_ref().map(|m| m.iter().map(|(k, v)| (k.clone(), v.mine, v.next_lease)).collect()).unwrap_or_default();
+            for (db, mine, next_lease) in todo {
+                let open = touch(&ctl, &db);
+                let mut mine = mine;
+                if now >= next_lease {
+                    let Some(_op) = ctl.ops.try_lock(&db) else { continue };
+                    match take(&ctl, &db, false).await {
+                        Ok(Some((p, m))) => {
+                            mine = m;
+                            let next = now + Duration::from_millis(if m { ttl_ms(&ctl) as u64 / 3 } else { 1000 });
+                            if let Some(k) = KNOWN.lock().unwrap().as_mut().and_then(|g| g.get_mut(&db)) {
+                                k.mine = m;
+                                k.next_lease = next;
+                            }
                             // Repair the registry copy if a crash separated it from the pin object.
-                            if mine {
+                            if m {
                                 let since = p["since_ms"].as_i64().unwrap_or(0);
-                                let _ = meta::modify(&ctl, db, |m| {
-                                    if m["keep_awake"] != json!(true) {
-                                        m["keep_awake"] = json!(true);
-                                        m["keep_awake_since_ms"] = json!(since);
+                                let _ = meta::modify(&ctl, &db, |md| {
+                                    if md["keep_awake"] != json!(true) {
+                                        md["keep_awake"] = json!(true);
+                                        md["keep_awake_since_ms"] = json!(since);
                                     }
                                 })
                                 .await;
                             }
                         }
                         Ok(None) => {
-                            k.mine = false;
-                            k.next_lease = now + refresh;
+                            // the pin is gone (unpinned elsewhere) or someone else holds it
+                            if let Some(k) = KNOWN.lock().unwrap().as_mut().and_then(|g| g.get_mut(&db)) {
+                                k.mine = false;
+                                k.next_lease = now + refresh;
+                            }
+                            mine = false;
                         }
                         Err(e) => {
                             eprintln!("keep-awake: lease of {db}: {e:#}");
-                            k.next_lease = now + Duration::from_secs(1);
+                            if let Some(k) = KNOWN.lock().unwrap().as_mut().and_then(|g| g.get_mut(&db)) {
+                                k.next_lease = now + Duration::from_secs(1);
+                            }
                         }
                     }
                 }
-                if k.mine && !open {
-                    wake(&ctl, db).await;
+                // still pinned? (an unpin through the API removes the entry at once)
+                let pinned = KNOWN.lock().unwrap().as_ref().map(|m| m.contains_key(&db)).unwrap_or(false);
+                if pinned && mine && !open {
+                    wake(&ctl, &db).await;
                 }
             }
         }

@@ -194,3 +194,16 @@ def test_pinned_database_keeps_serving_under_load_and_after_idle(env):
     assert not errs
     time.sleep(IDLE * 3)
     assert state(srv, "load")["state"] == "awake"
+
+
+def test_unpin_takes_effect_at_once(env):
+    """Unpinning then closing the database must not be undone by the agent (which used to act on a stale listing for up
+    to ten seconds)."""
+    srv, _ = env
+    c = mk(srv, "flap")
+    for _ in range(5):
+        assert srv.admin.put("/v1/databases/flap/keep-awake")[0] == 200
+        assert srv.admin.delete("/v1/databases/flap/keep-awake")[0] == 200
+        c["flap"].command("tenantAdmin", close=True)
+        time.sleep(1.6)
+        assert state(srv, "flap")["state"] == "asleep", "the database was woken after it was unpinned"

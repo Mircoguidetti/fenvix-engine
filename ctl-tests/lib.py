@@ -13,7 +13,7 @@ import boto3
 from botocore.config import Config
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BIN = os.path.join(ROOT, "target", "release", "mongo-server")
+BIN = os.environ.get("MONGO_SERVER_BIN", os.path.join(ROOT, "target", "release", "mongo-server"))
 OUT = os.path.join(ROOT, "ctl-tests", "out")
 MINIO = os.environ.get("MINIO_ENDPOINT", "http://127.0.0.1:9000")
 TOKEN = "test-token-0123456789abcdef"
@@ -60,7 +60,8 @@ def free_port():
 
 
 class Server:
-    def __init__(self, bucket, tag="srv", idle=60, extra=(), holder=None, port=None, admin_port=None, env=None, endpoint=None):
+    def __init__(self, bucket, tag="srv", idle=60, extra=(), holder=None, port=None, admin_port=None, env=None, endpoint=None, admin=True, binary=None):
+        self.admin_enabled, self.binary = admin, binary or BIN
         self.bucket, self.tag, self.idle, self.extra = bucket, tag, idle, list(extra)
         self.endpoint = endpoint or MINIO
         self.port = port or free_port()
@@ -71,7 +72,7 @@ class Server:
         self.env = env or {}
 
     def start(self, wait=True):
-        cmd = [BIN, "--listen", f"127.0.0.1:{self.port}", "--admin-listen", f"127.0.0.1:{self.admin_port}",
+        cmd = [self.binary, "--listen", f"127.0.0.1:{self.port}"] + (["--admin-listen", f"127.0.0.1:{self.admin_port}"] if self.admin_enabled else []) + [
                "--idle-secs", str(self.idle), "--bucket", self.bucket, "--endpoint", self.endpoint, "--holder", self.holder,
                "--lease-ttl-secs", "6", "--no-ttl"] + self.extra
         env = dict(os.environ, MONGO_ADMIN_TOKEN=TOKEN, **self.env)
@@ -87,7 +88,8 @@ class Server:
             if self.proc.poll() is not None:
                 raise RuntimeError(f"server exited with {self.proc.returncode}; see {self.log_path}")
             try:
-                self.admin.get("/v1/health")
+                if self.admin_enabled:
+                    self.admin.get("/v1/health")
                 import socket
                 socket.create_connection(("127.0.0.1", self.port), timeout=1).close()
                 return

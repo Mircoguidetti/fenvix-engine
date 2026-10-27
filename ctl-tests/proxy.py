@@ -91,11 +91,13 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         r = conn.getresponse()
         data = r.read() if self.command != "HEAD" else b""
         parts = [p for p in u.path.split("/") if p]
-        key = "/".join(parts[1:3]) if len(parts) > 2 else "/".join(parts[1:])
-        prefix = "/".join(parts[1:3]) if len(parts) > 2 else (parts[1] if len(parts) > 1 else "")
+        # attribution key: tenants/<db>, ttl-hints/<db>, control/<kind>/<db> (path below the bucket)
+        def keyof(comps):
+            comps = [c for c in comps if c]
+            return "/".join(comps[:3]) if comps[:1] == ["control"] else "/".join(comps[:2])
+        prefix = keyof(parts[1:])
         if "prefix" in urllib.parse.parse_qs(u.query):
-            pq = urllib.parse.parse_qs(u.query)["prefix"][0]
-            prefix = "/".join(pq.split("/")[:2])
+            prefix = keyof(urllib.parse.parse_qs(u.query)["prefix"][0].split("/"))
         counters.add(classify(self.command, u.path, u.query, self.headers), prefix, len(body), len(data) if r.status < 300 else 0)  # error bodies (404 probes) are not object data
         self.send_response(r.status)
         for k, v in r.getheaders():
