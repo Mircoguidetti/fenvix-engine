@@ -4,7 +4,7 @@
 use crate::agg::{accumulate, run_pipeline, Foreign};
 use crate::error::MongoError;
 use crate::query::{as_f64, compare, equal, is_numeric};
-use bson::{doc, Bson, DateTime, Document};
+use bson::{doc, Bson, DateTime, Decimal128, Document};
 use chrono::{Datelike, TimeZone, Timelike, Utc};
 use std::cmp::Ordering;
 
@@ -190,7 +190,7 @@ pub fn bucket_auto(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> R<Vec<
                     end += 1;
                 }
             }
-            if end == n {
+            if end == n && compare(&keyed[n - 1].0, &boundary) != Ordering::Less {
                 boundary = g.round_up(&keyed[n - 1].0)?;
             }
             ranges.push((start, end));
@@ -292,6 +292,9 @@ impl Rounder {
         if x == 0.0 {
             return Ok(v.clone());
         }
+        if let Bson::Decimal128(d) = v {
+            return self.decimal(d, true);
+        }
         match self {
             Rounder::Pow2 => Ok(pow2_bson(2f64.powf(Self::finite(v)?.log2().floor() + 1.0))),
             Rounder::Preferred(_, _) if x.is_infinite() => Ok(Bson::Double(x)),
@@ -312,6 +315,9 @@ impl Rounder {
         if x == 0.0 {
             return Ok(v.clone());
         }
+        if let Bson::Decimal128(d) = v {
+            return self.decimal(d, false);
+        }
         match self {
             Rounder::Pow2 => {
                 let l = Self::finite(v)?.log2();
@@ -326,6 +332,166 @@ impl Rounder {
                     }
                 }
                 Ok(Bson::Double(x))
+            }
+        }
+    }
+}
+
+/// A positive decimal as `d1.d2d3... * 10^adj`, digits without leading or trailing zeros.
+#[derive(Clone, Debug)]
+struct Dec {
+    digits: Vec<u8>,
+    adj: i32,
+}
+
+impl Dec {
+    fn parse(s: &str) -> Option<Dec> {
+        let s = s.trim_start_matches('-');
+        let (mant, exp) = match s.split_once(['E', 'e']) {
+            Some((m, e)) => (m, e.parse::<i32>().ok()?),
+            None => (s, 0),
+        };
+        let (int, frac) = mant.split_once('.').unwrap_or((mant, ""));
+        let all: Vec<u8> = int.bytes().chain(frac.bytes()).map(|c| c.wrapping_sub(b'0')).collect();
+        if all.iter().any(|d| *d > 9) {
+            return None;
+        }
+        let lead = all.iter().position(|d| *d != 0)?;
+        let mut digits: Vec<u8> = all[lead..].to_vec();
+        while digits.last() == Some(&0) {
+            digits.pop();
+        }
+        let adj = int.len() as i32 - 1 - lead as i32 + exp;
+        Some(Dec { digits, adj })
+    }
+
+    fn of_mantissa(m: i64, adj: i32) -> Dec {
+        let mut digits: Vec<u8> = m.to_string().bytes().map(|c| c - b'0').collect();
+        while digits.last() == Some(&0) {
+            digits.pop();
+        }
+        Dec { digits, adj }
+    }
+
+    fn cmp(&self, o: &Dec) -> Ordering {
+        self.adj.cmp(&o.adj).then_with(|| {
+            let n = self.digits.len().max(o.digits.len());
+            (0..n).map(|i| self.digits.get(i).unwrap_or(&0).cmp(o.digits.get(i).unwrap_or(&0))).find(|c| *c != Ordering::Equal).unwrap_or(Ordering::Equal)
+        })
+    }
+
+    /// `2^k` exactly.
+    fn pow2(k: i32) -> Dec {
+        // base 10^9 limbs, least significant first; 2^k for k < 0 is 5^|k| * 10^k
+        let (base, n) = if k >= 0 { (2u64, k) } else { (5u64, -k) };
+        let mut limbs: Vec<u64> = vec![1];
+        for _ in 0..n {
+            let mut carry = 0u64;
+            for l in limbs.iter_mut() {
+                let v = *l * base + carry;
+                *l = v % 1_000_000_000;
+                carry = v / 1_000_000_000;
+            }
+            if carry > 0 {
+                limbs.push(carry);
+            }
+        }
+        let mut text = limbs.last().unwrap().to_string();
+        for l in limbs.iter().rev().skip(1) {
+            text.push_str(&format!("{l:09}"));
+        }
+        let mut digits: Vec<u8> = text.bytes().map(|c| c - b'0').collect();
+        let adj = digits.len() as i32 - 1 + if k >= 0 { 0 } else { k };
+        while digits.last() == Some(&0) {
+            digits.pop();
+        }
+        Dec { digits, adj }
+    }
+
+    /// The Decimal128 with `precision` significant digits (zero padded, half-even rounded) of this number.
+    fn to_sig_digits(&self, precision: usize) -> Bson {
+        let mut d: Vec<u8> = self.digits.clone();
+        let mut adj = self.adj;
+        if d.len() > precision {
+            let tail = &d[precision..];
+            let up = match tail[0].cmp(&5) {
+                Ordering::Greater => true,
+                Ordering::Less => false,
+                Ordering::Equal => tail[1..].iter().any(|x| *x != 0) || d[precision - 1] % 2 == 1,
+            };
+            d.truncate(precision);
+            if up {
+                let mut i = precision;
+                loop {
+                    if i == 0 {
+                        d.insert(0, 1);
+                        d.truncate(precision);
+                        adj += 1;
+                        break;
+                    }
+                    i -= 1;
+                    if d[i] == 9 {
+                        d[i] = 0;
+                    } else {
+                        d[i] += 1;
+                        break;
+                    }
+                }
+            }
+        }
+        d.resize(precision, 0);
+        let coeff: String = d.iter().map(|x| (b'0' + x) as char).collect();
+        dec_bson(&format!("{coeff}E{}", adj - precision as i32 + 1))
+    }
+}
+
+fn dec_bson(s: &str) -> Bson {
+    s.parse::<Decimal128>().map(Bson::Decimal128).unwrap_or(Bson::Null)
+}
+
+impl Rounder {
+    /// Rounding a Decimal128 keeps the type and, like mongod, a fixed number of digits: the preferred series are written
+    /// with 15 significant digits below ten, from ten up, 13 decimals (12 from a hundred up for the three-digit series), powers of two with 34 significant digits.
+    fn decimal(&self, d: &Decimal128, up: bool) -> R<Bson> {
+        let text = d.to_string();
+        if text.contains("NaN") {
+            return Err(err(40259, "$bucketAuto can specify a 'granularity' with numeric boundaries only, but found a NaN"));
+        }
+        // beyond the double range mongod treats the number as infinite
+        if text.contains("Infinity") || text.parse::<f64>().map(f64::is_infinite).unwrap_or(false) {
+            return match self {
+                Rounder::Pow2 => Err(err(11785400, "A granularity rounder can only round finite numbers")),
+                _ => Ok(Bson::Decimal128(*d)),
+            };
+        }
+        let Some(x) = Dec::parse(&text) else { return Ok(Bson::Decimal128(*d)) };
+        match self {
+            Rounder::Pow2 => {
+                // exponent estimate from the leading digits, corrected against the exact powers
+                let lead: f64 = x.digits.iter().take(15).fold(0.0, |a, d| a * 10.0 + *d as f64) / 10f64.powi(x.digits.len().min(15) as i32 - 1);
+                let mut k = ((lead.log10() + x.adj as f64) / 2f64.log10()).floor() as i32;
+                while Dec::pow2(k).cmp(&x) == Ordering::Greater {
+                    k -= 1;
+                }
+                while Dec::pow2(k + 1).cmp(&x) != Ordering::Greater {
+                    k += 1;
+                }
+                // 2^k <= x < 2^(k+1)
+                let r = if up { k + 1 } else if Dec::pow2(k).cmp(&x) == Ordering::Equal { k - 1 } else { k };
+                Ok(Dec::pow2(r).to_sig_digits(34))
+            }
+            Rounder::Preferred(t, dg) => {
+                let pick = |dec: i32| -> Vec<Dec> { t.iter().map(|m| Dec::of_mantissa(*m, dec)).collect() };
+                let chosen = if up {
+                    (x.adj - 1..=x.adj + 2).find_map(|dec| pick(dec).into_iter().find(|m| m.cmp(&x) == Ordering::Greater))
+                } else {
+                    (x.adj - 2..=x.adj + 1).rev().find_map(|dec| pick(dec).into_iter().rev().find(|m| m.cmp(&x) == Ordering::Less))
+                };
+                let Some(m) = chosen else { return Ok(Bson::Decimal128(*d)) };
+                let decimals = if m.adj >= 2 && *dg == 3 { 12 } else if m.adj >= 1 { 13 } else { 14 - m.adj };
+                let shift = m.adj - m.digits.len() as i32 + 1 + decimals;
+                let coeff: String = m.digits.iter().map(|x| (b'0' + x) as char).chain(std::iter::repeat('0').take(shift.max(0) as usize)).collect();
+                Ok(dec_bson(&format!("{coeff}E-{decimals}")))
             }
         }
     }

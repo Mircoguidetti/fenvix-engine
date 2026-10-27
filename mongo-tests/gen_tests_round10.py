@@ -151,6 +151,16 @@ def register(g):
         tb(f"{g}.null_and_missing", [ins("c", [{"_id": 1, "v": 1}, {"_id": 2}]), ba(g, 2), ins("d", [{"_id": 1, "v": None}]), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": g}}])])
         tb(f"{g}.empty", [{"op": "create_collection", "coll": "c"}, ba(g, 3)])
         tb(f"{g}.tiny_huge", [ins("c", vals([1e-12, 1e-9, 1e300, 1e305])), ba(g, 2), ba(g, 4)])
+    DEC = lambda x: {"$numberDecimal": x}
+    DVALS = ["0.37", "1.1", "3.3", "5.5", "12", "37", "155", "1234", "99999", "1E+7", "123456789", "1E+12", "1E+20", "1E+25", "1E+30", "1E-10", "1E-30", "7E-20", "6.3", "10", "1.6"]
+    for g in GR:
+        tb(f"{g}.decimal_each", [ins("c", [{"_id": i, "v": DEC(x)} for i, x in enumerate(DVALS)])] + [agg("c", [{"$match": {"_id": i}}, {"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": g}}]) for i in range(len(DVALS))])
+        tb(f"{g}.decimal_buckets", [ins("c", [{"_id": i, "v": DEC(x)} for i, x in enumerate(DVALS)])] + [ba(g, b) for b in (2, 5, 21)])
+        tb(f"{g}.decimal_special", [ins("c", [{"_id": 1, "v": DEC("0")}, {"_id": 2, "v": DEC("5")}]), ba(g, 2), ins("d", [{"_id": 1, "v": DEC("NaN")}, {"_id": 2, "v": 1}]), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}]),
+                                    ins("e", [{"_id": 1, "v": DEC("Infinity")}, {"_id": 2, "v": 1}]), agg("e", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}]),
+                                    ins("f", [{"_id": 1, "v": DEC("-1.5")}, {"_id": 2, "v": 2}]), agg("f", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}]),
+                                    ins("h", [{"_id": 1, "v": DEC("1E+1000")}, {"_id": 2, "v": 1}]), agg("h", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}])])
+        tb(f"{g}.decimal_mixed_types", [ins("c", [{"_id": 1, "v": DEC("1.5")}, {"_id": 2, "v": 2.5}, {"_id": 3, "v": 7}, {"_id": 4, "v": DEC("9.9")}]), ba(g, 2), ba(g, 4)])
     tb("unknown_granularity", [ins("c", vals([1, 2])), ba("R7", 2), ba("r5", 2), ba("e6", 2), ba("", 2)])
     tb("unknown_granularity_empty", [{"op": "create_collection", "coll": "c"}, ba("nope", 2)])
     tb("granularity_not_string", [ins("c", vals([1, 2])), ba(5, 2), ba(None, 2)])
