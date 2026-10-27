@@ -1,0 +1,39 @@
+{
+ "store": "local",
+ "control": false,
+ "trials": [
+  {
+   "acked_ids": 1505,
+   "acked_writes_before_kill": 2990,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 1.355
+  },
+  {
+   "acked_ids": 1302,
+   "acked_writes_before_kill": 2588,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 1.49
+  },
+  {
+   "acked_ids": 1472,
+   "acked_writes_before_kill": 2929,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 1.381
+  },
+  {
+   "acked_ids": 1607,
+   "acked_writes_before_kill": 3195,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 1.452
+  }
+ ],
+ "total": {
+  "acked_ids": 5886,
+  "lost_inserts": 0,
+  "lost_updates": 0
+ }
+}

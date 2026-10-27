@@ -1,0 +1,30 @@
+[
+ {
+  "process_lease": "on",
+  "tenants_open": 50,
+  "window_s": 300.0,
+  "ttl_s": 30,
+  "lease_puts": 29,
+  "all_puts": 79,
+  "all_gets": 2100,
+  "lease_puts_per_tenant_hour": 7.0,
+  "all_puts_per_tenant_hour": 19.0,
+  "gets_per_tenant_hour": 504.0,
+  "put_by_category": {
+   "wal": 0,
+   "manifest": 0,
+   "compacted_sst": 0,
+   "lease": 29,
+   "clean_marker": 0,
+   "other": 50
+  },
+  "get_by_category": {
+   "wal": 0,
+   "manifest": 1050,
+   "compacted_sst": 0,
+   "lease": 0,
+   "clean_marker": 0,
+   "other": 1050
+  }
+ }
+]

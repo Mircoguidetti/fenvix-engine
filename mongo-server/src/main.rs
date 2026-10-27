@@ -130,6 +130,58 @@ struct Args {
     /// Do not use leases (single process only; for stores without conditional update, e.g. --store local).
     #[arg(long)]
     no_leases: bool,
+    /// Wait for each write's own flush while holding the tenant lock (the behaviour before group commit: one WAL
+    /// object per write). By default writes arriving while a flush is in flight share the next WAL object.
+    #[arg(long)]
+    no_group_commit: bool,
+    /// Seconds between manifest reads of an open writer (it learns of compactions, and retries a memtable flush that
+    /// stalled on a full L0, at this pace). One GET per open writer per interval.
+    #[arg(long, default_value_t = 30)]
+    writer_poll_secs: u64,
+    /// One lease per process (`processes/{holder}/_lease`, renewed every third of the ttl) plus a per-database owner
+    /// record written when the database is opened, instead of one lease object renewed per open database: an idle open
+    /// database then costs no request. Every process sharing the bucket must use the same setting.
+    #[arg(long)]
+    process_lease: bool,
+    /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = off, WAL objects
+    /// then stay until the tenant has been idle and is collected as a whole).
+    #[arg(long, default_value_t = 20)]
+    wal_gc_secs: u64,
+    /// Group commit window in milliseconds (fractions allowed): the first write of a group waits this long before
+    /// flushing so that more writes can share the WAL object. 0 (default) flushes at once.
+    #[arg(long, default_value_t = 0.0)]
+    group_commit_window_ms: f64,
+    /// Reads see only durable data (default true). `--durable-reads false`: reads may see writes that are staged
+    /// and waiting for their group flush (they can disappear if the process dies before the flush).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    durable_reads: bool,
+    /// Test control: slatedb's `l0_max_ssts` for writers (default 8, 0 keeps it). Lowering it makes the stalled-flush
+    /// shutdown fallback reachable with a modest number of writes.
+    #[arg(long, default_value_t = 0)]
+    l0_max_ssts: usize,
+    /// How the WAL cleanup of an open writer works: `bulk` (default: remembers where it stopped, bulk deletes),
+    /// `single` (the same with one DELETE per object), `slatedb` (slatedb's own pass: lists the whole WAL directory,
+    /// one DELETE per object) or `list-only` (that listing without deleting; profiling only, bounds nothing).
+    #[arg(long, default_value = "bulk")]
+    wal_gc_mode: String,
+    /// Seconds between cleanups of the compacted SSTs and old manifests of an open writer (0 = off: they stay until
+    /// the tenant closes).
+    #[arg(long, default_value_t = 60)]
+    sst_gc_secs: u64,
+    /// Seconds an SST or manifest must have been seen unreferenced before it is deleted (must exceed
+    /// --writer-poll-secs, the staleness of a live writer's view of the manifest).
+    #[arg(long, default_value_t = 120)]
+    sst_gc_min_unref_secs: u64,
+    /// Test control, unsafe: the SST cleanup also deletes the oldest SST the manifest still references.
+    #[arg(long)]
+    gc_control_delete_live: bool,
+    /// Test control: memtable size at which a writer flushes it to an L0 SST (slatedb default 64 MiB; 0 keeps it).
+    #[arg(long, default_value_t = 0)]
+    l0_sst_bytes: u64,
+    /// With --group-commit-window-ms: wait for the window only while another write of the tenant is still on its way
+    /// to the flush; flush at once when none is (so a lone writer never waits). Without it the window is always waited.
+    #[arg(long)]
+    group_commit_adaptive: bool,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -187,6 +239,21 @@ async fn main() -> Result<()> {
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
+    tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
+    dbs::DURABLE_READS.store(args.durable_reads, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::L0_MAX_SSTS_OVERRIDE.store(args.l0_max_ssts, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::WAL_GC_MODE.store(
+        match args.wal_gc_mode.as_str() { "slatedb" => 0, "list-only" => 1, "single" => 2, "bulk" => 3, other => anyhow::bail!("unknown --wal-gc-mode {other}") },
+        std::sync::atomic::Ordering::Relaxed,
+    );
+    tenant_bench::lifecycle::SST_GC_EVERY_SECS.store(args.sst_gc_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::SST_GC_MIN_UNREF_SECS.store(args.sst_gc_min_unref_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::GC_CONTROL_DELETE_LIVE.store(args.gc_control_delete_live, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::L0_SST_BYTES_OVERRIDE.store(args.l0_sst_bytes, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::GROUP_ADAPTIVE.store(args.group_commit_adaptive, std::sync::atomic::Ordering::Relaxed);
+    dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
@@ -203,6 +270,7 @@ async fn main() -> Result<()> {
     });
     let holder = args.holder.clone().unwrap_or_else(|| format!("{}-{:08x}", std::process::id(), rand::random::<u32>()));
     let leases = lease::Leases::new(Arc::clone(&lc.store), holder.clone(), Duration::from_secs(args.lease_ttl_secs));
+    leases.process_mode.store(args.process_lease, std::sync::atomic::Ordering::Relaxed);
     leases.disabled.store(args.no_leases, std::sync::atomic::Ordering::Relaxed);
     leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
@@ -241,6 +309,7 @@ async fn main() -> Result<()> {
     }
     eprintln!("shutting down: closing tenants cleanly");
     dbs.close_all().await;
+    leases.release_process().await;
     eprintln!("tenants closed; stopping maintenance");
     if let Some(m) = maintenance {
         m.shutdown().await;

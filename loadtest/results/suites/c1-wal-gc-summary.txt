@@ -1,0 +1,5 @@
+c1-wal-gc
+py   core: 1081/1081 passed
+py   extra: 25/49 passed
+node core: 1081/1081 passed
+node extra: 25/49 passed

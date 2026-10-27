@@ -31,7 +31,7 @@ ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://172.18.0.2:9000")
 
 def start(port, holder, ttl, extra):
     f = open(os.path.join(OUT, f"server-{port}.log"), "ab")
-    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{port}", "--idle-secs", "600", "--holder", holder, "--lease-ttl-secs", str(ttl), "--endpoint", ENDPOINT] + extra, stdout=f, stderr=f)
+    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{port}", "--idle-secs", "600", "--holder", holder, "--lease-ttl-secs", str(ttl), "--endpoint", ENDPOINT] + extra + os.environ.get("EXTRA_SERVER_FLAGS", "").split(), stdout=f, stderr=f)
     for _ in range(100):
         try:
             MongoClient(f"mongodb://127.0.0.1:{port}", serverSelectionTimeoutMS=200).admin.command("ping")
@@ -51,7 +51,7 @@ def scenario(unsafe, shared, rounds, ttl):
     a = start(29101, "A", ttl, extra_a)
     b = start(29102, "B", ttl, extra_b)
     ca, cb = client(29101), client(29102)
-    tot = {"stale": 0, "new_value": 0, "refused_134": 0, "other_error": 0, "queued_reads": 0, "post_resume_reads": 0}
+    tot = {"writes_acked_by_frozen_process": 0, "writes_refused": 0, "writes_other_error": 0, "final_value_clobbered": 0, "stale": 0, "new_value": 0, "refused_134": 0, "other_error": 0, "queued_reads": 0, "post_resume_reads": 0}
     examples = []
     try:
         for r in range(rounds):
@@ -73,6 +73,21 @@ def scenario(unsafe, shared, rounds, ttl):
                     res = ("error", type(e).__name__)
                 with lock:
                     results.append((tag, res))
+            wres = []
+
+            def writer():
+                try:
+                    ca[db].c.update_one({"_id": 1}, {"$set": {"v": 777}})
+                    res = "acked"
+                except OperationFailure as e:
+                    res = "refused" if e.code == 134 else "error"
+                except Exception:  # noqa
+                    res = "error"
+                with lock:
+                    wres.append(res)
+            # writes sent to A while it is frozen (and after it resumes) must never be applied
+            qw = [threading.Thread(target=writer) for _ in range(20)]
+            [t.start() for t in qw]
             # reads sent while A is frozen: they sit in the socket buffer until it resumes
             queued = [threading.Thread(target=reader, args=("queued",)) for _ in range(40)]
             [t.start() for t in queued]
@@ -93,7 +108,13 @@ def scenario(unsafe, shared, rounds, ttl):
             os.kill(a.pid, signal.SIGCONT)
             post = [threading.Thread(target=reader, args=("post",)) for _ in range(40)]
             [t.start() for t in post]
-            [t.join() for t in queued + post]
+            pw = [threading.Thread(target=writer) for _ in range(20)]
+            [t.start() for t in pw]
+            [t.join() for t in queued + post + qw + pw]
+            tot["writes_acked_by_frozen_process"] += wres.count("acked")
+            tot["writes_refused"] += wres.count("refused")
+            tot["writes_other_error"] += wres.count("error")
+            tot["final_value_clobbered"] += int(cb[db].c.find_one({"_id": 1})["v"] != 2)
             for tag, (kind, val) in results:
                 key = "queued_reads" if tag == "queued" else "post_resume_reads"
                 tot[key] += 1

@@ -1,0 +1,50 @@
+[
+ {
+  "process_lease": "off",
+  "tenants_open": 100,
+  "window_s": 120.0,
+  "ttl_s": 30,
+  "lease_puts": 1102,
+  "all_puts": 1202,
+  "all_gets": 2986,
+  "lease_puts_per_tenant_hour": 330.6,
+  "all_puts_per_tenant_hour": 360.6,
+  "gets_per_tenant_hour": 895.8
+ },
+ {
+  "process_lease": "off",
+  "tenants_open": 400,
+  "window_s": 120.0,
+  "ttl_s": 30,
+  "lease_puts": 4720,
+  "all_puts": 5119,
+  "all_gets": 12000,
+  "lease_puts_per_tenant_hour": 354.0,
+  "all_puts_per_tenant_hour": 383.9,
+  "gets_per_tenant_hour": 900.0
+ },
+ {
+  "process_lease": "on",
+  "tenants_open": 100,
+  "window_s": 120.0,
+  "ttl_s": 30,
+  "lease_puts": 12,
+  "all_puts": 112,
+  "all_gets": 3000,
+  "lease_puts_per_tenant_hour": 3.6,
+  "all_puts_per_tenant_hour": 33.6,
+  "gets_per_tenant_hour": 900.0
+ },
+ {
+  "process_lease": "on",
+  "tenants_open": 400,
+  "window_s": 120.0,
+  "ttl_s": 30,
+  "lease_puts": 12,
+  "all_puts": 412,
+  "all_gets": 12000,
+  "lease_puts_per_tenant_hour": 0.9,
+  "all_puts_per_tenant_hour": 30.9,
+  "gets_per_tenant_hour": 900.0
+ }
+]

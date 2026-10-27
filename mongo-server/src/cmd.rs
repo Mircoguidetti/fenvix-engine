@@ -96,7 +96,24 @@ impl Server {
             eprintln!("CMD {name} db={db}");
         }
         let t0 = std::time::Instant::now();
-        let r = crate::js::scoped(db, self.dispatch(db, &name, &cmd, conn_id)).await;
+        // Writes staged by the command become durable here, after its locks were released; the reply waits for it.
+        let mut r = crate::dbs::TOKENS
+            .scope(Default::default(), async {
+                let (mut r, mut commits) = crate::dbs::PENDING
+                    .scope(Default::default(), async {
+                        let r = crate::js::scoped(db, self.dispatch(db, &name, &cmd, conn_id)).await;
+                        (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())))
+                    })
+                    .await;
+                if let Some(last) = commits.pop() {
+                    // Later commits flush after earlier ones, so waiting for the last covers all of them.
+                    if let Err(e) = last.wait().await {
+                        r = Err(e.into());
+                    }
+                }
+                r
+            })
+            .await;
         let ms = t0.elapsed().as_millis();
         if ms >= 500 {
             eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
@@ -297,6 +314,9 @@ impl Server {
                 "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
                 "putBytes": self.dbs.global.counters.put_bytes.load(Relaxed) as i64, "getBytes": self.dbs.global.counters.get_bytes.load(Relaxed) as i64,
             },
+            "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64 },
+            "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64 },
+            "sstGc": { "passes": tenant_bench::lifecycle::SST_GC_PASSES.load(Relaxed) as i64, "deletedSsts": tenant_bench::lifecycle::SST_GC_DELETED_SSTS.load(Relaxed) as i64, "deletedManifests": tenant_bench::lifecycle::SST_GC_DELETED_MANIFESTS.load(Relaxed) as i64 },
             "putByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.put_cat[i].load(Relaxed) as i64))).collect::<Document>(),
             "getByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.get_cat[i].load(Relaxed) as i64))).collect::<Document>(),
             "maintenance": {

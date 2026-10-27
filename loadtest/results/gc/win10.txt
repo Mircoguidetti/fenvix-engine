@@ -1,0 +1,3 @@
+win10 s3 1 65.7 ops/s p50 15.007 p99 22.367 errors 0 writes/flush 1.0 wal PUT/write 1.0 all PUT/write 1.001
+win10 s3 8 451.1 ops/s p50 15.263 p99 31.599 errors 0 writes/flush 6.59 wal PUT/write 0.166 all PUT/write 0.166
+win10 s3 64 604.7 ops/s p50 107.199 p99 207.359 errors 0 writes/flush 6.72 wal PUT/write 0.13 all PUT/write 0.13

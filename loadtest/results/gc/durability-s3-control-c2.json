@@ -1,0 +1,35 @@
+{
+ "store": "s3",
+ "control": true,
+ "trials": [
+  {
+   "secs": 15.0,
+   "acked_ids": 3256,
+   "acked_writes_before_kill": 6493,
+   "lost_inserts": 26,
+   "lost_updates": 11,
+   "wal_puts_per_write": 0.002
+  },
+  {
+   "secs": 15.0,
+   "acked_ids": 3293,
+   "acked_writes_before_kill": 6569,
+   "lost_inserts": 46,
+   "lost_updates": 16,
+   "wal_puts_per_write": 0.002
+  },
+  {
+   "secs": 15.0,
+   "acked_ids": 3305,
+   "acked_writes_before_kill": 6592,
+   "lost_inserts": 74,
+   "lost_updates": 19,
+   "wal_puts_per_write": 0.002
+  }
+ ],
+ "total": {
+  "acked_ids": 9854,
+  "lost_inserts": 146,
+  "lost_updates": 46
+ }
+}

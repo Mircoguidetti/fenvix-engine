@@ -1,0 +1,59 @@
+{
+ "flags": "--durable-reads false",
+ "trials": [
+  {
+   "acked": 5637,
+   "seen_before_ack": 1853,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 5703,
+   "seen_before_ack": 1876,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4847,
+   "seen_before_ack": 1566,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4727,
+   "seen_before_ack": 1536,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4251,
+   "seen_before_ack": 1406,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 3681,
+   "seen_before_ack": 1269,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 1
+  },
+  {
+   "acked": 3394,
+   "seen_before_ack": 1116,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  },
+  {
+   "acked": 4792,
+   "seen_before_ack": 1563,
+   "lost_acked": 0,
+   "seen_before_ack_but_lost": 0
+  }
+ ],
+ "total": {
+  "acked": 37032,
+  "seen_before_ack": 12185,
+  "lost_acked": 0,
+  "seen_before_ack_but_lost": 1
+ }
+}

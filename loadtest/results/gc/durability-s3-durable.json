@@ -1,0 +1,53 @@
+{
+ "store": "s3",
+ "control": false,
+ "trials": [
+  {
+   "acked_ids": 1303,
+   "acked_writes_before_kill": 2591,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.596
+  },
+  {
+   "acked_ids": 1313,
+   "acked_writes_before_kill": 2611,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.586
+  },
+  {
+   "acked_ids": 1052,
+   "acked_writes_before_kill": 2090,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.593
+  },
+  {
+   "acked_ids": 1147,
+   "acked_writes_before_kill": 2277,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.599
+  },
+  {
+   "acked_ids": 1024,
+   "acked_writes_before_kill": 2030,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.593
+  },
+  {
+   "acked_ids": 1194,
+   "acked_writes_before_kill": 2371,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "wal_puts_per_write": 0.6
+  }
+ ],
+ "total": {
+  "acked_ids": 7033,
+  "lost_inserts": 0,
+  "lost_updates": 0
+ }
+}

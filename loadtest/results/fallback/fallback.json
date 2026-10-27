@@ -1,0 +1,102 @@
+[
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.0,
+  "acked_docs": 8421,
+  "acked_updates": 8358,
+  "found_docs": 8424,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.6
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 22.1,
+  "acked_docs": 8684,
+  "acked_updates": 8642,
+  "found_docs": 8685,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.7
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.8,
+  "acked_docs": 8676,
+  "acked_updates": 8639,
+  "found_docs": 8683,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.7
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.7,
+  "acked_docs": 8615,
+  "acked_updates": 8575,
+  "found_docs": 8617,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.7
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.8,
+  "acked_docs": 8777,
+  "acked_updates": 8735,
+  "found_docs": 8779,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 2.0
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.6,
+  "acked_docs": 8541,
+  "acked_updates": 8498,
+  "found_docs": 8541,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 2.0
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.4,
+  "acked_docs": 8705,
+  "acked_updates": 8649,
+  "found_docs": 8706,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.8
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 22.1,
+  "acked_docs": 8728,
+  "acked_updates": 8695,
+  "found_docs": 8730,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.9
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.3,
+  "acked_docs": 8529,
+  "acked_updates": 8478,
+  "found_docs": 8536,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 2.2
+ },
+ {
+  "fallback_used": true,
+  "exit_s_after_sigterm": 21.9,
+  "acked_docs": 8807,
+  "acked_updates": 8772,
+  "found_docs": 8812,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "first_full_read_s": 1.9
+ }
+]

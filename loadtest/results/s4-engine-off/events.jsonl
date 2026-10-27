@@ -1,0 +1,16 @@
+{"event": "kill", "holder": "S0", "port": 28001, "unix_ms_before": 1793051048063, "unix_ms_after": 1793051048069}
+{"event": "restart", "holder": "S0", "port": 28001, "unix_ms_before": 1793051049651, "unix_ms_after": 1793051049752}
+{"event": "kill", "holder": "S0", "port": 28001, "unix_ms_before": 1793051066200, "unix_ms_after": 1793051066211}
+{"event": "restart", "holder": "S0", "port": 28001, "unix_ms_before": 1793051066811, "unix_ms_after": 1793051066912}
+{"event": "kill", "holder": "S1", "port": 28002, "unix_ms_before": 1793051082333, "unix_ms_after": 1793051082340}
+{"event": "restart", "holder": "S1", "port": 28002, "unix_ms_before": 1793051084041, "unix_ms_after": 1793051084142}
+{"event": "kill", "holder": "S0", "port": 28001, "unix_ms_before": 1793051101155, "unix_ms_after": 1793051101163}
+{"event": "restart", "holder": "S0", "port": 28001, "unix_ms_before": 1793051102444, "unix_ms_after": 1793051102546}
+{"event": "kill", "holder": "S0", "port": 28001, "unix_ms_before": 1793051115556, "unix_ms_after": 1793051115567}
+{"event": "restart", "holder": "S0", "port": 28001, "unix_ms_before": 1793051117307, "unix_ms_after": 1793051117409}
+{"event": "kill", "holder": "S0", "port": 28001, "unix_ms_before": 1793051131623, "unix_ms_after": 1793051131642}
+{"event": "restart", "holder": "S0", "port": 28001, "unix_ms_before": 1793051133386, "unix_ms_after": 1793051133487}
+{"event": "kill", "holder": "S1", "port": 28002, "unix_ms_before": 1793051151342, "unix_ms_after": 1793051151350}
+{"event": "restart", "holder": "S1", "port": 28002, "unix_ms_before": 1793051152140, "unix_ms_after": 1793051152241}
+{"event": "kill", "holder": "S1", "port": 28002, "unix_ms_before": 1793051165253, "unix_ms_after": 1793051165263}
+{"event": "restart", "holder": "S1", "port": 28002, "unix_ms_before": 1793051165893, "unix_ms_after": 1793051165994}

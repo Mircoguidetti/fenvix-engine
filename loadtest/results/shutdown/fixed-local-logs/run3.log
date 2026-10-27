@@ -1,0 +1,11 @@
+mongo-server listening on 127.0.0.1:28041 (idle close after 3600 s, holder H, lease ttl 30 s)
+LEASE acquired tenant=h000000 holder=H unix_ms=1793049263365 takeover_from=-
+LEASE acquired tenant=h000000 holder=H unix_ms=1793049263366 takeover_from=-
+LEASE acquired tenant=h000000 holder=H unix_ms=1793049263367 takeover_from=-
+LEASE acquired tenant=h000000 holder=H unix_ms=1793049263368 takeover_from=-
+LEASE acquired tenant=h000000 holder=H unix_ms=1793049263368 takeover_from=- new=true
+LEASE writer_open tenant=h000000 holder=H unix_ms=1793049263373 
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=h000000 holder=H unix_ms=1793049416412 
+tenants closed; stopping maintenance
+maintenance stopped

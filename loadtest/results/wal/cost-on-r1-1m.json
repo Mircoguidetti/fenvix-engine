@@ -1,0 +1,48 @@
+{
+ "p50_ms": 14.799,
+ "p99_ms": 36.479,
+ "label": "cost-on-r1",
+ "minutes": 1.0,
+ "connections": 8,
+ "extra_args": [],
+ "writes": 29869,
+ "ops_per_sec": 497.81666666666666,
+ "errors": 0,
+ "wal_samples": [
+  [
+   0,
+   2
+  ],
+  [
+   10,
+   3235
+  ],
+  [
+   20,
+   6721
+  ],
+  [
+   30,
+   8137
+  ],
+  [
+   40,
+   11166
+  ],
+  [
+   50,
+   6550
+  ],
+  [
+   60,
+   9964
+  ]
+ ],
+ "wal_max": 11166,
+ "wal_at_kill": 9967,
+ "compacted_ssts_at_kill": 4,
+ "restart_to_ping_s": 0.56,
+ "recovery_s": 1.35,
+ "docs_after": 50,
+ "doc0_ok": true
+}

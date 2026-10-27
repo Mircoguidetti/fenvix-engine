@@ -359,3 +359,328 @@ Single-tenant throughput, closed loop (each connection sends its next operation 
 - Whether the shutdown hang (defect 1) affects S3 deployments: it was not observed there, but those runs were not instrumented to show where a hang would be.
 - Node.js driver results for this round's server changes (only the pymongo suite was rerun).
 <!-- round2:end -->
+
+<!-- round3:start -->
+## Round 3 — branch `engine-cost`: per-process lease, group commit, shutdown hang, driver suites
+
+Branch `engine-cost` from `load-test` (32facb8), not merged. Every number below is computed from a file in `loadtest/results/` (`gc/`, `lease-cost/`, `t2/stop_cont-*.json`, `s4-engine-{off,on}/`, `shutdown/`, `engine-py-*`, `engine-node-*`); what could not be measured is listed at the end. One commit per change so they rebase cleanly: group commit (`cmd.rs`, `dbs.rs`, `lifecycle.rs`: one function pair and a `handle` wrapper, no change to the write commands), the shutdown fix, and the per-process lease (`lease.rs`, flag off by default). A document and its index entries are still written in **one** `slatedb::WriteBatch` (`Tenant::stage` takes the same `Vec<Op>` that `apply` took), so the atomic write that `compat-indexes` relies on is unchanged.
+
+### Step 0 — environment
+
+`cargo build --release --workspace` works (first build 3 min 29 s). MinIO could not be downloaded (`dl.min.io` and GitHub release downloads are refused by the proxy, HTTP 403), so it was **built from source** with `go install github.com/minio/minio@latest` through the reachable Go module proxy (version string `DEVELOPMENT.GOGET`, go1.24.7) and run natively with its data on the local disk. Docker was not running; `dockerd` was started by hand and `mongo:7.0` (MongoDB 7.0.45) pulled for the differential suites. Same machine as the earlier rounds (4 vCPU, 16 GB); MinIO, the server and the load generator share it, so latencies are a lower bound for MinIO-class stores, and MinIO here is on a faster local disk than in the earlier rounds (the "before" write numbers are therefore not those of round 2).
+
+### Task 1 — per-process lease (`--process-lease`, default off)
+
+**Design.** `processes/{holder}/_lease` is one lease per process, renewed every TTL/3 with a conditional update. `tenants/{id}/_lease` becomes an *owner record* `{holder, inc, seq}` written once when the tenant is opened and not renewed. A record is valid while its owner's process lease is live **and carries the generation (`inc`) the record names**; otherwise another process takes the tenant over with a conditional update of the record. A process whose own lease lapsed before it could renew (frozen or starved for longer than the TTL) bumps its generation and abandons every tenant it held before the lease can look valid again; every command also checks that the tenant's generation is the current one and the process lease is valid. Clean close releases the owner record as before; clean shutdown expires the process lease. All processes sharing a bucket must use the same mode (a per-tenant-mode process refuses a tenant with an owner record, which is the safe direction). This answers the objection of round 2 (a takeover reads one object, the old owner's liveness lives in another): the check-then-act race is closed by the owner's local deadline (lapse detection) being earlier than the takeover deadline (expiry plus the 1.5 s skew allowance), the same clock assumption as the per-tenant lease; I did not model-check it.
+
+**PUTs per tenant-hour, idle** (`exp_idle_lease.py idle`: tenants opened by one process, then left alone for 120 s, TTL 30 s, writers with the 30 s manifest poll of Task 3):
+
+| Open idle tenants | Flag | Lease PUTs per tenant-hour | All PUTs per tenant-hour | GETs per tenant-hour |
+|---|---|---|---|---|
+| 100 | off | 330.6 | 360.6 | 895.8 |
+| 400 | off | 354.0 | 383.9 | 900.0 |
+| 100 | on | 3.6 | 33.6 | 900.0 |
+| 400 | on | 0.9 | 30.9 | 900.0 |
+| 50 (300 s window) | on | 7.0 | 19.0 | 504.0 |
+
+With the flag off the cost is one PUT per tenant per TTL/3 (360 per hour at TTL 30 s, measured 331 to 354 in a 120 s window); with it on it is one PUT per process per TTL/3 whatever the number of tenants (12 PUTs in 120 s: 360 per hour per process), so 3.6 and 0.9 per tenant-hour at 100 and 400 tenants. The remaining 30 PUTs per tenant-hour in the 120 s windows are one PUT per tenant, once, in category "other" (the 300 s window shows 50 PUTs for 50 tenants, not 125), so it is a start-up cost, not a rate; I did not identify what writes it (it is also in the unmodified binary). GETs: the unmodified binary measured 660 per tenant-hour (`idle-base.json`), the current one 900 in both modes: the 30 s writer manifest poll costs 240 extra GETs per tenant-hour (about $0.0001 per tenant-hour at S3 prices against $0.0017 saved by 330 fewer PUTs).
+
+**Failover time, kill to first success** (`exp_idle_lease.py failover`, SIGKILL of the owner, second process retries every 50 ms, TTL 10 s, 8 trials per flag, 20 documents verified after takeover):
+
+| Flag | min / median / max (s) |
+|---|---|
+| off | 11.03 / 11.41 / 11.45 |
+| on | 11.07 / 11.37 / 11.40 |
+
+Both are TTL plus the 1.5 s skew allowance (11.5 s); the process lease does not change failover.
+
+**Safety.**
+- `test_lease.py` (two processes, 13 checks incl. refusal with 134, clean-close handover, SIGKILL takeover on the unclean path, same-holder restart, 40-thread race): 13/13 with the flag off and on, twice each.
+- **Frozen process** (`test_stop.py`, SIGSTOP of the owner for longer than the TTL, 5 rounds, TTL 4 s; the other process takes the tenant over at about 5.6 s and writes a newer value; then 40 reads queued during the freeze and 40 sent after SIGCONT, and now also 20 writes queued and 20 sent after SIGCONT per round): flag off and on, both with serialized and shared reads: 400 of 400 reads refused with 134, **0 stale reads, 0 writes acknowledged by the frozen process, 200 of 200 writes refused, final value never clobbered**. **Negative control** (`--unsafe-skip-ownership-checks` on the frozen process): flag off 11 stale reads of 400 and 72 of 200 writes acknowledged; flag on 89 stale reads of 400 and 91 of 200 writes acknowledged, so the test detects staleness in both modes (the other reads of the control failed with I/O errors from the fenced writer; the split between stale and failed varies from run to run).
+- **SIGKILL scenario** (`run_load.py s4`, reduced: two processes, 200 active tenants from a pool of 2,000 preloaded tenants, 150 s, 8 SIGKILLs of a random process each followed by a restart with the same holder id, TTL 10 s, random routing, retries and a read-your-writes check through the other process; the earlier S4 had 1,000 tenants, 300 s and 10 kills): 
+
+| | Flag off | Flag on |
+|---|---|---|
+| Writer intervals / overlaps between different holders | 1,308 / **0** | 1,338 / **0** |
+| Lease-record overlaps in the log | 0 | 0 |
+| Max concurrent writer intervals on one tenant | 1 | 1 |
+| Takeovers of expired leases / unclean WAL-replay wakes | 116 / 1,333 | 136 / 1,370 |
+| Operations ok / failed after retries | 29,105 / 0 | 28,997 / 0 |
+| Read-your-writes checks / stale | 5,664 / **0** (5,662 refused with 134, 2 I/O errors) | 5,676 / **0** (5,675 refused, 1 I/O error) |
+| Acknowledged inserts missing | 0 of 2,785 | 0 of 2,834 |
+| Acknowledged updates older than the last acknowledged value | 1 of 629 (see below) | 1 of 635 (see below) |
+
+The single "stale" update of each run is on tenant `t000011`, whose preload had failed half-way (2 documents instead of 50): the update matched no document, in both modes and the same tenant. (A first attempt of this scenario was discarded: I had not preloaded the tenants, so every update matched nothing and the checker reported hundreds; after preloading, the remaining 7 failed preloads were reloaded except this one.)
+- **Read-your-writes across two processes**: the S4 checks above (0 stale of 11,340), plus `test_lease.py` (after a clean close the other process sees 10 of 10 writes; after SIGKILL 25 of 25).
+
+Not shown: a model of the clock assumption, a frozen process whose *process lease* is renewed by the same holder id started twice (that case abandons everything and recreates the lease, untested), and mixed-mode clusters.
+
+### Task 2 — group commit
+
+**What it does.** A write command takes the tenant lock exclusively as before, decides, and puts its batch into the database (`Tenant::stage`, one atomic `WriteBatch`); it no longer waits for the flush there. `Server::handle` waits for durability after the command released its locks and **before the reply is sent**, so writes that arrive while a flush is in flight share the next WAL object, and a write is acknowledged only after the object holding it is durable. `--no-group-commit` restores the old behaviour (flush under the lock). One consequence, not present before: after the lock is released and before the flush finishes, other connections' reads and writes can see the staged batch (a read of not yet durable data); if the process dies in that window the value disappears without ever having been acknowledged, and if the flush fails the batch stays visible but unacknowledged. Acknowledged data is not affected.
+
+**Single tenant, writes only** (`exp_groupcommit.py`, closed loop, `update_one` on 50 documents, 15 s per cell, no warm-up; before = the unmodified binary, after = this branch; cells: ops/s (p50 / p99 ms) and WAL PUTs per write / all PUTs per write):
+
+| Store | Connections | Before | After | Speed-up |
+|---|---|---|---|---|
+| MinIO | 1 | 285 (3.4 / 6.2) 1.00 / 1.00 | 265 (3.7 / 6.7) 1.00 / 1.00 | 0.93 |
+| MinIO | 8 | 274 (29.3 / 42.1) 1.00 / 1.00 | 484 (16.7 / 27.7) 0.93 / 0.93 | 1.77 |
+| MinIO | 64 | 331 (204.3 / 261.2) 0.78 / 0.78 | 644 (109.6 / 183.8) 0.67 / 0.67 | 1.94 |
+| local directory | 1 | 541 (1.8 / 3.6) 2.00 / 2.00 | 510 (1.9 / 3.8) 2.00 / 2.00 | 0.94 |
+| local directory | 8 | 534 (14.8 / 25.9) 2.00 / 2.00 | 785 (10.1 / 20.4) 1.93 / 1.93 | 1.47 |
+| local directory | 64 | 647 (100.5 / 169.0) 1.56 / 1.56 | 762 (84.9 / 177.8) 1.54 / 1.54 | 1.18 |
+| in memory (ceiling, 10 s) | 1 / 8 / 64 | 677 / 776 / 821 | 670 / 797 / 891 | 0.99 / 1.03 / 1.09 |
+
+The local-directory store counts 2 PUT-type requests per WAL object (measured, cause not determined), so its PUTs per write are twice the MinIO figures at one connection. The write step stays serialized per tenant (it scans the collection and decides under the lock); the in-memory store, which has no flush cost at all, tops out at 797 to 891 ops/s with 8 to 64 connections, which is the ceiling group commit can reach here: on MinIO it gets to 644 of it (72%). PUTs per write fall from 1.00 to 0.67 at 64 connections, not further, because only writes that queue behind the lock share an object.
+
+**Durability** (`test_group_commit.py`: 32 threads inserting and then updating their own documents on one tenant, SIGKILL at a random moment between 2.5 and 4 s, restart, read back everything that was acknowledged): MinIO 6 trials, 7,033 acknowledged documents (about 14,000 acknowledged writes), **0 lost inserts, 0 lost updates**; local directory 4 trials, 5,886 acknowledged documents, **0 lost, 0 lost**; WAL PUTs per acknowledged write before the kill 0.57 to 0.61 on MinIO (so the objects were shared). **Negative control** (`--ack-before-durable`, 1.5 s flush interval): 4 trials, 5,738 acknowledged documents, **681 lost inserts and 66 lost updates**, so the check detects loss. (My first run of this test was invalid: an earlier crashed run had left a server on the port, so every trial talked to a stale server; the script now refuses to start if the port is taken.)
+
+### Task 3 — the graceful-shutdown hang
+
+**Cause.** A writer that the server opens has the in-`Db` compactor off and polled the manifest every hour (`LONG_POLL`); compaction was requested only *after* a clean close. slatedb freezes the memtable by WAL count, not by size: on the local store a hot tenant wrote an L0 SST (51 KB each) about every 10 s, reached `l0_max_ssts` = 8 after about 80 s and the memtable flush then stalled, retrying only once per `manifest_poll_interval`, that is hourly. From then on the WAL piled up (38,545 WAL objects, 153 MB after 150 s) and `Db::close` called by SIGTERM never returned. Evidence: with a debug build, `close_all` logged "got entry lock" and "db.close() begin" and never "done"; the store held exactly 8 compacted SSTs; thread dumps (gdb) showed every runtime thread parked, i.e. an await that never completes, not a lock cycle. It reproduced in 3 of 3 runs of 150 to 180 s load (64 connections, 90/10 mix) on the memory store (unmodified binary and group-commit binary) and the local store, and in none of the 6 shorter runs of the earlier round, which matches the time to fill L0. It is **not** specific to the non-S3 stores: I did not rerun it against MinIO; the earlier rounds' MinIO runs wrote far fewer operations per second (about 130 against 450), which may be why they stayed below the limit, but the mechanism applies to any store: any tenant written long enough would hit it, and so would an idle close of such a tenant.
+
+**Fix** (own commit). (1) The server asks the maintenance queue for a compaction of an open writer once its L0 reaches the compaction threshold (4), at most every 10 s. (2) Writers poll the manifest every `--writer-poll-secs` (default 30 instead of 3,600) so they see the result and retry a stalled flush (cost: 240 GETs per open writer-hour, see Task 1). (3) Safety net: `Tenant::close` gives the final flush 20 s, then closes without it and writes no clean marker (the WAL is durable, the next wake replays it) and reports the error.
+
+**Result.** After a 150 s hot run (64 connections, 90/10 mix) and SIGTERM: **local directory 10 of 10 and in-memory 10 of 10 exited within 2 to 3 s**, every log has "tenants closed" and "maintenance stopped" and none the timeout message (`shutdown/fixed-10runs-*.txt`, logs in `shutdown/fixed-*-logs/`). Safety net tested separately: with `--no-maintenance --writer-poll-secs 3600` (the stall comes back) the server exits after 21 s with "final flush did not finish in 20s; closing without it (unclean)", twice; without the net the same configuration is the original hang. Whether the data written before such an unclean close is fully recovered on the next wake was not tested.
+
+### Task 4 — differential driver suites against this branch's server
+
+Real MongoDB 7.0.45 on :27017, `mongo-server` (this branch, default flags) on :27018 and :27019 with MinIO, `tests.json` regenerated and identical to the committed one.
+
+| Suite | In scope ("core") | Out-of-scope ("extra") |
+|---|---|---|
+| pymongo (`run_py.py`) | **1081/1081** | 24/49 |
+| Node.js `mongodb` 7.7.0 (`run_node.js`) | **1081/1081** | 25/49 |
+
+The extra tests are the out-of-scope features and failed in the earlier rounds too (24/49 in `results6.md`); the one difference between the two drivers' runs is `aggregate.extra.group_add_to_set` (fails with pymongo, passes with Node.js; `$addToSet` order is unspecified, I did not look further).
+
+### Defects found in this round
+
+1. **Shutdown hang: cause found and fixed** (Task 3). Related and *not fixed*: a hot writer keeps every WAL object until the tenant has been idle for 30 s (GC only runs then): 56,517 WAL objects after a 150 s run in the fixed build, so a crash of a long-lived hot tenant means a very long WAL replay on the next wake.
+2. **Group commit makes staged, not yet durable data readable** (Task 2): a change of the read guarantee, described there; acknowledged writes are unaffected.
+3. **Harness defects** (not server defects): `test_lease.py` listed the bucket with `docker exec` (now `MINIO_DATA_DIR` when MinIO runs outside docker; the first runs failed that check); its "single holder in the log" check once failed for a tenant that process A acquired, discarded (the tenant did not exist) and process B then acquired: A never wrote (one failure in 5 flag-off runs, unreproduced afterwards); a stale server from a crashed earlier run answered on the test port and invalidated a whole first durability run; the first S4 attempt ran on tenants that had never been loaded; and my S4 runs overwrote the tracked outputs of the earlier round in `loadtest/out/s4` and `lease-test` (restored from 32facb8 in a separate commit; this round's copies are in `results/s4-engine-*`).
+4. The unmodified binary's idle open writers already cost about 660 GETs per tenant-hour (manifest and one more GET per roughly 11 s per tenant); not investigated.
+
+### What I could not measure
+
+- Anything against real S3: MinIO runs on the same machine with local-disk latency; the PUT counts transfer, the latencies do not.
+- Per-process lease: the clock-drift assumption under which a takeover is safe (only SIGSTOP of up to a few TTLs and SIGKILL were tested, no clock skew, no network partition between a process and the store); mixed-mode clusters; a duplicated holder id; the full-size S4 (1,000 tenants, 300 s, 10 kills) and the S4 on a cold disk.
+- Group commit: more than one tenant at a time (this was a single-tenant measurement), the interaction with `compat-indexes` (that branch's code was not available here), and any real-S3 gain: the PUT saving at 64 connections is 0.33 PUT per write on MinIO, bounded by the serialized write step.
+- What writes the one PUT per tenant ("other" category) after a tenant opens, and why the unmodified binary issues about 11 manifest-related GETs per tenant per 120 s while idle.
+- Recovery of the data after the shutdown safety net's unclean close.
+- Whether `--writer-poll-secs 30` is the right value for S3 prices at very large numbers of open writers (the cost is 240 GETs per open writer-hour; no sweep was run).
+<!-- round3:end -->
+
+<!-- round4:start -->
+## Round 4 — branch `engine-cost`: WAL growth, shutdown-fallback recovery, durable reads, batch window, one connection, the extra PUT
+
+Same rules as round 3: every number comes from a file in `loadtest/results/` (`wal/`, `gc/`, `fallback/`, `durable-reads/`, `lease-cost/idle-r4.json`, `suites/`), same machine, MinIO (built from source, local disk) with the load generator and the server sharing 4 vCPUs. One commit per change; after each commit-worthy change the differential suites were rerun (summaries in `suites/*-summary.txt`):
+
+| Change (commit) | pymongo core / extra | Node.js core / extra |
+|---|---|---|
+| WAL GC of open writers | 1081/1081, 25/49 | 1081/1081, 25/49 |
+| Group-commit leader and window | 1081/1081, 25/49 | 1081/1081, 24/49 |
+| Durable reads | 1081/1081, 25/49 | 1081/1081, 25/49 |
+| Test control `--l0-max-ssts` | 1081/1081, 24/49 | 1081/1081, 25/49 |
+
+The "extra" count (out-of-scope features) wanders between 24 and 25 from run to run because of the `$addToSet` order test noted in round 3; the in-scope count never moved.
+
+### 1. WAL objects of a hot writer (fixed: bounded, with a cost)
+
+**Fix.** The maintenance loop runs a WAL-only garbage-collection pass (`gc_tenant_wal`: only the `wal/` directory, never manifests, SSTs or compactions, because the writer is live) every `--wal-gc-secs` (default 20) over writers that were written in the last minute, deleting WAL objects before the latest manifest's `replay_after_wal_id` (it advances each time slatedb flushes the memtable to an L0 SST). The whole-tenant pass is skipped for a tenant that is still open. slatedb does not allow flushing the memtable more often than every 4,096 WAL objects (`max_wal_flushes_before_l0_flush` must be at least 4096; I tried 1,024 and the server refuses to open the tenant), so that is the floor of the bound.
+
+**One tenant on MinIO, 8 connections, writes only, 10 minutes** (`exp_wal_growth.py`, WAL objects counted in MinIO's data directory every 10 s; "before" = the round-3 binary, "after" = this change):
+
+| Seconds into the run | 0 | 60 | 120 | 180 | 240 | 300 | 360 | 420 | 480 | 540 | 590 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| WAL objects before | 2 | 18,744 | 45,048 | 69,285 | 93,217 | 116,514 | 141,995 | 166,425 | 192,411 | 216,440 | 236,301 |
+| WAL objects after | 2 | 9,181 | 7,625 | 10,151 | 9,367 | 8,860 | 8,353 | 9,087 | 11,412 | 13,273 | 7,915 |
+
+**Maximum seen over the 10-minute run: 236,301 before (239,108 at the kill), 14,088 after (11,490 at the kill)**; mean over the samples 116,129 and 9,378. Maxima over the 1 and 5 minute runs: before 12,816 and 108,444, after 11,406 and 10,854. Writes done: before 27,198 / 137,217 / 286,369 (1 / 5 / 10 min), after 23,118 / 104,104 / 243,481.
+
+**Recovery after SIGKILL** (new server on the same bucket, time from process start to the first successful read of the tenant, which takes the unclean WAL-replay path): before 1.58 / 0.63 / 0.97 s after 1 / 5 / 10 minutes, after 1.60 / 1.56 / 1.11 s. **Recovery did not depend on the number of WAL objects before this change either**: slatedb replays only the objects after `replay_after_wal_id`, so with 239,108 objects present the replay was already limited to the tail (at most about 4,096 objects plus what was written since the last memtable flush). The change bounds storage and the size of the `wal/` listing, not recovery time; I did not find a configuration where the "before" recovery was long. (The three recoveries differ by up to a second in both columns, so the table does not show a difference between before and after.)
+
+**Cost.** Throughput of the same runs: before 453 / 457 / 477 ops/s, after 385 / 347 / 406 ops/s (1 / 5 / 10 min), i.e. 15 to 24% lower, one run per cell. The deletes of one object per WAL object (thousands per pass) compete with the writes on MinIO; I did not measure which part (DELETEs, the LISTs, or the compaction requests of an open writer that came with the round-3 fix) costs how much. Lengthening `--wal-gc-secs` would trade storage for throughput; not measured.
+
+**Not collected while the tenant is open:** compacted SSTs (at the kill: 6 / 27 / 79 after, 7 / 46 / 99 before, growing with the run) and old manifests. They go with the whole-tenant pass when the tenant closes. I kept the pass WAL-only because slatedb protects freshly uploaded SSTs from GC by an age (24 h by default) and I did not want to shorten it for a live writer without a test; the growth is small (about 3 SSTs per minute of 51 KB each here) but unbounded for a tenant that stays open for days.
+
+**Durability with the GC running** (`test_group_commit.py --secs 60`, 32 threads inserting and updating, SIGKILL after 60 s so several memtable flushes and GC passes had happened, MinIO): 4 trials, **25,006 acknowledged documents (about 50,000 acknowledged writes), 0 lost inserts, 0 lost updates**. **Negative control** (`--ack-before-durable`): 2 trials, 13,194 acknowledged documents, **42 lost inserts and 39 lost updates**.
+
+### 2. Recovery after the shutdown fallback (proved)
+
+`test_fallback_recovery.py`: the stall is real, not simulated. The server runs with `--no-maintenance --writer-poll-secs 3600` (nothing compacts or re-reads the manifest) and `--l0-max-ssts 1` (a new test-control flag; slatedb's limit of 8 would need 8 x 4,096 WAL objects, which Python writers cannot produce in a reasonable time), 96 threads insert documents and update each once for 130 s, then SIGTERM is sent *while they are still writing*; after the exit a normal server is started on the same bucket and every acknowledged document and update is compared with what is read back.
+
+| | Result |
+|---|---|
+| Trials in which the fallback fired ("closing without it" in the log) | **10 of 10** |
+| Server exit after SIGTERM | 21.0 to 22.1 s |
+| Acknowledged documents / acknowledged updates | 86,483 / 86,041 |
+| **Lost inserts / lost updates** | **0 / 0** |
+| Documents found beyond the acknowledged ones (written, durable, reply not delivered) | 1 to 7 per trial |
+| First full read after the restart | 1.6 to 2.2 s |
+
+Limits: the stall was forced with `--l0-max-ssts 1`, not by 8 real SSTs; no separate negative control for this test (its comparison code is the one used by the durability tests above, whose control loses data).
+
+### 3. Reads see only durable data (changed, default on)
+
+`--durable-reads` (default true): read commands read a writer with slatedb's `DurabilityLevel::Remote`, so a batch that is staged and waiting for its group flush is invisible to them; commands that write still read their own staged data to decide (duplicate keys, unique indexes), under the exclusive lock. The acknowledged-write path is unchanged.
+
+**Throughput** (`exp_groupcommit.py` with `READ_PCT`, one tenant, closed loop, 15 s per cell; cells: ops/s (p50 / p99 ms); "staged visible" = `--durable-reads false`, the behaviour of round 3 and of the first part of this round):
+
+| Mix | Connections | Staged visible | Durable reads | Change |
+|---|---|---|---|---|
+| writes only | 1 | 272 (3.6 / 6.4) | 292 (3.3 / 5.9) | +7% |
+| writes only | 8 | 677 (10.7 / 26.7) | 699 (10.8 / 25.4) | +3% |
+| writes only | 64 | 729 (84.0 / 173.4) | 731 (79.9 / 200.6) | 0% |
+| 90% reads | 1 | 2,002 (0.15 / 4.4) | 2,205 (0.13 / 3.9) | +10% |
+| 90% reads | 8 | 5,274 (0.56 / 8.6) | 5,293 (0.56 / 8.7) | 0% |
+| 90% reads | 64 | 5,736 (10.0 / 29.4) | 5,712 (10.1 / 29.5) | -0.4% |
+| reads only | 1 | 8,556 (0.106 / 0.25) | 8,542 (0.107 / 0.26) | -0.2% |
+| reads only | 8 | 34,354 (0.218 / 0.58) | 33,439 (0.224 / 0.60) | -2.7% |
+| reads only | 64 | 46,611 (1.32 / 2.84) | 44,084 (1.39 / 3.02) | **-5.4%** |
+
+The worst cell is -5.4%, under the 10% limit, so durable reads are the default; one run per cell, so differences of a few percent are inside the run-to-run spread (the +7% and +10% at one connection are noise in the other direction).
+
+**Test** (`test_durable_reads.py`: 16 writers insert increasing ids, 16 readers poll for the id each writer is inserting right now; a document a reader saw *before its insert was acknowledged* must exist after SIGKILL and restart): default flags, 8 trials: 37,954 acknowledged, 8,482 documents seen before their ack, **0 of them lost**. Negative control `--durable-reads false`: 12,185 seen early, **1 lost**: the window between staging and durability is only about 3 ms, so the control is weak. With `--group-commit-window-ms 10` widening the window: durable reads 5,917 seen early, **0 lost**; control 19,643 seen early, **18 lost**. So the test detects reads of non-durable data, and with durable reads on none occurred.
+
+**What the flag off means (the risk):** with `--durable-reads false` a read can return a document, or a new value, that is only staged; if the process dies before the group flush (a few ms, up to the window), that value disappears although a client saw it, and it was never acknowledged to its writer. Acknowledged data is not affected in either setting.
+
+### 4. PUTs per write: why group commit barely helped, and the batch window
+
+**Why.** The write step of one tenant is serialized under the lock (scan, decide, stage: about 1.5 ms on this machine) and a flush takes about 2.5 to 3.4 ms (1 / flushes per second: 2.47 ms at 8 connections, 3.08 ms at 64, 3.39 ms at 1, all with window 0). A batch can only collect the writes staged during the previous flush, so at most about two: measured writes per flush at window 0: **1.00 (1 connection), 1.65 (8), 1.56 (64)**, and WAL PUTs per write 1.00, 0.617, 0.507. The "0.93" of round 3 came from the old design, where every queued write sent its own flush request to slatedb: with the leader/follower flush of this round (one flush at a time, later writes whose sequence number a flush already covered return at once) the same 8 connections give 0.575 to 0.598 PUTs per write and 623 to 649 ops/s against 467 to 474 ops/s (+33 to 37%) for the round-3 binary measured in the same session; 64 connections 704 to 722 against 619 to 640 ops/s (+11 to 14%), PUTs per write 0.49 to 0.51 against 0.62 to 0.65; one connection unchanged (261 to 263 against 256 to 262).
+
+**Batch window** (`--group-commit-window-ms W`: the leader waits W ms after getting the flush lock before flushing; MinIO, writes only, 15 s per cell, one run per cell; cells: ops/s (p50 / p99 ms), WAL PUTs per write, writes per flush):
+
+| Window | 1 connection | 8 connections | 64 connections |
+|---|---|---|---|
+| 0 ms (default) | 295 (3.2 / 5.8), 1.00, 1.0 | 667 (11.1 / 26.1), 0.617, 1.65 | 649 (92.5 / 192.1), 0.507, 1.56 |
+| 2 ms | 157 (6.3 / 8.7), 1.00, 1.0 | 521 (13.7 / 41.4), 0.348, 3.01 | 531 (134.7 / 240.3), 0.297, 2.73 |
+| 5 ms | 107 (9.3 / 12.2), 1.00, 1.0 | 497 (16.9 / 35.3), 0.238, 4.53 | 516 (116.5 / 252.8), 0.210, 3.98 |
+| 10 ms | 66 (15.0 / 22.4), 1.00, 1.0 | 451 (15.3 / 31.6), 0.166, 6.59 | 605 (107.2 / 207.4), 0.130, 6.72 |
+
+A window lowers PUTs per write (0.617 to 0.166 at 8 connections, 0.507 to 0.130 at 64) and costs throughput and latency everywhere except the 64-connection, 10 ms cell (605 against 649 ops/s, p50 107 against 92 ms); at one connection it is pure added latency because there is nothing to batch. **The default stays 0**: at the saturation point of this machine the window never raises throughput, and it only pays for itself when the store charges per PUT and latency does not matter (a 5 ms window at 8 connections saves 61% of the PUTs for 25% of the throughput). A window that is skipped when no other write is queued (so a lone writer does not wait) was not tried.
+
+### 5. One connection: 285 to 265 ops/s (not reproducible, nothing to fix)
+
+Five runs of 15 s each of the unmodified binary, the round-3 group-commit binary, this round's WAL-GC binary and the leader-flush binary (`one-*-N.json`, interleaved): ops/s mean (sd), min to max: unmodified **264.5 (5.4)**, 258.6 to 272.9; round-3 **272.3 (6.3)**, 266.3 to 281.3; WAL-GC **270.9 (8.6)**, 260.4 to 284.2; leader flush **272.6 (7.3)**, 265.5 to 281.8; p50 3.5 to 3.6 ms and p99 6.6 to 6.9 ms in all four. The group-commit builds are about 3% faster than the unmodified one, not slower; the 285 of round 3 was above the maximum of five runs of the same binary today, so it was a high outlier of the baseline (MinIO's disk state differs from run to run), not a regression. I found no cause because there is no effect.
+
+### 6. The extra PUT (found, removed)
+
+It is `gc/manifest.boundary`, written by the whole-tenant GC pass 30 s after a tenant that was written is opened (the maintenance loop collected every tenant 30 s after its last write, including tenants that were still open): MinIO's data directory shows the object appearing at 06:37:01 for a tenant opened at 06:36:31. The whole-tenant pass is now skipped for tenants that are still open (it runs when they close). Idle 50 open tenants, 150 s, lease per tenant (`idle-r4.json`): PUTs by category **lease 700, other 0, all 700** (was 100 "other" per 100 tenants per window); GETs unchanged. The boundary object is still written by the pass at close; whether it can be skipped there was not examined.
+
+### Not done / not measured in this round
+
+- Recovery time did not change, because it was never proportional to the WAL; a replay of the maximum tail (just under 4,096 objects) on a slow store was not measured, and there is no setting to shorten it below 4,096 (slatedb's limit).
+- The 15 to 24% throughput cost of the WAL GC: cause split and a cheaper schedule not measured.
+- Compacted SSTs and manifests of an open writer still accumulate (see 1).
+- The shutdown fallback was proved with `--l0-max-ssts 1`, not with eight real SSTs.
+- A window that adapts to the number of waiting writes; a window on the local-directory store; all window and durable-read numbers are one 15 s run per cell on one machine.
+- `compat-indexes`: not available here, so the interaction with indexes written in the same batch was not tested (the batch is still one `WriteBatch`, unchanged).
+<!-- round4:end -->
+
+<!-- round5:start -->
+## Round 5 — branch `engine-cost`: cost of the WAL cleanup, cleanup of SSTs and manifests, adaptive batch window
+
+Rules as before: numbers come from files in `loadtest/results/` (`wal/cost-*`, `wal/bulk*`, `objects/`, `open-gc/`, `gc/ad-*`, `suites/`); MinIO built from source, local disk, load generator and server on the same 4 vCPUs. **Comparisons below are only between runs interleaved in one session**: absolute throughput drifted between sessions on this machine (the same code with the cleanup off made 486 ops/s at 10 minutes in one session and 434 in the next; one connection made 265 to 295 ops/s earlier in this branch and 217 to 240 now), so a number from one table must not be compared with a number from another.
+
+After each change the differential suites were rerun (`suites/*-summary.txt`):
+
+| Change (commit) | pymongo core / extra | Node.js core / extra |
+|---|---|---|
+| Incremental bulk WAL cleanup | 1081/1081, 25/49 | 1081/1081, 24/49 |
+| SST / manifest cleanup of an open writer | 1081/1081, 25/49 | 1081/1081, 25/49 |
+| Adaptive window flag | 1081/1081, 25/49 | 1081/1081, 25/49 |
+
+### 1. The throughput cost of the WAL cleanup: measured, explained, reduced
+
+**Measured, repeated.** The cleanup of round 4 (slatedb's own WAL pass every 20 s), `exp_wal_growth.py`, one tenant on MinIO, 8 connections, writes only, 3 runs per cell, cleanup on and off interleaved (ops/s per run; mean):
+
+| Run length | Off | On (round-4 pass) | Cost | p50 / p99 ms off | p50 / p99 ms on | Max WAL objects off / on |
+|---|---|---|---|---|---|---|
+| 1 min | 536, 538, 502 (525) | 498, 509, 510 (506) | **-3.7%** | 14.4 / 33.2 | 14.8 / 38.4 | 18,976 / 11,429 |
+| 5 min | 496, 485, 485 (489) | 461, 448, 460 (456) | **-6.6%** | 16.0 / 31.9 | 17.0 / 39.1 | 107,557 / 12,673 |
+| 10 min | 486, 485, 486 (486) | 438, 450, 453 (447) | **-7.9%** | 16.2 / 31.8 | 17.4 / 38.7 | 220,360 / 12,501 |
+
+So the 15 to 24% of round 4 (one run per cell, from different sessions) was mostly noise and drift; the real cost was 4 to 8%, growing with the run, and p99 was 16 to 22% higher.
+
+**Where it goes** (profile: `exp_objects.py`, 8 connections, 180 s, 3 runs per variant interleaved, same binary; "list-only" = slatedb's listing without deleting; "single" = incremental pass with one DELETE per object; "bulk" = incremental pass with bulk deletes):
+
+| Variant | ops/s (mean of 3) | vs off | p99 ms | MinIO CPU s | Objects deleted | Time in the pass (list / delete) |
+|---|---|---|---|---|---|---|
+| off | 504.7 | | 31.0 | 122 | 0 | |
+| list-only (slatedb listing every pass) | 489.3 | -3.1% | 32.4 | 132 | 0 | 8.1 s (8.0 / 0) |
+| slatedb pass (list + 1 DELETE per object) | 469.5 | -7.0% | 38.1 | 151 | 48,616 | 35.1 s |
+| single (no listing, 1 DELETE per object) | 454.9 | -9.9% | 38.8 | 153 | 47,786 | 29.2 s (0.4 / 28.7) |
+| bulk (no listing, bulk deletes) | 480.7 | -4.8% | 34.7 | 138 | 51,884 | 15.9 s (0.3 / 15.5) |
+
+The run-to-run spread is 9 to 17 ops/s, so single differences of 2 to 3% are not resolved by one table; the pattern across MinIO CPU (+10 s listing, +29 s slatedb, +31 s single, +16 s bulk) and time in the pass is consistent: **the cost is the deletes** (slatedb's pass sends one DELETE per object, about 48,000 per 3 minutes; a MinIO delete removes a directory and its `xl.meta`), **the full-directory listing is small** (3% at most, 8 s of listing in 3 minutes), the interaction with flushes and lock contention was not separable: the pass runs outside the write path (under the tenant's maintenance lock, which only compaction and other cleanup share) and the server's own CPU is unchanged in all variants (205 to 210 s). Batch size and pauses did not help (3 runs each, 3 minutes: batches of 100 with 10 ms pauses 481.3 ops/s, batches of 250 481.2, one stream 481.1, cleanup off 481.7 in that session, whose off baseline contained one slow run of 442; pass time 29 s, 24 s, 16 s): the flags were removed again.
+
+**The fix** (own commit): the default pass reads the manifest, skips if a checkpoint exists, and deletes the ids from where the previous pass stopped up to `replay_after_wal_id` with bulk deletes (one listing the first time a tenant is cleaned in a process); `--wal-gc-mode slatedb` restores the old pass. No object is deleted that slatedb's pass would keep (it keeps the boundary id itself, so does this one).
+
+**Result, matched pairs** (same binary, `--wal-gc-secs 0` against default, interleaved, 3 runs per cell, 8 connections):
+
+| Run length | Off (ops/s) | Bulk pass (ops/s) | Cost | p50 / p99 ms off | p50 / p99 ms on | Max WAL objects off / on | Recovery after SIGKILL (s) |
+|---|---|---|---|---|---|---|---|
+| 1 min | 494, 484, 490 (489) | 486, 481, 486 (484) | **-1.1%** | 15.5 / 33.6 | 15.5 / 35.1 | 20,087 / 8,938 | 1.14 to 1.40 |
+| 5 min | 447, 447, 440 (444) | 427, 443, 440 (437) | **-1.8%** | 17.7 / 34.5 | 17.9 / 36.5 | 93,918 / 9,324 | 0.98 to 1.29 |
+| 10 min | 436, 434, 432 (434) | 413, 428, 422 (421) | **-3.0%** | 18.2 / 34.3 | 18.5 / 37.4 | 194,123 / 10,607 | 0.73 to 1.69 |
+
+Under 5% at every length and the bound kept (maximum 10,607 objects over a 10-minute run, against 194,123 without the cleanup). The cost still grows with the run (1.1, 1.8, 3.0%) and p99 is 4 to 9% higher; the 1.1, 1.8 and 3.0% are means of three runs with a spread of 1 to 8 ops/s, one session. Recovery after SIGKILL is about 1 s with or without the cleanup (replay is only the tail).
+
+**By connections** (`exp_objects.py`, 120 s, 2 runs per cell, interleaved; ops/s, p50 / p99 ms, max WAL objects; "round-4 pass" = `--wal-gc-mode slatedb`):
+
+| Connections | Off | Round-4 pass | Bulk pass |
+|---|---|---|---|
+| 1 | 217 (4.5 / 7.9), 24,441 | 210 (4.5 / 10.3), 7,415, -3.4% | 210 (4.6 / 8.5), 4,932, -3.0% |
+| 8 | 470 (16.6 / 33.8), 36,643 | 448 (17.0 / 40.5), 10,785, -4.7% | 450 (17.3 / 35.8), 8,415, -4.3% |
+| 64 | 463 (139.2 / 243.9), 32,617 | 443 (144.5 / 266.0), 9,785, -4.3% | 451 (144.1 / 256.3), 8,258, -2.6% |
+
+Here the two passes are inside each other's noise (two runs per cell, spread about 3%); the matched 1/5/10-minute runs above are the better evidence for the difference. Durability with the new pass (`test_group_commit.py --secs 60`, SIGKILL after a minute of writes with cleanup passes running): 4 trials, **23,692 acknowledged documents, 0 lost inserts, 0 lost updates**; negative control (`--ack-before-durable`): 11,907 documents, 53 lost inserts and 38 lost updates.
+
+Not done: getting the cost to zero (the deletes are the cost; fewer WAL objects would need a longer group-commit window, which costs more than it saves, see 3); the cost on a store where deletes are cheaper than on MinIO's one-directory-per-object layout (not measured); MinIO's own request counter for the bulk requests (the counter in the server counts objects, not HTTP requests, so that bulk deletes are sent as bulk requests is inferred from `object_store`'s implementation and from the shorter pass time).
+
+### 2. SSTs, manifests and compaction states of an open writer (cleaned up, bounded)
+
+**What it deletes, and when that is safe for a live writer.** Every `--sst-gc-secs` (default 60) for a writer written in the last minute, under the tenant's maintenance lock (no compaction of this process writes a new SST meanwhile): the compacted SSTs that the latest manifest's L0 and sorted runs do not name, the manifests below the latest, and the compaction states below the highest number, but **only once this process has seen the object unreferenced for `--sst-gc-min-unref-secs` (default 120)**. The reason for the wait: a live writer keeps reading the SSTs of the manifest it last loaded (it re-reads it every 30 s), so an SST that a compaction has just replaced must outlive that view; an SST that the writer has uploaded but not yet put in the manifest also looks unreferenced and is covered by the same wait. The clock starts when a pass first sees the object, so a restart only delays deletion. A pass is skipped when a checkpoint or a segment exists. No other reader exists for an open tenant (another process is refused by the lease). slatedb's own GC uses 24 hours for this; 120 s rests on the 30 s poll and on a single owner per tenant, which is a judgment, not something I proved beyond the tests below.
+
+**Object count over a 10-minute hot run** (`exp_objects.py`, 8 connections, 2 runs per setting, `--sst-gc-secs 0` against default, WAL cleanup on in both; objects in the tenant's `compacted/`, `manifest/`, `compactions/`; run 1 of each):
+
+| Seconds | Off: compacted / manifest / compactions | On: compacted / manifest / compactions |
+|---|---|---|
+| 60 | 6 / 10 / 8 | 4 / 6 / 0 |
+| 180 | 20 / 27 / 22 | 21 / 27 / 22 |
+| 300 | 35 / 44 / 40 | 27 / 25 / 24 |
+| 420 | 51 / 64 / 56 | 35 / 26 / 25 |
+| 540 | 66 / 80 / 73 | 29 / 25 / 25 |
+| 590 | 73 / 91 / 81 | 32 / 28 / 26 |
+| **Maximum, both runs** | **73, 72 / 91, 86 / 81, 80** | **39, 43 / 30, 30 / 29, 26** |
+
+Off grows linearly (about 7 SSTs, 9 manifests and 8 compaction states per minute); on is bounded (the window of 120 s plus the 60 s pass interval keeps about three minutes of history; manifests and compaction states about 30). Passes: 9 per run, 40 SSTs and 111 to 116 manifests deleted per run. Throughput and latency are unchanged: 416 and 420 ops/s on against 422 and 414 off, p99 39.6 and 39.4 ms against 37.1 and 38.4.
+
+**Durability, SIGKILL during the cleanup** (`test_open_gc.py`: memtable flush at 1 MiB, manifest re-read every 2 s, cleanup every 5 s with an unreferenced window of 20 s so that many SSTs are deleted; 24 writers insert 2 KB documents and update a counter twice, the test waits for the next "SSTGC begin" in the server log and sends SIGKILL at once): 4 trials of 100 s, **4 of 4 kills landed inside a cleanup pass** (a "begin" line without its "end"), 16 passes per trial, 63 SSTs and 226 manifests/compaction states deleted, **15,227 acknowledged documents (about 45,000 acknowledged writes: an insert and two updates each), 0 lost inserts, 0 lost updates** after the restart. **Negative control** (`--gc-control-delete-live`: the pass also deletes the oldest SST the manifest references): 2 trials, 7,306 acknowledged documents, **all 7,306 unreadable after the restart** (the read fails with "Object ... compacted/....sst not found"), so the test catches a cleanup that deletes too much.
+
+**Correctness of reads during the cleanup:** 8 readers checked 16,213 reads of documents with a known acknowledged counter during those runs: **0 missing, 0 with an older counter, 0 with damaged padding, 0 errors, 0 counts below the number of acknowledged inserts**. Limit: in the control run the readers did **not** see the deleted SST (0 violations during the run, the failure came only at the restart), because the writer served those reads from its memtable and block cache; so this read check has weak power against an SST deleted too early, and the evidence for safety rests on the unreferenced-window reasoning and the restart check, not on the live reads alone.
+
+Not done: the same window under a compaction stall longer than 120 s (not tested); tenants with segments or checkpoints (the pass skips them, untested); the old SSTs left behind by a crash of a process that never cleans that tenant again are collected only when the tenant is closed and collected as a whole.
+
+### 3. Adaptive batch window: not made the default
+
+`--group-commit-adaptive` (with `--group-commit-window-ms W`): the leader of a flush group waits for the window only while another write of the tenant is on its way, that is in flight (from asking for the tenant lock to its reply) but not yet waiting for the flush; when every in-flight write is already in the group, it flushes at once. MinIO, writes only, 15 s per cell, 3 runs per cell, configurations interleaved; cells: ops/s mean (change against window 0), p50 / p99 ms, WAL PUTs per write, writes per flush:
+
+| Window | 1 connection | 8 connections | 64 connections |
+|---|---|---|---|
+| 0 (default) | 240 (4.1 / 6.9), 1.000, 1.00 | 607 (11.4 / 32.1), 0.563, 1.81 | 631 (87.0 / 244.2), 0.489, 1.63 |
+| 2 ms, always waits | 140 (-42%) (7.1 / 9.7), 1.000, 1.00 | 485 (-20%) (14.5 / 36.1), 0.344, 3.07 | 557 (-12%) (114.8 / 232.2), 0.295, 2.76 |
+| 2 ms adaptive | 234 (-2%) (4.1 / 7.5), 1.000, 1.00 | 492 (-19%) (15.6 / 36.3), 0.392, 2.66 | 559 (-11%) (116.4 / 230.7), 0.322, 2.51 |
+| 5 ms adaptive | 237 (-1%) (4.1 / 7.2), 1.000, 1.00 | 481 (-21%) (16.8 / 36.8), 0.277, 3.85 | 556 (-12%) (116.9 / 254.2), 0.215, 3.88 |
+| 10 ms adaptive | 239 (0%) (4.1 / 6.8), 1.000, 1.00 | 462 (-24%) (15.4 / 38.5), 0.216, 5.03 | 562 (-11%) (113.1 / 238.6), 0.141, 6.19 |
+
+The adaptive rule removes the penalty at one connection (-42% becomes -2% to 0%: a lone writer no longer waits), and at 8 and 64 connections it saves PUTs (0.563 to 0.216 and 0.489 to 0.141 per write) at a cost of 11 to 24% throughput and 2 to 4 ms of p50. **It is not better or equal on every cell, so the default stays at window 0 and not adaptive.** Why it still waits at saturation: with 8 or 64 connections there is nearly always a write that has asked for the tenant lock and not yet reached the flush (the write step is serialized at about 1.5 ms each), so the leader waits for the window; flushing as soon as every in-flight write is waiting would need all connections to be in the group at once, which a closed loop with a serialized write step rarely reaches.
+
+### Not measured in this round
+
+- Anything on a store other than local MinIO; the cleanup cost where deletes are cheap, and MinIO's own request counts.
+- A 10-minute run of the final binary with both cleanups and the 1/8/64 table together (the cleanups were measured one at a time, each against its own off setting).
+- The WAL cleanup cost beyond 10 minutes (the cost grew from 1.1% to 3.0% between 1 and 10 minutes; whether it keeps growing was not measured).
+- `compat-indexes`: not available here.
+<!-- round5:end -->

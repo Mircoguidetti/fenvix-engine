@@ -36,7 +36,24 @@ impl std::fmt::Display for LeaseHeld {
 
 impl std::error::Error for LeaseHeld {}
 
+/// This process's own lease in per-process mode (`processes/{holder}/_lease`). One object for all the tenants the
+/// process owns: renewing it keeps every one of them valid, so an idle open tenant costs no request.
+struct ProcLease {
+    /// Unique id of this lease generation; written into every owner record this process creates.
+    inc: String,
+    /// Bumped whenever the lease lapsed before it was renewed. Owner records and held tenants of an older
+    /// generation are void: another process may have taken those tenants over while this one was frozen.
+    gen: u64,
+    etag: Option<String>,
+    version: Option<String>,
+    seq: u64,
+    valid_until: Instant,
+    renew_at: Instant,
+}
+
 struct Held {
+    /// Process-lease generation this tenant was acquired under (per-process mode only).
+    gen: u64,
     etag: Option<String>,
     version: Option<String>,
     /// Local monotonic time until which this process may still act as the owner.
@@ -59,6 +76,12 @@ pub struct Leases {
     pub stats: Mutex<LeaseStats>,
     /// Test control only: never treat a lease as expired or lost (`--unsafe-skip-ownership-checks`).
     pub unsafe_skip: std::sync::atomic::AtomicBool,
+    /// Per-process lease mode (`--process-lease`): see [`ProcLease`]. All processes sharing a bucket must use the same mode.
+    pub process_mode: std::sync::atomic::AtomicBool,
+    proc: Mutex<Option<ProcLease>>,
+    proc_init: tokio::sync::Mutex<()>,
+    /// Source of process-lease generation numbers (never reused within this process).
+    proc_gen_floor: std::sync::atomic::AtomicU64,
     /// No leases at all (single process, for object stores without conditional update such as the local-directory store).
     pub disabled: std::sync::atomic::AtomicBool,
 }
@@ -82,13 +105,42 @@ fn now_ms() -> u64 {
 }
 
 fn body(holder: &str, expires_ms: u64, seq: u64) -> Bytes {
-    let d = doc! { "holder": holder, "expiresMs": expires_ms as i64, "seq": seq as i64 };
+    body_inc(holder, expires_ms, seq, "")
+}
+
+/// `inc` (per-process mode) is the process-lease generation an owner record belongs to, or the generation of a
+/// process lease itself; absent in per-tenant records.
+fn body_inc(holder: &str, expires_ms: u64, seq: u64, inc: &str) -> Bytes {
+    let mut d = doc! { "holder": holder, "expiresMs": expires_ms as i64, "seq": seq as i64 };
+    if !inc.is_empty() {
+        d.insert("inc", inc);
+    }
     Bytes::from(d.to_vec().unwrap())
 }
 
 fn parse(b: &[u8]) -> Result<(String, u64, u64)> {
+    parse_inc(b).map(|(h, e, s, _)| (h, e, s))
+}
+
+fn parse_inc(b: &[u8]) -> Result<(String, u64, u64, String)> {
     let d = Document::from_reader(b)?;
-    Ok((d.get_str("holder")?.to_string(), d.get_i64("expiresMs")? as u64, d.get_i64("seq").unwrap_or(0) as u64))
+    Ok((d.get_str("holder")?.to_string(), d.get_i64("expiresMs")? as u64, d.get_i64("seq").unwrap_or(0) as u64, d.get_str("inc").unwrap_or("").to_string()))
+}
+
+/// Expiry written into an owner record in per-process mode: the record itself never expires, the owner's process
+/// lease decides. A per-tenant-mode process reading it refuses the tenant, which is the safe direction.
+const OWNER_NEVER_EXPIRES_MS: u64 = u64::MAX / 4;
+
+pub fn process_path(holder: &str) -> Path {
+    Path::from(format!("processes/{holder}/_lease"))
+}
+
+fn fresh_inc() -> String {
+    format!("{:016x}", rand::random::<u64>())
+}
+
+fn far() -> Instant {
+    Instant::now() + Duration::from_secs(86400 * 365)
 }
 
 /// Log line parsed by the S4 checker: `LEASE <event> tenant=<t> holder=<h> unix_ms=<ms> ...`.
@@ -98,7 +150,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), disabled: std::sync::atomic::AtomicBool::new(false) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -109,6 +161,16 @@ impl Leases {
     pub fn valid(&self, id: &str) -> bool {
         if self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed) {
             return true;
+        }
+        if self.process_mode.load(std::sync::atomic::Ordering::Relaxed) {
+            // Owned while this process's lease is valid and still of the generation the tenant was acquired under.
+            // Lock order: proc, then held (as in renew_process).
+            let p = self.proc.lock().unwrap();
+            let held = self.held.lock().unwrap();
+            return match (held.get(id), p.as_ref()) {
+                (Some(h), Some(p)) => h.gen == p.gen && Instant::now() + self.ttl / 6 < p.valid_until,
+                _ => false,
+            };
         }
         self.held.lock().unwrap().get(id).map_or(false, |h| Instant::now() + self.ttl / 6 < h.valid_until)
     }
@@ -138,6 +200,9 @@ impl Leases {
                 self.stats.lock().unwrap().refused += 1;
                 return Err(LeaseHeld { tenant: id.to_string(), holder, remaining_ms: remaining }.into());
             }
+        }
+        if self.process_mode.load(std::sync::atomic::Ordering::Relaxed) {
+            return self.acquire_owner(id).await;
         }
         for _ in 0..4 {
             let started = Instant::now();
@@ -188,9 +253,184 @@ impl Leases {
         Err(anyhow!("could not settle the lease of tenant {id} (contended)"))
     }
 
+    /// Per-process mode: make sure this process has its own lease; returns its (inc, gen).
+    async fn ensure_process(&self) -> Result<(String, u64)> {
+        if let Some(p) = self.proc.lock().unwrap().as_ref() {
+            return Ok((p.inc.clone(), p.gen));
+        }
+        let _init = self.proc_init.lock().await;
+        if let Some(p) = self.proc.lock().unwrap().as_ref() {
+            return Ok((p.inc.clone(), p.gen));
+        }
+        let path = process_path(&self.holder);
+        let gen = self.proc_gen_floor.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+        for _ in 0..4 {
+            let started = Instant::now();
+            let inc = fresh_inc();
+            let expires = now_ms() + self.ttl.as_millis() as u64;
+            let (put, seq) = match self.store.get(&path).await {
+                Err(object_store::Error::NotFound { .. }) => (self.store.put_opts(&path, PutPayload::from(body_inc(&self.holder, expires, 1, &inc)), PutOptions { mode: PutMode::Create, ..Default::default() }).await, 1),
+                Err(e) => return Err(e.into()),
+                Ok(got) => {
+                    // The same holder id is the same process slot (a restart): its old generation is dead.
+                    let (etag, version) = (got.meta.e_tag.clone(), got.meta.version.clone());
+                    let seq = parse(&got.bytes().await?).map(|(_, _, s)| s).unwrap_or(0) + 1;
+                    let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: etag, version }), ..Default::default() };
+                    (self.store.put_opts(&path, PutPayload::from(body_inc(&self.holder, expires, seq, &inc)), opts).await, seq)
+                }
+            };
+            match put {
+                Ok(r) => {
+                    *self.proc.lock().unwrap() = Some(ProcLease { inc: inc.clone(), gen, etag: r.e_tag, version: r.version, seq, valid_until: started + self.ttl, renew_at: started + self.ttl / 3 });
+                    self.stats.lock().unwrap().acquired += 1;
+                    log("process_lease", "-", &self.holder, &format!("inc={inc} gen={gen}"));
+                    return Ok((inc, gen));
+                }
+                Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) => continue,
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Err(anyhow!("could not settle the process lease of {} (contended)", self.holder))
+    }
+
+    /// Per-process mode: take ownership of a tenant by writing its owner record (`tenants/{id}/_lease`, written once
+    /// and not renewed). Another process's record stays valid while that process's own lease is live and of the
+    /// generation the record names; otherwise the tenant is taken over with a conditional update.
+    async fn acquire_owner(&self, id: &str) -> Result<Option<String>> {
+        let (inc, gen) = self.ensure_process().await?;
+        let path = lease_path(id);
+        for _ in 0..4 {
+            match self.store.get(&path).await {
+                Err(object_store::Error::NotFound { .. }) => {
+                    let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
+                    match self.store.put_opts(&path, PutPayload::from(body_inc(&self.holder, OWNER_NEVER_EXPIRES_MS, 1, &inc)), opts).await {
+                        Ok(r) => {
+                            self.record_owner(id, r.e_tag, r.version, 1, gen);
+                            return Ok(None);
+                        }
+                        Err(object_store::Error::AlreadyExists { .. }) | Err(object_store::Error::Precondition { .. }) => continue,
+                        Err(e) => return Err(e.into()),
+                    }
+                }
+                Err(e) => return Err(e.into()),
+                Ok(got) => {
+                    let (etag, version) = (got.meta.e_tag.clone(), got.meta.version.clone());
+                    let (holder, exp, seq, rec_inc) = parse_inc(&got.bytes().await?)?;
+                    let mine = holder == self.holder;
+                    let free = holder.is_empty() || exp == 0;
+                    if !(mine || free) {
+                        let now = now_ms();
+                        let skew = self.skew.as_millis() as u64;
+                        // When is the record's owner no longer the owner (None: it still is, and until when)?
+                        let owner_gone = if rec_inc.is_empty() {
+                            // A per-tenant-mode record: it expires by itself.
+                            (exp + skew < now).then_some(0).ok_or(exp.saturating_sub(now))
+                        } else {
+                            match self.store.get(&process_path(&holder)).await {
+                                Err(object_store::Error::NotFound { .. }) => Ok(0),
+                                Err(e) => return Err(e.into()),
+                                Ok(pg) => {
+                                    let (_, pexp, _, pinc) = parse_inc(&pg.bytes().await?)?;
+                                    if pinc != rec_inc || pexp + skew < now { Ok(0) } else { Err(pexp.saturating_sub(now)) }
+                                }
+                            }
+                        };
+                        if let Err(remaining) = owner_gone {
+                            self.stats.lock().unwrap().refused += 1;
+                            self.denied.lock().unwrap().insert(id.to_string(), (Instant::now() + Duration::from_millis(500).min(Duration::from_millis(remaining)), holder.clone(), remaining));
+                            return Err(LeaseHeld { tenant: id.to_string(), holder, remaining_ms: remaining }.into());
+                        }
+                    }
+                    let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: etag, version }), ..Default::default() };
+                    match self.store.put_opts(&path, PutPayload::from(body_inc(&self.holder, OWNER_NEVER_EXPIRES_MS, seq + 1, &inc)), opts).await {
+                        Ok(r) => {
+                            self.record_owner(id, r.e_tag, r.version, seq + 1, gen);
+                            let took = (!mine && !free).then_some(holder);
+                            if took.is_some() {
+                                self.stats.lock().unwrap().takeovers += 1;
+                            }
+                            return Ok(took);
+                        }
+                        Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) => continue,
+                        Err(e) => return Err(e.into()),
+                    }
+                }
+            }
+        }
+        Err(anyhow!("could not settle the owner record of tenant {id} (contended)"))
+    }
+
+    fn record_owner(&self, id: &str, etag: Option<String>, version: Option<String>, seq: u64, gen: u64) {
+        self.denied.lock().unwrap().remove(id);
+        self.held.lock().unwrap().insert(id.to_string(), Held { gen, etag, version, valid_until: far(), renew_at: far(), seq });
+        self.stats.lock().unwrap().acquired += 1;
+    }
+
+    /// Per-process mode: renew the process lease. If it had already lapsed (this process was frozen or starved for
+    /// longer than the ttl) another process may have taken tenants over, so every tenant held under the old
+    /// generation is abandoned first and the lease only becomes valid again as a new generation.
+    async fn renew_process(&self, lost: &tokio::sync::mpsc::UnboundedSender<String>) {
+        let unsafe_skip = self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed);
+        let started = Instant::now();
+        let (etag, version, seq, inc) = {
+            let mut guard = self.proc.lock().unwrap();
+            let Some(p) = guard.as_mut() else { return };
+            if started > p.valid_until && !unsafe_skip {
+                p.gen = self.proc_gen_floor.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+                p.inc = fresh_inc();
+                let ids: Vec<String> = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+                log("process_lease_lapsed", "-", &self.holder, &format!("gen={} abandoned={}", p.gen, ids.len()));
+                self.stats.lock().unwrap().lost += ids.len() as u64;
+                for id in ids {
+                    log("lost", &id, &self.holder, "process_lease_lapsed");
+                    let _ = lost.send(id);
+                }
+            }
+            (p.etag.clone(), p.version.clone(), p.seq, p.inc.clone())
+        };
+        let expires = now_ms() + self.ttl.as_millis() as u64;
+        let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: etag, version }), ..Default::default() };
+        match self.store.put_opts(&process_path(&self.holder), PutPayload::from(body_inc(&self.holder, expires, seq + 1, &inc)), opts).await {
+            Ok(r) => {
+                if let Some(p) = self.proc.lock().unwrap().as_mut() {
+                    p.etag = r.e_tag;
+                    p.version = r.version;
+                    p.seq = seq + 1;
+                    p.valid_until = started + self.ttl;
+                    p.renew_at = started + self.ttl / 3;
+                }
+                self.stats.lock().unwrap().renewals += 1;
+            }
+            Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) if !unsafe_skip => {
+                // Someone else wrote our process lease (the same holder id started twice): we are not the owner of
+                // anything. Abandon everything and start over with a new lease.
+                let ids: Vec<String> = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+                *self.proc.lock().unwrap() = None;
+                self.stats.lock().unwrap().lost += ids.len() as u64;
+                log("process_lease_lost", "-", &self.holder, &format!("abandoned={}", ids.len()));
+                for id in ids {
+                    log("lost", &id, &self.holder, "process_lease_lost");
+                    let _ = lost.send(id);
+                }
+            }
+            Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) => {}
+            Err(e) => {
+                self.stats.lock().unwrap().renew_failures += 1;
+                eprintln!("process lease renewal failed: {e}");
+            }
+        }
+    }
+
+    /// Clean shutdown in per-process mode: expire the process lease so nothing waits for it.
+    pub async fn release_process(&self) {
+        let Some(p) = self.proc.lock().unwrap().take() else { return };
+        let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: p.etag, version: p.version }), ..Default::default() };
+        let _ = self.store.put_opts(&process_path(&self.holder), PutPayload::from(body_inc(&self.holder, 0, p.seq + 1, &p.inc)), opts).await;
+    }
+
     fn record(&self, id: &str, etag: Option<String>, version: Option<String>, started: Instant, seq: u64) {
         self.denied.lock().unwrap().remove(id);
-        self.held.lock().unwrap().insert(id.to_string(), Held { etag, version, valid_until: started + self.ttl, renew_at: started + self.ttl / 3, seq });
+        self.held.lock().unwrap().insert(id.to_string(), Held { gen: 0, etag, version, valid_until: started + self.ttl, renew_at: started + self.ttl / 3, seq });
         self.stats.lock().unwrap().acquired += 1;
     }
 
@@ -256,6 +496,21 @@ impl Leases {
             loop {
                 tick.tick().await;
                 let now = Instant::now();
+                if me.process_mode.load(std::sync::atomic::Ordering::Relaxed) {
+                    let due = me.proc.lock().unwrap().as_mut().map_or(false, |p| {
+                        let due = p.renew_at <= now;
+                        if due {
+                            // Pushed out so a slow renewal is not started twice; success sets the real next time.
+                            p.renew_at = now + me.ttl / 12;
+                        }
+                        due
+                    });
+                    if due {
+                        let (me, lost) = (Arc::clone(&me), lost.clone());
+                        tokio::spawn(async move { me.renew_process(&lost).await });
+                    }
+                    continue;
+                }
                 let due: Vec<String> = {
                     let mut held = me.held.lock().unwrap();
                     let mut due = Vec::new();

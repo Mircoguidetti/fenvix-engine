@@ -1,0 +1,132 @@
+{
+ "label": "tab1-bulk-c8-r2",
+ "seconds": 120.0,
+ "connections": 8,
+ "read_pct": 0,
+ "extra_args": [],
+ "ops": 54012,
+ "ops_per_sec": 450.1,
+ "errors": 0,
+ "p50_ms": 17.183,
+ "p99_ms": 36.095,
+ "objects_final": {
+  "wal": 6466,
+  "compacted": 10,
+  "manifest": 14,
+  "compactions": 8
+ },
+ "objects_max": {
+  "wal": 8415,
+  "compacted": 9,
+  "manifest": 13,
+  "compactions": 8
+ },
+ "samples": [
+  [
+   0,
+   2,
+   0,
+   2,
+   0
+  ],
+  [
+   10,
+   3411,
+   0,
+   2,
+   0
+  ],
+  [
+   20,
+   6552,
+   1,
+   3,
+   0
+  ],
+  [
+   30,
+   5390,
+   2,
+   4,
+   0
+  ],
+  [
+   40,
+   8415,
+   3,
+   5,
+   0
+  ],
+  [
+   50,
+   2878,
+   3,
+   5,
+   0
+  ],
+  [
+   60,
+   5905,
+   4,
+   6,
+   0
+  ],
+  [
+   70,
+   4514,
+   7,
+   11,
+   8
+  ],
+  [
+   80,
+   7624,
+   7,
+   11,
+   8
+  ],
+  [
+   90,
+   2014,
+   8,
+   12,
+   8
+  ],
+  [
+   100,
+   4843,
+   9,
+   13,
+   8
+  ],
+  [
+   110,
+   3502,
+   9,
+   13,
+   8
+  ]
+ ],
+ "server_cpu_s": 135.1,
+ "minio_cpu_s": 96.5,
+ "wall_s": 120.0,
+ "requests": {
+  "put": 35177,
+  "get": 138,
+  "list": 32,
+  "head": 1,
+  "delete": 28671
+ },
+ "walGc": {
+  "passes": 5,
+  "deleted": 28671,
+  "listUs": 491222,
+  "deleteUs": 10162264,
+  "totalUs": 10719025
+ },
+ "sstGc": {
+  "passes": 0,
+  "deletedSsts": 0,
+  "deletedManifests": 0
+ }
+}

@@ -1,0 +1,80 @@
+[
+ {
+  "tenant": "gbefore-memmemory1x000000",
+  "connections": 1,
+  "read_pct": 0,
+  "duration_secs": 10,
+  "ops": 6770,
+  "errors": 0,
+  "ops_per_sec": 677.0,
+  "p50_ms": 1.432,
+  "p99_ms": 2.903,
+  "max_ms": 28.879,
+  "label": "before-mem",
+  "store": "memory",
+  "wal_puts": 6770,
+  "total_puts": 6772,
+  "wal_puts_per_write": 1.0,
+  "total_puts_per_write": 1.0,
+  "put_by_category": {
+   "wal": 6770,
+   "manifest": 1,
+   "compacted_sst": 1,
+   "lease": 0,
+   "clean_marker": 0,
+   "other": 0
+  }
+ },
+ {
+  "tenant": "gbefore-memmemory8x000000",
+  "connections": 8,
+  "read_pct": 0,
+  "duration_secs": 10,
+  "ops": 7758,
+  "errors": 0,
+  "ops_per_sec": 775.8,
+  "p50_ms": 10.535,
+  "p99_ms": 19.055,
+  "max_ms": 28.015,
+  "label": "before-mem",
+  "store": "memory",
+  "wal_puts": 7758,
+  "total_puts": 7760,
+  "wal_puts_per_write": 1.0,
+  "total_puts_per_write": 1.0,
+  "put_by_category": {
+   "wal": 7758,
+   "manifest": 1,
+   "compacted_sst": 1,
+   "lease": 0,
+   "clean_marker": 0,
+   "other": 0
+  }
+ },
+ {
+  "tenant": "gbefore-memmemory64x000000",
+  "connections": 64,
+  "read_pct": 0,
+  "duration_secs": 10,
+  "ops": 8206,
+  "errors": 0,
+  "ops_per_sec": 820.6,
+  "p50_ms": 76.543,
+  "p99_ms": 140.159,
+  "max_ms": 153.087,
+  "label": "before-mem",
+  "store": "memory",
+  "wal_puts": 6542,
+  "total_puts": 6544,
+  "wal_puts_per_write": 0.797,
+  "total_puts_per_write": 0.797,
+  "put_by_category": {
+   "wal": 6542,
+   "manifest": 1,
+   "compacted_sst": 1,
+   "lease": 0,
+   "clean_marker": 0,
+   "other": 0
+  }
+ }
+]

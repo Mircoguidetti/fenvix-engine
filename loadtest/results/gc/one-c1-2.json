@@ -1,0 +1,28 @@
+[
+ {
+  "tenant": "gone-c1-2s31x000000",
+  "connections": 1,
+  "read_pct": 0,
+  "duration_secs": 15,
+  "ops": 4027,
+  "errors": 0,
+  "ops_per_sec": 268.46666666666664,
+  "p50_ms": 3.467,
+  "p99_ms": 6.919,
+  "max_ms": 69.247,
+  "label": "one-c1-2",
+  "store": "s3",
+  "wal_puts": 4027,
+  "total_puts": 4028,
+  "wal_puts_per_write": 1.0,
+  "total_puts_per_write": 1.0,
+  "put_by_category": {
+   "wal": 4027,
+   "manifest": 0,
+   "compacted_sst": 0,
+   "lease": 1,
+   "clean_marker": 0,
+   "other": 0
+  }
+ }
+]

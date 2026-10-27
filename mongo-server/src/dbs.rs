@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicI64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tenant_bench::lifecycle::{Lifecycle, Op, Tenant};
+use tenant_bench::lifecycle::{Commit, Lifecycle, Op, Tenant};
 use std::sync::atomic::AtomicU64;
 use tokio::sync::{OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock as AsyncMutex, Semaphore};
 
@@ -34,6 +34,33 @@ pub static WAKE_MAX_QUEUED: AtomicI64 = AtomicI64::new(0);
 /// before concurrent reads, one command per tenant at a time; `--serialize-reads`).
 pub static SHARED_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
+/// Group commit: a write is staged under the tenant's exclusive lock and made durable after the lock is released
+/// (by the server's `handle`, before the reply is sent), so writes that arrive while a flush is in flight share
+/// the next WAL object. False (`--no-group-commit`): the write waits for its own flush under the lock.
+pub static GROUP_COMMIT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Counts a write command of a tenant from the moment it asks for the tenant lock until its reply is ready; dropped
+/// at the end of `Server::handle`. Group commit uses the count to tell whether another write is on its way.
+pub struct InflightToken(Arc<AtomicU64>);
+
+impl Drop for InflightToken {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Relaxed);
+    }
+}
+
+tokio::task_local! {
+    /// In-flight tokens of the command being handled on this task.
+    pub static TOKENS: std::cell::RefCell<Vec<InflightToken>>;
+    /// Commits staged by the command being handled on this task, awaited before its reply is sent.
+    pub static PENDING: std::cell::RefCell<Vec<Commit>>;
+}
+
+/// Reads (find, count, distinct, aggregate) see only durable data: a write that is staged and waiting for its group
+/// flush is invisible to them until its flush is done. Commands that write still see their own staged data, which
+/// they need to decide (duplicate keys, unique indexes). False (`--durable-reads false`) lets reads see staged data.
+pub static DURABLE_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
 pub fn set_wake_limit(n: usize) {
     let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });
 }
@@ -52,6 +79,7 @@ pub struct Dbs {
     pub writers: Arc<AtomicI64>,
     pub ttl: Arc<crate::ttl::TtlStats>,
     pub changes: Arc<crate::changes::ChangeLog>,
+    inflight: Mutex<HashMap<String, Arc<AtomicU64>>>,
 }
 
 pub struct Entry {
@@ -84,6 +112,8 @@ pub struct Entry {
     /// Document keys written by open transactions -> transaction id (a second writer gets a write conflict at once).
     pub(crate) locks: HashMap<Vec<u8>, u64>,
     pub(crate) changes: Arc<crate::changes::ChangeLog>,
+    last_compaction_request: Option<Instant>,
+    inflight: Arc<AtomicU64>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -93,7 +123,7 @@ pub fn valid_db_name(name: &str) -> bool {
 
 impl Dbs {
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
-        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default() })
+        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default(), inflight: Mutex::new(HashMap::new()) })
     }
 
     /// Entries that currently exist (open or not).
@@ -132,6 +162,8 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
+                    last_compaction_request: None,
+                    inflight: self.inflight_counter(name),
                 }))
             })
             .clone()
@@ -183,14 +215,26 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
+                        last_compaction_request: None,
+                        inflight: self.inflight_counter(name),
                     }))
                 })
                 .clone()
         }
     }
 
-    /// Lock a database's entry exclusively (every command that writes, and tenant state changes).
+    fn inflight_counter(&self, name: &str) -> Arc<AtomicU64> {
+        Arc::clone(self.inflight.lock().unwrap().entry(name.to_string()).or_default())
+    }
+
+    /// Lock a database's entry exclusively (every command that writes, and tenant state changes). Counts the command
+    /// as in flight for its tenant until the end of `Server::handle`.
     pub async fn lock(&self, name: &str) -> OwnedRwLockWriteGuard<Entry> {
+        let counter = self.inflight_counter(name);
+        counter.fetch_add(1, Relaxed);
+        let token = InflightToken(counter);
+        // Outside `handle` there is no scope to hold the token: it is dropped (and the count decremented) at once.
+        let _ = TOKENS.try_with(|t| t.borrow_mut().push(token));
         let mut g = self.entry(name).write_owned().await;
         g.snap = None;
         g.absent = false;
@@ -355,6 +399,21 @@ impl Entry {
         }
     }
 
+    /// A writer has no compactor of its own (it would poll the manifest on every idle tenant), so ask the maintenance
+    /// queue for a compaction while the tenant is open once its L0 reaches the compaction threshold; without it a
+    /// tenant written for a few minutes fills its L0 and stalls (see `WRITER_POLL_SECS`). At most one request per
+    /// `COMPACTION_REQUEST_EVERY`.
+    fn request_compaction_if_needed(&mut self) {
+        const COMPACTION_REQUEST_EVERY: Duration = Duration::from_secs(10);
+        let (Some(t), Some(q)) = (self.tenant.as_ref(), self.lc.queue.as_ref()) else { return };
+        if t.writer_l0().map_or(false, |n| n >= tenant_bench::lifecycle::L0_COMPACT_THRESHOLD)
+            && self.last_compaction_request.map_or(true, |at| at.elapsed() >= COMPACTION_REQUEST_EVERY)
+        {
+            self.last_compaction_request = Some(Instant::now());
+            q.request(&self.name, None);
+        }
+    }
+
     /// Drop the tenant without clean-close bookkeeping (its lease was lost).
     pub async fn abandon(&mut self) {
         if let Some(t) = self.tenant.take() {
@@ -488,9 +547,22 @@ impl Entry {
                 }
             }
         }
-        let r = self.tenant.as_mut().unwrap().apply(ops).await;
+        let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
-        r
+        tenant_bench::lifecycle::note_write(&self.name);
+        if let Some(t) = self.tenant.as_ref() {
+            t.bind_inflight(Arc::clone(&self.inflight));
+        }
+        self.request_compaction_if_needed();
+        let Some(commit) = staged? else { return Ok(()) };
+        let mut slot = Some(commit);
+        if GROUP_COMMIT.load(Relaxed) {
+            let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
+        }
+        match slot {
+            Some(commit) => commit.wait().await,
+            None => Ok(()),
+        }
     }
 
     /// Close the tenant and delete every object of the database. Holds the tenant's maintenance
@@ -786,13 +858,15 @@ impl ReadView {
 
     pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
-        let r = g.tenant.as_ref().unwrap().scan_prefix(prefix).await?;
+        let t = g.tenant.as_ref().unwrap();
+        let r = if DURABLE_READS.load(Relaxed) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
         self.done(r)
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
-        let r = g.tenant.as_ref().unwrap().get(key).await?;
+        let t = g.tenant.as_ref().unwrap();
+        let r = if DURABLE_READS.load(Relaxed) { t.get_durable(key).await? } else { t.get(key).await? };
         self.done(r)
     }
 
