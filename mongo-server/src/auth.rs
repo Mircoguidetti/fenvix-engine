@@ -30,6 +30,8 @@ struct Conn {
     local: bool,
     peer: Option<std::net::IpAddr>,
     server: Option<std::net::IpAddr>,
+    /// RFC 2253 subject of the TLS client certificate.
+    x509: Option<String>,
     /// (user, db) authenticated on this connection.
     users: Vec<(String, String)>,
     conv: Option<ConvState>,
@@ -134,9 +136,9 @@ fn role_doc(r: &(String, String)) -> Bson {
 }
 
 impl Server {
-    pub fn auth_connection_opened(&self, conn_id: i64, peer: Option<std::net::IpAddr>, server: Option<std::net::IpAddr>) {
+    pub fn auth_connection_opened(&self, conn_id: i64, peer: Option<std::net::IpAddr>, server: Option<std::net::IpAddr>, x509: Option<String>) {
         let local = peer.map(|a| a.is_loopback()).unwrap_or(false);
-        self.auth.conns.lock().unwrap().insert(conn_id, Conn { local, peer, server, next_conv: 1, ..Default::default() });
+        self.auth.conns.lock().unwrap().insert(conn_id, Conn { local, peer, server, x509, next_conv: 1, ..Default::default() });
     }
 
     pub fn auth_connection_closed(&self, conn_id: i64) {
@@ -468,6 +470,34 @@ impl Server {
         } else {
             Err(auth_failed())
         }
+    }
+
+    /// `authenticate` (MONGODB-X509): the user is the subject of the TLS client certificate, defined in `$external`.
+    pub(crate) async fn authenticate(&self, conn_id: i64, db: &str, cmd: &Document) -> R<Document> {
+        let mech = cmd.get_str("mechanism").map_err(|_| MongoError::new(2, "BadValue", "BSON field 'mechanism' is missing but a required field".into()))?;
+        if mech != "MONGODB-X509" {
+            return Err(MongoError::new(2, "BadValue", format!("Unsupported mechanism {mech}")));
+        }
+        if db != "$external" {
+            return Err(MongoError::new(2, "BadValue", "MONGODB-X509 authentication must be done against $external".into()));
+        }
+        let Some(subject) = self.with_conn(conn_id, |c| c.x509.clone()) else {
+            return Err(auth_failed());
+        };
+        if let Ok(user) = cmd.get_str("user") {
+            if user != subject {
+                return Err(auth_failed());
+            }
+        }
+        if self.find_user("$external", &subject).await?.is_none() {
+            return Err(MongoError::new(11, "UserNotFound", format!("Could not find user \"{subject}\" for db \"$external\"")));
+        }
+        self.with_conn(conn_id, |c| {
+            c.users.retain(|(u, d)| !(d == "$external" && u == &subject));
+            c.users.push((subject.clone(), "$external".to_string()));
+            c.privs = None;
+        });
+        Ok(doc! { "dbname": "$external", "user": subject, "ok": 1.0 })
     }
 
     // ---- user commands ---------------------------------------------------------------------------

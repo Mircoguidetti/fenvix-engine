@@ -80,7 +80,7 @@ def main():
                 cmd = [os.path.join(TESTS, ".venv", "bin", "python"), "run_py.py", "--real", real, "--ours", ours, "--idle", idle, "--ours-port", str(28100 + k), "--idle-port", str(28200 + k), "--shard", f"{k}/{a.shards}", "--out", out + ".json"] + extra
                 cwd = TESTS
             else:
-                cmd = ["node", "run_node.js", f"--real={real}", f"--ours={ours}", f"--idle={idle}", f"--ours-port={28100 + k}", f"--idle-port={28200 + k}", f"--shard={k}/{a.shards}", f"--out={out}.json"] + ([f"--only={a.only}"] if a.only else [])
+                cmd = ["node", "run_node.js", f"--real={real}", f"--ours={ours}", f"--idle={idle}", f"--ours-port={28100 + k}", f"--idle-port={28200 + k}", f"--shard={k}/{a.shards}", f"--out={out}.json"] + ([f"--only={a.only}"] if a.only else []) + ([f"--tests={a.tests}"] if a.tests else [])
                 cwd = os.path.join(TESTS, "node")
             procs.append(subprocess.Popen(cmd, cwd=cwd, env=env, stdout=open(out + ".log", "w"), stderr=subprocess.STDOUT))
         for p in procs:

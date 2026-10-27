@@ -19,10 +19,15 @@ from pymongo import MongoClient
 CASES = []
 
 
-def case(name, rs=False, sort_keys=False, uri=None, auth=False):
-    """auth=True: run on the servers started with --auth (see auth_env.sh), through a client logged in as the root user."""
+CERTS = os.path.join(os.path.dirname(HERE), "..", ".tools", "certs")
+PAIRS = {"A": (27040, 27048), "B": (27041, 27049), "C": (27042, 27050), "D": (27043, 27051), "E": (27044, 27052)}
+
+
+def case(name, rs=False, sort_keys=False, uri=None, auth=False, pair=None, opts=None):
+    """auth=True: run on the servers started with --auth (see auth_env.sh), through a client logged in as the root user.
+    pair="A".."E": run on the TLS server pair of tls_env.py; the client is built with `opts` (TLS options) and carries .gaps_addr."""
     def deco(f):
-        CASES.append(dict(name=name, rs=rs, f=f, sort_keys=sort_keys, uri=uri, auth=auth))
+        CASES.append(dict(name=name, rs=rs, f=f, sort_keys=sort_keys, uri=uri, auth=auth, pair=pair, opts=opts or {}))
         return f
     return deco
 
@@ -110,7 +115,17 @@ def main():
     for c in CASES:
         if a.only and a.only not in c["name"]:
             continue
-        if c["auth"]:
+        if c.get("pair"):
+            rp, op = PAIRS[c["pair"]]
+            opts = {k: (os.path.join(CERTS, v) if isinstance(v, str) and v.endswith(".pem") else v) for k, v in c["opts"].items()}
+            outs = []
+            for port in (rp, op):
+                cl = MongoClient("localhost", port, connect=False, serverSelectionTimeoutMS=4000, **opts)
+                cl.gaps_addr = ("localhost", port)
+                outs.append(run_side(cl, c)[0])
+                cl.close()
+            r, o = outs
+        elif c["auth"]:
             real_a = real_a or MongoClient(a.real_auth, **kw)
             ours_a = ours_a or MongoClient(a.ours_auth, **kw)
             r, _ = run_side(real_a, c)

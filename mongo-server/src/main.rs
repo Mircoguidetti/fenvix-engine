@@ -8,6 +8,7 @@ mod agg;
 mod auth;
 mod authz;
 mod scram;
+mod tls;
 mod agg_ext;
 mod agg_more;
 mod json_schema;
@@ -140,17 +141,36 @@ struct Args {
     /// Require authentication and authorization for every command (mongod's --auth).
     #[arg(long)]
     auth: bool,
+    /// TLS on the client port: disabled, allowTLS, preferTLS or requireTLS (mongod's net.tls.mode).
+    #[arg(long, default_value = "disabled")]
+    tls_mode: String,
+    /// PEM file with the server certificate chain and its private key (net.tls.certificateKeyFile).
+    #[arg(long, default_value = "")]
+    tls_certificate_key_file: String,
+    /// PEM file with the CA certificates client certificates must chain to (net.tls.CAFile).
+    #[arg(long, default_value = "")]
+    tls_ca_file: String,
+    /// With --tls-ca-file: accept clients that present no certificate (net.tls.allowConnectionsWithoutCertificates).
+    #[arg(long)]
+    tls_allow_connections_without_certificates: bool,
 }
 
-async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64) {
-    let _ = stream.set_nodelay(true);
-    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()));
+async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
+    let stream = match tls.accept(tcp).await {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("conn {conn_id}: TLS handshake failed: {e:#}");
+            return;
+        }
+    };
+    stream.set_nodelay(true);
+    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject());
     handle_connection_inner(&server, stream, conn_id).await;
     server.auth_connection_closed(conn_id);
 }
 
-async fn handle_connection_inner(server: &Arc<Server>, stream: TcpStream, conn_id: i64) {
-    let (r, mut w) = stream.into_split();
+async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn_id: i64) {
+    let (r, mut w) = tokio::io::split(stream);
     let mut r = BufReader::new(r);
     let mut response_id = 1;
     loop {
@@ -238,6 +258,7 @@ async fn main() -> Result<()> {
     }
     server.spawn_txn_janitor();
 
+    let tls_cfg = Arc::new(tls::load(&tls::Options { mode: &args.tls_mode, certificate_key_file: &args.tls_certificate_key_file, ca_file: &args.tls_ca_file, allow_without_certificates: args.tls_allow_connections_without_certificates })?);
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
@@ -247,7 +268,7 @@ async fn main() -> Result<()> {
                 let (stream, _) = accepted?;
                 let server = Arc::clone(&server);
                 let id = server.new_connection_id();
-                tokio::spawn(handle_connection(server, stream, id));
+                tokio::spawn(handle_connection(server, Arc::clone(&tls_cfg), stream, id));
             }
             _ = tokio::signal::ctrl_c() => break,
             _ = term.recv() => break,

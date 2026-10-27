@@ -12,16 +12,22 @@ const { EJSON } = req('bson');
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '')).map((a) => { const i = a.indexOf('='); return i < 0 ? [a, true] : [a.slice(0, i), a.slice(i + 1)]; }));
 const CASES = [];
-const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs, auth: !!o.auth });
+const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs, auth: !!o.auth, pair: o.pair || null });
 const sortKeys = (x) => Array.isArray(x) ? x.map(sortKeys) : (x && typeof x === 'object' && !(x instanceof Date) && !x._bsontype && !Buffer.isBuffer(x)) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, sortKeys(x[k])])) : x;
 const canon = (x, sk) => EJSON.stringify(sk ? sortKeys(x === undefined ? null : x) : (x === undefined ? null : x), { relaxed: false });
 const errOf = (e) => ({ __error__: { code: e.code ?? null, codeName: e.codeName ?? null, name: e.code ? undefined : e.name } });
 const H = { C, canon, errOf, MongoClient, ObjectId, Long, EJSON, args };
 H.A = (name, fn, o = {}) => C(name, fn, { ...o, auth: true });
+H.P = (pair, name, fn) => C(name, fn, { pair });
+const PAIRS = { A: [27040, 27048], B: [27041, 27049], C: [27042, 27050], D: [27043, 27051], E: [27044, 27052] };
+const CERTS = path.join(__dirname, '..', '..', '..', '.tools', 'certs');
+H.cert = (n) => path.join(CERTS, n);
+// a client factory for one server of a TLS pair: mk({tls:true, tlsCAFile:'ca.pem'}, host) -> MongoClient (file names are resolved in CERTS)
+const pairClient = (port) => ({ gaps_addr: ['localhost', port], mk: (opts = {}, host) => { const o = Object.fromEntries(Object.entries(opts).map(([k, v]) => [k, typeof v === 'string' && v.endsWith('.pem') ? path.join(CERTS, v) : v])); return new MongoClient(`mongodb://${host || 'localhost'}:${port}/`, { serverSelectionTimeoutMS: 3000, ...o }); } });
 
 async function runOn(client, c) {
   const dbname = 'gn_' + Math.random().toString(16).slice(2, 12);
-  const db = client.db(dbname);
+  const db = c.pair ? { databaseName: dbname, dropDatabase: async () => {} } : client.db(dbname);
   try {
     return canon(await Promise.race([c.fn(client, db), new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout 40s'), { code: 'TIMEOUT' })), 40000))])).split(dbname).join('$DB');
   } catch (e) { return canon(errOf(e)); } finally { try { await db.dropDatabase(); } catch (e) { /* ignore */ } }
@@ -32,10 +38,12 @@ async function runOn(client, c) {
     if (args.item && !f.startsWith(args.item)) continue;
     require(path.join(__dirname, f))(H);
   }
-  const mk = async (uri) => { const c = await new MongoClient(uri).connect(); c.__uri = uri; return c; };
-  const real = await mk(args.real || 'mongodb://localhost:27017');
-  const realRs = await mk(args['real-rs'] || 'mongodb://localhost:27020/?replicaSet=rs0');
-  const ours = await mk(args.ours || 'mongodb://localhost:27018');
+  const mk = async (uri) => { const c = await new MongoClient(uri, { serverSelectionTimeoutMS: 4000 }).connect(); c.__uri = uri; return c; };
+  const only = (pred) => CASES.filter((c) => !args.only || c.name.includes(args.only)).some(pred);
+  const need = only((c) => !c.pair && !c.auth);
+  const real = need ? await mk(args.real || 'mongodb://localhost:27017') : null;
+  const realRs = need ? await mk(args['real-rs'] || 'mongodb://localhost:27020/?replicaSet=rs0') : null;
+  const ours = need ? await mk(args.ours || 'mongodb://localhost:27018') : null;
   const oursRs = args['ours-rs'] ? await mk(args['ours-rs']) : ours;
   const realA = args['real-auth'] === 'skip' ? null : await mk(args['real-auth'] || 'mongodb://root:rootpw@localhost:27030/?authSource=admin').catch(() => null);
   const oursA = args['real-auth'] === 'skip' ? null : await mk(args['ours-auth'] || 'mongodb://root:rootpw@localhost:27028/?authSource=admin').catch(() => null);
@@ -43,12 +51,13 @@ async function runOn(client, c) {
   for (const c of CASES) {
     if (args.only && !c.name.includes(args.only)) continue;
     if (c.auth && !(realA && oursA)) { console.log('S', c.name, '(auth servers not running)'); continue; }
-    const r = await runOn(c.auth ? realA : c.rs ? realRs : real, c); const o = await runOn(c.auth ? oursA : c.rs ? oursRs : ours, c);
+    const r = c.pair ? await runOn(pairClient(PAIRS[c.pair][0]), c) : await runOn(c.auth ? realA : c.rs ? realRs : real, c);
+    const o = c.pair ? await runOn(pairClient(PAIRS[c.pair][1]), c) : await runOn(c.auth ? oursA : c.rs ? oursRs : ours, c);
     n++; if (r !== o) bad++;
     console.log(r === o ? '.' : 'F', c.name);
     if (r !== o) console.log('    real:', r.slice(0, 400), '\n    ours:', o.slice(0, 400));
   }
   console.log(`gaps_node: ${n - bad}/${n} identical to mongod 7.0.45`);
-  await Promise.all([real.close(), realRs.close(), ours.close()].concat(oursRs !== ours ? [oursRs.close()] : []));
+  await Promise.all([real, realRs, ours, realA, oursA].filter(Boolean).map((c) => c.close()).concat(oursRs && oursRs !== ours ? [oursRs.close()] : []));
   process.exit(bad ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

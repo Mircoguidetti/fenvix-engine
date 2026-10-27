@@ -118,6 +118,7 @@ impl Server {
                 return Ok(d);
             }
             "saslStart" => return self.sasl_start(conn_id, db, cmd).await,
+            "authenticate" => return self.authenticate(conn_id, db, cmd).await,
             "saslContinue" => return self.sasl_continue(conn_id, cmd).await,
             "logout" => return self.logout(conn_id, db),
             "createUser" => return self.create_user(db, cmd).await,
