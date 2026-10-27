@@ -518,7 +518,9 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     // until they expire. Nothing else takes checkpoints in this lifecycle (FollowLatest readers
     // create none), so drop them all once the pass is over. Counted in the pass's requests.
     let admin = Admin::builder(tenant_path(id), cleanup_store).build();
-    let checkpoints = admin.list_checkpoints(None).await?;
+    // Only the compactor's own checkpoints (named nothing, with an expiry). A checkpoint without an expiry pins the SSTs
+    // a shallow fork (control layer) still reads, and a named one is a restore point or an export snapshot.
+    let checkpoints: Vec<_> = admin.list_checkpoints(None).await?.into_iter().filter(|c| c.name.is_none() && c.expire_time.is_some()).collect();
     let checkpoints_deleted = checkpoints.len();
     for cp in checkpoints {
         admin.delete_checkpoint(cp.id).await?;

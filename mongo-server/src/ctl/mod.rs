@@ -13,9 +13,11 @@
 //! * `control/staging/{op}/...`              scratch slatedb databases of a restore
 
 pub mod api;
+pub mod fork;
 pub mod http;
 pub mod meta;
 pub mod ops;
+pub mod purge;
 pub mod rec;
 pub mod usage;
 
@@ -183,3 +185,14 @@ pub async fn start(dbs: Arc<Dbs>, lc: Arc<Lifecycle>, holder: String, args: CtlA
     Ok(ctl)
 }
 
+
+/// Test hook: when the environment variable `CTL_FAILPOINT` names this point, the process announces it on stderr
+/// and then waits forever, so a test can `kill -9` it at exactly this step of an operation. Unset in production.
+pub async fn failpoint(name: &str) {
+    if std::env::var("CTL_FAILPOINT").map(|v| v == name).unwrap_or(false) {
+        eprintln!("FAILPOINT {name} reached");
+        loop {
+            tokio::time::sleep(Duration::from_secs(3600)).await;
+        }
+    }
+}

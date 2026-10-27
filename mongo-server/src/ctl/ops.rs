@@ -65,6 +65,7 @@ pub async fn recover(ctl: &Arc<Ctl>) {
         let kind = op["kind"].as_str().unwrap_or("").to_string();
         eprintln!("ctl recovery: {kind} of {name} was interrupted; finishing it");
         let r: ApiResult<()> = match kind.as_str() {
+            "fork" => super::fork::rollback(ctl, &name, &op).await,
             other => Err(ApiError::new(500, "internal", format!("unknown intent kind {other}"))),
         };
         match r {

@@ -54,6 +54,16 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
             let v = usage::query(ctl, db, req.query.get("from").map(|s| s.as_str()), req.query.get("to").map(|s| s.as_str()), flag(req, "storage", true)).await?;
             Ok(Response::json(200, &v))
         }
+        ("POST", ["v1", "databases", db, "fork"]) => {
+            let b = body_json(req)?;
+            let target = b["target"].as_str().ok_or_else(|| ApiError::bad("body needs a string field target"))?;
+            let mode = b["mode"].as_str().unwrap_or("clone");
+            Ok(Response::json(201, &super::fork::fork(ctl, db, target, mode).await?))
+        }
+        ("GET", ["v1", "databases", db, "checkpoints"]) => {
+            meta::check_name(db)?;
+            Ok(Response::json(200, &json!({ "checkpoints": super::purge::checkpoints(&ctl.store, db).await? })))
+        }
         (_, ["v1", ..]) => Err(ApiError::new(404, "no_route", format!("no route for {} {}", req.method, req.path))),
         _ => Err(ApiError::new(404, "no_route", "not found")),
     }
