@@ -162,6 +162,7 @@ impl Server {
 
     async fn dispatch(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         self.authorize(conn_id, db, name, cmd).await?;
+        crate::stable_api::check(name, cmd)?;
         if matches!(name, "commitTransaction" | "abortTransaction") && db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
         }
@@ -433,7 +434,14 @@ impl Server {
         };
         crate::query::probe_filter(&filter)?;
         let name_only = bool_arg(cmd.get("nameOnly"), false);
-        let names = self.dbs.list_databases().await?;
+        let mut names = self.dbs.list_databases().await?;
+        // (mongod always has these)
+        for n in ["admin", "config", "local"] {
+            if !names.iter().any(|x| x == n) {
+                names.push(n.to_string());
+            }
+        }
+        names.sort();
         let names = self.visible_databases(conn_id, names).await?;
         let mut dbs: Vec<Bson> = Vec::new();
         for n in names {
@@ -708,6 +716,20 @@ impl Server {
         if let Some(Some(tail)) = tail {
             return self.tail_get_more(id, tail, batch, cmd).await;
         }
+        if let Some(v) = cmd.get("maxTimeMS") {
+            let m = match v {
+                Bson::Int32(i) => *i as i64,
+                Bson::Int64(i) => *i,
+                Bson::Double(f) => *f as i64,
+                other => return Err(MongoError::type_mismatch(format!("BSON field 'getMore.maxTimeMS' is the wrong type '{}', expected types '[long, int, decimal, double']", crate::update::type_name(other)))),
+            };
+            if !(0..=2147483647).contains(&m) {
+                return Err(MongoError::bad_value(format!("{m} value for maxTimeMS is out of range [0, 2147483647]")));
+            }
+            if self.cursors.lock().unwrap().contains_key(&id) {
+                return Err(MongoError::bad_value("cannot set maxTimeMS on getMore command for a non-awaitData cursor".into()));
+            }
+        }
         let mut cursors = self.cursors.lock().unwrap();
         let c = cursors.get_mut(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
         let n = batch.unwrap_or(usize::MAX).min(c.docs.len());
@@ -760,6 +782,11 @@ impl Server {
         let ids = cmd.get_array("cursors").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'killCursors.cursors' is missing but a required field".into()))?;
         let mut killed = Vec::new();
         let mut not_found = Vec::new();
+        for (i, b) in ids.iter().enumerate() {
+            if !matches!(b, Bson::Int64(_)) {
+                return Err(MongoError::type_mismatch(format!("BSON field 'killCursors.cursors.{i}' is the wrong type '{}', expected type 'long'", crate::update::type_name(b))));
+            }
+        }
         let mut cursors = self.cursors.lock().unwrap();
         for id in ids.iter().filter_map(|b| int_arg(Some(b))) {
             if cursors.remove(&id).is_some() || self.change_cursors.lock().unwrap().remove(&id).is_some() { killed.push(Bson::Int64(id)) } else { not_found.push(Bson::Int64(id)) }
@@ -770,13 +797,13 @@ impl Server {
 
 fn build_info() -> Document {
     doc! {
-        "version": "7.0.14",
+        "version": "7.0.45",
         "gitVersion": "none",
         "modules": [],
         "allocator": "system",
         "javascriptEngine": "quickjs",
         "sysInfo": "deprecated",
-        "versionArray": [7, 0, 14, 0],
+        "versionArray": [7, 0, 45, 0],
         "openssl": { "running": "disabled", "compiled": "disabled" },
         "buildEnvironment": {},
         "bits": 64,

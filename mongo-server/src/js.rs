@@ -94,7 +94,7 @@ fn start(rt: &Runtime) -> R<Context> {
     let ctx = native(Context::full(rt))?;
     ctx.with(|c| -> R<()> {
         let g = c.globals();
-        native(g.set("__serverVersion", native(Function::new(c.clone(), || "7.0.14".to_string()))?))?;
+        native(g.set("__serverVersion", native(Function::new(c.clone(), || "7.0.45".to_string()))?))?;
         native(g.set("__bsonsize", native(Function::new(c.clone(), |s: String| -> rquickjs::Result<i32> { Ok(parse_ser(&s).ok().map(|b| bson_size(&b)).unwrap_or(0) as i32) }))?))?;
         native(g.set(
             "__bsoncmp",

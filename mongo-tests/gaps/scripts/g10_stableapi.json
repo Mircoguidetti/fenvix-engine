@@ -1,0 +1,277 @@
+[
+ {
+  "name": "g10.stableapi.commands",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     },
+     {
+      "_id": 1
+     },
+     {
+      "_id": 2
+     },
+     {
+      "_id": 3
+     },
+     {
+      "_id": 4
+     },
+     {
+      "_id": 5
+     },
+     {
+      "_id": 6
+     },
+     {
+      "_id": 7
+     },
+     {
+      "_id": 8
+     },
+     {
+      "_id": 9
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "ping": 1,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "count": "t",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "mapReduce": "t",
+    "map": "function(){}",
+    "reduce": "function(){}",
+    "out": {
+     "inline": 1
+    },
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$indexStats": {}
+     }
+    ],
+    "cursor": {},
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$collStats": {}
+     },
+     {
+      "$count": "n"
+     }
+    ],
+    "cursor": {},
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$currentOp": {}
+     }
+    ],
+    "cursor": {},
+    "__db": "admin",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "find": "t",
+    "singleBatch": true,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": "text"
+      },
+      "name": "a_t"
+     }
+    ],
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "create": "cc",
+    "capped": true,
+    "size": 1000,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "create": "cd",
+    "capped": true,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "collStats": "t",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "dbStats": 1,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "listCollections": 1,
+    "nameOnly": true,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "serverStatus": 1,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "getParameter": 1,
+    "logLevel": 1,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "listIndexes": "t",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "a": 1
+     }
+    },
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "validate": "t",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "collMod": "t",
+    "validator": {},
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "drop": "zz",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "renameCollection": "$DB.t",
+    "to": "$DB.t2",
+    "__db": "admin",
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "killCursors": "t",
+    "cursors": [
+     {
+      "$numberLong": "1"
+     }
+    ],
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "listDatabases": 1,
+    "nameOnly": true,
+    "__db": "admin",
+    "apiVersion": "1",
+    "apiStrict": true,
+    "filter": {
+     "name": {
+      "$in": [
+       "$DB",
+       "admin",
+       "config",
+       "local"
+      ]
+     }
+    }
+   },
+   {
+    "buildInfo": 1,
+    "apiVersion": "1",
+    "apiStrict": true
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiVersion": "2"
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiVersion": 1
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiStrict": true
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiDeprecationErrors": true
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiVersion": "1",
+    "apiStrict": "x"
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiVersion": "1",
+    "apiDeprecationErrors": true
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "apiVersion": "1",
+    "apiStrict": false
+   }
+  ]
+ }
+]
