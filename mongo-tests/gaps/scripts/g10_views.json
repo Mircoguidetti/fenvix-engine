@@ -1,0 +1,1537 @@
+[
+ {
+  "name": "g10.view.basic",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gt": 2
+       }
+      }
+     },
+     {
+      "$project": {
+       "a": 1,
+       "b": 1
+      }
+     }
+    ]
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "t",
+       "v1",
+       "system.views"
+      ]
+     }
+    },
+    "__as": "lc",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "find": "v1",
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "v1",
+    "filter": {
+     "b": "s1"
+    },
+    "sort": {
+     "a": -1
+    },
+    "limit": 2,
+    "projection": {
+     "_id": 0
+    }
+   },
+   {
+    "count": "v1"
+   },
+   {
+    "count": "v1",
+    "query": {
+     "a": {
+      "$lt": 5
+     }
+    }
+   },
+   {
+    "distinct": "v1",
+    "key": "b",
+    "__sortarr": "values"
+   },
+   {
+    "aggregate": "v1",
+    "pipeline": [
+     {
+      "$group": {
+       "_id": "$b",
+       "n": {
+        "$sum": 1
+       }
+      }
+     },
+     {
+      "$sort": {
+       "_id": 1
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "v1",
+    "pipeline": [
+     {
+      "$match": {
+       "a": 5
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "find": "v1",
+    "batchSize": 1,
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 100,
+      "a": 100,
+      "b": "new"
+     }
+    ]
+   },
+   {
+    "find": "v1",
+    "filter": {
+     "a": 100
+    }
+   },
+   {
+    "find": "v1",
+    "hint": {
+     "_id": 1
+    }
+   },
+   {
+    "collStats": "v1"
+   },
+   {
+    "dbStats": 1,
+    "__shape": true
+   },
+   {
+    "validate": "v1"
+   },
+   {
+    "listIndexes": "v1"
+   },
+   {
+    "insert": "v1",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ]
+   },
+   {
+    "update": "v1",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "delete": "v1",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 1
+     }
+    ]
+   },
+   {
+    "findAndModify": "v1",
+    "query": {},
+    "update": {
+     "$set": {
+      "x": 1
+     }
+    }
+   },
+   {
+    "createIndexes": "v1",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ]
+   },
+   {
+    "dropIndexes": "v1",
+    "index": "*"
+   },
+   {
+    "renameCollection": "$DB.v1",
+    "to": "$DB.v9",
+    "__db": "admin"
+   },
+   {
+    "renameCollection": "$DB.t",
+    "to": "$DB.v1",
+    "__db": "admin"
+   },
+   {
+    "collMod": "v1",
+    "validator": {
+     "a": 1
+    }
+   },
+   {
+    "drop": "v1"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "v1",
+       "system.views"
+      ]
+     }
+    },
+    "__as": "after_drop",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "find": "v1"
+   }
+  ]
+ },
+ {
+  "name": "g10.view.create_errors",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": []
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": []
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {}
+     }
+    ]
+   },
+   {
+    "create": "t",
+    "viewOn": "t2",
+    "pipeline": []
+   },
+   {
+    "create": "v2",
+    "viewOn": "v2",
+    "pipeline": []
+   },
+   {
+    "create": "v3",
+    "viewOn": "v4",
+    "pipeline": []
+   },
+   {
+    "create": "v4",
+    "viewOn": "v3",
+    "pipeline": []
+   },
+   {
+    "create": "v5",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$out": "x"
+     }
+    ]
+   },
+   {
+    "create": "v6",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$merge": {
+       "into": "x"
+      }
+     }
+    ]
+   },
+   {
+    "create": "v7",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$bogus": 1
+     }
+    ]
+   },
+   {
+    "create": "v8",
+    "viewOn": "t",
+    "pipeline": 5
+   },
+   {
+    "create": "v9",
+    "viewOn": 5
+   },
+   {
+    "create": "va",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "$where": "1"
+      }
+     }
+    ]
+   },
+   {
+    "create": "vb",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$collStats": {}
+     }
+    ]
+   },
+   {
+    "create": "vc",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$indexStats": {}
+     }
+    ]
+   },
+   {
+    "create": "vd",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$geoNear": {
+       "near": [
+        0,
+        0
+       ],
+       "distanceField": "d"
+      }
+     }
+    ]
+   },
+   {
+    "create": "ve",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": 1
+      }
+     }
+    ],
+    "capped": true,
+    "size": 100
+   },
+   {
+    "create": "vf",
+    "viewOn": "system.profile",
+    "pipeline": []
+   },
+   {
+    "create": "vg",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$merge": 5
+     }
+    ]
+   },
+   {
+    "create": "vh",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$project": {
+       "a": 1
+      }
+     }
+    ],
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "create": "vi",
+    "viewOn": "t",
+    "pipeline": [],
+    "validator": {
+     "a": 1
+    }
+   },
+   {
+    "create": "vj",
+    "viewOn": "t",
+    "pipeline": [],
+    "max": 3
+   },
+   {
+    "create": "vk",
+    "pipeline": [
+     {
+      "$match": {}
+     }
+    ]
+   },
+   {
+    "create": "system.views"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$regex": "^(v|system)"
+     }
+    },
+    "__as": "lc",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "find": "system.views",
+    "sort": {
+     "_id": 1
+    },
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "create": "v1",
+    "viewOn": "t2",
+    "pipeline": []
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": [],
+    "collation": {
+     "locale": "fr"
+    }
+   },
+   {
+    "create": "v1"
+   },
+   {
+    "create": "vcoll",
+    "viewOn": "t",
+    "pipeline": []
+   },
+   {
+    "create": "vcoll"
+   },
+   {
+    "create": "w1",
+    "viewOn": "v1"
+   },
+   {
+    "create": "w1",
+    "viewOn": "v1",
+    "collation": {
+     "locale": "en"
+    }
+   },
+   {
+    "create": "cc",
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "insert": "cc",
+    "documents": [
+     {
+      "_id": 1,
+      "b": "a"
+     },
+     {
+      "_id": 2,
+      "b": "A"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "vcc",
+    "viewOn": "cc",
+    "pipeline": []
+   },
+   {
+    "find": "vcc",
+    "filter": {
+     "b": "a"
+    },
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "create": "vcc2",
+    "viewOn": "cc",
+    "pipeline": [],
+    "collation": {
+     "locale": "simple"
+    }
+   },
+   {
+    "find": "vcc2",
+    "filter": {
+     "b": "a"
+    },
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "vcc",
+       "vcc2"
+      ]
+     }
+    },
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ },
+ {
+  "name": "g10.view.live_and_nested",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gt": 3
+       }
+      }
+     }
+    ]
+   },
+   {
+    "create": "v2",
+    "viewOn": "v1",
+    "pipeline": [
+     {
+      "$addFields": {
+       "w": {
+        "$multiply": [
+         "$a",
+         10
+        ]
+       }
+      }
+     }
+    ]
+   },
+   {
+    "find": "v2",
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 4
+      },
+      "u": {
+       "$set": {
+        "a": 0
+       }
+      }
+     }
+    ]
+   },
+   {
+    "find": "v2",
+    "sort": {
+     "a": 1
+    },
+    "projection": {
+     "w": 1
+    }
+   },
+   {
+    "aggregate": "v2",
+    "pipeline": [
+     {
+      "$count": "n"
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "collMod": "v1",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$lt": 3
+       }
+      }
+     }
+    ]
+   },
+   {
+    "find": "v2",
+    "sort": {
+     "a": 1
+    },
+    "projection": {
+     "w": 1
+    }
+   },
+   {
+    "collMod": "v1",
+    "pipeline": [
+     {
+      "$match": {
+       "a": 7
+      }
+     }
+    ]
+   },
+   {
+    "find": "v2"
+   },
+   {
+    "collMod": "v1",
+    "viewOn": "v2"
+   },
+   {
+    "collMod": "v1",
+    "viewOn": "nope",
+    "pipeline": []
+   },
+   {
+    "find": "v1"
+   },
+   {
+    "collMod": "v1",
+    "viewOn": 5
+   },
+   {
+    "collMod": "v1",
+    "pipeline": [
+     {
+      "$out": "x"
+     }
+    ]
+   },
+   {
+    "collMod": "vnope",
+    "viewOn": "t"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "v1",
+       "v2"
+      ]
+     }
+    },
+    "__as": "lc",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "drop": "t"
+   },
+   {
+    "find": "v2"
+   },
+   {
+    "count": "v2"
+   },
+   {
+    "drop": "v1"
+   },
+   {
+    "find": "v2"
+   },
+   {
+    "listCollections": 1,
+    "nameOnly": true,
+    "__as": "names",
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ },
+ {
+  "name": "g10.view.lookup_and_other_collections",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "u",
+    "documents": [
+     {
+      "_id": 1,
+      "k": 2,
+      "nm": "two"
+     },
+     {
+      "_id": 2,
+      "k": 5,
+      "nm": "five"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "vj",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$lookup": {
+       "from": "u",
+       "localField": "a",
+       "foreignField": "k",
+       "as": "us"
+      }
+     },
+     {
+      "$match": {
+       "us": {
+        "$ne": []
+       }
+      }
+     },
+     {
+      "$project": {
+       "a": 1,
+       "us.nm": 1
+      }
+     }
+    ]
+   },
+   {
+    "find": "vj",
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "aggregate": "u",
+    "pipeline": [
+     {
+      "$lookup": {
+       "from": "vj",
+       "localField": "k",
+       "foreignField": "a",
+       "as": "v"
+      }
+     },
+     {
+      "$project": {
+       "v._id": 1,
+       "k": 1
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "u",
+    "pipeline": [
+     {
+      "$unionWith": "vj"
+     },
+     {
+      "$count": "n"
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "vj",
+    "pipeline": [
+     {
+      "$lookup": {
+       "from": "vj",
+       "localField": "a",
+       "foreignField": "a",
+       "as": "self"
+      }
+     },
+     {
+      "$count": "n"
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "create": "vc",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "b": "s1"
+      }
+     }
+    ],
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "find": "vc",
+    "filter": {
+     "b": "S1"
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "vc",
+    "filter": {
+     "b": "S1"
+    },
+    "collation": {
+     "locale": "simple"
+    }
+   },
+   {
+    "find": "vc",
+    "filter": {
+     "b": "S1"
+    },
+    "collation": {
+     "locale": "en",
+     "strength": 3
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "vc"
+    },
+    "__as": "lc",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "find": "vj",
+    "filter": {
+     "b": "S1"
+    },
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "find": "vj",
+    "collation": {
+     "locale": "simple"
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "count": "vc",
+    "query": {
+     "b": "S1"
+    },
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "find": "vc",
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    },
+    "filter": {
+     "b": "S1"
+    }
+   },
+   {
+    "aggregate": "vc",
+    "pipeline": [
+     {
+      "$match": {
+       "b": "S1"
+      }
+     }
+    ],
+    "cursor": {},
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "distinct": "vc",
+    "key": "b",
+    "collation": {
+     "locale": "simple"
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.view.explain_and_stats",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "v1",
+    "viewOn": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gt": 2
+       }
+      }
+     }
+    ]
+   },
+   {
+    "explain": {
+     "find": "v1",
+     "filter": {
+      "b": "s1"
+     }
+    },
+    "verbosity": "queryPlanner",
+    "__shape": true,
+    "__strip": [
+     "parsedQuery",
+     "winningPlan",
+     "serverInfo",
+     "serverParameters"
+    ]
+   },
+   {
+    "aggregate": "v1",
+    "pipeline": [
+     {
+      "$sort": {
+       "a": 1
+      }
+     }
+    ],
+    "explain": true,
+    "__shape": true,
+    "__strip": [
+     "serverInfo",
+     "serverParameters"
+    ]
+   },
+   {
+    "dbStats": 1,
+    "__strip": [
+     "avgObjSize",
+     "dataSize",
+     "storageSize",
+     "indexSize",
+     "totalSize",
+     "fsUsedSize",
+     "fsTotalSize",
+     "freeStorageSize",
+     "indexFreeStorageSize",
+     "totalFreeStorageSize",
+     "objects",
+     "collections",
+     "indexes",
+     "db"
+    ]
+   },
+   {
+    "listCollections": 1,
+    "nameOnly": true,
+    "filter": {
+     "type": "view"
+    },
+    "__as": "names",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "type": "collection"
+    },
+    "nameOnly": true,
+    "__as": "colls",
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ },
+ {
+  "name": "g10.view.depth",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "d0",
+    "viewOn": "t",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d1",
+    "viewOn": "d0",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d2",
+    "viewOn": "d1",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d3",
+    "viewOn": "d2",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d4",
+    "viewOn": "d3",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d5",
+    "viewOn": "d4",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d6",
+    "viewOn": "d5",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d7",
+    "viewOn": "d6",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d8",
+    "viewOn": "d7",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d9",
+    "viewOn": "d8",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d10",
+    "viewOn": "d9",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d11",
+    "viewOn": "d10",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d12",
+    "viewOn": "d11",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d13",
+    "viewOn": "d12",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d14",
+    "viewOn": "d13",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d15",
+    "viewOn": "d14",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d16",
+    "viewOn": "d15",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d17",
+    "viewOn": "d16",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d18",
+    "viewOn": "d17",
+    "pipeline": [],
+    "__skip": true
+   },
+   {
+    "create": "d19",
+    "viewOn": "d18",
+    "pipeline": []
+   },
+   {
+    "create": "d20",
+    "viewOn": "d19",
+    "pipeline": []
+   },
+   {
+    "create": "d21",
+    "viewOn": "d20",
+    "pipeline": []
+   },
+   {
+    "create": "d22",
+    "viewOn": "d21",
+    "pipeline": []
+   },
+   {
+    "find": "d17"
+   },
+   {
+    "find": "d18"
+   },
+   {
+    "find": "d19"
+   },
+   {
+    "count": "d19"
+   },
+   {
+    "aggregate": "d18",
+    "pipeline": [
+     {
+      "$count": "n"
+     }
+    ],
+    "cursor": {}
+   }
+  ]
+ }
+]

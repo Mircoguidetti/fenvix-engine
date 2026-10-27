@@ -5,7 +5,7 @@
 Each step is run as a command (database of the case; "__db": "admin" for admin, "$OTHER" for a second database), and the reply or the
 error {code, codeName, message} is recorded. "$DB" and "$OTHER" inside strings stand for the database names. Step options:
 "__skip": true (run, do not record), "__strip": [names] (remove these fields wherever they occur in the reply), "__sort": true (sort the
-keys of the reply), "__shape": true (compare only the structure: keys and value types), "__pause": ms (wait before the step), "__as": "name" (record under this key instead of the step number).
+keys of the reply), "__shape": true (compare only the structure: keys and value types), "__sortarr": "a.b" (sort the array at that path), "__pause": ms (wait before the step), "__as": "name" (record under this key instead of the step number).
 Replies are normalised: cursor ids (open / closed), collection and index-build UUIDs, $clusterTime and operationTime."""
 import glob
 import json
@@ -86,7 +86,7 @@ def make(c):
         other = client[db.name + "_x"]
         out = {}
         lsid = fresh_lsid()
-        base = c["_base"]
+        base = c.get("_base", int(time.time() * 1000) * 1000)
         try:
             for i, st in enumerate(c["steps"]):
                 st = dict(st)
@@ -109,6 +109,8 @@ def make(c):
                 try:
                     r = target.command(cmd)
                     rec = norm(r, opts.get("__strip", []))
+                    if opts.get("__sortarr"):
+                        rec = sortarr(rec, opts["__sortarr"])
                     if opts.get("__shape"):
                         rec = shape(rec)
                 except OperationFailure as e:
@@ -119,6 +121,17 @@ def make(c):
         finally:
             client.drop_database(other.name)
     return f
+
+
+def sortarr(rec, path):
+    """Sort the array at the dotted path (by name, else by its JSON text): listCollections and distinct order is a hash order on the real server."""
+    node = rec
+    keys = path.split(".")
+    for k in keys[:-1]:
+        node = node[k]
+    arr = node[keys[-1]]
+    arr.sort(key=lambda x: x.get("name", "") if isinstance(x, dict) and "name" in x else json.dumps(x, sort_keys=True, default=str))
+    return rec
 
 
 _START = int(time.time() * 1000) * 1000

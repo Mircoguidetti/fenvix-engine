@@ -28,7 +28,7 @@ for cl in (real, ours):
     cl.drop_database(db.name)
 keys = list(res[0].keys())
 for k in keys:
-    if only is not None and int(k[1:]) not in only:
+    if only is not None and k[1:].isdigit() and int(k[1:]) not in only:
         continue
     a, b = json.dumps(res[0][k], default=str), json.dumps(res[1].get(k), default=str)
     print(("= " if a == b else "! ") + k + " " + (a if len(a) < 1500 else a[:1500] + "..."))

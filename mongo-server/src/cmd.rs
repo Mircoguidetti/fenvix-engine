@@ -230,6 +230,9 @@ impl Server {
     async fn route(&self, db: &str, name: &str, cmd: &Document) -> R<Document> {
         let mut no_tx: Option<crate::txn::Txn> = None;
         let tx = &mut no_tx;
+        if let Some(d) = self.view_route(db, name, cmd, tx).await? {
+            return Ok(d);
+        }
         match name {
             "insert" => self.insert(db, cmd, tx).await,
             "find" => self.find(db, cmd, tx).await,
@@ -346,9 +349,14 @@ impl Server {
             }
         }
         drop(g);
+        let views = self.list_views(db).await?;
         let mut docs = VecDeque::new();
-        for n in names {
-            let d = if name_only {
+        let mut names: Vec<(String, Option<crate::views::ViewDef>)> = names.into_iter().map(|n| (n, None)).chain(views.into_iter().map(|(n, v)| (n, Some(v)))).collect();
+        names.sort_by(|a, b| a.0.cmp(&b.0));
+        for (n, view) in names {
+            let d = if let Some(v) = view {
+                if name_only { doc! { "name": n, "type": "view" } } else { doc! { "name": n, "type": "view", "options": v.options(), "info": { "readOnly": true } } }
+            } else if name_only {
                 doc! { "name": n, "type": "collection" }
             } else {
                 let options = options_of.get(&n).cloned().unwrap_or_default();
@@ -369,6 +377,9 @@ impl Server {
 
     pub(crate) async fn create(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "create")?;
+        if let Some(d) = self.create_view(db, coll, cmd).await? {
+            return Ok(d);
+        }
         let collation = match cmd.get("collation") {
             Some(v) => crate::collation::of_create(v)?,
             None => None,

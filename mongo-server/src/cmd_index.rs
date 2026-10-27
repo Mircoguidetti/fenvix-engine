@@ -373,6 +373,7 @@ impl Server {
     /// index metadata to the new name, so a crash leaves either the old or the new collection.
     pub(crate) async fn rename_collection(&self, cmd_db: &str, cmd: &Document) -> R<Document> {
         let r = crate::xdb::parse_rename(cmd_db, cmd)?;
+        self.view_rename_check(&r.from_db, &r.from, &r.to_db, &r.to).await?;
         if r.from_db != r.to_db {
             return self.rename_across(&r).await;
         }
@@ -449,7 +450,7 @@ impl Server {
         let coll = collection_name(cmd, "listIndexes")?;
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
-            return Err(MongoError::namespace_not_found(format!("ns does not exist: {db}.{coll}")));
+            return Err(MongoError::namespace_not_found("ns does not exist".to_string()));
         }
         let mut docs: VecDeque<Document> = VecDeque::new();
         let indexes = self.load_indexes(&mut g, db, coll).await?;
@@ -710,7 +711,7 @@ impl Server {
         let coll = collection_name(cmd, "collMod")?;
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
-            return Err(MongoError::namespace_not_found(format!("ns does not exist: {db}.{coll}")));
+            return Err(MongoError::namespace_not_found("ns does not exist".to_string()));
         }
         if cmd.contains_key("collation") {
             return Err(MongoError::new(40415, "IDLUnknownField", "BSON field 'collMod.collation' is an unknown field.".into()));
@@ -1083,6 +1084,7 @@ impl Server {
     }
 
     pub(crate) async fn db_stats(&self, db: &str, _cmd: &Document) -> R<Document> {
+        let views = self.view_count(db).await?;
         let mut g = self.dbs.lock(db).await;
         let names = g.collections().await?;
         let (mut objects, mut data, mut indexes_n, mut index_size) = (0_i64, 0_i64, 0_i64, 0_i64);
@@ -1094,8 +1096,8 @@ impl Server {
             index_size += s.get_i64("totalIndexSize").unwrap_or(0);
         }
         Ok(doc! {
-            "db": db, "collections": names.len() as i64, "views": 0_i64, "objects": objects, "avgObjSize": if objects > 0 { data as f64 / objects as f64 } else { 0.0 },
-            "dataSize": data, "storageSize": data, "indexes": indexes_n, "indexSize": index_size, "totalSize": data + index_size, "scaleFactor": 1, "ok": 1.0,
+            "db": db, "collections": names.len() as i64, "views": views, "objects": objects, "avgObjSize": if objects > 0 { data as f64 / objects as f64 } else { 0.0 },
+            "dataSize": data, "storageSize": data, "indexes": indexes_n, "indexSize": index_size, "totalSize": data + index_size, "scaleFactor": 1_i64, "fsUsedSize": 0.0, "fsTotalSize": 0.0, "ok": 1.0,
         })
     }
 }

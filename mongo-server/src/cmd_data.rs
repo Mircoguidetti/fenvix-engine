@@ -207,21 +207,7 @@ impl Server {
             attach(&mut g, tx);
             self.matching(&mut *g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?
         };
-        let mut values: Vec<Bson> = Vec::new();
-        for d in &docs {
-            for v in path_values(d, key) {
-                let items: Vec<&Bson> = match v {
-                    Bson::Array(a) => a.iter().collect(),
-                    other => vec![other],
-                };
-                for it in items {
-                    if !values.iter().any(|x| query::equal(x, it)) {
-                        values.push(it.clone());
-                    }
-                }
-            }
-        }
-        values.sort_by(query::compare);
+        let values = distinct_values(&docs, key);
         Ok(doc! { "values": values, "ok": 1.0 })
     }
 
@@ -338,7 +324,9 @@ impl Server {
         let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$geoNear") || d.contains_key("$planCacheStats")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
-            let fd = if tx.is_none() {
+            let fd = if let Some(v) = Box::pin(self.view_docs(db, &from, tx)).await? {
+                v
+            } else if tx.is_none() {
                 let mut g = self.dbs.read(db).await?;
                 self.scan_visible(&mut g, db, &from).await?
             } else {
@@ -1328,4 +1316,24 @@ impl Server {
         let out = run_pipeline(docs, &pipeline[1..], &crate::agg::Foreign::new())?;
         Ok(self.cursor_reply_open(format!("{db}.$cmd.aggregate"), out.into(), batch, false, false))
     }
+}
+
+/// The distinct values of `key` in `docs` (an array contributes its elements), in the order of the BSON comparison.
+pub(crate) fn distinct_values(docs: &[Document], key: &str) -> Vec<Bson> {
+    let mut values: Vec<Bson> = Vec::new();
+    for d in docs {
+        for v in path_values(d, key) {
+            let items: Vec<&Bson> = match v {
+                Bson::Array(a) => a.iter().collect(),
+                other => vec![other],
+            };
+            for it in items {
+                if !values.iter().any(|x| query::equal(x, it)) {
+                    values.push(it.clone());
+                }
+            }
+        }
+    }
+    values.sort_by(query::compare);
+    values
 }

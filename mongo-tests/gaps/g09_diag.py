@@ -45,6 +45,7 @@ def _ss_shape(client):
     r.pop("$clusterTime", None)
     r.pop("operationTime", None)
     cm = r["metrics"].pop("commands")
+    r["metrics"].pop("apiVersions", None)   # (the apps that sent an apiVersion to the server so far)
     for k in ("locks", "defaultRWConcern", "transactions", "wiredTiger", "tcmalloc"):   # (what these hold depends on what the server did before)
         r.pop(k, None)
     return {"shape": shape(r), "commands_entries": sorted({str(sorted(set(v) & {"failed", "total"})) for v in cm.values() if isinstance(v, dict)})}

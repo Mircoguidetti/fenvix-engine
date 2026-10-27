@@ -23,6 +23,7 @@ module.exports = ({ C, EJSON }) => {
     return x;
   };
   const norm = (r, names) => { r = strip(r, [...VOLATILE, ...names]); if (r.cursor && 'id' in r.cursor) r.cursor.id = r.cursor.id.toString() !== '0' ? 'open' : 'closed'; return unify(r); };
+  const sortarr = (rec, path) => { const ks = path.split('.'); let n = rec; for (const k of ks.slice(0, -1)) n = n[k]; const key = (x) => (x && typeof x === 'object' && 'name' in x) ? String(x.name) : JSON.stringify(x); n[ks[ks.length - 1]].sort((a, b) => { const ka = key(a), kb = key(b); return ka < kb ? -1 : ka > kb ? 1 : 0; }); return rec; };
   const shape = (x) => { if (Array.isArray(x)) return x.length ? [shape(x[0])] : []; if (x && x._bsontype) return 'num'; if (x instanceof Date) return 'Date'; if (x && typeof x === 'object') return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, shape(v)])); return typeof x === 'number' ? 'num' : typeof x; };
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   for (const f of fs.readdirSync(path.join(__dirname, '..', 'scripts')).filter((f) => f.endsWith('.json')).sort()) {
@@ -39,7 +40,7 @@ module.exports = ({ C, EJSON }) => {
             const sub = subst(st, db.databaseName, other.databaseName); if (sub.lsid === '$LSID') sub.lsid = lsid;
             const cmd = EJSON.parse(JSON.stringify(sub));
             let rec;
-            try { rec = norm(await target.command(cmd), opts.__strip || []); if (opts.__shape) rec = shape(rec); } catch (e) { rec = { err: [e.code, e.codeName, unify(e.errmsg || e.message || '')] }; }
+            try { rec = norm(await target.command(cmd), opts.__strip || []); if (opts.__sortarr) rec = sortarr(rec, opts.__sortarr); if (opts.__shape) rec = shape(rec); } catch (e) { rec = { err: [e.code, e.codeName, unify(e.errmsg || e.message || '')] }; }
             if (!opts.__skip) out[opts.__as || `s${i}`] = rec;
           }
           return out;

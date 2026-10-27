@@ -50,6 +50,7 @@ mod ttl;
 mod txn;
 mod update;
 mod validation;
+mod views;
 mod wire;
 mod xdb;
 
