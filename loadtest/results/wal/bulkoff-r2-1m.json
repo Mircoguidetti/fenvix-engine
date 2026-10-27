@@ -1,0 +1,47 @@
+{
+ "p50_ms": 15.511,
+ "p99_ms": 34.303,
+ "label": "bulkoff-r2",
+ "minutes": 1.0,
+ "connections": 8,
+ "extra_args": [
+  "--wal-gc-secs",
+  "0"
+ ],
+ "writes": 29038,
+ "ops_per_sec": 483.96666666666664,
+ "errors": 0,
+ "wal_samples": [
+  [
+   0,
+   2
+  ],
+  [
+   10,
+   3181
+  ],
+  [
+   20,
+   6445
+  ],
+  [
+   30,
+   9521
+  ],
+  [
+   40,
+   12460
+  ],
+  [
+   50,
+   15479
+  ]
+ ],
+ "wal_max": 15479,
+ "wal_at_kill": 18388,
+ "compacted_ssts_at_kill": 4,
+ "restart_to_ping_s": 0.56,
+ "recovery_s": 1.28,
+ "docs_after": 50,
+ "doc0_ok": true
+}
