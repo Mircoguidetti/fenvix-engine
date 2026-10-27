@@ -170,6 +170,9 @@ impl Server {
         }
         for (i, s) in pipeline.iter().enumerate() {
             let n = stage_name(s);
+            if matches!(n.as_str(), "$search" | "$searchMeta") && i != 0 {
+                return Err(MongoError::new(40602, "Location40602", format!("{n} is only valid as the first stage in a pipeline.")));
+            }
             if n == "$geoNear" && i != 0 {
                 return Err(MongoError::new(40603, "Location40603", "$geoNear was not the first stage in the pipeline".to_string()));
             }
@@ -193,6 +196,16 @@ impl Server {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
             self.index_stats_stage(&mut g, db, coll).await?
+        } else if let Some((sname, sspec)) = first.and_then(|d| d.iter().find(|(k, _)| matches!(k.as_str(), "$search" | "$searchMeta"))) {
+            let all = if tx.is_none() {
+                let mut g = self.dbs.read(db).await?;
+                self.matching(&mut g, db, coll, &Document::new(), None, None).await?
+            } else {
+                let mut g = self.dbs.lock(db).await;
+                attach(&mut g, tx);
+                self.matching(&mut *g, db, coll, &Document::new(), None, tx_ov(tx)).await?
+            };
+            crate::search::run_stage(sname, sspec, all)?
         } else if let Some(spec) = first.and_then(|d| d.get("$geoNear")) {
             let (filter, st) = geo_near_filter(spec)?;
             let mut docs = if tx.is_none() {
@@ -219,6 +232,7 @@ impl Server {
             }
         };
         let first_is_text_match = first.and_then(|d| d.get_document("$match").ok()).map(crate::text::has_text).unwrap_or(false);
+        let first_is_text_match = first_is_text_match || first.map(|d| d.contains_key("$search") || d.contains_key("$searchMeta")).unwrap_or(false);
         let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$geoNear")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
