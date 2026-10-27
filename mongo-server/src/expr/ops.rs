@@ -1286,16 +1286,19 @@ fn function(arg: &Bson, sc: &Scope) -> Out {
     let body = match d.get("body") {
         Some(Bson::String(s)) => s.clone(),
         Some(Bson::JavaScriptCode(c)) => c.clone(),
-        _ => return Err(err(31261, "$function requires 'body' to be a string or code")),
+        None => return Err(err(31261, "$function requires 'body' to be specified")),
+        _ => return Err(err(31262, "$function requires 'body' to be a string or code")),
+    };
+    let args = match d.get("args") {
+        Some(Bson::Array(a)) => a.clone(),
+        None => return Err(err(31263, "$function requires 'args' to be specified")),
+        _ => return Err(err(31266, "$function requires 'args' to be an array")),
     };
     match d.get("lang") {
         Some(Bson::String(l)) if l == "js" => {}
-        _ => return Err(err(31262, "$function only supports lang: 'js'")),
+        None => return Err(err(31418, "$function requires 'lang' to be specified")),
+        _ => return Err(err(31419, "$function only supports lang: 'js'")),
     }
-    let args = match d.get("args") {
-        Some(Bson::Array(a)) => a.clone(),
-        _ => return Err(err(31263, "$function requires 'args' to be an array")),
-    };
     let mut vals = Vec::new();
     for a in &args {
         vals.push(ev(a, sc)?.unwrap_or(Bson::Null));

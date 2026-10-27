@@ -110,11 +110,76 @@ pub enum Shape {
 
 /// Fixed reference point for crossing parity (`S2::Origin()`).
 const ORIGIN: V = [-0.009_999_466_435_025_02, 0.002_592_454_260_932_412, 0.999_946_643_502_502];
+fn origin() -> V {
+    ORIGIN
+}
 
-/// Orientation of three points: `true` when `c` is to the left of the directed great circle `a -> b`.
-fn left_of(a: &V, b: &V, c: &V) -> bool {
-    use s2::predicates::{robust_sign, Direction};
-    matches!(robust_sign(&s2_point(a), &s2_point(b), &s2_point(c)), Direction::CounterClockwise)
+/// Determinant sign by the stable formulation of the S2 library mongod embeds (`S2::ExpensiveCCW`): the longest
+/// difference vector decides which vertex is the origin of the triple product.
+fn det_stable(a: &V, b: &V, c: &V) -> f64 {
+    let sab = if dot(a, b) > 0.0 { -1.0 } else { 1.0 };
+    let sbc = if dot(b, c) > 0.0 { -1.0 } else { 1.0 };
+    let sca = if dot(c, a) > 0.0 { -1.0 } else { 1.0 };
+    let vab = add(a, &scale(b, sab));
+    let vbc = add(b, &scale(c, sbc));
+    let vca = add(c, &scale(a, sca));
+    let n2 = |v: &V| dot(v, v);
+    let (dab, dbc, dca) = (n2(&vab), n2(&vbc), n2(&vca));
+    let lt = |p: &V, q: &V| p.partial_cmp(q) == Some(std::cmp::Ordering::Less);
+    if dca < dbc || (dca == dbc && lt(a, b)) {
+        if dab < dbc || (dab == dbc && lt(a, c)) {
+            dot(&cross(&vab, &vca), a) * sab
+        } else {
+            dot(&cross(&vca, &vbc), c) * sca
+        }
+    } else if dab < dca || (dab == dca && lt(b, c)) {
+        dot(&cross(&vbc, &vab), b) * sbc
+    } else {
+        dot(&cross(&vca, &vbc), c) * sca
+    }
+}
+
+/// `S2::RobustCCW`: +1 counter-clockwise, -1 clockwise, 0 only when two points are equal. Numerically coplanar
+/// triples are resolved by the library's own tie-break (sorted lexicographically, planar x-y, y-z, z-x), not by exact
+/// arithmetic, so the answer for points exactly on an edge matches mongod rather than the geometry.
+fn robust_ccw(a: &V, b: &V, c: &V) -> i32 {
+    let det = dot(&cross(a, b), c);
+    if det > 0.8e-15 {
+        return 1;
+    }
+    if det < -0.8e-15 {
+        return -1;
+    }
+    if a == b || b == c || c == a {
+        return 0;
+    }
+    let s = det_stable(a, b, c);
+    if s > 0.0 {
+        return 1;
+    }
+    if s < 0.0 {
+        return -1;
+    }
+    let mut p = [*a, *b, *c];
+    let mut parity = 1;
+    for i in 0..3 {
+        for j in 0..2 - i {
+            if p[j + 1].partial_cmp(&p[j]) == Some(std::cmp::Ordering::Less) {
+                p.swap(j, j + 1);
+                parity = -parity;
+            }
+        }
+    }
+    for (i, j) in [(0, 1), (1, 2), (2, 0)] {
+        let d = (p[1][i] - p[0][i]) * (p[2][j] - p[0][j]) - (p[1][j] - p[0][j]) * (p[2][i] - p[0][i]);
+        if d > 0.0 {
+            return parity;
+        }
+        if d < 0.0 {
+            return -parity;
+        }
+    }
+    parity
 }
 
 /// Do the arcs `a-b` and `c-d` cross (not just touch at an endpoint)?
@@ -122,24 +187,94 @@ fn arcs_cross(a: &V, b: &V, c: &V, d: &V) -> bool {
     left_of(a, b, c) != left_of(a, b, d) && left_of(c, d, a) != left_of(c, d, b)
 }
 
-/// S2's edge-or-vertex crossing: proper crossings count, and shared vertices follow the vertex-crossing rule, so that
-/// point-in-polygon parity is consistent (half-open boundaries).
+/// Orientation of three points: `true` when `c` is to the left of the directed great circle `a -> b`.
+fn left_of(a: &V, b: &V, c: &V) -> bool {
+    robust_ccw(a, b, c) > 0
+}
+
+/// `S2EdgeUtil::RobustCrossing`: 1 for a proper crossing, 0 when the edges share a vertex, -1 otherwise.
+fn robust_crossing(a: &V, b: &V, c: &V, d: &V) -> i32 {
+    if a == c || a == d || b == c || b == d {
+        return 0;
+    }
+    let acb = -robust_ccw(a, b, c);
+    let bda = robust_ccw(a, b, d);
+    if acb == -bda && bda != 0 {
+        return -1;
+    }
+    let cbd = -robust_ccw(c, d, b);
+    if cbd != bda {
+        return -1;
+    }
+    if robust_ccw(c, d, a) == bda && acb == bda {
+        1
+    } else {
+        -1
+    }
+}
+
+/// `S2::Ortho`
+fn ortho(a: &V) -> V {
+    let big = (0..3).fold(0, |m, i| if a[i].abs() > a[m].abs() { i } else { m });
+    let k = (big + 2) % 3;
+    let mut t = [0.012, 0.0053, 0.00457];
+    t[k] = 1.0;
+    unit(&cross(a, &t))
+}
+
+/// `S2::OrderedCCW`: are `a, b, c` in counter-clockwise order around `o`?
+fn ordered(a: &V, b: &V, c: &V, o: &V) -> bool {
+    let mut sum = 0;
+    if robust_ccw(b, o, a) >= 0 {
+        sum += 1;
+    }
+    if robust_ccw(c, o, b) >= 0 {
+        sum += 1;
+    }
+    if robust_ccw(a, o, c) > 0 {
+        sum += 1;
+    }
+    sum >= 2
+}
+
+/// `S2EdgeUtil::VertexCrossing`
+fn vertex_crossing(a: &V, b: &V, c: &V, d: &V) -> bool {
+    if a == b || c == d {
+        return false;
+    }
+    if a == d {
+        return ordered(&ortho(a), c, b, a);
+    }
+    if b == c {
+        return ordered(&ortho(b), d, a, b);
+    }
+    if a == c {
+        return ordered(&ortho(a), d, b, a);
+    }
+    if b == d {
+        return ordered(&ortho(b), c, a, b);
+    }
+    false
+}
+
+/// `S2EdgeUtil::EdgeOrVertexCrossing`: proper crossings count, and shared vertices follow the vertex-crossing rule, so
+/// that point-in-polygon parity is consistent (half-open boundaries).
 fn xing(a: &V, b: &V, c: &V, d: &V) -> bool {
-    s2::edge_crossings::edge_or_vertex_crossing(&s2_point(a), &s2_point(b), &s2_point(c), &s2_point(d))
+    match robust_crossing(a, b, c, d) {
+        c if c < 0 => false,
+        0 => vertex_crossing(a, b, c, d),
+        _ => true,
+    }
 }
 
 /// Do the edges cross properly (interior to interior)?
 fn proper_cross(a: &V, b: &V, c: &V, d: &V) -> bool {
-    s2::edge_crossings::crossing_sign(&s2_point(a), &s2_point(b), &s2_point(c), &s2_point(d)) == s2::edge_crossings::Crossing::Cross
+    robust_crossing(a, b, c, d) > 0
 }
 
 /// Do the edges cross or share a vertex (`S2Polyline::Intersects`)?
 fn cross_or_touch(a: &V, b: &V, c: &V, d: &V) -> bool {
-    s2::edge_crossings::crossing_sign(&s2_point(a), &s2_point(b), &s2_point(c), &s2_point(d)) != s2::edge_crossings::Crossing::DoNotCross
-}
-
-fn ordered(a: &V, b: &V, c: &V, o: &V) -> bool {
-    s2::point::ordered_ccw(&s2_point(a), &s2_point(b), &s2_point(c), &s2_point(o))
+    robust_crossing(a, b, c, d) >= 0
 }
 
 /// Do the wedges `a0-ab1-a2` and `b0-ab1-b2` (interiors to the left) share interior points?
@@ -178,7 +313,7 @@ pub fn dist_to_arc(x: &V, a: &V, b: &V) -> f64 {
 impl Loop {
     /// Interior to the left of the edges (`strict`), or the smaller side.
     pub fn new(v: Vec<V>, strict: bool) -> Loop {
-        let mut l = Loop { v, flip: false, origin_in: false, cap: (ORIGIN, 0.0) };
+        let mut l = Loop { v, flip: false, origin_in: false, cap: (origin(), 0.0) };
         l.cap = l.bound_cap();
         // origin: a point just left of the midpoint of edge 0 is inside the left region
         let (a, b) = (l.v[0], l.v[1 % l.v.len()]);
@@ -186,7 +321,7 @@ impl Loop {
         let left = unit(&cross(&a, &b));
         let eps = (angle(&a, &b) * 1e-6).max(1e-13);
         let probe = unit(&add(&m, &scale(&left, eps)));
-        let parity = l.crossings(&ORIGIN, &probe) % 2 == 1;
+        let parity = l.crossings(&origin(), &probe) % 2 == 1;
         l.origin_in = !parity;
         if !strict {
             l.flip = l.left_area() > 2.0 * PI;
@@ -245,7 +380,7 @@ impl Loop {
 
     /// Strict interior test (boundary points answer arbitrarily; see [`Poly::contains`]).
     fn contains_interior(&self, p: &V) -> bool {
-        let inside_left = self.origin_in ^ (self.crossings(&ORIGIN, p) % 2 == 1);
+        let inside_left = self.origin_in ^ (self.crossings(&origin(), p) % 2 == 1);
         inside_left ^ self.flip
     }
 }
@@ -270,6 +405,17 @@ impl Poly {
             return false;
         }
         !self.loops[1..].iter().any(|h| h.contains_interior(p))
+    }
+
+    /// mongod's `containsPoint`: S2's half-open `Contains`, else whether the point's leaf cell overlaps the polygon, so a
+    /// point on an edge or vertex is inside when the cell on its side of the boundary reaches into the polygon.
+    pub fn contains_point_s2(&self, p: &V) -> bool {
+        if self.contains_halfopen(p) {
+            return true;
+        }
+        let cell = s2::cell::Cell::from(&s2_point(p));
+        let cv: Vec<V> = cell.vertices().iter().map(|q| [q.0.x, q.0.y, q.0.z]).collect();
+        polys_intersect(self, &Poly::new(vec![Loop::new(cv, true)]))
     }
 
     /// Point in polygon with S2's half-open boundary (a boundary point belongs to exactly one of two adjacent polygons).
@@ -330,6 +476,19 @@ fn poly_dist(pg: &Poly, p: &V) -> f64 {
 // Predicates between shapes
 // ---------------------------------------------------------------------------------------------
 
+/// `S2Polyline::MayIntersect(S2Cell)` with the query point's leaf cell: mongod answers point-on-line this way, so a
+/// point lying exactly on a stored line misses when the line runs along the leaf cell's edge.
+fn line_may_intersect_cell(l: &[V], p: &V) -> bool {
+    use s2::cell::Cell;
+    let cell = Cell::from(&s2_point(p));
+    if l.iter().any(|v| cell.contains_point(&s2_point(v))) {
+        return true;
+    }
+    let cv = cell.vertices();
+    let cv: Vec<V> = cv.iter().map(|q| [q.0.x, q.0.y, q.0.z]).collect();
+    (0..4).any(|j| l.windows(2).any(|w| cross_or_touch(&cv[j], &cv[(j + 1) & 3], &w[0], &w[1])))
+}
+
 fn segs(l: &[V]) -> impl Iterator<Item = (&V, &V)> {
     l.windows(2).map(|w| (&w[0], &w[1]))
 }
@@ -364,6 +523,7 @@ fn loops_intersect(a: &Loop, b: &Loop) -> bool {
     }
     false
 }
+
 
 /// Does loop `a` contain loop `b` (`S2Loop::Contains`)?
 fn loop_contains(a: &Loop, b: &Loop) -> bool {
@@ -465,8 +625,8 @@ fn line_in_poly(l: &[V], pg: &Poly) -> bool {
 /// Does the shape `a` lie inside the polygon region `r` (a multi-polygon), boundary included for points?
 pub fn within(a: &Shape, r: &[Poly]) -> bool {
     match a {
-        Shape::Point(p) => r.iter().any(|pg| pg.contains(p)),
-        Shape::MultiPoint(ps) => ps.iter().all(|p| r.iter().any(|pg| pg.contains(p))),
+        Shape::Point(p) => r.iter().any(|pg| pg.contains_point_s2(p)),
+        Shape::MultiPoint(ps) => ps.iter().all(|p| r.iter().any(|pg| pg.contains_point_s2(p))),
         Shape::Line(l) => r.iter().any(|pg| line_in_poly(l, pg)),
         Shape::MultiLine(ls) => ls.iter().all(|l| r.iter().any(|pg| line_in_poly(l, pg))),
         Shape::Polygon(pg) => r.iter().any(|q| poly_contains_poly(q, pg)),
@@ -490,8 +650,8 @@ pub fn intersects(a: &Shape, b: &Shape) -> bool {
         (_, MultiPolygon(ys)) => ys.iter().any(|y| intersects(a, &Polygon(y.clone()))),
         (Cap(c, r), other) | (other, Cap(c, r)) => other.dist_point(c) <= *r,
         (Point(p), Point(q)) => angle(p, q) < BOUNDARY_EPS,
-        (Point(p), Line(l)) | (Line(l), Point(p)) => line_dist(l, p) < BOUNDARY_EPS,
-        (Point(p), Polygon(pg)) | (Polygon(pg), Point(p)) => pg.contains(p),
+        (Point(p), Line(l)) | (Line(l), Point(p)) => line_may_intersect_cell(l, p),
+        (Point(p), Polygon(pg)) | (Polygon(pg), Point(p)) => pg.contains_point_s2(p),
         (Line(x), Line(y)) => segs(x).any(|(p, q)| segs(y).any(|(r, s)| cross_or_touch(p, q, r, s))),
         (Line(l), Polygon(pg)) | (Polygon(pg), Line(l)) => line_poly_intersects(l, pg),
         (Polygon(x), Polygon(y)) => polys_intersect(x, y),

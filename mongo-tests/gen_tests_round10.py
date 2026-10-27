@@ -151,9 +151,111 @@ def register(g):
         tb(f"{g}.null_and_missing", [ins("c", [{"_id": 1, "v": 1}, {"_id": 2}]), ba(g, 2), ins("d", [{"_id": 1, "v": None}]), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": g}}])])
         tb(f"{g}.empty", [{"op": "create_collection", "coll": "c"}, ba(g, 3)])
         tb(f"{g}.tiny_huge", [ins("c", vals([1e-12, 1e-9, 1e300, 1e305])), ba(g, 2), ba(g, 4)])
+    DEC = lambda x: {"$numberDecimal": x}
+    DVALS = ["0.37", "1.1", "3.3", "5.5", "12", "37", "155", "1234", "99999", "1E+7", "123456789", "1E+12", "1E+20", "1E+25", "1E+30", "1E-10", "1E-30", "7E-20", "6.3", "10", "1.6"]
+    for g in GR:
+        tb(f"{g}.decimal_each", [ins("c", [{"_id": i, "v": DEC(x)} for i, x in enumerate(DVALS)])] + [agg("c", [{"$match": {"_id": i}}, {"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": g}}]) for i in range(len(DVALS))])
+        tb(f"{g}.decimal_buckets", [ins("c", [{"_id": i, "v": DEC(x)} for i, x in enumerate(DVALS)])] + [ba(g, b) for b in (2, 5, 21)])
+        tb(f"{g}.decimal_special", [ins("c", [{"_id": 1, "v": DEC("0")}, {"_id": 2, "v": DEC("5")}]), ba(g, 2), ins("d", [{"_id": 1, "v": DEC("NaN")}, {"_id": 2, "v": 1}]), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}]),
+                                    ins("e", [{"_id": 1, "v": DEC("Infinity")}, {"_id": 2, "v": 1}]), agg("e", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}]),
+                                    ins("f", [{"_id": 1, "v": DEC("-1.5")}, {"_id": 2, "v": 2}]), agg("f", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}]),
+                                    ins("h", [{"_id": 1, "v": DEC("1E+1000")}, {"_id": 2, "v": 1}]), agg("h", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}])])
+        tb(f"{g}.decimal_mixed_types", [ins("c", [{"_id": 1, "v": DEC("1.5")}, {"_id": 2, "v": 2.5}, {"_id": 3, "v": 7}, {"_id": 4, "v": DEC("9.9")}]), ba(g, 2), ba(g, 4)])
     tb("unknown_granularity", [ins("c", vals([1, 2])), ba("R7", 2), ba("r5", 2), ba("e6", 2), ba("", 2)])
     tb("unknown_granularity_empty", [{"op": "create_collection", "coll": "c"}, ba("nope", 2)])
     tb("granularity_not_string", [ins("c", vals([1, 2])), ba(5, 2), ba(None, 2)])
     tb("infinity", [ins("c", vals([1, {"$numberDouble": "Infinity"}])), ba("POWERSOF2", 2), ba("R5", 2), ba("1-2-5", 2)])
     tb("pow2_large", [ins("c", vals([1, 2 ** 40])), ba("POWERSOF2", 1), ba("POWERSOF2", 2), ins("d", vals([2 ** 31, 2 ** 33])), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": "POWERSOF2"}}])])
     tb("computed_group_by", [ins("c", [{"_id": i, "a": i, "b": 2} for i in range(1, 20)]), agg("c", [{"$bucketAuto": {"groupBy": {"$multiply": ["$a", "$b"]}, "buckets": 5, "granularity": "E12"}}])])
+
+    # ------------------------------------------------------------------ $near / $nearSphere without $maxDistance (rings)
+    import random as _random
+    rnd = _random.Random(5)
+
+    def pts(n):
+        out = []
+        for i in range(n):
+            lng, lat = round(rnd.uniform(-180, 180), 3), round(rnd.uniform(-89, 89), 3)
+            out.append({"_id": i, "k": i % 5, "loc": {"type": "Point", "coordinates": [lng, lat]}, "xy": [round(lng / 2, 3), round(lat / 2, 3)]})
+        # exact duplicates and near-duplicates test the tie order
+        out.append({"_id": 1000, "k": 1, "loc": {"type": "Point", "coordinates": [10.0, 10.0]}, "xy": [5.0, 5.0]})
+        out.append({"_id": 1001, "k": 2, "loc": {"type": "Point", "coordinates": [10.0, 10.0002]}, "xy": [5.0, 5.0002]})
+        out.append({"_id": 1002, "k": 1, "loc": {"type": "Point", "coordinates": [10.0, 10.0001]}, "xy": [5.0, 5.0001]})
+        out.append({"_id": 1003, "k": 3, "loc": {"type": "Point", "coordinates": [179.999, 0.0]}, "xy": [90.0, 0.0]})
+        out.append({"_id": 1004, "k": 3, "loc": {"type": "Point", "coordinates": [-179.999, 0.0]}, "xy": [-90.0, 0.0]})
+        out.append({"_id": 1005, "k": 4, "loc": {"type": "Point", "coordinates": [0.0, 89.9]}, "xy": [0.0, 44.95]})
+        out.append({"_id": 1006, "k": 4, "loc": {"type": "Point", "coordinates": [0.0, -89.9]}, "xy": [0.0, -44.95]})
+        return out
+
+    PT = pts(300)
+    IX = [{"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, {"op": "create_index", "coll": "c", "keys": [["xy", "2d"]]}]
+
+    def nq(flt, sort=None, **kw):
+        return find("c", flt, projection={"_id": 1}, **({"sort": sort} if sort else {}), **kw)
+
+    def center(lng, lat):
+        return {"type": "Point", "coordinates": [lng, lat]}
+
+    for ci, (lng, lat) in enumerate([(10, 10), (0, 0), (180, 0), (-179.9, 10), (0, 89), (100, -60), (-100, 30)]):
+        steps = [ins("c", PT)] + IX
+        for lim in (1, 3, 10, 40):
+            steps.append(nq({"loc": {"$nearSphere": {"$geometry": center(lng, lat)}}}, limit=lim))
+        steps.append(nq({"loc": {"$near": {"$geometry": center(lng, lat)}}}, limit=7, skip=3))
+        steps.append(nq({"loc": {"$near": {"$geometry": center(lng, lat), "$minDistance": 500000}}}, limit=5))
+        steps.append(nq({"loc": {"$nearSphere": {"$geometry": center(lng, lat), "$maxDistance": 3000000}}}, limit=20))
+        steps.append(nq({"loc": {"$nearSphere": [lng, lat]}}, limit=6))
+        steps.append(nq({"k": 2, "loc": {"$nearSphere": {"$geometry": center(lng, lat)}}}, limit=5))
+        steps.append(nq({"loc": {"$nearSphere": {"$geometry": center(lng, lat)}}, "k": {"$in": [1, 3]}}, limit=9))
+        tc(f"near_rings_sphere_{ci}", steps) if False else add(f"geo.near_rings_sphere_{ci}", steps, "geo: nearest-first rings")
+        steps2 = [ins("c", PT)] + IX
+        for lim in (1, 4, 25):
+            steps2.append(nq({"xy": {"$near": [lng / 2, lat / 2]}}, limit=lim))
+        steps2.append(nq({"xy": {"$near": [lng / 2, lat / 2], "$maxDistance": 30}}, limit=10))
+        steps2.append(nq({"xy": {"$nearSphere": [lng / 2, lat / 2]}}, limit=5))
+        steps2.append(nq({"k": 4, "xy": {"$near": [lng / 2, lat / 2]}}, limit=3))
+        add(f"geo.near_rings_flat_{ci}", steps2, "geo: nearest-first rings")
+    add("geo.near_rings_no_limit", [ins("c", PT[:80])] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}}), nq({"xy": {"$near": [5, 5]}})], "geo: nearest-first rings")
+    add("geo.near_rings_sort_desc", [ins("c", PT[:80])] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, sort={"_id": -1}, limit=5)], "geo: nearest-first rings")
+    add("geo.near_rings_compound_prefix", [ins("c", PT), {"op": "create_index", "coll": "c", "keys": [["k", 1], ["loc", "2dsphere"]]},
+                                          nq({"k": 2, "loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, limit=6), nq({"k": {"$in": [1, 2]}, "loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, limit=6)], "geo: nearest-first rings")
+    add("geo.near_rings_polygons_indexed", [ins("c", [{"_id": i, "loc": {"type": "Polygon", "coordinates": [[[i, i], [i + 3, i], [i + 3, i + 3], [i, i + 3], [i, i]]]}} for i in range(0, 60, 2)]),
+                                           {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(20, 22)}}}, limit=4), nq({"loc": {"$near": {"$geometry": center(-40, -40)}}}, limit=4)], "geo: nearest-first rings")
+    add("geo.near_rings_multikey_points", [ins("c", [{"_id": i, "loc": [{"type": "Point", "coordinates": [i * 3 % 170, i * 7 % 80]}, {"type": "Point", "coordinates": [-i * 3 % 170, -i * 7 % 80]}]} for i in range(40)]),
+                                          {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(30, 30)}}}, limit=6)], "geo: nearest-first rings")
+
+    # Documents at exactly the same distance come out of mongod's search in the pop order of a binary heap; the order is
+    # reproduced for a group that is alone in its search interval.
+    TIES = [{"_id": i, "loc": {"type": "Point", "coordinates": [10.0, 10.0]}, "xy": [5.0, 5.0]} for i in range(1, 8)] + [{"_id": 20 + i, "loc": {"type": "Point", "coordinates": [10.0 + i, 10.0]}, "xy": [5.0 + i, 5.0]} for i in range(1, 6)]
+    for lim in (1, 3, 4, 5, 7, 9):
+        add(f"geo.near_exact_ties_limit_{lim}", [ins("c", TIES)] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, limit=lim)], "geo: nearest-first, equal distances")
+        add(f"geo.near_exact_ties_flat_limit_{lim}", [ins("c", TIES)] + IX + [nq({"xy": {"$near": [5, 5]}}, limit=lim)], "geo: nearest-first, equal distances")
+    add("geo.near_exact_ties_no_limit", [ins("c", TIES)] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}})], "geo: nearest-first, equal distances")
+
+    # The same place written as longitude 180 and -180.
+    add("geo.near_antimeridian_twins", [ins("c", [{"_id": 1, "loc": {"type": "Point", "coordinates": [180.0, 0.0]}}, {"_id": 2, "loc": {"type": "Point", "coordinates": [-180.0, 0.0]}}, {"_id": 3, "loc": {"type": "Point", "coordinates": [100.0, 0.0]}}]),
+                                       {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(-179.9, 10)}}}, limit=3)], "geo: nearest-first, equal distances")
+
+
+def register_knife(g):
+    """Knife-edge geometry: the (offset, query, operator) answers of knife_cases.py on which mongo:7.0 and our server agree
+    (knife_matched.json, written by geo_knife_battery.py). The other answers are listed in results10.md."""
+    import json, os
+    from knife_cases import OFFS, build
+    add, ins, find = g["add"], g["ins"], g["find"]
+    matched = set(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "knife_matched.json"))))
+    for (ox, oy, s) in OFFS:
+        stored, queries = build(ox, oy, s)
+        docs = [dict(_id=i + 1, name=n, g=stored[n]) for i, n in enumerate(stored)]
+        steps = [ins("c", docs)]
+        for qn, geom in queries.items():
+            for op in ("$geoIntersects", "$geoWithin"):
+                if f"{ox},{oy},{s}|{qn}|{op}" in matched:
+                    steps.append(find("c", {"g": {op: {"$geometry": geom}}}, sort={"_id": 1}, projection={"name": 1}))
+        add(f"geo.knife_edge_{ox}_{oy}_{s}".replace("-", "m"), steps, "geo: knife-edge shared boundaries")
+    lines = [{"_id": 1, "g": {"type": "LineString", "coordinates": [[170, 0], [-170, 0]]}}, {"_id": 2, "g": {"type": "LineString", "coordinates": [[170, 10], [-170, 10]]}},
+             {"_id": 3, "g": {"type": "LineString", "coordinates": [[80, 0], [100, 0]]}}, {"_id": 4, "g": {"type": "LineString", "coordinates": [[0, 70], [0, 90]]}},
+             {"_id": 5, "g": {"type": "LineString", "coordinates": [[-100, 0], [-80, 0]]}}, {"_id": 6, "g": {"type": "LineString", "coordinates": [[0, -10], [0, 10]]}},
+             {"_id": 7, "g": {"type": "LineString", "coordinates": [[40, 40], [50, 50]]}}]
+    pts = [(180, 0), (175, 0), (-175, 0), (-90, 0), (0, 0), (0, 5), (0, -5), (0, 75), (0, 80), (45, 45), (45, 45.0001), (175, 10), (180, 10), (170, 0), (-170, 0), (100, 0), (80, 0), (85, 0), (90, 0)]
+    add("geo.knife_point_on_stored_line", [ins("c", lines)] + [find("c", {"g": {"$geoIntersects": {"$geometry": {"type": "Point", "coordinates": [x, y]}}}}, sort={"_id": 1}, projection={"_id": 1}) for x, y in pts],
+        "geo: points on stored lines on S2 face boundaries")

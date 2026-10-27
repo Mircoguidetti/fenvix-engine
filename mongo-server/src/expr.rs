@@ -192,7 +192,7 @@ fn is_const(e: &Bson) -> bool {
         Bson::String(s) => !s.starts_with('$'),
         Bson::Array(a) => a.iter().all(is_const),
         Bson::Document(d) => match d.iter().next() {
-            Some((k, _)) if k.starts_with('$') => k == "$literal" || (k != "$meta" && k != "$rand" && d.len() == 1 && d.values().all(is_const)),
+            Some((k, _)) if k.starts_with('$') => k == "$literal" || (k != "$meta" && k != "$rand" && k != "$function" && d.len() == 1 && d.values().all(is_const)),
             _ => d.values().all(is_const),
         },
         _ => true,

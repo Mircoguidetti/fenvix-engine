@@ -322,7 +322,7 @@ impl Server {
     }
 
     /// `$out` / `$merge`: write the pipeline's output into a collection of the same database.
-    async fn agg_write_stage(&self, db: &str, stage: &Bson, docs: Vec<Document>, tx: &mut Option<Txn>) -> R<()> {
+    pub(crate) async fn agg_write_stage(&self, db: &str, stage: &Bson, docs: Vec<Document>, tx: &mut Option<Txn>) -> R<()> {
         let sd = stage.as_document().unwrap();
         let (name, spec) = sd.iter().next().unwrap();
         let target_of = |v: &Bson| -> R<String> {

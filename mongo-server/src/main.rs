@@ -17,6 +17,7 @@ mod cmd_changes;
 mod coll;
 mod cmd_data;
 mod cmd_index;
+mod cmd_mapreduce;
 mod dbs;
 mod error;
 mod expr;
