@@ -24,6 +24,7 @@ mod coll;
 mod cmd_data;
 mod cmd_index;
 mod cmd_mapreduce;
+mod cs_events;
 mod dbs;
 mod diag;
 mod fields;

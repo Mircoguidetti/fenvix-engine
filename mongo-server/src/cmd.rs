@@ -328,8 +328,8 @@ impl Server {
                 let colls = self.dbs.lock(db).await.collections().await?;
                 let n_colls = colls.len();
                 self.dbs.lock(db).await.drop_database().await?;
-                let mut evs: Vec<crate::changes::EvSpec> = colls.into_iter().map(|c| crate::changes::EvSpec { db: db.to_string(), coll: Some(c), op: "drop", doc_key: None, full: None, desc: None, txn: None }).collect();
-                evs.push(crate::changes::EvSpec { db: db.to_string(), coll: None, op: "dropDatabase", doc_key: None, full: None, desc: None, txn: None });
+                let mut evs: Vec<crate::changes::EvSpec> = colls.into_iter().map(|c| crate::changes::EvSpec { db: db.to_string(), coll: Some(c), op: "drop", doc_key: None, full: None, desc: None, txn: None, ..Default::default() }).collect();
+                evs.push(crate::changes::EvSpec { db: db.to_string(), coll: None, op: "dropDatabase", doc_key: None, full: None, desc: None, txn: None, ..Default::default() });
                 self.dbs.changes.publish(evs);
                 Ok(doc! { "dropped": db, "\u{0}ncolls": n_colls as i32, "ok": 1.0 })
             }
@@ -483,6 +483,12 @@ impl Server {
         }
         raw.extend(crate::collopts::plain_options("create", cmd)?);
         raw.extend(crate::collopts::validation_options("create", cmd)?);
+        if let Some(i) = crate::collopts::images_option("create", cmd)? {
+            // (a disabled option is not kept)
+            if i.get_document("changeStreamPreAndPostImages").ok().and_then(|d| d.get_bool("enabled").ok()) == Some(true) {
+                raw.extend(i);
+            }
+        }
         let raw = crate::collopts::canonical(&raw);
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
@@ -506,6 +512,7 @@ impl Server {
         }
         names.push(coll.to_string());
         let mut ops = vec![Entry::collections_op(&names)?];
+        let options = raw.clone();
         if !raw.is_empty() {
             ops.push(Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?));
             g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
@@ -514,6 +521,9 @@ impl Server {
             ops.push(Op::Put(crate::capped::stat_key(coll), doc! { "docs": 0_i64, "bytes": 0_i64 }.to_vec()?));
         }
         g.apply(ops).await?;
+        let uuid = g.collection_uuid(coll).await?;
+        drop(g);
+        self.publish_create(db, coll, uuid, &options, false);
         Ok(ok())
     }
 

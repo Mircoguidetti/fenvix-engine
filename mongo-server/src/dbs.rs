@@ -692,6 +692,11 @@ impl Entry {
         eprintln!("WARN document failed validation (validationAction warn): _id {:?}", d.get("_id"));
     }
 
+    /// Whether a collection whose options were loaded keeps change-stream pre- and post-images.
+    pub fn images_of(&self, coll: &str) -> bool {
+        self.copts.get(coll).and_then(|o| o.as_ref()).map(|o| o.images).unwrap_or(false)
+    }
+
     /// The capped limits of a collection whose options were loaded.
     pub fn cap_of(&self, coll: &str) -> Option<crate::capped::Cap> {
         self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.cap.clone())

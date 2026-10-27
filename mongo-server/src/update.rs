@@ -1000,6 +1000,8 @@ pub struct Upd {
     forced: std::cell::Cell<bool>,
 }
 
+static PIPELINE_MARK: std::sync::LazyLock<Document> = std::sync::LazyLock::new(|| bson::doc! { "$pipeline": 1 });
+
 enum UpdBody {
     Doc(Document),
     Pipeline(Vec<Bson>),
@@ -1076,7 +1078,8 @@ impl Upd {
     pub fn operators(&self) -> Option<&Document> {
         match &self.body {
             UpdBody::Doc(d) if d.keys().any(|k| k.starts_with('$')) => Some(d),
-            _ => None,
+            UpdBody::Doc(_) => None,
+            _ => Some(&PIPELINE_MARK),
         }
     }
 

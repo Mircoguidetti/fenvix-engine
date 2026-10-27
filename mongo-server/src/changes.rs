@@ -11,13 +11,16 @@ use tokio::sync::Notify;
 
 const RETAINED: usize = 100_000;
 
+/// Set once a stream with `showExpandedEvents` was opened: data events then carry the UUID of their collection from the start.
+pub static WANTS_UUID: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 tokio::task_local! {
     /// The cluster time of the last event that the running command published (its operation time).
     pub static OP_TIME: std::cell::Cell<Option<(u32, u32)>>;
 }
 
 /// What a writer reports.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct EvSpec {
     pub db: String,
     pub coll: Option<String>,
@@ -27,6 +30,28 @@ pub struct EvSpec {
     pub desc: Option<Document>,
     /// Transaction number and session id, for events of a committed transaction.
     pub txn: Option<(i64, Document)>,
+    /// `rename`: the new namespace.
+    pub to: Option<(String, String)>,
+    /// The UUID of the collection (shown by streams with `showExpandedEvents`); looked up when the event is read if not given.
+    pub uuid: Option<Vec<u8>>,
+    /// `operationDescription` of the expanded events (create, createIndexes, dropIndexes, modify, rename).
+    pub op_desc: Option<Document>,
+    /// `stateBeforeChange` of `modify`.
+    pub state_before: Option<Document>,
+    /// The document before and after a change, kept when the collection has `changeStreamPreAndPostImages` enabled.
+    pub pre: Option<Document>,
+    pub post: Option<Document>,
+    /// Whether the collection kept images when the event happened (a missing image is then `null`, or an error for `required`).
+    pub images: bool,
+    /// Only streams with `showExpandedEvents` see the event.
+    pub expanded_only: bool,
+}
+
+impl EvSpec {
+    /// An event of a data change or a DDL operation on `db.coll`.
+    pub fn on(db: &str, coll: &str, op: &'static str) -> EvSpec {
+        EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op, ..Default::default() }
+    }
 }
 
 #[derive(Debug)]
@@ -183,6 +208,22 @@ impl ChangeLog {
 /// `updateDescription` of an operator update, derived from the update spec and the documents before and after.
 pub fn update_description(old: &Document, new: &Document, update: &Document) -> Document {
     use crate::query::path_values;
+    if update.contains_key("$pipeline") {
+        // an aggregation-pipeline update: the fields that differ
+        let mut updated = Document::new();
+        let mut removed: Vec<Bson> = Vec::new();
+        for (k, v) in new {
+            if old.get(k) != Some(v) {
+                updated.insert(k.clone(), v.clone());
+            }
+        }
+        for k in old.keys() {
+            if !new.contains_key(k) {
+                removed.push(Bson::String(k.clone()));
+            }
+        }
+        return doc! { "updatedFields": updated, "removedFields": removed, "truncatedArrays": Vec::<Bson>::new() };
+    }
     let mut updated = Document::new();
     let mut removed: Vec<Bson> = Vec::new();
     let exists = |d: &Document, p: &str| !path_values(d, p).is_empty();

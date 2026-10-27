@@ -457,11 +457,16 @@ impl Server {
         }
         self.check_view_cycle(db, coll, view_on).await?;
         self.check_view_pipeline(db, &ns, &pipeline)?;
-        let mut d = doc! { "_id": ns, "viewOn": view_on, "pipeline": pipeline };
-        if let Some(c) = collation {
+        let mut d = doc! { "_id": ns, "viewOn": view_on, "pipeline": pipeline.clone() };
+        if let Some(c) = collation.clone() {
             d.insert("collation", c);
         }
+        let mut options = doc! { "viewOn": view_on, "pipeline": pipeline.clone() };
+        if let Some(c) = &collation {
+            options.insert("collation", c.clone());
+        }
         self.insert(db, &doc! { "insert": VIEWS, "documents": [d] }, &mut None).await?;
+        self.publish_ddl(crate::changes::EvSpec { op_desc: Some(options), ..crate::changes::EvSpec::on(db, coll, "create") }, true);
         Ok(Some(ok()))
     }
 

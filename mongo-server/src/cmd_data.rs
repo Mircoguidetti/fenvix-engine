@@ -559,6 +559,7 @@ impl Server {
             w.meta.insert(coll.to_string(), indexes.to_vec());
             w.indexes_dirty = false;
         }
+        let created = new_coll.is_some() && coll != "system.views";
         if new_coll.is_some() {
             w.names = new_coll;
         }
@@ -571,9 +572,21 @@ impl Server {
             let ix = if c == coll { indexes.to_vec() } else { g.indexes(&c).await? };
             crate::capped::enforce(g, "", &mut w, &ix, &c).await?;
         }
-        let events = std::mem::take(&mut w.events);
+        let mut events = std::mem::take(&mut w.events);
+        if coll == "system.views" {
+            events.clear();
+        }
         let ops = w.final_ops()?;
         g.apply(ops).await?;
+        if created {
+            // a collection made by a write: its `create` event comes first
+            let uuid = g.collection_uuid(coll).await?;
+            let db = events.first().map(|e| e.db.clone());
+            if let Some(db) = db {
+                let id_index = doc! { "idIndex": { "v": 2, "key": { "_id": 1 }, "name": "_id_" } };
+                events.insert(0, crate::changes::EvSpec { uuid: Some(uuid), op_desc: Some(id_index), expanded_only: true, ..crate::changes::EvSpec::on(&db, coll, "create") });
+            }
+        }
         self.dbs.changes.publish(events);
         Ok(())
     }

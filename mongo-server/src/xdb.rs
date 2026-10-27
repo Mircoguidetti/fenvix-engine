@@ -98,6 +98,8 @@ impl Server {
         if src.indexes(&r.from).await?.iter().any(|i| i.state != State::Ready) {
             return Err(MongoError::new(2, "BadValue", format!("cannot rename {}.{}: an index build is in progress", r.from_db, r.from)));
         }
+        let src_uuid = src.collection_uuid(&r.from).await?;
+        let dropped_uuid = if target_exists { Some(dst.collection_uuid(&r.to).await?) } else { None };
         let (from_prefixes, from_meta) = parts(&r.from);
         let (to_prefixes, to_meta) = parts(&r.to);
         let mut put: Vec<Op> = Vec::new();
@@ -139,6 +141,9 @@ impl Server {
         gone.push(Entry::collections_op(&src_names)?);
         src.apply(gone).await?;
         src.forget_coll_opts(&r.from);
+        drop(g1);
+        drop(g2);
+        self.publish_rename(&r.from_db, &r.from, &r.to_db, &r.to, src_uuid, dropped_uuid);
         Ok(ok())
     }
 }

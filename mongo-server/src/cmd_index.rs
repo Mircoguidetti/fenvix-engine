@@ -349,6 +349,7 @@ impl Server {
             return Ok(ok());
         };
         let n_indexes = 1 + g.indexes(coll).await?.iter().filter(|i| i.state == State::Ready).count() as i32;
+        let uuid = g.collection_uuid(coll).await?;
         let mut ops: Vec<Op> = Vec::new();
         for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll)] {
             for (k, _) in g.scan(&prefix).await? {
@@ -364,7 +365,7 @@ impl Server {
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
         g.set_coll_opts(coll, None);
-        self.dbs.changes.publish(vec![crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "drop", doc_key: None, full: None, desc: None, txn: None }]);
+        self.publish_drop(db, coll, uuid);
         Ok(doc! { "nIndexesWas": n_indexes, "ns": format!("{db}.{coll}"), "ok": 1.0 })
     }
 
@@ -393,6 +394,8 @@ impl Server {
         if from_ix.iter().any(|i| i.state != State::Ready) {
             return Err(MongoError::new(2, "BadValue", format!("cannot rename {db}.{from}: an index build is in progress")));
         }
+        let src_uuid = g.collection_uuid(&from).await?;
+        let dropped_uuid = if target_exists { Some(g.collection_uuid(&to).await?) } else { None };
         let mut ops: Vec<Op> = Vec::new();
         if target_exists {
             for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to), crate::collopts::idc_prefix(&to)] {
@@ -443,6 +446,8 @@ impl Server {
         names.push(to.clone());
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
+        drop(g);
+        self.publish_rename(db, &from, db, &to, src_uuid, dropped_uuid);
         Ok(ok())
     }
 
@@ -755,6 +760,25 @@ impl Server {
                 self.wait_builds(db, coll).await?;
             }
         }
+        if changed {
+            let (uuid, specs) = {
+                let mut g = self.dbs.lock(db).await;
+                let ix = g.indexes(coll).await?;
+                let specs: Vec<Document> = new_names.iter().filter_map(|n| ix.iter().find(|i| i.name == *n)).map(|i| i.spec.clone()).collect();
+                (g.collection_uuid(coll).await?, specs)
+            };
+            if !existed {
+                self.publish_create(db, coll, uuid.clone(), &Document::new(), false);
+            }
+            if building {
+                self.publish_create_indexes(db, coll, uuid, &specs);
+            } else {
+                // an index built on an empty collection is a build of its own
+                for s in &specs {
+                    self.publish_create_indexes(db, coll, uuid.clone(), std::slice::from_ref(s));
+                }
+            }
+        }
         let mut reply = doc! { "numIndexesBefore": before, "numIndexesAfter": after };
         if changed {
             reply.insert("createdCollectionAutomatically", !existed);
@@ -774,6 +798,45 @@ impl Server {
 
     pub(crate) async fn coll_mod(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "collMod")?;
+        // the state the change event reports as "before"
+        let before = {
+            let mut g = self.dbs.lock(db).await;
+            if g.collections().await?.iter().any(|n| n == coll) {
+                let mut opts = doc! { "uuid": Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: g.collection_uuid(coll).await? }) };
+                if let Some(o) = g.coll_opts(coll).await? {
+                    opts.extend(o.raw.iter().filter(|(k, _)| !matches!(k.as_str(), "capped" | "size" | "max" | "collation" | "storageEngine" | "indexOptionDefaults")).map(|(k, v)| (k.clone(), v.clone())));
+                }
+                let uuid = match opts.get("uuid") { Some(Bson::Binary(b)) => b.bytes.clone(), _ => Vec::new() };
+                Some((opts, uuid))
+            } else {
+                None
+            }
+        };
+        let reply = self.coll_mod_inner(db, cmd).await?;
+        if let Some((opts, uuid)) = before {
+            let mut desc = Document::new();
+            for (k, v) in cmd.iter().skip(1) {
+                if !k.starts_with('$') && !matches!(k.as_str(), "lsid" | "txnNumber" | "comment" | "writeConcern" | "readConcern" | "maxTimeMS" | "apiVersion" | "apiStrict" | "apiDeprecationErrors") {
+                    desc.insert(k.clone(), v.clone());
+                }
+            }
+            let mut state = doc! { "collectionOptions": opts };
+            let mut index_opts = Document::new();
+            for (k, v) in &reply {
+                if let Some(f) = k.strip_suffix("_old") {
+                    index_opts.insert(f, v.clone());
+                }
+            }
+            if !index_opts.is_empty() {
+                state.insert("indexOptions", index_opts);
+            }
+            self.publish_ddl(crate::changes::EvSpec { uuid: Some(uuid), op_desc: Some(desc), state_before: Some(state), ..crate::changes::EvSpec::on(db, coll, "modify") }, true);
+        }
+        Ok(reply)
+    }
+
+    async fn coll_mod_inner(&self, db: &str, cmd: &Document) -> R<Document> {
+        let coll = collection_name(cmd, "collMod")?;
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Err(MongoError::namespace_not_found("ns does not exist".to_string()));
@@ -786,6 +849,18 @@ impl Server {
             let opts = g.coll_opts(coll).await?;
             let mut raw = opts.as_ref().map(|o| o.raw.clone()).unwrap_or_default();
             raw.extend(changes);
+            let raw = crate::collopts::canonical(&raw);
+            g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
+            g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
+        }
+        if let Some(images) = crate::collopts::images_option("collMod", cmd)? {
+            let opts = g.coll_opts(coll).await?;
+            let mut raw = opts.as_ref().map(|o| o.raw.clone()).unwrap_or_default();
+            if images.get_document("changeStreamPreAndPostImages").ok().and_then(|d| d.get_bool("enabled").ok()) == Some(true) {
+                raw.extend(images);
+            } else {
+                raw.remove("changeStreamPreAndPostImages");
+            }
             let raw = crate::collopts::canonical(&raw);
             g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
             g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
@@ -839,14 +914,19 @@ impl Server {
             }
             _ => return Err(MongoError::new(14, "TypeMismatch", "BSON field 'dropIndexes.index' is the wrong type, expected string or object".into())),
         };
+        let dropped: Vec<Document> = targets.iter().map(|p| indexes[*p].spec.clone()).collect();
         for p in &targets {
             indexes[*p].state = State::Dropping;
         }
         let ttl_none = targets.is_empty();
+        let uuid = if dropped.is_empty() { Vec::new() } else { g.collection_uuid(coll).await? };
         if !ttl_none {
             g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
         }
         drop(g);
+        for spec in &dropped {
+            self.publish_drop_index(db, coll, uuid.clone(), spec);
+        }
         if !ttl_none {
             let key = format!("{db}\0{coll}");
             if self.builds.lock().unwrap().insert(key.clone()) {

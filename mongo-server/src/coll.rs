@@ -1098,11 +1098,20 @@ impl Writes {
         self.ops.push(Op::Put(k.clone(), bytes));
         self.ov.insert(k, Some(new.clone()));
         let db = ns.split('.').next().unwrap_or("").to_string();
-        let spec = match (old, self.pending_update.take()) {
-            (None, _) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "insert", doc_key: Some(id.clone()), full: Some(new.clone()), desc: None, txn: None },
-            (Some(o), Some(u)) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "update", doc_key: Some(id.clone()), full: None, desc: Some(crate::changes::update_description(o, new, &u)), txn: None },
-            (Some(_), None) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "replace", doc_key: Some(id.clone()), full: Some(new.clone()), desc: None, txn: None },
+        let images = g.images_of(coll);
+        let mut spec = match (old, self.pending_update.take()) {
+            (None, _) => crate::changes::EvSpec { doc_key: Some(id.clone()), full: Some(new.clone()), ..crate::changes::EvSpec::on(&db, coll, "insert") },
+            (Some(o), Some(u)) => crate::changes::EvSpec { doc_key: Some(id.clone()), desc: Some(crate::changes::update_description(o, new, &u)), ..crate::changes::EvSpec::on(&db, coll, "update") },
+            (Some(_), None) => crate::changes::EvSpec { doc_key: Some(id.clone()), full: Some(new.clone()), ..crate::changes::EvSpec::on(&db, coll, "replace") },
         };
+        if crate::changes::WANTS_UUID.load(std::sync::atomic::Ordering::Relaxed) {
+            spec.uuid = Some(g.collection_uuid(coll).await?);
+        }
+        if let (true, Some(o)) = (images, old) {
+            spec.images = true;
+            spec.pre = Some(o.clone());
+            spec.post = Some(new.clone());
+        }
         self.events.push(spec);
         Ok(())
     }
@@ -1160,7 +1169,9 @@ impl Writes {
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);
         if !self.quiet {
-            self.events.push(crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "delete", doc_key: Some(id), full: None, desc: None, txn: None });
+            let images = g.images_of(coll);
+            let uuid = if crate::changes::WANTS_UUID.load(std::sync::atomic::Ordering::Relaxed) { Some(g.collection_uuid(coll).await?) } else { None };
+            self.events.push(crate::changes::EvSpec { doc_key: Some(id), images, uuid, pre: images.then(|| old.clone()), ..crate::changes::EvSpec::on(db, coll, "delete") });
         }
         Ok(())
     }

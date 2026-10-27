@@ -5,7 +5,7 @@
 
 use crate::collation::Collation;
 use crate::layout::escape_collection;
-use bson::{Bson, Document};
+use bson::{doc, Bson, Document};
 use std::sync::Arc;
 
 pub struct CollOpts {
@@ -14,6 +14,8 @@ pub struct CollOpts {
     pub collation: Option<Arc<Collation>>,
     pub cap: Option<crate::capped::Cap>,
     pub validator: Option<crate::validation::Validator>,
+    /// `changeStreamPreAndPostImages: {enabled: true}`: change events keep the document before and after a change.
+    pub images: bool,
 }
 
 impl CollOpts {
@@ -21,7 +23,8 @@ impl CollOpts {
         let collation = raw.get("collation").and_then(|c| crate::collation::parse(c).ok().flatten());
         let cap = crate::capped::Cap::from_options(&raw);
         let validator = crate::validation::Validator::from_options(&raw);
-        Arc::new(CollOpts { raw, collation, cap, validator })
+        let images = raw.get_document("changeStreamPreAndPostImages").ok().and_then(|d| d.get_bool("enabled").ok()).unwrap_or(false);
+        Arc::new(CollOpts { raw, collation, cap, validator, images })
     }
 }
 
@@ -81,6 +84,22 @@ fn enum_error(cmd: &str, field: &str, v: &str) -> crate::error::MongoError {
 
 fn type_error(cmd: &str, field: &str, v: &Bson, expected: &str) -> crate::error::MongoError {
     crate::error::MongoError::new(14, "TypeMismatch", format!("BSON field '{cmd}.{field}' is the wrong type '{}', expected type '{expected}'", crate::update::type_name(v)))
+}
+
+/// The `changeStreamPreAndPostImages` option of a `create` / `collMod` command, checked: `{enabled: <bool>}`.
+pub fn images_option(cmd_name: &str, cmd: &Document) -> Result<Option<Document>, crate::error::MongoError> {
+    let Some(v) = cmd.get("changeStreamPreAndPostImages") else { return Ok(None) };
+    let Bson::Document(d) = v else { return Err(type_error(cmd_name, "changeStreamPreAndPostImages", v, "object")) };
+    for k in d.keys() {
+        if k != "enabled" {
+            return Err(crate::error::MongoError::new(40415, "IDLUnknownField", format!("BSON field '{cmd_name}.changeStreamPreAndPostImages.{k}' is an unknown field.")));
+        }
+    }
+    match d.get("enabled") {
+        None => Err(crate::error::MongoError::new(40414, "IDLFailedToParse", format!("BSON field '{cmd_name}.changeStreamPreAndPostImages.enabled' is missing but a required field"))),
+        Some(Bson::Boolean(b)) => Ok(Some(doc! { "changeStreamPreAndPostImages": { "enabled": *b } })),
+        Some(other) => Err(type_error(cmd_name, "changeStreamPreAndPostImages.enabled", other, "bool")),
+    }
 }
 
 /// The validation options of a `create` / `collMod` command, checked: validator, validationLevel, validationAction.
