@@ -12,6 +12,8 @@ mod tls;
 mod agg_ext;
 mod agg_more;
 mod json_schema;
+mod capped;
+mod capped_cmds;
 mod changes;
 mod cmd;
 mod cmd_changes;
@@ -22,6 +24,9 @@ mod cmd_data;
 mod cmd_index;
 mod cmd_mapreduce;
 mod dbs;
+mod diag;
+mod fields;
+mod find_ext;
 mod dsum;
 mod error;
 mod expr;
@@ -44,6 +49,7 @@ mod wild;
 mod ttl;
 mod txn;
 mod update;
+mod validation;
 mod wire;
 mod xdb;
 
@@ -170,9 +176,11 @@ async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: T
         }
     };
     stream.set_nodelay(true);
+    server.diag.conn_opened(conn_id, stream.peer_addr().ok().map(|a| std::net::SocketAddr::new(a.ip(), a.port())));
     server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject());
     handle_connection_inner(&server, stream, conn_id).await;
     server.auth_connection_closed(conn_id);
+    server.diag.conn_closed(conn_id);
 }
 
 async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn_id: i64) {
@@ -182,6 +190,7 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
     loop {
         match wire::read_request(&mut r).await {
             Ok(Some(req)) => {
+                server.diag.note_seq(conn_id, &req.seq_keys);
                 let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
                 if req.more_to_come {
                     continue;
@@ -201,8 +210,12 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
+    // The futures of the command handlers are large: the workers get stacks that are not the 2 MiB default.
+    tokio::runtime::Builder::new_multi_thread().enable_all().thread_stack_size(64 << 20).build()?.block_on(run())
+}
+
+async fn run() -> Result<()> {
     let args = Args::parse();
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
         "s3" => Arc::new(

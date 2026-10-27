@@ -234,7 +234,7 @@ pub fn matches(doc: &Document, filter: &Document) -> R<bool> {
                 crate::expr::truthy(crate::expr::eval(v, &crate::expr::Scope::new(doc))?.as_ref())
             }
             op if op.starts_with('$') => {
-                return Err(MongoError::new(2, "BadValue", format!("unknown top level operator: {op}")));
+                return Err(MongoError::new(2, "BadValue", format!("unknown top level operator: {op}. If you have a field name that starts with a '$' symbol, consider using $getField or $setField.")));
             }
             path => match_field(doc, path, v)?,
         };
@@ -243,6 +243,41 @@ pub fn matches(doc: &Document, filter: &Document) -> R<bool> {
         }
     }
     Ok(true)
+}
+
+/// Check the operators of a filter without a document to match against: mongod parses a filter before it looks at the
+/// collection, so a bad operator fails even on a collection that does not exist or is empty.
+pub fn probe_filter(filter: &Document) -> R<()> {
+    let empty = Document::new();
+    for (k, v) in filter {
+        match k.as_str() {
+            "$and" | "$or" | "$nor" => {
+                let arr = v.as_array().ok_or_else(|| MongoError::bad_value(format!("{k} must be an array")))?;
+                if arr.is_empty() {
+                    return Err(MongoError::bad_value(format!("{k} must be a nonempty array")));
+                }
+                for sub in arr {
+                    let sub = sub.as_document().ok_or_else(|| MongoError::bad_value(format!("{k} argument's entries must be objects")))?;
+                    probe_filter(sub)?;
+                }
+            }
+            "$where" | "$text" | "$jsonSchema" | "$comment" | "$sampleRate" => {}
+            "$expr" => crate::expr::validate(v)?,
+            _ => match v {
+                Bson::Document(d) if is_operator_doc(d) && !d.keys().any(|o| matches!(o.as_str(), "$near" | "$nearSphere" | "$geoWithin" | "$within" | "$geoIntersects" | "$elemMatch" | "$not" | "$regex" | "$options")) => {
+                    for (op, arg) in d {
+                        matches(&empty, &Document::from_iter([(k.clone(), Bson::Document(Document::from_iter([(op.clone(), arg.clone())])))]))?;
+                    }
+                }
+                _ => {
+                    if k.starts_with('$') {
+                        matches(&empty, &Document::from_iter([(k.clone(), v.clone())]))?;
+                    }
+                }
+            },
+        }
+    }
+    Ok(())
 }
 
 fn is_operator_doc(d: &Document) -> bool {

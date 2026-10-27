@@ -147,7 +147,7 @@ fn with_scope<T>(pooled: bool, f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
             let rt = native(Runtime::new())?;
             rt.set_max_stack_size(512 << 10);
             rt.set_interrupt_handler(Some(Box::new(|| {
-                let over = DEADLINE.with(|d| d.get().map(|t| Instant::now() > t).unwrap_or(false));
+                let over = DEADLINE.with(|d| d.get().map(|t| Instant::now() > t).unwrap_or(false)) || crate::diag::current_killed();
                 if over {
                     TIMED_OUT.with(|t| t.set(true));
                 }

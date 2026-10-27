@@ -22,6 +22,8 @@ pub struct Request {
     pub command: Document,
     /// The sender does not want a reply (unacknowledged write).
     pub more_to_come: bool,
+    /// Fields that arrived as document sequences (`documents`, `updates`, `deletes`).
+    pub seq_keys: Vec<String>,
 }
 
 fn read_i32(b: &[u8], pos: &mut usize) -> Result<i32> {
@@ -96,11 +98,12 @@ fn parse_msg(request_id: i32, body: &[u8]) -> Result<Request> {
         }
     }
     let mut command = command.ok_or_else(|| anyhow!("OP_MSG without a body section"))?;
+    let seq_keys: Vec<String> = sequences.iter().map(|(i, _)| i.clone()).collect();
     for (ident, docs) in sequences {
         command.insert(ident, Bson::Array(docs));
     }
     let db = command.get_str("$db").unwrap_or("admin").to_string();
-    Ok(Request { request_id, legacy: false, db, command, more_to_come: flags & FLAG_MORE_TO_COME != 0 })
+    Ok(Request { request_id, legacy: false, db, command, more_to_come: flags & FLAG_MORE_TO_COME != 0, seq_keys })
 }
 
 fn parse_query(request_id: i32, body: &[u8]) -> Result<Request> {
@@ -114,7 +117,7 @@ fn parse_query(request_id: i32, body: &[u8]) -> Result<Request> {
         command = inner;
     }
     let db = ns.strip_suffix(".$cmd").ok_or_else(|| anyhow!("OP_QUERY on non-command namespace {ns}"))?.to_string();
-    Ok(Request { request_id, legacy: true, db, command, more_to_come: false })
+    Ok(Request { request_id, legacy: true, db, command, more_to_come: false, seq_keys: Vec::new() })
 }
 
 pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &Request, reply: &Document, response_id: i32) -> Result<()> {

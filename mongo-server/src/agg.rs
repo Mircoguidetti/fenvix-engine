@@ -85,9 +85,77 @@ fn parse_accumulators(spec: &Document) -> R<Vec<AccSpec>> {
         if op == "$accumulator" {
             validate_js_accumulator(expr)?;
         }
+        validate_n_spec(op, expr)?;
         out.push(AccSpec { name: name.clone(), op: op.clone(), expr: expr.clone() });
     }
     Ok(out)
+}
+
+/// How a value is spelled in the messages about `n` (`MISSING` for no value).
+fn n_shown(v: Option<&Bson>) -> String {
+    match v {
+        None => "MISSING".into(),
+        Some(Bson::String(s)) => format!("\"{s}\""),
+        Some(Bson::Array(a)) => format!("[{}]", a.iter().map(|x| n_shown(Some(x))).collect::<Vec<_>>().join(",")),
+        Some(Bson::Null) => "null".into(),
+        Some(other) => crate::update::fmt_bson(other),
+    }
+}
+
+/// The checks `$firstN`/`$lastN`/`$maxN`/`$minN` and `$top`/`$bottom`/`$topN`/`$bottomN` make of their specification, with MongoDB's
+/// codes, when the pipeline is parsed (also for a window function).
+pub fn validate_n_spec(op: &str, expr: &Bson) -> R<()> {
+    let n_family = matches!(op, "$firstN" | "$lastN" | "$maxN" | "$minN");
+    let top_family = matches!(op, "$top" | "$bottom" | "$topN" | "$bottomN");
+    if !n_family && !top_family {
+        return Ok(());
+    }
+    let Bson::Document(d) = expr else {
+        return Err(if top_family {
+            MongoError::new(5788001, "Location5788001", format!("specification must be an object; found {op}: {}", n_shown(Some(expr))))
+        } else {
+            MongoError::new(5787900, "Location5787900", format!("specification of {op} must be an object"))
+        });
+    };
+    let has_n = n_family || matches!(op, "$topN" | "$bottomN");
+    for k in d.keys() {
+        let known = if n_family { matches!(k.as_str(), "input" | "n") } else { matches!(k.as_str(), "output" | "sortBy") || (has_n && k == "n") };
+        if !known {
+            return Err(if n_family {
+                MongoError::new(5787901, "Location5787901", format!("Unknown argument for 'n' operator: {k}"))
+            } else {
+                MongoError::new(5788002, "Location5788002", format!("Unknown argument to {op} '{k}'"))
+            });
+        }
+    }
+    if has_n {
+        let Some(n_expr) = d.get("n") else {
+            return Err(if n_family { MongoError::new(5787906, "Location5787906", "Missing value for 'n'".into()) } else { MongoError::new(5788003, "Location5788003", "Missing value for 'n'".into()) });
+        };
+        let n = eval(n_expr, &Document::new())?;
+        match &n {
+            Some(Bson::Int32(i)) if *i > 0 => {}
+            Some(Bson::Int64(i)) if *i > 0 => {}
+            Some(Bson::Int32(i)) => return Err(MongoError::new(5787908, "Location5787908", format!("'n' must be greater than 0, found {i}"))),
+            Some(Bson::Int64(i)) => return Err(MongoError::new(5787908, "Location5787908", format!("'n' must be greater than 0, found {i}"))),
+            Some(Bson::Double(f)) if f.fract() == 0.0 && *f > 0.0 => {}
+            Some(Bson::Double(f)) if f.fract() == 0.0 => return Err(MongoError::new(5787908, "Location5787908", format!("'n' must be greater than 0, found {}", *f as i64))),
+            Some(Bson::Double(f)) => return Err(MongoError::new(5787903, "Location5787903", format!("Value for 'n' must be of integral type, but found {}", crate::update::fmt_bson(&Bson::Double(*f))))),
+            other => return Err(MongoError::new(5787902, "Location5787902", format!("Value for 'n' must be of integral type, but found {}", n_shown(other.as_ref())))),
+        }
+    }
+    if n_family && !d.contains_key("input") {
+        return Err(MongoError::new(5787907, "Location5787907", "Missing value for 'input'".into()));
+    }
+    if top_family {
+        if !d.contains_key("output") {
+            return Err(MongoError::new(5788004, "Location5788004", "Missing value for 'output'".into()));
+        }
+        if !d.contains_key("sortBy") {
+            return Err(MongoError::new(5788005, "Location5788005", "Missing value for 'sortBy'".into()));
+        }
+    }
+    Ok(())
 }
 
 /// `$accumulator` specification errors, with MongoDB's codes.
@@ -160,10 +228,11 @@ fn arg_doc<'a>(spec: &'a AccSpec) -> R<&'a Document> {
 
 /// Run one accumulator over a list of documents (used by window functions).
 pub fn accumulate(op: &str, expr: &Bson, docs: &[Document]) -> R<Bson> {
-    let known = ["$sum", "$avg", "$min", "$max", "$count", "$first", "$last", "$push", "$addToSet", "$mergeObjects", "$stdDevPop", "$stdDevSamp", "$median", "$percentile"];
+    let known = ["$sum", "$avg", "$min", "$max", "$count", "$first", "$last", "$push", "$addToSet", "$mergeObjects", "$stdDevPop", "$stdDevSamp", "$median", "$percentile", "$firstN", "$lastN", "$maxN", "$minN", "$top", "$bottom", "$topN", "$bottomN"];
     if !known.contains(&op) {
         return Err(MongoError::new(15952, "Location15952", format!("unknown window operator '{op}'")));
     }
+    validate_n_spec(op, expr)?;
     let spec = AccSpec { name: String::new(), op: op.to_string(), expr: expr.clone() };
     let mut acc = init(op);
     for d in docs {
@@ -183,8 +252,11 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
         }
         ("$firstN" | "$lastN" | "$maxN" | "$minN", Acc::NList(v)) => {
             let d = arg_doc(spec)?;
-            if let Some(x) = eval(d.get("input").unwrap_or(&Bson::Null), doc)? {
-                v.push(x);
+            // (a value that is missing counts as null in $firstN and $lastN)
+            match eval(d.get("input").unwrap_or(&Bson::Null), doc)? {
+                Some(x) => v.push(x),
+                None if matches!(spec.op.as_str(), "$firstN" | "$lastN") => v.push(Bson::Null),
+                None => {}
             }
             return Ok(());
         }

@@ -669,6 +669,34 @@ impl Entry {
         self.copts.remove(coll);
     }
 
+    /// The UUID of a collection: made (and stored) the first time it is asked for.
+    pub async fn collection_uuid(&mut self, coll: &str) -> Result<Vec<u8>> {
+        let key = crate::collopts::uuid_key(coll);
+        if let Some(v) = self.get_live(&key).await? {
+            return Ok(v.to_vec());
+        }
+        let mut id: [u8; 16] = rand::random();
+        id[6] = (id[6] & 0x0f) | 0x40;
+        id[8] = (id[8] & 0x3f) | 0x80;
+        self.apply(vec![Op::Put(key, id.to_vec())]).await?;
+        Ok(id.to_vec())
+    }
+
+    /// The validator of a collection whose options were loaded.
+    pub fn validator_of(&self, coll: &str) -> Option<crate::validation::Validator> {
+        self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.validator.clone())
+    }
+
+    /// A document was written that does not satisfy a validator whose action is `warn`.
+    pub fn log_validation_warning(&self, d: &Document) {
+        eprintln!("WARN document failed validation (validationAction warn): _id {:?}", d.get("_id"));
+    }
+
+    /// The capped limits of a collection whose options were loaded.
+    pub fn cap_of(&self, coll: &str) -> Option<crate::capped::Cap> {
+        self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.cap.clone())
+    }
+
     pub fn set_coll_opts(&mut self, coll: &str, o: Option<Arc<crate::collopts::CollOpts>>) {
         self.copts.insert(coll.to_string(), o);
     }
@@ -876,6 +904,13 @@ impl ReadView {
         if let Some(g) = &self.g {
             g.ttl_seen.store(true, Relaxed);
         }
+    }
+
+    /// The names of the collections of the database.
+    pub async fn collections(&self) -> Result<Vec<String>> {
+        let Some(v) = self.get(layout::META_COLLECTIONS).await? else { return Ok(vec![]) };
+        let d = Document::from_reader(&v[..])?;
+        Ok(d.get_array("names")?.iter().filter_map(|b| b.as_str().map(str::to_string)).collect())
     }
 
     pub async fn coll_opts(&self, coll: &str) -> Result<Option<Arc<crate::collopts::CollOpts>>> {

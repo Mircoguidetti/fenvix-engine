@@ -1,0 +1,2781 @@
+[
+ {
+  "name": "g10.validator.jsonschema_insert",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+       "a",
+       "b"
+      ],
+      "properties": {
+       "a": {
+        "bsonType": "int",
+        "minimum": 0
+       },
+       "b": {
+        "bsonType": "string",
+        "enum": [
+         "x",
+         "y"
+        ]
+       },
+       "c": {
+        "bsonType": "array",
+        "items": {
+         "bsonType": "int"
+        },
+        "minItems": 1
+       }
+      }
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "s"
+    },
+    "__as": "options"
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "a": -1,
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 3,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 4,
+      "a": 1,
+      "b": "z"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 5,
+      "a": "s",
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 6,
+      "a": 1,
+      "b": "x",
+      "c": [
+       1,
+       "a"
+      ]
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 7,
+      "a": 1,
+      "b": "x",
+      "c": []
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 8
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 9,
+      "a": 1,
+      "b": "x"
+     },
+     {
+      "_id": 10,
+      "a": -5,
+      "b": "y"
+     },
+     {
+      "_id": 11,
+      "a": 3,
+      "b": "q"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 12,
+      "a": -1,
+      "b": "x"
+     },
+     {
+      "_id": 13,
+      "a": 1,
+      "b": "x"
+     },
+     {
+      "_id": 14
+     }
+    ],
+    "ordered": false
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 15,
+      "a": 1,
+      "b": "x"
+     },
+     {
+      "_id": 16
+     },
+     {
+      "_id": 17,
+      "a": 1,
+      "b": "y"
+     }
+    ],
+    "ordered": true
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 18
+     }
+    ],
+    "bypassDocumentValidation": true
+   },
+   {
+    "find": "s",
+    "sort": {
+     "_id": 1
+    },
+    "projection": {
+     "_id": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.jsonschema_keywords",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "$jsonSchema": {
+      "bsonType": "object",
+      "properties": {
+       "s": {
+        "bsonType": "string",
+        "minLength": 2,
+        "maxLength": 4,
+        "pattern": "^[a-z]+$"
+       },
+       "n": {
+        "bsonType": "number",
+        "minimum": 1,
+        "maximum": 10,
+        "exclusiveMaximum": true,
+        "multipleOf": 2
+       },
+       "arr": {
+        "bsonType": "array",
+        "maxItems": 2,
+        "uniqueItems": true
+       },
+       "o": {
+        "bsonType": "object",
+        "required": [
+         "k"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "k": {
+          "bsonType": "int"
+         }
+        }
+       },
+       "u": {
+        "oneOf": [
+         {
+          "bsonType": "string"
+         },
+         {
+          "bsonType": "int"
+         }
+        ]
+       },
+       "w": {
+        "anyOf": [
+         {
+          "bsonType": "string"
+         },
+         {
+          "bsonType": "bool"
+         }
+        ]
+       },
+       "x": {
+        "allOf": [
+         {
+          "bsonType": "int"
+         },
+         {
+          "minimum": 5
+         }
+        ]
+       },
+       "nn": {
+        "not": {
+         "bsonType": "string"
+        }
+       },
+       "t": {
+        "type": "string"
+       },
+       "d": {
+        "bsonType": [
+         "int",
+         "double"
+        ]
+       }
+      },
+      "additionalProperties": true
+     }
+    }
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "s": "a"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "s": "abcde"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 3,
+      "s": "AB"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 4,
+      "n": 0
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 5,
+      "n": 10
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 6,
+      "n": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 7,
+      "arr": [
+       1,
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 8,
+      "arr": [
+       1,
+       2,
+       3
+      ]
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 9,
+      "o": {}
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 10,
+      "o": {
+       "k": 1,
+       "z": 2
+      }
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 11,
+      "u": 1.5
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 12,
+      "u": true
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 13,
+      "w": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 14,
+      "x": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 15,
+      "x": "s"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 16,
+      "nn": "s"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 17,
+      "t": 5
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 18,
+      "d": "s"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 19,
+      "s": "ok",
+      "n": 4,
+      "arr": [
+       1
+      ],
+      "o": {
+       "k": 1
+      },
+      "u": "s",
+      "w": true,
+      "x": 6,
+      "nn": 1,
+      "t": "s",
+      "d": 1.5
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.query_expression",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "a": {
+      "$gt": 0
+     },
+     "$or": [
+      {
+       "b": "x"
+      },
+      {
+       "c": {
+        "$exists": true
+       }
+      }
+     ]
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "s"
+    },
+    "__as": "options"
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "a": 0,
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 3,
+      "a": 1,
+      "b": "y"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 4,
+      "a": 1,
+      "b": "y",
+      "c": 1
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 5,
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 6,
+      "a": "s",
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 7,
+      "a": [
+       1,
+       -1
+      ],
+      "b": "x"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.query_operators",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "$and": [
+      {
+       "n": {
+        "$in": [
+         1,
+         2,
+         3
+        ]
+       }
+      },
+      {
+       "s": {
+        "$regex": "^a"
+       }
+      },
+      {
+       "t": {
+        "$type": "string"
+       }
+      },
+      {
+       "z": {
+        "$not": {
+         "$gt": 5
+        }
+       }
+      },
+      {
+       "q": {
+        "$exists": false
+       }
+      },
+      {
+       "arr": {
+        "$size": 2
+       }
+      },
+      {
+       "m": {
+        "$mod": [
+         2,
+         0
+        ]
+       }
+      },
+      {
+       "e": {
+        "$eq": 1
+       }
+      },
+      {
+       "ne": {
+        "$ne": 2
+       }
+      },
+      {
+       "lt": {
+        "$lt": 5,
+        "$gte": 0
+       }
+      }
+     ]
+    }
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "n": 9,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 3,
+      "n": 1,
+      "s": "ba",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 4,
+      "n": 1,
+      "s": "ab",
+      "t": 5,
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 5,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 9,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 6,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "q": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 7,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 8,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 3,
+      "e": 1,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 9,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 2,
+      "ne": 1,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 10,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 2,
+      "lt": 3
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 11,
+      "n": 1,
+      "s": "ab",
+      "t": "x",
+      "z": 1,
+      "arr": [
+       1,
+       2
+      ],
+      "m": 4,
+      "e": 1,
+      "ne": 1,
+      "lt": 7
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.expr_and_misc",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "$expr": {
+      "$lt": [
+       "$lo",
+       "$hi"
+      ]
+     }
+    }
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "lo": 1,
+      "hi": 2
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "lo": 3,
+      "hi": 2
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validator": {
+     "$nor": [
+      {
+       "x": 1
+      }
+     ]
+    }
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 4,
+      "x": 1
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 5,
+      "x": 2
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validator": {}
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 6,
+      "x": 1
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.level_and_action",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "a": {
+      "$gt": 0
+     }
+    },
+    "validationLevel": "moderate",
+    "validationAction": "warn"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "s"
+    },
+    "__as": "options"
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "a": -1
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "u": {
+       "$set": {
+        "a": -5
+       }
+      }
+     }
+    ]
+   },
+   {
+    "find": "s",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "collMod": "s",
+    "validationAction": "error"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "s"
+    },
+    "__as": "options"
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 3,
+      "a": -1
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$set": {
+        "b": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "u": {
+       "$set": {
+        "b": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validationLevel": "strict"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "s"
+    },
+    "__as": "options"
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$set": {
+        "b": 2
+       }
+      }
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validationLevel": "off"
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 4,
+      "a": -9
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validationLevel": "bogus"
+   },
+   {
+    "collMod": "s",
+    "validationAction": "bogus"
+   },
+   {
+    "collMod": "s",
+    "validator": 5
+   },
+   {
+    "collMod": "s",
+    "validator": {
+     "$where": "1"
+    }
+   },
+   {
+    "create": "s2",
+    "validator": {
+     "a": {
+      "$bogus": 1
+     }
+    }
+   },
+   {
+    "create": "s3",
+    "validationLevel": "strict"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "s"
+    },
+    "__as": "options"
+   },
+   {
+    "create": "s4",
+    "validator": {
+     "$text": {
+      "$search": "x"
+     }
+    }
+   },
+   {
+    "create": "s5",
+    "validator": {
+     "$near": [
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "create": "s6",
+    "validationAction": "warn"
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "s3",
+       "s6"
+      ]
+     }
+    },
+    "__as": "opts36"
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.updates_and_upserts",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "a": {
+      "$gte": 0
+     }
+    }
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$set": {
+        "a": -1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$inc": {
+        "a": -5
+       }
+      }
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "a": -2
+      }
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "u": {
+       "$set": {
+        "a": -1
+       }
+      },
+      "upsert": true
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 3
+      },
+      "u": {
+       "$set": {
+        "a": 3
+       }
+      },
+      "upsert": true
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$set": {
+        "a": -1
+       }
+      }
+     }
+    ],
+    "bypassDocumentValidation": true
+   },
+   {
+    "findAndModify": "s",
+    "query": {
+     "_id": 3
+    },
+    "update": {
+     "$set": {
+      "a": -9
+     }
+    }
+   },
+   {
+    "findAndModify": "s",
+    "query": {
+     "_id": 99
+    },
+    "update": {
+     "$set": {
+      "a": -9
+     }
+    },
+    "upsert": true
+   },
+   {
+    "findAndModify": "s",
+    "query": {
+     "_id": 3
+    },
+    "update": {
+     "$set": {
+      "a": -9
+     }
+    },
+    "bypassDocumentValidation": true,
+    "new": true
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": -100
+       }
+      },
+      "multi": true
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 3
+      },
+      "u": [
+       {
+        "$set": {
+         "a": "s"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 3
+      },
+      "u": {
+       "$unset": {
+        "a": ""
+       }
+      }
+     }
+    ]
+   },
+   {
+    "find": "s",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "aggregate": "s",
+    "pipeline": [
+     {
+      "$merge": {
+       "into": "s",
+       "on": "_id",
+       "whenMatched": "replace"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "s",
+    "pipeline": [
+     {
+      "$project": {
+       "a": -1
+      }
+     },
+     {
+      "$merge": {
+       "into": "s",
+       "on": "_id",
+       "whenMatched": "merge"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "s",
+    "pipeline": [
+     {
+      "$project": {
+       "a": -1,
+       "_id": {
+        "$add": [
+         "$_id",
+         100
+        ]
+       }
+      }
+     },
+     {
+      "$merge": {
+       "into": "s",
+       "on": "_id",
+       "whenNotMatched": "insert"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "s",
+    "pipeline": [
+     {
+      "$project": {
+       "a": -1
+      }
+     },
+     {
+      "$out": "s"
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "find": "s",
+    "sort": {
+     "_id": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.transactions",
+  "mode": "rs",
+  "steps": [
+   {
+    "create": "s",
+    "validator": {
+     "a": {
+      "$gte": 0
+     }
+    }
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "a": -1
+     }
+    ],
+    "lsid": "$LSID",
+    "txnNumber": {
+     "$numberLong": "1"
+    },
+    "autocommit": false,
+    "startTransaction": true
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "a": 1
+     }
+    ],
+    "lsid": "$LSID",
+    "txnNumber": {
+     "$numberLong": "1"
+    },
+    "autocommit": false
+   },
+   {
+    "commitTransaction": 1,
+    "lsid": "$LSID",
+    "txnNumber": {
+     "$numberLong": "1"
+    },
+    "autocommit": false,
+    "__db": "admin"
+   },
+   {
+    "find": "s"
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.index_and_existing_docs",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 1,
+      "a": -1
+     }
+    ]
+   },
+   {
+    "insert": "s",
+    "documents": [
+     {
+      "_id": 2,
+      "a": 2
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validator": {
+     "a": {
+      "$gte": 0
+     }
+    }
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$set": {
+        "b": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "u": {
+       "$set": {
+        "b": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "collMod": "s",
+    "validationLevel": "moderate"
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 1
+      },
+      "u": {
+       "$set": {
+        "b": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "update": "s",
+    "updates": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "u": {
+       "$set": {
+        "a": -3
+       }
+      }
+     }
+    ]
+   },
+   {
+    "find": "s",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "createIndexes": "s",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ]
+   },
+   {
+    "delete": "s",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 0
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "g10.validator.explain_matrix",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "m1",
+    "validator": {
+     "$jsonSchema": {
+      "required": [
+       "a"
+      ],
+      "properties": {
+       "b": {
+        "bsonType": "int"
+       }
+      },
+      "bsonType": "object",
+      "minProperties": 3
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m1",
+    "documents": [
+     {
+      "_id": 1,
+      "b": "x"
+     }
+    ]
+   },
+   {
+    "create": "m2",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "b": {
+        "bsonType": "int"
+       }
+      },
+      "required": [
+       "a"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m2",
+    "documents": [
+     {
+      "_id": 1,
+      "b": "x",
+      "z": 1
+     }
+    ]
+   },
+   {
+    "create": "m3",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "a": {
+        "bsonType": "int"
+       },
+       "b": {
+        "bsonType": "string",
+        "minLength": 3
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m3",
+    "documents": [
+     {
+      "_id": 1,
+      "a": "x",
+      "b": "y"
+     }
+    ]
+   },
+   {
+    "create": "m4",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "a": {
+        "bsonType": "string",
+        "minLength": 3,
+        "pattern": "^z"
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m4",
+    "documents": [
+     {
+      "_id": 1,
+      "a": "ab"
+     }
+    ]
+   },
+   {
+    "create": "m5",
+    "validator": {
+     "a": {
+      "$nin": [
+       1,
+       2
+      ]
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m5",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m6",
+    "validator": {
+     "a": {
+      "$all": [
+       1,
+       2
+      ]
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m6",
+    "documents": [
+     {
+      "_id": 1,
+      "a": [
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "create": "m7",
+    "validator": {
+     "a": {
+      "$elemMatch": {
+       "$gt": 5
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m7",
+    "documents": [
+     {
+      "_id": 1,
+      "a": [
+       1,
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "create": "m8",
+    "validator": {
+     "a.b": {
+      "$gt": 5
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m8",
+    "documents": [
+     {
+      "_id": 1,
+      "a": {
+       "b": 1
+      }
+     }
+    ]
+   },
+   {
+    "insert": "m8",
+    "documents": [
+     {
+      "_id": 2,
+      "a": [
+       {
+        "b": 1
+       },
+       {
+        "b": 2
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "insert": "m8",
+    "documents": [
+     {
+      "_id": 3,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m9",
+    "validator": {
+     "a": {
+      "$gt": 5
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m9",
+    "documents": [
+     {
+      "_id": 1,
+      "a": [
+       1,
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "create": "m10",
+    "validator": {
+     "$or": [
+      {
+       "a": 1
+      },
+      {
+       "a": 2
+      }
+     ]
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m10",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 3
+     }
+    ]
+   },
+   {
+    "create": "m11",
+    "validator": {
+     "a": {
+      "$exists": true
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m11",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ]
+   },
+   {
+    "create": "m12",
+    "validator": {
+     "a": {
+      "$gte": 1
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m12",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ]
+   },
+   {
+    "create": "m13",
+    "validator": {
+     "a": {
+      "$ne": 1
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m13",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m14",
+    "validator": {
+     "a": null
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m14",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m15",
+    "validator": {
+     "a": 5
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m15",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 6
+     }
+    ]
+   },
+   {
+    "insert": "m15",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ]
+   },
+   {
+    "create": "m16",
+    "validator": {
+     "a": {
+      "$in": [
+       1
+      ]
+     },
+     "b": {
+      "$gt": 0
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m16",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 2,
+      "b": -1
+     }
+    ]
+   },
+   {
+    "create": "m17",
+    "validator": {
+     "a": {
+      "$regex": "^a",
+      "$options": "i"
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m17",
+    "documents": [
+     {
+      "_id": 1,
+      "a": "b"
+     }
+    ]
+   },
+   {
+    "create": "m18",
+    "validator": {
+     "a": {
+      "$type": [
+       "string",
+       "int"
+      ]
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m18",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1.5
+     }
+    ]
+   },
+   {
+    "create": "m19",
+    "validator": {
+     "$and": [
+      {
+       "$jsonSchema": {
+        "required": [
+         "x"
+        ]
+       }
+      },
+      {
+       "a": 1
+      }
+     ]
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m19",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 2
+     }
+    ]
+   },
+   {
+    "create": "m20",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "o": {
+        "properties": {
+         "k": {
+          "bsonType": "int"
+         }
+        },
+        "required": [
+         "z"
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m20",
+    "documents": [
+     {
+      "_id": 1,
+      "o": {
+       "k": "s"
+      }
+     }
+    ]
+   },
+   {
+    "create": "m21",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "a": {
+        "items": [
+         {
+          "bsonType": "int"
+         },
+         {
+          "bsonType": "string"
+         }
+        ],
+        "additionalItems": false
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m21",
+    "documents": [
+     {
+      "_id": 1,
+      "a": [
+       "x",
+       1,
+       3
+      ]
+     }
+    ]
+   },
+   {
+    "create": "m22",
+    "validator": {
+     "$jsonSchema": {
+      "dependencies": {
+       "a": [
+        "b"
+       ]
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m22",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m23",
+    "validator": {
+     "$jsonSchema": {
+      "maxProperties": 1
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m23",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m24",
+    "validator": {
+     "$jsonSchema": {
+      "patternProperties": {
+       "^x": {
+        "bsonType": "int"
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m24",
+    "documents": [
+     {
+      "_id": 1,
+      "xa": "s"
+     }
+    ]
+   },
+   {
+    "create": "m25",
+    "validator": {
+     "$jsonSchema": {
+      "additionalProperties": {
+       "bsonType": "int"
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m25",
+    "documents": [
+     {
+      "_id": 1,
+      "a": "s"
+     }
+    ]
+   },
+   {
+    "create": "m26",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "a": {
+        "enum": [
+         1,
+         "x",
+         null
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m26",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 2
+     }
+    ]
+   },
+   {
+    "create": "m27",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "a": {
+        "minimum": 1,
+        "exclusiveMinimum": true
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m27",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m28",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "a": {
+        "oneOf": [
+         {
+          "minimum": 1
+         },
+         {
+          "maximum": 10
+         }
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m28",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 5
+     }
+    ]
+   },
+   {
+    "create": "m29",
+    "validator": {
+     "$jsonSchema": {
+      "bsonType": "array"
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m29",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ]
+   },
+   {
+    "create": "m30",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "v": {
+        "bsonType": "string",
+        "minLength": 5,
+        "maxLength": 1,
+        "pattern": "^z",
+        "not": {
+         "bsonType": "string"
+        },
+        "enum": [
+         "q"
+        ],
+        "allOf": [
+         {
+          "minLength": 9
+         }
+        ],
+        "anyOf": [
+         {
+          "minLength": 9
+         }
+        ],
+        "oneOf": [
+         {
+          "minLength": 9
+         }
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m30",
+    "documents": [
+     {
+      "_id": 1,
+      "v": "abc"
+     }
+    ]
+   },
+   {
+    "create": "m31",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "v": {
+        "multipleOf": 7,
+        "maximum": 0,
+        "minimum": 10,
+        "bsonType": "number",
+        "not": {
+         "bsonType": "number"
+        },
+        "enum": [
+         1000
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m31",
+    "documents": [
+     {
+      "_id": 1,
+      "v": 3
+     }
+    ]
+   },
+   {
+    "create": "m32",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "v": {
+        "bsonType": "array",
+        "minItems": 9,
+        "maxItems": 1,
+        "uniqueItems": true,
+        "items": {
+         "bsonType": "string"
+        },
+        "enum": [
+         [
+          0
+         ]
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m32",
+    "documents": [
+     {
+      "_id": 1,
+      "v": [
+       1,
+       1,
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "create": "m33",
+    "validator": {
+     "$jsonSchema": {
+      "required": [
+       "q"
+      ],
+      "minProperties": 9,
+      "maxProperties": 0,
+      "properties": {
+       "a": {
+        "bsonType": "string"
+       }
+      },
+      "additionalProperties": false,
+      "patternProperties": {
+       "^a": {
+        "bsonType": "string"
+       }
+      },
+      "dependencies": {
+       "a": [
+        "q"
+       ]
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m33",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 5,
+      "b": 2
+     }
+    ]
+   },
+   {
+    "create": "m34",
+    "validator": {
+     "$jsonSchema": {
+      "properties": {
+       "v": {
+        "bsonType": "string",
+        "minimum": 10,
+        "enum": [
+         "a"
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m34",
+    "documents": [
+     {
+      "_id": 1,
+      "v": 3
+     }
+    ]
+   },
+   {
+    "create": "m35",
+    "validator": {
+     "$jsonSchema": {
+      "bsonType": "object",
+      "properties": {
+       "a": {
+        "bsonType": [
+         "int",
+         "double"
+        ]
+       }
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m35",
+    "documents": [
+     {
+      "_id": 1,
+      "a": "s"
+     }
+    ]
+   },
+   {
+    "create": "m36",
+    "validator": {
+     "$nor": [
+      {
+       "a": 1
+      },
+      {
+       "b": 2
+      }
+     ]
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m36",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": 2
+     }
+    ]
+   },
+   {
+    "create": "m37",
+    "validator": {
+     "$and": [
+      {
+       "$or": [
+        {
+         "a": 1
+        },
+        {
+         "b": 2
+        }
+       ]
+      },
+      {
+       "c": {
+        "$not": {
+         "$lt": 5
+        }
+       }
+      }
+     ]
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m37",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 3,
+      "b": 3,
+      "c": 1
+     }
+    ]
+   },
+   {
+    "create": "m38",
+    "validator": {
+     "a": {
+      "$not": {
+       "$regex": "^x"
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m38",
+    "documents": [
+     {
+      "_id": 1,
+      "a": "xy"
+     }
+    ]
+   },
+   {
+    "create": "m39",
+    "validator": {
+     "a": {
+      "$exists": false
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m39",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m40",
+    "validator": {
+     "a": {
+      "$size": 1
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m40",
+    "documents": [
+     {
+      "_id": 1,
+      "a": [
+       1,
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "insert": "m40",
+    "documents": [
+     {
+      "_id": 2,
+      "a": 5
+     }
+    ]
+   },
+   {
+    "create": "m41",
+    "validator": {
+     "d": {
+      "$lt": {
+       "$date": "2020-01-01T00:00:00Z"
+      }
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m41",
+    "documents": [
+     {
+      "_id": 1,
+      "d": {
+       "$date": "2021-01-01T00:00:00Z"
+      }
+     }
+    ]
+   },
+   {
+    "create": "m42",
+    "validator": {
+     "a": {
+      "$bitsAllSet": 3
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m42",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m43",
+    "validator": {
+     "a": {
+      "$gt": 1,
+      "$lt": 5
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m43",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 9
+     }
+    ]
+   },
+   {
+    "create": "m44",
+    "validator": {
+     "$expr": {
+      "$gt": [
+       "$a",
+       5
+      ]
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m44",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     }
+    ]
+   },
+   {
+    "create": "m45",
+    "validator": {
+     "a": {
+      "$all": [
+       {
+        "$elemMatch": {
+         "b": 1
+        }
+       }
+      ]
+     }
+    },
+    "__skip": true
+   },
+   {
+    "insert": "m45",
+    "documents": [
+     {
+      "_id": 1,
+      "a": [
+       {
+        "b": 2
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]

@@ -51,6 +51,23 @@ pub struct TxnCtx {
     pub start: bool,
 }
 
+/// mongod's text for a transaction number that matches no transaction of the session.
+fn given_msg(tc: &TxnCtx, active: i64) -> String {
+    let uuid = match tc.lsid_doc.get("id") {
+        Some(Bson::Binary(b)) if b.bytes.len() == 16 => {
+            let h: String = b.bytes.iter().map(|x| format!("{x:02x}")).collect();
+            format!("{}-{}-{}-{}-{}", &h[..8], &h[8..12], &h[12..16], &h[16..20], &h[20..])
+        }
+        _ => String::new(),
+    };
+    let uid = {
+        use base64::Engine;
+        use sha2::Digest;
+        base64::engine::general_purpose::STANDARD.encode(sha2::Sha256::digest(b""))
+    };
+    format!("Given transaction number {} on session {uuid} - {uid} -  -  using txnRetryCounter 0 does not match any in-progress transactions. The active transaction number is {active}", tc.number)
+}
+
 fn hex(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect()
 }
@@ -101,20 +118,20 @@ impl Server {
         if !tc.start {
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is -1", tc.number)));
+                return Err(no_such(given_msg(&tc, -1)));
             };
             if s.number > tc.number {
                 return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
             }
             if s.number != tc.number {
-                return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is {}", tc.number, s.number)));
+                return Err(no_such(given_msg(&tc, s.number)));
             }
             return match std::mem::replace(&mut s.state, State::Active(None)) {
                 State::Active(Some(t)) => Ok(t),
                 State::Active(None) => Err(MongoError::new(117, "ConflictingOperationInProgress", "Another operation of this transaction is in progress".into())),
                 State::Aborted => {
                     s.state = State::Aborted;
-                    Err(no_such(format!("Transaction {} has been aborted.", tc.number)))
+                    Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)))
                 }
                 State::Committed => {
                     s.state = State::Committed;
@@ -189,13 +206,13 @@ impl Server {
         let txn = {
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is -1", tc.number)));
+                return Err(no_such(given_msg(&tc, -1)));
             };
             if s.number > tc.number {
                 return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
             }
             if s.number != tc.number {
-                return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is {}", tc.number, s.number)));
+                return Err(no_such(given_msg(&tc, s.number)));
             }
             match std::mem::replace(&mut s.state, State::Active(None)) {
                 State::Active(Some(t)) => t,
@@ -206,7 +223,7 @@ impl Server {
                 }
                 State::Aborted => {
                     s.state = State::Aborted;
-                    return Err(no_such(format!("Transaction {} has been aborted.", tc.number)));
+                    return Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)));
                 }
             }
         };
@@ -246,13 +263,13 @@ impl Server {
         let taken = {
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is -1", tc.number)));
+                return Err(no_such(given_msg(&tc, -1)));
             };
             if s.number > tc.number {
                 return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
             }
             if s.number != tc.number {
-                return Err(no_such(format!("Given transaction number {} does not match any in-progress transactions. The active transaction number is {}", tc.number, s.number)));
+                return Err(no_such(given_msg(&tc, s.number)));
             }
             match std::mem::replace(&mut s.state, State::Aborted) {
                 State::Active(Some(t)) => Some(t),
@@ -265,7 +282,7 @@ impl Server {
                     return Err(MongoError::new(256, "TransactionCommitted", format!("Transaction {} has been committed.", tc.number)));
                 }
                 State::Aborted => {
-                    return Err(no_such(format!("Transaction {} has been aborted.", tc.number)));
+                    return Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)));
                 }
             }
         };

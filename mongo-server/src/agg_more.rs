@@ -1027,6 +1027,11 @@ pub fn set_window_fields(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> 
                 }
                 Some(_) => return Err(err(9, "window must be an object")),
             };
+            if let Some((kind, ..)) = &window_kind {
+                if kind == "range" && sort.as_ref().map(|s| s.len()).unwrap_or(0) != 1 {
+                    return Err(err(5339902, "Range-based bounds require sortBy a single field"));
+                }
+            }
             for i in 0..n {
                 let (lo, hi) = window_range(&part, i, &window_kind, &sort)?;
                 let members: Vec<&Document> = part[lo..hi.max(lo)].iter().collect();

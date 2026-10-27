@@ -358,6 +358,8 @@ impl Server {
         ops.push(Op::Delete(index_key(coll)));
         ops.push(Op::Delete(crate::natural::meta_key(coll)));
         ops.push(Op::Delete(crate::collopts::meta_key(coll)));
+        ops.push(Op::Delete(crate::collopts::uuid_key(coll)));
+        ops.push(Op::Delete(crate::capped::stat_key(coll)));
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
@@ -400,6 +402,8 @@ impl Server {
             ops.push(Op::Delete(index_key(&to)));
             ops.push(Op::Delete(crate::natural::meta_key(&to)));
             ops.push(Op::Delete(crate::collopts::meta_key(&to)));
+            ops.push(Op::Delete(crate::collopts::uuid_key(&to)));
+            ops.push(Op::Delete(crate::capped::stat_key(&to)));
         }
         for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to)), (crate::collopts::idc_prefix(&from), crate::collopts::idc_prefix(&to))] {
             for (k, v) in g.scan(&old_prefix).await? {
@@ -423,6 +427,14 @@ impl Server {
         if let Some(v) = g.get(&crate::collopts::meta_key(&from)).await? {
             ops.push(Op::Put(crate::collopts::meta_key(&to), v.to_vec()));
             ops.push(Op::Delete(crate::collopts::meta_key(&from)));
+        }
+        if let Some(v) = g.get(&crate::collopts::uuid_key(&from)).await? {
+            ops.push(Op::Put(crate::collopts::uuid_key(&to), v.to_vec()));
+            ops.push(Op::Delete(crate::collopts::uuid_key(&from)));
+        }
+        if let Some(v) = g.get(&crate::capped::stat_key(&from)).await? {
+            ops.push(Op::Put(crate::capped::stat_key(&to), v.to_vec()));
+            ops.push(Op::Delete(crate::capped::stat_key(&from)));
         }
         g.forget_coll_opts(&from);
         g.forget_coll_opts(&to);
@@ -454,7 +466,7 @@ impl Server {
 
     pub(crate) async fn create_indexes(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "createIndexes")?;
-        let specs = cmd.get_array("indexes").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'createIndexes.indexes' is missing but a required field".into()))?;
+        let specs = cmd.get_array("indexes").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'createIndexes.indexes' is missing but a required field".into()))?;
         let ns = format!("{db}.{coll}");
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
@@ -475,7 +487,7 @@ impl Server {
         let mut skipped_existing = false;
         for spec in specs {
             let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "Each element of the 'indexes' array must be an object".into()))?;
-            let key = spec.get_document("key").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'indexes.key' is missing but a required field".into()))?;
+            let key = spec.get_document("key").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'indexes.key' is missing but a required field".into()))?;
             if key.is_empty() {
                 return Err(MongoError::new(67, "CannotCreateIndex", "Index keys cannot be empty.".into()));
             }
@@ -537,6 +549,9 @@ impl Server {
                     }
                 }
             }
+            if idx.get("expireAfterSeconds").is_some() && g.cap_of(coll).is_some() {
+                return Err(MongoError::new(67, "CannotCreateIndex", "Cannot create a TTL index on a capped collection".into()));
+            }
             if idx.get("expireAfterSeconds").is_some() && key.len() > 1 {
                 return Err(MongoError::new(67, "CannotCreateIndex", format!("TTL indexes are single-field indexes, compound indexes do not support TTL. Index spec: {}", fmt_doc(&idx))));
             }
@@ -556,7 +571,16 @@ impl Server {
                 };
                 validate_partial(pd)?;
                 if bool_arg(idx.get("sparse"), false) {
-                    return Err(MongoError::new(67, "CannotCreateIndex", "cannot mix \"partialFilterExpression\" and \"sparse\" options".into()));
+                    let mut shown = Document::new();
+                    for (k, v) in idx.iter().filter(|(k, _)| !matches!(k.as_str(), "v" | "key")) {
+                        shown.insert(k.clone(), v.clone());
+                    }
+                    for k in ["key", "v"] {
+                        if let Some(v) = idx.get(k) {
+                            shown.insert(k, v.clone());
+                        }
+                    }
+                    return Err(MongoError::new(67, "CannotCreateIndex", format!("Error in specification {} :: caused by :: cannot mix \"partialFilterExpression\" and \"sparse\" options", fmt_doc(&shown))));
                 }
             }
             // The collation: the one named, or the default of the collection; it ends the specification.
@@ -603,11 +627,22 @@ impl Server {
                 }
                 return Err(MongoError::new(86, "IndexKeySpecsConflict", format!("An existing index has the same name as the requested index. When index names are not specified, they are auto generated and can cause conflicts. Please refer to our documentation. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
             }
-            if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| k == key).unwrap_or(false) && crate::collation::same(&i.collation, &index_collation)) {
-                if same_options(&ex.spec, &idx) {
+            // Two indexes are the same index when their key pattern and the options that decide which entries they hold agree:
+            // sparse, unique, partialFilterExpression, collation, wildcardProjection.
+            let identity = |d: &Document| -> Vec<(String, String)> {
+                ["sparse", "unique", "partialFilterExpression", "wildcardProjection"]
+                    .iter()
+                    .filter_map(|f| d.get(*f).map(|v| (f.to_string(), v.clone())))
+                    .filter(|(f, v)| !(matches!(f.as_str(), "sparse" | "unique") && !bool_arg(Some(v), false)))
+                    .map(|(f, v)| (f, crate::update::fmt_bson(&v)))
+                    .collect()
+            };
+            if let Some(ex) = indexes.iter().find(|i| i.spec.get_document("key").map(|k| k == key).unwrap_or(false) && crate::collation::same(&i.collation, &index_collation) && identity(&i.spec) == identity(&idx)) {
+                let drop_hidden = |d: &Document| { let mut d = d.clone(); d.remove("hidden"); d };
+                if same_options(&drop_hidden(&ex.spec), &drop_hidden(&idx)) {
                     return Err(MongoError::new(85, "IndexOptionsConflict", format!("Index already exists with a different name: {}", ex.name)));
                 }
-                return Err(MongoError::new(85, "IndexOptionsConflict", format!("Index already exists with a different name: {}", ex.name)));
+                return Err(MongoError::new(85, "IndexOptionsConflict", format!("An equivalent index already exists with a different name and options. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
             }
             let mut def = wanted;
             if has_docs && !def.special {
@@ -657,7 +692,10 @@ impl Server {
                 self.wait_builds(db, coll).await?;
             }
         }
-        let mut reply = doc! { "createdCollectionAutomatically": !existed, "numIndexesBefore": before, "numIndexesAfter": after };
+        let mut reply = doc! { "numIndexesBefore": before, "numIndexesAfter": after };
+        if changed {
+            reply.insert("createdCollectionAutomatically", !existed);
+        }
         if !changed {
             reply.insert("note", "all indexes already exist");
         } else if skipped_existing {
@@ -676,6 +714,18 @@ impl Server {
         }
         if cmd.contains_key("collation") {
             return Err(MongoError::new(40415, "IDLUnknownField", "BSON field 'collMod.collation' is an unknown field.".into()));
+        }
+        if cmd.contains_key("validator") || cmd.contains_key("validationLevel") || cmd.contains_key("validationAction") {
+            let changes = crate::collopts::validation_options("collMod", cmd)?;
+            let opts = g.coll_opts(coll).await?;
+            let mut raw = opts.as_ref().map(|o| o.raw.clone()).unwrap_or_default();
+            raw.extend(changes);
+            let raw = crate::collopts::canonical(&raw);
+            g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
+            g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
+        }
+        if cmd.contains_key("cappedSize") || cmd.contains_key("cappedMax") {
+            self.coll_mod_capped(&mut g, coll, cmd).await?;
         }
         let Some(Bson::Document(spec)) = cmd.get("index") else { return Ok(ok()) };
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
@@ -707,7 +757,7 @@ impl Server {
 
     pub(crate) async fn drop_indexes(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "dropIndexes")?;
-        let which = cmd.get("index").ok_or_else(|| MongoError::new(40414, "Location40414", "BSON field 'dropIndexes.index' is missing but a required field".into()))?;
+        let which = cmd.get("index").ok_or_else(|| MongoError::new(40414, "IDLFailedToParse", "BSON field 'dropIndexes.index' is missing but a required field".into()))?;
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Err(MongoError::namespace_not_found(format!("ns not found {db}.{coll}")));
@@ -776,11 +826,12 @@ impl Server {
     // ---- explain ---------------------------------------------------------------------------
 
     pub(crate) async fn explain(&self, db: &str, cmd: &Document) -> R<Document> {
-        let inner = cmd.get_document("explain").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'explain.explain' is missing but a required field".into()))?;
+        let inner = cmd.get_document("explain").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'explain.explain' is missing but a required field".into()))?;
         let verbosity = cmd.get_str("verbosity").unwrap_or("allPlansExecution").to_string();
         let name = inner.keys().next().cloned().unwrap_or_default();
         let coll = collection_name(inner, &name)?;
         let ns = format!("{db}.{coll}");
+        let mut absorbed = false;
         let (filter, sort, limit, skip, hint_b, projection) = match name.as_str() {
             "find" => (
                 inner.get_document("filter").cloned().unwrap_or_default(),
@@ -792,8 +843,24 @@ impl Server {
             ),
             "count" | "distinct" => (inner.get_document("query").cloned().unwrap_or_default(), vec![], int_arg(inner.get("limit")).unwrap_or(0), int_arg(inner.get("skip")).unwrap_or(0), inner.get("hint").cloned(), None),
             "aggregate" => {
-                let first = inner.get_array("pipeline").ok().and_then(|p| p.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("$match").ok()).cloned()).unwrap_or_default();
-                (first, vec![], 0, 0, inner.get("hint").cloned(), None)
+                // the leading $match / $sort / $skip / $limit stages become the query plan
+                let stages = inner.get_array("pipeline").cloned().unwrap_or_default();
+                let mut it = stages.iter().filter_map(|s| s.as_document()).peekable();
+                let first = if matches!(it.peek(), Some(d) if d.contains_key("$match")) { it.next().and_then(|d| d.get_document("$match").ok().cloned()).unwrap_or_default() } else { Document::new() };
+                let mut sort = vec![];
+                if matches!(it.peek(), Some(d) if d.contains_key("$sort")) {
+                    sort = it.next().and_then(|d| d.get_document("$sort").ok()).map(parse_sort).transpose()?.unwrap_or_default();
+                }
+                let mut skip = 0;
+                if matches!(it.peek(), Some(d) if d.contains_key("$skip")) {
+                    skip = int_arg(it.next().and_then(|d| d.get("$skip"))).unwrap_or(0);
+                }
+                let mut limit = 0;
+                if matches!(it.peek(), Some(d) if d.contains_key("$limit")) {
+                    limit = int_arg(it.next().and_then(|d| d.get("$limit"))).unwrap_or(0);
+                }
+                absorbed = it.peek().is_none();
+                (first, sort, limit, skip, inner.get("hint").cloned(), None)
             }
             "update" | "delete" | "findAndModify" => {
                 let q = inner.get_array("updates").or_else(|_| inner.get_array("deletes")).ok().and_then(|a| a.first().and_then(|s| s.as_document()).and_then(|s| s.get_document("q").ok()).cloned()).or_else(|| inner.get_document("query").ok().cloned()).unwrap_or_default();
@@ -802,6 +869,7 @@ impl Server {
             other => return Err(MongoError::command_not_found(other)),
         };
         let mut g = self.dbs.lock(db).await;
+        let exists = g.collections().await?.iter().any(|n| n == coll);
         let indexes = self.load_indexes(&mut g, db, coll).await?;
         let hint = resolve_hint(&indexes, hint_b.as_ref())?;
         let specs = index::ttl_specs(&indexes);
@@ -841,6 +909,24 @@ impl Server {
             }
             qp = with;
         }
+        if !exists {
+            // nothing to plan: mongod answers EOF and has no query hash
+            qp.remove("queryHash");
+            qp.remove("planCacheKey");
+            qp.insert("winningPlan", doc! { "stage": "EOF" });
+        }
+        if name == "aggregate" {
+            let mut with = Document::new();
+            for (k, v) in qp {
+                let after_key = k == "planCacheKey" || (k == "parsedQuery" && !exists);
+                with.insert(k, v);
+                if after_key {
+                    with.insert("optimizationTimeMillis", 0);
+                    with.insert("optimizedPipeline", absorbed);
+                }
+            }
+            qp = with;
+        }
         let mut out = doc! { "explainVersion": "1", "queryPlanner": qp };
         if let Some((n, stats)) = exec {
             out.insert(
@@ -856,7 +942,7 @@ impl Server {
             );
         }
         out.insert("command", Bson::Document(inner.clone()));
-        out.insert("serverInfo", doc! { "host": "mongo-server", "port": 27017, "version": "7.0.14", "gitVersion": "none" });
+        out.insert("serverInfo", doc! { "host": self.host_port_name(), "port": self.listen_port(), "version": crate::diag::VERSION, "gitVersion": "none" });
         out.insert("serverParameters", doc! { "internalQueryFacetBufferSizeBytes": 104857600_i32 });
         out.insert("ok", 1.0);
         Ok(out)
@@ -941,7 +1027,7 @@ impl Server {
     pub(crate) async fn storage_stats(&self, g: &mut Entry, db: &str, coll: &str) -> R<Document> {
         let indexes = g.indexes(coll).await?;
         let rows = g.scan(&doc_prefix(coll)).await?;
-        let size: usize = rows.iter().map(|(_, v)| v.len()).sum();
+        let size: usize = rows.iter().map(|(_, v)| crate::natural::bson_part(v).len()).sum();
         let mut sizes = doc! { "_id_": 0_i64 };
         let mut total = 0_i64;
         let mut n_idx = 1;
@@ -957,13 +1043,21 @@ impl Server {
         total += id_bytes as i64;
         let count = rows.len() as i64;
         let _ = db;
-        Ok(doc! {
-            "size": size as i64,
+        let cap = g.coll_opts(coll).await?.and_then(|o| o.cap.clone());
+        let mut out = doc! {
+            "size": crate::capped::n32(size as i64),
             "count": rows.len() as i32,
-            "avgObjSize": if count > 0 { size as i64 / count } else { 0 },
+            "avgObjSize": crate::capped::n32(if count > 0 { size as i64 / count } else { 0 }),
             "storageSize": size as i64,
             "freeStorageSize": 0_i64,
-            "capped": false,
+            "capped": cap.is_some(),
+        };
+        if let Some(c) = &cap {
+            out.insert("max", crate::capped::n32(c.max.unwrap_or(0)));
+            out.insert("maxSize", crate::capped::n32(c.size));
+            out.insert("storageSize", ((c.size + 4095) / 4096 * 4096).max(4096));
+        }
+        out.extend(doc! {
             "nindexes": n_idx,
             "indexDetails": {},
             "indexBuilds": [],
@@ -971,7 +1065,8 @@ impl Server {
             "totalSize": size as i64 + total,
             "indexSizes": sizes,
             "scaleFactor": 1,
-        })
+        });
+        Ok(out)
     }
 
     pub(crate) async fn coll_stats(&self, db: &str, cmd: &Document) -> R<Document> {

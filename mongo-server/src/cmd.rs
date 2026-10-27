@@ -31,11 +31,14 @@ pub struct Server {
     next_conn: AtomicI64,
     pub(crate) auth: crate::auth::AuthState,
     pub(crate) retry: crate::retry::Registry,
+    pub(crate) diag: crate::diag::Diag,
 }
 
 struct Cursor {
     ns: String,
     docs: VecDeque<Document>,
+    /// A tailable cursor: where it stands in its capped collection.
+    tail: Option<crate::capped::Tail>,
 }
 
 pub(crate) fn ok() -> Document {
@@ -83,14 +86,14 @@ pub(crate) fn write_error(index: usize, code: i32, msg: String) -> Document {
 
 impl Server {
     pub fn new(dbs: Arc<Dbs>, log_commands: bool) -> Arc<Self> {
-        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1), auth: Default::default(), retry: Default::default() })
+        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1), auth: Default::default(), retry: Default::default(), diag: Default::default() })
     }
 
     pub fn new_connection_id(&self) -> i64 {
         self.next_conn.fetch_add(1, Relaxed)
     }
 
-    pub async fn handle(&self, db: &str, cmd: Document, conn_id: i64) -> Document {
+    pub async fn handle(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
         let Some(name) = cmd.keys().next().cloned() else {
             return MongoError::new(59, "CommandNotFound", "Empty command document".into()).to_reply();
         };
@@ -98,7 +101,19 @@ impl Server {
             eprintln!("CMD {name} db={db}");
         }
         let t0 = std::time::Instant::now();
-        let r = crate::js::scoped(db, self.dispatch(db, &name, &cmd, conn_id)).await;
+        let (opid, kill) = self.diag.begin(conn_id, db, &name, &cmd);
+        let killable = crate::diag::killable(&name);
+        let r = if crate::diag::needs_js(&name, &cmd) {
+            // a command that runs JavaScript blocks its thread: all of them run on one thread of their own (the engines and their
+            // per-database scopes are per thread), the connections that run no JavaScript go on
+            let (me, db2, name2, cmd2) = (Arc::clone(self), db.to_string(), name.clone(), cmd.clone());
+            crate::diag::run_js(async move { crate::diag::as_op(opid, me.diag.guarded(kill, killable, crate::js::scoped(&db2, me.dispatch(&db2, &name2, &cmd2, conn_id)))).await }).await
+        } else {
+            crate::diag::as_op(opid, self.diag.guarded(kill, killable, crate::js::scoped(db, self.dispatch(db, &name, &cmd, conn_id)))).await
+        };
+        let micros = t0.elapsed().as_micros() as i64;
+        self.diag.end(opid, db, &name, &cmd, &r, micros);
+        self.profile_record(db, &name, &cmd, &r, micros, conn_id).await;
         let ms = t0.elapsed().as_millis();
         if ms >= 500 {
             eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
@@ -111,9 +126,35 @@ impl Server {
 
     async fn dispatch(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         self.authorize(conn_id, db, name, cmd).await?;
+        if let Some(r) = self.diag_command(db, name, cmd).await {
+            return r;
+        }
+        // the `let` option: variables every expression of the command can read
+        let vars = match (name, cmd.get("let")) {
+            ("find" | "aggregate" | "update" | "delete" | "findAndModify" | "findandmodify", Some(l)) => {
+                let label = match name {
+                    "find" => "FindCommandRequest",
+                    "findAndModify" | "findandmodify" => "findAndModify",
+                    other => other,
+                };
+                crate::expr::parse_let(label, l)?
+            }
+            _ => Vec::new(),
+        };
+        if vars.is_empty() {
+            self.dispatch_commands(db, name, cmd, conn_id).await
+        } else {
+            crate::expr::CMD_LET.scope(vars, self.dispatch_commands(db, name, cmd, conn_id)).await
+        }
+    }
+
+    async fn dispatch_commands(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         // Commands that do not touch a tenant.
         match name {
             "hello" | "isMaster" | "ismaster" => {
+                if let Ok(md) = cmd.get_document("client") {
+                    self.diag.set_metadata(conn_id, md.clone());
+                }
                 let mut d = self.hello(name, conn_id);
                 self.auth_hello(cmd, &mut d).await?;
                 return Ok(d);
@@ -159,6 +200,7 @@ impl Server {
         if !valid_db_name(db) {
             return Err(MongoError::new(73, "InvalidNamespace", format!("Invalid database name: '{db}'")));
         }
+        crate::fields::check(name, cmd)?;
         self.check_txn_number(name, cmd)?;
         if let Some(tc) = crate::txn::parse(cmd)? {
             return self.run_in_txn(db, name, cmd, &tc).await;
@@ -204,6 +246,8 @@ impl Server {
             "create" => self.create(db, cmd).await,
             "dropIndexes" => self.drop_indexes(db, cmd).await,
             "collMod" => self.coll_mod(db, cmd).await,
+            "convertToCapped" => self.convert_to_capped(db, cmd).await,
+            "cloneCollectionAsCapped" => self.clone_as_capped(db, cmd).await,
             "explain" => self.explain(db, cmd).await,
             "validate" => self.validate(db, cmd).await,
             "collStats" => self.coll_stats(db, cmd).await,
@@ -226,6 +270,14 @@ impl Server {
                 Err(MongoError::command_not_found(other))
             }
         }
+    }
+
+    pub(crate) fn cursors_open(&self) -> usize {
+        self.cursors.lock().unwrap().len() + self.change_cursors.lock().unwrap().len()
+    }
+
+    pub(crate) fn hello_doc(&self) -> Document {
+        self.hello("hello", 0)
     }
 
     fn hello(&self, name: &str, conn_id: i64) -> Document {
@@ -283,12 +335,14 @@ impl Server {
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         names.sort();
-        let mut collations: HashMap<String, Document> = HashMap::new();
+        let mut options_of: HashMap<String, Document> = HashMap::new();
+        let mut uuids: HashMap<String, Vec<u8>> = HashMap::new();
         if !name_only {
             for n in &names {
-                if let Some(c) = g.coll_opts(n).await?.and_then(|o| o.collation.clone()) {
-                    collations.insert(n.clone(), c.to_doc());
+                if let Some(o) = g.coll_opts(n).await? {
+                    options_of.insert(n.clone(), o.raw.clone());
                 }
+                uuids.insert(n.clone(), g.collection_uuid(n).await?);
             }
         }
         drop(g);
@@ -297,13 +351,13 @@ impl Server {
             let d = if name_only {
                 doc! { "name": n, "type": "collection" }
             } else {
-                let mut options = Document::new();
+                let options = options_of.get(&n).cloned().unwrap_or_default();
                 let mut id_index = doc! { "v": 2, "key": { "_id": 1 }, "name": "_id_" };
-                if let Some(c) = collations.get(&n) {
-                    options.insert("collation", c.clone());
+                if let Some(c) = options.get("collation") {
                     id_index.insert("collation", c.clone());
                 }
-                doc! { "name": n, "type": "collection", "options": options, "info": { "readOnly": false }, "idIndex": id_index }
+                let uuid = Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: uuids.get(&n).cloned().unwrap_or_default() });
+                doc! { "name": n, "type": "collection", "options": options, "info": { "readOnly": false, "uuid": uuid }, "idIndex": id_index }
             };
             if matches(&d, &filter)? {
                 docs.push_back(d);
@@ -313,36 +367,52 @@ impl Server {
         Ok(self.cursor_reply(format!("{db}.$cmd.listCollections"), docs, batch, false))
     }
 
-    async fn create(&self, db: &str, cmd: &Document) -> R<Document> {
+    pub(crate) async fn create(&self, db: &str, cmd: &Document) -> R<Document> {
         let coll = collection_name(cmd, "create")?;
         let collation = match cmd.get("collation") {
             Some(v) => crate::collation::of_create(v)?,
             None => None,
         };
+        let capped = crate::capped::parse_create(cmd)?;
+        // the options as stored and listed: capped, size, max, then the collation
+        let mut raw = Document::new();
+        if let Some((size, max)) = capped.clone() {
+            raw.extend(crate::capped::options_doc(size, max));
+        }
+        if let Some(c) = &collation {
+            raw.insert("collation", c.to_doc());
+        }
+        raw.extend(crate::collopts::plain_options("create", cmd)?);
+        raw.extend(crate::collopts::validation_options("create", cmd)?);
+        let raw = crate::collopts::canonical(&raw);
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         if names.iter().any(|n| n == coll) {
             // MongoDB 7.0: creating an existing collection with the same options succeeds.
-            let existing = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
+            let existing = g.coll_opts(coll).await?.map(|o| o.raw.clone()).unwrap_or_default();
             let has_options = cmd.iter().any(|(k, v)| {
-                !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference" | "collation")
+                !matches!(k.as_str(), "create" | "$db" | "lsid" | "$clusterTime" | "writeConcern" | "readConcern" | "comment" | "txnNumber" | "$readPreference" | "collation" | "capped" | "size" | "max" | "validator" | "validationLevel" | "validationAction" | "storageEngine" | "indexOptionDefaults")
                     && !(k == "capped" && matches!(v, Bson::Boolean(false)))
             });
             if has_options {
                 return Err(MongoError::namespace_exists(format!("Collection already exists. NS: {db}.{coll}")));
             }
-            if !crate::collation::same(&existing, &collation) {
-                let tail = existing.as_ref().map(|c| format!(", collation: {}", crate::update::fmt_doc(&c.to_doc()))).unwrap_or_default();
-                return Err(MongoError::namespace_exists(format!("namespace {db}.{coll} already exists, but with different options: {{ uuid: UUID(\"{}\"){tail} }}", fake_uuid())));
+            if existing != raw {
+                let mut shown = doc! { "uuid": "<uuid>" };
+                shown.extend(existing);
+                let body = crate::update::fmt_doc(&shown).replacen("uuid: \"<uuid>\"", &format!("uuid: UUID(\"{}\")", fake_uuid()), 1);
+                return Err(MongoError::namespace_exists(format!("namespace {db}.{coll} already exists, but with different options: {body}")));
             }
             return Ok(ok());
         }
         names.push(coll.to_string());
         let mut ops = vec![Entry::collections_op(&names)?];
-        if let Some(c) = &collation {
-            let raw = doc! { "collation": c.to_doc() };
+        if !raw.is_empty() {
             ops.push(Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?));
             g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));
+        }
+        if capped.is_some() {
+            ops.push(Op::Put(crate::capped::stat_key(coll), doc! { "docs": 0_i64, "bytes": 0_i64 }.to_vec()?));
         }
         g.apply(ops).await?;
         Ok(ok())
@@ -445,7 +515,32 @@ impl Server {
         let n = batch.unwrap_or(DEFAULT_FIRST_BATCH).min(docs.len());
         let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
         let id = if docs.is_empty() || single_batch { 0 } else { self.store_cursor(ns.clone(), docs) };
+        // (the list commands put the cursor id and namespace first)
+        doc! { "cursor": { "id": id, "ns": ns, "firstBatch": first }, "ok": 1.0 }
+    }
+
+    /// The reply of `find` and `aggregate`: like mongod, a batch that is exactly as big as asked leaves the cursor open (the
+    /// next `getMore` finds out that it is exhausted), unless a `limit` was reached.
+    pub(crate) fn cursor_reply_open(&self, ns: String, mut docs: VecDeque<Document>, batch: Option<usize>, single_batch: bool, limited: bool) -> Document {
+        let want = batch.unwrap_or(DEFAULT_FIRST_BATCH);
+        let n = want.min(docs.len());
+        let first: Vec<Bson> = docs.drain(..n).map(Bson::Document).collect();
+        let open = !single_batch && (!docs.is_empty() || (!limited && n > 0 && n == want));
+        let id = if open { self.store_cursor(ns.clone(), docs) } else { 0 };
         doc! { "cursor": { "firstBatch": first, "id": id, "ns": ns }, "ok": 1.0 }
+    }
+
+    /// Register a tailable cursor (it stays open when it has caught up) and answer with its first batch.
+    pub(crate) fn tail_reply(&self, ns: String, first: Vec<Document>, tail: crate::capped::Tail) -> Document {
+        let mut c = self.cursors.lock().unwrap();
+        let id = loop {
+            let id = (rand::random::<i64>() & i64::MAX) | (1 << 40);
+            if !c.contains_key(&id) {
+                break id;
+            }
+        };
+        c.insert(id, Cursor { ns: ns.clone(), docs: VecDeque::new(), tail: Some(tail) });
+        doc! { "cursor": { "firstBatch": first.into_iter().map(Bson::Document).collect::<Vec<_>>(), "id": id, "ns": ns }, "ok": 1.0 }
     }
 
     fn store_cursor(&self, ns: String, docs: VecDeque<Document>) -> i64 {
@@ -453,7 +548,7 @@ impl Server {
         loop {
             let id = (rand::random::<i64>() & i64::MAX) | (1 << 40);
             if !c.contains_key(&id) {
-                c.insert(id, Cursor { ns, docs });
+                c.insert(id, Cursor { ns, docs, tail: None });
                 return id;
             }
         }
@@ -465,12 +560,19 @@ impl Server {
             return self.change_get_more(id, cmd).await;
         }
         let batch = int_arg(cmd.get("batchSize")).map(|b| b as usize);
+        let tail = {
+            let cursors = self.cursors.lock().unwrap();
+            cursors.get(&id).map(|c| c.tail.clone())
+        };
+        if let Some(Some(tail)) = tail {
+            return self.tail_get_more(id, tail, batch, cmd).await;
+        }
         let mut cursors = self.cursors.lock().unwrap();
         let c = cursors.get_mut(&id).ok_or_else(|| MongoError::cursor_not_found(id))?;
         let n = batch.unwrap_or(usize::MAX).min(c.docs.len());
         let next: Vec<Bson> = c.docs.drain(..n).map(Bson::Document).collect();
         let ns = c.ns.clone();
-        let done = c.docs.is_empty();
+        let done = c.docs.is_empty() && !(batch.is_some() && n > 0 && n == batch.unwrap_or(0));
         if done {
             cursors.remove(&id);
         }
@@ -478,8 +580,43 @@ impl Server {
         Ok(doc! { "cursor": { "nextBatch": next, "id": if done { 0 } else { id }, "ns": ns }, "ok": 1.0 })
     }
 
+    /// `getMore` of a tailable cursor: the documents after the last one it looked at; an `awaitData` cursor waits for some.
+    async fn tail_get_more(&self, id: i64, tail: crate::capped::Tail, batch: Option<usize>, cmd: &Document) -> R<Document> {
+        let max_time = int_arg(cmd.get("maxTimeMS"));
+        if max_time.is_some() && !tail.await_data {
+            return Err(MongoError::bad_value("cannot set maxTimeMS on getMore command for a non-awaitData cursor".into()));
+        }
+        let wait = std::time::Duration::from_millis(max_time.filter(|m| *m > 0).unwrap_or(1000) as u64);
+        let deadline = std::time::Instant::now() + wait;
+        let limit = batch.filter(|b| *b > 0).unwrap_or(usize::MAX);
+        let mut cur = tail;
+        loop {
+            let r = {
+                let mut g = self.dbs.read(&cur.db).await?;
+                crate::capped::fetch_after(&mut g, &cur, limit).await
+            };
+            let (docs, last) = match r {
+                Ok(x) => x,
+                Err(e) => {
+                    self.cursors.lock().unwrap().remove(&id);
+                    return Err(e);
+                }
+            };
+            cur.last_seq = last;
+            if !docs.is_empty() || !cur.await_data || std::time::Instant::now() >= deadline {
+                let ns = format!("{}.{}", cur.db, cur.coll);
+                match self.cursors.lock().unwrap().get_mut(&id) {
+                    Some(c) => c.tail = Some(cur),
+                    None => return Err(MongoError::cursor_not_found(id)),
+                }
+                return Ok(doc! { "cursor": { "nextBatch": docs.into_iter().map(Bson::Document).collect::<Vec<_>>(), "id": id, "ns": ns }, "ok": 1.0 });
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+    }
+
     fn kill_cursors(&self, cmd: &Document) -> R<Document> {
-        let ids = cmd.get_array("cursors").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'killCursors.cursors' is missing but a required field".into()))?;
+        let ids = cmd.get_array("cursors").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'killCursors.cursors' is missing but a required field".into()))?;
         let mut killed = Vec::new();
         let mut not_found = Vec::new();
         let mut cursors = self.cursors.lock().unwrap();

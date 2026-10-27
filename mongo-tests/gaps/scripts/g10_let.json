@@ -1,0 +1,1636 @@
+[
+ {
+  "name": "g10.let.find",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x"
+      ]
+     }
+    },
+    "let": {
+     "x": 4
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$gt": [
+       "$a",
+       "$$x"
+      ]
+     }
+    },
+    "let": {
+     "x": {
+      "$add": [
+       1,
+       3
+      ]
+     }
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$and": [
+       {
+        "$gte": [
+         "$a",
+         "$$lo"
+        ]
+       },
+       {
+        "$lte": [
+         "$a",
+         "$$hi"
+        ]
+       }
+      ]
+     }
+    },
+    "let": {
+     "lo": 2,
+     "hi": 4
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$b",
+       "$$s"
+      ]
+     }
+    },
+    "let": {
+     "s": "s1"
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$in": [
+       "$a",
+       "$$list"
+      ]
+     }
+    },
+    "let": {
+     "list": [
+      1,
+      3,
+      5
+     ]
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "projection": {
+     "y": "$$x",
+     "a": 1,
+     "_id": 0
+    },
+    "let": {
+     "x": {
+      "$literal": "v"
+     }
+    },
+    "sort": {
+     "a": 1
+    },
+    "limit": 2
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$y"
+      ]
+     }
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$y"
+      ]
+     }
+    },
+    "let": {
+     "x": 1
+    }
+   },
+   {
+    "find": "t",
+    "let": 5
+   },
+   {
+    "find": "t",
+    "let": [
+     1
+    ]
+   },
+   {
+    "find": "t",
+    "let": "x"
+   },
+   {
+    "find": "t",
+    "let": {},
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$X"
+      ]
+     }
+    },
+    "let": {
+     "X": 1
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x"
+      ]
+     }
+    },
+    "let": {
+     "X": 1
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x1_b"
+      ]
+     }
+    },
+    "let": {
+     "x1_b": 3
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$1x"
+      ]
+     }
+    },
+    "let": {
+     "1x": 3
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$ROOT"
+      ]
+     }
+    },
+    "let": {
+     "ROOT": 3
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$NOW"
+      ]
+     }
+    },
+    "let": {
+     "NOW": 3
+    }
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$CURRENT"
+      ]
+     }
+    },
+    "let": {
+     "CURRENT": 3
+    }
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": "$a"
+    },
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x"
+      ]
+     }
+    }
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": {
+      "$add": [
+       "$a",
+       1
+      ]
+     }
+    },
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": "$$ROOT"
+    },
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": "$$NOW"
+    },
+    "filter": {
+     "$expr": {
+      "$lt": [
+       "$$x",
+       {
+        "$add": [
+         "$$NOW",
+         1000
+        ]
+       }
+      ]
+     }
+    },
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": "$$REMOVE"
+    },
+    "filter": {
+     "$expr": {
+      "$eq": [
+       {
+        "$type": "$$x"
+       },
+       "missing"
+      ]
+     }
+    },
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": {
+      "a": 1
+     }
+    },
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$$x.a",
+       1
+      ]
+     }
+    },
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": 2
+    },
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       {
+        "$multiply": [
+         "$$x",
+         2
+        ]
+       }
+      ]
+     }
+    }
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": 2
+    },
+    "filter": {
+     "a": "$$x"
+    }
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": 2
+    },
+    "filter": {
+     "$and": [
+      {
+       "a": {
+        "$gt": 0
+       }
+      },
+      {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      }
+     ]
+    }
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": 2
+    },
+    "filter": {
+     "$or": [
+      {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      },
+      {
+       "a": 5
+      }
+     ]
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": 2
+    },
+    "filter": {
+     "arr": {
+      "$elemMatch": {
+       "$gt": 0
+      }
+     }
+    },
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "let": {
+     "x": 4
+    },
+    "filter": {
+     "a": {
+      "$exists": true
+     }
+    },
+    "sort": {
+     "a": 1
+    },
+    "skip": 2,
+    "limit": 2,
+    "projection": {
+     "v": {
+      "$add": [
+       "$a",
+       "$$x"
+      ]
+     }
+    }
+   },
+   {
+    "count": "t",
+    "let": {
+     "x": 1
+    }
+   },
+   {
+    "distinct": "t",
+    "key": "a",
+    "let": {
+     "x": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.let.aggregate",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 4
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$project": {
+       "_id": 0,
+       "a": 1,
+       "v": "$$x"
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 2
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": "hi"
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$addFields": {
+       "v": {
+        "$add": [
+         "$a",
+         "$$n"
+        ]
+       }
+      }
+     },
+     {
+      "$match": {
+       "v": {
+        "$gt": 9
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "n": 5
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$group": {
+       "_id": "$b",
+       "s": {
+        "$sum": {
+         "$multiply": [
+          "$a",
+          "$$m"
+         ]
+        }
+       }
+      }
+     },
+     {
+      "$sort": {
+       "_id": 1
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "m": 10
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$lookup": {
+       "from": "t",
+       "let": {
+        "k": "$a"
+       },
+       "pipeline": [
+        {
+         "$match": {
+          "$expr": {
+           "$and": [
+            {
+             "$eq": [
+              "$a",
+              "$$k"
+             ]
+            },
+            {
+             "$gt": [
+              "$a",
+              "$$min"
+             ]
+            }
+           ]
+          }
+         }
+        }
+       ],
+       "as": "j"
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$project": {
+       "a": 1,
+       "n": {
+        "$size": "$j"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "min": 3
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$facet": {
+       "x": [
+        {
+         "$match": {
+          "$expr": {
+           "$lt": [
+            "$a",
+            "$$c"
+           ]
+          }
+         }
+        },
+        {
+         "$count": "n"
+        }
+       ],
+       "y": [
+        {
+         "$match": {
+          "$expr": {
+           "$gte": [
+            "$a",
+            "$$c"
+           ]
+          }
+         }
+        },
+        {
+         "$count": "n"
+        }
+       ]
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "c": 4
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {}
+     },
+     {
+      "$limit": 1
+     }
+    ],
+    "cursor": {},
+    "let": 5
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$set": {
+       "w": "$$x"
+      }
+     },
+     {
+      "$limit": 1
+     },
+     {
+      "$project": {
+       "w": 1,
+       "_id": 0
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": {
+      "$concat": [
+       "a",
+       "b"
+      ]
+     }
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      }
+     },
+     {
+      "$out": "o"
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 2
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$unionWith": {
+       "coll": "t",
+       "pipeline": [
+        {
+         "$match": {
+          "$expr": {
+           "$eq": [
+            "$a",
+            "$$x"
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "$count": "n"
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 2
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$skip": "$$x"
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 2
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$replaceRoot": {
+       "newRoot": {
+        "v": "$$x"
+       }
+      }
+     },
+     {
+      "$limit": 1
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 7
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucket": {
+       "groupBy": "$a",
+       "boundaries": [
+        0,
+        "$$x",
+        100
+       ],
+       "default": "o"
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 4
+    }
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$documents": [
+       {
+        "a": 1
+       },
+       {
+        "a": 2
+       }
+      ]
+     },
+     {
+      "$match": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "let": {
+     "x": 2
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.let.update_delete",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      },
+      "u": {
+       "$set": {
+        "v": 1
+       }
+      }
+     }
+    ],
+    "let": {
+     "x": 4
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "a": 5
+      },
+      "u": [
+       {
+        "$set": {
+         "v": "$$x"
+        }
+       }
+      ]
+     }
+    ],
+    "let": {
+     "x": "viaPipeline"
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "a": 6
+      },
+      "u": [
+       {
+        "$set": {
+         "v": {
+          "$add": [
+           "$a",
+           "$$x"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    ],
+    "let": {
+     "x": 100
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "$expr": {
+        "$gt": [
+         "$a",
+         "$$x"
+        ]
+       }
+      },
+      "u": {
+       "$set": {
+        "big": true
+       }
+      },
+      "multi": true
+     }
+    ],
+    "let": {
+     "x": 5
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "a": 1
+      },
+      "u": {
+       "$set": {
+        "v": "$$x"
+       }
+      }
+     }
+    ],
+    "let": {
+     "x": "literal?"
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$y"
+        ]
+       }
+      },
+      "u": {
+       "$set": {
+        "v": 1
+       }
+      }
+     }
+    ],
+    "let": {
+     "x": 1
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "a": 1
+      },
+      "u": {
+       "$set": {
+        "v": 1
+       }
+      }
+     }
+    ],
+    "let": 5
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      },
+      "u": {
+       "$set": {
+        "z": 1
+       }
+      },
+      "upsert": true
+     }
+    ],
+    "let": {
+     "x": 99
+    }
+   },
+   {
+    "find": "t",
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$x"
+        ]
+       }
+      },
+      "limit": 1
+     }
+    ],
+    "let": {
+     "x": 3
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "$expr": {
+        "$gt": [
+         "$a",
+         "$$x"
+        ]
+       }
+      },
+      "limit": 0
+     }
+    ],
+    "let": {
+     "x": 6
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "$expr": {
+        "$eq": [
+         "$a",
+         "$$nope"
+        ]
+       }
+      },
+      "limit": 0
+     }
+    ],
+    "let": {
+     "x": 6
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 1
+     }
+    ],
+    "let": "x"
+   },
+   {
+    "find": "t",
+    "sort": {
+     "a": 1
+    },
+    "projection": {
+     "a": 1,
+     "v": 1,
+     "big": 1,
+     "z": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.let.find_and_modify",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x"
+      ]
+     }
+    },
+    "update": {
+     "$set": {
+      "v": 1
+     }
+    },
+    "new": true,
+    "let": {
+     "x": 4
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "a": 5
+    },
+    "update": [
+     {
+      "$set": {
+       "v": "$$x"
+      }
+     }
+    ],
+    "new": true,
+    "let": {
+     "x": "p"
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x"
+      ]
+     }
+    },
+    "remove": true,
+    "let": {
+     "x": 2
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$y"
+      ]
+     }
+    },
+    "remove": true,
+    "let": {
+     "x": 2
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "a": 1
+    },
+    "update": {
+     "$set": {
+      "v": 1
+     }
+    },
+    "let": 7
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "a": 6
+    },
+    "sort": {
+     "a": 1
+    },
+    "update": [
+     {
+      "$set": {
+       "v": {
+        "$multiply": [
+         "$a",
+         "$$f"
+        ]
+       }
+      }
+     }
+    ],
+    "fields": {
+     "v": 1
+    },
+    "new": true,
+    "let": {
+     "f": 3
+    }
+   },
+   {
+    "find": "t",
+    "sort": {
+     "a": 1
+    },
+    "projection": {
+     "a": 1,
+     "v": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.let.in_transaction",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "arr": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "arr": [
+       2,
+       4
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "arr": [
+       3,
+       6
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "arr": [
+       4,
+       8
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "arr": [
+       5,
+       10
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "arr": [
+       6,
+       12
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "arr": [
+       7,
+       14
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "filter": {
+     "$expr": {
+      "$eq": [
+       "$a",
+       "$$x"
+      ]
+     }
+    },
+    "let": {
+     "x": 2
+    },
+    "lsid": "$LSID",
+    "txnNumber": {
+     "$numberLong": "1"
+    },
+    "autocommit": false,
+    "startTransaction": true
+   }
+  ]
+ }
+]

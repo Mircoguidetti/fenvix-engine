@@ -74,8 +74,8 @@ pub fn parse_rename(db: &str, cmd: &Document) -> R<Rename> {
 }
 
 /// Everything stored for a collection: (prefix, same keys under the other collection's name) pairs and single metadata keys.
-fn parts(coll: &str) -> ([Vec<u8>; 4], [Vec<u8>; 3]) {
-    ([doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll)], [index_key(coll), crate::natural::meta_key(coll), crate::collopts::meta_key(coll)])
+fn parts(coll: &str) -> ([Vec<u8>; 4], [Vec<u8>; 5]) {
+    ([doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll), crate::collopts::idc_prefix(coll)], [index_key(coll), crate::natural::meta_key(coll), crate::collopts::meta_key(coll), crate::collopts::uuid_key(coll), crate::capped::stat_key(coll)])
 }
 
 impl Server {

@@ -14,6 +14,8 @@ use crate::update::Upd;
 use bson::{doc, oid::ObjectId, Bson, Document};
 use std::collections::VecDeque;
 
+const DEFAULT_FIRST_BATCH_TAIL: usize = 101;
+
 pub(crate) fn now_ms() -> i64 {
     bson::DateTime::now().timestamp_millis()
 }
@@ -73,6 +75,8 @@ impl Server {
             sort.clear();
         }
         let hint_arg = natural_hint.as_ref().or_else(|| cmd.get("hint"));
+        crate::query::probe_filter(&filter)?;
+        let ext = crate::find_ext::parse(cmd)?;
         let projection = match cmd.get_document("projection") {
             Ok(p) => crate::projfind::parse(p, &filter)?,
             Err(_) => None,
@@ -88,7 +92,29 @@ impl Server {
         if (sort.iter().any(|(f, _)| f == crate::geo::DIST_KEY) || projection.as_ref().map(|p| p.needs_geo_near()).unwrap_or(false)) && crate::geo_query::find_near(&filter)?.is_none() {
             return Err(MongoError::new(40218, "Location40218", "query requires geoNear metadata, but it is not available".into()));
         }
-        let mut docs = if tx.is_none() {
+        if bool_arg(cmd.get("awaitData"), false) && !bool_arg(cmd.get("tailable"), false) {
+            return Err(MongoError::new(9, "FailedToParse", "Cannot set 'awaitData' without also setting 'tailable'".into()));
+        }
+        if bool_arg(cmd.get("tailable"), false) {
+            if cmd.get_document("sort").map(|s| !(s.len() == 1 && s.get("$natural").map(|v| crate::query::as_f64(v) == 1.0).unwrap_or(false))).unwrap_or(false) {
+                return Err(MongoError::bad_value("cannot use tailable option with a sort other than {$natural: 1}".into()));
+            }
+            if single {
+                return Err(MongoError::bad_value("cannot use tailable option with the 'singleBatch' option".into()));
+            }
+            return self.find_tailable(db, coll, &filter, projection.as_ref(), limit, skip, batch, bool_arg(cmd.get("awaitData"), false), tx).await;
+        }
+        let mut docs = if ext.active() {
+            let (sort_doc, proj_doc) = (cmd.get_document("sort").ok(), cmd.get_document("projection").ok());
+            if tx.is_none() {
+                let mut g = self.dbs.read(db).await?;
+                self.find_ext(&mut g, db, coll, &filter, &sort, hint_arg, sort_doc, proj_doc, None, &ext).await?
+            } else {
+                let mut g = self.dbs.lock(db).await;
+                attach(&mut g, tx);
+                self.find_ext(&mut *g, db, coll, &filter, &sort, hint_arg, sort_doc, proj_doc, tx_ov(tx), &ext).await?
+            }
+        } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
             self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await?
         } else {
@@ -101,15 +127,52 @@ impl Server {
         if limit > 0 {
             docs.truncate(limit as usize);
         }
-        if let Some(p) = &projection {
+        if let (Some(p), false) = (&projection, ext.return_key) {
             for d in docs.iter_mut() {
+                let rid = d.remove("$recordId");
                 *d = p.apply(d)?;
+                if let Some(r) = rid {
+                    d.insert("$recordId", r);
+                }
             }
         }
         for d in docs.iter_mut() {
             crate::text::strip_hidden(d);
+            if coll == "system.profile" {
+                d.remove("_id");
+            }
         }
-        Ok(self.cursor_reply(format!("{db}.{coll}"), docs, batch, single))
+        let limited = limit > 0 && docs.len() >= limit as usize;
+        Ok(self.cursor_reply_open(format!("{db}.{coll}"), docs, batch, single, limited))
+    }
+
+    /// `find` with `tailable`: only a capped collection has a natural order that new documents are added to. The cursor
+    /// stays open after the last document and `getMore` continues from there.
+    #[allow(clippy::too_many_arguments)]
+    async fn find_tailable(&self, db: &str, coll: &str, filter: &Document, projection: Option<&crate::projfind::FindProjection>, limit: i64, skip: usize, batch: Option<usize>, await_data: bool, tx: &mut Option<Txn>) -> R<Document> {
+        let ns = format!("{db}.{coll}");
+        let mut g = self.dbs.read(db).await?;
+        if !g.collections().await?.iter().any(|n| n == coll) {
+            return Ok(self.cursor_reply_open(ns, VecDeque::new(), batch, false, false));
+        }
+        let _ = tx;
+        let capped = g.coll_opts(coll).await?.map(|o| o.cap.is_some()).unwrap_or(false);
+        if !capped {
+            let tree = if filter.is_empty() { "$and".to_string() } else { crate::update::fmt_doc(filter) };
+            return Err(MongoError::bad_value(format!("error processing query: ns={ns}Tree: {tree}\nSort: {{}}\nProj: {{}}\n tailable cursor requested on non capped collection")));
+        }
+        let tail = crate::capped::Tail { db: db.to_string(), coll: coll.to_string(), filter: filter.clone(), await_data, last_seq: 0 };
+        let first_n = batch.unwrap_or(DEFAULT_FIRST_BATCH_TAIL).min(if limit > 0 { limit as usize } else { usize::MAX });
+        let (mut docs, last) = crate::capped::fetch_after(&mut g, &tail, first_n.saturating_add(skip)).await?;
+        docs.drain(..skip.min(docs.len()));
+        docs.truncate(first_n);
+        drop(g);
+        if let Some(p) = projection {
+            for d in docs.iter_mut() {
+                *d = p.apply(d)?;
+            }
+        }
+        Ok(self.tail_reply(ns, docs, crate::capped::Tail { last_seq: last, ..tail }))
     }
 
     pub(crate) async fn count(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
@@ -134,7 +197,7 @@ impl Server {
 
     pub(crate) async fn distinct(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "distinct")?;
-        let key = cmd.get_str("key").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'distinct.key' is missing but a required field".into()))?;
+        let key = cmd.get_str("key").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'distinct.key' is missing but a required field".into()))?;
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
         let docs = if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
@@ -163,7 +226,29 @@ impl Server {
     }
 
     pub(crate) async fn aggregate(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
-        let pipeline = cmd.get_array("pipeline").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'aggregate.pipeline' is missing but a required field".into()))?;
+        match cmd.get("explain") {
+            None => {}
+            Some(Bson::Boolean(false)) => {}
+            Some(Bson::Boolean(true)) => {
+                let mut inner = Document::new();
+                for (k, v) in cmd {
+                    if k != "explain" && !k.starts_with('$') && !matches!(k.as_str(), "lsid" | "txnNumber") {
+                        inner.insert(k.clone(), v.clone());
+                    }
+                }
+                if !inner.contains_key("cursor") {
+                    inner.insert("cursor", doc! {});
+                }
+                let mut out = self.explain(db, &doc! { "explain": inner, "verbosity": "queryPlanner" }).await?;
+                let mut echo = cmd.clone();
+                echo.remove("$clusterTime");
+                echo.remove("$readPreference");
+                out.insert("command", echo);
+                return Ok(out);
+            }
+            Some(_) => return Err(MongoError::new(14, "TypeMismatch", "explain must be a boolean".into())),
+        }
+        let pipeline = cmd.get_array("pipeline").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'aggregate.pipeline' is missing but a required field".into()))?;
         if let Some(Bson::Document(spec)) = pipeline.first().and_then(|s| s.as_document()).and_then(|s| s.get("$changeStream")) {
             return self.open_change_stream(db, cmd, spec, &pipeline[1..]).await;
         }
@@ -281,9 +366,9 @@ impl Server {
         }
         if let Some(t) = tail {
             self.agg_write_stage(db, t, out, tx).await?;
-            return Ok(self.cursor_reply(format!("{db}.{coll}"), VecDeque::new(), batch, false));
+            return Ok(self.cursor_reply_open(format!("{db}.{coll}"), VecDeque::new(), batch, false, false));
         }
-        Ok(self.cursor_reply(format!("{db}.{coll}"), out.into(), batch, false))
+        Ok(self.cursor_reply_open(format!("{db}.{coll}"), out.into(), batch, false, false))
     }
 
     /// The documents of a `$collStats` stage.
@@ -491,6 +576,11 @@ impl Server {
             t.w = w;
             return Ok(());
         }
+        let colls: Vec<String> = w.cap_delta.keys().cloned().collect();
+        for c in colls {
+            let ix = if c == coll { indexes.to_vec() } else { g.indexes(&c).await? };
+            crate::capped::enforce(g, "", &mut w, &ix, &c).await?;
+        }
         let events = std::mem::take(&mut w.events);
         let ops = w.final_ops()?;
         g.apply(ops).await?;
@@ -500,7 +590,7 @@ impl Server {
 
     pub(crate) async fn insert(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "insert")?;
-        let docs = cmd.get_array("documents").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'insert.documents' is missing but a required field".into()))?;
+        let docs = cmd.get_array("documents").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'insert.documents' is missing but a required field".into()))?;
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
         let mut rr = self.retry_begin(db, cmd, docs.len(), "insert").await?;
@@ -510,6 +600,7 @@ impl Server {
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
         let mut w = take_writes(tx);
+        w.bypass_validation = bool_arg(cmd.get("bypassDocumentValidation"), false);
         let names = w.names.clone().unwrap_or(names);
         let mut errors: Vec<Bson> = Vec::new();
         let mut n = 0;
@@ -591,7 +682,7 @@ impl Server {
 
     pub(crate) async fn update(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "update")?;
-        let specs = cmd.get_array("updates").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'update.updates' is missing but a required field".into()))?;
+        let specs = cmd.get_array("updates").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'update.updates' is missing but a required field".into()))?;
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
         // The shape of a pipeline's stages is checked while parsing the command, before any statement runs.
@@ -611,6 +702,7 @@ impl Server {
         self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
         let mut w = take_writes(tx);
+        w.bypass_validation = bool_arg(cmd.get("bypassDocumentValidation"), false);
         let names = w.names.clone().unwrap_or(names);
         let mut acc = UpdAcc::default();
         let mut errors: Vec<Bson> = Vec::new();
@@ -653,6 +745,10 @@ impl Server {
                 if e.code == 112 {
                     return Err(e);
                 }
+                // a statement that failed counts nothing
+                acc.n = before.0;
+                acc.n_modified = before.1;
+                acc.upserted.truncate(before.2);
                 errors.push(Bson::Document(e.to_write_error(i)));
                 if ordered {
                     break 'specs;
@@ -672,6 +768,9 @@ impl Server {
             b.run.apply();
         }
         let mut reply = doc! { "n": acc.n };
+        if !errors.is_empty() {
+            reply.insert("writeErrors", errors);
+        }
         if let Some(b) = &rr {
             if !b.run.retried.is_empty() {
                 reply.insert("retriedStmtIds", b.run.retried_ids());
@@ -681,14 +780,21 @@ impl Server {
             reply.insert("upserted", acc.upserted);
         }
         reply.insert("nModified", acc.n_modified);
-        if !errors.is_empty() {
-            reply.insert("writeErrors", errors);
-        }
         reply.insert("ok", 1.0);
         Ok(reply)
     }
 
     pub(crate) async fn find_and_modify(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
+        self.find_and_modify_inner(db, cmd, tx).await.map_err(|mut e| {
+            // (a document that fails the collection validator surfaces from the plan executor)
+            if e.code == 121 && !e.msg.starts_with("Plan executor") {
+                e.msg = format!("Plan executor error during findAndModify :: caused by :: {}", e.msg);
+            }
+            e
+        })
+    }
+
+    async fn find_and_modify_inner(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let key = cmd.keys().next().cloned().unwrap_or_default();
         let coll = collection_name(cmd, &key)?;
         let ns = format!("{db}.{coll}");
@@ -761,6 +867,7 @@ impl Server {
         let ttl_specs = index::ttl_specs(&indexes);
         let hint = resolve_hint(&indexes, cmd.get("hint"))?;
         let mut w = take_writes(tx);
+        w.bypass_validation = bool_arg(cmd.get("bypassDocumentValidation"), false);
         let names = w.names.clone().unwrap_or(names);
         let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: Some(&w.ov) }).await?;
         for d in matched.iter_mut() { crate::text::strip_hidden(d); }
@@ -835,7 +942,7 @@ impl Server {
 
     pub(crate) async fn delete(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "delete")?;
-        let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'delete.deletes' is missing but a required field".into()))?;
+        let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'delete.deletes' is missing but a required field".into()))?;
         let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("delete", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
         let mut rr = self.retry_begin(db, cmd, specs.len(), "delete").await?;
         let mut g = self.dbs.lock(db).await;
@@ -911,10 +1018,10 @@ struct UpdAcc {
 #[allow(clippy::too_many_arguments)]
 async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<IndexDef>, ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, i: usize, acc: &mut UpdAcc) -> R<()> {
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "update statement must be an object".into()))?;
-                let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'updates.q' is missing but a required field".into()))?;
+                let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'updates.q' is missing but a required field".into()))?;
                 let u = match spec.get("u") {
                     Some(u @ (Bson::Document(_) | Bson::Array(_))) => Upd::new(u, q, spec.get("arrayFilters"), spec.get("c"))?,
-                    _ => return Err(MongoError::new(40414, "Location40414", "BSON field 'updates.u' is missing but a required field".into())),
+                    _ => return Err(MongoError::new(40414, "IDLFailedToParse", "BSON field 'updates.u' is missing but a required field".into())),
                 };
                 let multi = bool_arg(spec.get("multi"), false);
                 let upsert = bool_arg(spec.get("upsert"), false);
@@ -954,7 +1061,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
 
 async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, n: &mut i32) -> R<()> {
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "delete statement must be an object".into()))?;
-                let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'deletes.q' is missing but a required field".into()))?;
+                let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'deletes.q' is missing but a required field".into()))?;
                 let limit = int_arg(spec.get("limit")).unwrap_or(0);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let ev_start = w.events.len();
@@ -1188,8 +1295,23 @@ impl Server {
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
         let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
         let first = pipeline.first().and_then(|s| s.as_document());
+        let first_name = first.and_then(|d| d.keys().next().cloned());
+        if let Some(name) = first_name.as_deref() {
+            if let Some(source) = self.db_level_source(db, name, first.and_then(|d| d.get(name)).unwrap_or(&Bson::Null)) {
+                let docs = source?;
+                for s in pipeline.iter().skip(1) {
+                    if let Some(n) = s.as_document().and_then(|d| d.keys().next()) {
+                        if matches!(n.as_str(), "$currentOp" | "$listLocalSessions" | "$listSessions") {
+                            return Err(MongoError::new(40602, "Location40602", format!("{n} is only valid as the first stage in a pipeline")));
+                        }
+                    }
+                }
+                let out = run_pipeline(docs, &pipeline[1..], &crate::agg::Foreign::new())?;
+                return Ok(self.cursor_reply_open(format!("{db}.$cmd.aggregate"), out.into(), batch, false, false));
+            }
+        }
         let Some(spec) = first.and_then(|d| d.get("$documents")) else {
-            return Err(MongoError::new(73, "InvalidNamespace", "{aggregate: 1} is not valid for this pipeline stage; the first stage must be $documents".to_string()));
+            return Err(crate::diag::db_level_error(first_name.as_deref()));
         };
         for (i, s) in pipeline.iter().enumerate().skip(1) {
             if s.as_document().map(|d| d.contains_key("$documents")).unwrap_or(false) {
@@ -1204,6 +1326,6 @@ impl Server {
             _ => return Err(MongoError::new(5858203, "Location5858203", "an array expression is expected".to_string())),
         };
         let out = run_pipeline(docs, &pipeline[1..], &crate::agg::Foreign::new())?;
-        Ok(self.cursor_reply(format!("{db}.$cmd.aggregate"), out.into(), batch, false))
+        Ok(self.cursor_reply_open(format!("{db}.$cmd.aggregate"), out.into(), batch, false, false))
     }
 }

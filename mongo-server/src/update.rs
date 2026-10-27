@@ -942,7 +942,14 @@ pub fn upsert_document(filter: &Document, update: &Document) -> R<Document> {
     upsert_document_ctx(filter, update, &PosCtx { filter: Some(filter), array_filters: &[] })
 }
 
+fn has_expr(filter: &Document) -> bool {
+    filter.iter().any(|(k, v)| k == "$expr" || (matches!(k.as_str(), "$and" | "$or" | "$nor") && matches!(v, Bson::Array(a) if a.iter().any(|s| matches!(s, Bson::Document(d) if has_expr(d))))))
+}
+
 fn upsert_document_ctx(filter: &Document, update: &Document, ctx: &PosCtx) -> R<Document> {
+    if has_expr(filter) {
+        return Err(MongoError::new(224, "QueryFeatureNotAllowed", "$expr is not allowed in the query predicate for an upsert".into()));
+    }
     let mut base = Document::new();
     collect_equalities(filter, &mut base)?;
     let mut doc = if is_operator_update(update) {

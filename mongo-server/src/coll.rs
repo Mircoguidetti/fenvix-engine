@@ -883,11 +883,40 @@ pub struct Writes {
     seqs: HashMap<Vec<u8>, u64>,
     /// Extra store operations applied in the same batch (the retryable-write record of the session).
     pub extra: Vec<Op>,
+    /// Capped collections: how this write set moves the (document count, byte count) of each.
+    pub cap_delta: HashMap<String, (i64, i64)>,
+    /// A document is being dropped by the cap, not by a user: no counts, no change event.
+    quiet: bool,
+    /// `bypassDocumentValidation` of the command that writes.
+    pub bypass_validation: bool,
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new() }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), quiet: false, bypass_validation: false }
+    }
+
+    /// The collection validator on a document that is written: `old` is what an update started from.
+    fn validate_document(&self, g: &mut Entry, v: &crate::validation::Validator, new: &Document, old: Option<&Document>) -> R<()> {
+        use crate::validation::{Action, Level};
+        if v.level == Level::Off || crate::validation::satisfies(new, v)? {
+            return Ok(());
+        }
+        if v.level == Level::Moderate {
+            // moderate: a document that did not satisfy the validator before may be updated without satisfying it
+            if let Some(o) = old {
+                if !crate::validation::satisfies(o, v)? {
+                    return Ok(());
+                }
+            }
+        }
+        match v.action {
+            Action::Error => Err(crate::validation::failure(new, v)),
+            Action::Warn => {
+                g.log_validation_warning(new);
+                Ok(())
+            }
+        }
     }
 
     /// Current version of a document: this write set first, then the store.
@@ -951,6 +980,11 @@ impl Writes {
     pub async fn put(&mut self, g: &mut Entry, coll: &str, ns: &str, indexes: &mut [IndexDef], new: &Document, old: Option<&Document>) -> R<()> {
         let id = new.get("_id").cloned().ok_or_else(|| MongoError::internal("document without _id".into()))?;
         let id_enc = encode_sortable(&id);
+        if !self.quiet && !self.bypass_validation && !coll.starts_with("system.") {
+            if let Some(v) = g.validator_of(coll) {
+                self.validate_document(g, &v, new, old)?;
+            }
+        }
         self.check_conflict(g, &doc_key(coll, &id))?;
         let mut plans: Vec<(usize, Vec<Vec<u8>>, Vec<Vec<u8>>, bool)> = Vec::new(); // (idx, to_add, to_remove, multikey)
         for (i, idx) in indexes.iter().enumerate() {
@@ -988,6 +1022,20 @@ impl Writes {
             plans.push((i, add, rem, mk));
         }
         let k = doc_key(coll, &id);
+        if g.cap_of(coll).is_some() {
+            if self.txn_id.is_some() || self.snap_seq.is_some() {
+                let db = ns.split('.').next().unwrap_or("");
+                return Err(MongoError::new(263, "OperationNotSupportedInTransaction", format!("Collection '{db}.{coll}' is a capped collection. Writes in transactions are not allowed on capped collections.")));
+            }
+            let e = self.cap_delta.entry(coll.to_string()).or_insert((0, 0));
+            match old {
+                None => {
+                    e.0 += 1;
+                    e.1 += new.to_vec()?.len() as i64;
+                }
+                Some(o) => e.1 += new.to_vec()?.len() as i64 - o.to_vec()?.len() as i64,
+            }
+        }
         if old.is_none() {
             if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
                 let ck = crate::collopts::idc_key(coll, &c, &id);
@@ -1059,8 +1107,30 @@ impl Writes {
         Ok(())
     }
 
+    /// The documents inserted by this write set into `coll` and still there: (sequence number, encoded `_id`).
+    pub fn batch_docs(&self, coll: &str) -> Vec<(u64, Vec<u8>)> {
+        let prefix = doc_prefix(coll);
+        self.seqs.iter().filter(|(k, _)| k.starts_with(&prefix)).map(|(k, s)| (*s, k[prefix.len()..].to_vec())).collect()
+    }
+
+    /// Delete a document because a capped collection is over its limit: no change event, and the caller keeps the counts.
+    pub async fn delete_quiet(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
+        self.quiet = true;
+        let r = self.delete(g, db, coll, indexes, old).await;
+        self.quiet = false;
+        r
+    }
+
     pub async fn delete(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
         let id = old.get("_id").cloned().unwrap_or(Bson::Null);
+        if !self.quiet && g.cap_of(coll).is_some() {
+            if self.txn_id.is_some() || self.snap_seq.is_some() {
+                return Err(MongoError::new(20, "IllegalOperation", format!("Cannot remove from a capped collection in a multi-document transaction: {db}.{coll}")));
+            }
+            let e = self.cap_delta.entry(coll.to_string()).or_insert((0, 0));
+            e.0 -= 1;
+            e.1 -= old.to_vec()?.len() as i64;
+        }
         self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
         for (i, idx) in indexes.iter().enumerate() {
@@ -1089,7 +1159,9 @@ impl Writes {
         }
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);
-        self.events.push(crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "delete", doc_key: Some(id), full: None, desc: None, txn: None });
+        if !self.quiet {
+            self.events.push(crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "delete", doc_key: Some(id), full: None, desc: None, txn: None });
+        }
         Ok(())
     }
 }
