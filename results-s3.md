@@ -11,7 +11,7 @@ Branch `s3-test-draft` (da `engine-cost`, perché `merge-engine` non è ancora p
 | `patches/0001-s3-aws-instance-profile.patch` | Correzione del motore (vedi §4). Applicata in Actions al momento della build, **non** committata nel sorgente. |
 | `engine/s3guard.rs` | Contatore di richieste a livello HTTP (retry inclusi) e limitatore di richieste al secondo. Stessa copia dentro la patch. |
 | `probe/` | `s3probe`: 1.000 PUT + 1.000 GET e confronto con il contatore. |
-| `scripts/gate.sh` | Prima di qualsiasi credenziale: valida `run.json`, somma del registro ≤ 30 $, `results-merge.md` per i test 2/3. |
+| `scripts/gate.sh` | Prima di qualsiasi credenziale: valida `run.json`, somma del registro + 5 $ ≤ 24 $, `results-merge.md` per i test 2/3. |
 | `scripts/build.sh` | Compila in Amazon Linux 2023 (stessa glibc dell'istanza) motore patchato + probe; fa il bundle. |
 | `scripts/orchestrate.sh` | Test 1 lato runner: ogni azione provata una per una, errori raccolti tutti insieme con azione IAM e risorsa. Lancia l'istanza, aspetta SSM, esegue i test sull'istanza. |
 | `scripts/watchdog.sh` | Secondo controllo di spesa, ogni 30 s, dal workflow. |
@@ -41,7 +41,7 @@ Test preparati: **solo 1, 2, 3.** `gate.sh` rifiuta qualsiasi altro numero. I te
 | Controllo sull'istanza ogni 10 s | `guard.py`, avviato da `run.sh` prima di tutto; se non produce un battito entro 60 s, `run.sh` spegne. Legge i contatori del motore (`tenantStats.s3Http`), calcola il costo lordo (PUT/LIST a prezzo PUT, GET a prezzo GET, ore di istanza), carica i contatori su S3. Ferma motore e spegne se costo > soglia. | provato in locale (con `shutdown` finto) |
 | Soglia | **tetto 5 $; il guard ferma a 4,5 $** (margine 0,5 $, vedi sotto). Se il motore gira ma i contatori non sono leggibili per 2 minuti, ferma lo stesso. | |
 | Secondo controllo dal workflow ogni 30 s | `watchdog.sh`: calcola il costo dagli stessi contatori su S3 e termina l'istanza a > 5 $; la termina anche se il battito del guard ha più di 90 s o non appare entro 8 minuti. | **non provato** (solo sintassi) |
-| Registro dei costi | `s3-test/ledger.json` sul branch `s3-test-results`; `gate.sh` rifiuta se somma + 5 $ > 30 $. Un run senza contatori recuperabili è registrato a **tetto + ore di istanza**, mai a zero. | |
+| Registro dei costi | `s3-test/ledger.json` sul branch `s3-test-results`; `gate.sh` rifiuta se somma + 5 $ > 24 $. Un run senza contatori recuperabili è registrato a **tetto + ore di istanza**, mai a zero. | |
 | Tag `project=fenvix-tests` | Istanza, volume, bucket. | |
 | Pulizia con `if: always()` | `cleanup.sh`: termina le istanze con il tag, svuota ed elimina il bucket; riautentica il ruolo prima (la sessione da 1 h potrebbe essere scaduta). Un errore di permessi in pulizia finisce in `errors.jsonl`. | |
 | Un solo trigger | `push` su `s3-test` con `paths: s3-test/run.json`. Niente `pull_request`, `environment`, `schedule`, `workflow_dispatch`. | verificato leggendo il file |
@@ -57,7 +57,7 @@ Il punto debole del piano di partenza era "quante richieste al secondo può gene
 - Massimo tra due letture del guard: 2 processi × 300 req/s × (10 s + ~25 s per fermare e spegnere) × $0,0054/1.000 ≈ **$0,11**. Il margine di 0,5 $ lo copre.
 - Se il guard muore (doppio guasto): il watchdog se ne accorge dopo al massimo ~130 s (90 s di battito vecchio + 30 s di ciclo + terminazione): 600 req/s × 130 s × $5,4e-6 ≈ **$0,42**, quindi al peggio ~4,9 $ lordi in quel caso.
 - Cintura in più: ogni processo del motore esce da solo (codice 86) se da solo supera 4 $ di richieste.
-- **Registro:** un run parte solo se somma registrata + 5 $ (tetto di un run) non supera 30 $, quindi il totale registrato non supera 30 $. Limite residuo: il registro conta il costo lordo calcolato dai contatori; un run senza contatori recuperabili è registrato a tetto + ore di istanza.
+- **Registro:** un run parte solo se somma registrata + 5 $ (tetto di un run) non supera 24 $ (tetto scelto perché 24 $ + IVA 22% ≈ 29,3 $), quindi il totale registrato non supera 24 $. Limite residuo: il registro conta il costo lordo calcolato dai contatori; un run senza contatori recuperabili è registrato a tetto + ore di istanza.
 
 Questo vale **se** il limitatore funziona (provato in locale: test unitari e prova contro un S3 finto, §7) e **se** i prezzi e le classi di richiesta sono giusti. Non è una garanzia di AWS.
 

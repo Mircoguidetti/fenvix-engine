@@ -18,6 +18,6 @@
  "c6i_large_usd_per_hour": 0.097,
  "gp3_usd_per_gb_month": 0.0952,
  "run_cost_cap_usd": 5.0,
- "ledger_cap_usd": 30.0,
+ "ledger_cap_usd": 24.0,
  "not_priced": "DELETE requests are not a priced SKU (free). Public IPv4 address charge was not found in the EC2 price file under the usagetype searched and is NOT included. Data transfer inside the region between EC2 and S3 is free (not re-verified here)."
 }
