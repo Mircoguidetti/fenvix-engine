@@ -27,7 +27,7 @@ def s3():
 
 
 def make_bucket(tag):
-    name = f"ctl-{tag}-{random.randrange(10**6):06d}".lower().replace("_", "-")
+    name = f"ctl-{tag}-{os.urandom(4).hex()}".lower().replace("_", "-")  # not `random`: tests seed it
     s3().create_bucket(Bucket=name)
     return name
 
@@ -48,7 +48,7 @@ def prefix_bytes(bucket, prefix):
 
 def free_port():
     while True:
-        p = random.randrange(20000, 40000)
+        p = random.SystemRandom().randrange(20000, 40000)
         try:
             import socket
             s = socket.socket()

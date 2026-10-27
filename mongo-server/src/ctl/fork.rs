@@ -52,7 +52,7 @@ pub async fn dependents(ctl: &Ctl, db: &str) -> anyhow::Result<Vec<String>> {
 
 /// Make the source's latest manifest the complete truth: flushed, marker present, no tenant open on it.
 /// The caller holds the entry lock.
-async fn quiesce(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str) -> ApiResult<()> {
+pub(crate) async fn quiesce(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str) -> ApiResult<()> {
     if g.is_open() {
         g.close().await?;
     }

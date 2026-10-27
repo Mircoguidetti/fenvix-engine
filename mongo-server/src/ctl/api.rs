@@ -67,6 +67,10 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("DELETE", ["v1", "databases", db]) => Ok(Response::json(200, &super::erase::erase(ctl, db).await?)),
         ("PUT", ["v1", "databases", db, "keep-awake"]) => Ok(Response::json(200, &super::pin::set(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "keep-awake"]) => Ok(Response::json(200, &super::pin::unset(ctl, db).await?)),
+        ("POST", ["v1", "databases", db, "exports"]) => Ok(Response::json(201, &super::export::create(ctl, db).await?)),
+        ("GET", ["v1", "exports", id]) => Ok(Response::json(200, &super::export::get(ctl, id).await?)),
+        ("DELETE", ["v1", "exports", id]) => Ok(Response::json(200, &super::export::delete(ctl, id).await?)),
+        ("GET", ["v1", "exports", id, "files", rest @ ..]) => super::export::download(ctl, id, &rest.join("/"), &req.headers).await,
         (_, ["v1", ..]) => Err(ApiError::new(404, "no_route", format!("no route for {} {}", req.method, req.path))),
         _ => Err(ApiError::new(404, "no_route", "not found")),
     }

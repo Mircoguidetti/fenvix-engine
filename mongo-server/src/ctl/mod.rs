@@ -14,6 +14,7 @@
 
 pub mod api;
 pub mod erase;
+pub mod export;
 pub mod fork;
 pub mod http;
 pub mod meta;
@@ -181,6 +182,7 @@ pub async fn start(dbs: Arc<Dbs>, lc: Arc<Lifecycle>, holder: String, args: CtlA
     }
     usage::spawn_flusher(&ctl);
     pin::spawn_agent(&ctl);
+    export::spawn_agent(&ctl);
     let listener = tokio::net::TcpListener::bind(args.admin_listen.as_deref().unwrap()).await?;
     eprintln!("admin interface listening on {} (bearer token required)", args.admin_listen.as_deref().unwrap());
     let handler: http::Handler = {
