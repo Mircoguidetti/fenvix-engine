@@ -472,6 +472,7 @@ impl Server {
             if name == "_id_" || (key.len() == 1 && matches!(key.get("_id"), Some(Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_)))) {
                 continue; // the implicit _id index
             }
+            crate::wild::plugin_conflicts(spec, key)?;
             // Normalised spec: the user's options in MongoDB's order.
             let text_idx = normalize_text(spec, key, &name)?;
             let geo_idx = if text_idx.is_none() { normalize_geo(spec, key, &name)? } else { None };

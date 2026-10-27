@@ -29,3 +29,93 @@ def register(g):
     t("to_hashed_index_key_expr", [ins("c", [{"_id": 1, "a": 2, "b": 3}]), agg("c", [{"$project": {"h": {"$toHashedIndexKey": {"$add": ["$a", "$b"]}}, "s": {"$toHashedIndexKey": {"$concat": ["x", "y"]}}}}])])
     t("to_hashed_index_key_group", [ins("c", [{"_id": i, "k": i % 4} for i in range(20)]),
                                    agg("c", [{"$group": {"_id": {"$mod": [{"$abs": {"$toHashedIndexKey": "$k"}}, 3]}, "n": {"$sum": 1}}}, {"$sort": {"_id": 1}}])])
+
+    # ------------------------------------------------------------------ compound wildcard indexes
+    def cix(coll, keys, **opts):
+        step = {"op": "create_index", "coll": coll, "keys": keys}
+        if opts:
+            step["opts"] = opts
+        return step
+
+    full = {"op": "list_indexes", "coll": "c", "full": True}
+
+    def tc(name, steps, **flags):
+        add("cwild." + name, steps, "compound wildcard index", **flags)
+
+    def ids(flt, **kw):
+        return find("c", flt, sort={"_id": 1}, projection={"_id": 1}, **kw)
+
+    CWD = [{"_id": 1, "a": 1, "b": 2, "c": {"x": 3}}, {"_id": 2, "a": 1, "b": 5, "c": {"x": 4}}, {"_id": 3, "a": 2, "b": 2, "c": {"x": 3}}, {"_id": 4, "b": 2},
+           {"_id": 5, "a": 1}, {"_id": 6, "a": 3, "b": [2, 3], "c": [{"x": 3}, {"x": 9}]}, {"_id": 7, "a": 1, "d": 9}, {"_id": 8, "a": None, "b": 2},
+           {"_id": 9, "a": {"k": 1}, "b": "s", "c": {"y": [1, 2]}}, {"_id": 10, "a": "z", "c": {}}]
+    Q = [{"a": 1}, {"a": 1, "b": 2}, {"b": 2}, {"a": 1, "c.x": 3}, {"b": 2, "c.x": 3}, {"a": {"$gt": 0}, "b": 2}, {"a": {"$in": [1, 2]}, "b": {"$in": [2, 5]}},
+         {}, {"a": 1, "b": {"$exists": True}}, {"a": 1, "d": 9}, {"c.x": {"$gte": 3}}, {"a": 2, "b": {"$gt": 1}}, {"a": None}, {"a": {"$exists": False}},
+         {"a": {"$type": "string"}}, {"a": 1, "b": None}, {"a": {"$ne": 1}, "b": 2}, {"c.x": 3}, {"c.y": 1}, {"a": {"$in": [1, None]}}, {"a": {"$gte": 1, "$lte": 2}, "c.x": 3}]
+    CONFIGS = {
+        "wild_after": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"b": 1, "c": 1}}),
+        "wild_before": ([["$**", 1], ["a", 1]], {"wildcardProjection": {"b": 1, "c": 1}}),
+        "prefix_after": ([["a", 1], ["c.$**", 1]], {}),
+        "prefix_before": ([["c.$**", 1], ["a", 1]], {}),
+        "two_regular": ([["a", 1], ["b", 1], ["c.$**", -1]], {}),
+        "wild_middle": ([["a", 1], ["c.$**", 1], ["b", 1]], {}),
+        "descending": ([["a", -1], ["$**", -1]], {"wildcardProjection": {"b": 1, "c": 1}}),
+        "partial": ([["a", 1], ["c.$**", 1]], {"partialFilterExpression": {"b": 2}}),
+        "exclusion": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"a": 0, "d": 0}}),
+    }
+    for cname, (keys, opts) in CONFIGS.items():
+        hint = "_".join(f"{k}_{v}" for k, v in keys)
+        steps = [cix("c", keys, **opts), ins("c", [d for d in CWD if cname != "x"])]
+        tc(cname + ".create_list", [cix("c", keys, **opts), full])
+        # hinted: each query returns the same rows or the same refusal; unhinted: same rows
+        tc(cname + ".hinted", steps + [ids(q, hint=hint) for q in Q])
+        tc(cname + ".unhinted", steps + [ids(q) for q in Q])
+        tc(cname + ".counts", steps + [{"op": "count_documents", "coll": "c", "filter": q} for q in Q[:12]])
+    # array in a regular key field is refused on write
+    for i, doc in enumerate([{"_id": 1, "a": []}, {"_id": 1, "a": [1]}, {"_id": 1, "a": [[1]]}, {"_id": 1, "a": [{"b": 1}]}, {"_id": 1, "a": 1, "c": [1, {"d": [2, 3]}]}]):
+        tc(f"array_in_key_{i}", [cix("c", [["a", 1], ["c.$**", 1]]), ins("c", [doc]), ids({})])
+    tc("array_in_key_update", [cix("c", [["a", 1], ["c.$**", 1]]), ins("c", [{"_id": 1, "a": 1, "c": {"x": 1}}]),
+                               upd("c", {"_id": 1}, {"$set": {"a": [1, 2]}}), upd("c", {"_id": 1}, {"$set": {"a": 7}}), ids({"a": 7}, hint="a_1_c.$**_1")])
+    tc("array_in_key_build", [ins("c", [{"_id": 1, "a": [1, 2]}, {"_id": 2, "a": 1}]), cix("c", [["a", 1], ["c.$**", 1]]), full])
+    tc("dotted_key_field", [cix("c", [["a.b", 1], ["c.$**", 1]]), ins("c", [{"_id": 1, "a": {"b": 1}, "c": {"x": 1}}, {"_id": 2, "a": [{"b": 1}], "c": {"x": 1}}]), ids({})])
+    tc("maintenance", [cix("c", [["a", 1], ["c.$**", 1]]), ins("c", CWD[:5]), upd("c", {"_id": 1}, {"$set": {"c.x": 100}}), upd("c", {"_id": 2}, {"$set": {"a": 50}}),
+                       {"op": "delete_one", "coll": "c", "filter": {"_id": 3}}, ids({"a": 1, "c.x": 100}, hint="a_1_c.$**_1"), ids({"a": 50}, hint="a_1_c.$**_1"), ids({"a": 2}, hint="a_1_c.$**_1"),
+                       upd("c", {"_id": 5}, {"$set": {"c": {"x": 3}}}), ids({"a": 1, "c.x": 3}, hint="a_1_c.$**_1")])
+    # specifications
+    SP = {
+        "no_projection": ([["a", 1], ["$**", 1]], {}),
+        "projection_overlap_key": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"a": 1}}),
+        "projection_key_below_included": ([["a.x", 1], ["$**", 1]], {"wildcardProjection": {"a": 1}}),
+        "projection_included_below_key": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"a.x": 1}}),
+        "projection_with_prefix_form": ([["a", 1], ["c.$**", 1]], {"wildcardProjection": {"c.x": 1}}),
+        "exclusion_missing_key": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"b": 0}}),
+        "exclusion_key": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"a": 0}}),
+        "exclusion_only_id": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"_id": 0}}),
+        "inclusion_with_id": ([["a", 1], ["$**", 1]], {"wildcardProjection": {"_id": 1, "b": 1}}),
+        "id_key": ([["_id", 1], ["$**", 1]], {"wildcardProjection": {"b": 1}}),
+        "empty_projection": ([["a", 1], ["$**", 1]], {"wildcardProjection": {}}),
+        "two_wildcards": ([["$**", 1], ["a.$**", 1]], {}),
+        "overlap_same": ([["a", 1], ["a.$**", 1]], {}),
+        "overlap_child_key": ([["a.b", 1], ["a.$**", 1]], {}),
+        "overlap_parent_key": ([["a.$**", 1], ["a.b", 1]], {}),
+        "disjoint": ([["c.$**", 1], ["a.b", 1]], {}),
+        "unique": ([["a", 1], ["c.$**", 1]], {"unique": True}),
+        "sparse": ([["a", 1], ["c.$**", 1]], {"sparse": True}),
+        "ttl": ([["a", 1], ["$**", 1]], {"expireAfterSeconds": 10, "wildcardProjection": {"b": 1}}),
+        "hashed_prefix": ([["a", "hashed"], ["$**", 1]], {"wildcardProjection": {"b": 1}}),
+        "hashed_wild": ([["a", 1], ["c.$**", "hashed"]], {}),
+        "text_prefix": ([["a", "text"], ["c.$**", 1]], {}),
+        "geo_wild": ([["a", 1], ["$**", "2dsphere"]], {}),
+        "named": ([["a", 1], ["c.$**", 1]], {"name": "custom"}),
+        "v1": ([["a", 1], ["c.$**", 1]], {"v": 1}),
+        "descending_wild": ([["a", 1], ["b", 1], ["c.$**", -1]], {}),
+        "dir_both": ([["$**", -1], ["a", -1]], {"wildcardProjection": {"b": 1}}),
+        "dotted_regular": ([["a.b", 1], ["$**", 1]], {"wildcardProjection": {"c": 1}}),
+    }
+    for sname, (keys, opts) in SP.items():
+        tc("spec." + sname, [cix("c", keys, **opts), full])
+    tc("spec.duplicate_other_name", [cix("c", [["a", 1], ["c.$**", 1]]), cix("c", [["a", 1], ["c.$**", 1]], name="again"), full])
+    tc("spec.same_twice", [cix("c", [["a", 1], ["c.$**", 1]]), cix("c", [["a", 1], ["c.$**", 1]]), full])
+    tc("drop_index", [cix("c", [["a", 1], ["c.$**", 1]]), ins("c", CWD), {"op": "drop_index", "coll": "c", "name": "a_1_c.$**_1"}, ids({"a": 1, "c.x": 3})])
+    tc("many_documents", [cix("c", [["a", 1], ["p.$**", 1]]), ins("c", [{"_id": i, "a": i % 7, "p": {"q": i % 11, "r": [i % 5, i % 3]}} for i in range(1, 401)]),
+                          {"op": "count_documents", "coll": "c", "filter": {"a": 3, "p.q": 4}, "hint": "a_1_p.$**_1"}, {"op": "count_documents", "coll": "c", "filter": {"a": 3}, "hint": "a_1_p.$**_1"},
+                          {"op": "count_documents", "coll": "c", "filter": {"a": {"$gte": 2, "$lt": 5}, "p.r": 2}, "hint": "a_1_p.$**_1"}, {"op": "count_documents", "coll": "c", "filter": {"a": 5, "p.q": {"$gt": 8}}, "hint": "a_1_p.$**_1"}])

@@ -201,10 +201,14 @@ pub struct WildSpec {
     pub proj: Option<(bool, Vec<String>)>,
     /// `_id` is covered only when the projection lists it.
     pub id_included: bool,
+    /// Direction of the wildcard term.
     pub asc: bool,
+    /// Compound wildcard indexes: the regular key fields before and after the wildcard term, with their directions.
+    pub before: Vec<(String, bool)>,
+    pub after: Vec<(String, bool)>,
 }
 
-fn is_wild_field(k: &str) -> bool {
+pub fn is_wild_field(k: &str) -> bool {
     k == "$**" || k.ends_with(".$**")
 }
 
@@ -219,17 +223,26 @@ fn truthy(v: &Bson) -> bool {
 }
 
 impl WildSpec {
-    /// A single-field wildcard index; `None` for anything else (compound wildcard indexes are only recorded).
+    /// A wildcard index (single-field or compound); `None` for any other key.
     pub fn from_stored(stored: &Document) -> Option<WildSpec> {
         let key = stored.get_document("key").ok()?;
-        if key.len() != 1 {
-            return None;
+        let dir = |v: &Bson| !matches!(v, Bson::Int32(i) if *i < 0) && !matches!(v, Bson::Int64(i) if *i < 0) && !matches!(v, Bson::Double(f) if *f < 0.0);
+        let mut wild: Option<(&String, bool)> = None;
+        let mut before = Vec::new();
+        let mut after = Vec::new();
+        for (k, v) in key {
+            if is_wild_field(k) {
+                if wild.is_some() || matches!(v, Bson::String(_)) {
+                    return None;
+                }
+                wild = Some((k, dir(v)));
+            } else if matches!(v, Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_)) {
+                if wild.is_some() { &mut after } else { &mut before }.push((k.clone(), dir(v)));
+            } else {
+                return None;
+            }
         }
-        let (k, v) = key.iter().next()?;
-        if !is_wild_field(k) {
-            return None;
-        }
-        let asc = !matches!(v, Bson::Int32(i) if *i < 0) && !matches!(v, Bson::Int64(i) if *i < 0) && !matches!(v, Bson::Double(f) if *f < 0.0);
+        let (k, asc) = wild?;
         let prefix = k.strip_suffix(".$**").map(str::to_string);
         let mut proj = None;
         let mut id_included = false;
@@ -249,7 +262,11 @@ impl WildSpec {
             }
             proj = Some(if !inc.is_empty() { (true, inc) } else { (false, exc) });
         }
-        Some(WildSpec { prefix, proj, id_included, asc })
+        Some(WildSpec { prefix, proj, id_included, asc, before, after })
+    }
+
+    pub fn compound(&self) -> bool {
+        !self.before.is_empty() || !self.after.is_empty()
     }
 
     /// Is `path` (a leaf path of a document) covered by the index?
@@ -306,14 +323,46 @@ impl WildSpec {
         }
     }
 
-    pub fn entries(&self, d: &Document) -> BTreeMap<Vec<u8>, Document> {
+    pub fn entries(&self, d: &Document) -> R<BTreeMap<Vec<u8>, Document>> {
         let mut m = BTreeMap::new();
-        for (path, v) in self.values(d) {
-            let mut k = keyenc::component(&Bson::String(path.clone()), true);
-            k.extend(keyenc::component(&v, self.asc));
-            m.insert(k, doc! { "path": path, "value": v });
+        let (mut pre, mut post) = (Vec::new(), Vec::new());
+        let mut shown = Document::new();
+        for (side, fields) in [(&mut pre, &self.before), (&mut post, &self.after)] {
+            for (path, asc) in fields {
+                let vals = crate::query::path_values(d, path);
+                let parts: Vec<&str> = path.split('.').collect();
+                let through_array = (1..parts.len()).any(|n| crate::query::path_values(d, &parts[..n].join(".")).iter().any(|v| matches!(v, Bson::Array(_))));
+                if through_array || vals.iter().any(|v| matches!(v, Bson::Array(_))) {
+                    return Err(MongoError::new(7246301, "Location7246301", format!("field {path} cannot be indexed as an array (multikey)")));
+                }
+                let v = vals.first().map(|v| (*v).clone()).unwrap_or(Bson::Null);
+                side.extend(keyenc::component(&v, *asc));
+                shown.insert(path.clone(), v);
+            }
         }
-        m
+        let mut values = self.values(d);
+        if values.is_empty() && self.compound() {
+            // every document has an entry in a compound index; this one has no wildcard path
+            let mut k = pre.clone();
+            k.extend(keyenc::component(&Bson::MinKey, true));
+            k.extend(keyenc::component(&Bson::Null, self.asc));
+            k.extend(&post);
+            let mut e = shown.clone();
+            e.insert("path", Bson::MinKey);
+            e.insert("value", Bson::Null);
+            m.insert(k, e);
+        }
+        for (path, v) in values.drain(..) {
+            let mut k = pre.clone();
+            k.extend(keyenc::component(&Bson::String(path.clone()), true));
+            k.extend(keyenc::component(&v, self.asc));
+            k.extend(&post);
+            let mut e = shown.clone();
+            e.insert("path", path);
+            e.insert("value", v);
+            m.insert(k, e);
+        }
+        Ok(m)
     }
 }
 
@@ -377,10 +426,10 @@ pub fn choose_bound(spec: &WildSpec, filter: &Document, cs: &std::collections::H
     best.map(|(_, b)| b)
 }
 
-/// Does `filter` constrain a covered path in a way MongoDB's planner accepts for a wildcard index (anything but an
-/// equality to null / a non-empty document or array, or `$ne`)? Such queries scan the whole index when hinted.
-fn usable_somehow(spec: &WildSpec, filter: &Document) -> bool {
-    let refused = |cond: &Bson| match cond {
+/// Predicates MongoDB's planner will not use a wildcard index for: equality to null / a non-empty document or array,
+/// `$ne`, `$nin`, `$not`, `$size`, `$exists: false`, `$in` with null or a regex.
+pub fn refused_cond(cond: &Bson) -> bool {
+    match cond {
         Bson::Null | Bson::Undefined => true,
         Bson::Document(d) if d.keys().all(|k| k.starts_with('$')) && !d.is_empty() => d.iter().any(|(k, v)| match k.as_str() {
             "$ne" | "$nin" | "$not" | "$size" => true,
@@ -392,7 +441,13 @@ fn usable_somehow(spec: &WildSpec, filter: &Document) -> bool {
         Bson::Document(d) => !d.is_empty(),
         Bson::Array(a) => !a.is_empty(),
         _ => false,
-    };
+    }
+}
+
+/// Does `filter` constrain a covered path in a way MongoDB's planner accepts for a wildcard index (anything but an
+/// equality to null / a non-empty document or array, or `$ne`)? Such queries scan the whole index when hinted.
+fn usable_somehow(spec: &WildSpec, filter: &Document) -> bool {
+    let refused = refused_cond;
     let mut any = false;
     for (k, v) in filter {
         match (k.as_str(), v) {
@@ -425,6 +480,20 @@ fn spec_err(spec: &Document, code: i32, name: &'static str, msg: &str) -> MongoE
     MongoError::new(code, name, format!("Error in specification {} :: caused by :: {msg}", crate::update::fmt_doc(spec)))
 }
 
+/// Wildcard terms next to another index plugin, checked before the text / geo specs are interpreted.
+pub fn plugin_conflicts(spec: &Document, key: &Document) -> R<()> {
+    if !key.keys().any(|k| is_wild_field(k)) || key.iter().any(|(k, v)| is_wild_field(k) && matches!(v, Bson::String(s) if s == "text")) {
+        return Ok(());
+    }
+    if key.iter().any(|(k, v)| is_wild_field(k) && matches!(v, Bson::String(_))) {
+        return Err(spec_err(spec, 67, "CannotCreateIndex", "Index key contains an illegal field name: field name starts with '$'."));
+    }
+    if key.iter().any(|(k, v)| !is_wild_field(k) && matches!(v, Bson::String(_))) {
+        return Err(spec_err(spec, 67, "CannotCreateIndex", "Can't use more than one index plugin for a single index."));
+    }
+    Ok(())
+}
+
 /// Validate the hashed / wildcard parts of an index specification (called for specs that are not text or geo).
 pub fn validate_spec(spec: &Document, key: &Document, unique: bool, sparse: bool, ttl: bool) -> R<()> {
     let hashed: Vec<&String> = key.iter().filter(|(_, v)| matches!(v, Bson::String(s) if s == "hashed")).map(|(k, _)| k).collect();
@@ -437,10 +506,13 @@ pub fn validate_spec(spec: &Document, key: &Document, unique: bool, sparse: bool
     }
     let wild: Vec<&String> = key.keys().filter(|k| is_wild_field(k)).collect();
     for (k, v) in key {
-        let wild_ok = is_wild_field(k) && !k.trim_end_matches("$**").contains('$') && !matches!(v, Bson::String(s) if s == "hashed");
+        let wild_ok = is_wild_field(k) && !k.trim_end_matches("$**").contains('$') && !matches!(v, Bson::String(_));
         if (k.starts_with('$') || k.split('.').any(|c| c.starts_with('$'))) && !wild_ok {
             return Err(spec_err(spec, 67, "CannotCreateIndex", "Index key contains an illegal field name: field name starts with '$'."));
         }
+    }
+    if !hashed.is_empty() && !wild.is_empty() {
+        return Err(spec_err(spec, 67, "CannotCreateIndex", "Can't use more than one index plugin for a single index."));
     }
     if hashed.len() > 1 {
         return Err(MongoError::new(31303, "Location31303", format!("A maximum of one index field is allowed to be hashed but found {} for 'key' {}", hashed.len(), crate::update::fmt_doc(key))));
@@ -455,20 +527,32 @@ pub fn validate_spec(spec: &Document, key: &Document, unique: bool, sparse: bool
         return Err(spec_err(spec, 7246201, "Location7246201", "Index Key can contain only one wildcard index field"));
     }
     if let Some(w) = wild.first() {
+        if matches!(spec.get("v"), Some(Bson::Int32(1))) || matches!(spec.get("v"), Some(Bson::Int64(1))) || matches!(spec.get("v"), Some(Bson::Double(f)) if *f == 1.0) {
+            return Err(spec_err(spec, 67, "CannotCreateIndex", "Index type 'wildcard' is not allowed with index version v: 1"));
+        }
         for opt in ["unique", "sparse"] {
             let on = if opt == "unique" { unique } else { sparse };
             if on {
                 return Err(spec_err(spec, 67, "CannotCreateIndex", &format!("Index type 'wildcard' does not support the '{opt}' option")));
             }
         }
+        if ttl && key.len() > 1 {
+            return Err(MongoError::new(67, "CannotCreateIndex", format!("TTL indexes are single-field indexes, compound indexes do not support TTL. Index spec: {}", crate::update::fmt_doc(spec))));
+        }
         if ttl {
             return Err(spec_err(spec, 67, "CannotCreateIndex", "cannot make a TTL index :: caused by :: Index type 'wildcard' does not support the 'expireAfterSeconds' option"));
+        }
+        if let Some(base) = w.strip_suffix(".$**") {
+            let over = |a: &str, b: &str| a == b || a.starts_with(&format!("{b}.")) || b.starts_with(&format!("{a}."));
+            if key.keys().any(|k| !is_wild_field(k) && over(k, base)) {
+                return Err(spec_err(spec, 7246204, "Location7246204", "A wildcard index field should not overlap with and index key fields if wildcardProjection is not specified"));
+            }
         }
         if let Some(p) = spec.get("wildcardProjection") {
             let Bson::Document(p) = p else {
                 return Err(spec_err(spec, 14, "TypeMismatch", "The field 'wildcardProjection' must be a non-empty object"));
             };
-            if key.len() == 1 && **w != *"$**" {
+            if **w != *"$**" {
                 return Err(spec_err(spec, 9, "FailedToParse", "The field 'wildcardProjection' is only allowed when 'key' is {\"$**\": ±1} or {\"$**\": \"columnstore\"}"));
             }
             if p.is_empty() {
@@ -498,6 +582,22 @@ pub fn validate_spec(spec: &Document, key: &Document, unique: bool, sparse: bool
                     if a.starts_with(&format!("{b}.")) || b.starts_with(&format!("{a}.")) {
                         return Err(spec_err(spec, 31250, "Location31250", "Failed to parse projection: wildcardProjection :: caused by :: Path collision"));
                     }
+                }
+            }
+            let under = |p: &str, base: &str| p == base || (p.len() > base.len() && p.starts_with(base) && p.as_bytes()[base.len()] == b'.');
+            let regular: Vec<&String> = key.keys().filter(|k| !is_wild_field(k)).collect();
+            if inc {
+                for k in &regular {
+                    if p.iter().any(|(path, v)| path != "_id" && truthy(v) && under(k, path)) {
+                        return Err(spec_err(spec, 7246208, "Location7246208", "Index Key and Wildcard Projection cannot contain overlapping fields"));
+                    }
+                }
+            } else if !regular.is_empty() {
+                if !exc {
+                    return Err(spec_err(spec, 7246210, "Location7246210", "wildcardProjection paths must exclude all regular index fields"));
+                }
+                if regular.iter().any(|k| !p.iter().any(|(path, v)| path != "_id" && !truthy(v) && under(k, path))) {
+                    return Err(spec_err(spec, 7246209, "Location7246209", "wildcardProjection paths must exclude all regular index fields"));
                 }
             }
         } else if key.len() > 1 && **w == *"$**" {

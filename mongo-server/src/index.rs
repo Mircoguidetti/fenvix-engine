@@ -83,7 +83,11 @@ impl IndexDef {
         let wild = if is_text || is_geo { None } else { crate::wild::WildSpec::from_stored(stored) };
         for (k, v) in key_doc {
             if wild.is_some() || (hashed_pos.is_some() && matches!(v, Bson::String(s) if s == "hashed")) {
-                key.push((k.clone(), wild.as_ref().map(|w| w.asc).unwrap_or(true)));
+                key.push((k.clone(), match &wild {
+                    Some(w) if crate::wild::is_wild_field(k) => w.asc,
+                    Some(_) => !matches!(num(v), Some(n) if n < 0.0),
+                    None => true,
+                }));
                 continue;
             }
             if is_text && (k == "_fts" || k == "_ftsx") {
@@ -213,7 +217,7 @@ impl IndexDef {
             Kind::Text(t) => return text_entries(t, d),
             Kind::Geo(g) => return geo_entries(g, d),
             Kind::Hashed(pos) => return crate::wild::hashed_entries(&self.key, *pos, self.sparse, d),
-            Kind::Wildcard(w) => return Ok((w.entries(d), false)),
+            Kind::Wildcard(w) => return w.entries(d).map(|m| (m, false)),
             Kind::Regular => {}
         }
         let mut fields: Vec<(Vec<Bson>, bool)> = Vec::new();
@@ -1291,33 +1295,80 @@ mod tests {
     }
 }
 
-/// A scan of a wildcard index for `filter`: the entries of one path within the bounds of its constraint.
+/// A scan of a wildcard index for `filter`: the entries of one path within the bounds of its constraint. A compound
+/// wildcard index also needs a bound on its first regular field when that comes before the wildcard term, and
+/// continues past the wildcard term into the fields after it when the path and value are equalities.
 pub fn wild_scan(indexes: &[IndexDef], filter: &Document, cs: &HashMap<String, Constraint>, hint: Option<usize>) -> Option<IxScan> {
     use crate::wild::WildBound;
+    const PATH: &str = "\u{0}path";
     for (i, idx) in indexes.iter().enumerate() {
         let Kind::Wildcard(w) = &idx.kind else { continue };
         if idx.state != State::Ready || !hint.map(|h| h == i).unwrap_or(true) || !index_covers_query(idx, cs) {
             continue;
         }
-        let Some(bound) = crate::wild::choose_bound(w, filter, cs) else { continue };
-        let intervals = match bound {
-            WildBound::Whole => vec![(Vec::new(), None)],
-            WildBound::Path(path) => {
-                // a pseudo two-field key: the path component, then the value
-                let mut pseudo = idx.clone();
-                pseudo.key = vec![("\u{0}path".to_string(), true), (path.clone(), w.asc)];
-                pseudo.multikey = true;
-                let mut c2 = cs.clone();
-                c2.insert("\u{0}path".to_string(), Constraint { eq: Some(vec![Bson::String(path.clone())]), ..Default::default() });
-                match bounds_for(&pseudo, &c2) {
-                    Some((ivs, _, _)) => ivs,
-                    None => continue,
+        let bound = crate::wild::choose_bound(w, filter, cs);
+        let mut pseudo = idx.clone();
+        pseudo.multikey = true;
+        let mut c2 = cs.clone();
+        for (f, _) in w.before.iter().chain(w.after.iter()) {
+            // the planner applies the wildcard rules to every predicate on the index's fields
+            if conjuncts(filter, f).iter().any(|c| crate::wild::refused_cond(c)) {
+                c2.remove(f);
+            }
+        }
+        let mut key: Vec<(String, bool)> = w.before.clone();
+        let wild_path = match &bound {
+            Some(WildBound::Path(path)) => Some(path.clone()),
+            _ => None,
+        };
+        if let Some(path) = &wild_path {
+            key.push((PATH.to_string(), true));
+            key.push((path.clone(), w.asc));
+            key.extend(w.after.iter().cloned());
+            c2.insert(PATH.to_string(), Constraint { eq: Some(vec![Bson::String(path.clone())]), ..Default::default() });
+        }
+        let (intervals, bounded, labels) = if key.is_empty() {
+            match bound {
+                Some(WildBound::Whole) => (vec![(Vec::new(), None)], 1, vec![("$_path".to_string(), vec!["[MinKey, MaxKey]".to_string()])]),
+                _ => continue,
+            }
+        } else {
+            pseudo.key = key;
+            match bounds_for(&pseudo, &c2) {
+                Some(x) => x,
+                // `$type` bounds the field to a type bracket; the whole index is read (and the filter re-applied)
+                None if conjuncts(filter, &pseudo.key[0].0).iter().any(|c| matches!(c, Bson::Document(d) if d.contains_key("$type"))) => {
+                    (vec![(Vec::new(), None)], 1, pseudo.key.iter().map(|(f, a)| (f.clone(), vec![if *a { "[MinKey, MaxKey]".to_string() } else { "[MaxKey, MinKey]".to_string() }])).collect())
                 }
+                None => continue,
             }
         };
-        return Some(IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: 1, bounds: vec![("$_path".to_string(), vec!["[MinKey, MaxKey]".to_string()])] });
+        if bound.is_none() && !w.compound() {
+            continue;
+        }
+        let bounds = labels.into_iter().map(|(f, v)| (if f == PATH { "$_path".to_string() } else { f }, v)).collect();
+        return Some(IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: bounded, bounds });
     }
     None
+}
+
+/// The conditions the top-level conjunction of `filter` puts on `field`.
+fn conjuncts<'a>(filter: &'a Document, field: &str) -> Vec<&'a Bson> {
+    let mut out = Vec::new();
+    for (k, v) in filter {
+        match (k.as_str(), v) {
+            ("$and", Bson::Array(a)) => {
+                for c in a {
+                    if let Bson::Document(d) = c {
+                        out.extend(conjuncts(d, field));
+                    }
+                }
+            }
+            (k, v) if k == field => out.push(v),
+            _ => {}
+        }
+    }
+    out
 }
 
 /// Can the wildcard index `idx` answer `filter` when it is forced with a hint? MongoDB refuses to scan a whole wildcard index.
