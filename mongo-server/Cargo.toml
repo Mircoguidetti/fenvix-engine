@@ -34,3 +34,6 @@ rustls-pki-types = "1"
 x509-parser = "0.17"
 icu_collator = "2"
 icu_locale = "2"
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+snap = "1"
+zstd = "0.13"

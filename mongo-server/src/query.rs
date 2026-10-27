@@ -48,6 +48,8 @@ fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
         (Bson::Int32(x), Bson::Int64(y)) => (*x as i64).cmp(y),
         (Bson::Int64(x), Bson::Int32(y)) => x.cmp(&(*y as i64)),
         (Bson::Int64(x), Bson::Int64(y)) => x.cmp(y),
+        (Bson::Int32(_) | Bson::Int64(_), Bson::Double(f)) => cmp_int_f64(int_of(a), *f),
+        (Bson::Double(f), Bson::Int32(_) | Bson::Int64(_)) => cmp_int_f64(int_of(b), *f).reverse(),
         _ => {
             let (x, y) = (as_f64(a), as_f64(b));
             // NaN sorts before every other number.
@@ -59,6 +61,36 @@ fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
             }
         }
     }
+}
+
+fn int_of(v: &Bson) -> i64 {
+    match v {
+        Bson::Int32(x) => *x as i64,
+        Bson::Int64(x) => *x,
+        _ => 0,
+    }
+}
+
+/// Exact comparison of an integer with a double (a 64-bit integer does not fit a double).
+fn cmp_int_f64(i: i64, f: f64) -> Ordering {
+    if f.is_nan() {
+        return Ordering::Greater;
+    }
+    if f >= 9223372036854775808.0 {
+        return Ordering::Less;
+    }
+    if f < -9223372036854775808.0 {
+        return Ordering::Greater;
+    }
+    let t = f.trunc();
+    match i.cmp(&(t as i64)) {
+        Ordering::Equal => 0.0_f64.partial_cmp(&(f - t)).unwrap_or(Ordering::Equal),
+        o => o,
+    }
+}
+
+fn is_nan_num(v: &Bson) -> bool {
+    is_numeric(v) && as_f64(v).is_nan()
 }
 
 pub fn as_f64(v: &Bson) -> f64 {
@@ -579,7 +611,7 @@ fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
                 return Ok(matches!(op, "$gte" | "$lte") && eq_match(vals, arg)?);
             }
             candidates(vals).iter().any(|c| {
-                same_bracket(c, arg) && {
+                same_bracket(c, arg) && (is_nan_num(c) == is_nan_num(arg)) && {
                     let o = compare(c, arg);
                     match op {
                         "$gt" => o == Ordering::Greater,
@@ -744,6 +776,19 @@ pub fn id_equality(filter: &Document) -> Option<&Bson> {
 // Sort
 // ---------------------------------------------------------------------------
 
+static EMPTY_ARRAY_KEY: Bson = Bson::Array(Vec::new());
+
+/// Compare two sort keys; the key of an empty array sorts above MinKey and below everything else (null, missing included).
+fn cmp_sort_keys(a: &Bson, b: &Bson) -> Ordering {
+    let (ea, eb) = (matches!(a, Bson::Array(x) if x.is_empty()), matches!(b, Bson::Array(x) if x.is_empty()));
+    match (ea, eb) {
+        (true, true) => Ordering::Equal,
+        (true, false) => if matches!(b, Bson::MinKey) { Ordering::Greater } else { Ordering::Less },
+        (false, true) => if matches!(a, Bson::MinKey) { Ordering::Less } else { Ordering::Greater },
+        _ => compare(a, b),
+    }
+}
+
 fn sort_key(doc: &Document, path: &str, ascending: bool) -> Bson {
     let vals = path_values(doc, path);
     if vals.is_empty() {
@@ -754,15 +799,15 @@ fn sort_key(doc: &Document, path: &str, ascending: bool) -> Bson {
     for v in &vals {
         match v {
             Bson::Array(a) if !a.is_empty() => flat.extend(a.iter()),
-            // An empty array sorts below null, in both directions.
-            Bson::Array(_) => flat.push(&Bson::MinKey),
+            // An empty array sorts like undefined: above MinKey, below null, in both directions.
+            Bson::Array(_) => flat.push(&EMPTY_ARRAY_KEY),
             other => flat.push(other),
         }
     }
     let pick = if ascending {
-        flat.into_iter().min_by(|a, b| compare(a, b))
+        flat.into_iter().min_by(|a, b| cmp_sort_keys(a, b))
     } else {
-        flat.into_iter().max_by(|a, b| compare(a, b))
+        flat.into_iter().max_by(|a, b| cmp_sort_keys(a, b))
     };
     pick.cloned().unwrap_or(Bson::Null)
 }
@@ -807,7 +852,7 @@ pub fn sort_docs(docs: &mut Vec<Document>, spec: &[(String, bool)]) {
         .collect();
     keyed.sort_by(|(a, _), (b, _)| {
         for (i, (_, asc)) in spec.iter().enumerate() {
-            let o = compare(&a[i], &b[i]);
+            let o = cmp_sort_keys(&a[i], &b[i]);
             let o = if *asc { o } else { o.reverse() };
             if o != Ordering::Equal {
                 return o;

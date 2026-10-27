@@ -218,7 +218,29 @@ impl Server {
                 if let Ok(md) = cmd.get_document("client") {
                     self.diag.set_metadata(conn_id, md.clone());
                 }
+                // an awaitable hello (topologyVersion + maxAwaitTimeMS): nothing changes here, so wait out the time
+                if let (Ok(tv), Some(ms)) = (cmd.get_document("topologyVersion"), crate::cmd::int_arg(cmd.get("maxAwaitTimeMS"))) {
+                    if tv.get_i64("counter").unwrap_or(-1) == 0 && ms > 0 {
+                        tokio::time::sleep(std::time::Duration::from_millis(ms.min(10_000) as u64)).await;
+                    }
+                }
                 let mut d = self.hello(name, conn_id);
+                if name != "hello" && matches!(cmd.get("helloOk"), Some(Bson::Boolean(true))) {
+                    let ok = d.remove("ismaster");
+                    let mut n = Document::new();
+                    n.insert("helloOk", true);
+                    n.insert("ismaster", ok.unwrap_or(Bson::Boolean(true)));
+                    n.extend(d);
+                    d = n;
+                }
+                if let Ok(list) = cmd.get_array("compression") {
+                    let chosen: Vec<Bson> = list.iter().filter(|c| matches!(c, Bson::String(s) if crate::wire::COMPRESSORS.contains(&s.as_str()))).cloned().collect();
+                    if !chosen.is_empty() {
+                        let mut n = doc! { "compression": chosen };
+                        n.extend(d);
+                        d = n;
+                    }
+                }
                 self.auth_hello(cmd, &mut d).await?;
                 return Ok(d);
             }
@@ -351,13 +373,32 @@ impl Server {
     }
 
     fn hello(&self, name: &str, conn_id: i64) -> Document {
+        static PROCESS_ID: std::sync::OnceLock<ObjectId> = std::sync::OnceLock::new();
+        let pid = *PROCESS_ID.get_or_init(ObjectId::new);
         let mut d = Document::new();
-        if name == "hello" {
-            d.insert("isWritablePrimary", true);
-        } else {
-            d.insert("ismaster", true);
+        let rs = self.rs.lock().unwrap().clone();
+        let primary_flag = if name == "hello" { "isWritablePrimary" } else { "ismaster" };
+        let topology = doc! { "processId": pid, "counter": 0_i64 };
+        match &rs {
+            Some((set, addr)) => {
+                d.insert("topologyVersion", topology);
+                d.insert("hosts", vec![Bson::String(addr.clone())]);
+                d.insert("setName", set.clone());
+                d.insert("setVersion", 1_i32);
+                d.insert(primary_flag, true);
+                d.insert("secondary", false);
+                d.insert("primary", addr.clone());
+                d.insert("me", addr.clone());
+                d.insert("electionId", ObjectId::from_bytes([0x7f, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 1]));
+                let ts = self.dbs.changes.cluster_now();
+                let now = DateTime::now();
+                d.insert("lastWrite", doc! { "opTime": { "ts": Bson::Timestamp(ts), "t": 1_i64 }, "lastWriteDate": now, "majorityOpTime": { "ts": Bson::Timestamp(ts), "t": 1_i64 }, "majorityWriteDate": now });
+            }
+            None => {
+                d.insert(primary_flag, true);
+                d.insert("topologyVersion", topology);
+            }
         }
-        d.insert("helloOk", true);
         d.insert("maxBsonObjectSize", 16_777_216_i32);
         d.insert("maxMessageSizeBytes", 48_000_000_i32);
         d.insert("maxWriteBatchSize", 100_000_i32);
@@ -367,15 +408,6 @@ impl Server {
         d.insert("minWireVersion", 0_i32);
         d.insert("maxWireVersion", MAX_WIRE_VERSION);
         d.insert("readOnly", false);
-        if let Some((set, addr)) = &*self.rs.lock().unwrap() {
-            d.insert("hosts", vec![Bson::String(addr.clone())]);
-            d.insert("setName", set.clone());
-            d.insert("setVersion", 1_i32);
-            d.insert("secondary", false);
-            d.insert("primary", addr.clone());
-            d.insert("me", addr.clone());
-            d.insert("electionId", ObjectId::from_bytes([0x7f, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 1]));
-        }
         d.insert("ok", 1.0);
         d
     }
