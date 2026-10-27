@@ -1,0 +1,1896 @@
+[
+ {
+  "name": "g10.concern.write_concern_values",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "seed",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 4
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 5
+     }
+    ],
+    "writeConcern": {
+     "w": 1,
+     "j": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 6
+     }
+    ],
+    "writeConcern": {
+     "w": 1,
+     "wtimeout": 100
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 7
+     }
+    ],
+    "writeConcern": {
+     "w": -1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 8
+     }
+    ],
+    "writeConcern": {
+     "w": "1"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9
+     }
+    ],
+    "writeConcern": {
+     "w": 1.5
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 10
+     }
+    ],
+    "writeConcern": {
+     "w": {}
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 11
+     }
+    ],
+    "writeConcern": {
+     "j": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 12
+     }
+    ],
+    "writeConcern": {
+     "wtimeout": -1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 13
+     }
+    ],
+    "writeConcern": {
+     "w": 2,
+     "wtimeout": 50
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 14
+     }
+    ],
+    "writeConcern": {
+     "w": 3
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 15
+     }
+    ],
+    "writeConcern": {
+     "w": 0,
+     "j": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 16
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "wtimeout": 10
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 17
+     }
+    ],
+    "writeConcern": {
+     "fsync": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 18
+     }
+    ],
+    "writeConcern": {
+     "w": 1,
+     "bogus": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 19
+     }
+    ],
+    "writeConcern": {}
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 20
+     }
+    ],
+    "writeConcern": {
+     "w": null
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 21
+     }
+    ],
+    "writeConcern": {
+     "w": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 22
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "j": false
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 23
+     }
+    ],
+    "writeConcern": {
+     "w": {
+      "$numberLong": "1"
+     }
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 24
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "wtimeout": {
+      "$numberLong": "5"
+     }
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 25
+     }
+    ],
+    "writeConcern": {
+     "j": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 26
+     }
+    ],
+    "writeConcern": {
+     "wtimeout": 0
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k31": 1
+      },
+      "name": "k31"
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "create": "c32",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "drop": "c32",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k39": 1
+      },
+      "name": "k39"
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "create": "c40",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "drop": "c40",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k47": 1
+      },
+      "name": "k47"
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "create": "c48",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "drop": "c48",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k55": 1
+      },
+      "name": "k55"
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "create": "c56",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "drop": "c56",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "find": "t",
+    "filter": {},
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$limit": 1
+     },
+     {
+      "$out": "o1"
+     }
+    ],
+    "cursor": {},
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$limit": 1
+     },
+     {
+      "$merge": {
+       "into": "o2"
+      }
+     }
+    ],
+    "cursor": {},
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 900
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup1"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 900
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup2"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 901
+     },
+     {
+      "_id": 901
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup3"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 902
+     },
+     {
+      "_id": 901
+     }
+    ],
+    "ordered": false,
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup4"
+   },
+   {
+    "commitTransaction": 1,
+    "writeConcern": {
+     "w": 2
+    },
+    "lsid": "$LSID",
+    "txnNumber": {
+     "$numberLong": "1"
+    },
+    "autocommit": false,
+    "__as": "commit_nox"
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$limit": 1
+     }
+    ],
+    "cursor": {},
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "count": "t",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "listCollections": 1,
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "listIndexes": "t",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1000
+     }
+    ],
+    "writeConcern": "majority"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1001
+     }
+    ],
+    "writeConcern": 5
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1002
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "provenance": "clientSupplied"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1003
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "provenance": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1004
+     }
+    ],
+    "writeConcern": {
+     "w": 50
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1005
+     }
+    ],
+    "writeConcern": {
+     "w": 51
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1006
+     }
+    ],
+    "writeConcern": {
+     "w": {
+      "a": 1
+     }
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1007
+     }
+    ],
+    "writeConcern": {
+     "wtimeout": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1008
+     }
+    ],
+    "writeConcern": {
+     "fsync": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1009
+     }
+    ],
+    "writeConcern": {
+     "fsync": true,
+     "j": true
+    }
+   },
+   {
+    "renameCollection": "$DB.t",
+    "to": "$DB.t9",
+    "writeConcern": {
+     "w": 2
+    },
+    "__db": "admin"
+   },
+   {
+    "dropDatabase": 1,
+    "writeConcern": {
+     "w": 2
+    },
+    "__skip": true
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "after_drop"
+   }
+  ]
+ },
+ {
+  "name": "g10.concern.write_concern_values_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "seed",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 4
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 5
+     }
+    ],
+    "writeConcern": {
+     "w": 1,
+     "j": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 6
+     }
+    ],
+    "writeConcern": {
+     "w": 1,
+     "wtimeout": 100
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 7
+     }
+    ],
+    "writeConcern": {
+     "w": -1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 8
+     }
+    ],
+    "writeConcern": {
+     "w": "1"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9
+     }
+    ],
+    "writeConcern": {
+     "w": 1.5
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 10
+     }
+    ],
+    "writeConcern": {
+     "w": {}
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 11
+     }
+    ],
+    "writeConcern": {
+     "j": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 12
+     }
+    ],
+    "writeConcern": {
+     "wtimeout": -1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 13
+     }
+    ],
+    "writeConcern": {
+     "w": 2,
+     "wtimeout": 50
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 14
+     }
+    ],
+    "writeConcern": {
+     "w": 3
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 15
+     }
+    ],
+    "writeConcern": {
+     "w": 0,
+     "j": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 16
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "wtimeout": 10
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 17
+     }
+    ],
+    "writeConcern": {
+     "fsync": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 18
+     }
+    ],
+    "writeConcern": {
+     "w": 1,
+     "bogus": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 19
+     }
+    ],
+    "writeConcern": {}
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 20
+     }
+    ],
+    "writeConcern": {
+     "w": null
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 21
+     }
+    ],
+    "writeConcern": {
+     "w": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 22
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "j": false
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 23
+     }
+    ],
+    "writeConcern": {
+     "w": {
+      "$numberLong": "1"
+     }
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 24
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "wtimeout": {
+      "$numberLong": "5"
+     }
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 25
+     }
+    ],
+    "writeConcern": {
+     "j": true
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 26
+     }
+    ],
+    "writeConcern": {
+     "wtimeout": 0
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k31": 1
+      },
+      "name": "k31"
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "create": "c32",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "drop": "c32",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k39": 1
+      },
+      "name": "k39"
+     }
+    ],
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "create": "c40",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "drop": "c40",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": "nosuchtag"
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k47": 1
+      },
+      "name": "k47"
+     }
+    ],
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "create": "c48",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "drop": "c48",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "u": {
+       "$set": {
+        "x": 1
+       }
+      }
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 1
+    },
+    "update": {
+     "$set": {
+      "y": 1
+     }
+    },
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "k55": 1
+      },
+      "name": "k55"
+     }
+    ],
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "create": "c56",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "drop": "c56",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "strict",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "dropIndexes": "t",
+    "index": "nonexistent_idx_x",
+    "writeConcern": {
+     "w": 0
+    }
+   },
+   {
+    "find": "t",
+    "filter": {},
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$limit": 1
+     },
+     {
+      "$out": "o1"
+     }
+    ],
+    "cursor": {},
+    "writeConcern": {
+     "w": 2
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$limit": 1
+     },
+     {
+      "$merge": {
+       "into": "o2"
+      }
+     }
+    ],
+    "cursor": {},
+    "writeConcern": {
+     "w": "majority"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 900
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup1"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 900
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup2"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 901
+     },
+     {
+      "_id": 901
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup3"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 902
+     },
+     {
+      "_id": 901
+     }
+    ],
+    "ordered": false,
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "dup4"
+   },
+   {
+    "commitTransaction": 1,
+    "writeConcern": {
+     "w": 2
+    },
+    "lsid": "$LSID",
+    "txnNumber": {
+     "$numberLong": "1"
+    },
+    "autocommit": false,
+    "__as": "commit_nox"
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$limit": 1
+     }
+    ],
+    "cursor": {},
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "count": "t",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "distinct": "t",
+    "key": "_id",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "listCollections": 1,
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "listIndexes": "t",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1000
+     }
+    ],
+    "writeConcern": "majority"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1001
+     }
+    ],
+    "writeConcern": 5
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1002
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "provenance": "clientSupplied"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1003
+     }
+    ],
+    "writeConcern": {
+     "w": "majority",
+     "provenance": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1004
+     }
+    ],
+    "writeConcern": {
+     "w": 50
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1005
+     }
+    ],
+    "writeConcern": {
+     "w": 51
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1006
+     }
+    ],
+    "writeConcern": {
+     "w": {
+      "a": 1
+     }
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1007
+     }
+    ],
+    "writeConcern": {
+     "wtimeout": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1008
+     }
+    ],
+    "writeConcern": {
+     "fsync": "x"
+    }
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1009
+     }
+    ],
+    "writeConcern": {
+     "fsync": true,
+     "j": true
+    }
+   },
+   {
+    "renameCollection": "$DB.t",
+    "to": "$DB.t9",
+    "writeConcern": {
+     "w": 2
+    },
+    "__db": "admin"
+   },
+   {
+    "dropDatabase": 1,
+    "writeConcern": {
+     "w": 2
+    },
+    "__skip": true
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "writeConcern": {
+     "w": 2
+    },
+    "__as": "after_drop"
+   }
+  ]
+ }
+]

@@ -467,7 +467,7 @@ impl Server {
 
     /// The `commitQuorum` of `createIndexes`: only a replica set takes one (the engine is a single data-bearing member).
     fn commit_quorum(&self, v: Option<&Bson>) -> R<Option<Bson>> {
-        let Some(v) = v else { return Ok(None) };
+        let Some(v) = v else { return Ok(self.is_rs().then(|| Bson::String("votingMembers".into()))) };
         let n = match v {
             Bson::String(_) => None,
             Bson::Int32(i) => Some(*i as f64),

@@ -1,0 +1,438 @@
+[
+ {
+  "name": "g10.params.sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "getParameter": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "logLevel": 1,
+    "ttlMonitorEnabled": 1,
+    "nosuch": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "nosuch": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": {
+     "showDetails": true
+    },
+    "logLevel": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": {
+     "showDetails": true,
+     "allParameters": true
+    },
+    "__db": "admin",
+    "__shape": true
+   },
+   {
+    "getParameter": "*",
+    "__db": "admin",
+    "__shape": true
+   },
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": -5,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": "x",
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": 100,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": {
+     "$numberLong": "60"
+    },
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "KeysRotationIntervalSec": 7776000,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "featureCompatibilityVersion": "7.0",
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": "x",
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": true,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "logLevel": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 1.5,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorEnabled": "x",
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "ttlMonitorEnabled": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorEnabled": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorEnabled": true,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorSleepSecs": -1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorSleepSecs": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "saslHostName": 5,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "nosuchparam": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 0,
+    "nosuchparam": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 0,
+    "ttlMonitorEnabled": true,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "enableMajorityReadConcern": true,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "internalQueryJavaScriptFnTimeoutMillis": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "internalQueryJavaScriptFnTimeoutMillis": 60000,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "jsHeapLimitMB": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "jsHeapLimitMB": 1100,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "cursorTimeoutMillis": 600000,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "cursorTimeoutMillis": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "cursorTimeoutMillis": 600000,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g10.params.rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "getParameter": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "logLevel": 1,
+    "ttlMonitorEnabled": 1,
+    "nosuch": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "nosuch": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": {
+     "showDetails": true
+    },
+    "logLevel": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "getParameter": {
+     "showDetails": true,
+     "allParameters": true
+    },
+    "__db": "admin",
+    "__shape": true
+   },
+   {
+    "getParameter": "*",
+    "__db": "admin",
+    "__shape": true
+   },
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": -5,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": "x",
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": 100,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "transactionLifetimeLimitSeconds": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "transactionLifetimeLimitSeconds": {
+     "$numberLong": "60"
+    },
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "KeysRotationIntervalSec": 7776000,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "featureCompatibilityVersion": "7.0",
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": "x",
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": true,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "logLevel": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 1.5,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorEnabled": "x",
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "ttlMonitorEnabled": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorEnabled": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorEnabled": true,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorSleepSecs": -1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "ttlMonitorSleepSecs": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "saslHostName": 5,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "nosuchparam": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 0,
+    "nosuchparam": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "logLevel": 0,
+    "ttlMonitorEnabled": true,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "enableMajorityReadConcern": true,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "internalQueryJavaScriptFnTimeoutMillis": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "internalQueryJavaScriptFnTimeoutMillis": 60000,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "jsHeapLimitMB": 0,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "jsHeapLimitMB": 1100,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "cursorTimeoutMillis": 600000,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "cursorTimeoutMillis": 1,
+    "__db": "admin"
+   },
+   {
+    "setParameter": 1,
+    "cursorTimeoutMillis": 600000,
+    "__db": "admin"
+   }
+  ]
+ }
+]

@@ -47,11 +47,13 @@ pub struct ChangeLog {
     inner: Mutex<Inner>,
     pub notify: Notify,
     nonce: u32,
+    /// The cluster time (seconds) before the first write.
+    boot: u32,
 }
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random() }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32 }
     }
 }
 
@@ -99,8 +101,7 @@ impl ChangeLog {
     /// time moving with a no-op write of its own).
     pub fn cluster_now(&self) -> Timestamp {
         let g = self.inner.lock().unwrap();
-        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
-        let (t, i) = if secs > g.last_time.0 { (secs, 1) } else { g.last_time };
+        let (t, i) = if g.last_time.0 == 0 { (self.boot, 1) } else { g.last_time };
         Timestamp { time: t, increment: i }
     }
 

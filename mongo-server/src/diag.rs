@@ -519,7 +519,7 @@ impl Server {
         }
     }
 
-    fn is_rs(&self) -> bool {
+    pub(crate) fn is_rs(&self) -> bool {
         self.rs.lock().unwrap().is_some()
     }
 
@@ -768,6 +768,11 @@ impl Server {
     }
 
     // ---- read / write concern defaults, cluster parameters ---------------------------------------
+
+    /// The write concern that `setDefaultRWConcern` set, if any.
+    pub(crate) fn default_write_concern(&self) -> Option<Document> {
+        self.diag.rwc.lock().unwrap().as_ref().and_then(|s| s.get_document("defaultWriteConcern").ok().cloned())
+    }
 
     fn get_default_rwc(&self, _db: &str, cmd: &Document) -> R<Document> {
         if !self.is_rs() {

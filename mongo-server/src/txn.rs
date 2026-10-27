@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 /// MongoDB aborts a transaction after `transactionLifetimeLimitSeconds` (default 60).
-pub const TXN_LIFETIME: Duration = Duration::from_secs(60);
+pub static LIFETIME_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(60);
 
 pub struct Txn {
     pub id: u64,
@@ -312,18 +312,18 @@ impl Server {
         Ok(ok())
     }
 
-    /// Abort transactions that outlived [`TXN_LIFETIME`].
+    /// Abort transactions that outlived `transactionLifetimeLimitSeconds`.
     pub fn spawn_txn_janitor(self: &Arc<Self>) {
         let me = Arc::clone(self);
         tokio::spawn(async move {
             loop {
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                tokio::time::sleep(Duration::from_secs(1)).await;
                 let mut dead = Vec::new();
                 {
                     let mut m = me.sessions.m.lock().unwrap();
                     for s in m.values_mut() {
                         if let State::Active(Some(t)) = &s.state {
-                            if t.started.elapsed() >= TXN_LIFETIME {
+                            if t.started.elapsed() >= Duration::from_secs(LIFETIME_SECS.load(std::sync::atomic::Ordering::Relaxed)) {
                                 if let State::Active(Some(t)) = std::mem::replace(&mut s.state, State::Aborted) {
                                     dead.push((t.db, t.id));
                                 }

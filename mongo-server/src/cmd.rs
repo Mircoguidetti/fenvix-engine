@@ -162,6 +162,33 @@ impl Server {
 
     async fn dispatch(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         self.authorize(conn_id, db, name, cmd).await?;
+        if matches!(name, "commitTransaction" | "abortTransaction") && db != "admin" {
+            return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
+        }
+        let wc = self.command_write_concern(name, cmd)?;
+        self.check_read_concern(name, cmd)?;
+        let mut r = Box::pin(self.dispatch_inner(db, name, cmd, conn_id)).await?;
+        if let Some(wc) = &wc {
+            self.finish_write_concern(name, cmd, wc, &mut r)?;
+        }
+        if self.is_rs() && matches!(cmd.get_document("readConcern").ok().and_then(|rc| rc.get_str("level").ok()), Some("snapshot")) && !cmd.contains_key("autocommit") {
+            // a snapshot read says the time it read at
+            let at = self.dbs.changes.cluster_now();
+            if let Ok(c) = r.get_document_mut("cursor") {
+                c.insert("atClusterTime", Bson::Timestamp(at));
+            } else if name == "distinct" {
+                let ok = r.remove("ok");
+                r.insert("atClusterTime", Bson::Timestamp(at));
+                if let Some(ok) = ok {
+                    r.insert("ok", ok);
+                }
+            }
+        }
+        r.remove("\u{0}ncolls");
+        Ok(r)
+    }
+
+    async fn dispatch_inner(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         if let Some(r) = self.diag_command(db, name, cmd).await {
             return r;
         }
@@ -215,10 +242,13 @@ impl Server {
             "invalidateUserCache" => return Ok(ok()),
             "ping" => return Ok(ok()),
             "buildInfo" | "buildinfo" => return Ok(build_info()),
-            "getParameter" => return get_parameter(cmd),
-            "setParameter" => return set_parameter(cmd),
+            "getParameter" => return crate::params::get_parameter(cmd, self.is_rs()),
+            "setParameter" => return crate::params::set_parameter(cmd, self.is_rs()),
             "endSessions" => return self.end_sessions(cmd).await,
             "killSessions" | "refreshSessions" => return Ok(ok()),
+            "commitTransaction" | "abortTransaction" if db != "admin" => {
+                return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
+            }
             "commitTransaction" => return self.commit_txn(cmd).await,
             "abortTransaction" => return self.abort_txn(cmd).await,
             "whatsmyuri" => return Ok(doc! { "you": "127.0.0.1:0", "ok": 1.0 }),
@@ -296,11 +326,12 @@ impl Server {
             "listCollections" => self.list_collections(db, cmd).await,
             "dropDatabase" => {
                 let colls = self.dbs.lock(db).await.collections().await?;
+                let n_colls = colls.len();
                 self.dbs.lock(db).await.drop_database().await?;
                 let mut evs: Vec<crate::changes::EvSpec> = colls.into_iter().map(|c| crate::changes::EvSpec { db: db.to_string(), coll: Some(c), op: "drop", doc_key: None, full: None, desc: None, txn: None }).collect();
                 evs.push(crate::changes::EvSpec { db: db.to_string(), coll: None, op: "dropDatabase", doc_key: None, full: None, desc: None, txn: None });
                 self.dbs.changes.publish(evs);
-                Ok(doc! { "dropped": db, "ok": 1.0 })
+                Ok(doc! { "dropped": db, "\u{0}ncolls": n_colls as i32, "ok": 1.0 })
             }
             "tenantAdmin" => self.tenant_admin(db, cmd).await,
             "tenantTrace" => Box::pin(self.tenant_trace(db, cmd)).await,
@@ -714,63 +745,4 @@ fn build_info() -> Document {
     }
 }
 
-fn get_parameter(cmd: &Document) -> R<Document> {
-    use std::sync::atomic::Ordering::Relaxed;
-    let all = matches!(cmd.get("getParameter"), Some(Bson::String(s)) if s == "*");
-    let mut reply = Document::new();
-    let mut found = false;
-    if all || cmd.get("featureCompatibilityVersion").is_some() {
-        reply.insert("featureCompatibilityVersion", doc! { "version": "7.0" });
-        found = true;
-    }
-    if all || cmd.get("internalQueryJavaScriptFnTimeoutMillis").is_some() {
-        reply.insert("internalQueryJavaScriptFnTimeoutMillis", crate::js::TIMEOUT_MS.load(Relaxed) as i32);
-        found = true;
-    }
-    if all || cmd.get("jsHeapLimitMB").is_some() {
-        reply.insert("jsHeapLimitMB", crate::js::HEAP_MB.load(Relaxed) as i32);
-        found = true;
-    }
-    if !found {
-        return Err(MongoError::new(72, "InvalidOptions", "no option found to get".into()));
-    }
-    reply.insert("ok", 1.0);
-    Ok(reply)
-}
-
-/// `setParameter` for the parameters this server has: the limits of server-side JavaScript.
-fn set_parameter(cmd: &Document) -> R<Document> {
-    use std::sync::atomic::Ordering::Relaxed;
-    let mut reply = Document::new();
-    let mut any = false;
-    for (k, v) in cmd.iter().skip(1) {
-        if k.starts_with('$') || matches!(k.as_str(), "lsid" | "txnNumber" | "comment" | "maxTimeMS" | "writeConcern" | "readConcern" | "apiVersion" | "apiStrict" | "apiDeprecationErrors") {
-            continue;
-        }
-        let cell = match k.as_str() {
-            "internalQueryJavaScriptFnTimeoutMillis" => &crate::js::TIMEOUT_MS,
-            "jsHeapLimitMB" => &crate::js::HEAP_MB,
-            other => return Err(MongoError::new(72, "InvalidOptions", format!("attempted to set unrecognized parameter [{other}], use help:true to see options "))),
-        };
-        let n = match v {
-            Bson::Int32(i) => *i as i64,
-            Bson::Int64(i) => *i,
-            Bson::Double(f) if f.fract() == 0.0 => *f as i64,
-            _ => return Err(MongoError::new(2, "BadValue", format!("Failed validating {k}: Unable to coerce value to integral type"))),
-        };
-        if n <= 0 {
-            return Err(MongoError::new(2, "BadValue", format!("Invalid value for parameter {k}: {n} is not greater than 0")));
-        }
-        if !any {
-            reply.insert("was", cell.load(Relaxed) as i32);
-        }
-        cell.store(n as u64, Relaxed);
-        any = true;
-    }
-    if !any {
-        return Err(MongoError::new(72, "InvalidOptions", "no option found to set, use help:true to see options ".into()));
-    }
-    reply.insert("ok", 1.0);
-    Ok(reply)
-}
 
