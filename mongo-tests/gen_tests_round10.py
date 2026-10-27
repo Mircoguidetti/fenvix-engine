@@ -119,3 +119,41 @@ def register(g):
     tc("many_documents", [cix("c", [["a", 1], ["p.$**", 1]]), ins("c", [{"_id": i, "a": i % 7, "p": {"q": i % 11, "r": [i % 5, i % 3]}} for i in range(1, 401)]),
                           {"op": "count_documents", "coll": "c", "filter": {"a": 3, "p.q": 4}, "hint": "a_1_p.$**_1"}, {"op": "count_documents", "coll": "c", "filter": {"a": 3}, "hint": "a_1_p.$**_1"},
                           {"op": "count_documents", "coll": "c", "filter": {"a": {"$gte": 2, "$lt": 5}, "p.r": 2}, "hint": "a_1_p.$**_1"}, {"op": "count_documents", "coll": "c", "filter": {"a": 5, "p.q": {"$gt": 8}}, "hint": "a_1_p.$**_1"}])
+
+    # ------------------------------------------------------------------ $bucketAuto granularities
+    def tb(name, steps, **flags):
+        add("bucketauto." + name, steps, "$bucketAuto granularity", **flags)
+
+    GR = ["R5", "R10", "R20", "R40", "R80", "1-2-5", "E6", "E12", "E24", "E48", "E96", "E192", "POWERSOF2"]
+
+    def vals(vs):
+        return [{"_id": i, "v": v} for i, v in enumerate(vs)]
+
+    def ba(g, b, **kw):
+        return agg("c", [{"$bucketAuto": {"groupBy": "$v", "buckets": b, "granularity": g, **kw}}])
+
+    GRID = [round(0.9 + i * 0.037, 4) for i in range(250)]            # about 0.9 .. 10.1
+    WIDE = [10 ** k * m for k in range(-4, 5) for m in (1.0, 1.7, 3.3, 6.4)]
+    for g in GR:
+        tb(f"{g}.grid_buckets", [ins("c", vals(GRID))] + [ba(g, b) for b in (1, 2, 7, 40, 250)])
+        tb(f"{g}.wide_decades", [ins("c", vals(WIDE))] + [ba(g, b) for b in (1, 3, 10, 36)])
+        tb(f"{g}.on_members", [ins("c", vals([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 0.1, 0.01]))] + [ba(g, b) for b in (2, 5, 14)])
+        tb(f"{g}.zeros", [ins("c", vals([0, 0, 5])), ba(g, 2), ba(g, 3), ba(g, 1)])
+        tb(f"{g}.zero_mix", [ins("c", vals([0, 1, 2, 3])), ba(g, 4), ba(g, 2), ins("d", vals([0, 100])), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 2, "granularity": g}}])])
+        tb(f"{g}.zero_variants", [ins("c", vals([0.0, 1.0])), ba(g, 2), ba(g, 1)])
+        tb(f"{g}.single", [ins("c", vals([7])), ba(g, 1), ba(g, 3)])
+        tb(f"{g}.equal_values", [ins("c", vals([2, 2, 2, 2])), ba(g, 4), ins("d", vals([1, 1, 2, 2])), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 4, "granularity": g}}])])
+        tb(f"{g}.integer_types", [ins("c", [{"_id": 1, "v": {"$numberLong": "3"}}, {"_id": 2, "v": {"$numberInt": "9"}}, {"_id": 3, "v": {"$numberDouble": "20.5"}}]), ba(g, 2), ba(g, 3)])
+        tb(f"{g}.output", [ins("c", [{"_id": i, "v": i * 1.5, "w": i} for i in range(1, 30)]), ba(g, 4, output={"n": {"$sum": 1}, "top": {"$max": "$w"}, "ws": {"$push": "$w"}})])
+        tb(f"{g}.negative", [ins("c", vals([-1, 2])), ba(g, 2)])
+        tb(f"{g}.nan", [ins("c", [{"_id": 1, "v": {"$numberDouble": "NaN"}}, {"_id": 2, "v": 1}]), ba(g, 2)])
+        tb(f"{g}.string", [ins("c", vals(["a", 1])), ba(g, 2)])
+        tb(f"{g}.null_and_missing", [ins("c", [{"_id": 1, "v": 1}, {"_id": 2}]), ba(g, 2), ins("d", [{"_id": 1, "v": None}]), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": g}}])])
+        tb(f"{g}.empty", [{"op": "create_collection", "coll": "c"}, ba(g, 3)])
+        tb(f"{g}.tiny_huge", [ins("c", vals([1e-12, 1e-9, 1e300, 1e305])), ba(g, 2), ba(g, 4)])
+    tb("unknown_granularity", [ins("c", vals([1, 2])), ba("R7", 2), ba("r5", 2), ba("e6", 2), ba("", 2)])
+    tb("unknown_granularity_empty", [{"op": "create_collection", "coll": "c"}, ba("nope", 2)])
+    tb("granularity_not_string", [ins("c", vals([1, 2])), ba(5, 2), ba(None, 2)])
+    tb("infinity", [ins("c", vals([1, {"$numberDouble": "Infinity"}])), ba("POWERSOF2", 2), ba("R5", 2), ba("1-2-5", 2)])
+    tb("pow2_large", [ins("c", vals([1, 2 ** 40])), ba("POWERSOF2", 1), ba("POWERSOF2", 2), ins("d", vals([2 ** 31, 2 ** 33])), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": "POWERSOF2"}}])])
+    tb("computed_group_by", [ins("c", [{"_id": i, "a": i, "b": 2} for i in range(1, 20)]), agg("c", [{"$bucketAuto": {"groupBy": {"$multiply": ["$a", "$b"]}, "buckets": 5, "granularity": "E12"}}])])

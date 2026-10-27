@@ -135,13 +135,28 @@ pub fn bucket_auto(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> R<Vec<
     }
     let group_by = group_by.ok_or_else(|| err(40246, "$bucketAuto requires 'groupBy' and 'buckets' to be specified"))?;
     let buckets = buckets.ok_or_else(|| err(40246, "$bucketAuto requires 'groupBy' and 'buckets' to be specified"))? as usize;
+    let grid = match granularity.as_deref() {
+        None => None,
+        Some(name) => Some(Rounder::named(name).ok_or_else(|| err(40257, format!("Unknown rounding granularity '{name}'")))?),
+    };
     let mut keyed: Vec<(Bson, Document)> = Vec::with_capacity(docs.len());
     for d in docs {
-        let k = ev(&group_by, &d)?.unwrap_or(Bson::Null);
-        keyed.push((k, d));
-    }
-    if granularity.is_some() && keyed.iter().any(|(k, _)| !is_numeric(k)) {
-        return Err(err(40258, "$bucketAuto with 'granularity' requires the groupBy values to be numeric"));
+        let k = ev(&group_by, &d)?;
+        if grid.is_some() {
+            match &k {
+                Some(v) if is_numeric(v) => {
+                    if as_f64(v).is_nan() {
+                        return Err(err(40259, "$bucketAuto can specify a 'granularity' with numeric boundaries only, but found a NaN"));
+                    }
+                    if as_f64(v) < 0.0 {
+                        return Err(err(40260, "$bucketAuto can specify a 'granularity' with non-negative numbers only, but found a negative number"));
+                    }
+                }
+                Some(v) => return Err(err(40258, format!("$bucketAuto can specify a 'granularity' with numeric boundaries only, but found a value with type: {}", crate::update::type_name(v)))),
+                None => return Err(err(40258, "$bucketAuto can specify a 'granularity' with numeric boundaries only, but found a value with type: missing")),
+            }
+        }
+        keyed.push((k.unwrap_or(Bson::Null), d));
     }
     keyed.sort_by(|a, b| compare(&a.0, &b.0));
     let n = keyed.len();
@@ -151,70 +166,55 @@ pub fn bucket_auto(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> R<Vec<
     // bucket boundaries as indexes: each of the first buckets takes round(n / buckets) documents, equal keys stay together
     let size = ((n as f64 / buckets as f64) + 0.5).floor() as usize;
     let size = size.max(1);
-    let mut ranges: Vec<(usize, usize)> = Vec::new();
-    let mut start = 0;
-    while start < n {
-        let last_bucket = ranges.len() + 1 == buckets;
-        let mut end = if last_bucket { n } else { (start + size).min(n) };
-        while end < n && end > start && equal(&keyed[end].0, &keyed[end - 1].0) {
-            end += 1;
-        }
-        ranges.push((start, end));
-        start = end;
-    }
-    let grid = match granularity.as_deref() {
-        None => None,
-        Some("POWERSOF2") => Some(Series::Pow2),
-        Some("1-2-5") => Some(Series::OneTwoFive),
-        Some(other) => return Err(err(40257, format!("Unsupported $bucketAuto granularity '{other}' (this server supports POWERSOF2 and 1-2-5)"))),
-    };
-    let mut mins: Vec<Bson> = ranges.iter().map(|(s, _)| keyed[*s].0.clone()).collect();
-    let mut max_last = keyed[n - 1].0.clone();
-    if let Some(g) = &grid {
-        if keyed.iter().any(|(k, _)| as_f64(k) < 0.0) {
-            return Err(err(40260, "$bucketAuto can specify a 'granularity' with numeric boundaries only, and they must be non-negative"));
-        }
-        for (i, m) in mins.iter_mut().enumerate() {
-            *m = if i == 0 { g.round_down(as_f64(m)) } else { g.round_up(as_f64(m)) };
-        }
-        max_last = g.round_up(as_f64(&max_last));
-    }
     let out_spec = match output {
         Some(o) if !o.is_empty() => o,
         _ => doc! { "count": { "$sum": 1 } },
     };
-    if grid.is_some() {
-        // rounded boundaries decide membership: re-split the sorted documents by them
-        mins.dedup_by(|a, b| equal(a, b));
-        let mut ranges2: Vec<(usize, usize)> = Vec::new();
-        let mut start = 0;
-        for bi in 0..mins.len() {
-            let end = if bi + 1 < mins.len() { keyed.iter().position(|(k, _)| compare(k, &mins[bi + 1]) != Ordering::Less).unwrap_or(n) } else { n };
-            if end > start {
-                ranges2.push((start, end));
-                start = end;
+    let mut ranges: Vec<(usize, usize)> = Vec::new();
+    let mut bounds: Option<(Bson, Vec<Bson>)> = None;
+    let mut start = 0;
+    if let Some(g) = &grid {
+        // With a granularity a bucket takes its share of documents, ends at the first series number above its last value
+        // (below the next document's value when that last value is zero) and takes every following document below it.
+        let min0 = g.round_down(&keyed[0].0)?;
+        let mut ends: Vec<Bson> = Vec::new();
+        while start < n {
+            let mut end = if ranges.len() + 1 == buckets { n } else { (start + size).min(n) };
+            while end < n && end > start && equal(&keyed[end].0, &keyed[end - 1].0) {
+                end += 1;
             }
-        }
-        // the lower boundary of each non-empty range
-        let firsts: Vec<Bson> = {
-            let mut v = Vec::new();
-            let mut idx = 0;
-            for bi in 0..mins.len() {
-                let end = if bi + 1 < mins.len() { keyed.iter().position(|(k, _)| compare(k, &mins[bi + 1]) != Ordering::Less).unwrap_or(n) } else { n };
-                if end > idx {
-                    v.push(mins[bi].clone());
-                    idx = end;
+            let last = &keyed[end - 1].0;
+            let mut boundary = if end < n && as_f64(last) == 0.0 { g.round_down(&keyed[end].0)? } else { g.round_up(last)? };
+            if ranges.len() + 1 != buckets {
+                while end < n && compare(&keyed[end].0, &boundary) == Ordering::Less {
+                    end += 1;
                 }
             }
-            v
-        };
-        ranges = ranges2;
-        mins = firsts;
+            if end == n {
+                boundary = g.round_up(&keyed[n - 1].0)?;
+            }
+            ranges.push((start, end));
+            ends.push(boundary);
+            start = end;
+        }
+        bounds = Some((min0, ends));
+    } else {
+        while start < n {
+            let last_bucket = ranges.len() + 1 == buckets;
+            let mut end = if last_bucket { n } else { (start + size).min(n) };
+            while end < n && end > start && equal(&keyed[end].0, &keyed[end - 1].0) {
+                end += 1;
+            }
+            ranges.push((start, end));
+            start = end;
+        }
     }
     let mut res = Vec::new();
     for (i, (s, e)) in ranges.iter().enumerate() {
-        let min = mins.get(i).cloned().unwrap_or_else(|| keyed[*s].0.clone());
-        let max = if i + 1 < ranges.len() { mins.get(i + 1).cloned().unwrap_or_else(|| keyed[ranges[i + 1].0].0.clone()) } else { max_last.clone() };
+        let (min, max) = match &bounds {
+            Some((min0, ends)) => (if i == 0 { min0.clone() } else { ends[i - 1].clone() }, ends[i].clone()),
+            None => (keyed[*s].0.clone(), if i + 1 < ranges.len() { keyed[ranges[i + 1].0].0.clone() } else { keyed[n - 1].0.clone() }),
+        };
         let members: Vec<Document> = keyed[*s..*e].iter().map(|(_, d)| d.clone()).collect();
         let mut gspec = out_spec.clone();
         gspec.insert("_id", Bson::Null);
@@ -232,48 +232,121 @@ pub fn bucket_auto(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> R<Vec<
     Ok(res)
 }
 
-fn num_bson(f: f64, int_ok: bool) -> Bson {
-    if int_ok && f.fract() == 0.0 && f.abs() < 2e9 {
-        Bson::Int32(f as i32)
-    } else {
-        Bson::Double(f)
-    }
-}
+// Preferred-number series as MongoDB's $bucketAuto rounders define them (read off a mongod 7.0): the integer mantissas,
+// the number of digits of each, so that `mantissa * 10^(exponent - digits + 1)` reproduces its floating-point results.
+const SERIES: &[(&str, i32, &[i64])] = &[
+    ("R5", 2, &[10, 16, 25, 40, 63]),
+    ("R10", 3, &[100, 125, 160, 200, 250, 315, 400, 500, 630, 800]),
+    ("R20", 3, &[100, 112, 125, 140, 160, 180, 200, 224, 250, 280, 315, 355, 400, 450, 500, 560, 630, 710, 800, 900]),
+    ("R40", 3, &[100, 106, 112, 118, 125, 132, 140, 150, 160, 170, 180, 190, 200, 212, 224, 236, 250, 265, 280, 300, 315, 355, 375, 400, 425, 450, 475, 500, 530, 560, 600, 630, 670, 710, 750, 800, 850, 900, 950]),
+    ("R80", 3, &[103, 109, 115, 122, 128, 136, 145, 155, 165, 175, 185, 195, 206, 218, 230, 243, 258, 272, 290, 307, 325, 345, 365, 387, 412, 437, 462, 487, 515, 545, 575, 615, 650, 690, 730, 775, 825, 875, 925, 975]),
+    ("1-2-5", 2, &[10, 20, 50]),
+    ("E6", 2, &[10, 15, 22, 33, 47, 68]),
+    ("E12", 2, &[10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82]),
+    ("E24", 2, &[10, 11, 12, 13, 15, 16, 18, 20, 22, 24, 27, 30, 33, 36, 39, 43, 47, 51, 56, 62, 68, 75, 82, 91]),
+    ("E48", 3, &[100, 105, 110, 115, 121, 127, 133, 140, 147, 154, 162, 169, 178, 187, 196, 205, 215, 226, 237, 249, 261, 274, 287, 301, 316, 332, 348, 365, 383, 402, 422, 442, 464, 487, 511, 536, 562, 590, 619, 649, 681, 715, 750, 787, 825, 866, 909, 953]),
+    ("E96", 3, &[100, 102, 105, 107, 110, 113, 115, 118, 121, 124, 127, 130, 133, 137, 140, 143, 147, 150, 154, 158, 162, 165, 169, 174, 178, 182, 187, 191, 196, 200, 205, 210, 215, 221, 226, 232, 237, 243, 249, 255, 261, 267, 274, 280, 287, 294, 301, 309, 316, 324, 332, 340, 348, 357, 365, 374, 383, 392, 402, 412, 422, 432, 442, 453, 464, 475, 487, 499, 511, 523, 536, 549, 562, 576, 590, 604, 619, 634, 649, 665, 681, 698, 715, 732, 750, 768, 787, 806, 825, 845, 866, 887, 909, 931, 953, 976]),
+    ("E192", 3, &[100, 101, 102, 104, 105, 106, 107, 109, 110, 111, 113, 114, 115, 117, 118, 120, 121, 123, 124, 126, 127, 129, 130, 132, 133, 135, 137, 138, 140, 142, 143, 145, 147, 149, 150, 152, 154, 156, 158, 160, 162, 164, 165, 167, 169, 172, 174, 176, 178, 180, 182, 184, 187, 189, 191, 193, 196, 198, 200, 203, 205, 208, 210, 213, 215, 218, 221, 223, 226, 229, 232, 234, 237, 240, 243, 246, 249, 252, 255, 258, 261, 264, 267, 271, 274, 277, 280, 284, 287, 291, 294, 298, 301, 305, 309, 312, 316, 320, 324, 328, 332, 336, 340, 344, 348, 352, 357, 361, 365, 370, 374, 379, 383, 388, 392, 397, 402, 407, 412, 417, 422, 427, 432, 437, 442, 448, 453, 459, 464, 470, 475, 481, 487, 493, 499, 505, 511, 517, 523, 530, 536, 542, 549, 556, 562, 569, 576, 583, 590, 597, 604, 612, 619, 626, 634, 642, 649, 657, 665, 673, 681, 690, 698, 706, 715, 723, 732, 741, 750, 759, 768, 777, 787, 796, 806, 816, 825, 835, 845, 856, 866, 876, 887, 898, 909, 920, 931, 942, 953, 965, 976, 988]),
+];
 
-enum Series {
+/// A `$bucketAuto` granularity: round a number to the next series number above it or the next one below it.
+enum Rounder {
     Pow2,
-    OneTwoFive,
+    /// Mantissas of one decade and the number of digits they are written with.
+    Preferred(&'static [i64], i32),
 }
 
-impl Series {
-    fn round_down(&self, x: f64) -> Bson {
-        num_bson(self.snap(x, false, true), matches!(self, Series::Pow2))
+impl Rounder {
+    fn named(name: &str) -> Option<Rounder> {
+        if name == "POWERSOF2" {
+            return Some(Rounder::Pow2);
+        }
+        SERIES.iter().find(|(n, _, _)| *n == name).map(|(_, d, m)| Rounder::Preferred(m, *d))
     }
 
-    fn round_up(&self, x: f64) -> Bson {
-        num_bson(self.snap(x, true, false), matches!(self, Series::Pow2))
+    /// `10^e` the way MongoDB builds it: by repeated multiplication or division, which is where the trailing digits of
+    /// `6.300000000000001` come from.
+    fn scale(e: i32) -> f64 {
+        let mut m = 1.0f64;
+        for _ in 0..e.unsigned_abs() {
+            m = if e < 0 { m / 10.0 } else { m * 10.0 };
+        }
+        m
     }
 
-    fn snap(&self, x: f64, up: bool, strict_below: bool) -> f64 {
-        if x <= 0.0 {
-            return 0.0;
+    fn members(table: &[i64], digits: i32, e: i32) -> impl Iterator<Item = f64> + '_ {
+        let mult = Self::scale(e - digits + 1);
+        table.iter().map(move |m| *m as f64 * mult)
+    }
+
+    fn finite(v: &Bson) -> R<f64> {
+        let x = as_f64(v);
+        if x.is_infinite() {
+            return Err(err(11785400, "A granularity rounder can only round finite numbers"));
+        }
+        Ok(x)
+    }
+
+    fn up(&self, v: &Bson) -> R<Bson> {
+        let x = as_f64(v);
+        if x == 0.0 {
+            return Ok(v.clone());
         }
         match self {
-            Series::Pow2 => {
-                let e = if up { x.log2().ceil() } else if strict_below { x.log2().ceil() - 1.0 } else { x.log2().floor() };
-                2f64.powf(e)
-            }
-            Series::OneTwoFive => {
-                let base = 10f64.powf(x.log10().floor());
-                let cands = [1.0, 2.0, 5.0, 10.0].map(|m| m * base);
-                if up {
-                    cands.iter().copied().find(|c| *c >= x).unwrap_or(x)
-                } else {
-                    let below = [0.5, 1.0, 2.0, 5.0, 10.0].map(|m| m * base);
-                    below.iter().copied().rev().find(|c| if strict_below { *c < x } else { *c <= x }).unwrap_or(x)
+            Rounder::Pow2 => Ok(pow2_bson(2f64.powf(Self::finite(v)?.log2().floor() + 1.0))),
+            Rounder::Preferred(_, _) if x.is_infinite() => Ok(Bson::Double(x)),
+            Rounder::Preferred(t, d) => {
+                let e = x.log10().floor() as i32;
+                for dec in e - 1..=e + 2 {
+                    if let Some(m) = Self::members(t, *d, dec).find(|m| *m > x) {
+                        return Ok(Bson::Double(m));
+                    }
                 }
+                Ok(Bson::Double(x))
             }
         }
+    }
+
+    fn down(&self, v: &Bson) -> R<Bson> {
+        let x = as_f64(v);
+        if x == 0.0 {
+            return Ok(v.clone());
+        }
+        match self {
+            Rounder::Pow2 => {
+                let l = Self::finite(v)?.log2();
+                Ok(pow2_bson(2f64.powf(if l.fract() == 0.0 { l - 1.0 } else { l.floor() })))
+            }
+            Rounder::Preferred(_, _) if x.is_infinite() => Ok(Bson::Double(x)),
+            Rounder::Preferred(t, d) => {
+                let e = x.log10().floor() as i32;
+                for dec in (e - 2..=e + 1).rev() {
+                    if let Some(m) = Self::members(t, *d, dec).filter(|m| *m < x).last() {
+                        return Ok(Bson::Double(m));
+                    }
+                }
+                Ok(Bson::Double(x))
+            }
+        }
+    }
+}
+
+impl Rounder {
+    fn round_up(&self, v: &Bson) -> R<Bson> {
+        self.up(v)
+    }
+
+    fn round_down(&self, v: &Bson) -> R<Bson> {
+        self.down(v)
+    }
+}
+
+/// Powers of two come back as integers when they are whole.
+fn pow2_bson(f: f64) -> Bson {
+    if f.fract() == 0.0 && f.abs() < 9.2e18 {
+        if f.abs() < 2147483648.0 { Bson::Int32(f as i32) } else { Bson::Int64(f as i64) }
+    } else {
+        Bson::Double(f)
     }
 }
 
