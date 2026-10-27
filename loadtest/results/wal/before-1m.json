@@ -1,0 +1,42 @@
+{
+ "label": "before",
+ "minutes": 1.0,
+ "connections": 8,
+ "extra_args": [],
+ "writes": 27198,
+ "ops_per_sec": 453.3,
+ "errors": 0,
+ "wal_samples": [
+  [
+   0,
+   2
+  ],
+  [
+   10,
+   4480
+  ],
+  [
+   20,
+   8190
+  ],
+  [
+   30,
+   12569
+  ],
+  [
+   40,
+   8867
+  ],
+  [
+   50,
+   12816
+  ]
+ ],
+ "wal_max": 12816,
+ "wal_at_kill": 16795,
+ "compacted_ssts_at_kill": 7,
+ "restart_to_ping_s": 0.56,
+ "recovery_s": 1.58,
+ "docs_after": 50,
+ "doc0_ok": true
+}
