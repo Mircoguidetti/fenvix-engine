@@ -185,11 +185,225 @@ fn check_conflicts(update: &Document) -> R<()> {
     Ok(())
 }
 
-fn unsupported_path(path: &str) -> Option<MongoError> {
-    if path.split('.').any(|p| p == "$" || p.starts_with("$[")) {
-        return Some(MongoError::new(238, "NotImplemented", format!("positional and filtered positional operators are not supported by this server (path '{path}')")));
+/// Positional context of an operator update: the query filter (for `$`) and the `arrayFilters` (for `$[<id>]`).
+pub struct PosCtx<'a> {
+    pub filter: Option<&'a Document>,
+    pub array_filters: &'a [(String, Document)],
+}
+
+const NO_CTX: PosCtx<'static> = PosCtx { filter: None, array_filters: &[] };
+
+fn is_filtered(p: &str) -> Option<&str> {
+    p.strip_prefix("$[").and_then(|r| r.strip_suffix(']')).filter(|id| !id.is_empty())
+}
+
+pub fn has_positional(path: &str) -> bool {
+    path.split('.').any(|p| p == "$" || p.starts_with("$["))
+}
+
+fn check_positional_syntax(path: &str) -> R<()> {
+    let mut dollars = 0;
+    for (i, p) in path.split('.').enumerate() {
+        if p == "$" {
+            if i == 0 {
+                return Err(bad(format!("Cannot have positional (i.e. '$') element in the first position in path '{path}'")));
+            }
+            dollars += 1;
+            if dollars > 1 {
+                return Err(bad(format!("Too many positional (i.e. '$') elements found in path '{path}'")));
+            }
+        } else if p.starts_with("$[") && p != "$[]" {
+            match is_filtered(p) {
+                Some(id) if valid_filter_id(id) => {}
+                _ => return Err(bad(format!("Cannot parse path '{path}': the identifier '{}' must be an alphanumeric string beginning with a lowercase letter", p.trim_start_matches("$[").trim_end_matches(']')))),
+            }
+        }
     }
-    None
+    Ok(())
+}
+
+fn valid_filter_id(id: &str) -> bool {
+    let mut c = id.chars();
+    matches!(c.next(), Some(f) if f.is_ascii_lowercase()) && c.all(|x| x.is_ascii_alphanumeric())
+}
+
+/// Validated `arrayFilters`: (identifier, filter document) in the order given.
+pub fn parse_array_filters(v: Option<&Bson>) -> R<Vec<(String, Document)>> {
+    let Some(Bson::Array(a)) = v else {
+        return match v {
+            None | Some(Bson::Null) => Ok(vec![]),
+            Some(_) => Err(MongoError::type_mismatch("BSON field 'arrayFilters' is the wrong type, expected array".into())),
+        };
+    };
+    let mut out: Vec<(String, Document)> = Vec::new();
+    for f in a {
+        let Bson::Document(d) = f else {
+            return Err(MongoError::type_mismatch("BSON field 'arrayFilters.0' is the wrong type, expected object".into()));
+        };
+        let mut ids: Vec<String> = Vec::new();
+        collect_filter_ids(d, &mut ids);
+        ids.sort();
+        ids.dedup();
+        let id = match ids.len() {
+            0 => return Err(MongoError::failed_to_parse("Cannot use an expression without a top-level field name in arrayFilters".into())),
+            1 => ids.pop().unwrap(),
+            _ => return Err(MongoError::failed_to_parse(format!("Error parsing array filter :: caused by :: Expected a single top-level field name, found '{}' and '{}'", ids[0], ids[1]))),
+        };
+        if !valid_filter_id(&id) {
+            return Err(bad(format!("Error parsing array filter :: caused by :: The top-level field name must be an alphanumeric string beginning with a lowercase letter, found '{id}'")));
+        }
+        if out.iter().any(|(i, _)| *i == id) {
+            return Err(MongoError::failed_to_parse(format!("Found multiple array filters with the same top-level field name {id}")));
+        }
+        out.push((id, d.clone()));
+    }
+    Ok(out)
+}
+
+fn collect_filter_ids(d: &Document, ids: &mut Vec<String>) {
+    for (k, v) in d {
+        if matches!(k.as_str(), "$and" | "$or" | "$nor") {
+            if let Bson::Array(a) = v {
+                for s in a {
+                    if let Bson::Document(sd) = s {
+                        collect_filter_ids(sd, ids);
+                    }
+                }
+            }
+        } else if !k.starts_with('$') {
+            ids.push(k.split('.').next().unwrap_or("").to_string());
+        }
+    }
+}
+
+fn lookup<'a>(doc: &'a Document, parts: &[String]) -> Option<&'a Bson> {
+    let mut cur = doc.get(parts.first()?)?;
+    for p in &parts[1..] {
+        cur = match cur {
+            Bson::Document(d) => d.get(p)?,
+            Bson::Array(a) => a.get(p.parse::<usize>().ok()?)?,
+            _ => return None,
+        };
+    }
+    Some(cur)
+}
+
+/// Index of the array element that the query matched, for the positional `$` at `array_path`.
+fn positional_index(filter: &Document, doc: &Document, array_path: &[String]) -> Option<usize> {
+    let Some(Bson::Array(arr)) = lookup(doc, array_path) else { return None };
+    let ap = array_path.join(".");
+    let mut found: Option<usize> = None;
+    let mut visit = |k: &str, cond: &Bson| {
+        if k != ap && !k.starts_with(&format!("{ap}.")) {
+            return;
+        }
+        for (i, el) in arr.iter().enumerate() {
+            let mut w = Document::new();
+            let parts: Vec<&str> = ap.split('.').collect();
+            if set_path(&mut w, &parts, Bson::Array(vec![el.clone()])).is_err() {
+                return;
+            }
+            let mut f = Document::new();
+            f.insert(k.to_string(), cond.clone());
+            if crate::query::matches(&w, &f).unwrap_or(false) {
+                if found.is_none() {
+                    found = Some(i);
+                }
+                return;
+            }
+        }
+    };
+    fn walk(filter: &Document, visit: &mut dyn FnMut(&str, &Bson)) {
+        for (k, v) in filter {
+            if k == "$and" {
+                if let Bson::Array(a) = v {
+                    for s in a {
+                        if let Bson::Document(sd) = s {
+                            walk(sd, visit);
+                        }
+                    }
+                }
+            } else if !k.starts_with('$') {
+                visit(k, v);
+            }
+        }
+    }
+    walk(filter, &mut visit);
+    found
+}
+
+enum Kind<'a> {
+    Pos,
+    All,
+    Filtered(&'a str),
+}
+
+/// The concrete paths (numeric array indexes) that a path with `$`, `$[]` and `$[<id>]` stands for in `doc`.
+fn expand_path(doc: &Document, path: &str, ctx: &PosCtx, used: &mut Vec<String>) -> R<Vec<String>> {
+    let mut paths: Vec<Vec<String>> = vec![vec![]];
+    let parts: Vec<&str> = path.split('.').collect();
+    for (pi, p) in parts.iter().enumerate() {
+        let kind = if *p == "$" {
+            Some(Kind::Pos)
+        } else if *p == "$[]" {
+            Some(Kind::All)
+        } else {
+            is_filtered(p).map(Kind::Filtered)
+        };
+        let Some(kind) = kind else {
+            for c in paths.iter_mut() {
+                c.push(p.to_string());
+            }
+            continue;
+        };
+        let mut next: Vec<Vec<String>> = Vec::new();
+        for c in &paths {
+            let arr = match lookup(doc, c) {
+                Some(Bson::Array(a)) => a,
+                Some(other) => {
+                    return Err(bad(format!("Cannot apply array updates to non-array element {}: {}", c.last().cloned().unwrap_or_default(), fmt_bson(other))));
+                }
+                None => return Err(bad(format!("The path '{}' must exist in the document in order to apply array updates.", c.join(".")))),
+            };
+            match kind {
+                Kind::Pos => {
+                    let Some(f) = ctx.filter else {
+                        return Err(bad("The positional operator did not find the match needed from the query.".to_string()));
+                    };
+                    let i = positional_index(f, doc, c).ok_or_else(|| bad("The positional operator did not find the match needed from the query."))?;
+                    let mut n = c.clone();
+                    n.push(i.to_string());
+                    next.push(n);
+                }
+                Kind::All => {
+                    for i in 0..arr.len() {
+                        let mut n = c.clone();
+                        n.push(i.to_string());
+                        next.push(n);
+                    }
+                }
+                Kind::Filtered(id) => {
+                    let Some((_, f)) = ctx.array_filters.iter().find(|(i, _)| i == id) else {
+                        return Err(bad(format!("No array filter found for identifier '{id}' in path '{}'", parts[..=pi].join("."))));
+                    };
+                    if !used.iter().any(|u| u == id) {
+                        used.push(id.to_string());
+                    }
+                    for (i, el) in arr.iter().enumerate() {
+                        let mut w = Document::new();
+                        w.insert(id.to_string(), el.clone());
+                        if crate::query::matches(&w, f)? {
+                            let mut n = c.clone();
+                            n.push(i.to_string());
+                            next.push(n);
+                        }
+                    }
+                }
+            }
+        }
+        paths = next;
+    }
+    Ok(paths.into_iter().map(|c| c.join(".")).collect())
 }
 
 fn mul_numbers(a: &Bson, b: &Bson) -> Option<Bson> {
@@ -375,7 +589,7 @@ fn now_ms() -> bson::DateTime {
 }
 
 /// Apply the operator form of an update to `doc`.
-fn apply_operators(doc: &mut Document, update: &Document, upsert_insert: bool) -> R<()> {
+fn apply_operators(doc: &mut Document, update: &Document, upsert_insert: bool, ctx: &PosCtx) -> R<()> {
     for (op, spec) in update {
         if !matches!(op.as_str(), "$set" | "$setOnInsert" | "$unset" | "$inc" | "$push" | "$pull" | "$pullAll" | "$addToSet" | "$pop" | "$rename" | "$min" | "$max" | "$mul" | "$currentDate" | "$bit") {
             return Err(MongoError::failed_to_parse(format!(
@@ -386,9 +600,7 @@ fn apply_operators(doc: &mut Document, update: &Document, upsert_insert: bool) -
             MongoError::new(9, "FailedToParse", format!("Modifiers operate on fields but we found type {} instead. For example: {{$mod: {{<field>: ...}}}} not {{{op}: {}}}", type_name(spec), fmt_bson(spec)))
         })?;
         for path in fields.keys() {
-            if let Some(e) = unsupported_path(path) {
-                return Err(e);
-            }
+            check_positional_syntax(path)?;
         }
     }
     if let Some(Bson::Document(r)) = update.get("$rename") {
@@ -400,22 +612,35 @@ fn apply_operators(doc: &mut Document, update: &Document, upsert_insert: bool) -
             if from == to {
                 return Err(bad(format!("The source and target field for $rename must differ: {from}: \"{to}\"")));
             }
-            if let Some(e) = unsupported_path(to) {
-                return Err(e);
+            check_positional_syntax(to)?;
+            if has_positional(from) || has_positional(to) {
+                return Err(bad(format!("The source field for $rename may not be dynamic: {from}")));
             }
         }
     }
     check_conflicts(update)?;
     // MongoDB applies the modifiers in path order (one tree over all operators), not in the order
     // they are written; a `$rename` sits at its target path.
-    let mut entries: Vec<(Vec<String>, &str, &str, &Bson)> = Vec::new();
+    let mut entries: Vec<(Vec<String>, &str, String, &Bson)> = Vec::new();
+    let mut used_filters: Vec<String> = Vec::new();
     for (op, spec) in update {
         for (path, v) in spec.as_document().unwrap() {
+            if has_positional(path) {
+                for concrete in expand_path(doc, path, ctx, &mut used_filters)? {
+                    entries.push((concrete.split('.').map(str::to_string).collect(), op, concrete, v));
+                }
+                continue;
+            }
             let key = match (op.as_str(), v) {
                 ("$rename", Bson::String(to)) => to,
                 _ => path,
             };
-            entries.push((key.split('.').map(str::to_string).collect(), op, path, v));
+            entries.push((key.split('.').map(str::to_string).collect(), op, path.clone(), v));
+        }
+    }
+    for (id, _) in ctx.array_filters {
+        if !used_filters.contains(id) {
+            return Err(MongoError::failed_to_parse(format!("The array filter for identifier '{id}' was not used in the update {}", fmt_doc(update))));
         }
     }
     entries.sort_by(|a, b| a.0.cmp(&b.0));
@@ -586,9 +811,6 @@ fn apply_operators(doc: &mut Document, update: &Document, upsert_insert: bool) -
                     if from == to {
                         return Err(bad(format!("The source and target field for $rename must differ: {from}: \"{to}\"")));
                     }
-                    if let Some(e) = unsupported_path(to) {
-                        return Err(e);
-                    }
                     let fparts = split(from);
                     let cur = target(doc, &fparts).map(|v| v.clone());
                     if let Some(v) = cur {
@@ -656,10 +878,14 @@ fn immutable_id_by_replacement(new_id: &Bson) -> MongoError {
 
 /// Apply an update (operators or replacement) to an existing document, returning the new document.
 pub fn apply_update(old: &Document, update: &Document) -> R<Document> {
+    apply_update_ctx(old, update, &NO_CTX)
+}
+
+fn apply_update_ctx(old: &Document, update: &Document, ctx: &PosCtx) -> R<Document> {
     let operator_form = is_operator_update(update);
     let new = if operator_form {
         let mut d = old.clone();
-        apply_operators(&mut d, update, false)?;
+        apply_operators(&mut d, update, false, ctx)?;
         d
     } else {
         let mut d = Document::new();
@@ -713,10 +939,14 @@ fn collect_equalities(filter: &Document, base: &mut Document) -> R<()> {
 
 /// Build the document an upsert inserts when nothing matched.
 pub fn upsert_document(filter: &Document, update: &Document) -> R<Document> {
+    upsert_document_ctx(filter, update, &PosCtx { filter: Some(filter), array_filters: &[] })
+}
+
+fn upsert_document_ctx(filter: &Document, update: &Document, ctx: &PosCtx) -> R<Document> {
     let mut base = Document::new();
     collect_equalities(filter, &mut base)?;
     let mut doc = if is_operator_update(update) {
-        apply_operators(&mut base, update, true)?;
+        apply_operators(&mut base, update, true, ctx)?;
         base
     } else {
         let mut d = Document::new();
@@ -749,6 +979,152 @@ pub fn upsert_document(filter: &Document, update: &Document) -> R<Document> {
         doc = with_id;
     }
     Ok(doc)
+}
+
+
+/// One update statement: operators or a replacement document, or an aggregation pipeline, with the query filter
+/// (for the positional `$`), the `arrayFilters` and the pipeline's constants (`c`).
+pub struct Upd {
+    body: UpdBody,
+    filter: Document,
+    array_filters: Vec<(String, Document)>,
+    consts: Vec<(String, Bson)>,
+    /// A pipeline removed `_id` and it was put back: MongoDB counts such a document as modified.
+    forced: std::cell::Cell<bool>,
+}
+
+enum UpdBody {
+    Doc(Document),
+    Pipeline(Vec<Bson>),
+}
+
+impl Upd {
+    pub fn new(u: &Bson, filter: &Document, array_filters: Option<&Bson>, consts: Option<&Bson>) -> R<Upd> {
+        let array_filters = parse_array_filters(array_filters)?;
+        let body = match u {
+            Bson::Document(d) => UpdBody::Doc(d.clone()),
+            Bson::Array(stages) => {
+                if !array_filters.is_empty() {
+                    return Err(MongoError::failed_to_parse("arrayFilters may not be specified for pipeline-style updates".into()));
+                }
+                for s in stages {
+                    let name = s.as_document().filter(|d| d.len() == 1).and_then(|d| d.keys().next().cloned());
+                    match name.as_deref() {
+                        Some("$addFields" | "$set" | "$project" | "$unset" | "$replaceRoot" | "$replaceWith") => {}
+                        Some(n) => return Err(MongoError::new(72, "InvalidOptions", format!("Unsupported stage in a pipeline-style update: {n}. Only $addFields, $set, $project, $unset, $replaceRoot and $replaceWith are allowed"))),
+                        None => return Err(MongoError::new(40323, "Location40323", "A pipeline stage specification object must contain exactly one field.".into())),
+                    }
+                }
+                if stages.is_empty() {
+                    return Err(MongoError::failed_to_parse("Update pipeline must contain at least one stage".to_string()));
+                }
+                UpdBody::Pipeline(stages.clone())
+            }
+            _ => return Err(MongoError::new(14, "TypeMismatch", "BSON field 'updates.u' is the wrong type, expected object or array".into())),
+        };
+        if let UpdBody::Doc(d) = &body {
+            if !array_filters.is_empty() && !is_operator_update(d) {
+                return Err(MongoError::failed_to_parse("arrayFilters may not be specified for replacement-style updates".into()));
+            }
+            if is_operator_update(d) {
+                // the same checks whether or not a document matches
+                let mut used: Vec<&str> = Vec::new();
+                for (op, spec) in d {
+                    let Bson::Document(fields) = spec else { continue };
+                    for path in fields.keys() {
+                        check_positional_syntax(path)?;
+                        if op == "$rename" && has_positional(path) {
+                            return Err(bad(format!("The source field for $rename may not be dynamic: {path}")));
+                        }
+                        for p in path.split('.') {
+                            if let Some(id) = is_filtered(p) {
+                                if !array_filters.iter().any(|(i, _)| i == id) {
+                                    return Err(bad(format!("No array filter found for identifier '{id}' in path '{path}'")));
+                                }
+                                used.push(id);
+                            }
+                        }
+                    }
+                }
+                for (id, _) in &array_filters {
+                    if !used.contains(&id.as_str()) {
+                        return Err(MongoError::failed_to_parse(format!("The array filter for identifier '{id}' was not used in the update {}", fmt_doc(d))));
+                    }
+                }
+            }
+        }
+        let consts = match consts {
+            Some(Bson::Document(c)) => c.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            _ => vec![],
+        };
+        Ok(Upd { body, filter: filter.clone(), array_filters, consts, forced: std::cell::Cell::new(false) })
+    }
+
+    /// Whether the last pipeline result must count as a modification even if it equals the old document.
+    pub fn take_forced(&self) -> bool {
+        self.forced.replace(false)
+    }
+
+    /// The operator document, for change-stream update descriptions (None for replacements and pipelines).
+    pub fn operators(&self) -> Option<&Document> {
+        match &self.body {
+            UpdBody::Doc(d) if d.keys().any(|k| k.starts_with('$')) => Some(d),
+            _ => None,
+        }
+    }
+
+    fn ctx(&self) -> PosCtx<'_> {
+        PosCtx { filter: Some(&self.filter), array_filters: &self.array_filters }
+    }
+
+    fn run_pipeline(&self, base: Document, stages: &[Bson]) -> R<Document> {
+        let vars: Vec<(String, Bson)> = self.consts.clone();
+        let out = crate::expr::with_ambient(vars, || crate::agg::run_pipeline(vec![base.clone()], stages, &Default::default()))?;
+        let mut d = out.into_iter().next().ok_or_else(|| MongoError::new(2, "BadValue", "pipeline-style update produced no document".into()))?;
+        match (base.get("_id"), d.get("_id")) {
+            (Some(a), Some(b)) if crate::query::equal(a, b) => {}
+            (Some(_), Some(_)) => return Err(immutable_id_by_operator()),
+            // a pipeline that removes `_id` keeps the document's: it is put back
+            (Some(a), None) => {
+                let mut with_id = Document::new();
+                with_id.insert("_id", a.clone());
+                for (k, v) in d {
+                    with_id.insert(k, v);
+                }
+                d = with_id;
+                self.forced.set(true);
+            }
+            _ => {}
+        }
+        Ok(d)
+    }
+
+    pub fn apply(&self, old: &Document) -> R<Document> {
+        match &self.body {
+            UpdBody::Doc(u) => apply_update_ctx(old, u, &self.ctx()),
+            UpdBody::Pipeline(stages) => self.run_pipeline(old.clone(), stages),
+        }
+    }
+
+    pub fn upsert(&self) -> R<Document> {
+        match &self.body {
+            UpdBody::Doc(u) => upsert_document_ctx(&self.filter, u, &self.ctx()),
+            UpdBody::Pipeline(stages) => {
+                let mut base = Document::new();
+                collect_equalities(&self.filter, &mut base)?;
+                let mut d = self.run_pipeline(base, stages)?;
+                if d.get("_id").is_none() {
+                    let mut with_id = Document::new();
+                    with_id.insert("_id", Bson::ObjectId(ObjectId::new()));
+                    for (k, v) in d {
+                        with_id.insert(k, v);
+                    }
+                    d = with_id;
+                }
+                Ok(d)
+            }
+        }
+    }
 }
 
 #[cfg(test)]

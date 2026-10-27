@@ -34,6 +34,9 @@ pub struct TtlStats {
     pub last_wake: Mutex<HashMap<String, Instant>>,
 }
 
+/// Set by `--ttl-wake-sleeping`: expiry hints are written at close and the maintenance pass runs.
+pub static WAKE_SLEEPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 const SWEEP_BATCH: usize = 1000;
 
 /// Delete expired documents of every collection of the tenant. Returns the number removed.
@@ -117,7 +120,7 @@ impl Dbs {
                 tokio::time::sleep(every).await;
                 for e in me.entries_snapshot() {
                     let Ok(mut g) = e.try_write() else { continue };
-                    if g.is_writer_open() && g.ttl_seen {
+                    if g.is_writer_open() && g.ttl_seen.load(std::sync::atomic::Ordering::Relaxed) {
                         match sweep_entry(&mut g, crate::cmd_data::now_ms(), 10).await {
                             Ok(n) => {
                                 me.ttl.session_sweeps.fetch_add(1, Relaxed);
@@ -187,7 +190,7 @@ impl Dbs {
             woken += 1;
             st.wakes.fetch_add(1, Relaxed);
             st.last_wake.lock().unwrap().insert(db.clone(), Instant::now());
-            g.ttl_seen = true;
+            g.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
             match sweep_entry(&mut g, now, 20).await {
                 Ok(n) => {
                     st.docs_expired.fetch_add(n as u64, Relaxed);

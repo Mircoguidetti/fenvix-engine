@@ -66,7 +66,13 @@ struct Args {
     /// Remove expired TTL documents of tenants that are open as writers this often.
     #[arg(long, default_value_t = 60)]
     ttl_sweep_secs: u64,
-    /// Every this often, look for sleeping tenants with expired documents (one LIST) and wake due ones.
+    /// Wake sleeping tenants to remove their expired documents (off by default). Off: expired documents are hidden on
+    /// every read and removed at the tenant's next natural writer session; nothing is woken, no expiry hint is
+    /// written at close and no maintenance pass lists anything. On: a maintenance pass (one LIST per pass) wakes
+    /// tenants whose documents are due, each at most once per `--ttl-min-gap-secs`.
+    #[arg(long)]
+    ttl_wake_sleeping: bool,
+    /// With `--ttl-wake-sleeping`: every this often, look for sleeping tenants with expired documents and wake due ones.
     #[arg(long, default_value_t = 60)]
     ttl_maintenance_secs: u64,
     /// Do not wake the same sleeping tenant for expiry more often than this.
@@ -197,7 +203,10 @@ async fn main() -> Result<()> {
     dbs.spawn_lost_handler(lost_rx);
     if !args.no_ttl {
         dbs.spawn_ttl_session_sweeper(Duration::from_secs(args.ttl_sweep_secs));
-        dbs.spawn_ttl_maintenance(Duration::from_secs(args.ttl_maintenance_secs), Duration::from_secs(args.ttl_min_gap_secs), args.ttl_max_wakes);
+        if args.ttl_wake_sleeping {
+            ttl::WAKE_SLEEPING.store(true, std::sync::atomic::Ordering::Relaxed);
+            dbs.spawn_ttl_maintenance(Duration::from_secs(args.ttl_maintenance_secs), Duration::from_secs(args.ttl_min_gap_secs), args.ttl_max_wakes);
+        }
     }
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
     if !args.replica_set.is_empty() {

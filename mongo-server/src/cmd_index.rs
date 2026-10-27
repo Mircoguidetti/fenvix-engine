@@ -4,7 +4,7 @@
 use crate::cmd::{bool_arg, collection_name, fake_uuid, int_arg, ok, Server, R};
 use crate::coll::{decode, find_docs, plan_for, resolve_hint, FindOpts, Hint};
 use crate::cmd_data::ttl_ctx;
-use crate::dbs::{Dbs, Entry};
+use crate::dbs::{valid_db_name, Dbs, Entry};
 use crate::error::MongoError;
 use crate::index::{self, entry_id, entry_key, IndexDef, Plan, State};
 use crate::keyenc::prefix_end;
@@ -147,15 +147,19 @@ fn num_opt(v: &Bson) -> Option<f64> {
     }
 }
 
+const RENAME_MAX_OPS: usize = 1_000_000;
+
 impl Server {
     /// Load a collection's indexes; unfinished builds / drops (after a crash or restart) are resumed in the background.
-    pub(crate) async fn load_indexes(&self, g: &mut Entry, db: &str, coll: &str) -> R<Vec<IndexDef>> {
+    pub(crate) async fn load_indexes(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str) -> R<Vec<IndexDef>> {
+        tenant_bench::counting::set_phase(4);
         let indexes = g.indexes(coll).await?;
+        tenant_bench::counting::set_phase(0);
         if indexes.iter().any(|i| i.state != State::Ready) {
             self.resume_builds(db, coll);
         }
         if indexes.iter().any(|i| i.ttl.is_some()) {
-            g.ttl_seen = true;
+            g.note_ttl();
         }
         Ok(indexes)
     }
@@ -210,6 +214,77 @@ impl Server {
         g.apply(ops).await?;
         self.dbs.changes.publish(vec![crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "drop", doc_key: None, full: None, desc: None, txn: None }]);
         Ok(doc! { "nIndexesWas": n_indexes, "ns": format!("{db}.{coll}"), "ok": 1.0 })
+    }
+
+    /// `renameCollection` within one database (a database is one tenant; a rename across databases would have to
+    /// copy between two tenants and is not supported). One atomic batch moves the documents, the index entries and the
+    /// index metadata to the new name, so a crash leaves either the old or the new collection.
+    pub(crate) async fn rename_collection(&self, cmd: &Document) -> R<Document> {
+        let split = |field: &str| -> R<(String, String)> {
+            let ns = cmd.get_str(field).map_err(|_| MongoError::new(40414, "IDLFailedToParse", format!("BSON field '{field}' is missing but a required field")))?;
+            match ns.split_once('.') {
+                Some((d, c)) if !d.is_empty() && !c.is_empty() => Ok((d.to_string(), c.to_string())),
+                _ => Err(MongoError::new(73, "InvalidNamespace", format!("Invalid namespace specified '{ns}'"))),
+            }
+        };
+        let (from_db, from) = split("renameCollection")?;
+        let (to_db, to) = split("to")?;
+        let drop_target = bool_arg(cmd.get("dropTarget"), false);
+        if from_db != to_db {
+            return Err(MongoError::new(238, "NotImplemented", "renameCollection across databases is not supported by this server".into()));
+        }
+        if !valid_db_name(&from_db) {
+            return Err(MongoError::new(73, "InvalidNamespace", format!("Invalid database name: '{from_db}'")));
+        }
+        if to.contains('$') || to.contains('\0') || to.starts_with("system.") || from.starts_with("system.") {
+            return Err(MongoError::new(20, "IllegalOperation", format!("Invalid target namespace: {to_db}.{to}")));
+        }
+        let db = from_db.as_str();
+        let mut g = self.dbs.lock(db).await;
+        let mut names = g.collections().await?;
+        if !names.iter().any(|n| *n == from) {
+            return Err(MongoError::namespace_not_found(format!("Source collection {db}.{from} does not exist")));
+        }
+        if from == to {
+            return Err(MongoError::new(20, "IllegalOperation", "Can't rename a collection to itself".into()));
+        }
+        let target_exists = names.iter().any(|n| *n == to);
+        if target_exists && !drop_target {
+            return Err(MongoError::new(48, "NamespaceExists", format!("target namespace exists")));
+        }
+        let from_ix = g.indexes(&from).await?;
+        if from_ix.iter().any(|i| i.state != State::Ready) {
+            return Err(MongoError::new(2, "BadValue", format!("cannot rename {db}.{from}: an index build is in progress")));
+        }
+        let mut ops: Vec<Op> = Vec::new();
+        if target_exists {
+            for prefix in [doc_prefix(&to), idx_collection_prefix(&to)] {
+                for (k, _) in g.scan(&prefix).await? {
+                    ops.push(Op::Delete(k.to_vec()));
+                }
+            }
+            ops.push(Op::Delete(index_key(&to)));
+        }
+        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to))] {
+            for (k, v) in g.scan(&old_prefix).await? {
+                let mut nk = new_prefix.clone();
+                nk.extend_from_slice(&k[old_prefix.len()..]);
+                ops.push(Op::Delete(k.to_vec()));
+                ops.push(Op::Put(nk, v.to_vec()));
+            }
+        }
+        if ops.len() > RENAME_MAX_OPS {
+            return Err(MongoError::new(238, "NotImplemented", format!("collection {db}.{from} is too large to rename atomically ({} keys, limit {RENAME_MAX_OPS})", ops.len() / 2)));
+        }
+        if let Some(v) = g.get(&index_key(&from)).await? {
+            ops.push(Op::Put(index_key(&to), v.to_vec()));
+            ops.push(Op::Delete(index_key(&from)));
+        }
+        names.retain(|n| *n != from && *n != to);
+        names.push(to.clone());
+        ops.push(Entry::collections_op(&names)?);
+        g.apply(ops).await?;
+        Ok(ok())
     }
 
     pub(crate) async fn list_indexes(&self, db: &str, cmd: &Document) -> R<Document> {

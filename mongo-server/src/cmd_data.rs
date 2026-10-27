@@ -10,7 +10,7 @@ use crate::error::MongoError;
 use crate::index::{self, IndexDef};
 use crate::layout::{doc_prefix, encode_sortable};
 use crate::query::{self, parse_projection, parse_sort, path_values, project, sort_docs};
-use crate::update::{apply_update, upsert_document};
+use crate::update::Upd;
 use bson::{doc, oid::ObjectId, Bson, Document};
 use std::collections::VecDeque;
 
@@ -35,7 +35,7 @@ impl Server {
     }
 
     /// Matching documents of `coll`: (docs, indexes) with TTL-expired documents hidden.
-    pub(crate) async fn matching(&self, g: &mut Entry, db: &str, coll: &str, filter: &Document, hint: Option<&Bson>, ov: Option<&crate::coll::Overlay>) -> R<Vec<Document>> {
+    pub(crate) async fn matching(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str, filter: &Document, hint: Option<&Bson>, ov: Option<&crate::coll::Overlay>) -> R<Vec<Document>> {
         let indexes = self.load_indexes(g, db, coll).await?;
         let hint = resolve_hint(&indexes, hint)?;
         let specs = index::ttl_specs(&indexes);
@@ -44,8 +44,17 @@ impl Server {
     }
 
     /// Every visible document of a collection (TTL-expired ones hidden).
-    pub(crate) async fn scan_visible(&self, g: &mut Entry, db: &str, coll: &str) -> R<Vec<Document>> {
+    pub(crate) async fn scan_visible(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str) -> R<Vec<Document>> {
         self.matching(g, db, coll, &Document::new(), None, None).await
+    }
+
+    /// The documents a find reads (before sort / skip / projection), from a shared view or the exclusive entry.
+    async fn find_part(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str, filter: &Document, sort: &[(String, bool)], want: Option<usize>, hint: Option<&Bson>, ov: Option<&crate::coll::Overlay>) -> R<Vec<Document>> {
+        let indexes = self.load_indexes(g, db, coll).await?;
+        let hint = resolve_hint(&indexes, hint)?;
+        let specs = index::ttl_specs(&indexes);
+        let (docs, _, _) = find_docs(g, coll, &indexes, &FindOpts { filter, sort, want, hint, ttl: ttl_ctx(&specs), ov }).await?;
+        Ok(docs)
     }
 
     pub(crate) async fn find(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
@@ -63,15 +72,14 @@ impl Server {
         let limit = int_arg(cmd.get("limit")).unwrap_or(0);
         let batch = int_arg(cmd.get("batchSize")).map(|b| b.max(0) as usize);
         let single = bool_arg(cmd.get("singleBatch"), false);
-        let mut docs = {
+        let want = if limit > 0 { Some(skip + limit as usize) } else { None };
+        let mut docs = if tx.is_none() {
+            let mut g = self.dbs.read(db).await?;
+            self.find_part(&mut g, db, coll, &filter, &sort, want, cmd.get("hint"), None).await?
+        } else {
             let mut g = self.dbs.lock(db).await;
-        attach(&mut g, tx);
-            let indexes = self.load_indexes(&mut g, db, coll).await?;
-            let hint = resolve_hint(&indexes, cmd.get("hint"))?;
-            let specs = index::ttl_specs(&indexes);
-            let want = if limit > 0 { Some(skip + limit as usize) } else { None };
-            let (docs, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &filter, sort: &sort, want, hint, ttl: ttl_ctx(&specs), ov: tx_ov(tx) }).await?;
-            docs
+            attach(&mut g, tx);
+            self.find_part(&mut *g, db, coll, &filter, &sort, want, cmd.get("hint"), tx_ov(tx)).await?
         };
         sort_docs(&mut docs, &sort);
         let mut docs: VecDeque<Document> = docs.into_iter().skip(skip).collect();
@@ -91,10 +99,13 @@ impl Server {
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
         let skip = int_arg(cmd.get("skip")).unwrap_or(0).max(0) as usize;
         let limit = int_arg(cmd.get("limit")).unwrap_or(0).unsigned_abs() as usize;
-        let n = {
+        let n = if tx.is_none() {
+            let mut g = self.dbs.read(db).await?;
+            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), None).await?.len()
+        } else {
             let mut g = self.dbs.lock(db).await;
-        attach(&mut g, tx);
-            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?.len()
+            attach(&mut g, tx);
+            self.matching(&mut *g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?.len()
         };
         let mut n = n.saturating_sub(skip);
         if limit > 0 {
@@ -107,10 +118,13 @@ impl Server {
         let coll = collection_name(cmd, "distinct")?;
         let key = cmd.get_str("key").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'distinct.key' is missing but a required field".into()))?;
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
-        let docs = {
+        let docs = if tx.is_none() {
+            let mut g = self.dbs.read(db).await?;
+            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), None).await?
+        } else {
             let mut g = self.dbs.lock(db).await;
-        attach(&mut g, tx);
-            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?
+            attach(&mut g, tx);
+            self.matching(&mut *g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?
         };
         let mut values: Vec<Bson> = Vec::new();
         for d in &docs {
@@ -165,17 +179,25 @@ impl Server {
             let first_match = first.and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
             // The pipeline's own $match rejects $where; do not run it here as a plain find filter.
             let first_match = if format!("{first_match:?}").contains("$where") { Document::new() } else { first_match };
-            let mut g = self.dbs.lock(db).await;
-            attach(&mut g, tx);
-            self.matching(&mut g, db, coll, &first_match, cmd.get("hint"), tx_ov(tx)).await?
+            if tx.is_none() {
+                let mut g = self.dbs.read(db).await?;
+                self.matching(&mut g, db, coll, &first_match, cmd.get("hint"), None).await?
+            } else {
+                let mut g = self.dbs.lock(db).await;
+                attach(&mut g, tx);
+                self.matching(&mut *g, db, coll, &first_match, cmd.get("hint"), tx_ov(tx)).await?
+            }
         };
         let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats")).unwrap_or(false) { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
-            let fd = {
+            let fd = if tx.is_none() {
+                let mut g = self.dbs.read(db).await?;
+                self.scan_visible(&mut g, db, &from).await?
+            } else {
                 let mut g = self.dbs.lock(db).await;
                 attach(&mut g, tx);
-                self.scan_visible(&mut g, db, &from).await?
+                self.scan_visible(&mut *g, db, &from).await?
             };
             foreign.insert(from, fd);
         }
@@ -471,6 +493,14 @@ impl Server {
         let specs = cmd.get_array("updates").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'update.updates' is missing but a required field".into()))?;
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
+        // The shape of a pipeline's stages is checked while parsing the command, before any statement runs.
+        for spec in specs {
+            if let Some(Bson::Array(stages)) = spec.as_document().and_then(|s| s.get("u")) {
+                if stages.iter().any(|s| s.as_document().map(|d| d.len() != 1).unwrap_or(true)) {
+                    return Err(MongoError::new(40323, "Location40323", "A pipeline stage specification object must contain exactly one field.".into()));
+                }
+            }
+        }
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
         let names = g.collections().await?;
@@ -531,15 +561,9 @@ impl Server {
             Some(Bson::Document(p)) => parse_projection(p)?,
             _ => None,
         };
-        if let Some(Bson::Array(a)) = cmd.get("arrayFilters") {
-            if !a.is_empty() {
-                return Err(MongoError::new(238, "NotImplemented", "arrayFilters are not supported by this server".into()));
-            }
-        }
         let u = match cmd.get("update") {
             None => None,
-            Some(Bson::Document(u)) => Some(u),
-            Some(Bson::Array(_)) => return Err(MongoError::new(238, "NotImplemented", "pipeline-style updates are not supported by this server".into())),
+            Some(u @ (Bson::Document(_) | Bson::Array(_))) => Some(Upd::new(u, &q, cmd.get("arrayFilters"), cmd.get("c"))?),
             Some(_) => return Err(MongoError::new(14, "TypeMismatch", "BSON field 'findAndModify.update' is the wrong type, expected object or array".into())),
         };
         if remove && u.is_some() {
@@ -588,9 +612,9 @@ impl Server {
         let u = u.unwrap();
         match hit {
             Some(old) => {
-                let new = apply_update(&old, u)?;
-                if new.to_vec()? != old.to_vec()? {
-                    w.pending_update = u.keys().any(|k| k.starts_with('$')).then(|| u.clone());
+                let new = u.apply(&old)?;
+                if u.take_forced() || new.to_vec()? != old.to_vec()? {
+                    w.pending_update = u.operators().cloned();
                     w.put(&mut g, coll, &ns, &mut indexes, &new, Some(&old)).await?;
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                 }
@@ -598,7 +622,7 @@ impl Server {
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": true }, "value": value, "ok": 1.0 })
             }
             None if upsert => {
-                let nd = upsert_document(&q, u)?;
+                let nd = u.upsert()?;
                 let id = nd.get("_id").cloned().unwrap();
                 if w.exists(&mut g, coll, &id).await? {
                     return Err(MongoError::duplicate_key(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": nd.get("_id").cloned().unwrap_or(Bson::Null) }));
@@ -664,15 +688,9 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "update statement must be an object".into()))?;
                 let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'updates.q' is missing but a required field".into()))?;
                 let u = match spec.get("u") {
-                    Some(Bson::Document(u)) => u,
-                    Some(Bson::Array(_)) => return Err(MongoError::new(238, "NotImplemented", "pipeline-style updates are not supported by this server".into())),
+                    Some(u @ (Bson::Document(_) | Bson::Array(_))) => Upd::new(u, q, spec.get("arrayFilters"), spec.get("c"))?,
                     _ => return Err(MongoError::new(40414, "Location40414", "BSON field 'updates.u' is missing but a required field".into())),
                 };
-                if let Some(Bson::Array(a)) = spec.get("arrayFilters") {
-                    if !a.is_empty() {
-                        return Err(MongoError::new(238, "NotImplemented", "arrayFilters are not supported by this server".into()));
-                    }
-                }
                 let multi = bool_arg(spec.get("multi"), false);
                 let upsert = bool_arg(spec.get("upsert"), false);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
@@ -684,7 +702,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     if !upsert {
                         return Ok(());
                     }
-                    let nd = upsert_document(q, u)?;
+                    let nd = u.upsert()?;
                     let id = nd.get("_id").cloned().unwrap();
                     if w.exists(g, coll, &id).await? {
                         return Err(MongoError::duplicate_key(ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }));
@@ -695,12 +713,12 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     return Ok(());
                 }
                 for old in matched {
-                    let new = apply_update(&old, u)?;
+                    let new = u.apply(&old)?;
                     acc.n += 1;
-                    if new.to_vec()? == old.to_vec()? {
+                    if !u.take_forced() && new.to_vec()? == old.to_vec()? {
                         continue;
                     }
-                    w.pending_update = u.keys().any(|k| k.starts_with('$')).then(|| u.clone());
+                    w.pending_update = u.operators().cloned();
                     w.put(g, coll, ns, indexes, &new, Some(&old)).await?;
                     acc.n_modified += 1;
                 }

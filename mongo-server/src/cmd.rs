@@ -124,6 +124,7 @@ impl Server {
             }
             "listDatabases" => return self.list_databases(cmd).await,
             "tenantStats" => return Ok(self.tenant_stats()),
+            "renameCollection" => return self.rename_collection(cmd).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
                 self.dbs.ttl_pass(std::time::Duration::from_secs(gap), int_arg(cmd.get("maxWakes")).unwrap_or(1000) as usize).await?;
@@ -332,6 +333,7 @@ impl Server {
             }
             _ => {}
         }
+        tenant_bench::counting::set_phase(0);
         self.dbs.global.trace.start();
         let t0 = std::time::Instant::now();
         let reply = self.dispatch(db, &name, &run, 0).await;
@@ -340,7 +342,7 @@ impl Server {
         Ok(doc! {
             "elapsedUs": elapsed.as_micros() as i64,
             "innerOk": reply.is_ok(),
-            "events": events.into_iter().map(|e| Bson::Document(doc! { "op": e.op, "path": e.path, "startUs": e.start_us as i64, "durUs": e.dur_us as i64, "bytes": e.bytes as i64 })).collect::<Vec<_>>(),
+            "events": events.into_iter().map(|e| Bson::Document(doc! { "op": e.op, "path": e.path, "phase": e.phase, "startUs": e.start_us as i64, "durUs": e.dur_us as i64, "bytes": e.bytes as i64 })).collect::<Vec<_>>(),
             "ok": 1.0,
         })
     }

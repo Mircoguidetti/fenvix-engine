@@ -156,6 +156,15 @@ impl Snapshot {
     }
 }
 
+/// Phase labels for traced calls: set by the server around the part of a command that is running. Process-wide, like
+/// the trace itself, so only meaningful on a quiet server.
+pub const PHASES: [&str; 6] = ["other", "index_scan", "doc_fetch", "collection_scan", "metadata", "wake"];
+static PHASE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+
+pub fn set_phase(p: usize) {
+    PHASE.store(p as u8, Relaxed);
+}
+
 /// One recorded object-store call (trace mode only).
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct TraceEvent {
@@ -166,6 +175,8 @@ pub struct TraceEvent {
     pub bytes: u64,
     /// True if any other traced call was in flight at some point during this one.
     pub overlapped: bool,
+    /// Server phase that was active when the call started (see [`set_phase`]).
+    pub phase: &'static str,
 }
 
 #[derive(Debug, Default)]
@@ -227,6 +238,7 @@ impl Trace {
             dur_us: 0,
             bytes: 0,
             overlapped,
+            phase: PHASES[PHASE.load(Relaxed) as usize],
         });
         st.inflight.push(idx);
         Some((st.generation, idx))

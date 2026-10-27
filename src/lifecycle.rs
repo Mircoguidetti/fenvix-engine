@@ -331,6 +331,17 @@ impl Tenant {
         Ok(db.snapshot().await?)
     }
 
+    /// Rough size in bytes of the data in the tenant's SSTs (from the manifest: no request). Unflushed writes are not
+    /// counted. Used to choose between point reads and a range scan.
+    pub fn approx_bytes(&self) -> u64 {
+        let m = match self.mode.as_ref() {
+            Some(Mode::Reader(r)) => r.manifest(),
+            Some(Mode::Writer(db)) => db.manifest(),
+            None => return 0,
+        };
+        m.l0().iter().map(|v| v.estimate_size()).sum::<u64>() + m.compacted().iter().map(|r| r.estimate_size()).sum::<u64>()
+    }
+
     /// Key/value pairs with `start <= key < end` (`end == None`: to the end of the keyspace), at most `limit`,
     /// ascending or descending. `read_ahead` is the bytes fetched per request (small for short index scans).
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {

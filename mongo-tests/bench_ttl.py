@@ -30,7 +30,7 @@ RUN = f"{int(time.time()) % 100000}"
 
 def run_policy(min_gap, tenants, active_secs, observe_secs, ttl_secs, rate):
     log = open(os.path.join(HERE, "out", "ttl-server.log"), "ab")
-    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{PORT}", "--idle-secs", "3", "--holder", f"ttl{min_gap}", "--ttl-sweep-secs", "2", "--ttl-maintenance-secs", "5", "--ttl-min-gap-secs", str(min_gap), "--ttl-max-wakes", "1000"], stdout=log, stderr=log)
+    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{PORT}", "--idle-secs", "3", "--holder", f"ttl{min_gap}", "--ttl-wake-sleeping", "--ttl-sweep-secs", "2", "--ttl-maintenance-secs", "5", "--ttl-min-gap-secs", str(min_gap), "--ttl-max-wakes", "1000"], stdout=log, stderr=log)
     for _ in range(100):
         try:
             pymongo.MongoClient(URI, serverSelectionTimeoutMS=300).admin.command("ping")

@@ -1362,6 +1362,8 @@ import gen_tests_ops
 gen_tests_ops.register(globals())
 import gen_tests_stages
 gen_tests_stages.register(globals())
+import gen_tests_updates
+gen_tests_updates.register(globals())
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "tests.json"

@@ -59,8 +59,12 @@ def bucket_bytes(db):
     return total, n
 
 
-def make_docs(start, n, rnd):
-    return [{"_id": i, "user": f"user{rnd.randint(0, 5000):05d}", "age": rnd.randint(18, 90), "ts": __import__("datetime").datetime(2024, 1, 1) + __import__("datetime").timedelta(seconds=rnd.randint(0, 10**7)), "tags": [f"t{rnd.randint(0, 50)}", f"t{rnd.randint(0, 50)}", f"t{rnd.randint(0, 50)}"], "payload": "x" * 100, "k": rnd.randint(0, max(1, n // 10))} for i in range(start, start + n)]
+PERKEY = 10  # documents per value of `k` in the whole collection
+
+
+def make_docs(start, n, rnd, total=None):
+    total = total or n  # `k` has about 10 documents per value in the whole collection (not per batch)
+    return [{"_id": i, "user": f"user{rnd.randint(0, 5000):05d}", "age": rnd.randint(18, 90), "ts": __import__("datetime").datetime(2024, 1, 1) + __import__("datetime").timedelta(seconds=rnd.randint(0, 10**7)), "tags": [f"t{rnd.randint(0, 50)}", f"t{rnd.randint(0, 50)}", f"t{rnd.randint(0, 50)}"], "payload": "x" * 100, "k": rnd.randint(0, max(1, total // PERKEY)), "g": rnd.randint(0, 99)} for i in range(start, start + n)]
 
 
 IDX = [[("user", 1)], [("age", 1), ("ts", -1)], [("tags", 1)]]
@@ -73,7 +77,7 @@ def setup(c, db, n_idx, n_docs, rnd, indexes_first=True):
         for k in IDX[:n_idx]:
             d.c.create_index(k)
     for s in range(0, n_docs, 1000):
-        d.c.insert_many(make_docs(s, min(1000, n_docs - s), rnd), ordered=True)
+        d.c.insert_many(make_docs(s, min(1000, n_docs - s), rnd, n_docs), ordered=True)
     if not indexes_first:
         for k in IDX[:n_idx]:
             d.c.create_index(k)
@@ -152,7 +156,7 @@ def main():
                 d = c[db]
                 d.drop_collection("c")
                 for s in range(0, n_docs, 1000):
-                    d.c.insert_many(make_docs(s, min(1000, n_docs - s), random.Random(s)))
+                    d.c.insert_many(make_docs(s, min(1000, n_docs - s), random.Random(s), n_docs))
                 if indexed:
                     d.c.create_index([("k", 1)])
                     d.c.create_index([("ts", 1)])

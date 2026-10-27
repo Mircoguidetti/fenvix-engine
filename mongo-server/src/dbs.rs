@@ -10,7 +10,7 @@ use futures::{StreamExt, TryStreamExt};
 use object_store::path::Path;
 use object_store::{ObjectStore, ObjectStoreExt};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicI64, Ordering::Relaxed};
+use std::sync::atomic::{AtomicBool, AtomicI64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tenant_bench::lifecycle::{Lifecycle, Op, Tenant};
@@ -68,7 +68,7 @@ pub struct Entry {
     pub wakes: u64,
     pub closes: u64,
     /// A collection with a TTL index was used while this entry was open: a close writes the expiry hint.
-    pub(crate) ttl_seen: bool,
+    pub(crate) ttl_seen: AtomicBool,
     pub(crate) hint_written: bool,
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
@@ -119,7 +119,7 @@ impl Dbs {
                     last_used_ms: AtomicU64::new(now_ms()),
                     wakes: 0,
                     closes: 0,
-                    ttl_seen: false,
+                    ttl_seen: AtomicBool::new(false),
                     hint_written: false,
                     swept: HashMap::new(),
                     snap: None,
@@ -169,7 +169,7 @@ impl Dbs {
                         last_used_ms: AtomicU64::new(now_ms()),
                         wakes: 0,
                         closes: 0,
-                        ttl_seen: false,
+                        ttl_seen: AtomicBool::new(false),
                         hint_written: false,
                         swept: HashMap::new(),
                     snap: None,
@@ -382,6 +382,7 @@ impl Entry {
             }
             None => None,
         };
+        tenant_bench::counting::set_phase(5);
         let took = self.leases.acquire(&self.name).await?;
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
         match self.lc.wake(&self.name).await {
@@ -392,6 +393,7 @@ impl Entry {
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
+                tenant_bench::counting::set_phase(0);
                 Ok(true)
             }
             Err(e) => {
@@ -561,7 +563,7 @@ impl Entry {
     /// Record when this tenant's next document expires as a tiny object outside the tenant's prefix, so a
     /// maintenance pass can find tenants with due documents with one LIST and no wake. Best effort.
     async fn write_ttl_hint(&mut self) {
-        if !self.is_writer_open() || !(self.ttl_seen || self.hint_written) {
+        if !crate::ttl::WAKE_SLEEPING.load(Relaxed) || !self.is_writer_open() || !(self.ttl_seen.load(Relaxed) || self.hint_written) {
             return;
         }
         let next = match self.next_expiry().await {
@@ -616,6 +618,11 @@ impl Entry {
     pub fn indexes_op(coll: &str, idx: &[crate::index::IndexDef]) -> Result<Op> {
         let d = doc! { "indexes": idx.iter().map(|i| Bson::Document(i.to_stored())).collect::<Vec<_>>() };
         Ok(Op::Put(layout::index_key(coll), d.to_vec()?))
+    }
+
+    /// [`Tenant::approx_bytes`] of the open tenant (0 if closed).
+    pub fn approx_bytes(&self) -> u64 {
+        self.tenant.as_ref().map(|t| t.approx_bytes()).unwrap_or(0)
     }
 
     pub async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
@@ -773,6 +780,40 @@ impl ReadView {
         let Some(g) = &self.g else { return Ok(None) };
         let r = g.tenant.as_ref().unwrap().get(key).await?;
         self.done(r)
+    }
+
+    pub async fn get_many(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
+        let Some(g) = &self.g else { return Ok(vec![None; keys.len()]) };
+        if keys.is_empty() {
+            return Ok(vec![]);
+        }
+        let t = g.tenant.as_ref().unwrap();
+        let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
+        let r = futures::stream::iter(futs).buffered(32).try_collect::<Vec<_>>().await?;
+        self.done(r)
+    }
+
+    pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        let Some(g) = &self.g else { return Ok(vec![]) };
+        let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
+        self.done(r)
+    }
+
+    pub fn approx_bytes(&self) -> u64 {
+        self.g.as_ref().map(|g| g.approx_bytes()).unwrap_or(0)
+    }
+
+    /// Indexes of a collection (see [`Entry::indexes`]).
+    pub async fn indexes(&self, coll: &str) -> Result<Vec<crate::index::IndexDef>> {
+        let Some(v) = self.get(&layout::index_key(coll)).await? else { return Ok(vec![]) };
+        let d = Document::from_reader(&v[..])?;
+        Ok(d.get_array("indexes")?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect())
+    }
+
+    pub fn note_ttl(&self) {
+        if let Some(g) = &self.g {
+            g.ttl_seen.store(true, Relaxed);
+        }
     }
 
     pub async fn scan_collection(&self, coll: &str) -> Result<Vec<Document>> {

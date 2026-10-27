@@ -7,7 +7,7 @@
 //!   with its documents. It also enforces unique indexes against the store plus the command's own pending
 //!   writes (the overlay), and is the write set of a transaction.
 
-use crate::dbs::Entry;
+use crate::dbs::{Entry, ReadView};
 use crate::error::MongoError;
 use crate::index::{self, entry_id, entry_key, IndexDef, Plan, State};
 use crate::keyenc::prefix_end;
@@ -19,6 +19,81 @@ use std::collections::{HashMap, HashSet};
 use tenant_bench::lifecycle::Op;
 
 type R<T> = Result<T, MongoError>;
+
+/// What the read path needs from a database: the exclusive [`Entry`] (writes, transactions: reads go through the
+/// command's snapshot) or a shared [`ReadView`] (plain reads, which run concurrently with each other).
+pub trait Rd: Send {
+    fn get(&mut self, key: &[u8]) -> impl std::future::Future<Output = anyhow::Result<Option<Bytes>>> + Send;
+    fn get_many(&mut self, keys: &[Vec<u8>]) -> impl std::future::Future<Output = anyhow::Result<Vec<Option<Bytes>>>> + Send;
+    fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> impl std::future::Future<Output = anyhow::Result<Vec<(Bytes, Bytes)>>> + Send;
+    fn approx_bytes(&self) -> u64;
+    fn indexes(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Vec<IndexDef>>> + Send;
+    /// A collection with a TTL index was read: a close of this tenant writes the expiry hint.
+    fn note_ttl(&self);
+}
+
+impl Rd for Entry {
+    async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
+        Entry::get(self, key).await
+    }
+    async fn get_many(&mut self, keys: &[Vec<u8>]) -> anyhow::Result<Vec<Option<Bytes>>> {
+        Entry::get_many(self, keys).await
+    }
+    async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> anyhow::Result<Vec<(Bytes, Bytes)>> {
+        Entry::scan_range(self, start, end, reverse, limit, read_ahead).await
+    }
+    fn approx_bytes(&self) -> u64 {
+        Entry::approx_bytes(self)
+    }
+    async fn indexes(&mut self, coll: &str) -> anyhow::Result<Vec<IndexDef>> {
+        Entry::indexes(self, coll).await
+    }
+    fn note_ttl(&self) {
+        self.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
+    async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
+        Entry::get(self, key).await
+    }
+    async fn get_many(&mut self, keys: &[Vec<u8>]) -> anyhow::Result<Vec<Option<Bytes>>> {
+        Entry::get_many(self, keys).await
+    }
+    async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> anyhow::Result<Vec<(Bytes, Bytes)>> {
+        Entry::scan_range(self, start, end, reverse, limit, read_ahead).await
+    }
+    fn approx_bytes(&self) -> u64 {
+        Entry::approx_bytes(self)
+    }
+    async fn indexes(&mut self, coll: &str) -> anyhow::Result<Vec<IndexDef>> {
+        Entry::indexes(self, coll).await
+    }
+    fn note_ttl(&self) {
+        self.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+impl Rd for ReadView {
+    async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
+        ReadView::get(self, key).await
+    }
+    async fn get_many(&mut self, keys: &[Vec<u8>]) -> anyhow::Result<Vec<Option<Bytes>>> {
+        ReadView::get_many(self, keys).await
+    }
+    async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> anyhow::Result<Vec<(Bytes, Bytes)>> {
+        ReadView::scan_range(self, start, end, reverse, limit, read_ahead).await
+    }
+    fn approx_bytes(&self) -> u64 {
+        ReadView::approx_bytes(self)
+    }
+    async fn indexes(&mut self, coll: &str) -> anyhow::Result<Vec<IndexDef>> {
+        ReadView::indexes(self, coll).await
+    }
+    fn note_ttl(&self) {
+        ReadView::note_ttl(self)
+    }
+}
 
 /// Pending writes by document key; `None` is a deletion.
 pub type Overlay = HashMap<Vec<u8>, Option<Document>>;
@@ -119,7 +194,8 @@ impl IxCursor {
     }
 
     /// Entries (full keys) of the next batch of at most `n`; empty when exhausted.
-    async fn next_batch(&mut self, g: &mut Entry, n: usize) -> R<Vec<Bytes>> {
+    async fn next_batch(&mut self, g: &mut impl Rd, n: usize) -> R<Vec<Bytes>> {
+        tenant_bench::counting::set_phase(1);
         let mut out: Vec<Bytes> = Vec::new();
         while out.is_empty() && self.i < self.ivs.len() {
             let (s, e) = &self.ivs[self.i];
@@ -152,8 +228,31 @@ pub fn decode(v: &[u8]) -> R<Document> {
     Ok(Document::from_reader(v)?)
 }
 
-async fn docs_by_ids(g: &mut Entry, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Document>> {
+/// Bytes read by one point read (a block).
+const POINT_READ_BYTES: u64 = 4096;
+/// Bytes per request of the range scan that replaces point reads.
+const FETCH_SCAN_READ_AHEAD: usize = 4 << 20;
+
+/// True when reading `n` documents with a range scan over their span is expected to take fewer object-store requests
+/// than `n` point reads: the point reads touch about one block each (at most all blocks of the tenant), the scan reads
+/// the tenant's data `FETCH_SCAN_READ_AHEAD` bytes per request. `total` is the tenant's SST size (an upper bound of the
+/// collection's, so the choice errs towards point reads).
+fn prefer_scan(total: u64, n: usize) -> bool {
+    static OFF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    if *OFF.get_or_init(|| std::env::var_os("MONGO_NO_FETCH_SCAN").is_some()) {
+        return false; // measurement switch: the behaviour before the cost-based choice
+    }
+    let point = (n as u64).min(total / POINT_READ_BYTES + 1);
+    let scan = total / FETCH_SCAN_READ_AHEAD as u64 + 1;
+    point > scan + 2
+}
+
+async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Document>> {
     let prefix = doc_prefix(coll);
+    tenant_bench::counting::set_phase(2);
+    if prefer_scan(g.approx_bytes(), ids.len()) {
+        return docs_by_scan(g, &prefix, ids).await;
+    }
     let keys: Vec<Vec<u8>> = ids
         .iter()
         .map(|id| {
@@ -166,8 +265,39 @@ async fn docs_by_ids(g: &mut Entry, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Docume
     vals.into_iter().flatten().map(|v| decode(&v)).collect()
 }
 
+/// The documents with these ids (in the order of `ids`) from one ascending range scan over the id span.
+async fn docs_by_scan(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>]) -> R<Vec<Document>> {
+    let want: HashSet<&[u8]> = ids.iter().map(|i| i.as_slice()).collect();
+    let (Some(lo), Some(hi)) = (ids.iter().min(), ids.iter().max()) else { return Ok(vec![]) };
+    let mut start = prefix.to_vec();
+    start.extend(lo);
+    let mut stop = prefix.to_vec();
+    stop.extend(hi);
+    stop.push(0);
+    let mut found: HashMap<Vec<u8>, Document> = HashMap::new();
+    loop {
+        let rows = g.scan_range(&start, Some(&stop), false, Some(FETCH_CHUNK), FETCH_SCAN_READ_AHEAD).await?;
+        let n = rows.len();
+        for (k, v) in &rows {
+            let id = &k[prefix.len()..];
+            if want.contains(id) {
+                found.insert(id.to_vec(), decode(v)?);
+            }
+        }
+        if n < FETCH_CHUNK {
+            break;
+        }
+        let mut k = rows.last().unwrap().0.to_vec();
+        k.push(0);
+        start = k;
+    }
+    Ok(ids.iter().filter_map(|i| found.get(i).cloned()).collect())
+}
+
+const FETCH_CHUNK: usize = 20_000;
+
 /// Candidate documents of `plan` (index order), still to be filtered.
-async fn plan_docs_ids(g: &mut Entry, coll: &str, indexes: &[IndexDef], plan: &Plan, stats: &mut Stats) -> R<Vec<Vec<u8>>> {
+async fn plan_docs_ids(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan: &Plan, stats: &mut Stats) -> R<Vec<Vec<u8>>> {
     let mut ids = Vec::new();
     let mut stack = vec![plan];
     while let Some(p) = stack.pop() {
@@ -199,7 +329,7 @@ fn visible(d: &Document, o: &FindOpts) -> bool {
 }
 
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it).
-pub async fn find_docs(g: &mut Entry, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
+pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
     let plan = plan_for(indexes, o);
     let mut stats = Stats::default();
     let prefix = doc_prefix(coll);
@@ -224,6 +354,7 @@ pub async fn find_docs(g: &mut Entry, coll: &str, indexes: &[IndexDef], o: &Find
             }
         }
         Plan::Coll { reverse } => {
+            tenant_bench::counting::set_phase(3);
             let end = prefix_end(&prefix);
             let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(usize::MAX);
             let (mut start, mut stop) = (prefix.clone(), end.clone());
