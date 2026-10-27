@@ -37,6 +37,11 @@ pub fn is_number(v: &Bson) -> bool {
     matches!(v, Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_))
 }
 
+/// Numbers of any type, Decimal128 included (comparison, equality and sorting).
+pub fn is_numeric(v: &Bson) -> bool {
+    matches!(v, Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_) | Bson::Decimal128(_))
+}
+
 fn cmp_numbers(a: &Bson, b: &Bson) -> Ordering {
     match (a, b) {
         (Bson::Int32(x), Bson::Int32(y)) => x.cmp(y),
@@ -61,6 +66,7 @@ pub fn as_f64(v: &Bson) -> f64 {
         Bson::Int32(x) => *x as f64,
         Bson::Int64(x) => *x as f64,
         Bson::Double(x) => *x,
+        Bson::Decimal128(d) => d.to_string().parse().unwrap_or(f64::NAN),
         _ => f64::NAN,
     }
 }
@@ -71,7 +77,7 @@ pub fn compare(a: &Bson, b: &Bson) -> Ordering {
         return ra.cmp(&rb);
     }
     match (a, b) {
-        (x, y) if is_number(x) && is_number(y) => cmp_numbers(x, y),
+        (x, y) if is_numeric(x) && is_numeric(y) => cmp_numbers(x, y),
         (Bson::String(x) | Bson::Symbol(x), Bson::String(y) | Bson::Symbol(y)) => x.as_bytes().cmp(y.as_bytes()),
         (Bson::Document(x), Bson::Document(y)) => {
             let mut xi = x.iter();
@@ -307,6 +313,12 @@ fn regex_vals(vals: &[&Bson], pat: &str, opts: &str) -> R<bool> {
     for c in candidates(vals) {
         if let Bson::String(s) | Bson::Symbol(s) = c {
             if crate::regex::is_match(&re, s)? {
+                return Ok(true);
+            }
+        }
+        // a stored regular expression value matches the same pattern and options
+        if let Bson::RegularExpression(r) = c {
+            if r.pattern.as_str() == pat && r.options.as_str() == opts {
                 return Ok(true);
             }
         }
@@ -636,7 +648,7 @@ fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
                 return Err(bad("divisor cannot be 0"));
             }
             let (d, r) = (d as i64, r as i64);
-            candidates(vals).iter().any(|c| is_number(c) && as_f64(c).is_finite() && (as_f64(c).trunc() as i64).wrapping_rem(d) == r)
+            candidates(vals).iter().any(|c| is_numeric(c) && as_f64(c).is_finite() && as_f64(c).abs() < 9.2e18 && (as_f64(c).trunc() as i64).wrapping_rem(d) == r)
         }
         other => return Err(bad(format!("unknown operator: {other}"))),
     })

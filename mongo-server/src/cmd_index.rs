@@ -469,12 +469,16 @@ impl Server {
                 return Err(MongoError::new(67, "CannotCreateIndex", "Index keys cannot be empty.".into()));
             }
             let name = spec.get_str("name").map(str::to_string).unwrap_or_else(|_| spec_name(key));
-            if name == "_id_" || (key.len() == 1 && key.get("_id").is_some()) {
+            if name == "_id_" || (key.len() == 1 && matches!(key.get("_id"), Some(Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_)))) {
                 continue; // the implicit _id index
             }
             // Normalised spec: the user's options in MongoDB's order.
             let text_idx = normalize_text(spec, key, &name)?;
             let geo_idx = if text_idx.is_none() { normalize_geo(spec, key, &name)? } else { None };
+            if text_idx.is_none() && geo_idx.is_none() {
+                let flag = |n: &str| bool_arg(spec.get(n), false);
+                crate::wild::validate_spec(spec, key, flag("unique"), flag("sparse"), spec.get("expireAfterSeconds").is_some())?;
+            }
             let mut idx = match (&text_idx, &geo_idx) {
                 (Some(d), _) => d.clone(),
                 (None, Some(d)) => {

@@ -1368,6 +1368,8 @@ import gen_tests_text
 gen_tests_text.register(globals())
 import gen_tests_geo
 gen_tests_geo.register(globals())
+import gen_tests_hashed
+gen_tests_hashed.register(globals())
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "tests.json"

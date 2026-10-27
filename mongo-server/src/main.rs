@@ -26,6 +26,7 @@ mod geo_query;
 mod regex;
 mod search;
 mod text;
+mod wild;
 mod ttl;
 mod txn;
 mod update;

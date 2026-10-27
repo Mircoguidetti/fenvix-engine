@@ -30,6 +30,9 @@ pub enum Kind {
     Regular,
     Text(crate::text::TextSpec),
     Geo(crate::geo_query::GeoSpec),
+    /// Hashed: the position of the hashed field in the key.
+    Hashed(usize),
+    Wildcard(crate::wild::WildSpec),
 }
 
 #[derive(Clone, Debug)]
@@ -76,7 +79,13 @@ impl IndexDef {
         let mut special = false;
         let is_text = key_doc.contains_key("_fts");
         let is_geo = key_doc.values().any(|v| matches!(v, Bson::String(s) if s == "2dsphere" || s == "2d"));
+        let hashed_pos = key_doc.values().position(|v| matches!(v, Bson::String(s) if s == "hashed"));
+        let wild = if is_text || is_geo { None } else { crate::wild::WildSpec::from_stored(stored) };
         for (k, v) in key_doc {
+            if wild.is_some() || (hashed_pos.is_some() && matches!(v, Bson::String(s) if s == "hashed")) {
+                key.push((k.clone(), wild.as_ref().map(|w| w.asc).unwrap_or(true)));
+                continue;
+            }
             if is_text && (k == "_fts" || k == "_ftsx") {
                 continue;
             }
@@ -115,6 +124,11 @@ impl IndexDef {
                 Some(g) => Kind::Geo(g),
                 None => return None,
             }
+        } else if let Some(w) = wild {
+            Kind::Wildcard(w)
+        } else if let Some(p) = hashed_pos {
+            // a hashed field next to a wildcard / unknown plugin key is only recorded
+            if special { Kind::Regular } else { Kind::Hashed(p) }
         } else {
             Kind::Regular
         };
@@ -164,7 +178,7 @@ impl IndexDef {
         for (f, asc) in &self.key {
             d.insert(f.clone(), if *asc { 1 } else { -1 });
         }
-        if self.special || matches!(self.kind, Kind::Text(_) | Kind::Geo(_)) {
+        if self.special || matches!(self.kind, Kind::Text(_) | Kind::Geo(_) | Kind::Hashed(_) | Kind::Wildcard(_)) {
             return self.spec.get_document("key").cloned().unwrap_or(d);
         }
         d
@@ -198,6 +212,8 @@ impl IndexDef {
         match &self.kind {
             Kind::Text(t) => return text_entries(t, d),
             Kind::Geo(g) => return geo_entries(g, d),
+            Kind::Hashed(pos) => return crate::wild::hashed_entries(&self.key, *pos, self.sparse, d),
+            Kind::Wildcard(w) => return Ok((w.entries(d), false)),
             Kind::Regular => {}
         }
         let mut fields: Vec<(Vec<Bson>, bool)> = Vec::new();
@@ -977,7 +993,7 @@ pub fn plan(inp: &PlanInput) -> Plan {
     if let Some(scan) = geo_scan(inp.indexes, inp.filter, &cs, inp.hint) {
         return Plan::Ix(scan);
     }
-    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular) && inp.hint.map(|h| h == i).unwrap_or(true);
+    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular | Kind::Hashed(_)) && inp.hint.map(|h| h == i).unwrap_or(true);
     let mut best: Option<(i64, IxScan)> = None;
     for (i, idx) in inp.indexes.iter().enumerate() {
         if !usable(i, idx) {
@@ -987,8 +1003,14 @@ pub fn plan(inp: &PlanInput) -> Plan {
         if !covers {
             continue;
         }
-        let b = bounds_for(idx, &cs);
-        let sorted_dir = sort_satisfied(idx, &cs, inp.sort);
+        let hashed_cs;
+        let (b, sorted_dir) = match &idx.kind {
+            Kind::Hashed(pos) => {
+                hashed_cs = crate::wild::hashed_constraints(&cs, &idx.key[*pos].0);
+                (bounds_for(idx, &hashed_cs), None)
+            }
+            _ => (bounds_for(idx, &cs), sort_satisfied(idx, &cs, inp.sort)),
+        };
         if b.is_none() && sorted_dir.is_none() && inp.hint.is_none() {
             continue;
         }
@@ -1012,6 +1034,9 @@ pub fn plan(inp: &PlanInput) -> Plan {
     }
     if let Some((_, s)) = best {
         return Plan::Ix(s);
+    }
+    if let Some(scan) = wild_scan(inp.indexes, inp.filter, &cs, inp.hint) {
+        return Plan::Ix(scan);
     }
     // $or: every clause must be answered by an index.
     if inp.hint.is_none() {
@@ -1264,4 +1289,39 @@ mod tests {
         assert_eq!(entry_id(&k).unwrap(), &[7, 8, 9]);
         assert_eq!(entry_comps(&k, b"p/").unwrap(), b"cc");
     }
+}
+
+/// A scan of a wildcard index for `filter`: the entries of one path within the bounds of its constraint.
+pub fn wild_scan(indexes: &[IndexDef], filter: &Document, cs: &HashMap<String, Constraint>, hint: Option<usize>) -> Option<IxScan> {
+    use crate::wild::WildBound;
+    for (i, idx) in indexes.iter().enumerate() {
+        let Kind::Wildcard(w) = &idx.kind else { continue };
+        if idx.state != State::Ready || !hint.map(|h| h == i).unwrap_or(true) || !index_covers_query(idx, cs) {
+            continue;
+        }
+        let Some(bound) = crate::wild::choose_bound(w, filter, cs) else { continue };
+        let intervals = match bound {
+            WildBound::Whole => vec![(Vec::new(), None)],
+            WildBound::Path(path) => {
+                // a pseudo two-field key: the path component, then the value
+                let mut pseudo = idx.clone();
+                pseudo.key = vec![("\u{0}path".to_string(), true), (path.clone(), w.asc)];
+                pseudo.multikey = true;
+                let mut c2 = cs.clone();
+                c2.insert("\u{0}path".to_string(), Constraint { eq: Some(vec![Bson::String(path.clone())]), ..Default::default() });
+                match bounds_for(&pseudo, &c2) {
+                    Some((ivs, _, _)) => ivs,
+                    None => continue,
+                }
+            }
+        };
+        return Some(IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: 1, bounds: vec![("$_path".to_string(), vec!["[MinKey, MaxKey]".to_string()])] });
+    }
+    None
+}
+
+/// Can the wildcard index `idx` answer `filter` when it is forced with a hint? MongoDB refuses to scan a whole wildcard index.
+pub fn wild_hint_ok(indexes: &[IndexDef], idx: usize, filter: &Document) -> bool {
+    let cs = constraints(filter);
+    wild_scan(indexes, filter, &cs, Some(idx)).is_some()
 }

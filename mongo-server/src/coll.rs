@@ -334,6 +334,11 @@ fn visible(d: &Document, o: &FindOpts) -> bool {
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
 /// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
+    if let Hint::Index(i) = &o.hint {
+        if matches!(indexes.get(*i).map(|x| &x.kind), Some(index::Kind::Wildcard(_))) && !index::wild_hint_ok(indexes, *i, o.filter) {
+            return Err(MongoError::new(291, "NoQueryExecutionPlans", "error processing query: planner returned error :: caused by :: $hint: refusing to build whole-index solution, because it's a wildcard index".to_string()));
+        }
+    }
     let has_text = crate::text::has_text(o.filter);
     let has_geo = crate::geo_query::filter_has_geo(o.filter);
     if !has_text && !has_geo {
