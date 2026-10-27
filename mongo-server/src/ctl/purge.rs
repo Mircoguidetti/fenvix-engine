@@ -47,6 +47,11 @@ pub async fn release_pins(store: &Store, db: &str) -> Result<u32> {
     Ok(n)
 }
 
+pub async fn delete_prefix(store: &Store, prefix: &Path) -> Result<u64> {
+    let objs = list(store, prefix).await?;
+    delete_all(store, objs).await
+}
+
 async fn list(store: &Store, prefix: &Path) -> Result<Vec<Path>> {
     Ok(store.list(Some(prefix)).map_ok(|m| m.location).try_collect().await?)
 }
@@ -76,6 +81,7 @@ pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
         }
         let (manifests, rest): (Vec<Path>, Vec<Path>) = objs.into_iter().partition(|p| p.as_ref().contains("/manifest/"));
         rep.deleted += delete_all(&ctl.store, manifests).await?;
+        super::failpoint("erase.after_manifests").await;
         let (lease, rest): (Vec<Path>, Vec<Path>) = rest.into_iter().partition(|p| p.filename() == Some("_lease"));
         rep.deleted += delete_all(&ctl.store, rest).await?;
         rep.deleted += delete_all(&ctl.store, lease).await?;
@@ -95,6 +101,7 @@ pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
         rec::path(&["control", "pins", db]),
         rec::path(&["control", "usage", db]),
         rec::path(&["control", "forks", db]),
+        rec::path(&["control", "exports", db]),
     ] {
         out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
     }

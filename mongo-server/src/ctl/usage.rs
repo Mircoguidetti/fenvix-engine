@@ -198,6 +198,14 @@ impl Usage {
         }
     }
 
+    /// Forget a database's counters (it was erased; its usage records went with it).
+    pub fn drop_db(&self, db: &str) {
+        let mut g = self.inner.lock().unwrap();
+        g.days.retain(|(d, _), _| d != db);
+        g.last_active.remove(db);
+        g.seen_wakes.remove(db);
+    }
+
     pub fn note_storage(&self, db: &str, bytes: u64) {
         let now = now_ms();
         self.with_day(db, |d| d.storage = Some((now, bytes)));
@@ -236,7 +244,7 @@ impl Usage {
     }
 
     /// Write every dirty (db, day) record. Returns the number written.
-    pub async fn flush(&self, store: &rec::Store) -> usize {
+    pub async fn flush(&self, store: &rec::Store, ops: &super::OpLocks) -> usize {
         let holder = self.holder.lock().unwrap().clone();
         let todo: Vec<(String, i64, Value)> = {
             let mut g = self.inner.lock().unwrap();
@@ -251,6 +259,13 @@ impl Usage {
         };
         let mut n = 0;
         for (db, day, doc) in todo {
+            // Not while an operation (an erase above all) holds the database: its records must not reappear.
+            let Some(_op) = ops.try_lock(&db) else {
+                if let Some(d) = self.inner.lock().unwrap().days.get_mut(&(db, day)) {
+                    d.dirty = true;
+                }
+                continue;
+            };
             let name = format!("{holder}-{:08x}.json", self.nonce);
             let p = rec::path(&["control", "usage", &db, &day_string(day), &name]);
             match rec::put(store, &p, &doc).await {
@@ -302,7 +317,7 @@ pub fn spawn_flusher(ctl: &Arc<Ctl>) {
                     }
                 }
             }
-            ctl.usage.flush(&ctl.store).await;
+            ctl.usage.flush(&ctl.store, &ctl.ops).await;
         }
     });
 }

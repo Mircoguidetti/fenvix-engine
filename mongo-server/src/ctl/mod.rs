@@ -13,6 +13,7 @@
 //! * `control/staging/{op}/...`              scratch slatedb databases of a restore
 
 pub mod api;
+pub mod erase;
 pub mod fork;
 pub mod http;
 pub mod meta;
@@ -120,6 +121,12 @@ impl OpLocks {
             Ok(g) => Ok(g),
             Err(_) => Err(ApiError::conflict("busy", format!("another operation on database {name} is still running"))),
         }
+    }
+
+    /// The lock if no operation holds it right now.
+    pub fn try_lock(&self, name: &str) -> Option<tokio::sync::OwnedMutexGuard<()>> {
+        let l = Arc::clone(self.m.lock().unwrap().entry(name.to_string()).or_default());
+        l.try_lock_owned().ok()
     }
 
     /// Two databases at once (a fork touches its source and its target), always in name order.
