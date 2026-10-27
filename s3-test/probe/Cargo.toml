@@ -1,0 +1,16 @@
+[package]
+name = "s3probe"
+version = "0.1.0"
+edition = "2021"
+
+# Its own workspace: the root workspace must not pick this crate up.
+[workspace]
+
+[dependencies]
+tenant-bench = { path = "../.." }
+object_store = { version = "=0.14.2", features = ["aws"] }
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+serde_json = "1"
+anyhow = "1"
+async-trait = "0.1"

@@ -1,0 +1,5 @@
+{
+  "tests": [1],
+  "note": "Trigger file. Tests 2 and 3 additionally need merge_results_blob = git blob id of results-merge.md (origin/main or origin/merge-engine) after the owner has read it and seen that ALL suites are green.",
+  "merge_results_blob": ""
+}
