@@ -39,7 +39,19 @@ pub static SHARED_READS: std::sync::atomic::AtomicBool = std::sync::atomic::Atom
 /// the next WAL object. False (`--no-group-commit`): the write waits for its own flush under the lock.
 pub static GROUP_COMMIT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
+/// Counts a write command of a tenant from the moment it asks for the tenant lock until its reply is ready; dropped
+/// at the end of `Server::handle`. Group commit uses the count to tell whether another write is on its way.
+pub struct InflightToken(Arc<AtomicU64>);
+
+impl Drop for InflightToken {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Relaxed);
+    }
+}
+
 tokio::task_local! {
+    /// In-flight tokens of the command being handled on this task.
+    pub static TOKENS: std::cell::RefCell<Vec<InflightToken>>;
     /// Commits staged by the command being handled on this task, awaited before its reply is sent.
     pub static PENDING: std::cell::RefCell<Vec<Commit>>;
 }
@@ -65,6 +77,7 @@ pub struct Dbs {
     pub global: Arc<tenant_bench::counting::CountingStore>,
     pub readers: Arc<AtomicI64>,
     pub writers: Arc<AtomicI64>,
+    inflight: Mutex<HashMap<String, Arc<AtomicU64>>>,
 }
 
 pub struct Entry {
@@ -81,6 +94,7 @@ pub struct Entry {
     pub wakes: u64,
     pub closes: u64,
     last_compaction_request: Option<Instant>,
+    inflight: Arc<AtomicU64>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -90,7 +104,7 @@ pub fn valid_db_name(name: &str) -> bool {
 
 impl Dbs {
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
-        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)) })
+        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), inflight: Mutex::new(HashMap::new()) })
     }
 
     pub fn entry_count(&self) -> usize {
@@ -130,14 +144,25 @@ impl Dbs {
                         wakes: 0,
                         closes: 0,
                         last_compaction_request: None,
+                        inflight: self.inflight_counter(name),
                     }))
                 })
                 .clone()
         }
     }
 
-    /// Lock a database's entry exclusively (every command that writes, and tenant state changes).
+    fn inflight_counter(&self, name: &str) -> Arc<AtomicU64> {
+        Arc::clone(self.inflight.lock().unwrap().entry(name.to_string()).or_default())
+    }
+
+    /// Lock a database's entry exclusively (every command that writes, and tenant state changes). Counts the command
+    /// as in flight for its tenant until the end of `Server::handle`.
     pub async fn lock(&self, name: &str) -> OwnedRwLockWriteGuard<Entry> {
+        let counter = self.inflight_counter(name);
+        counter.fetch_add(1, Relaxed);
+        let token = InflightToken(counter);
+        // Outside `handle` there is no scope to hold the token: it is dropped (and the count decremented) at once.
+        let _ = TOKENS.try_with(|t| t.borrow_mut().push(token));
         self.entry(name).write_owned().await
     }
 
@@ -414,6 +439,9 @@ impl Entry {
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
         tenant_bench::lifecycle::note_write(&self.name);
+        if let Some(t) = self.tenant.as_ref() {
+            t.bind_inflight(Arc::clone(&self.inflight));
+        }
         self.request_compaction_if_needed();
         let Some(commit) = staged? else { return Ok(()) };
         let mut slot = Some(commit);

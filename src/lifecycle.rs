@@ -290,7 +290,15 @@ pub struct GroupFlush {
     staged_seq: std::sync::atomic::AtomicU64,
     /// Highest sequence number known to be in a durable WAL object.
     flushed_seq: std::sync::atomic::AtomicU64,
+    /// Writes of this tenant between asking for the tenant lock and their reply (owned by the server's tenant entry).
+    inflight: std::sync::OnceLock<Arc<std::sync::atomic::AtomicU64>>,
+    /// Writes currently inside `Commit::wait` (staged, waiting for a flush).
+    waiting: std::sync::atomic::AtomicU64,
 }
+
+/// With a window set, wait for it only while another write of the tenant is still on its way to the flush (in flight but
+/// not yet waiting); when none is, flush at once. False: always wait the full window.
+pub static GROUP_ADAPTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Microseconds the leader of a group waits before flushing so that more writes can join (0 = flush at once).
 pub static GROUP_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
@@ -310,15 +318,37 @@ impl Commit {
     /// together by the next one.
     pub async fn wait(self) -> Result<()> {
         use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+        struct Waiting<'a>(&'a std::sync::atomic::AtomicU64);
+        impl Drop for Waiting<'_> {
+            fn drop(&mut self) {
+                self.0.fetch_sub(1, std::sync::atomic::Ordering::Release);
+            }
+        }
+        self.group.waiting.fetch_add(1, Release);
+        let group = Arc::clone(&self.group);
+        let _waiting = Waiting(&group.waiting);
         GROUP_COMMITS.fetch_add(1, Relaxed);
         let seq = self.handle.seqnum();
         // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
         if EXPLICIT_FLUSH.load(Relaxed) && self.group.flushed_seq.load(Acquire) < seq {
             let _lead = self.group.lock.lock().await;
             if self.group.flushed_seq.load(Acquire) < seq {
-                let window = GROUP_WINDOW_US.load(Relaxed);
-                if window > 0 {
-                    tokio::time::sleep(Duration::from_micros(window)).await;
+                let window = Duration::from_micros(GROUP_WINDOW_US.load(Relaxed));
+                if !window.is_zero() {
+                    if GROUP_ADAPTIVE.load(Relaxed) {
+                        let deadline = Instant::now() + window;
+                        loop {
+                            let inflight = self.group.inflight.get().map_or(0, |c| c.load(Acquire));
+                            let others = inflight.saturating_sub(self.group.waiting.load(Acquire));
+                            let left = deadline.saturating_duration_since(Instant::now());
+                            if others == 0 || left.is_zero() {
+                                break;
+                            }
+                            tokio::time::sleep(left.min(Duration::from_micros(100))).await;
+                        }
+                    } else {
+                        tokio::time::sleep(window).await;
+                    }
                 }
                 let target = self.group.staged_seq.load(Acquire);
                 self.db.flush().await?;
@@ -350,6 +380,11 @@ impl Tenant {
             Some(Mode::Writer(db)) => Some(db.manifest().l0().len()),
             _ => None,
         }
+    }
+
+    /// Give group commit the tenant's in-flight write counter (see `GroupFlush::inflight`).
+    pub fn bind_inflight(&self, counter: Arc<std::sync::atomic::AtomicU64>) {
+        let _ = self.group.inflight.set(counter);
     }
 
     pub fn is_writer(&self) -> bool {
