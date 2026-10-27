@@ -48,7 +48,7 @@ def trial(n, secs, writers, readers, control):
     c = MongoClient(uri, retryWrites=False, serverSelectionTimeoutMS=5000, maxPoolSize=writers + readers + 4)
     c[db].c.insert_one({"_id": -1, "v": 0, "pad": PAD})
     acked, ids, lock, stop = {-1: 0}, [-1], threading.Lock(), threading.Event()
-    viol = {"missing": 0, "stale": 0, "padding": 0, "errors": 0, "count_below_acked": 0}
+    viol = {"reads_checked": 0, "missing": 0, "stale": 0, "padding": 0, "errors": 0, "count_below_acked": 0}
 
     def writer(w):
         i = 0
@@ -80,6 +80,7 @@ def trial(n, secs, writers, readers, control):
                     with lock: viol["errors"] += 1
                 continue
             with lock:
+                viol["reads_checked"] += 1
                 if d is None: viol["missing"] += 1
                 elif d["v"] < v_ack: viol["stale"] += 1
                 elif d.get("pad") != PAD: viol["padding"] += 1

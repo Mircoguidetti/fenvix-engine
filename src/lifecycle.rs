@@ -90,6 +90,7 @@ static OPEN_WRITERS: std::sync::LazyLock<Mutex<std::collections::HashSet<String>
 struct HotGc {
     last_write: Instant,
     last_gc: Instant,
+    last_sst_gc: Instant,
 }
 static GC_HOT: std::sync::LazyLock<Mutex<HashMap<String, HotGc>>> = std::sync::LazyLock::new(Default::default);
 /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = never).
@@ -98,12 +99,15 @@ pub static HOT_GC_EVERY_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::
 /// Record that a writer of tenant `id` just wrote.
 pub fn note_write(id: &str) {
     let now = Instant::now();
-    GC_HOT.lock().unwrap().entry(id.to_string()).and_modify(|h| h.last_write = now).or_insert(HotGc { last_write: now, last_gc: now });
+    GC_HOT.lock().unwrap().entry(id.to_string()).and_modify(|h| h.last_write = now).or_insert(HotGc { last_write: now, last_gc: now, last_sst_gc: now });
 }
 
 /// Test control: override slatedb's `l0_max_ssts` (8) for writers, 0 = keep the default. A lower value makes the
 /// memtable-flush stall that the shutdown fallback handles happen after fewer writes.
 pub static L0_MAX_SSTS_OVERRIDE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// Test control: memtable size (bytes) at which a writer flushes it to an L0 SST, 0 = slatedb's default.
+pub static L0_SST_BYTES_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
@@ -115,6 +119,10 @@ pub fn writer_settings() -> Settings {
     if l0_max > 0 {
         s.l0_max_ssts = l0_max;
         s.l0_max_ssts_per_key = s.l0_max_ssts_per_key.min(l0_max);
+    }
+    let l0_bytes = L0_SST_BYTES_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
+    if l0_bytes > 0 {
+        s.l0_sst_size_bytes = l0_bytes as usize;
     }
     s.garbage_collector_options = None;
     s.compactor_options = None;
@@ -772,6 +780,125 @@ async fn gc_wal_incremental(store: &Arc<dyn ObjectStore>, id: &str, mode: u8) ->
     Ok(())
 }
 
+/// Seconds between cleanups of the compacted SSTs and old manifests of an open writer (0 = never; they then stay
+/// until the tenant closes and is collected as a whole).
+pub static SST_GC_EVERY_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(60);
+/// An object that the latest manifest does not reference is deleted only after this process has seen it unreferenced
+/// for this long. A live writer keeps reading the SSTs of the manifest it last loaded (it re-reads the manifest every
+/// `--writer-poll-secs`) so an SST that a compaction has just replaced must outlive that view; the clock starts
+/// when a pass first sees the object unreferenced, so a restart only delays deletion.
+pub static SST_GC_MIN_UNREF_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(120);
+/// Negative control for the tests: also delete the oldest SST that the manifest *does* reference.
+pub static GC_CONTROL_DELETE_LIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub static SST_GC_PASSES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static SST_GC_DELETED_SSTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static SST_GC_DELETED_MANIFESTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Per tenant: object name (`compacted/...`, `manifest/...`) -> when a pass first saw it unreferenced.
+static SST_UNREF: std::sync::LazyLock<Mutex<HashMap<String, HashMap<String, Instant>>>> = std::sync::LazyLock::new(Default::default);
+
+fn unix_ms() -> u128 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+}
+
+/// Delete the compacted SSTs and old manifests of an open writer that nothing can reference any more: the latest
+/// manifest does not name them, no checkpoint exists, and a previous pass saw them unreferenced at least
+/// `SST_GC_MIN_UNREF_SECS` ago (longer than the writer's view of the manifest can be stale). Runs under the tenant's
+/// maintenance lock, so no compaction of this process is writing a new SST meanwhile; a flush of the writer that
+/// uploaded an SST but has not yet put it in the manifest looks unreferenced too and is covered by the same wait.
+pub async fn gc_tenant_ssts(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<()> {
+    use std::sync::atomic::Ordering::Relaxed;
+    eprintln!("SSTGC begin tenant={id} unix_ms={}", unix_ms());
+    let admin = Admin::builder(tenant_path(id), Arc::clone(s3)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(()) };
+    if !m.segments().is_empty() || !admin.list_checkpoints(None).await?.is_empty() {
+        eprintln!("SSTGC skip tenant={id} (segments or checkpoints present)");
+        return Ok(());
+    }
+    let latest = m.id();
+    let mut referenced = std::collections::HashSet::new();
+    for v in m.l0() {
+        referenced.insert(v.sst.id.value().to_string());
+    }
+    for run in m.compacted() {
+        for v in run.sst_views() {
+            referenced.insert(v.sst.id.value().to_string());
+        }
+    }
+    let min_unref = Duration::from_secs(SST_GC_MIN_UNREF_SECS.load(Relaxed));
+    let now = Instant::now();
+    let base = tenant_path(id);
+    // List first (no lock held across the awaits).
+    let mut listed: Vec<(&str, object_store::ObjectMeta)> = Vec::new();
+    for dir in ["compacted", "manifest", "compactions"] {
+        let prefix = Path::from(format!("{base}/{dir}"));
+        let mut it = s3.list(Some(&prefix));
+        while let Some(meta) = it.next().await {
+            listed.push((dir, meta?));
+        }
+    }
+    // Numbered state objects (manifests, compaction states): the highest number is the live one.
+    let number = |file: &str| file.split('.').next().and_then(|n| n.parse::<u64>().ok());
+    let max_compactions = listed.iter().filter(|(d, _)| *d == "compactions").filter_map(|(_, m)| m.location.filename().and_then(number)).max().unwrap_or(0);
+    let mut doomed: Vec<Path> = Vec::new();
+    let (mut n_ssts, mut n_manifests) = (0u64, 0u64);
+    let mut live_old: Vec<(i64, Path)> = Vec::new();
+    {
+        let mut track = SST_UNREF.lock().unwrap();
+        let t = track.entry(id.to_string()).or_default();
+        let mut seen = std::collections::HashSet::new();
+        for (dir, meta) in listed {
+            let Some(file) = meta.location.filename().map(str::to_string) else { continue };
+            let key = format!("{dir}/{file}");
+            seen.insert(key.clone());
+            let live = if dir == "compacted" {
+                file.strip_suffix(".sst").map_or(true, |u| referenced.contains(u))
+            } else if dir == "compactions" {
+                number(&file).map_or(true, |n| n >= max_compactions)
+            } else {
+                // Manifests: the latest is live; older ones are not needed by the writer or by this process's compactor.
+                file.strip_suffix(".manifest").and_then(|n| n.parse::<u64>().ok()).map_or(true, |n| n >= latest)
+            };
+            if live {
+                t.remove(&key);
+                if dir == "compacted" {
+                    live_old.push((meta.last_modified.timestamp(), meta.location.clone()));
+                }
+                continue;
+            }
+            let first = *t.entry(key).or_insert(now);
+            if now.duration_since(first) >= min_unref {
+                if dir == "compacted" { n_ssts += 1 } else { n_manifests += 1 }
+                doomed.push(meta.location);
+            }
+        }
+        t.retain(|k, _| seen.contains(k));
+    }
+    if GC_CONTROL_DELETE_LIVE.load(Relaxed) {
+        // Negative control: also delete the oldest referenced SST that is at least 30 s old.
+        live_old.sort();
+        let now_s = (unix_ms() / 1000) as i64;
+        if let Some((lm, p)) = live_old.into_iter().find(|(lm, _)| now_s - *lm >= 30) {
+            eprintln!("SSTGC CONTROL deleting a referenced SST {p} (modified {lm})");
+            doomed.push(p);
+        }
+    }
+    if !doomed.is_empty() {
+        let mut del = s3.delete_stream(futures::stream::iter(doomed.into_iter().map(Ok)).boxed());
+        while let Some(r) = del.next().await {
+            match r {
+                Ok(_) | Err(object_store::Error::NotFound { .. }) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+    }
+    SST_GC_PASSES.fetch_add(1, Relaxed);
+    SST_GC_DELETED_SSTS.fetch_add(n_ssts, Relaxed);
+    SST_GC_DELETED_MANIFESTS.fetch_add(n_manifests, Relaxed);
+    eprintln!("SSTGC end tenant={id} unix_ms={} deleted_ssts={n_ssts} deleted_manifests={n_manifests} referenced={}", unix_ms(), referenced.len());
+    Ok(())
+}
+
 #[derive(Default)]
 pub struct MaintenanceLog {
     pub compactions: Vec<CompactionRecord>,
@@ -858,6 +985,28 @@ impl Maintenance {
                         let now = Instant::now();
                         m.iter_mut().filter(|(_, h)| h.last_gc.elapsed() >= every).map(|(id, h)| { h.last_gc = now; id.clone() }).collect()
                     };
+                    let sst_every = Duration::from_secs(SST_GC_EVERY_SECS.load(std::sync::atomic::Ordering::Relaxed));
+                    let sst_due: Vec<String> = if sst_every.is_zero() {
+                        Vec::new()
+                    } else {
+                        let mut m = GC_HOT.lock().unwrap();
+                        let now = Instant::now();
+                        let due = m.iter_mut().filter(|(_, h)| h.last_sst_gc.elapsed() >= sst_every).map(|(id, h)| { h.last_sst_gc = now; id.clone() }).collect();
+                        SST_UNREF.lock().unwrap().retain(|id, _| m.contains_key(id));
+                        due
+                    };
+                    futures::stream::iter(sst_due)
+                        .for_each_concurrent(GC_CONCURRENCY, |id| {
+                            let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
+                            async move {
+                                let lock = maint_lock(&locks, &id);
+                                let _held = lock.lock().await;
+                                if let Err(e) = gc_tenant_ssts(&s3, &id).await {
+                                    log.lock().unwrap().errors.push(format!("sst gc {id}: {e:#}"));
+                                }
+                            }
+                        })
+                        .await;
                     futures::stream::iter(hot_due)
                         .for_each_concurrent(GC_CONCURRENCY, |id| {
                             let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());

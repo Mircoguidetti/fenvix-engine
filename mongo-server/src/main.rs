@@ -114,6 +114,20 @@ struct Args {
     /// one DELETE per object) or `list-only` (that listing without deleting; profiling only, bounds nothing).
     #[arg(long, default_value = "bulk")]
     wal_gc_mode: String,
+    /// Seconds between cleanups of the compacted SSTs and old manifests of an open writer (0 = off: they stay until
+    /// the tenant closes).
+    #[arg(long, default_value_t = 60)]
+    sst_gc_secs: u64,
+    /// Seconds an SST or manifest must have been seen unreferenced before it is deleted (must exceed
+    /// --writer-poll-secs, the staleness of a live writer's view of the manifest).
+    #[arg(long, default_value_t = 120)]
+    sst_gc_min_unref_secs: u64,
+    /// Test control, unsafe: the SST cleanup also deletes the oldest SST the manifest still references.
+    #[arg(long)]
+    gc_control_delete_live: bool,
+    /// Test control: memtable size at which a writer flushes it to an L0 SST (slatedb default 64 MiB; 0 keeps it).
+    #[arg(long, default_value_t = 0)]
+    l0_sst_bytes: u64,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -180,6 +194,10 @@ async fn main() -> Result<()> {
         match args.wal_gc_mode.as_str() { "slatedb" => 0, "list-only" => 1, "single" => 2, "bulk" => 3, other => anyhow::bail!("unknown --wal-gc-mode {other}") },
         std::sync::atomic::Ordering::Relaxed,
     );
+    tenant_bench::lifecycle::SST_GC_EVERY_SECS.store(args.sst_gc_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::SST_GC_MIN_UNREF_SECS.store(args.sst_gc_min_unref_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::GC_CONTROL_DELETE_LIVE.store(args.gc_control_delete_live, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::L0_SST_BYTES_OVERRIDE.store(args.l0_sst_bytes, std::sync::atomic::Ordering::Relaxed);
     dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
