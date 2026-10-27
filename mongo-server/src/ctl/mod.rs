@@ -18,6 +18,7 @@ pub mod fork;
 pub mod http;
 pub mod meta;
 pub mod ops;
+pub mod pin;
 pub mod purge;
 pub mod rec;
 pub mod usage;
@@ -179,6 +180,7 @@ pub async fn start(dbs: Arc<Dbs>, lc: Arc<Lifecycle>, holder: String, args: CtlA
         ops::recover(&ctl).await;
     }
     usage::spawn_flusher(&ctl);
+    pin::spawn_agent(&ctl);
     let listener = tokio::net::TcpListener::bind(args.admin_listen.as_deref().unwrap()).await?;
     eprintln!("admin interface listening on {} (bearer token required)", args.admin_listen.as_deref().unwrap());
     let handler: http::Handler = {
@@ -200,6 +202,16 @@ pub async fn failpoint(name: &str) {
         eprintln!("FAILPOINT {name} reached");
         loop {
             tokio::time::sleep(Duration::from_secs(3600)).await;
+        }
+    }
+}
+
+/// Clean shutdown: hand pins over and write the last usage counters. Called after the tenants are closed.
+pub async fn shutdown() {
+    if let Some(ctl) = get() {
+        if ctl.args.admin_listen.is_some() {
+            pin::release_all(ctl).await;
+            ctl.usage.flush(&ctl.store, &ctl.ops).await;
         }
     }
 }

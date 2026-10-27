@@ -249,6 +249,7 @@ async fn main() -> Result<()> {
     }
     eprintln!("shutting down: closing tenants cleanly");
     dbs.close_all().await;
+    ctl::shutdown().await;
     eprintln!("tenants closed; stopping maintenance");
     if let Some(m) = maintenance {
         m.shutdown().await;

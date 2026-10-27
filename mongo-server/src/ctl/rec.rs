@@ -50,7 +50,7 @@ pub async fn delete(store: &Store, p: &Path) -> Result<()> {
 
 /// Read-modify-write with a conditional put, retried on conflict. `f` maps the current value (None if absent) to
 /// the new one (None: leave as is). Returns the value that is stored afterwards.
-pub async fn update(store: &Store, p: &Path, f: impl Fn(Option<Value>) -> Result<Option<Value>>) -> Result<Option<Value>> {
+pub async fn update(store: &Store, p: &Path, mut f: impl FnMut(Option<Value>) -> Result<Option<Value>>) -> Result<Option<Value>> {
     for _ in 0..8 {
         let (cur, version) = match store.get(p).await {
             Ok(g) => {

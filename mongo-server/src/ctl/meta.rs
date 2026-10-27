@@ -130,6 +130,7 @@ pub async fn describe(ctl: &Arc<Ctl>, db: &str, with_storage: bool) -> ApiResult
         "name": db,
         "state": st["state"], "mode": st["mode"], "holder": st["holder"],
         "keep_awake": m["keep_awake"],
+        "keep_awake_lease": if m["keep_awake"] == json!(true) { super::pin::lease_of(ctl, db).await? } else { Value::Null },
         "storage_bytes": fp.as_ref().map(|f| f.bytes),
         "storage_objects": fp.as_ref().map(|f| f.objects),
         "created_at": rec::rfc3339(m["created_at_ms"].as_i64().unwrap_or(0)),
