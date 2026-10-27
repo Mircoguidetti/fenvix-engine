@@ -15,6 +15,7 @@ chrono = { version = "0.4", default-features = false, features = ["std", "clock"
 chrono-tz = "0.10"
 rust-stemmers = "1"
 unicode-normalization = "0.1"
+s2 = "0.2"
 tokio = { version = "=1.54.1", features = ["full"] }
 anyhow = "1"
 bytes = "1"

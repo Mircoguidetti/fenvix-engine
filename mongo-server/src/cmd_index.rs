@@ -153,6 +153,74 @@ fn bad_spec(spec_name: &str, key: &Document, msg: &str) -> MongoError {
     MongoError::new(67, "CannotCreateIndex", format!("Error in specification {{ name: \"{spec_name}\", key: {} }} :: caused by :: {msg}", fmt_doc(key)))
 }
 
+/// The stored spec of a 2dsphere / 2d index, or `None` when `key` has no geo field.
+fn normalize_geo(spec: &Document, key: &Document, name: &str) -> R<Option<Document>> {
+    let is = |v: &Bson, t: &str| matches!(v, Bson::String(s) if s == t);
+    let n_sphere = key.values().filter(|v| is(v, "2dsphere")).count();
+    let n_plane = key.values().filter(|v| is(v, "2d")).count();
+    if n_sphere + n_plane == 0 {
+        return Ok(None);
+    }
+    if key.values().any(|v| matches!(v, Bson::String(s) if s != "2d" && s != "2dsphere")) || (n_sphere > 0 && n_plane > 0) {
+        return Err(bad_spec(name, key, "Can't use more than one index plugin for a single index."));
+    }
+    let mut idx = doc! { "v": 2, "key": key.clone(), "name": name };
+    if n_plane > 0 {
+        if n_plane > 1 {
+            return Err(MongoError::new(16800, "Location16800", "can't have 2 geo fields".into()));
+        }
+        if !key.values().next().map(|v| is(v, "2d")).unwrap_or(false) {
+            return Err(MongoError::new(16801, "Location16801", "2d has to be first in index".into()));
+        }
+        let bits = match spec.get("bits") {
+            None => None,
+            Some(v) => {
+                let n = crate::index::num_of(v).ok_or_else(|| MongoError::new(72, "InvalidOptions", "bits must be a number".into()))?;
+                if !(1.0..=32.0).contains(&n) {
+                    return Err(MongoError::new(72, "InvalidOptions", format!("bits for hash must be > 0 and <= 32, but {} bits were specified", n as i64)));
+                }
+                Some(v.clone())
+            }
+        };
+        let num = |f: &str| spec.get(f).and_then(crate::index::num_of);
+        let (min, max) = (num("min"), num("max"));
+        if min.is_some() || max.is_some() {
+            let (lo, hi) = (min.unwrap_or(-180.0), max.unwrap_or(180.0));
+            if !(lo < hi) {
+                return Err(MongoError::new(72, "InvalidOptions", format!("region for hash must be valid and have positive area, but [{}, {}] was specified", crate::geo::fmt_num(lo), crate::geo::fmt_num(hi))));
+            }
+        }
+        // geo settings come after the generic options, which the caller appends before calling `finish_geo_spec`
+        let mut extra = Document::new();
+        if let Some(b) = bits {
+            extra.insert("bits", b);
+        }
+        if let Some(lo) = min {
+            extra.insert("min", lo);
+        }
+        if let Some(hi) = max {
+            extra.insert("max", hi);
+        }
+        idx.insert("geoSettings", extra);
+    } else {
+        let version = match spec.get("2dsphereIndexVersion") {
+            None => 3,
+            Some(v) => match crate::index::num_of(v) {
+                Some(n) if (1.0..=3.0).contains(&n) => n as i32,
+                _ => return Err(bad_spec(name, key, &format!("unsupported geo index version {{ 2dsphereIndexVersion : {} }}", crate::update::fmt_bson(v)))),
+            },
+        };
+        let mut extra = doc! { "2dsphereIndexVersion": version };
+        for f in ["coarsestIndexedLevel", "finestIndexedLevel"] {
+            if let Some(v) = spec.get(f) {
+                extra.insert(f, v.clone());
+            }
+        }
+        idx.insert("geoSettings", extra);
+    }
+    Ok(Some(idx))
+}
+
 /// The stored spec of a text index, or `None` when `key` has no `"text"` field. `listIndexes` shows the key as
 /// `{..prefix, _fts: "text", _ftsx: 1, ..suffix}` with `weights`, `default_language`, `language_override` and
 /// `textIndexVersion`; the user's key pattern is kept as the internal `textKey`.
@@ -406,9 +474,15 @@ impl Server {
             }
             // Normalised spec: the user's options in MongoDB's order.
             let text_idx = normalize_text(spec, key, &name)?;
-            let mut idx = match &text_idx {
-                Some(d) => d.clone(),
-                None => doc! { "v": 2, "key": key.clone(), "name": name.clone() },
+            let geo_idx = if text_idx.is_none() { normalize_geo(spec, key, &name)? } else { None };
+            let mut idx = match (&text_idx, &geo_idx) {
+                (Some(d), _) => d.clone(),
+                (None, Some(d)) => {
+                    let mut d = d.clone();
+                    d.remove("geoSettings");
+                    d
+                }
+                _ => doc! { "v": 2, "key": key.clone(), "name": name.clone() },
             };
             let ikey: Document = idx.get_document("key").cloned().unwrap_or_else(|_| key.clone());
             let key = &ikey;
@@ -416,11 +490,19 @@ impl Server {
                 if text_idx.is_some() && matches!(k.as_str(), "weights" | "default_language" | "language_override" | "textIndexVersion") {
                     continue;
                 }
+                if geo_idx.is_some() && matches!(k.as_str(), "bits" | "min" | "max" | "2dsphereIndexVersion" | "coarsestIndexedLevel" | "finestIndexedLevel") {
+                    continue;
+                }
                 if !matches!(k.as_str(), "key" | "name" | "v") {
                     // `unique: false` and `sparse: false` are the defaults and are not stored
                     if matches!(k.as_str(), "unique" | "sparse") && !bool_arg(Some(v), false) {
                         continue;
                     }
+                    idx.insert(k.clone(), v.clone());
+                }
+            }
+            if let Some(Bson::Document(gs)) = geo_idx.as_ref().and_then(|d| d.get("geoSettings")) {
+                for (k, v) in gs {
                     idx.insert(k.clone(), v.clone());
                 }
             }
@@ -849,7 +931,7 @@ fn same_options(a: &Document, b: &Document) -> bool {
     let norm = |d: &Document| -> Vec<(String, String)> {
         let mut v: Vec<(String, String)> = d
             .iter()
-            .filter(|(k, _)| !matches!(k.as_str(), "v" | "name" | "textKey"))
+            .filter(|(k, _)| !matches!(k.as_str(), "v" | "name" | "textKey" | "2dsphereIndexVersion"))
             .filter(|(k, v)| !(matches!(k.as_str(), "unique" | "sparse") && !crate::cmd::bool_arg(Some(v), false)))
             .map(|(k, v)| (k.clone(), crate::update::fmt_bson(v)))
             .collect();

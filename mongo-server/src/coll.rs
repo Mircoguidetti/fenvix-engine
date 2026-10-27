@@ -334,30 +334,94 @@ fn visible(d: &Document, o: &FindOpts) -> bool {
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
 /// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    if !crate::text::has_text(o.filter) {
+    let has_text = crate::text::has_text(o.filter);
+    let has_geo = crate::geo_query::filter_has_geo(o.filter);
+    if !has_text && !has_geo {
         return find_docs_inner(g, coll, indexes, o).await;
     }
-    let text_index = indexes.iter().find(|i| matches!(i.kind, index::Kind::Text(_)) && i.state == State::Ready).map(|i| i.to_stored());
-    let filter2 = crate::text::resolve_filter(o.filter, text_index.as_ref())?;
-    let o2 = FindOpts { filter: &filter2, sort: o.sort, want: o.want, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
-    if let Some(op) = crate::text::find_operand_any(&filter2) {
-        crate::text::parse_text_operand(op, crate::text::Lang::English)?; // report a bad operand before planning
+    let mut near = None;
+    if has_geo {
+        crate::geo_query::validate_filter(o.filter, true)?;
+        near = crate::geo_query::find_near(o.filter)?;
     }
-    if !matches!(o.hint, Hint::None) {
-        return Err(MongoError::bad_value("error processing query: planner returned error :: caused by :: hint provided does not correspond to an existing index".to_string()));
-    }
-    let p = plan_for(indexes, &o2);
-    let planned = if crate::text::find_operand(&filter2).is_some() { matches!(p, Plan::Ix(_)) } else { matches!(p, Plan::Or(_)) };
-    if !planned {
-        return Err(MongoError::new(291, "NoQueryExecutionPlans", "Failed to produce a solution for TEXT under OR - other non-TEXT clauses under OR have to be indexed as well. Or: failed to use text index to satisfy $text query (if text index is compound, are equality predicates given for all prefix fields?)".to_string()));
-    }
-    let (mut docs, stats, plan) = find_docs_inner(g, coll, indexes, &o2).await?;
-    for d in docs.iter_mut() {
-        if let Some(s) = crate::text::score_of(&filter2, d)? {
-            d.insert(crate::text::SCORE_KEY, s);
+    if let Some((path, n)) = &near {
+        if has_text {
+            return Err(MongoError::bad_value("text and geoNear not allowed in same query".to_string()));
+        }
+        let ok = indexes.iter().any(|i| match &i.kind {
+            index::Kind::Geo(gs) => i.state == State::Ready && gs.field == *path && if n.from_geometry { gs.sphere } else { n.spherical || !gs.sphere },
+            _ => false,
+        });
+        for i in indexes.iter() {
+            if let index::Kind::Geo(gs) = &i.kind {
+                if !gs.sphere && gs.field == *path && !n.spherical && !(n.center_xy[0] >= gs.min && n.center_xy[0] < gs.max && n.center_xy[1] >= gs.min && n.center_xy[1] < gs.max) {
+                    return Err(MongoError::new(16433, "Location16433", format!("point not in interval of [ {}, {} )", crate::geo::fmt_num(gs.min), crate::geo::fmt_num(gs.max))));
+                }
+            }
+        }
+        let hinted_elsewhere = match &o.hint {
+            Hint::Index(i) => !matches!(indexes.get(*i).map(|x| &x.kind), Some(index::Kind::Geo(gs)) if gs.field == *path),
+            Hint::Natural(_) => true,
+            Hint::None => false,
+        };
+        if !ok || hinted_elsewhere {
+            return Err(MongoError::new(291, "NoQueryExecutionPlans", "error processing query: planner returned error :: caused by :: unable to find index for $geoNear query".to_string()));
         }
     }
+    let (mut docs, stats, plan);
+    if has_text {
+        let text_index = indexes.iter().find(|i| matches!(i.kind, index::Kind::Text(_)) && i.state == State::Ready).map(|i| i.to_stored());
+        let filter2 = crate::text::resolve_filter(o.filter, text_index.as_ref())?;
+        let o2 = FindOpts { filter: &filter2, sort: o.sort, want: o.want, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
+        if let Some(op) = crate::text::find_operand_any(&filter2) {
+            crate::text::parse_text_operand(op, crate::text::Lang::English)?; // report a bad operand before planning
+        }
+        if !matches!(o.hint, Hint::None) {
+            return Err(MongoError::bad_value("error processing query: planner returned error :: caused by :: hint provided does not correspond to an existing index".to_string()));
+        }
+        let p = plan_for(indexes, &o2);
+        let planned = if crate::text::find_operand(&filter2).is_some() { matches!(p, Plan::Ix(_)) } else { matches!(p, Plan::Or(_)) };
+        if !planned {
+            return Err(MongoError::new(291, "NoQueryExecutionPlans", "Failed to produce a solution for TEXT under OR - other non-TEXT clauses under OR have to be indexed as well. Or: failed to use text index to satisfy $text query (if text index is compound, are equality predicates given for all prefix fields?)".to_string()));
+        }
+        (docs, stats, plan) = find_docs_inner(g, coll, indexes, &o2).await?;
+        for d in docs.iter_mut() {
+            if let Some(s) = crate::text::score_of(&filter2, d)? {
+                d.insert(crate::text::SCORE_KEY, s);
+            }
+        }
+    } else {
+        // nearest-first needs every candidate before the limit applies
+        let o3 = FindOpts { filter: o.filter, sort: o.sort, want: if near.is_some() { None } else { o.want }, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
+        if near.is_some() && !matches!(plan_for(indexes, &o3), Plan::Ix(s) if matches!(indexes[s.idx].kind, index::Kind::Geo(_))) {
+            return Err(MongoError::new(291, "NoQueryExecutionPlans", "error processing query: planner returned error :: caused by :: unable to find index for $geoNear query".to_string()));
+        }
+        (docs, stats, plan) = find_docs_inner(g, coll, indexes, &o3).await?;
+    }
+    if let Some((path, n)) = near {
+        let spec = indexes.iter().find_map(|i| match &i.kind {
+            index::Kind::Geo(gs) if gs.field == path => Some(gs.clone()),
+            _ => None,
+        });
+        docs = order_by_near(docs, &path, &n, spec.as_ref());
+    }
     Ok((docs, stats, plan))
+}
+
+/// Nearest first (ties in index order, then by `_id`), with the distance and the matched location attached as hidden metadata.
+pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::Near, spec: Option<&crate::geo_query::GeoSpec>) -> Vec<Document> {
+    docs.sort_by(|a, b| crate::query::compare(a.get("_id").unwrap_or(&Bson::Null), b.get("_id").unwrap_or(&Bson::Null)));
+    let mut keyed: Vec<(f64, u64, Document)> = Vec::with_capacity(docs.len());
+    for mut d in docs {
+        let elems: Vec<(crate::geo::Elem, Bson)> = crate::query::path_values(&d, path).iter().flat_map(|v| crate::geo::elements_raw(v)).collect();
+        let (dist, loc) = crate::geo_query::near_distance(n, &elems).unwrap_or((f64::INFINITY, Bson::Null));
+        d.insert(crate::geo::DIST_KEY, dist);
+        d.insert(crate::geo::POINT_KEY, loc);
+        let tie = spec.map(|s| crate::geo_query::tie_key(s, d.get(crate::geo::POINT_KEY).unwrap_or(&Bson::Null))).unwrap_or(0);
+        keyed.push((dist, tie, d));
+    }
+    keyed.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal).then(a.1.cmp(&b.1)));
+    keyed.into_iter().map(|(_, _, d)| d).collect()
 }
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {

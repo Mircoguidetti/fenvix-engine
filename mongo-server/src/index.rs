@@ -29,6 +29,7 @@ pub enum State {
 pub enum Kind {
     Regular,
     Text(crate::text::TextSpec),
+    Geo(crate::geo_query::GeoSpec),
 }
 
 #[derive(Clone, Debug)]
@@ -74,8 +75,13 @@ impl IndexDef {
         let mut key = Vec::new();
         let mut special = false;
         let is_text = key_doc.contains_key("_fts");
+        let is_geo = key_doc.values().any(|v| matches!(v, Bson::String(s) if s == "2dsphere" || s == "2d"));
         for (k, v) in key_doc {
             if is_text && (k == "_fts" || k == "_ftsx") {
+                continue;
+            }
+            if is_geo {
+                key.push((k.clone(), !matches!(num(v), Some(n) if n < 0.0)));
                 continue;
             }
             match num(v) {
@@ -102,6 +108,11 @@ impl IndexDef {
         let kind = if is_text {
             match crate::text::TextSpec::from_spec(stored) {
                 Some(t) => Kind::Text(t),
+                None => return None,
+            }
+        } else if is_geo {
+            match crate::geo_query::GeoSpec::from_spec(stored) {
+                Some(g) => Kind::Geo(g),
                 None => return None,
             }
         } else {
@@ -153,7 +164,7 @@ impl IndexDef {
         for (f, asc) in &self.key {
             d.insert(f.clone(), if *asc { 1 } else { -1 });
         }
-        if self.special || matches!(self.kind, Kind::Text(_)) {
+        if self.special || matches!(self.kind, Kind::Text(_) | Kind::Geo(_)) {
             return self.spec.get_document("key").cloned().unwrap_or(d);
         }
         d
@@ -184,8 +195,10 @@ impl IndexDef {
                 return Ok((BTreeMap::new(), false));
             }
         }
-        if let Kind::Text(t) = &self.kind {
-            return text_entries(t, d);
+        match &self.kind {
+            Kind::Text(t) => return text_entries(t, d),
+            Kind::Geo(g) => return geo_entries(g, d),
+            Kind::Regular => {}
         }
         let mut fields: Vec<(Vec<Bson>, bool)> = Vec::new();
         let mut any_present = false;
@@ -328,6 +341,47 @@ fn text_entries(t: &crate::text::TextSpec, d: &Document) -> R<(BTreeMap<Vec<u8>,
         return Ok((BTreeMap::new(), false));
     }
     Ok((acc.into_iter().map(|k| (k, Document::new())).collect(), false))
+}
+
+/// Entries of a 2dsphere / 2d index: prefix fields, the cell token, suffix fields. The flag is set when a shape larger than
+/// a point was indexed (queries then also look for coarser cells).
+fn geo_entries(g: &crate::geo_query::GeoSpec, d: &Document) -> R<(BTreeMap<Vec<u8>, Document>, bool)> {
+    let vals = path_values(d, &g.field);
+    let (tokens, coarse): (Vec<u64>, bool) = if g.sphere {
+        crate::geo_query::sphere_keys(g, d, &vals)?
+    } else {
+        (crate::geo_query::plane_keys(g, d, &vals)?, false)
+    };
+    if tokens.is_empty() {
+        return Ok((BTreeMap::new(), false));
+    }
+    let comp = |v: &Bson, asc: bool| keyenc::component(v, asc);
+    let mut acc: Vec<Vec<u8>> = vec![Vec::new()];
+    let cross = |acc: Vec<Vec<u8>>, comps: Vec<Vec<u8>>| -> Vec<Vec<u8>> {
+        let mut next = Vec::with_capacity(acc.len() * comps.len());
+        for p in &acc {
+            for c in &comps {
+                let mut k = p.clone();
+                k.extend(c);
+                next.push(k);
+            }
+        }
+        next
+    };
+    for (path, asc) in &g.prefix {
+        let mut comps: Vec<Vec<u8>> = field_values(d, path).iter().map(|v| comp(v, *asc)).collect();
+        comps.sort();
+        comps.dedup();
+        acc = cross(acc, comps);
+    }
+    acc = cross(acc, tokens.iter().map(|t| comp(&Bson::String(crate::geo_query::token(*t)), true)).collect());
+    for (path, asc) in &g.suffix {
+        let mut comps: Vec<Vec<u8>> = field_values(d, path).iter().map(|v| comp(v, *asc)).collect();
+        comps.sort();
+        comps.dedup();
+        acc = cross(acc, comps);
+    }
+    Ok((acc.into_iter().map(|k| (k, Document::new())).collect(), coarse))
 }
 
 /// Key of one entry.
@@ -920,6 +974,9 @@ pub fn plan(inp: &PlanInput) -> Plan {
             return Plan::Ix(scan);
         }
     }
+    if let Some(scan) = geo_scan(inp.indexes, inp.filter, &cs, inp.hint) {
+        return Plan::Ix(scan);
+    }
     let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular) && inp.hint.map(|h| h == i).unwrap_or(true);
     let mut best: Option<(i64, IxScan)> = None;
     for (i, idx) in inp.indexes.iter().enumerate() {
@@ -975,6 +1032,86 @@ pub fn plan(inp: &PlanInput) -> Plan {
         }
     }
     Plan::Coll { reverse: false }
+}
+
+/// The first field of `filter` (top level or inside `$and`) that carries geo conditions.
+fn find_geo_field(filter: &Document) -> Option<(String, Vec<crate::geo_query::Cond>)> {
+    for (k, v) in filter {
+        match (k.as_str(), v) {
+            ("$and", Bson::Array(a)) => {
+                for s in a {
+                    if let Bson::Document(sd) = s {
+                        if let Some(x) = find_geo_field(sd) {
+                            return Some(x);
+                        }
+                    }
+                }
+            }
+            (k2, Bson::Document(d)) if !k2.starts_with('$') && crate::geo_query::has_geo_cond(d) => {
+                if let Ok(conds) = crate::geo_query::parse_field_conds(d) {
+                    if !conds.is_empty() {
+                        return Some((k.clone(), conds));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// The index scan that answers geo conditions with a 2dsphere or 2d index on the queried field.
+pub fn geo_scan(indexes: &[IndexDef], filter: &Document, cs: &HashMap<String, Constraint>, hint: Option<usize>) -> Option<IxScan> {
+    use crate::geo_query::{cover, plane_query_bbox, plane_ranges, sphere_query_shape, sphere_ranges, token, Cond};
+    let (path, conds) = find_geo_field(filter)?;
+    let (i, g, idx) = indexes.iter().enumerate().find_map(|(i, x)| match &x.kind {
+        Kind::Geo(g) if x.state == State::Ready && g.field == path && hint.map(|h| h == i).unwrap_or(true) => Some((i, g, x)),
+        _ => None,
+    })?;
+    let mut prefixes: Vec<Vec<u8>> = vec![Vec::new()];
+    for (p, asc) in &g.prefix {
+        let vals = cs.get(p).and_then(|c| c.eq.clone())?;
+        let mut next = Vec::new();
+        for pre in &prefixes {
+            for v in &vals {
+                let mut k = pre.clone();
+                k.extend(keyenc::component(v, *asc));
+                next.push(k);
+            }
+        }
+        prefixes = next;
+    }
+    // the condition that bounds the scan: a near query, else a region
+    let cond = conds.iter().find(|c| matches!(c, Cond::Near(_))).or_else(|| conds.first())?;
+    let ranges: Option<Vec<(u64, u64)>> = if g.sphere {
+        match sphere_query_shape(cond) {
+            Some(shape) => Some(sphere_ranges(&cover(&shape, 20, 0, 24), g.coarsest, idx.multikey)),
+            None => None,
+        }
+    } else {
+        match (cond, plane_query_bbox(cond)) {
+            (Cond::Intersects(_), _) => None,
+            (_, Some((lo, hi))) => Some(plane_ranges(g, lo, hi)),
+            _ => None,
+        }
+    };
+    let mut intervals: Vec<Interval> = Vec::new();
+    for p in &prefixes {
+        match &ranges {
+            Some(rs) => {
+                for (lo, hi) in rs {
+                    let mut start = p.clone();
+                    start.extend(keyenc::component(&Bson::String(token(*lo)), true));
+                    let mut hi_key = p.clone();
+                    hi_key.extend(keyenc::component(&Bson::String(token(*hi)), true));
+                    intervals.push((start, keyenc::prefix_end(&hi_key)));
+                }
+            }
+            None => intervals.push((p.clone(), keyenc::prefix_end(p))),
+        }
+    }
+    intervals.sort();
+    Some(IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: g.prefix.len() + 1, bounds: vec![(path, vec!["[geo]".to_string()])] })
 }
 
 /// The index scan that answers a `$text` condition: one interval per (prefix value, term). `None` when there is no

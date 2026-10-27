@@ -854,7 +854,14 @@ fn lookup(docs: Vec<Document>, arg: &Bson, foreign: &Foreign) -> R<Vec<Document>
                 }
                 _ => fdocs.clone(),
             };
-            let res = crate::expr::with_ambient(vars, || run_pipeline(candidates, &p, foreign))?;
+            let res = if matches!(p.first().and_then(|s| s.as_document()).map(|d| d.contains_key("$geoNear")), Some(true)) {
+                let geo: Vec<(String, bool)> = foreign.get(&format!("\u{0}geo:{from}")).map(|m| m.iter().map(|d| (d.get_str("field").unwrap_or("").to_string(), d.get_bool("sphere").unwrap_or(false))).collect()).unwrap_or_default();
+                let stage = p[0].as_document().and_then(|d| d.get("$geoNear")).cloned().unwrap_or(Bson::Null);
+                let near = crate::cmd_data::geo_near_pure(candidates, &stage, &geo)?;
+                crate::expr::with_ambient(vars, || run_pipeline(near, &p[1..], foreign))?
+            } else {
+                crate::expr::with_ambient(vars, || run_pipeline(candidates, &p, foreign))?
+            };
             crate::update::set_path(&mut d, &as_parts, Bson::Array(res.into_iter().map(Bson::Document).collect()))?;
             out.push(d);
         }

@@ -22,6 +22,7 @@ mod layout;
 mod lease;
 mod query;
 mod geo;
+mod geo_query;
 mod regex;
 mod search;
 mod text;

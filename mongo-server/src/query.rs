@@ -231,6 +231,19 @@ fn is_operator_doc(d: &Document) -> bool {
 
 fn match_field(doc: &Document, path: &str, cond: &Bson) -> R<bool> {
     let vals = path_values(doc, path);
+    if let Bson::Document(d) = cond {
+        if crate::geo_query::has_geo_cond(d) {
+            if !crate::geo_query::match_field(&vals, d)? {
+                return Ok(false);
+            }
+            // the other operators of the same condition document still apply
+            let mut rest = d.clone();
+            for k in ["$geoWithin", "$within", "$geoIntersects", "$near", "$nearSphere", "$maxDistance", "$minDistance"] {
+                rest.remove(k);
+            }
+            return if rest.is_empty() { Ok(true) } else { match_operator_doc(&vals, &rest) };
+        }
+    }
     match cond {
         Bson::Document(d) if is_operator_doc(d) => match_operator_doc(&vals, d),
         other => eq_match(&vals, other),
@@ -541,6 +554,7 @@ fn match_op(vals: &[&Bson], op: &str, arg: &Bson) -> R<bool> {
         }
         "$not" => match arg {
             Bson::RegularExpression(r) => !regex_vals(vals, r.pattern.as_str(), r.options.as_str())?,
+            Bson::Document(d) if crate::geo_query::has_geo_cond(d) => !crate::geo_query::match_field(vals, d)?,
             Bson::Document(d) if is_operator_doc(d) => !match_operator_doc(vals, d)?,
             _ => return Err(bad("$not needs a regex or a document")),
         },
@@ -682,6 +696,10 @@ pub fn parse_sort(spec: &Document) -> R<Vec<(String, bool)>> {
                 out.push((crate::text::SCORE_KEY.to_string(), false));
                 continue;
             }
+            Bson::Document(d) if d.len() == 1 && d.get_str("$meta").ok() == Some("geoNearDistance") => {
+                out.push((crate::geo::DIST_KEY.to_string(), false));
+                continue;
+            }
             Bson::Document(d) if d.len() == 1 && d.contains_key("$meta") => {
                 return Err(MongoError::new(2, "BadValue", "Illegal $meta sort: ".to_string() + &crate::update::fmt_bson(d.get("$meta").unwrap())));
             }
@@ -738,7 +756,7 @@ pub struct Projection {
     /// `$slice` projections: (path, skip, limit); `limit == None` means "last/first |skip| elements" form.
     slices: Vec<(Vec<String>, i64, Option<i64>)>,
     /// `{field: {$meta: "textScore"}}`: output fields that receive the text score.
-    pub metas: Vec<String>,
+    pub metas: Vec<(String, &'static str)>,
 }
 
 fn parse_slice(arg: &Bson) -> R<(i64, Option<i64>)> {
@@ -767,12 +785,14 @@ pub fn parse_projection(spec: &Document) -> R<Option<Projection>> {
     let mut inc: Vec<Vec<String>> = Vec::new();
     let mut exc = Vec::new();
     let mut slices = Vec::new();
-    let mut metas: Vec<String> = Vec::new();
+    let mut metas: Vec<(String, &'static str)> = Vec::new();
     for (k, v) in spec {
         if let Bson::Document(d) = v {
             if d.len() == 1 && d.contains_key("$meta") {
                 match d.get_str("$meta") {
-                    Ok("textScore") => metas.push(k.clone()),
+                    Ok("textScore") => metas.push((k.clone(), crate::text::SCORE_KEY)),
+                    Ok("geoNearDistance") => metas.push((k.clone(), crate::geo::DIST_KEY)),
+                    Ok("geoNearPoint") => metas.push((k.clone(), crate::geo::POINT_KEY)),
                     Ok(other) => return Err(MongoError::new(17308, "Location17308", format!("Unsupported argument to $meta: {other}"))),
                     Err(_) => return Err(MongoError::new(2, "BadValue", "$meta projection requires a string argument".into())),
                 }
@@ -795,6 +815,11 @@ pub fn parse_projection(spec: &Document) -> R<Option<Projection>> {
     }
     if !inc.is_empty() && !exc.is_empty() {
         return Err(MongoError::new(31254, "Location31254", "Cannot do exclusion on field in inclusion projection".into()));
+    }
+    let id_included = matches!(spec.get("_id"), Some(v) if !matches!(v, Bson::Boolean(false) | Bson::Int32(0) | Bson::Int64(0)) && !matches!(v, Bson::Double(f) if *f == 0.0));
+    if inc.is_empty() && exc.is_empty() && !metas.is_empty() && id_included {
+        // `{_id: 1, s: {$meta: ..}}` keeps just the _id and the meta fields.
+        return Ok(Some(Projection { include: true, id: true, paths: vec![], slices, metas }));
     }
     if inc.is_empty() && exc.is_empty() && (!slices.is_empty() || !metas.is_empty()) {
         // Slice-only and $meta-only projections keep every field.
@@ -892,18 +917,22 @@ pub fn project(doc: &Document, p: &Projection) -> Document {
     for (path, skip, limit) in &p.slices {
         slice_at(&mut out, path, *skip, *limit);
     }
-    out.remove(crate::text::SCORE_KEY);
-    for m in &p.metas {
-        if let Some(v) = doc.get(crate::text::SCORE_KEY) {
-            out.insert(m.clone(), v.clone());
+    crate::text::strip_hidden(&mut out);
+    for (name, key) in &p.metas {
+        if let Some(v) = doc.get(*key) {
+            out.insert(name.clone(), v.clone());
         }
     }
     out
 }
 
 impl Projection {
+    pub fn needs_geo_near(&self) -> bool {
+        self.metas.iter().any(|(_, k)| *k == crate::geo::DIST_KEY || *k == crate::geo::POINT_KEY)
+    }
+
     pub fn needs_text_score(&self) -> bool {
-        !self.metas.is_empty()
+        self.metas.iter().any(|(_, k)| *k == crate::text::SCORE_KEY)
     }
 }
 

@@ -76,6 +76,9 @@ impl Server {
         if (sort.iter().any(|(f, _)| f == crate::text::SCORE_KEY) || projection.as_ref().map(|p| p.needs_text_score()).unwrap_or(false)) && !crate::text::has_text(&filter) {
             return Err(MongoError::new(40218, "Location40218", "query requires text score metadata, but it is not available".into()));
         }
+        if (sort.iter().any(|(f, _)| f == crate::geo::DIST_KEY) || projection.as_ref().map(|p| p.needs_geo_near()).unwrap_or(false)) && crate::geo_query::find_near(&filter)?.is_none() {
+            return Err(MongoError::new(40218, "Location40218", "query requires geoNear metadata, but it is not available".into()));
+        }
         let mut docs = if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
             self.find_part(&mut g, db, coll, &filter, &sort, want, cmd.get("hint"), None).await?
@@ -95,7 +98,7 @@ impl Server {
             }
         }
         for d in docs.iter_mut() {
-            d.remove(crate::text::SCORE_KEY);
+            crate::text::strip_hidden(d);
         }
         Ok(self.cursor_reply(format!("{db}.{coll}"), docs, batch, single))
     }
@@ -156,11 +159,20 @@ impl Server {
             return self.open_change_stream(db, cmd, spec, &pipeline[1..]).await;
         }
         let coll = collection_name(cmd, "aggregate")?;
+        // empty leading $match stages are optimized away, which lets a following $geoNear be first
+        let lead = pipeline.iter().take_while(|s| matches!(s.as_document().and_then(|d| d.get_document("$match").ok()), Some(m) if m.is_empty() && s.as_document().map(|d| d.len()) == Some(1))).count();
+        let pipeline: &Vec<Bson> = &if lead > 0 && pipeline.get(lead).and_then(|s| s.as_document()).map(|d| d.contains_key("$geoNear")).unwrap_or(false) { pipeline[lead..].to_vec() } else { pipeline.clone() };
         let cursor = cmd.get_document("cursor").map_err(|_| MongoError::failed_to_parse("The 'cursor' option is required, except for aggregate with the explain argument".into()))?;
         let batch = int_arg(cursor.get("batchSize")).map(|b| b.max(0) as usize);
         let stage_name = |s: &Bson| s.as_document().and_then(|d| d.keys().next().cloned()).unwrap_or_default();
+        if pipeline_match_has_near(pipeline) {
+            return Err(MongoError::new(5626500, "Location5626500", "$geoNear, $near, and $nearSphere are not allowed in this context, as these operators require sorting geospatial data. If you do not need sort, consider using $geoWithin instead. Check out https://dochub.mongodb.org/core/near-aggregation for more details.".to_string()));
+        }
         for (i, s) in pipeline.iter().enumerate() {
             let n = stage_name(s);
+            if n == "$geoNear" && i != 0 {
+                return Err(MongoError::new(40603, "Location40603", "$geoNear was not the first stage in the pipeline".to_string()));
+            }
             if (n == "$collStats" || n == "$indexStats") && i != 0 {
                 return Err(MongoError::new(40602, "Location40602", format!("{n} is only valid as the first stage in a pipeline.")));
             }
@@ -181,6 +193,18 @@ impl Server {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
             self.index_stats_stage(&mut g, db, coll).await?
+        } else if let Some(spec) = first.and_then(|d| d.get("$geoNear")) {
+            let (filter, st) = geo_near_filter(spec)?;
+            let mut docs = if tx.is_none() {
+                let mut g = self.dbs.read(db).await?;
+                self.geo_near_docs(&mut g, db, coll, &filter, cmd.get("hint"), None, &st).await?
+            } else {
+                let mut g = self.dbs.lock(db).await;
+                attach(&mut g, tx);
+                self.geo_near_docs(&mut *g, db, coll, &filter, cmd.get("hint"), tx_ov(tx), &st).await?
+            };
+            apply_geo_near_fields(&mut docs, &st)?;
+            docs
         } else {
             let first_match = first.and_then(|s| s.get_document("$match").ok()).cloned().unwrap_or_default();
             // The pipeline's own $match rejects $where; do not run it here as a plain find filter.
@@ -195,7 +219,7 @@ impl Server {
             }
         };
         let first_is_text_match = first.and_then(|d| d.get_document("$match").ok()).map(crate::text::has_text).unwrap_or(false);
-        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
+        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$geoNear")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
             let fd = if tx.is_none() {
@@ -206,6 +230,18 @@ impl Server {
                 attach(&mut g, tx);
                 self.scan_visible(&mut *g, db, &from).await?
             };
+            let geo_meta: Vec<Document> = {
+                let ix = if tx.is_none() {
+                    let mut g = self.dbs.read(db).await?;
+                    self.load_indexes(&mut g, db, &from).await?
+                } else {
+                    let mut g = self.dbs.lock(db).await;
+                    attach(&mut g, tx);
+                    self.load_indexes(&mut *g, db, &from).await?
+                };
+                ix.iter().filter_map(|i| match &i.kind { index::Kind::Geo(gs) if i.state == index::State::Ready => Some(doc! { "field": gs.field.clone(), "sphere": gs.sphere }), _ => None }).collect()
+            };
+            foreign.insert(format!("\u{0}geo:{from}"), geo_meta);
             foreign.insert(from, fd);
         }
         let mut out = run_pipeline(docs, body_rest, &foreign)?;
@@ -607,7 +643,7 @@ impl Server {
         let mut w = take_writes(tx);
         let names = w.names.clone().unwrap_or(names);
         let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: Some(&w.ov) }).await?;
-        for d in matched.iter_mut() { d.remove(crate::text::SCORE_KEY); }
+        for d in matched.iter_mut() { crate::text::strip_hidden(d); }
         sort_docs(&mut matched, &sort);
         let hit = matched.into_iter().next();
         if remove {
@@ -706,7 +742,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                 let upsert = bool_arg(spec.get("upsert"), false);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let (mut matched, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if multi { None } else { Some(1) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
-        for d in matched.iter_mut() { d.remove(crate::text::SCORE_KEY); }
+        for d in matched.iter_mut() { crate::text::strip_hidden(d); }
                 if !multi {
                     matched.truncate(1);
                 }
@@ -745,7 +781,7 @@ async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], 
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let ev_start = w.events.len();
                 let (mut found, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if limit == 0 { None } else { Some(limit as usize) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
-        for d in found.iter_mut() { d.remove(crate::text::SCORE_KEY); }
+        for d in found.iter_mut() { crate::text::strip_hidden(d); }
                 if limit > 0 {
                     found.truncate(limit as usize);
                 }
@@ -770,4 +806,200 @@ pub(crate) fn ttl_ctx(specs: &[index::TtlSpec]) -> Option<(&[index::TtlSpec], i6
 #[allow(dead_code)]
 fn _unused(_: &Hint) {
     let _ = (doc_prefix, encode_sortable);
+}
+
+/// The parsed options of a `$geoNear` stage that apply after the search.
+pub(crate) struct GeoNearStage {
+    distance_field: String,
+    include_locs: Option<String>,
+    multiplier: f64,
+    key: Option<String>,
+    spherical: bool,
+}
+
+/// Validate a `$geoNear` stage and turn it into the equivalent `$near` / `$nearSphere` find filter.
+pub(crate) fn geo_near_filter(spec: &Bson) -> R<(Document, GeoNearStage)> {
+    let Bson::Document(s) = spec else {
+        return Err(MongoError::new(10065, "Location10065", "invalid parameter: expected an object ($geoNear)".to_string()));
+    };
+    let num = |b: &Bson| match b {
+        Bson::Double(x) => Some(*x),
+        Bson::Int32(x) => Some(*x as f64),
+        Bson::Int64(x) => Some(*x as f64),
+        _ => None,
+    };
+    for k in ["limit", "num"] {
+        if s.contains_key(k) {
+            let c = if k == "limit" { 50858 } else { 50857 };
+            return Err(MongoError::new(c, if c == 50858 { "Location50858" } else { "Location50857" }, format!("$geoNear no longer supports the '{k}' parameter. Use a $limit stage instead.")));
+        }
+    }
+    let near = s.get("near").ok_or_else(|| MongoError::new(5860400, "Location5860400", "$geoNear requires a 'near' argument".to_string()))?;
+    let distance_field = match s.get("distanceField") {
+        Some(Bson::String(f)) => f.clone(),
+        _ => return Err(MongoError::new(16606, "Location16606", "$geoNear requires a 'distanceField' option as a String".to_string())),
+    };
+    let near_geojson = match near {
+        Bson::Document(_) => true,
+        Bson::Array(_) => false,
+        _ => return Err(MongoError::new(5860401, "Location5860401", "$geoNear requires near argument to be a GeoJSON object or a legacy point(array)".to_string())),
+    };
+    let spherical = matches!(s.get("spherical"), Some(Bson::Boolean(true)));
+    let mut cond = Document::new();
+    let mut inner = Document::new();
+    for (k, op) in [("maxDistance", "$maxDistance"), ("minDistance", "$minDistance")] {
+        if let Some(v) = s.get(k) {
+            let n = num(v).ok_or_else(|| MongoError::bad_value(format!("{k} must be a number")))?;
+            if n < 0.0 {
+                return Err(MongoError::bad_value(format!("{k} must be nonnegative")));
+            }
+            inner.insert(op, v.clone());
+        }
+    }
+    let name = if spherical || near_geojson { "$nearSphere" } else { "$near" };
+    let arg = if near_geojson {
+        let mut a = doc! { "$geometry": near.clone() };
+        a.extend(inner);
+        Bson::Document(a)
+    } else {
+        cond.extend(inner);
+        near.clone()
+    };
+    let key = match s.get("key") {
+        Some(Bson::String(k)) => Some(k.clone()),
+        Some(_) => return Err(MongoError::new(14, "TypeMismatch", "$geoNear requires that 'key' option as a String".to_string())),
+        None => None,
+    };
+    let multiplier = s.get("distanceMultiplier").and_then(num).unwrap_or(1.0);
+    let include_locs = match s.get("includeLocs") {
+        Some(Bson::String(l)) => Some(l.clone()),
+        Some(_) => return Err(MongoError::new(16607, "Location16607", "$geoNear requires that 'includeLocs' option is a String".to_string())),
+        None => None,
+    };
+    let query = match s.get("query") {
+        None => Document::new(),
+        Some(Bson::Document(q)) => q.clone(),
+        Some(_) => return Err(MongoError::new(14, "TypeMismatch", "query must be an object".to_string())),
+    };
+    if crate::geo_query::contains_near(&query) {
+        return Err(MongoError::bad_value("Too many geoNear expressions".to_string()));
+    }
+    cond.insert(name, arg);
+    // the field is filled in by the caller once the index is known
+    let mut f = Document::new();
+    f.insert("\0field", cond);
+    if !query.is_empty() {
+        f.insert("\0query", query);
+    }
+    Ok((f, GeoNearStage { distance_field, include_locs, multiplier, key, spherical }))
+}
+
+impl Server {
+    /// The documents of a `$geoNear` stage, nearest first, carrying the hidden distance / point fields.
+    async fn geo_near_docs(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str, f: &Document, hint: Option<&Bson>, ov: Option<&crate::coll::Overlay>, st: &GeoNearStage) -> R<Vec<Document>> {
+        let indexes = self.load_indexes(g, db, coll).await?;
+        let geo: Vec<&crate::index::IndexDef> = indexes.iter().filter(|i| matches!(i.kind, crate::index::Kind::Geo(_)) && i.state == crate::index::State::Ready).collect();
+        let field = match &st.key {
+            Some(k) => k.clone(),
+            None => match geo.as_slice() {
+                [only] => match &only.kind {
+                    crate::index::Kind::Geo(gs) => gs.field.clone(),
+                    _ => unreachable!(),
+                },
+                [] => {
+                    let any = self.scan_visible(g, db, coll).await?;
+                    return Err(if any.is_empty() {
+                        MongoError::new(26, "NamespaceNotFound", format!("$geoNear requires a geo index to run, but {db}.{coll} does not exist"))
+                    } else {
+                        MongoError::new(27, "IndexNotFound", "$geoNear requires a 2d or 2dsphere index, but none were found".to_string())
+                    });
+                }
+                many => {
+                    // several geo indexes: the kind the options ask for decides; two of the same kind are ambiguous
+                    let sphere = st.spherical;
+                    let same: Vec<&&crate::index::IndexDef> = many.iter().filter(|i| matches!(&i.kind, crate::index::Kind::Geo(gs) if gs.sphere == sphere)).collect();
+                    match same.as_slice() {
+                        [one] => match &one.kind {
+                            crate::index::Kind::Geo(gs) => gs.field.clone(),
+                            _ => unreachable!(),
+                        },
+                        _ => return Err(MongoError::new(27, "IndexNotFound", "There is more than one 2dsphere index or more than one 2d index, specify a key".to_string())),
+                    }
+                }
+            },
+        };
+        let mut filter = Document::new();
+        filter.insert(field, f.get("\0field").cloned().unwrap_or(Bson::Null));
+        if let Some(q) = f.get_document("\0query").ok() {
+            filter = doc! { "$and": [Bson::Document(q.clone()), Bson::Document(filter)] };
+        }
+        self.matching(g, db, coll, &filter, hint, ov).await
+    }
+}
+
+/// Does a `$match` stage anywhere in the pipeline (including `$lookup` sub-pipelines) use `$near` / `$nearSphere`?
+fn pipeline_match_has_near(stages: &[Bson]) -> bool {
+    fn walk(b: &Bson) -> bool {
+        match b {
+            Bson::Document(d) => d.iter().any(|(k, v)| (k == "$match" && matches!(v, Bson::Document(m) if crate::geo_query::contains_near(m))) || walk(v)),
+            Bson::Array(a) => a.iter().any(walk),
+            _ => false,
+        }
+    }
+    stages.iter().any(walk)
+}
+
+/// Replace the hidden distance / location of nearest-first documents by the stage's output fields.
+pub(crate) fn apply_geo_near_fields(docs: &mut [Document], st: &GeoNearStage) -> R<()> {
+    for d in docs.iter_mut() {
+        let dist = d.remove(crate::geo::DIST_KEY).and_then(|b| match b { Bson::Double(x) => Some(x), _ => None }).unwrap_or(0.0);
+        let loc = d.remove(crate::geo::POINT_KEY).unwrap_or(Bson::Null);
+        let parts: Vec<&str> = st.distance_field.split('.').collect();
+        crate::update::set_path(d, &parts, Bson::Double(dist * st.multiplier))?;
+        if let Some(l) = &st.include_locs {
+            let parts: Vec<&str> = l.split('.').collect();
+            crate::update::set_path(d, &parts, loc)?;
+        }
+    }
+    Ok(())
+}
+
+/// `$geoNear` over already-read documents (a `$lookup` sub-pipeline); `geo` lists the collection's `(field, spherical)` geo indexes.
+pub(crate) fn geo_near_pure(docs: Vec<Document>, spec: &Bson, geo: &[(String, bool)]) -> R<Vec<Document>> {
+    let (f, st) = geo_near_filter(spec)?;
+    let no_plan = || MongoError::new(291, "NoQueryExecutionPlans", "error processing query: planner returned error :: caused by :: unable to find index for $geoNear query".to_string());
+    let field = match &st.key {
+        Some(k) => k.clone(),
+        None => match geo {
+            [] => return Err(MongoError::new(27, "IndexNotFound", "$geoNear requires a 2d or 2dsphere index, but none were found".to_string())),
+            [only] => only.0.clone(),
+            many => {
+                let same: Vec<&(String, bool)> = many.iter().filter(|g| g.1 == st.spherical).collect();
+                match same.as_slice() {
+                    [one] => one.0.clone(),
+                    _ => return Err(MongoError::new(27, "IndexNotFound", "There is more than one 2dsphere index or more than one 2d index, specify a key".to_string())),
+                }
+            }
+        },
+    };
+    let mut filter = Document::new();
+    filter.insert(field.clone(), f.get("\0field").cloned().unwrap_or(Bson::Null));
+    if let Ok(q) = f.get_document("\0query") {
+        filter = doc! { "$and": [Bson::Document(q.clone()), Bson::Document(filter)] };
+    }
+    crate::geo_query::validate_filter(&filter, true)?;
+    let Some((path, n)) = crate::geo_query::find_near(&filter)? else { return Err(no_plan()) };
+    let Some(g) = geo.iter().find(|g| g.0 == path) else { return Err(no_plan()) };
+    if !(if n.from_geometry { g.1 } else { n.spherical || !g.1 }) {
+        return Err(no_plan());
+    }
+    let mut hits = Vec::new();
+    for d in docs {
+        if query::matches(&d, &filter)? {
+            hits.push(d);
+        }
+    }
+    let mut out = crate::coll::order_by_near(hits, &path, &n, None);
+    apply_geo_near_fields(&mut out, &st)?;
+    Ok(out)
 }
