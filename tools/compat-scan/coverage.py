@@ -55,6 +55,12 @@ FEATURE_TESTS_R6 = dict(FEATURE_TESTS)
 FEATURE_TESTS["withTransaction / startTransaction"] = r"^txn\."
 FEATURE_TESTS["watch (change streams)"] = r"^cs\."
 FEATURE_TESTS["$where|query"] = r"^where\."
+# ---- results8: update features (the scan learned to look for them in results8) ------------------------------------
+FEATURE_TESTS["arrayFilters"] = r"^upd8\.filtered_"
+FEATURE_TESTS["positional update path ($, $[], $[id])"] = r"^upd8\.(pos_|all_|filtered_)"
+FEATURE_TESTS["pipeline-style update"] = r"^upd8\.pipe_"
+FEATURE_TESTS["renameCollection"] = r"^upd8\.rename_"
+NEW8 = {"arrayFilters", "positional update path ($, $[], $[id])", "pipeline-style update", "renameCollection"}
 # index options that results5 only recorded; they are honoured now and have passing differential tests
 INDEX_TESTS = {
     "index: sparse": r"^idx\.(plan_sparse|unique_sparse|res_sparse|backfill_sparse|sparse_compound)",
@@ -234,6 +240,8 @@ def status(key, profile):
     st = report.display(key)[2]
     if profile == "r6" and key in R6_SUPPORTED:
         return report.SUPPORTED
+    if profile == "r7" and key not in NEW8 and (key in AFTER_SUPPORTED or key in INDEX_SUPPORTED or key in R6_SUPPORTED):
+        return report.SUPPORTED
     if profile == "after" and (key in AFTER_SUPPORTED or key in INDEX_SUPPORTED or key in R6_SUPPORTED):
         return report.SUPPORTED
     return st
@@ -264,7 +272,7 @@ def compute(data, profile):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--profile", default="baseline", choices=["baseline", "r6", "after"])
+    ap.add_argument("--profile", default="baseline", choices=["baseline", "r6", "r7", "after"])
     ap.add_argument("--markdown", action="store_true")
     ap.add_argument("--in", dest="inp", default=os.path.join(HERE, "results.json"))
     a = ap.parse_args()

@@ -230,6 +230,8 @@ pub fn decode(v: &[u8]) -> R<Document> {
 
 /// Bytes read by one point read (a block).
 const POINT_READ_BYTES: u64 = 4096;
+/// Tenants up to this size are cheap to scan in full.
+const SMALL_TENANT_BYTES: u64 = 8 << 20;
 /// Bytes per request of the range scan that replaces point reads.
 const FETCH_SCAN_READ_AHEAD: usize = 4 << 20;
 
@@ -244,7 +246,8 @@ fn prefer_scan(total: u64, n: usize) -> bool {
     }
     let point = (n as u64).min(total / POINT_READ_BYTES + 1);
     let scan = total / FETCH_SCAN_READ_AHEAD as u64 + 1;
-    point > scan + 2
+    // A scan reads the whole tenant: it must save a lot of requests (large tenants) or be cheap in bytes (small ones).
+    (point > 4 * scan + 8) || (total <= SMALL_TENANT_BYTES && point > scan + 2)
 }
 
 async fn docs_by_ids(g: &mut impl Rd, coll: &str, ids: &[Vec<u8>]) -> R<Vec<Document>> {

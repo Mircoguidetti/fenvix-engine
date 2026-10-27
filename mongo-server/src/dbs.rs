@@ -69,6 +69,9 @@ pub struct Entry {
     pub closes: u64,
     /// A collection with a TTL index was used while this entry was open: a close writes the expiry hint.
     pub(crate) ttl_seen: AtomicBool,
+    /// The database was found not to exist during the current command: later reads of the same command answer
+    /// "absent" without another lease attempt and LIST (reset when the next command takes the lock).
+    absent: bool,
     pub(crate) hint_written: bool,
     /// When each collection's expired documents were last swept by a write command.
     pub(crate) swept: HashMap<String, Instant>,
@@ -120,6 +123,7 @@ impl Dbs {
                     wakes: 0,
                     closes: 0,
                     ttl_seen: AtomicBool::new(false),
+                    absent: false,
                     hint_written: false,
                     swept: HashMap::new(),
                     snap: None,
@@ -170,6 +174,7 @@ impl Dbs {
                         wakes: 0,
                         closes: 0,
                         ttl_seen: AtomicBool::new(false),
+                    absent: false,
                         hint_written: false,
                         swept: HashMap::new(),
                     snap: None,
@@ -188,6 +193,7 @@ impl Dbs {
     pub async fn lock(&self, name: &str) -> OwnedRwLockWriteGuard<Entry> {
         let mut g = self.entry(name).write_owned().await;
         g.snap = None;
+        g.absent = false;
         g
     }
 
@@ -198,6 +204,7 @@ impl Dbs {
         let e = self.entry(name);
         if !SHARED_READS.load(Relaxed) {
             let mut w = Arc::clone(&e).write_owned().await;
+            w.absent = false;
             if !w.ensure_open().await? {
                 return Ok(ReadView { g: None });
             }
@@ -212,6 +219,7 @@ impl Dbs {
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
+            w.absent = false;
             if !w.ensure_open().await? {
                 return Ok(ReadView { g: None });
             }
@@ -361,6 +369,9 @@ impl Entry {
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
         self.touch();
+        if self.tenant.is_none() && self.absent {
+            return Ok(false);
+        }
         if self.tenant.is_some() {
             if self.leases.valid(&self.name) {
                 return Ok(true);
@@ -402,6 +413,7 @@ impl Entry {
                     Err(e)
                 } else {
                     self.leases.discard(&self.name).await;
+                    self.absent = true;
                     Ok(false)
                 }
             }
@@ -460,6 +472,7 @@ impl Entry {
             self.leases.acquire(&self.name).await?;
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.tenant = Some(self.lc.create(&self.name).await?);
+            self.absent = false;
             self.wakes += 1;
             self.sync_gauges();
         }
@@ -668,6 +681,7 @@ impl Entry {
             // The database does not exist yet: create it so the transaction has something to snapshot.
             self.leases.acquire(&self.name).await?;
             self.tenant = Some(self.lc.create(&self.name).await?);
+            self.absent = false;
             self.wakes += 1;
             self.sync_gauges();
         }

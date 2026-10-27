@@ -103,11 +103,13 @@ def main():
     results = []
     counted = 0
     tries = 0
-    while counted < a.kills and tries < a.kills * 4:
-        tries += 1
-        if attempt(srv, tries, rnd, a.docs, results):
-            counted += 1
-    srv.kill()
+    try:
+        while counted < a.kills and tries < a.kills * 4:
+            tries += 1
+            if attempt(srv, tries, rnd, a.docs, results):
+                counted += 1
+    finally:
+        srv.kill()
     mids = [r for r in results if r["killed_mid_build"]]
     summary = {
         "attempts": len(results),

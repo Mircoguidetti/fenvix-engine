@@ -1,0 +1,15 @@
+== AFTER (final rule) perkey=10, 100k docs, 1 index
+elapsed 61.3 ms, 26 requests, ok=True
+by phase: {'wake': (8, 575), 'metadata': (5, 549044), 'index_scan': (1, 4074), 'doc_fetch': (12, 47109)}
+== AFTER perkey=1000
+elapsed 445.7 ms, 21 requests, ok=True
+by phase: {'wake': (8, 575), 'metadata': (5, 549659), 'index_scan': (1, 44998), 'doc_fetch': (7, 26144702)}
+== BEFORE perkey=1000 (MONGO_NO_FETCH_SCAN=1)
+elapsed 678.8 ms, 980 requests, ok=True
+by phase: {'wake': (8, 575), 'metadata': (5, 549659), 'index_scan': (1, 44998), 'doc_fetch': (966, 3793764)}
+== full scan
+elapsed 943.1 ms, 20 requests, ok=True
+by phase: {'wake': (8, 575), 'metadata': (4, 549044), 'collection_scan': (8, 26184219)}
+== _id point read
+elapsed 44.1 ms, 14 requests, ok=True
+by phase: {'wake': (8, 575), 'metadata': (5, 549044), 'other': (1, 3954)}

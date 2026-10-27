@@ -1,0 +1,122 @@
+[
+ {
+  "min_gap_secs": -1,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 0,
+   "hintsListed": 0,
+   "due": 0,
+   "skippedOpen": 0,
+   "skippedGap": 0,
+   "wakes": 0,
+   "sessionSweeps": 3962,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2132,
+   "copy": 0,
+   "list": 846,
+   "get": 3174,
+   "head": 1110,
+   "delete": 324,
+   "billedPutTier": 2978,
+   "billedGetTier": 4284,
+   "putBytes": 336799,
+   "getBytes": 132405
+  },
+  "wakes_per_tenant": 0.0
+ },
+ {
+  "min_gap_secs": 0,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 30,
+   "hintsListed": 810,
+   "due": 300,
+   "skippedOpen": 0,
+   "skippedGap": 0,
+   "wakes": 300,
+   "sessionSweeps": 3958,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2143,
+   "copy": 0,
+   "list": 906,
+   "get": 3184,
+   "head": 1120,
+   "delete": 334,
+   "billedPutTier": 3049,
+   "billedGetTier": 4304,
+   "putBytes": 336626,
+   "getBytes": 132405
+  },
+  "wakes_per_tenant": 5.0
+ },
+ {
+  "min_gap_secs": 30,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 30,
+   "hintsListed": 810,
+   "due": 300,
+   "skippedOpen": 0,
+   "skippedGap": 250,
+   "wakes": 50,
+   "sessionSweeps": 3958,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2143,
+   "copy": 0,
+   "list": 906,
+   "get": 3184,
+   "head": 1120,
+   "delete": 334,
+   "billedPutTier": 3049,
+   "billedGetTier": 4304,
+   "putBytes": 337711,
+   "getBytes": 132405
+  },
+  "wakes_per_tenant": 0.83
+ },
+ {
+  "min_gap_secs": 100,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 30,
+   "hintsListed": 810,
+   "due": 300,
+   "skippedOpen": 0,
+   "skippedGap": 280,
+   "wakes": 20,
+   "sessionSweeps": 3956,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2143,
+   "copy": 0,
+   "list": 906,
+   "get": 3184,
+   "head": 1120,
+   "delete": 334,
+   "billedPutTier": 3049,
+   "billedGetTier": 4304,
+   "putBytes": 338928,
+   "getBytes": 132405
+  },
+  "wakes_per_tenant": 0.33
+ }
+]

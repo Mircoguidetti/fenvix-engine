@@ -30,7 +30,9 @@ RUN = f"{int(time.time()) % 100000}"
 
 def run_policy(min_gap, tenants, active_secs, observe_secs, ttl_secs, rate):
     log = open(os.path.join(HERE, "out", "ttl-server.log"), "ab")
-    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{PORT}", "--idle-secs", "3", "--holder", f"ttl{min_gap}", "--ttl-wake-sleeping", "--ttl-sweep-secs", "2", "--ttl-maintenance-secs", "5", "--ttl-min-gap-secs", str(min_gap), "--ttl-max-wakes", "1000"], stdout=log, stderr=log)
+    # min_gap < 0: the default (sleeping tenants are never woken for expiry); otherwise --ttl-wake-sleeping with that gap
+    wake = ["--ttl-wake-sleeping", "--ttl-maintenance-secs", "5", "--ttl-min-gap-secs", str(min_gap), "--ttl-max-wakes", "1000"] if min_gap >= 0 else []
+    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{PORT}", "--idle-secs", "3", "--holder", f"ttl{min_gap}", "--ttl-sweep-secs", "2", *wake], stdout=log, stderr=log)
     for _ in range(100):
         try:
             pymongo.MongoClient(URI, serverSelectionTimeoutMS=300).admin.command("ping")
@@ -68,7 +70,7 @@ def main():
     ap.add_argument("--active", type=int, default=60)
     ap.add_argument("--observe", type=int, default=150)
     ap.add_argument("--ttl", type=int, default=8)
-    ap.add_argument("--gaps", default="0,30,100")
+    ap.add_argument("--gaps", default="-1,0,30,100")
     ap.add_argument("--rate", type=float, default=6.0, help="mean inserts per tenant in the active window")
     a = ap.parse_args()
     os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
