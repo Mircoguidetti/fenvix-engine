@@ -1,0 +1,150 @@
+ 1. opt:delete.comment  [command options / delete]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/delete.md
+    page: delete (database command)
+    ctx: : <document|string> }, ... ], comment: <any>, let: <document>, // Added in MongoDB 5.0 ordered: <boolean>, writeConcern: { <write concern> }, maxTimeMS: <integer> 
+
+ 2. qop:$in  [query operators / comparison]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/query/in.md
+    page: $in (query predicate operator)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # $in (query predicate operator) The [`$in`](https://www.mongodb.com/docs/v7.0/reference/operator/query/in.md#mongodb-query-op.-in) operator selects the document
+
+ 3. opt:validate.metadata  [command options / validate]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/validate.md
+    page: validate (database command)
+    ctx:  repair: <boolean>, // Optional, added in MongoDB 5.0 metadata: <boolean>, // Optional, added in MongoDB 5.0.4 checkBSONConformance: <boolean> // Optional, added in MongoDB 6.2 } ) ``` ## Command Fields 
+
+ 4. py:pymongo.command_cursor.CommandCursor.batch_size  [driver api pymongo / CommandCursor]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/command_cursor.html
+    page: command_cursor – Tools for iterating over MongoDB command results - PyMongo 4.19
+    ctx: batch_size(batch_size<span cl
+
+ 5. cmd:_transferMods  [commands / internal]
+    url: https://www.mongodb.com/docs/v7.0/reference/command.md
+    page: Database Commands
+    ctx: (command listed by listCommands only; docs_url is the command index)
+
+ 6. cmd:createRole  [commands / user and role management]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/createrole.md
+    page: createRole (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # createRole (database command) ## Definition Creates a role and specifies its [privileges](https://www.mongodb.com/docs/v7.0/core/authorization.md#std-label-pr
+
+ 7. node:ListCollectionsCursor.clone  [driver api node / ListCollectionsCursor]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/ListCollectionsCursor.html
+    page: ListCollectionsCursor | mongodb
+    ctx: clone<
+
+ 8. gridfs:chunks._id  [gridfs]
+    url: https://www.mongodb.com/docs/v7.0/core/gridfs.md
+    page: GridFS for Self-Managed Deployments
+    ctx: his collection have the following form: ```javascript { "_id" : <ObjectId>, "files_id" : <ObjectId>, "n" : <num>, "data" : <binary> } ``` A document from the `chunks` collection contains the following fields: 
+
+ 9. cmd:getShardMap  [commands / sharding]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/getshardmap.md
+    page: getShardMap (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # getShardMap (database command) [`getShardMap`](https://www.mongodb.com/docs/v7.0/reference/command/getshardmap.md#mongodb-dbcommand-dbcmd.getShardMap) returns 
+
+10. opt:createIndexes.indexes[].language_override  [command options / createIndexes]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/createindexes.md
+    page: createIndexes (database command)
+    ctx: ormation and examples. The default value is `english`. | | `language_override` | string | Optional. For [text](https://www.mongodb.com/docs/v7.0/core/indexes/index-types/index-text.md#std-label-index-type-text) indexes, 
+
+11. py:pymongo.mongo_client.MongoClient.topology_description  [driver api pymongo / MongoClient]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html
+    page: mongo_client – Tools for connecting to MongoDB - PyMongo 4.19.0 documentation
+    ctx: topology_description<a class="headerlink" href="#pymongo.mongo_client.MongoClient.topology_description" title="Link to this definition"
+
+12. cmd:cleanupOrphaned  [commands / sharding]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/cleanuporphaned.md
+    page: cleanupOrphaned (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # cleanupOrphaned (database command) **Important:** Starting in MongoDB 6.0.3, you should run an aggregation using the [`$shardedDataDistribution`](https://www.
+
+13. bson:undefined  [bson types]
+    url: https://www.mongodb.com/docs/v7.0/reference/bson-types.md
+    page: BSON Types
+    ctx: ay" | | | Binary data | 5 | "binData" | | | Undefined | 6 | "undefined" | Deprecated. | | ObjectId | 7 | "objectId" | | | Boolean | 8 | "bool" | | | Date | 9 | "date" | | | Null | 10 | "null" | | | Regular Expression | 1
+
+14. expr:$reduce  [aggregation expressions / Array Operators]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/aggregation/reduce.md
+    page: $reduce (expression operator)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # $reduce (expression operator) ## Definition Applies an expression to each element in an array and combines them into a single value. [`$reduce`](https://www.
+
+15. cmd:_shardsvrDropIndexCatalogEntryParticipant  [commands / internal]
+    url: https://www.mongodb.com/docs/v7.0/reference/command.md
+    page: Database Commands
+    ctx: (command listed by listCommands only; docs_url is the command index)
+
+16. cmd:findAndModify  [commands / crud]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/findandmodify.md
+    page: findAndModify (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # findAndModify (database command) ## Definition Updates and returns a single document. By default, the returned document does not include the modifications mad
+
+17. locale:zh@collation=zhuyin  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: `search`Cherokee`chr`Chinese`zh``big5han``gb2312han``unihan``zhuyin`Chinese (Traditional)`zh_Hant`Croatian`hr``search`Czech`cs``search`Danish`da``search`Dutch`nl`Dzongkha`dz`English`en`English (United States)`en_US`Engli
+
+18. coll:caseLevel  [collation]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation.md
+    page: Collation
+    ctx: as the following fields: ```none { locale: <string>, caseLevel: <boolean>, caseFirst: <string>, strength: <int>, numericOrdering: <boolean>, alternate: <string>, maxVariable: <string>, backwards:
+
+19. cmd:convertToCapped  [commands / collection and database management]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/converttocapped.md
+    page: convertToCapped (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # convertToCapped (database command) ## Definition **Warning: Do Not Run This Command On Sharded Collections** MongoDB does **not** support the [`convertToCapp
+
+20. expr:$percentile  [aggregation expressions / Expressions Associated with Accumulators]
+    url: https://www.mongodb.com/docs/v7.0/reference/expression/percentile.md
+    page: $percentile (expression)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # $percentile (expression) ## Definition Returns one or more percentile values computed over an array of numbers. **Note: Disambiguation** This page describes
+
+21. cmd:getDatabaseVersion  [commands / internal]
+    url: https://www.mongodb.com/docs/v7.0/reference/command.md
+    page: Database Commands
+    ctx: (command listed by listCommands only; docs_url is the command index)
+
+22. cse:dropDatabase  [change stream events]
+    url: https://www.mongodb.com/docs/v7.0/reference/change-events/dropdatabase.md
+    page: dropDatabase Event
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # dropDatabase Event ## Synopsis A `dropDatabase` event occurs when a database is dropped. ## Description | Field | Type | Description | | --- | --- | --- | |
+
+23. locale:hy  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: rikaans`af`Albanian`sq`Amharic`am`Arabic`ar``compat`Armenian`hy`Assamese`as`Azeri`az``search`Bengali`bn`Belarusian`be`Bengali`bn``traditional`Bosnian`bs``search`Bosnian (Cyrillic)`bs_Cyrl`Bulgarian`bg`Burmese`my`Catalan`
+
+24. cmd:cloneCollectionAsCapped  [commands / collection and database management]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/clonecollectionascapped.md
+    page: cloneCollectionAsCapped (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # cloneCollectionAsCapped (database command) ## Definition The [`cloneCollectionAsCapped`](https://www.mongodb.com/docs/v7.0/reference/command/clonecollectionas
+
+25. node:ChangeStream.RESPONSE  [driver api node / ChangeStream]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/ChangeStream.html
+    page: ChangeStream | mongodb
+    ctx: Static ReadonlyRESPONSE<svg vi
+
+26. stableapi:apiStrict  [driver protocol]
+    url: https://www.mongodb.com/docs/v7.0/reference/stable-api.md
+    page: MongoDB Stable API for Server Upgrades
+    ctx:  a *strict* client: ```javascript mongosh --apiVersion 1 --apiStrict ``` ```python MongoClient(uri, server_api=ServerApi("1", strict=True)) ``` ```php $serverApi = new \MongoDB\Driver\ServerApi('1', true); $client = n
+
+27. cmd:replSetStepUp  [commands / replication]
+    url: https://www.mongodb.com/docs/v7.0/reference/command.md
+    page: Database Commands
+    ctx: (command listed by listCommands only; docs_url is the command index)
+
+28. expr:$lte  [aggregation expressions / Comparison Operators]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/aggregation/lte.md
+    page: $lte (expression operator)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # $lte (expression operator) ## Definition Compares two values and returns: - `true` when the first value is *less than or equivalent to* the second value. - 
+
+29. py:pymongo.collection.Collection.__getitem__  [driver api pymongo / Collection]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html
+    page: collection – Collection level operations - PyMongo 4.19.0 documentation
+    ctx: __getitem__(name<span class="
+
+30. py:pymongo.collection.Collection.create_search_indexes  [driver api pymongo / Collection]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html
+    page: collection – Collection level operations - PyMongo 4.19.0 documentation
+    ctx: create_search_indexes(models,
+
