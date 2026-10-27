@@ -1,0 +1,92 @@
+# DRAFT. Lives as .yml.txt so GitHub does not read it. On "AVVIA AWS" it is copied to .github/workflows/s3-test.yml.
+# Single trigger: a push to branch s3-test that touches s3-test/run.json. No pull_request, no environment, no schedule,
+# no workflow_dispatch. No AWS keys anywhere: OIDC only.
+name: s3-test
+on:
+  push:
+    branches: [s3-test]
+    paths: ['s3-test/run.json']
+permissions:
+  id-token: write
+  contents: write      # push of the results to branch s3-test-results
+concurrency:
+  group: fenvix-s3-test
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 150
+    env:
+      AWS_REGION: eu-central-1
+      AWS_DEFAULT_REGION: eu-central-1
+      AWS_PAGER: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Results branch (ledger) -> ./results
+        run: |
+          url="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          if git ls-remote --exit-code --heads origin s3-test-results >/dev/null 2>&1; then
+            git clone -q --branch s3-test-results --single-branch "$url" results
+          else
+            mkdir results && git -C results init -q -b s3-test-results && git -C results remote add origin "$url"
+          fi
+
+      # Everything below that can refuse the run happens BEFORE any AWS credential is requested.
+      - name: Gate (run.json, ledger total <= 30 USD, results-merge.md for tests 2/3)
+        run: bash s3-test/scripts/gate.sh
+
+      - name: Build engine (patched) and s3probe in Amazon Linux 2023, make the bundle
+        run: bash s3-test/scripts/build.sh
+
+      - name: AWS credentials (OIDC, 4 h)
+        id: aws4h
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::865859654353:role/fenvix-gha-tests
+          aws-region: eu-central-1
+          role-duration-seconds: 14400
+
+      - name: AWS credentials (OIDC, 1 h fallback)
+        if: steps.aws4h.outcome == 'failure'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::865859654353:role/fenvix-gha-tests
+          aws-region: eu-central-1
+          role-duration-seconds: 3600
+
+      - name: Test run (preflight, then engine tests as selected in run.json)
+        id: orchestrate
+        continue-on-error: true
+        run: bash s3-test/scripts/orchestrate.sh
+
+      # A 1 h session may have expired by now: get a fresh one for the cleanup.
+      - name: AWS credentials for cleanup
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::865859654353:role/fenvix-gha-tests
+          aws-region: eu-central-1
+          role-duration-seconds: 3600
+
+      - name: Cleanup (terminate tagged instances, empty and delete the bucket)
+        if: always()
+        run: bash s3-test/scripts/cleanup.sh run-out
+
+      - name: Ledger and results -> branch s3-test-results
+        if: always()
+        run: bash s3-test/scripts/finalize.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## s3-test run ${{ github.run_id }}"
+            echo "gross cost: $(cat run-out/gross_usd.txt 2>/dev/null || echo unknown) USD"
+            echo; echo "### Missing permissions / failed steps"
+            cat results/s3-test/runs/${{ github.run_id }}/missing-permissions.md 2>/dev/null || echo "(none recorded)"
+            echo; echo "### Steps"; echo '```'; cat run-out/steps.jsonl 2>/dev/null; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
