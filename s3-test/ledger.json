@@ -1,0 +1,16 @@
+{
+ "runs": [
+  {
+   "run_id": "40568199783",
+   "ts": 1793128944,
+   "tests": "1",
+   "gross_usd": 0.000242,
+   "put_tier": 40,
+   "get_tier": 60,
+   "instance_secs": 0,
+   "note": "no instance was launched",
+   "unknown": false
+  }
+ ],
+ "total_usd": 0.000242
+}
