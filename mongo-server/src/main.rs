@@ -22,6 +22,7 @@ mod js;
 mod keyenc;
 mod layout;
 mod lease;
+mod natural;
 mod query;
 mod geo;
 mod geo_query;

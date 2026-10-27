@@ -84,6 +84,8 @@ pub struct Entry {
     /// Document keys written by open transactions -> transaction id (a second writer gets a write conflict at once).
     pub(crate) locks: HashMap<Vec<u8>, u64>,
     pub(crate) changes: Arc<crate::changes::ChangeLog>,
+    /// Natural order: per collection (next sequence number, reserved limit); see `natural.rs`. Cleared whenever the tenant is opened or closed.
+    pub(crate) nat: HashMap<String, (u64, u64)>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -132,6 +134,7 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
+                    nat: HashMap::new(),
                 }))
             })
             .clone()
@@ -183,6 +186,7 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
+                    nat: HashMap::new(),
                     }))
                 })
                 .clone()
@@ -357,6 +361,7 @@ impl Entry {
 
     /// Drop the tenant without clean-close bookkeeping (its lease was lost).
     pub async fn abandon(&mut self) {
+        self.nat.clear();
         if let Some(t) = self.tenant.take() {
             t.abandon().await;
             self.closes += 1;
@@ -401,6 +406,7 @@ impl Entry {
                 if took.is_some() || t.unclean {
                     lease::log("takeover_wake", &self.name, &self.leases.holder, &format!("unclean={} takeover_from={}", t.unclean, took.as_deref().unwrap_or("-")));
                 }
+                self.nat.clear();
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
@@ -423,6 +429,7 @@ impl Entry {
     pub async fn close(&mut self) -> Result<()> {
         self.write_ttl_hint().await;
         let had = self.tenant.is_some();
+        self.nat.clear();
         if let Some(t) = self.tenant.take() {
             let r = t.close().await;
             self.closes += 1;
@@ -471,6 +478,7 @@ impl Entry {
         if !self.ensure_open().await? {
             self.leases.acquire(&self.name).await?;
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
+            self.nat.clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -502,6 +510,7 @@ impl Entry {
         if !self.leases.is_held(&self.name) {
             self.leases.acquire(&self.name).await?;
         }
+        self.nat.clear();
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -680,6 +689,7 @@ impl Entry {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
             self.leases.acquire(&self.name).await?;
+            self.nat.clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;

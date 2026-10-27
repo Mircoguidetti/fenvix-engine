@@ -398,11 +398,12 @@ async function main() {
   let tests = EJSON.parse(fs.readFileSync(testsPath, 'utf8'), { relaxed: false });
   if (args.only) tests = tests.filter((t) => t.name.includes(args.only));
   if (args.category) tests = tests.filter((t) => t.category === args.category);
+  if (args.shard) { const [k, n] = args.shard.split('/').map(Number); tests = tests.filter((t, i) => i % n === k); }
   const out = args.out || path.join(HERE, 'out', 'results_node.json');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const real = new Ctx(args.real || 'mongodb://localhost:27017', 27017, 0, false);
-  const ours = new Ctx(args.ours || 'mongodb://localhost:27018', 27018, 60, true);
-  const idle = new Ctx(args.idle || 'mongodb://localhost:27019', 27019, 3, true);
+  const ours = new Ctx(args.ours || 'mongodb://localhost:27018', Number(args['ours-port'] || 27018), 60, true);
+  const idle = new Ctx(args.idle || 'mongodb://localhost:27019', Number(args['idle-port'] || 27019), 3, true);
   await Promise.all([real.connect(), ours.connect(), idle.connect()]);
   const results = [];
   let n = 0;

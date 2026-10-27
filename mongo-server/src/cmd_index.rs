@@ -47,7 +47,7 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
             ops.push(Entry::indexes_op(coll, &indexes)?);
         }
         g.apply(ops).await?;
-        return Ok(if last { Step::Done } else { Step::More });
+        return Ok(if last && !indexes.iter().any(|i| i.state != State::Ready) { Step::Done } else { Step::More });
     }
     // Building.
     let dp = doc_prefix(coll);
@@ -90,13 +90,16 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
                 }
                 seen.insert(c.clone(), id_enc.clone());
             }
-            ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), Vec::new()));
+            ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), crate::natural::entry_value(crate::natural::seq_of(v))));
         }
     }
     if let Some(e) = failure {
-        // Abort the build: the index becomes a Dropping one and its entries are removed by the next steps.
-        indexes[pos].state = State::Dropping;
-        indexes[pos].cursor = None;
+        // Abort the build: a multi-index build is all or nothing (as in mongod), so every index still building becomes a
+        // Dropping one and its entries are removed by the next steps.
+        for i in indexes.iter_mut().filter(|i| i.state == State::Building) {
+            i.state = State::Dropping;
+            i.cursor = None;
+        }
         g.apply(vec![Entry::indexes_op(coll, &indexes)?]).await?;
         return Ok(Step::Failed(e));
     }
@@ -114,7 +117,7 @@ pub async fn build_step(dbs: &Arc<Dbs>, db: &str, coll: &str) -> R<Step> {
     }
     ops.push(Entry::indexes_op(coll, &indexes)?);
     g.apply(ops).await?;
-    Ok(if done { Step::Done } else { Step::More })
+    Ok(if done && !indexes.iter().any(|i| i.state != State::Ready) { Step::Done } else { Step::More })
 }
 
 /// Run steps until nothing is left to build or drop on `coll`. Returns the error of a failed build.
@@ -345,12 +348,13 @@ impl Server {
         };
         let n_indexes = 1 + g.indexes(coll).await?.iter().filter(|i| i.state == State::Ready).count() as i32;
         let mut ops: Vec<Op> = Vec::new();
-        for prefix in [doc_prefix(coll), idx_collection_prefix(coll)] {
+        for prefix in [doc_prefix(coll), idx_collection_prefix(coll), crate::natural::prefix(coll)] {
             for (k, _) in g.scan(&prefix).await? {
                 ops.push(Op::Delete(k.to_vec()));
             }
         }
         ops.push(Op::Delete(index_key(coll)));
+        ops.push(Op::Delete(crate::natural::meta_key(coll)));
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;
@@ -400,14 +404,15 @@ impl Server {
         }
         let mut ops: Vec<Op> = Vec::new();
         if target_exists {
-            for prefix in [doc_prefix(&to), idx_collection_prefix(&to)] {
+            for prefix in [doc_prefix(&to), idx_collection_prefix(&to), crate::natural::prefix(&to)] {
                 for (k, _) in g.scan(&prefix).await? {
                     ops.push(Op::Delete(k.to_vec()));
                 }
             }
             ops.push(Op::Delete(index_key(&to)));
+            ops.push(Op::Delete(crate::natural::meta_key(&to)));
         }
-        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to))] {
+        for (old_prefix, new_prefix) in [(doc_prefix(&from), doc_prefix(&to)), (idx_collection_prefix(&from), idx_collection_prefix(&to)), (crate::natural::prefix(&from), crate::natural::prefix(&to))] {
             for (k, v) in g.scan(&old_prefix).await? {
                 let mut nk = new_prefix.clone();
                 nk.extend_from_slice(&k[old_prefix.len()..]);
@@ -421,6 +426,10 @@ impl Server {
         if let Some(v) = g.get(&index_key(&from)).await? {
             ops.push(Op::Put(index_key(&to), v.to_vec()));
             ops.push(Op::Delete(index_key(&from)));
+        }
+        if let Some(v) = g.get(&crate::natural::meta_key(&from)).await? {
+            ops.push(Op::Put(crate::natural::meta_key(&to), v.to_vec()));
+            ops.push(Op::Delete(crate::natural::meta_key(&from)));
         }
         names.retain(|n| *n != from && *n != to);
         names.push(to.clone());
@@ -462,6 +471,8 @@ impl Server {
         let has_docs = existed && !g.scan_range(&doc_prefix(coll), prefix_end(&doc_prefix(coll)).as_deref(), false, Some(1), 4096).await?.is_empty();
         let mut changed = false;
         let mut building = false;
+        let mut new_names: Vec<String> = Vec::new();
+        let mut skipped_existing = false;
         for spec in specs {
             let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "Each element of the 'indexes' array must be an object".into()))?;
             let key = spec.get_document("key").map_err(|_| MongoError::new(40414, "Location40414", "BSON field 'indexes.key' is missing but a required field".into()))?;
@@ -551,6 +562,10 @@ impl Server {
             let wanted = IndexDef::from_stored(&idx).ok_or_else(|| MongoError::new(67, "CannotCreateIndex", "bad index specification".into()))?;
             if let Some(ex) = indexes.iter().find(|i| i.name == name) {
                 if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&ex.spec, &idx) {
+                    if new_names.contains(&name) {
+                        return Err(MongoError::new(96, "OperationFailed", format!("Index build failed: {}: Collection {ns} ( {} ) :: caused by :: Cannot build two identical indexes. Try again without duplicate indexes.", fake_uuid(), fake_uuid())));
+                    }
+                    skipped_existing = true;
                     continue;
                 }
                 let without_ttl = |d: &Document| { let mut d = d.clone(); for f in ["expireAfterSeconds", "weights", "default_language", "language_override", "textIndexVersion", "textKey"] { d.remove(f); } d };
@@ -570,6 +585,7 @@ impl Server {
                 def.state = State::Building;
                 building = true;
             }
+            new_names.push(def.name.clone());
             indexes.push(def);
             changed = true;
         }
@@ -588,7 +604,19 @@ impl Server {
             // Backfill in chunks, releasing the database between chunks; a build already running in the background is joined.
             let key = format!("{db}\0{coll}");
             if self.builds.lock().unwrap().insert(key.clone()) {
-                let r = run_builds(&self.dbs, db, coll).await;
+                let mut r = run_builds(&self.dbs, db, coll).await;
+                if r.is_err() {
+                    // all or nothing: the indexes of this request that finished before the failing one go too
+                    let mut g = self.dbs.lock(db).await;
+                    let mut ix = g.indexes(coll).await?;
+                    for i in ix.iter_mut().filter(|i| new_names.contains(&i.name)) {
+                        i.state = State::Dropping;
+                        i.cursor = None;
+                    }
+                    g.apply(vec![Entry::indexes_op(coll, &ix)?]).await?;
+                    drop(g);
+                    let _ = run_builds(&self.dbs, db, coll).await;
+                }
                 self.builds.lock().unwrap().remove(&key);
                 r.map_err(|mut e| {
                     if e.code == 11000 && !e.msg.starts_with("Index build failed") {
@@ -603,6 +631,8 @@ impl Server {
         let mut reply = doc! { "createdCollectionAutomatically": !existed, "numIndexesBefore": before, "numIndexesAfter": after };
         if !changed {
             reply.insert("note", "all indexes already exist");
+        } else if skipped_existing {
+            reply.insert("note", "index already exists");
         }
         reply.insert("ok", 1.0);
         Ok(reply)

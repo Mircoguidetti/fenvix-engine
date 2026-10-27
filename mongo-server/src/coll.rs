@@ -160,6 +160,7 @@ pub fn plan_for(indexes: &[IndexDef], o: &FindOpts) -> Plan {
 
 /// Walks the byte intervals of an index scan in batches.
 struct IxCursor {
+    prefix: Vec<u8>,
     ivs: Vec<(Vec<u8>, Vec<u8>)>,
     reverse: bool,
     i: usize,
@@ -190,7 +191,7 @@ impl IxCursor {
         if scan.reverse {
             ivs.reverse();
         }
-        IxCursor { ivs, reverse: scan.reverse, i: 0, resume: None }
+        IxCursor { prefix, ivs, reverse: scan.reverse, i: 0, resume: None }
     }
 
     /// Entries (full keys) of the next batch of at most `n`; empty when exhausted.
@@ -206,14 +207,36 @@ impl IxCursor {
                 let start = self.resume.clone().unwrap_or_else(|| s.clone());
                 g.scan_range(&start, Some(e), false, Some(n), INDEX_READ_AHEAD).await?
             };
+            let mut rows = rows;
+            if rows.len() >= n {
+                // complete the last run of equal keys so that it can be put into insertion order
+                loop {
+                    let last = rows.last().unwrap().0.to_vec();
+                    let more = if self.reverse {
+                        g.scan_range(s, Some(&last), true, Some(64), INDEX_READ_AHEAD).await?
+                    } else {
+                        let mut st = last.clone();
+                        st.push(0);
+                        g.scan_range(&st, Some(e), false, Some(64), INDEX_READ_AHEAD).await?
+                    };
+                    let k = more.iter().take_while(|(mk, _)| crate::natural::same_group(&last, mk, &self.prefix)).count();
+                    let full = k == more.len() && !more.is_empty();
+                    rows.extend(more.into_iter().take(k));
+                    if !full {
+                        break;
+                    }
+                }
+            }
+            let scan_last = rows.last().map(|(k, _)| k.to_vec());
+            crate::natural::reorder_ties(&mut rows, &self.prefix, self.reverse);
             if rows.len() < n {
                 self.i += 1;
                 self.resume = None;
-            } else if let Some((last, _)) = rows.last() {
+            } else if let Some(last) = scan_last {
                 self.resume = Some(if self.reverse {
-                    last.to_vec()
+                    last
                 } else {
-                    let mut k = last.to_vec();
+                    let mut k = last;
                     k.push(0);
                     k
                 });
@@ -441,6 +464,7 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
     let sorted_by_plan = o.sort.is_empty() || matches!(&plan, Plan::Ix(s) if s.sorted);
     let early = o.want.filter(|_| sorted_by_plan && ov_coll.is_empty());
     let mut out: Vec<Document> = Vec::new();
+    let mut ov_done: HashSet<Vec<u8>> = HashSet::new();
 
     match &plan {
         Plan::Id(id) => {
@@ -455,6 +479,56 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                     }
                 }
             }
+        }
+        Plan::Coll { reverse } if crate::natural::enabled(g, coll).await? => {
+            tenant_bench::counting::set_phase(3);
+            let np = crate::natural::prefix(coll);
+            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(4096);
+            let (mut start, mut stop) = (np.clone(), prefix_end(&np));
+            let mut replaced: HashSet<Vec<u8>> = HashSet::new();
+            'nat: loop {
+                let rows = g.scan_range(&start, stop.as_deref(), *reverse, Some(chunk), INDEX_READ_AHEAD).await?;
+                let n = rows.len();
+                let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
+                for stored in docs_by_ids(g, coll, &ids).await? {
+                    stats.docs += 1;
+                    let mut d = stored;
+                    if !ov_keys.is_empty() {
+                        let k = doc_key(coll, d.get("_id").unwrap_or(&Bson::Null));
+                        let mut rk = b"reins/".to_vec();
+                        rk.extend(&k);
+                        if o.ov.map(|m| m.contains_key(&rk)).unwrap_or(false) {
+                            continue; // deleted and inserted again in this transaction: listed at the end
+                        }
+                        if let Some(v) = o.ov.and_then(|m| m.get(&k)) {
+                            replaced.insert(k);
+                            match v {
+                                Some(nd) => d = nd.clone(), // updated in this transaction: same position
+                                None => continue,
+                            }
+                        }
+                    }
+                    if visible(&d, o) && matches(&d, o.filter)? {
+                        out.push(d);
+                        if early.map(|w| out.len() >= w).unwrap_or(false) {
+                            break 'nat;
+                        }
+                    }
+                }
+                if n < chunk {
+                    break;
+                }
+                let last = rows.last().unwrap().0.to_vec();
+                if *reverse {
+                    stop = Some(last);
+                } else {
+                    let mut k = last;
+                    k.push(0);
+                    start = k;
+                }
+            }
+            stats.keys = stats.docs;
+            ov_done = replaced;
         }
         Plan::Coll { reverse } => {
             tenant_bench::counting::set_phase(3);
@@ -535,7 +609,10 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
             }
         }
     }
-    for (_, v) in ov_coll {
+    for (k, v) in ov_coll {
+        if ov_done.contains(k) {
+            continue;
+        }
         if let Some(d) = v {
             if visible(d, o) && matches(d, o.filter)? {
                 out.push(d.clone());
@@ -565,11 +642,13 @@ pub struct Writes {
     pub events: Vec<crate::changes::EvSpec>,
     /// The update document of the next `put` (an operator update); `None` for inserts and replacements.
     pub pending_update: Option<Document>,
+    /// Insertion sequence numbers (see `natural.rs`) of the documents written by this set, by document key.
+    seqs: HashMap<Vec<u8>, u64>,
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new() }
     }
 
     /// Current version of a document: this write set first, then the store.
@@ -657,6 +736,25 @@ impl Writes {
             }
             plans.push((i, add, rem, mk));
         }
+        let k = doc_key(coll, &id);
+        let mut bytes = new.to_vec()?;
+        let seq = match old {
+            None => {
+                if matches!(self.ov.get(&k), Some(None)) {
+                    // deleted earlier in this write set and inserted again: it moves to the end
+                    let mut rk = b"reins/".to_vec();
+                    rk.extend(&k);
+                    self.ov.insert(rk, Some(Document::new()));
+                }
+                let s = crate::natural::alloc(g, coll).await?;
+                self.ops.push(Op::Put(crate::natural::key(coll, s), id_enc.clone()));
+                Some(s)
+            }
+            Some(_) => match self.seqs.get(&k) {
+                Some(s) => Some(*s),
+                None => crate::natural::stored_seq(g, &k).await?,
+            },
+        };
         // Commit to the write set.
         for (i, add, rem, mk) in plans {
             let idx = &mut indexes[i];
@@ -667,7 +765,7 @@ impl Writes {
                 self.released.insert((i, c, id_enc.clone()));
             }
             for c in add {
-                self.ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), Vec::new()));
+                self.ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), crate::natural::entry_value(seq)));
                 self.released.remove(&(i, c.clone(), id_enc.clone()));
                 self.claims.insert((i, c), id_enc.clone());
             }
@@ -676,8 +774,11 @@ impl Writes {
                 self.indexes_dirty = true;
             }
         }
-        let k = doc_key(coll, &id);
-        self.ops.push(Op::Put(k.clone(), new.to_vec()?));
+        if let Some(s) = seq {
+            bytes = crate::natural::with_seq(bytes, s);
+            self.seqs.insert(k.clone(), s);
+        }
+        self.ops.push(Op::Put(k.clone(), bytes));
         self.ov.insert(k, Some(new.clone()));
         let db = ns.split('.').next().unwrap_or("").to_string();
         let spec = match (old, self.pending_update.take()) {
@@ -689,7 +790,7 @@ impl Writes {
         Ok(())
     }
 
-    pub fn delete(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
+    pub async fn delete(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
         let id = old.get("_id").cloned().unwrap_or(Bson::Null);
         self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
@@ -705,6 +806,13 @@ impl Writes {
             }
         }
         let k = doc_key(coll, &id);
+        let seq = match self.seqs.remove(&k) {
+            Some(s) => Some(s),
+            None => crate::natural::stored_seq(g, &k).await?,
+        };
+        if let Some(s) = seq {
+            self.ops.push(Op::Delete(crate::natural::key(coll, s)));
+        }
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);
         self.events.push(crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "delete", doc_key: Some(id), full: None, desc: None, txn: None });

@@ -60,10 +60,19 @@ impl Server {
     pub(crate) async fn find(&self, db: &str, cmd: &Document, tx: &mut Option<Txn>) -> R<Document> {
         let coll = collection_name(cmd, "find")?;
         let filter = cmd.get_document("filter").cloned().unwrap_or_default();
-        let sort = match cmd.get_document("sort") {
+        let mut sort = match cmd.get_document("sort") {
             Ok(s) => parse_sort(s)?,
             Err(_) => vec![],
         };
+        // sort({$natural: ±1}) is the natural-order scan, forward or backward
+        let natural_hint = match sort.as_slice() {
+            [(f, asc)] if f == "$natural" && cmd.get("hint").is_none() => Some(bson::Bson::Document(doc! { "$natural": if *asc { 1 } else { -1 } })),
+            _ => None,
+        };
+        if natural_hint.is_some() {
+            sort.clear();
+        }
+        let hint_arg = natural_hint.as_ref().or_else(|| cmd.get("hint"));
         let projection = match cmd.get_document("projection") {
             Ok(p) => parse_projection(p)?,
             Err(_) => None,
@@ -81,11 +90,11 @@ impl Server {
         }
         let mut docs = if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            self.find_part(&mut g, db, coll, &filter, &sort, want, cmd.get("hint"), None).await?
+            self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await?
         } else {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
-            self.find_part(&mut *g, db, coll, &filter, &sort, want, cmd.get("hint"), tx_ov(tx)).await?
+            self.find_part(&mut *g, db, coll, &filter, &sort, want, hint_arg, tx_ov(tx)).await?
         };
         sort_docs(&mut docs, &sort);
         let mut docs: VecDeque<Document> = docs.into_iter().skip(skip).collect();
@@ -343,7 +352,7 @@ impl Server {
                 docs
             };
             for d in &existing {
-                w.delete(&mut g, db, &target, &indexes, d)?;
+                w.delete(&mut g, db, &target, &indexes, d).await?;
             }
             for mut d in docs {
                 if !d.contains_key("_id") {
@@ -669,7 +678,7 @@ impl Server {
             return Ok(match hit {
                 None => doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 },
                 Some(old) => {
-                    w.delete(&mut g, db, coll, &indexes, &old)?;
+                    w.delete(&mut g, db, coll, &indexes, &old).await?;
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                     doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old)), "ok": 1.0 }
                 }
@@ -805,7 +814,7 @@ async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], 
                     found.truncate(limit as usize);
                 }
                 for d in found {
-                    w.delete(g, db, coll, indexes, &d)?;
+                    w.delete(g, db, coll, indexes, &d).await?;
                     *n += 1;
                 }
                 // MongoDB's oplog (and so a change stream) lists the documents of one delete statement last-first.

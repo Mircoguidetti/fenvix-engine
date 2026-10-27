@@ -533,6 +533,7 @@ def main():
     ap.add_argument("--idle-port", type=int, default=27019)
     ap.add_argument("--idle-secs", type=int, default=3)
     ap.add_argument("--out", default=os.path.join(HERE, "out", "results_py.json"))
+    ap.add_argument("--shard", default="", help="k/n: run the tests whose position is k modulo n (several shards run in parallel on separate servers)")
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     server_script = os.path.join(HERE, "server.sh")
@@ -541,6 +542,9 @@ def main():
         tests = [t for t in tests if a.only in t["name"]]
     if a.category:
         tests = [t for t in tests if t["category"] == a.category]
+    if a.shard:
+        k, n_ = (int(x) for x in a.shard.split("/"))
+        tests = [t for i, t in enumerate(tests) if i % n_ == k]
     real = Ctx(a.real, 27017, 0, False, server_script)
     ours = Ctx(a.ours, a.ours_port, a.ours_idle_secs, True, server_script)
     idle = Ctx(a.idle, a.idle_port, a.idle_secs, True, server_script)
