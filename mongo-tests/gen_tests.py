@@ -1371,6 +1371,8 @@ import gen_tests_geo
 gen_tests_geo.register(globals())
 import gen_tests_hashed
 gen_tests_hashed.register(globals())
+import gen_tests_round10
+gen_tests_round10.register(globals())
 import gen_tests_tail
 gen_tests_tail.register(globals())
 

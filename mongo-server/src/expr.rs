@@ -163,7 +163,7 @@ pub fn is_known_operator(name: &str) -> bool {
             | "$let" | "$switch" | "$mergeObjects" | "$reduce" | "$objectToArray" | "$arrayToObject" | "$getField" | "$setField" | "$unsetField" | "$range" | "$reverseArray" | "$indexOfArray" | "$first" | "$last" | "$firstN" | "$lastN" | "$maxN" | "$minN"
             | "$sortArray" | "$zip" | "$isNumber" | "$setIntersection" | "$setDifference" | "$setEquals" | "$setIsSubset" | "$anyElementTrue" | "$allElementsTrue" | "$max" | "$min" | "$sum" | "$avg" | "$cmp" | "$type" | "$bsonSize" | "$binarySize"
             | "$abs" | "$ceil" | "$floor" | "$sqrt" | "$exp" | "$ln" | "$log10" | "$trunc" | "$round" | "$pow" | "$log" | "$substr" | "$substrBytes" | "$substrCP" | "$strLenBytes" | "$strLenCP" | "$strcasecmp" | "$trim" | "$ltrim" | "$rtrim" | "$split"
-            | "$indexOfBytes" | "$indexOfCP" | "$replaceOne" | "$replaceAll" | "$regexMatch" | "$regexFind" | "$regexFindAll" | "$convert" | "$toInt" | "$toLong" | "$toDouble" | "$toDecimal" | "$toBool" | "$toDate" | "$toString" | "$toObjectId" | "$function"
+            | "$indexOfBytes" | "$indexOfCP" | "$replaceOne" | "$replaceAll" | "$regexMatch" | "$regexFind" | "$regexFindAll" | "$convert" | "$toInt" | "$toLong" | "$toDouble" | "$toDecimal" | "$toBool" | "$toDate" | "$toString" | "$toObjectId" | "$function" | "$toHashedIndexKey"
             | "$rand" | "$tsSecond" | "$tsIncrement" | "$median" | "$percentile"
             | "$year" | "$month" | "$dayOfMonth" | "$hour" | "$minute" | "$second" | "$millisecond" | "$dayOfWeek" | "$dayOfYear" | "$week" | "$isoWeek" | "$isoWeekYear" | "$isoDayOfWeek" | "$dateToParts" | "$dateFromParts" | "$dateFromString" | "$dateAdd" | "$dateSubtract" | "$dateDiff" | "$dateTrunc"
     )

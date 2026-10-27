@@ -189,6 +189,10 @@ pub(super) fn operator_ext(name: &str, arg: &Bson, sc: &Scope) -> Out {
             Ok(Some(Some(convert(&v.unwrap(), &to.to_ascii_lowercase(), name)?)))
         }
         "$function" => function(arg, sc),
+        "$toHashedIndexKey" => {
+            let v = ev(arg, sc)?.unwrap_or(Bson::Null);
+            some(Bson::Int64(crate::wild::hash_value(&v)))
+        }
         "$rand" => {
             match arg {
                 Bson::Document(d) if d.is_empty() => {}

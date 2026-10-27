@@ -2008,6 +2008,7 @@ dependencies = [
  "clap",
  "fancy-regex",
  "futures",
+ "md-5",
  "object_store",
  "rand 0.8.8",
  "rquickjs",

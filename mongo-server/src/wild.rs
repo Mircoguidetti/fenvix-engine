@@ -35,103 +35,107 @@ fn put_str(out: &mut Vec<u8>, s: &str) {
     out.extend(s.as_bytes());
 }
 
-/// Canonical bytes of a value: equal values (numbers of any type included) produce equal bytes.
-fn canon(v: &Bson, out: &mut Vec<u8>) {
+
+/// Canonical type order, as MongoDB's `BSONElement::canonicalType` numbers it (hashed first, so it must match).
+fn canon_type(v: &Bson) -> i32 {
     match v {
-        Bson::Null | Bson::Undefined => out.push(0),
-        Bson::Boolean(b) => out.extend([1, *b as u8]),
-        Bson::Int32(i) => {
-            out.push(2);
-            out.extend((*i as i64).to_be_bytes());
-        }
-        Bson::Int64(i) => {
-            out.push(2);
-            out.extend(i.to_be_bytes());
-        }
-        Bson::Double(_) | Bson::Decimal128(_) => {
-            let n = as_f64(v).unwrap_or(f64::NAN);
-            if n.is_nan() {
-                out.push(3);
-                out.extend(f64::NAN.to_bits().to_be_bytes());
-            } else if n.trunc().abs() < 9.2e18 {
-                out.push(2);
-                out.extend((n.trunc() as i64).to_be_bytes());
-            } else {
-                out.push(3);
-                out.extend(n.to_bits().to_be_bytes());
-            }
-        }
-        Bson::String(s) | Bson::Symbol(s) => {
-            out.push(4);
-            put_str(out, s);
-        }
+        Bson::MinKey => -1,
+        Bson::Undefined => 0,
+        Bson::Null => 5,
+        Bson::Double(_) | Bson::Int32(_) | Bson::Int64(_) | Bson::Decimal128(_) => 10,
+        Bson::String(_) | Bson::Symbol(_) => 15,
+        Bson::Document(_) => 20,
+        Bson::Array(_) => 25,
+        Bson::Binary(_) => 30,
+        Bson::ObjectId(_) => 35,
+        Bson::Boolean(_) => 40,
+        Bson::DateTime(_) => 45,
+        Bson::Timestamp(_) => 47,
+        Bson::RegularExpression(_) => 50,
+        Bson::DbPointer(_) => 55,
+        Bson::JavaScriptCode(_) => 60,
+        Bson::JavaScriptCodeWithScope(_) => 65,
+        Bson::MaxKey => 127,
+    }
+}
+
+/// `safeNumberLong`: doubles truncate (NaN is 0, out of range saturates), decimals round half to even.
+fn number_long(v: &Bson) -> i64 {
+    match v {
+        Bson::Int32(i) => *i as i64,
+        Bson::Int64(i) => *i,
+        Bson::Double(d) => *d as i64,
+        Bson::Decimal128(d) => d.to_string().parse::<f64>().map(|x| x.round_ties_even() as i64).unwrap_or(0),
+        _ => 0,
+    }
+}
+
+fn put_cstr(out: &mut Vec<u8>, s: &str) {
+    out.extend(s.as_bytes());
+    out.push(0);
+}
+
+fn put_lstr(out: &mut Vec<u8>, s: &str) {
+    out.extend((s.len() as i32 + 1).to_le_bytes());
+    put_cstr(out, s);
+}
+
+/// MongoDB's `BSONElementHasher::recursiveHash`: the byte stream that is fed to MD5.
+fn canon(v: &Bson, name: Option<&str>, out: &mut Vec<u8>) {
+    out.extend(canon_type(v).to_le_bytes());
+    if let Some(n) = name {
+        put_cstr(out, n);
+    }
+    match v {
+        Bson::MinKey | Bson::MaxKey | Bson::Null | Bson::Undefined => {}
+        Bson::Double(_) | Bson::Int32(_) | Bson::Int64(_) | Bson::Decimal128(_) => out.extend(number_long(v).to_le_bytes()),
+        Bson::String(s) | Bson::Symbol(s) | Bson::JavaScriptCode(s) => put_lstr(out, s),
         Bson::Document(d) => {
-            out.push(5);
             for (k, x) in d {
-                put_str(out, k);
-                canon(x, out);
+                canon(x, Some(k), out);
             }
-            out.push(0xFF);
+            out.extend(0i32.to_le_bytes());
         }
         Bson::Array(a) => {
-            out.push(6);
-            for x in a {
-                canon(x, out);
+            for (i, x) in a.iter().enumerate() {
+                canon(x, Some(&i.to_string()), out);
             }
-            out.push(0xFF);
-        }
-        Bson::ObjectId(o) => {
-            out.push(7);
-            out.extend(o.bytes());
-        }
-        Bson::DateTime(d) => {
-            out.push(8);
-            out.extend(d.timestamp_millis().to_be_bytes());
-        }
-        Bson::Timestamp(t) => {
-            out.push(9);
-            out.extend(t.time.to_be_bytes());
-            out.extend(t.increment.to_be_bytes());
+            out.extend(0i32.to_le_bytes());
         }
         Bson::Binary(b) => {
-            out.push(10);
+            out.extend((b.bytes.len() as i32).to_le_bytes());
             out.push(u8::from(b.subtype));
-            out.extend((b.bytes.len() as u32).to_be_bytes());
             out.extend(&b.bytes);
         }
+        Bson::ObjectId(o) => out.extend(o.bytes()),
+        Bson::Boolean(b) => out.push(*b as u8),
+        Bson::DateTime(d) => out.extend(d.timestamp_millis().to_le_bytes()),
+        Bson::Timestamp(t) => {
+            out.extend(t.increment.to_le_bytes());
+            out.extend(t.time.to_le_bytes());
+        }
         Bson::RegularExpression(r) => {
-            out.push(11);
-            put_str(out, r.pattern.as_str());
-            put_str(out, r.options.as_str());
+            put_cstr(out, r.pattern.as_str());
+            put_cstr(out, r.options.as_str());
         }
-        Bson::JavaScriptCode(s) => {
-            out.push(12);
-            put_str(out, s);
-        }
-        Bson::MinKey => out.push(14),
-        Bson::MaxKey => out.push(15),
-        other => {
-            out.push(16);
-            put_str(out, &format!("{other:?}"));
+        Bson::DbPointer(_) => {}
+        Bson::JavaScriptCodeWithScope(c) => {
+            for (k, x) in &c.scope {
+                canon(x, Some(k), out);
+            }
+            out.extend(0i32.to_le_bytes());
         }
     }
 }
 
-/// The 64-bit hash stored for a value (FNV-1a with a finalizer; stable because it is persisted in index entries).
+/// The 64-bit key a hashed index stores for a value, and what `$toHashedIndexKey` returns: the first eight bytes of
+/// MD5(seed 0 ++ canonical form), read little endian. Identical to MongoDB's, so values agree with a real server.
 pub fn hash_value(v: &Bson) -> i64 {
-    let mut bytes = Vec::new();
-    canon(v, &mut bytes);
-    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
-    for b in bytes {
-        h ^= b as u64;
-        h = h.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    h ^= h >> 30;
-    h = h.wrapping_mul(0xbf58_476d_1ce4_e5b9);
-    h ^= h >> 27;
-    h = h.wrapping_mul(0x94d0_49bb_1331_11eb);
-    h ^= h >> 31;
-    h as i64
+    use md5::{Digest, Md5};
+    let mut bytes = 0i32.to_le_bytes().to_vec();
+    canon(v, None, &mut bytes);
+    let d = Md5::digest(&bytes);
+    i64::from_le_bytes(d[..8].try_into().unwrap())
 }
 
 /// `hashed` entries of a document: `(component bytes, {field: value})`, or no entry for a sparse index when no key

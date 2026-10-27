@@ -22,3 +22,4 @@ bytes = "1"
 futures = "0.3"
 clap = { version = "4", features = ["derive"] }
 rand = "0.8"
+md-5 = "0.11"
