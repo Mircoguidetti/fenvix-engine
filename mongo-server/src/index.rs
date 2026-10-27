@@ -24,6 +24,13 @@ pub enum State {
     Dropping,
 }
 
+/// What kind of index this is; `Regular` indexes are ordered B-tree-like key lists.
+#[derive(Clone, Debug)]
+pub enum Kind {
+    Regular,
+    Text(crate::text::TextSpec),
+}
+
 #[derive(Clone, Debug)]
 pub struct IndexDef {
     pub name: String,
@@ -37,10 +44,18 @@ pub struct IndexDef {
     pub multikey: bool,
     /// Build cursor: the document key (inside the collection prefix) up to which existing documents are indexed.
     pub cursor: Option<Vec<u8>>,
-    /// text / 2dsphere / hashed: recorded and listed, no entries.
+    /// 2dsphere / 2d / hashed / wildcard: recorded and listed, no entries (until implemented).
     pub special: bool,
+    pub kind: Kind,
+    /// Text indexes: the key pattern as the user gave it (`listIndexes` shows `_fts`/`_ftsx`); internal.
+    pub text_key: Option<Document>,
     /// The spec as the user gave it (plus `v`), without internal state; this is what `listIndexes` returns.
     pub spec: Document,
+}
+
+/// Numeric value of an int / long / double.
+pub fn num_of(v: &Bson) -> Option<f64> {
+    num(v)
 }
 
 fn num(v: &Bson) -> Option<f64> {
@@ -58,7 +73,11 @@ impl IndexDef {
         let key_doc = stored.get_document("key").ok()?;
         let mut key = Vec::new();
         let mut special = false;
+        let is_text = key_doc.contains_key("_fts");
         for (k, v) in key_doc {
+            if is_text && (k == "_fts" || k == "_ftsx") {
+                continue;
+            }
             match num(v) {
                 Some(n) => key.push((k.clone(), n >= 0.0)),
                 None => {
@@ -76,9 +95,18 @@ impl IndexDef {
             State::Ready
         };
         let mut spec = stored.clone();
-        for internal in ["building", "dropping", "buildCursor", "multikey"] {
+        for internal in ["building", "dropping", "buildCursor", "multikey", "textKey"] {
             spec.remove(internal);
         }
+        let text_key = stored.get_document("textKey").ok().cloned();
+        let kind = if is_text {
+            match crate::text::TextSpec::from_spec(stored) {
+                Some(t) => Kind::Text(t),
+                None => return None,
+            }
+        } else {
+            Kind::Regular
+        };
         Some(IndexDef {
             name: stored.get_str("name").ok()?.to_string(),
             key,
@@ -93,6 +121,8 @@ impl IndexDef {
                 _ => None,
             },
             special,
+            kind,
+            text_key,
             spec,
         })
     }
@@ -100,6 +130,9 @@ impl IndexDef {
     /// The document stored in `meta/indexes/{collection}` (spec plus internal state).
     pub fn to_stored(&self) -> Document {
         let mut d = self.spec.clone();
+        if let Some(tk) = &self.text_key {
+            d.insert("textKey", tk.clone());
+        }
         if self.state == State::Building {
             d.insert("building", true);
             if let Some(c) = &self.cursor {
@@ -120,7 +153,7 @@ impl IndexDef {
         for (f, asc) in &self.key {
             d.insert(f.clone(), if *asc { 1 } else { -1 });
         }
-        if self.special {
+        if self.special || matches!(self.kind, Kind::Text(_)) {
             return self.spec.get_document("key").cloned().unwrap_or(d);
         }
         d
@@ -150,6 +183,9 @@ impl IndexDef {
             if !matches(d, p)? {
                 return Ok((BTreeMap::new(), false));
             }
+        }
+        if let Kind::Text(t) = &self.kind {
+            return text_entries(t, d);
         }
         let mut fields: Vec<(Vec<Bson>, bool)> = Vec::new();
         let mut any_present = false;
@@ -235,6 +271,63 @@ impl IndexDef {
         }
         out
     }
+}
+
+/// Values a key field contributes to the entries of a document (`null` when missing, the elements of an array).
+fn field_values(d: &Document, path: &str) -> Vec<Bson> {
+    let vals = path_values(d, path);
+    if vals.is_empty() {
+        return vec![Bson::Null];
+    }
+    let mut out = Vec::new();
+    for v in vals {
+        match v {
+            Bson::Array(a) if a.is_empty() => out.push(Bson::Undefined),
+            Bson::Array(a) => out.extend(a.iter().cloned()),
+            other => out.push(other.clone()),
+        }
+    }
+    out
+}
+
+/// Entries of a text index: prefix fields, the term, suffix fields.
+fn text_entries(t: &crate::text::TextSpec, d: &Document) -> R<(BTreeMap<Vec<u8>, Document>, bool)> {
+    let scores = crate::text::doc_scores(t, d)?;
+    let mut acc: Vec<Vec<u8>> = vec![Vec::new()];
+    let cross = |acc: Vec<Vec<u8>>, comps: Vec<Vec<u8>>| -> Vec<Vec<u8>> {
+        let mut next = Vec::with_capacity(acc.len() * comps.len());
+        for p in &acc {
+            for c in &comps {
+                let mut k = p.clone();
+                k.extend(c);
+                next.push(k);
+            }
+        }
+        next
+    };
+    for (path, asc) in t.prefix.iter().chain(t.suffix.iter()) {
+        if path_values(d, path).iter().any(|v| matches!(v, Bson::Array(_))) {
+            return Err(MongoError::new(201, "CannotBuildIndexKeys", format!("Field '{path}' of text index contains an array in document: {{ _id: {} }}", d.get("_id").map(crate::update::fmt_bson).unwrap_or_default())));
+        }
+    }
+    for (path, asc) in &t.prefix {
+        let mut comps: Vec<Vec<u8>> = field_values(d, path).iter().map(|v| keyenc::component(v, *asc)).collect();
+        comps.sort();
+        comps.dedup();
+        acc = cross(acc, comps);
+    }
+    let term_comps: Vec<Vec<u8>> = scores.keys().map(|term| keyenc::component(&Bson::String(term.clone()), true)).collect();
+    acc = cross(acc, term_comps);
+    for (path, asc) in &t.suffix {
+        let mut comps: Vec<Vec<u8>> = field_values(d, path).iter().map(|v| keyenc::component(v, *asc)).collect();
+        comps.sort();
+        comps.dedup();
+        acc = cross(acc, comps);
+    }
+    if scores.is_empty() {
+        return Ok((BTreeMap::new(), false));
+    }
+    Ok((acc.into_iter().map(|k| (k, Document::new())).collect(), false))
 }
 
 /// Key of one entry.
@@ -822,7 +915,12 @@ pub fn plan(inp: &PlanInput) -> Plan {
             return Plan::Id(id.clone());
         }
     }
-    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && inp.hint.map(|h| h == i).unwrap_or(true);
+    if let Some(Bson::Document(op)) = crate::text::find_operand(inp.filter) {
+        if let Some(scan) = text_scan(inp.indexes, op, &cs, inp.hint) {
+            return Plan::Ix(scan);
+        }
+    }
+    let usable = |i: usize, idx: &IndexDef| idx.state == State::Ready && !idx.special && matches!(idx.kind, Kind::Regular) && inp.hint.map(|h| h == i).unwrap_or(true);
     let mut best: Option<(i64, IxScan)> = None;
     for (i, idx) in inp.indexes.iter().enumerate() {
         if !usable(i, idx) {
@@ -877,6 +975,41 @@ pub fn plan(inp: &PlanInput) -> Plan {
         }
     }
     Plan::Coll { reverse: false }
+}
+
+/// The index scan that answers a `$text` condition: one interval per (prefix value, term). `None` when there is no
+/// text index or a prefix field has no equality (the caller reports the error).
+pub fn text_scan(indexes: &[IndexDef], operand: &Document, cs: &HashMap<String, Constraint>, hint: Option<usize>) -> Option<IxScan> {
+    let (i, idx, t) = indexes.iter().enumerate().find_map(|(i, x)| match &x.kind {
+        Kind::Text(t) if x.state == State::Ready && hint.map(|h| h == i).unwrap_or(true) => Some((i, x, t)),
+        _ => None,
+    })?;
+    let _ = idx;
+    let mut prefixes: Vec<Vec<u8>> = vec![Vec::new()];
+    for (path, asc) in &t.prefix {
+        let vals = cs.get(path).and_then(|c| c.eq.clone()).filter(|v| v.len() == 1)?;
+        let mut next = Vec::new();
+        for p in &prefixes {
+            for v in &vals {
+                let mut k = p.clone();
+                k.extend(keyenc::component(v, *asc));
+                next.push(k);
+            }
+        }
+        prefixes = next;
+    }
+    let terms = crate::text::lookup_terms(&Bson::Document(operand.clone()), t).ok()?;
+    let mut intervals: Vec<Interval> = Vec::new();
+    for p in &prefixes {
+        for term in &terms {
+            let mut start = p.clone();
+            start.extend(keyenc::component(&Bson::String(term.clone()), true));
+            let end = keyenc::prefix_end(&start);
+            intervals.push((start, end));
+        }
+    }
+    intervals.sort();
+    Some(IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: t.prefix.len() + 1, bounds: vec![("_fts".to_string(), terms.iter().map(|x| format!("[\"{x}\", \"{x}\"]")).collect())] })
 }
 
 /// Collection-level helper: the doc key of an `_id` encoding.

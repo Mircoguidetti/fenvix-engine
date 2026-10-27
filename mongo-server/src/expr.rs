@@ -151,7 +151,7 @@ fn variable(sc: &Scope, name_and_path: &str) -> R<Option<Bson>> {
 pub fn is_known_operator(name: &str) -> bool {
     matches!(
         name,
-        "$literal" | "$cond" | "$ifNull" | "$eq" | "$ne" | "$gt" | "$gte" | "$lt" | "$lte" | "$and" | "$or" | "$not" | "$in" | "$add" | "$subtract" | "$multiply" | "$divide" | "$mod" | "$concat" | "$toLower" | "$toUpper" | "$size" | "$isArray" | "$arrayElemAt" | "$concatArrays" | "$setUnion" | "$filter" | "$map" | "$dateToString" | "$slice"
+        "$literal" | "$meta" | "$cond" | "$ifNull" | "$eq" | "$ne" | "$gt" | "$gte" | "$lt" | "$lte" | "$and" | "$or" | "$not" | "$in" | "$add" | "$subtract" | "$multiply" | "$divide" | "$mod" | "$concat" | "$toLower" | "$toUpper" | "$size" | "$isArray" | "$arrayElemAt" | "$concatArrays" | "$setUnion" | "$filter" | "$map" | "$dateToString" | "$slice"
             | "$let" | "$switch" | "$mergeObjects" | "$reduce" | "$objectToArray" | "$arrayToObject" | "$getField" | "$setField" | "$unsetField" | "$range" | "$reverseArray" | "$indexOfArray" | "$first" | "$last" | "$firstN" | "$lastN" | "$maxN" | "$minN"
             | "$sortArray" | "$zip" | "$isNumber" | "$setIntersection" | "$setDifference" | "$setEquals" | "$setIsSubset" | "$anyElementTrue" | "$allElementsTrue" | "$max" | "$min" | "$sum" | "$avg" | "$cmp" | "$type" | "$bsonSize" | "$binarySize"
             | "$abs" | "$ceil" | "$floor" | "$sqrt" | "$exp" | "$ln" | "$log10" | "$trunc" | "$round" | "$pow" | "$log" | "$substr" | "$substrBytes" | "$substrCP" | "$strLenBytes" | "$strLenCP" | "$strcasecmp" | "$trim" | "$ltrim" | "$rtrim" | "$split"
@@ -182,7 +182,7 @@ fn is_const(e: &Bson) -> bool {
         Bson::String(s) => !s.starts_with('$'),
         Bson::Array(a) => a.iter().all(is_const),
         Bson::Document(d) => match d.iter().next() {
-            Some((k, _)) if k.starts_with('$') => k == "$literal" || (d.len() == 1 && d.values().all(is_const)),
+            Some((k, _)) if k.starts_with('$') => k == "$literal" || (k != "$meta" && k != "$rand" && d.len() == 1 && d.values().all(is_const)),
             _ => d.values().all(is_const),
         },
         _ => true,
@@ -375,6 +375,21 @@ pub fn eval(e: &Bson, sc: &Scope) -> R<Option<Bson>> {
 fn operator(name: &str, arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
     match name {
         "$literal" => Ok(Some(arg.clone())),
+        "$meta" => {
+            let m = arg.as_str().ok_or_else(|| err(17307, "$meta only supports string arguments"))?;
+            let hidden = match m {
+                "textScore" => crate::text::SCORE_KEY,
+                "searchScore" => crate::search::SCORE_KEY,
+                "geoNearDistance" => crate::geo::DIST_KEY,
+                "geoNearPoint" => crate::geo::POINT_KEY,
+                other => return Err(err(17308, format!("Unsupported argument to $meta: {other}"))),
+            };
+            match sc.root.get(hidden) {
+                Some(v) => Ok(Some(v.clone())),
+                None if m == "textScore" => Err(err(40218, "query requires text score metadata, but it is not available")),
+                None => Err(err(40218, format!("query requires {m} metadata, but it is not available"))),
+            }
+        }
         "$cond" => cond(arg, sc),
         "$ifNull" => {
             let a = args(arg);

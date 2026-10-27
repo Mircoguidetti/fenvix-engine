@@ -331,8 +331,36 @@ fn visible(d: &Document, o: &FindOpts) -> bool {
     }
 }
 
-/// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it).
+/// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
+/// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
+    if !crate::text::has_text(o.filter) {
+        return find_docs_inner(g, coll, indexes, o).await;
+    }
+    let text_index = indexes.iter().find(|i| matches!(i.kind, index::Kind::Text(_)) && i.state == State::Ready).map(|i| i.to_stored());
+    let filter2 = crate::text::resolve_filter(o.filter, text_index.as_ref())?;
+    let o2 = FindOpts { filter: &filter2, sort: o.sort, want: o.want, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
+    if let Some(op) = crate::text::find_operand_any(&filter2) {
+        crate::text::parse_text_operand(op, crate::text::Lang::English)?; // report a bad operand before planning
+    }
+    if !matches!(o.hint, Hint::None) {
+        return Err(MongoError::bad_value("error processing query: planner returned error :: caused by :: hint provided does not correspond to an existing index".to_string()));
+    }
+    let p = plan_for(indexes, &o2);
+    let planned = if crate::text::find_operand(&filter2).is_some() { matches!(p, Plan::Ix(_)) } else { matches!(p, Plan::Or(_)) };
+    if !planned {
+        return Err(MongoError::new(291, "NoQueryExecutionPlans", "Failed to produce a solution for TEXT under OR - other non-TEXT clauses under OR have to be indexed as well. Or: failed to use text index to satisfy $text query (if text index is compound, are equality predicates given for all prefix fields?)".to_string()));
+    }
+    let (mut docs, stats, plan) = find_docs_inner(g, coll, indexes, &o2).await?;
+    for d in docs.iter_mut() {
+        if let Some(s) = crate::text::score_of(&filter2, d)? {
+            d.insert(crate::text::SCORE_KEY, s);
+        }
+    }
+    Ok((docs, stats, plan))
+}
+
+async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
     let plan = plan_for(indexes, o);
     let mut stats = Stats::default();
     let prefix = doc_prefix(coll);

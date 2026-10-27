@@ -73,6 +73,9 @@ impl Server {
         let batch = int_arg(cmd.get("batchSize")).map(|b| b.max(0) as usize);
         let single = bool_arg(cmd.get("singleBatch"), false);
         let want = if limit > 0 { Some(skip + limit as usize) } else { None };
+        if (sort.iter().any(|(f, _)| f == crate::text::SCORE_KEY) || projection.as_ref().map(|p| p.needs_text_score()).unwrap_or(false)) && !crate::text::has_text(&filter) {
+            return Err(MongoError::new(40218, "Location40218", "query requires text score metadata, but it is not available".into()));
+        }
         let mut docs = if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
             self.find_part(&mut g, db, coll, &filter, &sort, want, cmd.get("hint"), None).await?
@@ -90,6 +93,9 @@ impl Server {
             for d in docs.iter_mut() {
                 *d = project(d, p);
             }
+        }
+        for d in docs.iter_mut() {
+            d.remove(crate::text::SCORE_KEY);
         }
         Ok(self.cursor_reply(format!("{db}.{coll}"), docs, batch, single))
     }
@@ -188,7 +194,8 @@ impl Server {
                 self.matching(&mut *g, db, coll, &first_match, cmd.get("hint"), tx_ov(tx)).await?
             }
         };
-        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats")).unwrap_or(false) { &body[1..] } else { body };
+        let first_is_text_match = first.and_then(|d| d.get_document("$match").ok()).map(crate::text::has_text).unwrap_or(false);
+        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
             let fd = if tx.is_none() {
@@ -201,7 +208,10 @@ impl Server {
             };
             foreign.insert(from, fd);
         }
-        let out = run_pipeline(docs, body_rest, &foreign)?;
+        let mut out = run_pipeline(docs, body_rest, &foreign)?;
+        for d in out.iter_mut() {
+            crate::text::strip_hidden(d);
+        }
         if let Some(t) = tail {
             self.agg_write_stage(db, t, out, tx).await?;
             return Ok(self.cursor_reply(format!("{db}.{coll}"), VecDeque::new(), batch, false));
@@ -597,6 +607,7 @@ impl Server {
         let mut w = take_writes(tx);
         let names = w.names.clone().unwrap_or(names);
         let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: Some(&w.ov) }).await?;
+        for d in matched.iter_mut() { d.remove(crate::text::SCORE_KEY); }
         sort_docs(&mut matched, &sort);
         let hit = matched.into_iter().next();
         if remove {
@@ -695,6 +706,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                 let upsert = bool_arg(spec.get("upsert"), false);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let (mut matched, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if multi { None } else { Some(1) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
+        for d in matched.iter_mut() { d.remove(crate::text::SCORE_KEY); }
                 if !multi {
                     matched.truncate(1);
                 }
@@ -733,6 +745,7 @@ async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], 
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let ev_start = w.events.len();
                 let (mut found, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if limit == 0 { None } else { Some(limit as usize) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
+        for d in found.iter_mut() { d.remove(crate::text::SCORE_KEY); }
                 if limit > 0 {
                     found.truncate(limit as usize);
                 }

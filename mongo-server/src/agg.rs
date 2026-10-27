@@ -934,6 +934,17 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
             MongoError::new(40323, "Location40323", "A pipeline stage specification object must contain exactly one field.".into())
         })?;
         let (name, arg) = sd.iter().next().unwrap();
+        // Search scores and geo distances travel with the documents through stages that map one document to one.
+        let carried: Option<Vec<Vec<(&'static str, Bson)>>> = if matches!(name.as_str(), "$project" | "$addFields" | "$set" | "$unset" | "$replaceRoot" | "$replaceWith") {
+            let keys = [crate::text::SCORE_KEY, crate::search::SCORE_KEY, crate::geo::DIST_KEY, crate::geo::POINT_KEY];
+            if docs.iter().any(|d| keys.iter().any(|k| d.contains_key(*k))) {
+                Some(docs.iter().map(|d| keys.iter().filter_map(|k| d.get(*k).map(|v| (*k, v.clone()))).collect()).collect())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
         match name.as_str() {
             "$match" => {
                 let f = arg.as_document().ok_or_else(|| MongoError::new(15959, "Location15959", "the match filter must be an expression in an object".into()))?;
@@ -982,6 +993,17 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
                 Some(d) => docs = d,
                 None => return Err(MongoError::new(40324, "Location40324", format!("Unrecognized pipeline stage name: '{other}'"))),
             },
+        }
+        if let Some(c) = carried {
+            if c.len() == docs.len() {
+                for (d, kv) in docs.iter_mut().zip(c) {
+                    for (k, v) in kv {
+                        if !d.contains_key(k) {
+                            d.insert(k, v);
+                        }
+                    }
+                }
+            }
         }
     }
     Ok(docs)

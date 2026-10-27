@@ -1991,10 +1991,12 @@ dependencies = [
  "object_store",
  "rand 0.8.8",
  "rquickjs",
+ "rust-stemmers",
  "serde_json",
  "slatedb",
  "tenant-bench",
  "tokio",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -2736,6 +2738,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cee271d0eeba64f0915b846cb7ae02e16faf3dfdffdca91731101d9d30fe3423"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "rust-stemmers"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e46a2036019fdb888131db7a4c847a1063a7493f971ed94ea82c67eada63ca54"
+dependencies = [
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]

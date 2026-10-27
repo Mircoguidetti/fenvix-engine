@@ -149,6 +149,80 @@ fn num_opt(v: &Bson) -> Option<f64> {
 
 const RENAME_MAX_OPS: usize = 1_000_000;
 
+fn bad_spec(spec_name: &str, key: &Document, msg: &str) -> MongoError {
+    MongoError::new(67, "CannotCreateIndex", format!("Error in specification {{ name: \"{spec_name}\", key: {} }} :: caused by :: {msg}", fmt_doc(key)))
+}
+
+/// The stored spec of a text index, or `None` when `key` has no `"text"` field. `listIndexes` shows the key as
+/// `{..prefix, _fts: "text", _ftsx: 1, ..suffix}` with `weights`, `default_language`, `language_override` and
+/// `textIndexVersion`; the user's key pattern is kept as the internal `textKey`.
+fn normalize_text(spec: &Document, key: &Document, name: &str) -> R<Option<Document>> {
+    let is_text = |v: &Bson| matches!(v, Bson::String(s) if s == "text");
+    if !key.values().any(is_text) {
+        return Ok(None);
+    }
+    if key.values().any(|v| matches!(v, Bson::String(s) if s != "text")) {
+        return Err(bad_spec(name, key, "Can't use more than one index plugin for a single index."));
+    }
+    let mut stored_key = Document::new();
+    let mut paths: Vec<String> = Vec::new();
+    let mut seen_text = false;
+    for (k, v) in key {
+        if is_text(v) {
+            if !seen_text {
+                stored_key.insert("_fts", "text");
+                stored_key.insert("_ftsx", 1);
+                seen_text = true;
+            }
+            paths.push(k.clone());
+        } else {
+            stored_key.insert(k.clone(), v.clone());
+        }
+    }
+    let mut weights: std::collections::BTreeMap<String, i32> = paths.iter().map(|p| (p.clone(), 1)).collect();
+    if let Some(w) = spec.get("weights") {
+        let Bson::Document(wd) = w else { return Err(bad_spec(name, key, "weights must be a document")) };
+        for (k, v) in wd {
+            let n = crate::index::num_of(v).ok_or_else(|| bad_spec(name, key, &format!("weight for text index needs to be numeric: {k}")))?;
+            if n < 1.0 || n > 2147483647.0 {
+                return Err(bad_spec(name, key, &format!("text index weight must be in the interval [1, 2147483647], but found: {}", fmt_doc(&doc! { "w": v.clone() }))));
+            }
+            weights.insert(k.clone(), n as i32);
+        }
+    }
+    let lang = match spec.get("default_language") {
+        None => "english".to_string(),
+        Some(Bson::String(l)) if crate::text::parse_lang(l).is_some() => l.clone(),
+        Some(Bson::String(l)) => return Err(bad_spec(name, key, &format!("default_language is not valid: {l}"))),
+        Some(_) => return Err(bad_spec(name, key, "default_language needs to be a string")),
+    };
+    let over = match spec.get("language_override") {
+        None => "language".to_string(),
+        Some(Bson::String(l)) if !l.starts_with('$') && !l.is_empty() => l.clone(),
+        Some(Bson::String(l)) => return Err(bad_spec(name, key, &format!("language_override is not valid: {l}"))),
+        Some(_) => return Err(bad_spec(name, key, "language_override needs to be a string")),
+    };
+    let version = match spec.get("textIndexVersion") {
+        None => 3,
+        Some(v) => match crate::index::num_of(v) {
+            Some(n) if (1.0..=3.0).contains(&n) => n as i32,
+            _ => return Err(bad_spec(name, key, &format!("bad textIndexVersion: {}", fmt_doc(&doc! { "v": v.clone() })))),
+        },
+    };
+    let mut idx = doc! { "v": 2, "key": stored_key, "name": name };
+    let mut w = Document::new();
+    for (k, v) in &weights {
+        w.insert(k.clone(), *v);
+    }
+    // options other than the text settings are added by the caller; the text settings must come last
+    idx.insert("weights", w);
+    idx.insert("default_language", lang);
+    idx.insert("language_override", over);
+    idx.insert("textIndexVersion", version);
+    idx.insert("textKey", key.clone());
+    Ok(Some(idx))
+}
+
 impl Server {
     /// Load a collection's indexes; unfinished builds / drops (after a crash or restart) are resumed in the background.
     pub(crate) async fn load_indexes(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str) -> R<Vec<IndexDef>> {
@@ -331,14 +405,31 @@ impl Server {
                 continue; // the implicit _id index
             }
             // Normalised spec: the user's options in MongoDB's order.
-            let mut idx = doc! { "v": 2, "key": key.clone(), "name": name.clone() };
+            let text_idx = normalize_text(spec, key, &name)?;
+            let mut idx = match &text_idx {
+                Some(d) => d.clone(),
+                None => doc! { "v": 2, "key": key.clone(), "name": name.clone() },
+            };
+            let ikey: Document = idx.get_document("key").cloned().unwrap_or_else(|_| key.clone());
+            let key = &ikey;
             for (k, v) in spec {
+                if text_idx.is_some() && matches!(k.as_str(), "weights" | "default_language" | "language_override" | "textIndexVersion") {
+                    continue;
+                }
                 if !matches!(k.as_str(), "key" | "name" | "v") {
                     // `unique: false` and `sparse: false` are the defaults and are not stored
                     if matches!(k.as_str(), "unique" | "sparse") && !bool_arg(Some(v), false) {
                         continue;
                     }
                     idx.insert(k.clone(), v.clone());
+                }
+            }
+            if let Some(t) = &text_idx {
+                for f in ["weights", "default_language", "language_override", "textIndexVersion"] {
+                    if let Some(v) = t.get(f).cloned() {
+                        idx.remove(f);
+                        idx.insert(f, v);
+                    }
                 }
             }
             for opt in ["unique", "sparse"] {
@@ -375,7 +466,7 @@ impl Server {
                 if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&ex.spec, &idx) {
                     continue;
                 }
-                let without_ttl = |d: &Document| { let mut d = d.clone(); d.remove("expireAfterSeconds"); d };
+                let without_ttl = |d: &Document| { let mut d = d.clone(); for f in ["expireAfterSeconds", "weights", "default_language", "language_override", "textIndexVersion", "textKey"] { d.remove(f); } d };
                 if ex.spec.get_document("key").map(|k| k == key).unwrap_or(false) && same_options(&without_ttl(&ex.spec), &without_ttl(&idx)) {
                     return Err(MongoError::new(85, "IndexOptionsConflict", format!("An equivalent index already exists with the same name but different options. Requested index: {}, existing index: {}", fmt_doc(&idx), fmt_doc(&ex.spec))));
                 }
@@ -758,7 +849,7 @@ fn same_options(a: &Document, b: &Document) -> bool {
     let norm = |d: &Document| -> Vec<(String, String)> {
         let mut v: Vec<(String, String)> = d
             .iter()
-            .filter(|(k, _)| !matches!(k.as_str(), "v" | "name"))
+            .filter(|(k, _)| !matches!(k.as_str(), "v" | "name" | "textKey"))
             .filter(|(k, v)| !(matches!(k.as_str(), "unique" | "sparse") && !crate::cmd::bool_arg(Some(v), false)))
             .map(|(k, v)| (k.clone(), crate::update::fmt_bson(v)))
             .collect();

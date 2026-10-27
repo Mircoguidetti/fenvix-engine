@@ -207,6 +207,7 @@ pub fn matches(doc: &Document, filter: &Document) -> R<bool> {
                 }
             }
             "$comment" => true,
+            "$text" => crate::text::matches_operand(v, doc)?,
             "$where" => crate::js::eval_where(v, doc)?,
             "$expr" => {
                 crate::expr::validate(v)?;
@@ -676,7 +677,15 @@ pub fn parse_sort(spec: &Document) -> R<Vec<(String, bool)>> {
             Bson::Int32(i) => *i as i64,
             Bson::Int64(i) => *i,
             Bson::Double(f) => *f as i64,
-            _ => return Err(MongoError::new(15974, "Location15974", "$meta sort is not supported by this server".into())),
+            Bson::Document(d) if d.len() == 1 && d.get_str("$meta").ok() == Some("textScore") => {
+                // the field name is ignored: documents sort by their text score, best first
+                out.push((crate::text::SCORE_KEY.to_string(), false));
+                continue;
+            }
+            Bson::Document(d) if d.len() == 1 && d.contains_key("$meta") => {
+                return Err(MongoError::new(2, "BadValue", "Illegal $meta sort: ".to_string() + &crate::update::fmt_bson(d.get("$meta").unwrap())));
+            }
+            _ => return Err(MongoError::new(15974, "Location15974", "Illegal key in $sort specification".into())),
         };
         if dir != 1 && dir != -1 {
             return Err(MongoError::new(15975, "Location15975", "$sort key ordering must be 1 (for ascending) or -1 (for descending)".into()));
@@ -728,6 +737,8 @@ pub struct Projection {
     paths: Vec<Vec<String>>,
     /// `$slice` projections: (path, skip, limit); `limit == None` means "last/first |skip| elements" form.
     slices: Vec<(Vec<String>, i64, Option<i64>)>,
+    /// `{field: {$meta: "textScore"}}`: output fields that receive the text score.
+    pub metas: Vec<String>,
 }
 
 fn parse_slice(arg: &Bson) -> R<(i64, Option<i64>)> {
@@ -756,8 +767,17 @@ pub fn parse_projection(spec: &Document) -> R<Option<Projection>> {
     let mut inc: Vec<Vec<String>> = Vec::new();
     let mut exc = Vec::new();
     let mut slices = Vec::new();
+    let mut metas: Vec<String> = Vec::new();
     for (k, v) in spec {
         if let Bson::Document(d) = v {
+            if d.len() == 1 && d.contains_key("$meta") {
+                match d.get_str("$meta") {
+                    Ok("textScore") => metas.push(k.clone()),
+                    Ok(other) => return Err(MongoError::new(17308, "Location17308", format!("Unsupported argument to $meta: {other}"))),
+                    Err(_) => return Err(MongoError::new(2, "BadValue", "$meta projection requires a string argument".into())),
+                }
+                continue;
+            }
             if d.len() == 1 && d.contains_key("$slice") {
                 let (skip, limit) = parse_slice(&d["$slice"])?;
                 slices.push((k.split('.').map(str::to_string).collect::<Vec<_>>(), skip, limit));
@@ -776,13 +796,13 @@ pub fn parse_projection(spec: &Document) -> R<Option<Projection>> {
     if !inc.is_empty() && !exc.is_empty() {
         return Err(MongoError::new(31254, "Location31254", "Cannot do exclusion on field in inclusion projection".into()));
     }
-    if inc.is_empty() && exc.is_empty() && !slices.is_empty() {
-        // Slice-only projections keep every field.
-        return Ok(Some(Projection { include: false, id, paths: vec![], slices }));
+    if inc.is_empty() && exc.is_empty() && (!slices.is_empty() || !metas.is_empty()) {
+        // Slice-only and $meta-only projections keep every field.
+        return Ok(Some(Projection { include: false, id, paths: vec![], slices, metas }));
     }
     if inc.is_empty() && exc.is_empty() {
         // Only `_id` was given: {_id: 1} keeps just the _id, {_id: 0} drops just the _id.
-        return Ok(Some(Projection { include: id, id, paths: vec![], slices }));
+        return Ok(Some(Projection { include: id, id, paths: vec![], slices, metas }));
     }
     let include = !inc.is_empty();
     if include {
@@ -791,7 +811,7 @@ pub fn parse_projection(spec: &Document) -> R<Option<Projection>> {
             inc.push(p.clone());
         }
     }
-    Ok(Some(Projection { include, id, paths: if include { inc } else { exc }, slices }))
+    Ok(Some(Projection { include, id, paths: if include { inc } else { exc }, slices, metas }))
 }
 
 fn include_into(src: &Document, paths: &[&[String]]) -> Document {
@@ -872,7 +892,19 @@ pub fn project(doc: &Document, p: &Projection) -> Document {
     for (path, skip, limit) in &p.slices {
         slice_at(&mut out, path, *skip, *limit);
     }
+    out.remove(crate::text::SCORE_KEY);
+    for m in &p.metas {
+        if let Some(v) = doc.get(crate::text::SCORE_KEY) {
+            out.insert(m.clone(), v.clone());
+        }
+    }
     out
+}
+
+impl Projection {
+    pub fn needs_text_score(&self) -> bool {
+        !self.metas.is_empty()
+    }
 }
 
 fn slice_at(doc: &mut Document, path: &[String], skip: i64, limit: Option<i64>) {

@@ -343812,5 +343812,17031 @@ null,
 }
 }
 ]
+},
+{
+"name": "text.single_term_scores",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.two_terms_or",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.term_frequency_and_length",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello world"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stop_words_only",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "the a of"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stop_word_ignored_in_query",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "the quick"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stemming_plural",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "dog"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stemming_ing_ed",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jump"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stemming_run_forms",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "running"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stemming_query_inflected",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumper jumping"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.case_insensitive_default",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "QUICK"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.diacritics_default",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "naive"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.diacritics_query_accented",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "caf\u00e9"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stem_then_strip_diacritics",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "r\u00e9sum\u00e9"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.stem_then_strip_plain",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "resume"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.apostrophe_english",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "don't"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.apostrophe_possessive",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "brien"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.punctuation_delimiters",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "roll mail foo bar example"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.underscore_is_not_a_delimiter",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "foo_bar"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.numbers_split_on_dot",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "14"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.empty_and_missing_and_non_string_fields_never_match",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "42 null"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.array_elements_scored_separately",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "world"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.raw_equal_boost",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "hello"
+},
+{
+"_id": 2,
+"t": "Hello"
+},
+{
+"_id": 3,
+"t": "hello!"
+},
+{
+"_id": 4,
+"t": "HELLO hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.duplicate_query_terms_count_once",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick quick quick"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.empty_search_matches_nothing",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": ""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.whitespace_search_matches_nothing",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "   "
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.only_negation_matches_nothing",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "-fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.long_text_repeated_term",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha alpha beta beta beta beta beta gamma"
+},
+{
+"_id": 2,
+"t": "alpha"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "alpha beta gamma"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_basic",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"quick brown\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_order_matters",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"brown quick\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_is_raw_substring",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"uick brown\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_with_punctuation",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"brown, quick\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_with_stop_word",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"the quick\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_plus_term",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"quick brown\" fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.two_phrases_and",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"quick brown\" \"brown fox\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.negated_term",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick -fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.negated_stemmed_term",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "brown -dogs"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.negated_phrase",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick -\"brown fox\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.phrase_and_negated_term",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"quick brown\" -fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.dash_inside_word_is_not_negation",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "fox-jumped"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.dash_space_is_ignored",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick - fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.unmatched_quote_ignored",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"quick brown"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.empty_phrase",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.case_sensitive_term",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "Quick",
+"$caseSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.case_sensitive_lower",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick",
+"$caseSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.case_sensitive_phrase",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"Quick Brown\"",
+"$caseSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.case_sensitive_negation",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "brown -Fox",
+"$caseSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.case_sensitive_stemmed_forms",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "Jumping dogs"
+},
+{
+"_id": 2,
+"t": "jumped Dog"
+},
+{
+"_id": 3,
+"t": "JUMPS DOGS"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "Jump dogs",
+"$caseSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.diacritic_sensitive_plain",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "naive",
+"$diacriticSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.diacritic_sensitive_accented",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "na\u00efve",
+"$diacriticSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.both_sensitive",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "NA\u00cfVE",
+"$caseSensitive": true,
+"$diacriticSensitive": true
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.explicit_false_flags",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "Quick",
+"$caseSensitive": false,
+"$diacriticSensitive": false
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_param_none",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumped",
+"$language": "none"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_param_english_name",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumped",
+"$language": "english"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_param_code",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumped",
+"$language": "en"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_param_uppercase",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumped",
+"$language": "ENGLISH"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_param_empty_string",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumped",
+"$language": ""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_param_spanish_stop_words",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "the fox",
+"$language": "spanish"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.default_language_french",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "french"
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "les chevaux mangent des pommes"
+},
+{
+"_id": 2,
+"t": "le cheval mange une pomme"
+},
+{
+"_id": 3,
+"t": "la maison est belle"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "cheval pommes"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "les des"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.default_language_spanish",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "es"
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "los gatos corren r\u00e1pidamente"
+},
+{
+"_id": 2,
+"t": "el gato corre"
+},
+{
+"_id": 3,
+"t": "las casas azules"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "gato correr"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "las los"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.default_language_german",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "german"
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "die H\u00e4user sind gro\u00df"
+},
+{
+"_id": 2,
+"t": "das Haus ist klein"
+},
+{
+"_id": 3,
+"t": "Kinder spielen drau\u00dfen"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "Haus"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "Kind"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.default_language_russian",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "russian"
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "\u043a\u0440\u0430\u0441\u0438\u0432\u044b\u0435 \u0434\u043e\u043c\u0430 \u0441\u0442\u043e\u044f\u0442"
+},
+{
+"_id": 2,
+"t": "\u043a\u0440\u0430\u0441\u0438\u0432\u044b\u0439 \u0434\u043e\u043c"
+},
+{
+"_id": 3,
+"t": "\u0438 \u0432 \u043d\u0430"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\u0434\u043e\u043c"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\u043a\u0440\u0430\u0441\u0438\u0432\u0430\u044f"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.default_language_none_no_stemming",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "none"
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jumped"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "jump"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "the"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_override_field",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "les chevaux",
+"language": "french"
+},
+{
+"_id": 2,
+"t": "los gatos",
+"language": "spanish"
+},
+{
+"_id": 3,
+"t": "the horses"
+},
+{
+"_id": 4,
+"t": "cheval",
+"language": "none"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "cheval"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "chevaux"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "gato"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_override_custom_name",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"language_override": "idioma"
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "les chevaux",
+"idioma": "french"
+},
+{
+"_id": 2,
+"t": "les chevaux",
+"language": "french"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "cheval"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_override_unsupported_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "x",
+"language": "klingon"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "x"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.language_override_non_string_ignored",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "hello",
+"language": 5
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.multiple_languages_in_collection",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "running horses",
+"language": "english"
+},
+{
+"_id": 2,
+"t": "chevaux courants",
+"language": "fr"
+},
+{
+"_id": 3,
+"t": "caballos corriendo",
+"language": "es"
+},
+{
+"_id": 4,
+"t": "Pferde laufen",
+"language": "de"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "running"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "cheval"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "caballo"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "Pferd"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.cjk_text_is_one_token_run",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "\u6771\u4eac \u5927\u962a"
+},
+{
+"_id": 2,
+"t": "\u6771\u4eac\u5927\u962a"
+},
+{
+"_id": 3,
+"t": "\u4e2d\u6587 \u641c\u7d22"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\u6771\u4eac"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\u641c\u7d22"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.emoji_and_symbols",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "party \ud83c\udf89 time \u2122 \u00a9 2024"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "party time"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "2024"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.spec_single_field",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_two_fields",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"b",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_weights",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"b",
+"text"
+]
+],
+"opts": {
+"weights": {
+"a": 3,
+"b": 7
+}
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_wildcard",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"$**",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_wildcard_with_weights",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"$**",
+"text"
+]
+],
+"opts": {
+"weights": {
+"b": 7,
+"a": 3
+}
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_prefix",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"p",
+1
+],
+[
+"a",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_suffix",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"s",
+-1
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_prefix_and_suffix",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"p",
+1
+],
+[
+"q",
+-1
+],
+[
+"a",
+"text"
+],
+[
+"s",
+1
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_language_options",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "spanish",
+"language_override": "idioma"
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_custom_name",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"name": "mytext"
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_nested_path",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a.b",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_extra_weight_field_sorted",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"weights": {
+"nope": 5
+}
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_weight_fraction_truncated",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"weights": {
+"t": 2.9
+}
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_text_index_version_2",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"textIndexVersion": 2
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.spec_with_sparse_option",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"sparse": true
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.two_text_indexes_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"b",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.same_text_index_twice_ok",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.same_text_index_different_options_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "french"
+}
+},
+{
+"op": "list_indexes",
+"coll": "c",
+"full": true
+}
+]
+},
+{
+"name": "text.bad_default_language_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"default_language": "klingon"
+}
+}
+]
+},
+{
+"name": "text.bad_language_override_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"language_override": "$bad"
+}
+}
+]
+},
+{
+"name": "text.bad_weight_zero_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"weights": {
+"t": 0
+}
+}
+}
+]
+},
+{
+"name": "text.bad_weight_negative_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"weights": {
+"t": -1
+}
+}
+}
+]
+},
+{
+"name": "text.bad_weight_string_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"weights": {
+"t": "x"
+}
+}
+}
+]
+},
+{
+"name": "text.bad_text_index_version_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+],
+"opts": {
+"textIndexVersion": 4
+}
+}
+]
+},
+{
+"name": "text.mixed_index_plugins_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"b",
+"hashed"
+]
+]
+}
+]
+},
+{
+"name": "text.text_on_two_plugins_2dsphere_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"2dsphere"
+],
+[
+"b",
+"text"
+]
+]
+}
+]
+},
+{
+"name": "text.drop_text_index_then_query_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "drop_index",
+"coll": "c",
+"index": "t_text"
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.no_text_index_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.two_fields_equal_weights",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"b",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": "apple",
+"b": "banana"
+},
+{
+"_id": 2,
+"a": "banana",
+"b": "apple"
+},
+{
+"_id": 3,
+"a": "apple apple",
+"b": "cherry"
+},
+{
+"_id": 4,
+"b": "banana banana banana"
+},
+{
+"_id": 5,
+"a": "banana",
+"x": "apple"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "apple"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "banana"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.weights_change_ranking",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"b",
+"text"
+]
+],
+"opts": {
+"weights": {
+"a": 10,
+"b": 1
+}
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": "apple",
+"b": "banana"
+},
+{
+"_id": 2,
+"a": "banana",
+"b": "apple"
+},
+{
+"_id": 3,
+"a": "apple apple",
+"b": "cherry"
+},
+{
+"_id": 4,
+"b": "banana banana banana"
+},
+{
+"_id": 5,
+"a": "banana",
+"x": "apple"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "apple"
+}
+},
+"sort": {
+"s": {
+"$meta": "textScore"
+},
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "banana"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.weights_on_wildcard_index",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"$**",
+"text"
+]
+],
+"opts": {
+"weights": {
+"a": 5
+}
+}
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": "apple",
+"b": "banana"
+},
+{
+"_id": 2,
+"a": "banana",
+"b": "apple"
+},
+{
+"_id": 3,
+"a": "apple apple",
+"b": "cherry"
+},
+{
+"_id": 4,
+"b": "banana banana banana"
+},
+{
+"_id": 5,
+"a": "banana",
+"x": "apple"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "apple"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "banana"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.wildcard_indexes_every_string_field",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"$**",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": "apple",
+"b": "banana"
+},
+{
+"_id": 2,
+"a": "banana",
+"b": "apple"
+},
+{
+"_id": 3,
+"a": "apple apple",
+"b": "cherry"
+},
+{
+"_id": 4,
+"b": "banana banana banana"
+},
+{
+"_id": 5,
+"a": "banana",
+"x": "apple"
+},
+{
+"_id": 6,
+"n": {
+"deep": {
+"er": "apple"
+}
+}
+},
+{
+"_id": 7,
+"arr": [
+{
+"k": "apple"
+},
+"banana"
+]
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "apple"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "cherry"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.nested_path_and_array_of_documents",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a.b",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": {
+"b": "red apple"
+}
+},
+{
+"_id": 2,
+"a": [
+{
+"b": "green apple"
+},
+{
+"b": "pear"
+}
+]
+},
+{
+"_id": 3,
+"a": "apple"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "apple"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "pear"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.text_in_other_field_not_searched",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "x",
+"u": "apple"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "apple"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.phrase_across_fields_not_joined",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"a",
+"text"
+],
+[
+"b",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"a": "red",
+"b": "apple"
+},
+{
+"_id": 2,
+"a": "red apple"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "\"red apple\""
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_equality",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": "a",
+"t": "hello world"
+},
+{
+"_id": 2,
+"r": "a",
+"t": "hello there"
+},
+{
+"_id": 3,
+"r": "b",
+"t": "hello world"
+},
+{
+"_id": 4,
+"r": "b",
+"t": "other"
+},
+{
+"_id": 5,
+"r": "c",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"r": "a",
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_in_list",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": "a",
+"t": "hello world"
+},
+{
+"_id": 2,
+"r": "a",
+"t": "hello there"
+},
+{
+"_id": 3,
+"r": "b",
+"t": "hello world"
+},
+{
+"_id": 4,
+"r": "b",
+"t": "other"
+},
+{
+"_id": 5,
+"r": "c",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"r": {
+"$in": [
+"a",
+"b"
+]
+},
+"$text": {
+"$search": "world"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_missing_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": "a",
+"t": "hello world"
+},
+{
+"_id": 2,
+"r": "a",
+"t": "hello there"
+},
+{
+"_id": 3,
+"r": "b",
+"t": "hello world"
+},
+{
+"_id": 4,
+"r": "b",
+"t": "other"
+},
+{
+"_id": 5,
+"r": "c",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_range_is_not_equality_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": "a",
+"t": "hello world"
+},
+{
+"_id": 2,
+"r": "a",
+"t": "hello there"
+},
+{
+"_id": 3,
+"r": "b",
+"t": "hello world"
+},
+{
+"_id": 4,
+"r": "b",
+"t": "other"
+},
+{
+"_id": 5,
+"r": "c",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"r": {
+"$gt": "a"
+},
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.prefix_with_extra_filter",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": "a",
+"t": "hello world"
+},
+{
+"_id": 2,
+"r": "a",
+"t": "hello there"
+},
+{
+"_id": 3,
+"r": "b",
+"t": "hello world"
+},
+{
+"_id": 4,
+"r": "b",
+"t": "other"
+},
+{
+"_id": 5,
+"r": "c",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"r": "a",
+"$text": {
+"$search": "hello"
+},
+"_id": {
+"$gt": 1
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_and_and",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": "a",
+"t": "hello world"
+},
+{
+"_id": 2,
+"r": "a",
+"t": "hello there"
+},
+{
+"_id": 3,
+"r": "b",
+"t": "hello world"
+},
+{
+"_id": 4,
+"r": "b",
+"t": "other"
+},
+{
+"_id": 5,
+"r": "c",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$and": [
+{
+"r": "b"
+},
+{
+"$text": {
+"$search": "hello"
+}
+}
+]
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.suffix_index_still_works",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+],
+[
+"s",
+1
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "hello",
+"s": 1
+},
+{
+"_id": 2,
+"t": "hello",
+"s": 2
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_numeric_values",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"n",
+-1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"n": 5,
+"t": "hello"
+},
+{
+"_id": 2,
+"n": 6,
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"n": 5,
+"$text": {
+"$search": "hello"
+}
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.prefix_array_values",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"r",
+1
+],
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"r": [
+"a",
+"b"
+],
+"t": "hello"
+},
+{
+"_id": 2,
+"r": "b",
+"t": "hello"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"r": "a",
+"$text": {
+"$search": "hello"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.sort_by_score",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello world"
+}
+},
+"sort": {
+"s": {
+"$meta": "textScore"
+},
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.sort_by_score_limit",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick brown fox",
+"limit": 3
+}
+},
+"sort": {
+"s": {
+"$meta": "textScore"
+},
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.sort_by_score_skip",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick brown"
+}
+},
+"sort": {
+"x": {
+"$meta": "textScore"
+},
+"_id": 1
+},
+"skip": 2,
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.meta_projection_with_inclusion",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"t": 1,
+"score": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.meta_projection_with_exclusion",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"t": 0,
+"score": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.meta_projection_id_off",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 0,
+"score": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.no_meta_no_score_field",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+}
+},
+"sort": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.meta_without_text_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.meta_sort_without_text_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"sort": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.meta_unknown_projection_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+}
+},
+"projection": {
+"s": {
+"$meta": "bogus"
+}
+}
+}
+]
+},
+{
+"name": "text.find_one_with_text",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find_one",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.count_with_text",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+}
+}
+}
+]
+},
+{
+"name": "text.count_with_text_and_filter",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+},
+"_id": {
+"$gt": 2
+}
+}
+}
+]
+},
+{
+"name": "text.distinct_with_text",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "distinct",
+"coll": "c",
+"key": "_id",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+}
+}
+]
+},
+{
+"name": "text.text_and_other_conditions",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick"
+},
+"t": {
+"@@regex": "^the",
+"@@options": "i"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.text_with_and_operator",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$and": [
+{
+"$text": {
+"$search": "brown"
+}
+},
+{
+"_id": {
+"$lt": 4
+}
+}
+]
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.text_with_hint",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "brown"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+},
+"hint": "t_text"
+}
+]
+},
+{
+"name": "text.update_many_with_text_filter",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "update_many",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "hello"
+}
+},
+"update": {
+"$set": {
+"seen": true
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"seen": true
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.delete_many_with_text_filter",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "delete_many",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "fox"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.find_one_and_update_with_text",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find_one_and_update",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"update": {
+"$set": {
+"seen": 1
+}
+},
+"return_document": "after",
+"projection": {
+"seen": 1
+}
+}
+]
+},
+{
+"name": "text.insert_after_index_creation",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "alpha"
+}
+],
+"ordered": true
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 2,
+"t": "alpha beta"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "alpha"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "beta"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.index_built_on_existing_documents",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "quick fox"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.update_changes_terms",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "alpha"
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"$set": {
+"t": "beta"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "alpha"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "beta"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.update_unset_removes_terms",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "alpha"
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"$unset": {
+"t": ""
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "alpha"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.replace_changes_terms",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "alpha"
+}
+],
+"ordered": true
+},
+{
+"op": "replace_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"t": "gamma delta"
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "alpha"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "delta"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.delete_removes_terms",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "alpha"
+},
+{
+"_id": 2,
+"t": "alpha"
+}
+],
+"ordered": true
+},
+{
+"op": "delete_one",
+"coll": "c",
+"filter": {
+"_id": 1
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "alpha"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.upsert_into_text_index",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 9
+},
+"update": {
+"$set": {
+"t": "omega"
+}
+},
+"upsert": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "omega"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_override_update",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "chevaux"
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"$set": {
+"language": "french"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "cheval"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "chevaux"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.language_override_bad_on_update_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "x"
+}
+],
+"ordered": true
+},
+{
+"op": "update_one",
+"coll": "c",
+"filter": {
+"_id": 1
+},
+"update": {
+"$set": {
+"language": "klingon"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "x"
+}
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.validate_text_index",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "command",
+"cmd": {
+"validate": "c"
+},
+"pick": [
+"ok",
+"valid"
+]
+}
+]
+},
+{
+"name": "text.coll_stats_counts_text_index",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "command",
+"cmd": {
+"collStats": "c"
+},
+"pick": [
+"ok",
+"nindexes"
+]
+}
+]
+},
+{
+"name": "text.many_documents",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "word1 common plain"
+},
+{
+"_id": 2,
+"t": "word2 common plain"
+},
+{
+"_id": 3,
+"t": "word3 common plain"
+},
+{
+"_id": 4,
+"t": "word4 common plain"
+},
+{
+"_id": 5,
+"t": "word5 common plain"
+},
+{
+"_id": 6,
+"t": "word6 common plain"
+},
+{
+"_id": 7,
+"t": "word7 common plain"
+},
+{
+"_id": 8,
+"t": "word8 common plain"
+},
+{
+"_id": 9,
+"t": "word9 common plain"
+},
+{
+"_id": 10,
+"t": "word10 common plain"
+},
+{
+"_id": 11,
+"t": "word11 common plain"
+},
+{
+"_id": 12,
+"t": "word12 common plain"
+},
+{
+"_id": 13,
+"t": "word13 common plain"
+},
+{
+"_id": 14,
+"t": "word14 common plain"
+},
+{
+"_id": 15,
+"t": "word15 common plain"
+},
+{
+"_id": 16,
+"t": "word16 common plain"
+},
+{
+"_id": 17,
+"t": "word0 common plain"
+},
+{
+"_id": 18,
+"t": "word1 common plain"
+},
+{
+"_id": 19,
+"t": "word2 common plain"
+},
+{
+"_id": 20,
+"t": "word3 common plain"
+},
+{
+"_id": 21,
+"t": "word4 common plain"
+},
+{
+"_id": 22,
+"t": "word5 common plain"
+},
+{
+"_id": 23,
+"t": "word6 common plain"
+},
+{
+"_id": 24,
+"t": "word7 common plain"
+},
+{
+"_id": 25,
+"t": "word8 common plain"
+},
+{
+"_id": 26,
+"t": "word9 common plain"
+},
+{
+"_id": 27,
+"t": "word10 common plain"
+},
+{
+"_id": 28,
+"t": "word11 common plain"
+},
+{
+"_id": 29,
+"t": "word12 common plain"
+},
+{
+"_id": 30,
+"t": "word13 common plain"
+},
+{
+"_id": 31,
+"t": "word14 common plain"
+},
+{
+"_id": 32,
+"t": "word15 common plain"
+},
+{
+"_id": 33,
+"t": "word16 common plain"
+},
+{
+"_id": 34,
+"t": "word0 common plain"
+},
+{
+"_id": 35,
+"t": "word1 common plain"
+},
+{
+"_id": 36,
+"t": "word2 common plain"
+},
+{
+"_id": 37,
+"t": "word3 common plain"
+},
+{
+"_id": 38,
+"t": "word4 common plain"
+},
+{
+"_id": 39,
+"t": "word5 common plain"
+},
+{
+"_id": 40,
+"t": "word6 common plain"
+},
+{
+"_id": 41,
+"t": "word7 common plain"
+},
+{
+"_id": 42,
+"t": "word8 common plain"
+},
+{
+"_id": 43,
+"t": "word9 common plain"
+},
+{
+"_id": 44,
+"t": "word10 common plain"
+},
+{
+"_id": 45,
+"t": "word11 common plain"
+},
+{
+"_id": 46,
+"t": "word12 common plain"
+},
+{
+"_id": 47,
+"t": "word13 common plain"
+},
+{
+"_id": 48,
+"t": "word14 common plain"
+},
+{
+"_id": 49,
+"t": "word15 common plain"
+},
+{
+"_id": 50,
+"t": "word16 common rare"
+},
+{
+"_id": 51,
+"t": "word0 common plain"
+},
+{
+"_id": 52,
+"t": "word1 common plain"
+},
+{
+"_id": 53,
+"t": "word2 common plain"
+},
+{
+"_id": 54,
+"t": "word3 common plain"
+},
+{
+"_id": 55,
+"t": "word4 common plain"
+},
+{
+"_id": 56,
+"t": "word5 common plain"
+},
+{
+"_id": 57,
+"t": "word6 common plain"
+},
+{
+"_id": 58,
+"t": "word7 common plain"
+},
+{
+"_id": 59,
+"t": "word8 common plain"
+},
+{
+"_id": 60,
+"t": "word9 common plain"
+},
+{
+"_id": 61,
+"t": "word10 common plain"
+},
+{
+"_id": 62,
+"t": "word11 common plain"
+},
+{
+"_id": 63,
+"t": "word12 common plain"
+},
+{
+"_id": 64,
+"t": "word13 common plain"
+},
+{
+"_id": 65,
+"t": "word14 common plain"
+},
+{
+"_id": 66,
+"t": "word15 common plain"
+},
+{
+"_id": 67,
+"t": "word16 common plain"
+},
+{
+"_id": 68,
+"t": "word0 common plain"
+},
+{
+"_id": 69,
+"t": "word1 common plain"
+},
+{
+"_id": 70,
+"t": "word2 common plain"
+},
+{
+"_id": 71,
+"t": "word3 common plain"
+},
+{
+"_id": 72,
+"t": "word4 common plain"
+},
+{
+"_id": 73,
+"t": "word5 common plain"
+},
+{
+"_id": 74,
+"t": "word6 common plain"
+},
+{
+"_id": 75,
+"t": "word7 common plain"
+},
+{
+"_id": 76,
+"t": "word8 common plain"
+},
+{
+"_id": 77,
+"t": "word9 common plain"
+},
+{
+"_id": 78,
+"t": "word10 common plain"
+},
+{
+"_id": 79,
+"t": "word11 common plain"
+},
+{
+"_id": 80,
+"t": "word12 common plain"
+},
+{
+"_id": 81,
+"t": "word13 common plain"
+},
+{
+"_id": 82,
+"t": "word14 common plain"
+},
+{
+"_id": 83,
+"t": "word15 common plain"
+},
+{
+"_id": 84,
+"t": "word16 common plain"
+},
+{
+"_id": 85,
+"t": "word0 common plain"
+},
+{
+"_id": 86,
+"t": "word1 common plain"
+},
+{
+"_id": 87,
+"t": "word2 common plain"
+},
+{
+"_id": 88,
+"t": "word3 common plain"
+},
+{
+"_id": 89,
+"t": "word4 common plain"
+},
+{
+"_id": 90,
+"t": "word5 common plain"
+},
+{
+"_id": 91,
+"t": "word6 common plain"
+},
+{
+"_id": 92,
+"t": "word7 common plain"
+},
+{
+"_id": 93,
+"t": "word8 common plain"
+},
+{
+"_id": 94,
+"t": "word9 common plain"
+},
+{
+"_id": 95,
+"t": "word10 common plain"
+},
+{
+"_id": 96,
+"t": "word11 common plain"
+},
+{
+"_id": 97,
+"t": "word12 common plain"
+},
+{
+"_id": 98,
+"t": "word13 common plain"
+},
+{
+"_id": 99,
+"t": "word14 common plain"
+},
+{
+"_id": 100,
+"t": "word15 common rare"
+},
+{
+"_id": 101,
+"t": "word16 common plain"
+},
+{
+"_id": 102,
+"t": "word0 common plain"
+},
+{
+"_id": 103,
+"t": "word1 common plain"
+},
+{
+"_id": 104,
+"t": "word2 common plain"
+},
+{
+"_id": 105,
+"t": "word3 common plain"
+},
+{
+"_id": 106,
+"t": "word4 common plain"
+},
+{
+"_id": 107,
+"t": "word5 common plain"
+},
+{
+"_id": 108,
+"t": "word6 common plain"
+},
+{
+"_id": 109,
+"t": "word7 common plain"
+},
+{
+"_id": 110,
+"t": "word8 common plain"
+},
+{
+"_id": 111,
+"t": "word9 common plain"
+},
+{
+"_id": 112,
+"t": "word10 common plain"
+},
+{
+"_id": 113,
+"t": "word11 common plain"
+},
+{
+"_id": 114,
+"t": "word12 common plain"
+},
+{
+"_id": 115,
+"t": "word13 common plain"
+},
+{
+"_id": 116,
+"t": "word14 common plain"
+},
+{
+"_id": 117,
+"t": "word15 common plain"
+},
+{
+"_id": 118,
+"t": "word16 common plain"
+},
+{
+"_id": 119,
+"t": "word0 common plain"
+},
+{
+"_id": 120,
+"t": "word1 common plain"
+},
+{
+"_id": 121,
+"t": "word2 common plain"
+},
+{
+"_id": 122,
+"t": "word3 common plain"
+},
+{
+"_id": 123,
+"t": "word4 common plain"
+},
+{
+"_id": 124,
+"t": "word5 common plain"
+},
+{
+"_id": 125,
+"t": "word6 common plain"
+},
+{
+"_id": 126,
+"t": "word7 common plain"
+},
+{
+"_id": 127,
+"t": "word8 common plain"
+},
+{
+"_id": 128,
+"t": "word9 common plain"
+},
+{
+"_id": 129,
+"t": "word10 common plain"
+},
+{
+"_id": 130,
+"t": "word11 common plain"
+},
+{
+"_id": 131,
+"t": "word12 common plain"
+},
+{
+"_id": 132,
+"t": "word13 common plain"
+},
+{
+"_id": 133,
+"t": "word14 common plain"
+},
+{
+"_id": 134,
+"t": "word15 common plain"
+},
+{
+"_id": 135,
+"t": "word16 common plain"
+},
+{
+"_id": 136,
+"t": "word0 common plain"
+},
+{
+"_id": 137,
+"t": "word1 common plain"
+},
+{
+"_id": 138,
+"t": "word2 common plain"
+},
+{
+"_id": 139,
+"t": "word3 common plain"
+},
+{
+"_id": 140,
+"t": "word4 common plain"
+},
+{
+"_id": 141,
+"t": "word5 common plain"
+},
+{
+"_id": 142,
+"t": "word6 common plain"
+},
+{
+"_id": 143,
+"t": "word7 common plain"
+},
+{
+"_id": 144,
+"t": "word8 common plain"
+},
+{
+"_id": 145,
+"t": "word9 common plain"
+},
+{
+"_id": 146,
+"t": "word10 common plain"
+},
+{
+"_id": 147,
+"t": "word11 common plain"
+},
+{
+"_id": 148,
+"t": "word12 common plain"
+},
+{
+"_id": 149,
+"t": "word13 common plain"
+},
+{
+"_id": 150,
+"t": "word14 common rare"
+},
+{
+"_id": 151,
+"t": "word15 common plain"
+},
+{
+"_id": 152,
+"t": "word16 common plain"
+},
+{
+"_id": 153,
+"t": "word0 common plain"
+},
+{
+"_id": 154,
+"t": "word1 common plain"
+},
+{
+"_id": 155,
+"t": "word2 common plain"
+},
+{
+"_id": 156,
+"t": "word3 common plain"
+},
+{
+"_id": 157,
+"t": "word4 common plain"
+},
+{
+"_id": 158,
+"t": "word5 common plain"
+},
+{
+"_id": 159,
+"t": "word6 common plain"
+},
+{
+"_id": 160,
+"t": "word7 common plain"
+},
+{
+"_id": 161,
+"t": "word8 common plain"
+},
+{
+"_id": 162,
+"t": "word9 common plain"
+},
+{
+"_id": 163,
+"t": "word10 common plain"
+},
+{
+"_id": 164,
+"t": "word11 common plain"
+},
+{
+"_id": 165,
+"t": "word12 common plain"
+},
+{
+"_id": 166,
+"t": "word13 common plain"
+},
+{
+"_id": 167,
+"t": "word14 common plain"
+},
+{
+"_id": 168,
+"t": "word15 common plain"
+},
+{
+"_id": 169,
+"t": "word16 common plain"
+},
+{
+"_id": 170,
+"t": "word0 common plain"
+},
+{
+"_id": 171,
+"t": "word1 common plain"
+},
+{
+"_id": 172,
+"t": "word2 common plain"
+},
+{
+"_id": 173,
+"t": "word3 common plain"
+},
+{
+"_id": 174,
+"t": "word4 common plain"
+},
+{
+"_id": 175,
+"t": "word5 common plain"
+},
+{
+"_id": 176,
+"t": "word6 common plain"
+},
+{
+"_id": 177,
+"t": "word7 common plain"
+},
+{
+"_id": 178,
+"t": "word8 common plain"
+},
+{
+"_id": 179,
+"t": "word9 common plain"
+},
+{
+"_id": 180,
+"t": "word10 common plain"
+},
+{
+"_id": 181,
+"t": "word11 common plain"
+},
+{
+"_id": 182,
+"t": "word12 common plain"
+},
+{
+"_id": 183,
+"t": "word13 common plain"
+},
+{
+"_id": 184,
+"t": "word14 common plain"
+},
+{
+"_id": 185,
+"t": "word15 common plain"
+},
+{
+"_id": 186,
+"t": "word16 common plain"
+},
+{
+"_id": 187,
+"t": "word0 common plain"
+},
+{
+"_id": 188,
+"t": "word1 common plain"
+},
+{
+"_id": 189,
+"t": "word2 common plain"
+},
+{
+"_id": 190,
+"t": "word3 common plain"
+},
+{
+"_id": 191,
+"t": "word4 common plain"
+},
+{
+"_id": 192,
+"t": "word5 common plain"
+},
+{
+"_id": 193,
+"t": "word6 common plain"
+},
+{
+"_id": 194,
+"t": "word7 common plain"
+},
+{
+"_id": 195,
+"t": "word8 common plain"
+},
+{
+"_id": 196,
+"t": "word9 common plain"
+},
+{
+"_id": 197,
+"t": "word10 common plain"
+},
+{
+"_id": 198,
+"t": "word11 common plain"
+},
+{
+"_id": 199,
+"t": "word12 common plain"
+},
+{
+"_id": 200,
+"t": "word13 common rare"
+},
+{
+"_id": 201,
+"t": "word14 common plain"
+},
+{
+"_id": 202,
+"t": "word15 common plain"
+},
+{
+"_id": 203,
+"t": "word16 common plain"
+},
+{
+"_id": 204,
+"t": "word0 common plain"
+},
+{
+"_id": 205,
+"t": "word1 common plain"
+},
+{
+"_id": 206,
+"t": "word2 common plain"
+},
+{
+"_id": 207,
+"t": "word3 common plain"
+},
+{
+"_id": 208,
+"t": "word4 common plain"
+},
+{
+"_id": 209,
+"t": "word5 common plain"
+},
+{
+"_id": 210,
+"t": "word6 common plain"
+},
+{
+"_id": 211,
+"t": "word7 common plain"
+},
+{
+"_id": 212,
+"t": "word8 common plain"
+},
+{
+"_id": 213,
+"t": "word9 common plain"
+},
+{
+"_id": 214,
+"t": "word10 common plain"
+},
+{
+"_id": 215,
+"t": "word11 common plain"
+},
+{
+"_id": 216,
+"t": "word12 common plain"
+},
+{
+"_id": 217,
+"t": "word13 common plain"
+},
+{
+"_id": 218,
+"t": "word14 common plain"
+},
+{
+"_id": 219,
+"t": "word15 common plain"
+},
+{
+"_id": 220,
+"t": "word16 common plain"
+},
+{
+"_id": 221,
+"t": "word0 common plain"
+},
+{
+"_id": 222,
+"t": "word1 common plain"
+},
+{
+"_id": 223,
+"t": "word2 common plain"
+},
+{
+"_id": 224,
+"t": "word3 common plain"
+},
+{
+"_id": 225,
+"t": "word4 common plain"
+},
+{
+"_id": 226,
+"t": "word5 common plain"
+},
+{
+"_id": 227,
+"t": "word6 common plain"
+},
+{
+"_id": 228,
+"t": "word7 common plain"
+},
+{
+"_id": 229,
+"t": "word8 common plain"
+},
+{
+"_id": 230,
+"t": "word9 common plain"
+},
+{
+"_id": 231,
+"t": "word10 common plain"
+},
+{
+"_id": 232,
+"t": "word11 common plain"
+},
+{
+"_id": 233,
+"t": "word12 common plain"
+},
+{
+"_id": 234,
+"t": "word13 common plain"
+},
+{
+"_id": 235,
+"t": "word14 common plain"
+},
+{
+"_id": 236,
+"t": "word15 common plain"
+},
+{
+"_id": 237,
+"t": "word16 common plain"
+},
+{
+"_id": 238,
+"t": "word0 common plain"
+},
+{
+"_id": 239,
+"t": "word1 common plain"
+},
+{
+"_id": 240,
+"t": "word2 common plain"
+},
+{
+"_id": 241,
+"t": "word3 common plain"
+},
+{
+"_id": 242,
+"t": "word4 common plain"
+},
+{
+"_id": 243,
+"t": "word5 common plain"
+},
+{
+"_id": 244,
+"t": "word6 common plain"
+},
+{
+"_id": 245,
+"t": "word7 common plain"
+},
+{
+"_id": 246,
+"t": "word8 common plain"
+},
+{
+"_id": 247,
+"t": "word9 common plain"
+},
+{
+"_id": 248,
+"t": "word10 common plain"
+},
+{
+"_id": 249,
+"t": "word11 common plain"
+},
+{
+"_id": 250,
+"t": "word12 common rare"
+},
+{
+"_id": 251,
+"t": "word13 common plain"
+},
+{
+"_id": 252,
+"t": "word14 common plain"
+},
+{
+"_id": 253,
+"t": "word15 common plain"
+},
+{
+"_id": 254,
+"t": "word16 common plain"
+},
+{
+"_id": 255,
+"t": "word0 common plain"
+},
+{
+"_id": 256,
+"t": "word1 common plain"
+},
+{
+"_id": 257,
+"t": "word2 common plain"
+},
+{
+"_id": 258,
+"t": "word3 common plain"
+},
+{
+"_id": 259,
+"t": "word4 common plain"
+},
+{
+"_id": 260,
+"t": "word5 common plain"
+},
+{
+"_id": 261,
+"t": "word6 common plain"
+},
+{
+"_id": 262,
+"t": "word7 common plain"
+},
+{
+"_id": 263,
+"t": "word8 common plain"
+},
+{
+"_id": 264,
+"t": "word9 common plain"
+},
+{
+"_id": 265,
+"t": "word10 common plain"
+},
+{
+"_id": 266,
+"t": "word11 common plain"
+},
+{
+"_id": 267,
+"t": "word12 common plain"
+},
+{
+"_id": 268,
+"t": "word13 common plain"
+},
+{
+"_id": 269,
+"t": "word14 common plain"
+},
+{
+"_id": 270,
+"t": "word15 common plain"
+},
+{
+"_id": 271,
+"t": "word16 common plain"
+},
+{
+"_id": 272,
+"t": "word0 common plain"
+},
+{
+"_id": 273,
+"t": "word1 common plain"
+},
+{
+"_id": 274,
+"t": "word2 common plain"
+},
+{
+"_id": 275,
+"t": "word3 common plain"
+},
+{
+"_id": 276,
+"t": "word4 common plain"
+},
+{
+"_id": 277,
+"t": "word5 common plain"
+},
+{
+"_id": 278,
+"t": "word6 common plain"
+},
+{
+"_id": 279,
+"t": "word7 common plain"
+},
+{
+"_id": 280,
+"t": "word8 common plain"
+},
+{
+"_id": 281,
+"t": "word9 common plain"
+},
+{
+"_id": 282,
+"t": "word10 common plain"
+},
+{
+"_id": 283,
+"t": "word11 common plain"
+},
+{
+"_id": 284,
+"t": "word12 common plain"
+},
+{
+"_id": 285,
+"t": "word13 common plain"
+},
+{
+"_id": 286,
+"t": "word14 common plain"
+},
+{
+"_id": 287,
+"t": "word15 common plain"
+},
+{
+"_id": 288,
+"t": "word16 common plain"
+},
+{
+"_id": 289,
+"t": "word0 common plain"
+},
+{
+"_id": 290,
+"t": "word1 common plain"
+},
+{
+"_id": 291,
+"t": "word2 common plain"
+},
+{
+"_id": 292,
+"t": "word3 common plain"
+},
+{
+"_id": 293,
+"t": "word4 common plain"
+},
+{
+"_id": 294,
+"t": "word5 common plain"
+},
+{
+"_id": 295,
+"t": "word6 common plain"
+},
+{
+"_id": 296,
+"t": "word7 common plain"
+},
+{
+"_id": 297,
+"t": "word8 common plain"
+},
+{
+"_id": 298,
+"t": "word9 common plain"
+},
+{
+"_id": 299,
+"t": "word10 common plain"
+},
+{
+"_id": 300,
+"t": "word11 common rare"
+},
+{
+"_id": 301,
+"t": "word12 common plain"
+},
+{
+"_id": 302,
+"t": "word13 common plain"
+},
+{
+"_id": 303,
+"t": "word14 common plain"
+},
+{
+"_id": 304,
+"t": "word15 common plain"
+},
+{
+"_id": 305,
+"t": "word16 common plain"
+},
+{
+"_id": 306,
+"t": "word0 common plain"
+},
+{
+"_id": 307,
+"t": "word1 common plain"
+},
+{
+"_id": 308,
+"t": "word2 common plain"
+},
+{
+"_id": 309,
+"t": "word3 common plain"
+},
+{
+"_id": 310,
+"t": "word4 common plain"
+},
+{
+"_id": 311,
+"t": "word5 common plain"
+},
+{
+"_id": 312,
+"t": "word6 common plain"
+},
+{
+"_id": 313,
+"t": "word7 common plain"
+},
+{
+"_id": 314,
+"t": "word8 common plain"
+},
+{
+"_id": 315,
+"t": "word9 common plain"
+},
+{
+"_id": 316,
+"t": "word10 common plain"
+},
+{
+"_id": 317,
+"t": "word11 common plain"
+},
+{
+"_id": 318,
+"t": "word12 common plain"
+},
+{
+"_id": 319,
+"t": "word13 common plain"
+},
+{
+"_id": 320,
+"t": "word14 common plain"
+},
+{
+"_id": 321,
+"t": "word15 common plain"
+},
+{
+"_id": 322,
+"t": "word16 common plain"
+},
+{
+"_id": 323,
+"t": "word0 common plain"
+},
+{
+"_id": 324,
+"t": "word1 common plain"
+},
+{
+"_id": 325,
+"t": "word2 common plain"
+},
+{
+"_id": 326,
+"t": "word3 common plain"
+},
+{
+"_id": 327,
+"t": "word4 common plain"
+},
+{
+"_id": 328,
+"t": "word5 common plain"
+},
+{
+"_id": 329,
+"t": "word6 common plain"
+},
+{
+"_id": 330,
+"t": "word7 common plain"
+},
+{
+"_id": 331,
+"t": "word8 common plain"
+},
+{
+"_id": 332,
+"t": "word9 common plain"
+},
+{
+"_id": 333,
+"t": "word10 common plain"
+},
+{
+"_id": 334,
+"t": "word11 common plain"
+},
+{
+"_id": 335,
+"t": "word12 common plain"
+},
+{
+"_id": 336,
+"t": "word13 common plain"
+},
+{
+"_id": 337,
+"t": "word14 common plain"
+},
+{
+"_id": 338,
+"t": "word15 common plain"
+},
+{
+"_id": 339,
+"t": "word16 common plain"
+},
+{
+"_id": 340,
+"t": "word0 common plain"
+},
+{
+"_id": 341,
+"t": "word1 common plain"
+},
+{
+"_id": 342,
+"t": "word2 common plain"
+},
+{
+"_id": 343,
+"t": "word3 common plain"
+},
+{
+"_id": 344,
+"t": "word4 common plain"
+},
+{
+"_id": 345,
+"t": "word5 common plain"
+},
+{
+"_id": 346,
+"t": "word6 common plain"
+},
+{
+"_id": 347,
+"t": "word7 common plain"
+},
+{
+"_id": 348,
+"t": "word8 common plain"
+},
+{
+"_id": 349,
+"t": "word9 common plain"
+},
+{
+"_id": 350,
+"t": "word10 common rare"
+},
+{
+"_id": 351,
+"t": "word11 common plain"
+},
+{
+"_id": 352,
+"t": "word12 common plain"
+},
+{
+"_id": 353,
+"t": "word13 common plain"
+},
+{
+"_id": 354,
+"t": "word14 common plain"
+},
+{
+"_id": 355,
+"t": "word15 common plain"
+},
+{
+"_id": 356,
+"t": "word16 common plain"
+},
+{
+"_id": 357,
+"t": "word0 common plain"
+},
+{
+"_id": 358,
+"t": "word1 common plain"
+},
+{
+"_id": 359,
+"t": "word2 common plain"
+},
+{
+"_id": 360,
+"t": "word3 common plain"
+},
+{
+"_id": 361,
+"t": "word4 common plain"
+},
+{
+"_id": 362,
+"t": "word5 common plain"
+},
+{
+"_id": 363,
+"t": "word6 common plain"
+},
+{
+"_id": 364,
+"t": "word7 common plain"
+},
+{
+"_id": 365,
+"t": "word8 common plain"
+},
+{
+"_id": 366,
+"t": "word9 common plain"
+},
+{
+"_id": 367,
+"t": "word10 common plain"
+},
+{
+"_id": 368,
+"t": "word11 common plain"
+},
+{
+"_id": 369,
+"t": "word12 common plain"
+},
+{
+"_id": 370,
+"t": "word13 common plain"
+},
+{
+"_id": 371,
+"t": "word14 common plain"
+},
+{
+"_id": 372,
+"t": "word15 common plain"
+},
+{
+"_id": 373,
+"t": "word16 common plain"
+},
+{
+"_id": 374,
+"t": "word0 common plain"
+},
+{
+"_id": 375,
+"t": "word1 common plain"
+},
+{
+"_id": 376,
+"t": "word2 common plain"
+},
+{
+"_id": 377,
+"t": "word3 common plain"
+},
+{
+"_id": 378,
+"t": "word4 common plain"
+},
+{
+"_id": 379,
+"t": "word5 common plain"
+},
+{
+"_id": 380,
+"t": "word6 common plain"
+},
+{
+"_id": 381,
+"t": "word7 common plain"
+},
+{
+"_id": 382,
+"t": "word8 common plain"
+},
+{
+"_id": 383,
+"t": "word9 common plain"
+},
+{
+"_id": 384,
+"t": "word10 common plain"
+},
+{
+"_id": 385,
+"t": "word11 common plain"
+},
+{
+"_id": 386,
+"t": "word12 common plain"
+},
+{
+"_id": 387,
+"t": "word13 common plain"
+},
+{
+"_id": 388,
+"t": "word14 common plain"
+},
+{
+"_id": 389,
+"t": "word15 common plain"
+},
+{
+"_id": 390,
+"t": "word16 common plain"
+},
+{
+"_id": 391,
+"t": "word0 common plain"
+},
+{
+"_id": 392,
+"t": "word1 common plain"
+},
+{
+"_id": 393,
+"t": "word2 common plain"
+},
+{
+"_id": 394,
+"t": "word3 common plain"
+},
+{
+"_id": 395,
+"t": "word4 common plain"
+},
+{
+"_id": 396,
+"t": "word5 common plain"
+},
+{
+"_id": 397,
+"t": "word6 common plain"
+},
+{
+"_id": 398,
+"t": "word7 common plain"
+},
+{
+"_id": 399,
+"t": "word8 common plain"
+},
+{
+"_id": 400,
+"t": "word9 common rare"
+}
+],
+"ordered": true
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "rare"
+}
+}
+},
+{
+"op": "count_documents",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "word3 word5"
+}
+}
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "rare word1",
+"limit": 5
+}
+},
+"sort": {
+"s": {
+"$meta": "textScore"
+},
+"_id": 1
+},
+"projection": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+},
+{
+"name": "text.agg_match_text_first",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_project_meta",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$project": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_addfields_meta",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$addFields": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+},
+{
+"$project": {
+"s": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_sort_meta",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$sort": {
+"s": {
+"$meta": "textScore"
+},
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_meta_survives_project_and_match",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$project": {
+"t": 1
+}
+},
+{
+"$match": {
+"_id": {
+"$lt": 8
+}
+}
+},
+{
+"$addFields": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_group_sum_of_scores",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$addFields": {
+"s": {
+"$meta": "textScore"
+}
+}
+},
+{
+"$group": {
+"_id": null,
+"total": {
+"$sum": "$s"
+},
+"n": {
+"$sum": 1
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_text_not_first_stage_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"_id": {
+"$lt": 8
+}
+}
+},
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_meta_without_text_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$project": {
+"s": {
+"$meta": "textScore"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_text_no_index_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_text_with_limit",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$sort": {
+"s": {
+"$meta": "textScore"
+},
+"_id": 1
+}
+},
+{
+"$limit": 2
+},
+{
+"$project": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_text_and_lookup",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "insert_many",
+"coll": "o",
+"docs": [
+{
+"_id": 1,
+"k": 1
+},
+{
+"_id": 2,
+"k": 2
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "o",
+"pipeline": [
+{
+"$lookup": {
+"from": "c",
+"localField": "k",
+"foreignField": "_id",
+"as": "j"
+}
+},
+{
+"$project": {
+"j._id": 1
+}
+},
+{
+"$sort": {
+"_id": 1
+}
+}
+]
+}
+]
+},
+{
+"name": "text.agg_count_after_text",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "aggregate",
+"coll": "c",
+"pipeline": [
+{
+"$match": {
+"$text": {
+"$search": "quick brown"
+}
+}
+},
+{
+"$count": "n"
+}
+]
+}
+]
+},
+{
+"name": "text.search_not_a_string_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": 5
+}
+}
+}
+]
+},
+{
+"name": "text.search_missing_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$language": "english"
+}
+}
+}
+]
+},
+{
+"name": "text.text_not_an_object_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": "hello"
+}
+}
+]
+},
+{
+"name": "text.language_not_a_string_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "a",
+"$language": 5
+}
+}
+}
+]
+},
+{
+"name": "text.unsupported_language_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "a",
+"$language": "klingon"
+}
+}
+}
+]
+},
+{
+"name": "text.case_sensitive_not_bool_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "a",
+"$caseSensitive": "yes"
+}
+}
+}
+]
+},
+{
+"name": "text.diacritic_sensitive_not_bool_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "a",
+"$diacriticSensitive": 1
+}
+}
+}
+]
+},
+{
+"name": "text.extra_field_in_text_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "a",
+"$bogus": 1
+}
+}
+}
+]
+},
+{
+"name": "text.text_inside_or_with_indexed_clause",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$or": [
+{
+"$text": {
+"$search": "hello"
+}
+},
+{
+"_id": 1
+}
+]
+},
+"sort": {
+"_id": 1
+},
+"projection": {
+"_id": 1
+}
+}
+]
+},
+{
+"name": "text.text_inside_nor_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$nor": [
+{
+"$text": {
+"$search": "hello"
+}
+}
+]
+}
+}
+]
+},
+{
+"name": "text.two_text_conditions_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$and": [
+{
+"$text": {
+"$search": "a"
+}
+},
+{
+"$text": {
+"$search": "b"
+}
+}
+]
+}
+}
+]
+},
+{
+"name": "text.text_with_near_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"$text": {
+"$search": "a"
+},
+"loc": {
+"$near": [
+0,
+0
+]
+}
+}
+}
+]
+},
+{
+"name": "text.text_in_field_condition_error",
+"group": "text search",
+"category": "core",
+"steps": [
+{
+"op": "create_index",
+"coll": "c",
+"keys": [
+[
+"t",
+"text"
+]
+]
+},
+{
+"op": "insert_many",
+"coll": "c",
+"docs": [
+{
+"_id": 1,
+"t": "The Quick Brown Fox"
+},
+{
+"_id": 2,
+"t": "quick brown dogs"
+},
+{
+"_id": 3,
+"t": "a lazy brown fox jumped over the fence"
+},
+{
+"_id": 4,
+"t": "na\u00efve caf\u00e9 r\u00e9sum\u00e9"
+},
+{
+"_id": 5,
+"t": "NAIVE CAFE RESUME"
+},
+{
+"_id": 6,
+"t": "brown quick"
+},
+{
+"_id": 7,
+"t": "the brown, quick fox"
+},
+{
+"_id": 8,
+"t": "hello hello hello world"
+},
+{
+"_id": 9,
+"t": [
+"hello",
+"world"
+]
+},
+{
+"_id": 10,
+"t": "Hello"
+},
+{
+"_id": 11,
+"t": ""
+},
+{
+"_id": 12
+},
+{
+"_id": 13,
+"t": 42
+},
+{
+"_id": 14,
+"t": null
+},
+{
+"_id": 15,
+"t": "running runs runner ran"
+},
+{
+"_id": 16,
+"t": "Jumping jumps jumped jumper"
+},
+{
+"_id": 17,
+"t": "don't stop believin' O'Brien's"
+},
+{
+"_id": 18,
+"t": "rock&roll e-mail foo_bar user@example.com 3.14 C++"
+}
+],
+"ordered": true
+},
+{
+"op": "find",
+"coll": "c",
+"filter": {
+"t": {
+"$text": {
+"$search": "a"
+}
+}
+}
+}
+]
 }
 ]
