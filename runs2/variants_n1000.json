@@ -1,0 +1,578 @@
+[
+  {
+    "name": "V0",
+    "desc": "writer `Db::open` + get, default settings (current behaviour)",
+    "load_secs": 19.651270011,
+    "gc_requests_total": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "storage_bytes_per_tenant_raw": 424616.475,
+    "storage_bytes_per_tenant_after_cleanup": null,
+    "storage_objects_per_tenant_final": 11.952,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "compactions": 119.324,
+      "manifest": 1445.186,
+      "wal": 209661.475
+    },
+    "wake_latency": {
+      "p50_ms": 35.917982,
+      "p99_ms": 46.152782,
+      "min_ms": 29.361721,
+      "max_ms": 47.929712,
+      "mean_ms": 36.46268705000001
+    },
+    "wake_requests_per_wake": {
+      "put": 500,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 2438,
+      "get_range": 229,
+      "head": 900,
+      "list": 297,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 100,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 739,
+      "get_range": 0,
+      "head": 0,
+      "list": 121,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      43.1,
+      19.5,
+      23.6,
+      22.3
+    ],
+    "close_shape_mean": [
+      9.5,
+      4.8,
+      4.7,
+      5.9
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 192,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    }
+  },
+  {
+    "name": "V1a",
+    "desc": "`DbReader` ManagedCheckpoint (API default) + get",
+    "load_secs": 22.526102255,
+    "gc_requests_total": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "storage_bytes_per_tenant_raw": 424614.222,
+    "storage_bytes_per_tenant_after_cleanup": null,
+    "storage_objects_per_tenant_final": 11.49,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "compactions": 110.0,
+      "manifest": 1403.228,
+      "wal": 209659.222
+    },
+    "wake_latency": {
+      "p50_ms": 16.891174,
+      "p99_ms": 26.648186,
+      "min_ms": 13.30999,
+      "max_ms": 29.187873,
+      "mean_ms": 17.295303680000004
+    },
+    "wake_requests_per_wake": {
+      "put": 100,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 799,
+      "get_range": 240,
+      "head": 1315,
+      "list": 100,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 100,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 301,
+      "get_range": 0,
+      "head": 285,
+      "list": 0,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      23.4,
+      8.0,
+      15.4,
+      10.1
+    ],
+    "close_shape_mean": [
+      8.8,
+      4.0,
+      4.8,
+      4.6
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 12,
+      "get_range": 0,
+      "head": 48,
+      "list": 0,
+      "delete": 0
+    }
+  },
+  {
+    "name": "V1b",
+    "desc": "`DbReader` FollowLatest (no object-store writes) + get",
+    "load_secs": 20.599561679,
+    "gc_requests_total": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "storage_bytes_per_tenant_raw": 424620.208,
+    "storage_bytes_per_tenant_after_cleanup": null,
+    "storage_objects_per_tenant_final": 11.312,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "compactions": 110.0,
+      "manifest": 1298.0,
+      "wal": 209665.208
+    },
+    "wake_latency": {
+      "p50_ms": 10.468300999999999,
+      "p99_ms": 17.35958,
+      "min_ms": 8.759544,
+      "max_ms": 23.162528000000002,
+      "mean_ms": 11.22398345
+    },
+    "wake_requests_per_wake": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 600,
+      "get_range": 230,
+      "head": 1282,
+      "list": 100,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 318,
+      "list": 0,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      21.2,
+      5.1,
+      16.1,
+      7.4
+    ],
+    "close_shape_mean": [
+      3.9,
+      0.0,
+      3.9,
+      0.6
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 12,
+      "get_range": 0,
+      "head": 48,
+      "list": 0,
+      "delete": 0
+    }
+  },
+  {
+    "name": "V1c",
+    "desc": "`DbReader` FollowLatest + skip_wal_replay + 1 h poll + get",
+    "load_secs": 22.265638703,
+    "gc_requests_total": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "storage_bytes_per_tenant_raw": 424610.843,
+    "storage_bytes_per_tenant_after_cleanup": null,
+    "storage_objects_per_tenant_final": 11.247,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "compactions": 110.0,
+      "manifest": 1298.0,
+      "wal": 209655.843
+    },
+    "wake_latency": {
+      "p50_ms": 9.209594,
+      "p99_ms": 14.356597,
+      "min_ms": 6.670573,
+      "max_ms": 16.842644,
+      "mean_ms": 9.351644509999995
+    },
+    "wake_requests_per_wake": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 599,
+      "get_range": 229,
+      "head": 0,
+      "list": 100,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 1,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      9.1,
+      5.1,
+      4.0,
+      6.1
+    ],
+    "close_shape_mean": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    }
+  },
+  {
+    "name": "V2",
+    "desc": "memtable-flush load + offline GC (min_age 0); writer open with in-Db GC off",
+    "load_secs": 17.319415807,
+    "gc_requests_total": {
+      "put": 2000,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 27000,
+      "get_range": 0,
+      "head": 0,
+      "list": 8000,
+      "delete": 6001
+    },
+    "storage_bytes_per_tenant_raw": 424589.868,
+    "storage_bytes_per_tenant_after_cleanup": 423610.138,
+    "storage_objects_per_tenant_final": 7.767,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "compactions": 51.324,
+      "gc": 2.0,
+      "manifest": 589.186,
+      "wal": 209577.138
+    },
+    "wake_latency": {
+      "p50_ms": 40.582208,
+      "p99_ms": 69.0611,
+      "min_ms": 34.124741,
+      "max_ms": 83.34708,
+      "mean_ms": 42.23891715
+    },
+    "wake_requests_per_wake": {
+      "put": 500,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 2200,
+      "get_range": 433,
+      "head": 1006,
+      "list": 200,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 100,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 100,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      43.0,
+      20.3,
+      22.7,
+      22.9
+    ],
+    "close_shape_mean": [
+      2.2,
+      1.9,
+      0.3,
+      2.0
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 192,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    }
+  },
+  {
+    "name": "V3",
+    "desc": "V2 + 1 h manifest/compactor poll intervals",
+    "load_secs": 18.200255313,
+    "gc_requests_total": {
+      "put": 2000,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 27000,
+      "get_range": 0,
+      "head": 0,
+      "list": 8000,
+      "delete": 6000
+    },
+    "storage_bytes_per_tenant_raw": 424589.571,
+    "storage_bytes_per_tenant_after_cleanup": 423667.571,
+    "storage_objects_per_tenant_final": 7.767,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "compactions": 51.324,
+      "gc": 2.0,
+      "manifest": 589.186,
+      "wal": 209634.571
+    },
+    "wake_latency": {
+      "p50_ms": 36.968947,
+      "p99_ms": 60.747516000000005,
+      "min_ms": 29.121421,
+      "max_ms": 94.867266,
+      "mean_ms": 38.662999310000004
+    },
+    "wake_requests_per_wake": {
+      "put": 500,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 2199,
+      "get_range": 437,
+      "head": 1008,
+      "list": 200,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 100,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 101,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      43.1,
+      20.5,
+      22.6,
+      23.0
+    ],
+    "close_shape_mean": [
+      2.0,
+      2.0,
+      0.0,
+      2.0
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 22,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    }
+  },
+  {
+    "name": "V4",
+    "desc": "V3 + in-Db compactor off (compaction would have to run offline)",
+    "load_secs": 13.163034526,
+    "gc_requests_total": {
+      "put": 1000,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 24000,
+      "get_range": 0,
+      "head": 0,
+      "list": 8000,
+      "delete": 3002
+    },
+    "storage_bytes_per_tenant_raw": 424341.958,
+    "storage_bytes_per_tenant_after_cleanup": 423638.518,
+    "storage_objects_per_tenant_final": 5.598,
+    "bytes_by_dir_final": {
+      "compacted": 213547.0,
+      "gc": 1.0,
+      "manifest": 530.348,
+      "wal": 209656.518
+    },
+    "wake_latency": {
+      "p50_ms": 22.734014000000002,
+      "p99_ms": 34.278873000000004,
+      "min_ms": 17.549704,
+      "max_ms": 35.959677,
+      "mean_ms": 23.288711659999986
+    },
+    "wake_requests_per_wake": {
+      "put": 200,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 700,
+      "get_range": 431,
+      "head": 1020,
+      "list": 100,
+      "delete": 0
+    },
+    "close_requests_per_wake": {
+      "put": 100,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 100,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    },
+    "wake_shape_mean": [
+      24.4,
+      10.9,
+      13.5,
+      12.9
+    ],
+    "close_shape_mean": [
+      2.0,
+      2.0,
+      0.0,
+      2.0
+    ],
+    "idle_secs": 60,
+    "idle_open_requests": {
+      "put": 0,
+      "multipart_create": 0,
+      "multipart_part": 0,
+      "multipart_complete": 0,
+      "copy": 0,
+      "get": 0,
+      "get_range": 0,
+      "head": 0,
+      "list": 0,
+      "delete": 0
+    }
+  }
+]

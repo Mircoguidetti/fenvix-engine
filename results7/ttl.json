@@ -1,0 +1,92 @@
+[
+ {
+  "min_gap_secs": 0,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 30,
+   "hintsListed": 810,
+   "due": 300,
+   "skippedOpen": 0,
+   "skippedGap": 0,
+   "wakes": 300,
+   "sessionSweeps": 3968,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2569,
+   "copy": 0,
+   "list": 2140,
+   "get": 3638,
+   "head": 1550,
+   "delete": 752,
+   "billedPutTier": 4709,
+   "billedGetTier": 5188,
+   "putBytes": 362601,
+   "getBytes": 136523
+  },
+  "wakes_per_tenant": 5.0
+ },
+ {
+  "min_gap_secs": 30,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 30,
+   "hintsListed": 810,
+   "due": 300,
+   "skippedOpen": 0,
+   "skippedGap": 250,
+   "wakes": 50,
+   "sessionSweeps": 3985,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2316,
+   "copy": 0,
+   "list": 1390,
+   "get": 3388,
+   "head": 1300,
+   "delete": 502,
+   "billedPutTier": 3706,
+   "billedGetTier": 4688,
+   "putBytes": 349617,
+   "getBytes": 136523
+  },
+  "wakes_per_tenant": 0.83
+ },
+ {
+  "min_gap_secs": 100,
+  "tenants": 60,
+  "documents_inserted": 283,
+  "documents_left_visible": 0,
+  "observed_secs": 150.0,
+  "ttl": {
+   "passes": 30,
+   "hintsListed": 810,
+   "due": 300,
+   "skippedOpen": 0,
+   "skippedGap": 280,
+   "wakes": 20,
+   "sessionSweeps": 3985,
+   "docsExpired": 283
+  },
+  "requests": {
+   "put": 2286,
+   "copy": 0,
+   "list": 1300,
+   "get": 3358,
+   "head": 1270,
+   "delete": 472,
+   "billedPutTier": 3586,
+   "billedGetTier": 4628,
+   "putBytes": 349039,
+   "getBytes": 136523
+  },
+  "wakes_per_tenant": 0.33
+ }
+]

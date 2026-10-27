@@ -1,0 +1,23 @@
+[package]
+name = "tenant-bench"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = ["mongo-server", "loadgen"]
+
+[dependencies]
+slatedb = "=0.17.0"
+object_store = { version = "=0.14.2", features = ["aws"] }
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+bytes = "1"
+futures = "0.3"
+rand = "0.8"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+
+[profile.release]
+debug = false

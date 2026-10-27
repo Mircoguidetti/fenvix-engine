@@ -1,0 +1,4906 @@
+{
+ "docs": [
+  {
+   "_id": 1,
+   "name": "Central Park",
+   "kind": "park",
+   "rating": 4.5,
+   "body": "A large public park in Manhattan. It has many trees and lakes. Visitors love the park.",
+   "tags": [
+    "green",
+    "city"
+   ],
+   "items": [
+    {
+     "name": "boat rental",
+     "price": 20
+    },
+    {
+     "name": "bike rental",
+     "price": 15
+    }
+   ],
+   "opened": {
+    "$date": "2000-06-01T00:00:00Z"
+   },
+   "loc": {
+    "type": "Point",
+    "coordinates": [
+     -73.9654,
+     40.7829
+    ]
+   },
+   "zone": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -73.9704,
+       40.777899999999995
+      ],
+      [
+       -73.9604,
+       40.777899999999995
+      ],
+      [
+       -73.9604,
+       40.7879
+      ],
+      [
+       -73.9704,
+       40.7879
+      ],
+      [
+       -73.9704,
+       40.777899999999995
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "_id": 2,
+   "name": "Prospect Park",
+   "kind": "park",
+   "rating": 4.7,
+   "body": "A public park in Brooklyn. It has a lake and a zoo.",
+   "tags": [
+    "green"
+   ],
+   "items": [
+    {
+     "name": "zoo ticket",
+     "price": 10
+    }
+   ],
+   "opened": {
+    "$date": "2001-06-01T00:00:00Z"
+   },
+   "loc": {
+    "type": "Point",
+    "coordinates": [
+     -73.969,
+     40.6602
+    ]
+   },
+   "zone": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -73.97399999999999,
+       40.6552
+      ],
+      [
+       -73.964,
+       40.6552
+      ],
+      [
+       -73.964,
+       40.665200000000006
+      ],
+      [
+       -73.97399999999999,
+       40.665200000000006
+      ],
+      [
+       -73.97399999999999,
+       40.6552
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "_id": 3,
+   "name": "Times Square",
+   "kind": "plaza",
+   "rating": 3.9,
+   "body": "A busy commercial intersection. Many theaters and shops.",
+   "tags": [
+    "city",
+    "tourist"
+   ],
+   "items": [
+    {
+     "name": "souvenir",
+     "price": 5
+    },
+    {
+     "name": "theater ticket",
+     "price": 100
+    }
+   ],
+   "opened": {
+    "$date": "1999-06-01T00:00:00Z"
+   },
+   "loc": {
+    "type": "Point",
+    "coordinates": [
+     -73.9855,
+     40.758
+    ]
+   },
+   "zone": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -73.9905,
+       40.753
+      ],
+      [
+       -73.9805,
+       40.753
+      ],
+      [
+       -73.9805,
+       40.763000000000005
+      ],
+      [
+       -73.9905,
+       40.763000000000005
+      ],
+      [
+       -73.9905,
+       40.753
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "_id": 4,
+   "name": "Statue of Liberty",
+   "kind": "monument",
+   "rating": 4.8,
+   "body": "A colossal statue on Liberty Island. Ferry tickets are needed.",
+   "tags": [],
+   "items": [
+    {
+     "name": "ferry ticket",
+     "price": 25
+    }
+   ],
+   "opened": {
+    "$date": "1886-10-28T00:00:00Z"
+   },
+   "loc": {
+    "type": "Point",
+    "coordinates": [
+     -74.0445,
+     40.6892
+    ]
+   },
+   "zone": {
+    "type": "Point",
+    "coordinates": [
+     -74.0445,
+     40.6892
+    ]
+   }
+  },
+  {
+   "_id": 5,
+   "name": "Empire State Building",
+   "kind": "monument",
+   "rating": 4.6,
+   "body": "An Art Deco skyscraper in Midtown Manhattan.",
+   "tags": [
+    "city"
+   ],
+   "items": [],
+   "opened": {
+    "$date": "1931-05-01T00:00:00Z"
+   },
+   "loc": {
+    "type": "Point",
+    "coordinates": [
+     -73.9857,
+     40.7484
+    ]
+   },
+   "zone": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -73.9867,
+      40.7474
+     ],
+     [
+      -73.9847,
+      40.7494
+     ]
+    ]
+   }
+  },
+  {
+   "_id": 6,
+   "name": "No Location",
+   "kind": "misc",
+   "rating": 2.0,
+   "body": "nothing here",
+   "tags": [],
+   "items": []
+  }
+ ],
+ "cases": [
+  {
+   "name": "near number order",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": 4.7,
+       "pivot": 0.5
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    2,
+    4,
+    5,
+    1,
+    3,
+    6
+   ]
+  },
+  {
+   "name": "near number scores",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": 4.7,
+       "pivot": 0.5
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 0.7142857142857141,
+    "2": 1.0,
+    "3": 0.3846153846153845,
+    "4": 0.8333333333333338,
+    "5": 0.8333333333333326,
+    "6": 0.15625
+   }
+  },
+  {
+   "name": "near integer origin",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": 5,
+       "pivot": 1
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    4,
+    2,
+    5,
+    1,
+    3,
+    6
+   ]
+  },
+  {
+   "name": "near date",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "opened",
+       "origin": {
+        "$date": "2000-01-01T00:00:00Z"
+       },
+       "pivot": 31536000000
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    1,
+    3,
+    2,
+    5,
+    4
+   ]
+  },
+  {
+   "name": "near date scores",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "opened",
+       "origin": {
+        "$date": "2000-01-01T00:00:00Z"
+       },
+       "pivot": 31536000000
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 0.7059961315280464,
+    "2": 0.41383219954648526,
+    "3": 0.6303972366148531,
+    "4": 0.008752577814013717,
+    "5": 0.014343537548630486
+   }
+  },
+  {
+   "name": "near geo",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "loc",
+       "origin": {
+        "type": "Point",
+        "coordinates": [
+         -73.9855,
+         40.758
+        ]
+       },
+       "pivot": 5000
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    3,
+    5,
+    1,
+    4,
+    2
+   ]
+  },
+  {
+   "name": "near geo scores",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "loc",
+       "origin": {
+        "type": "Point",
+        "coordinates": [
+         -73.9855,
+         40.758
+        ]
+       },
+       "pivot": 5000
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 0.6064160500959781,
+    "2": 0.31321550004814047,
+    "3": 1.0,
+    "4": 0.3540085470670923,
+    "5": 0.8240482742145327
+   }
+  },
+  {
+   "name": "near geo limit",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "loc",
+       "origin": {
+        "type": "Point",
+        "coordinates": [
+         -73.9855,
+         40.758
+        ]
+       },
+       "pivot": 5000
+      }
+     }
+    },
+    {
+     "$limit": 2
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    3,
+    5
+   ]
+  },
+  {
+   "name": "near wrong type",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "name",
+       "origin": 5,
+       "pivot": 1
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "near boost",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": 4.7,
+       "pivot": 0.5,
+       "score": {
+        "boost": {
+         "value": 3
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 2.1428571428571423,
+    "2": 3.0,
+    "3": 1.1538461538461535,
+    "4": 2.5000000000000013,
+    "5": 2.499999999999998,
+    "6": 0.46875
+   }
+  },
+  {
+   "name": "near in compound filter",
+   "pipeline": [
+    {
+     "$search": {
+      "compound": {
+       "must": [
+        {
+         "near": {
+          "path": "rating",
+          "origin": 4.7,
+          "pivot": 0.5
+         }
+        }
+       ],
+       "filter": [
+        {
+         "equals": {
+          "path": "kind",
+          "value": "monument"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    4,
+    5
+   ]
+  },
+  {
+   "name": "near no pivot",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": 4.7
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "near zero pivot",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": 4.7,
+       "pivot": 0
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "near no origin",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "pivot": 1
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "near bad origin",
+   "pipeline": [
+    {
+     "$search": {
+      "near": {
+       "path": "rating",
+       "origin": "x",
+       "pivot": 1
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoWithin circle",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "circle": {
+        "center": {
+         "type": "Point",
+         "coordinates": [
+          -73.9855,
+          40.758
+         ]
+        },
+        "radius": 2000
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3,
+    5
+   ]
+  },
+  {
+   "name": "geoWithin circle big",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "circle": {
+        "center": {
+         "type": "Point",
+         "coordinates": [
+          -73.9855,
+          40.758
+         ]
+        },
+        "radius": 30000
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "geoWithin circle small",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "circle": {
+        "center": {
+         "type": "Point",
+         "coordinates": [
+          -73.9855,
+          40.758
+         ]
+        },
+        "radius": 10
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3
+   ]
+  },
+  {
+   "name": "geoWithin box",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "box": {
+        "bottomLeft": {
+         "type": "Point",
+         "coordinates": [
+          -74.0,
+          40.7
+         ]
+        },
+        "topRight": {
+         "type": "Point",
+         "coordinates": [
+          -73.97,
+          40.76
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3,
+    5
+   ]
+  },
+  {
+   "name": "geoWithin polygon",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -74.0,
+           40.7
+          ],
+          [
+           -73.97,
+           40.7
+          ],
+          [
+           -73.97,
+           40.76
+          ],
+          [
+           -74.0,
+           40.76
+          ],
+          [
+           -74.0,
+           40.7
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3,
+    5
+   ]
+  },
+  {
+   "name": "geoWithin multipolygon",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+         [
+          [
+           [
+            -74.0,
+            40.7
+           ],
+           [
+            -73.97,
+            40.7
+           ],
+           [
+            -73.97,
+            40.76
+           ],
+           [
+            -74.0,
+            40.76
+           ],
+           [
+            -74.0,
+            40.7
+           ]
+          ]
+         ],
+         [
+          [
+           [
+            -73.97399999999999,
+            40.6552
+           ],
+           [
+            -73.964,
+            40.6552
+           ],
+           [
+            -73.964,
+            40.665200000000006
+           ],
+           [
+            -73.97399999999999,
+            40.665200000000006
+           ],
+           [
+            -73.97399999999999,
+            40.6552
+           ]
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2,
+    3,
+    5
+   ]
+  },
+  {
+   "name": "geoWithin in compound",
+   "pipeline": [
+    {
+     "$search": {
+      "compound": {
+       "filter": [
+        {
+         "geoWithin": {
+          "path": "loc",
+          "circle": {
+           "center": {
+            "type": "Point",
+            "coordinates": [
+             -73.9855,
+             40.758
+            ]
+           },
+           "radius": 30000
+          }
+         }
+        }
+       ],
+       "must": [
+        {
+         "text": {
+          "path": "body",
+          "query": "park"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "geoWithin ignores non points",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "zone",
+       "circle": {
+        "center": {
+         "type": "Point",
+         "coordinates": [
+          -73.9855,
+          40.758
+         ]
+        },
+        "radius": 30000
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    4
+   ]
+  },
+  {
+   "name": "geoWithin two shapes",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "box": {
+        "bottomLeft": {
+         "type": "Point",
+         "coordinates": [
+          0,
+          0
+         ]
+        },
+        "topRight": {
+         "type": "Point",
+         "coordinates": [
+          1,
+          1
+         ]
+        }
+       },
+       "circle": {
+        "center": {
+         "type": "Point",
+         "coordinates": [
+          0,
+          0
+         ]
+        },
+        "radius": 1
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoWithin point geometry",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc",
+       "geometry": {
+        "type": "Point",
+        "coordinates": [
+         0,
+         0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoWithin none",
+   "pipeline": [
+    {
+     "$search": {
+      "geoWithin": {
+       "path": "loc"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoShape intersects small",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9674,
+           40.780899999999995
+          ],
+          [
+           -73.96340000000001,
+           40.780899999999995
+          ],
+          [
+           -73.96340000000001,
+           40.7849
+          ],
+          [
+           -73.9674,
+           40.7849
+          ],
+          [
+           -73.9674,
+           40.780899999999995
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape intersects big",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9804,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7679
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape within big",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "within",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9804,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7679
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape within small",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "within",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9674,
+           40.780899999999995
+          ],
+          [
+           -73.96340000000001,
+           40.780899999999995
+          ],
+          [
+           -73.96340000000001,
+           40.7849
+          ],
+          [
+           -73.9674,
+           40.7849
+          ],
+          [
+           -73.9674,
+           40.780899999999995
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "geoShape contains small",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "contains",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9674,
+           40.780899999999995
+          ],
+          [
+           -73.96340000000001,
+           40.780899999999995
+          ],
+          [
+           -73.96340000000001,
+           40.7849
+          ],
+          [
+           -73.9674,
+           40.7849
+          ],
+          [
+           -73.9674,
+           40.780899999999995
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape contains big",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "contains",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9804,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7679
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "geoShape disjoint",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "disjoint",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9804,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7679
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "geoShape disjoint away",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "disjoint",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.01,
+           39.99
+          ],
+          [
+           -72.99,
+           39.99
+          ],
+          [
+           -72.99,
+           40.01
+          ],
+          [
+           -73.01,
+           40.01
+          ],
+          [
+           -73.01,
+           39.99
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "geoShape intersects point zone",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -74.0545,
+           40.6792
+          ],
+          [
+           -74.0345,
+           40.6792
+          ],
+          [
+           -74.0345,
+           40.6992
+          ],
+          [
+           -74.0545,
+           40.6992
+          ],
+          [
+           -74.0545,
+           40.6792
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    4
+   ]
+  },
+  {
+   "name": "geoShape intersects line zone",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.98769999999999,
+           40.746399999999994
+          ],
+          [
+           -73.9837,
+           40.746399999999994
+          ],
+          [
+           -73.9837,
+           40.7504
+          ],
+          [
+           -73.98769999999999,
+           40.7504
+          ],
+          [
+           -73.98769999999999,
+           40.746399999999994
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    5
+   ]
+  },
+  {
+   "name": "geoShape within covers point",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "within",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -74.0545,
+           40.6792
+          ],
+          [
+           -74.0345,
+           40.6792
+          ],
+          [
+           -74.0345,
+           40.6992
+          ],
+          [
+           -74.0545,
+           40.6992
+          ],
+          [
+           -74.0545,
+           40.6792
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    4
+   ]
+  },
+  {
+   "name": "geoShape query point intersects",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects",
+       "geometry": {
+        "type": "Point",
+        "coordinates": [
+         -73.9655,
+         40.783
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape query point contains",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "contains",
+       "geometry": {
+        "type": "Point",
+        "coordinates": [
+         -73.9655,
+         40.783
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape within point query error",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "within",
+       "geometry": {
+        "type": "Point",
+        "coordinates": [
+         0,
+         0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoShape bad relation",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "touches",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -73.9804,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7679
+          ],
+          [
+           -73.9504,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7979
+          ],
+          [
+           -73.9804,
+           40.7679
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoShape no geometry",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "geoShape line query",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "zone",
+       "relation": "intersects",
+       "geometry": {
+        "type": "LineString",
+        "coordinates": [
+         [
+          -73.97,
+          40.78
+         ],
+         [
+          -73.96,
+          40.785
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "geoShape over points",
+   "pipeline": [
+    {
+     "$search": {
+      "geoShape": {
+       "path": "loc",
+       "relation": "within",
+       "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+         [
+          [
+           -74.0,
+           40.7
+          ],
+          [
+           -73.97,
+           40.7
+          ],
+          [
+           -73.97,
+           40.76
+          ],
+          [
+           -74.0,
+           40.76
+          ],
+          [
+           -74.0,
+           40.7
+          ]
+         ]
+        ]
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3,
+    5
+   ]
+  },
+  {
+   "name": "queryString term",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "queryString and",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park AND lake"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "queryString and symbol",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park && lake"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "queryString or",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park OR statue"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "name": "queryString or symbol",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "statue || skyscraper"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    4,
+    5
+   ]
+  },
+  {
+   "name": "queryString default or",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "statue theaters"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3,
+    4
+   ]
+  },
+  {
+   "name": "queryString minus",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park -brooklyn"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "queryString plus",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "+park +manhattan"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "queryString plus only",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "+park lake"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "queryString not alone",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "NOT park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "queryString not bang",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "!park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "queryString park not",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park NOT brooklyn"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "queryString group",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "(park OR statue) AND ferry"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    4
+   ]
+  },
+  {
+   "name": "queryString nested group",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "((park OR statue) AND (ferry OR zoo))"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2,
+    4
+   ]
+  },
+  {
+   "name": "queryString field",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "name:central"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "queryString field phrase",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "name:\"times square\""
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3
+   ]
+  },
+  {
+   "name": "queryString phrase",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "\"public park\""
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "queryString phrase miss",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "\"park public\""
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "queryString phrase slop",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "\"park manhattan\"~3"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1
+   ]
+  },
+  {
+   "name": "queryString phrase slop zero",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "\"park manhattan\""
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "queryString wildcard star",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "man*"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    3,
+    5
+   ]
+  },
+  {
+   "name": "queryString wildcard question",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "tick?ts"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    4
+   ]
+  },
+  {
+   "name": "queryString fuzzy",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "lak~1"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "queryString fuzzy default",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "lake~"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "name": "queryString field group",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "name:(central OR prospect)"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "queryString numeric range",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "rating:[4.6 TO 4.8]"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2,
+    4,
+    5
+   ]
+  },
+  {
+   "name": "queryString numeric range exclusive",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "rating:{4.6 TO 4.8}"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "queryString numeric range open",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "rating:[4.7 TO *]"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2,
+    4
+   ]
+  },
+  {
+   "name": "queryString string range",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "name:[a TO d]"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    5
+   ]
+  },
+  {
+   "name": "queryString boost",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park^2 OR statue"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    4
+   ]
+  },
+  {
+   "name": "queryString case insensitive",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "PARK"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "queryString escaped",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "tick\\?ts"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "queryString match all",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "*:*"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  },
+  {
+   "name": "queryString and or precedence",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park AND lake OR statue"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "queryString path name",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "name",
+       "query": "central OR statue"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    4
+   ]
+  },
+  {
+   "name": "queryString syntax dangling and",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park AND"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString syntax open paren",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "(park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString syntax close paren",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park)"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString syntax unterminated phrase",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "\"park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString syntax bad range",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "rating:[1 4]"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString no path",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "query": "park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString no query",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "queryString scores positive",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "ok": {
+       "$gt": [
+        {
+         "$meta": "searchScore"
+        },
+        0
+       ]
+      }
+     }
+    }
+   ],
+   "kind": "docsById",
+   "expect": {
+    "1": {
+     "ok": true
+    },
+    "2": {
+     "ok": true
+    }
+   }
+  },
+  {
+   "name": "mlt brooklyn zoo",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": {
+        "body": "Brooklyn zoo"
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "mlt name",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": {
+        "name": "Central Park"
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "mlt array",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": [
+        {
+         "name": "Statue"
+        },
+        {
+         "name": "Times"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3,
+    4
+   ]
+  },
+  {
+   "name": "mlt unknown words",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": {
+        "body": "zzzzz qqqqq"
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "mlt wrong field",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": {
+        "nonexistent": "park"
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "mlt source document",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": {
+        "name": "Empire State Building",
+        "body": "An Art Deco skyscraper in Midtown Manhattan."
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    1,
+    2,
+    5
+   ]
+  },
+  {
+   "name": "mlt excluding source",
+   "pipeline": [
+    {
+     "$search": {
+      "compound": {
+       "must": [
+        {
+         "moreLikeThis": {
+          "like": {
+           "name": "Central Park"
+          }
+         }
+        }
+       ],
+       "mustNot": [
+        {
+         "equals": {
+          "path": "_id",
+          "value": 1
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "mlt not a document",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": "park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "mlt missing like",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {}
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "mlt scores ordered",
+   "pipeline": [
+    {
+     "$search": {
+      "moreLikeThis": {
+       "like": {
+        "body": "park lake zoo Brooklyn"
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    2,
+    1
+   ]
+  },
+  {
+   "name": "embedded text",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "text": {
+         "path": "items.name",
+         "query": "ticket"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "name": "embedded same element",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "compound": {
+         "must": [
+          {
+           "text": {
+            "path": "items.name",
+            "query": "ticket"
+           }
+          },
+          {
+           "range": {
+            "path": "items.price",
+            "lte": 20
+           }
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    2
+   ]
+  },
+  {
+   "name": "embedded different elements do not combine",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "compound": {
+         "must": [
+          {
+           "text": {
+            "path": "items.name",
+            "query": "souvenir"
+           }
+          },
+          {
+           "range": {
+            "path": "items.price",
+            "gte": 100
+           }
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "embedded range",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gt": 50
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": [
+    3
+   ]
+  },
+  {
+   "name": "embedded no array",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "text": {
+         "path": "items.name",
+         "query": "zzz"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ids",
+   "expect": []
+  },
+  {
+   "name": "embedded score default sum",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gte": 0
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 2.0,
+    "2": 1.0,
+    "3": 2.0,
+    "4": 1.0
+   }
+  },
+  {
+   "name": "embedded score sum",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gte": 0
+        }
+       },
+       "score": {
+        "embedded": {
+         "aggregate": "sum"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 2.0,
+    "2": 1.0,
+    "3": 2.0,
+    "4": 1.0
+   }
+  },
+  {
+   "name": "embedded score maximum",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gte": 0
+        }
+       },
+       "score": {
+        "embedded": {
+         "aggregate": "maximum"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   }
+  },
+  {
+   "name": "embedded score minimum",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gte": 0
+        }
+       },
+       "score": {
+        "embedded": {
+         "aggregate": "minimum"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   }
+  },
+  {
+   "name": "embedded score mean",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gte": 0
+        }
+       },
+       "score": {
+        "embedded": {
+         "aggregate": "mean"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "scoresById",
+   "expect": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0
+   }
+  },
+  {
+   "name": "embedded bad aggregate",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items",
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gte": 0
+        }
+       },
+       "score": {
+        "embedded": {
+         "aggregate": "median"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "s": {
+       "$meta": "searchScore"
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "embedded no operator",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "path": "items"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "embedded no path",
+   "pipeline": [
+    {
+     "$search": {
+      "embeddedDocument": {
+       "operator": {
+        "range": {
+         "path": "items.price",
+         "gt": 1
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet string",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "k": {
+       "buckets": [
+        {
+         "_id": "monument",
+         "count": 2
+        },
+        {
+         "_id": "park",
+         "count": 2
+        },
+        {
+         "_id": "misc",
+         "count": 1
+        },
+        {
+         "_id": "plaza",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet string numBuckets",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind",
+         "numBuckets": 2
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "k": {
+       "buckets": [
+        {
+         "_id": "monument",
+         "count": 2
+        },
+        {
+         "_id": "park",
+         "count": 2
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet string array values",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "t": {
+         "type": "string",
+         "path": "tags"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "t": {
+       "buckets": [
+        {
+         "_id": "city",
+         "count": 3
+        },
+        {
+         "_id": "green",
+         "count": 2
+        },
+        {
+         "_id": "tourist",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet number",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "number",
+         "path": "rating",
+         "boundaries": [
+          0,
+          3,
+          4,
+          5
+         ],
+         "default": "other"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "r": {
+       "buckets": [
+        {
+         "_id": 0,
+         "count": 1
+        },
+        {
+         "_id": 3,
+         "count": 1
+        },
+        {
+         "_id": 4,
+         "count": 4
+        },
+        {
+         "_id": "other",
+         "count": 0
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet number default",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "number",
+         "path": "rating",
+         "boundaries": [
+          4,
+          4.6,
+          5
+         ],
+         "default": "other"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "r": {
+       "buckets": [
+        {
+         "_id": 4,
+         "count": 1
+        },
+        {
+         "_id": 4.6,
+         "count": 3
+        },
+        {
+         "_id": "other",
+         "count": 2
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet number no default",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "number",
+         "path": "rating",
+         "boundaries": [
+          4,
+          4.6,
+          5
+         ]
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "r": {
+       "buckets": [
+        {
+         "_id": 4,
+         "count": 1
+        },
+        {
+         "_id": 4.6,
+         "count": 3
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet date",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "o": {
+         "type": "date",
+         "path": "opened",
+         "boundaries": [
+          {
+           "$date": "1990-01-01T00:00:00Z"
+          },
+          {
+           "$date": "2000-01-01T00:00:00Z"
+          },
+          {
+           "$date": "2001-01-01T00:00:00Z"
+          },
+          {
+           "$date": "2002-01-01T00:00:00Z"
+          }
+         ],
+         "default": "old"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "o": {
+       "buckets": [
+        {
+         "_id": {
+          "$date": "1990-01-01T00:00:00Z"
+         },
+         "count": 1
+        },
+        {
+         "_id": {
+          "$date": "2000-01-01T00:00:00Z"
+         },
+         "count": 1
+        },
+        {
+         "_id": {
+          "$date": "2001-01-01T00:00:00Z"
+         },
+         "count": 1
+        },
+        {
+         "_id": "old",
+         "count": 2
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet with operator",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "operator": {
+        "text": {
+         "path": "body",
+         "query": "park"
+        }
+       },
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 2
+     },
+     "facet": {
+      "k": {
+       "buckets": [
+        {
+         "_id": "park",
+         "count": 2
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet several",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind",
+         "numBuckets": 1
+        },
+        "r": {
+         "type": "number",
+         "path": "rating",
+         "boundaries": [
+          0,
+          5
+         ]
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "lowerBound": 6
+     },
+     "facet": {
+      "k": {
+       "buckets": [
+        {
+         "_id": "monument",
+         "count": 2
+        }
+       ]
+      },
+      "r": {
+       "buckets": [
+        {
+         "_id": 0,
+         "count": 6
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet count total",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind"
+        }
+       }
+      },
+      "count": {
+       "type": "total"
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "count": {
+      "total": 6
+     },
+     "facet": {
+      "k": {
+       "buckets": [
+        {
+         "_id": "monument",
+         "count": 2
+        },
+        {
+         "_id": "park",
+         "count": 2
+        },
+        {
+         "_id": "misc",
+         "count": 1
+        },
+        {
+         "_id": "plaza",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet via $search and SEARCH_META",
+   "pipeline": [
+    {
+     "$search": {
+      "facet": {
+       "operator": {
+        "text": {
+         "path": "body",
+         "query": "park"
+        }
+       },
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$limit": 1
+    },
+    {
+     "$project": {
+      "_id": 0,
+      "meta": "$$SEARCH_META"
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "meta": {
+      "count": {
+       "lowerBound": 2
+      },
+      "facet": {
+       "k": {
+        "buckets": [
+         {
+          "_id": "park",
+          "count": 2
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "facet $search documents",
+   "pipeline": [
+    {
+     "$search": {
+      "facet": {
+       "operator": {
+        "text": {
+         "path": "body",
+         "query": "park"
+        }
+       },
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind"
+        }
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1
+     }
+    }
+   ],
+   "kind": "ordered",
+   "expect": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "facet no facets",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {}
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet missing facets",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "operator": {
+        "text": {
+         "path": "body",
+         "query": "park"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet unsorted boundaries",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "number",
+         "path": "rating",
+         "boundaries": [
+          5,
+          1
+         ]
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet one boundary",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "number",
+         "path": "rating",
+         "boundaries": [
+          5
+         ]
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet bad type",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "bool",
+         "path": "rating"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet no path",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "r": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "facet numBuckets zero",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "facet": {
+       "facets": {
+        "k": {
+         "type": "string",
+         "path": "kind",
+         "numBuckets": 0
+        }
+       }
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "highlight passages",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    },
+    {
+     "$sort": {
+      "_id": 1
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 1,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A large public ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": " in Manhattan.",
+         "type": "text"
+        }
+       ]
+      },
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "Visitors love the ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": ".",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "_id": 2,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A public ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": " in Brooklyn.",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight maxNumPassages",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {
+       "path": "body",
+       "maxNumPassages": 1
+      }
+     }
+    },
+    {
+     "$sort": {
+      "_id": 1
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 1,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A large public ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": " in Manhattan.",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "_id": 2,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A public ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": " in Brooklyn.",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight other path",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {
+       "path": "name"
+      }
+     }
+    },
+    {
+     "$sort": {
+      "_id": 1
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 1,
+     "hl": []
+    },
+    {
+     "_id": 2,
+     "hl": []
+    }
+   ]
+  },
+  {
+   "name": "highlight two paths",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": [
+        "name",
+        "body"
+       ],
+       "query": "park"
+      },
+      "highlight": {
+       "path": [
+        "name",
+        "body"
+       ]
+      }
+     }
+    },
+    {
+     "$match": {
+      "_id": 2
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 2,
+     "hl": [
+      {
+       "path": "name",
+       "texts": [
+        {
+         "value": "Prospect ",
+         "type": "text"
+        },
+        {
+         "value": "Park",
+         "type": "hit"
+        }
+       ]
+      },
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A public ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": " in Brooklyn.",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight wildcard path",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": {
+        "wildcard": "*"
+       },
+       "query": "brooklyn"
+      },
+      "highlight": {
+       "path": {
+        "wildcard": "*"
+       }
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 2,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A public park in ",
+         "type": "text"
+        },
+        {
+         "value": "Brooklyn",
+         "type": "hit"
+        },
+        {
+         "value": ".",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight multiple hits",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "lake zoo"
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 2,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "It has a ",
+         "type": "text"
+        },
+        {
+         "value": "lake",
+         "type": "hit"
+        },
+        {
+         "value": " and a ",
+         "type": "text"
+        },
+        {
+         "value": "zoo",
+         "type": "hit"
+        },
+        {
+         "value": ".",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight phrase",
+   "pipeline": [
+    {
+     "$search": {
+      "phrase": {
+       "path": "body",
+       "query": "large public"
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 1,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A ",
+         "type": "text"
+        },
+        {
+         "value": "large",
+         "type": "hit"
+        },
+        {
+         "value": " ",
+         "type": "text"
+        },
+        {
+         "value": "public",
+         "type": "hit"
+        },
+        {
+         "value": " park in Manhattan.",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight in compound",
+   "pipeline": [
+    {
+     "$search": {
+      "compound": {
+       "must": [
+        {
+         "text": {
+          "path": "body",
+          "query": "park"
+         }
+        }
+       ],
+       "should": [
+        {
+         "text": {
+          "path": "body",
+          "query": "zoo"
+         }
+        }
+       ]
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    },
+    {
+     "$match": {
+      "_id": 2
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 2,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "A public ",
+         "type": "text"
+        },
+        {
+         "value": "park",
+         "type": "hit"
+        },
+        {
+         "value": " in Brooklyn.",
+         "type": "text"
+        }
+       ]
+      },
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "It has a lake and a ",
+         "type": "text"
+        },
+        {
+         "value": "zoo",
+         "type": "hit"
+        },
+        {
+         "value": ".",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight queryString",
+   "pipeline": [
+    {
+     "$search": {
+      "queryString": {
+       "defaultPath": "body",
+       "query": "ferry"
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "docsNoScore",
+   "expect": [
+    {
+     "_id": 4,
+     "hl": [
+      {
+       "path": "body",
+       "texts": [
+        {
+         "value": "Ferry",
+         "type": "hit"
+        },
+        {
+         "value": " tickets are needed.",
+         "type": "text"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "highlight passage count",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    },
+    {
+     "$match": {
+      "_id": 1
+     }
+    },
+    {
+     "$project": {
+      "_id": 0,
+      "n": {
+       "$size": {
+        "$meta": "searchHighlights"
+       }
+      }
+     }
+    }
+   ],
+   "kind": "exact",
+   "expect": [
+    {
+     "n": 2
+    }
+   ]
+  },
+  {
+   "name": "highlight meta absent",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      }
+     }
+    },
+    {
+     "$project": {
+      "h": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "highlight no path",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {}
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "highlight bad maxNumPassages",
+   "pipeline": [
+    {
+     "$search": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {
+       "path": "body",
+       "maxNumPassages": 0
+      }
+     }
+    },
+    {
+     "$project": {
+      "_id": 1,
+      "hl": {
+       "$meta": "searchHighlights"
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  },
+  {
+   "name": "highlight in searchMeta",
+   "pipeline": [
+    {
+     "$searchMeta": {
+      "text": {
+       "path": "body",
+       "query": "park"
+      },
+      "highlight": {
+       "path": "body"
+      }
+     }
+    }
+   ],
+   "kind": "error",
+   "expect": null
+  }
+ ]
+}

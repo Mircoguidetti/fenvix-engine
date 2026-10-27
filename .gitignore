@@ -1,0 +1,7 @@
+target/
+mongo-tests/.venv/
+mongo-tests/node/node_modules/
+mongo-tests/out/
+__pycache__/
+loadtest/out/*
+!loadtest/out/.gitkeep

@@ -1,0 +1,190 @@
+{
+  "scenario": "s1",
+  "config": {
+    "mode": "rotate",
+    "uris": "mongodb://127.0.0.1:28001",
+    "start": 0,
+    "pool": 20000,
+    "active": 1000,
+    "lifetime_secs": 60,
+    "ramp_secs": 60,
+    "hold_secs": 120,
+    "rate": 1.0,
+    "read_pct": 80,
+    "duration_secs": 600,
+    "hot_tenant": -1,
+    "hot_rate": 500.0,
+    "hot_workers": 16,
+    "pool_size": 256,
+    "max_attempts": 30
+  },
+  "start_unix_ms": 1793012753972,
+  "end_unix_ms": 1793013363011,
+  "seconds": 609.038437313,
+  "normal": {
+    "activations": 12547,
+    "ops": 597417,
+    "late_ticks": 0,
+    "all_ops": {
+      "count": 597417,
+      "mean_ms": 92.08307197819953,
+      "p50_ms": 12.287,
+      "p90_ms": 181.631,
+      "p99_ms": 1440.767,
+      "p999_ms": 4147.199,
+      "max_ms": 9134.079
+    },
+    "steady_ops": {
+      "count": 585801,
+      "mean_ms": 75.85064329354168,
+      "p50_ms": 11.799,
+      "p90_ms": 145.663,
+      "p99_ms": 1185.791,
+      "p999_ms": 3008.511,
+      "max_ms": 9134.079
+    },
+    "by_type": {
+      "find_by_id": {
+        "count": 240749,
+        "mean_ms": 57.438291706299935,
+        "p50_ms": 7.447,
+        "p90_ms": 66.559,
+        "p99_ms": 1025.535,
+        "p999_ms": 4098.047,
+        "max_ms": 8962.047
+      },
+      "find_filter": {
+        "count": 239531,
+        "mean_ms": 54.117806826673835,
+        "p50_ms": 7.787,
+        "p90_ms": 55.775,
+        "p99_ms": 976.895,
+        "p999_ms": 4059.135,
+        "max_ms": 8904.703
+      },
+      "insert": {
+        "count": 58737,
+        "mean_ms": 239.9826574220681,
+        "p50_ms": 95.231,
+        "p90_ms": 579.071,
+        "p99_ms": 2277.375,
+        "p999_ms": 4333.567,
+        "max_ms": 9084.927
+      },
+      "update": {
+        "count": 58400,
+        "mean_ms": 241.86691071917718,
+        "p50_ms": 98.303,
+        "p90_ms": 580.607,
+        "p99_ms": 2203.647,
+        "p999_ms": 4382.719,
+        "max_ms": 9134.079
+      }
+    },
+    "steady_by_type": {
+      "find_by_id": {
+        "count": 234972,
+        "mean_ms": 35.736513039851516,
+        "p50_ms": 7.015,
+        "p90_ms": 54.815,
+        "p99_ms": 548.863,
+        "p999_ms": 2055.167,
+        "max_ms": 7303.167
+      },
+      "find_filter": {
+        "count": 233692,
+        "mean_ms": 33.44322362340177,
+        "p50_ms": 7.435,
+        "p90_ms": 46.175,
+        "p99_ms": 535.039,
+        "p999_ms": 2049.023,
+        "max_ms": 7303.167
+      },
+      "insert": {
+        "count": 58737,
+        "mean_ms": 239.9826574220681,
+        "p50_ms": 95.231,
+        "p90_ms": 579.071,
+        "p99_ms": 2277.375,
+        "p999_ms": 4333.567,
+        "max_ms": 9084.927
+      },
+      "update": {
+        "count": 58400,
+        "mean_ms": 241.86691071917718,
+        "p50_ms": 98.303,
+        "p90_ms": 580.607,
+        "p99_ms": 2203.647,
+        "p999_ms": 4382.719,
+        "max_ms": 9134.079
+      }
+    },
+    "wake": {
+      "count": 11616,
+      "mean_ms": 910.6930027548203,
+      "p50_ms": 392.959,
+      "p90_ms": 2394.111,
+      "p99_ms": 8503.295,
+      "p999_ms": 8871.935,
+      "max_ms": 8962.047
+    },
+    "wake_by_type": {
+      "find_by_id": {
+        "count": 5777,
+        "mean_ms": 940.1300585078768,
+        "p50_ms": 414.975,
+        "p90_ms": 2490.367,
+        "p99_ms": 8503.295,
+        "p999_ms": 8871.935,
+        "max_ms": 8962.047
+      },
+      "find_filter": {
+        "count": 5839,
+        "mean_ms": 881.5685172118516,
+        "p50_ms": 370.687,
+        "p90_ms": 2353.151,
+        "p99_ms": 8495.103,
+        "p999_ms": 8871.935,
+        "max_ms": 8904.703
+      }
+    },
+    "attempts": {
+      "1": 597417
+    }
+  },
+  "hot": {
+    "activations": 0,
+    "ops": 0,
+    "late_ticks": 0,
+    "all_ops": {
+      "count": 0,
+      "mean_ms": 0.0,
+      "p50_ms": 0.0,
+      "p90_ms": 0.0,
+      "p99_ms": 0.0,
+      "p999_ms": 0.0,
+      "max_ms": 0.0
+    },
+    "steady_ops": {
+      "count": 0,
+      "mean_ms": 0.0,
+      "p50_ms": 0.0,
+      "p90_ms": 0.0,
+      "p99_ms": 0.0,
+      "p999_ms": 0.0,
+      "max_ms": 0.0
+    },
+    "by_type": {},
+    "steady_by_type": {},
+    "wake": null,
+    "wake_by_type": {},
+    "attempts": {}
+  },
+  "errors_by_code": {},
+  "failures_by_code": {},
+  "retries": 0,
+  "acknowledged_writes": 117137,
+  "read_misses": 0,
+  "ops_per_sec": 980.918384454892,
+  "verification": null
+}

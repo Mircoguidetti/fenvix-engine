@@ -1,0 +1,238 @@
+{
+ "summary": {
+  "attempts": 10,
+  "kills_mid_build": 10,
+  "finished_after_restart": 10,
+  "index_complete_and_valid": 10,
+  "max_secs_to_finish": 0.61,
+  "attempts_not_counted": []
+ },
+ "attempts": [
+  {
+   "attempt": 1,
+   "db": "bfk87523_1",
+   "keys": [
+    [
+     "y",
+     1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.61,
+   "docs_total": 20051,
+   "docs_via_index": 20051,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 2,
+   "db": "bfk87526_2",
+   "keys": [
+    [
+     "y",
+     1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.56,
+   "docs_total": 20036,
+   "docs_via_index": 20036,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 3,
+   "db": "bfk87529_3",
+   "keys": [
+    [
+     "z",
+     1
+    ],
+    [
+     "y",
+     -1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.6,
+   "docs_total": 20047,
+   "docs_via_index": 20047,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 4,
+   "db": "bfk87532_4",
+   "keys": [
+    [
+     "z",
+     1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.55,
+   "docs_total": 20048,
+   "docs_via_index": 20048,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 5,
+   "db": "bfk87535_5",
+   "keys": [
+    [
+     "z",
+     1
+    ],
+    [
+     "y",
+     -1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.59,
+   "docs_total": 20027,
+   "docs_via_index": 20027,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 6,
+   "db": "bfk87538_6",
+   "keys": [
+    [
+     "y",
+     1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.51,
+   "docs_total": 20021,
+   "docs_via_index": 20021,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 7,
+   "db": "bfk87541_7",
+   "keys": [
+    [
+     "z",
+     1
+    ],
+    [
+     "y",
+     -1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.58,
+   "docs_total": 20040,
+   "docs_via_index": 20040,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 8,
+   "db": "bfk87544_8",
+   "keys": [
+    [
+     "z",
+     1
+    ],
+    [
+     "y",
+     -1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.59,
+   "docs_total": 20033,
+   "docs_via_index": 20033,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 9,
+   "db": "bfk87546_9",
+   "keys": [
+    [
+     "y",
+     1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.54,
+   "docs_total": 20018,
+   "docs_via_index": 20018,
+   "index_complete": true,
+   "validate_valid": true
+  },
+  {
+   "attempt": 10,
+   "db": "bfk87549_10",
+   "keys": [
+    [
+     "y",
+     1
+    ]
+   ],
+   "docs": 20000,
+   "client_build_finished": false,
+   "listed_before_kill": false,
+   "listed_right_after_restart": false,
+   "killed_mid_build": true,
+   "finished_after_restart": true,
+   "secs_to_finish_after_restart": 0.59,
+   "docs_total": 20064,
+   "docs_via_index": 20064,
+   "index_complete": true,
+   "validate_valid": true
+  }
+ ]
+}

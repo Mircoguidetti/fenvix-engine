@@ -1,0 +1,89 @@
+{
+ "kills": 10,
+ "tenant_kill_pairs": 6848,
+ "pairs_with_no_successful_op_afterwards": 2165,
+ "kill_to_first_success_ms": {
+  "n": 4683,
+  "p50": 7703,
+  "p90": 13158,
+  "p99": 21489,
+  "max": 44278
+ },
+ "service_time_of_first_success_ms": {
+  "p50": 7593,
+  "p99": 21172,
+  "max": 44164
+ },
+ "per_kill": [
+  {
+   "holder": "S0",
+   "kill_unix_ms": 1793042139859,
+   "tenants": 489,
+   "p50_ms": 6429,
+   "max_ms": 17279
+  },
+  {
+   "holder": "S0",
+   "kill_unix_ms": 1793042169350,
+   "tenants": 459,
+   "p50_ms": 9192,
+   "max_ms": 29637
+  },
+  {
+   "holder": "S1",
+   "kill_unix_ms": 1793042195879,
+   "tenants": 512,
+   "p50_ms": 7542,
+   "max_ms": 18741
+  },
+  {
+   "holder": "S0",
+   "kill_unix_ms": 1793042226452,
+   "tenants": 458,
+   "p50_ms": 7712,
+   "max_ms": 17657
+  },
+  {
+   "holder": "S0",
+   "kill_unix_ms": 1793042250192,
+   "tenants": 479,
+   "p50_ms": 7531,
+   "max_ms": 37816
+  },
+  {
+   "holder": "S0",
+   "kill_unix_ms": 1793042276444,
+   "tenants": 434,
+   "p50_ms": 9368,
+   "max_ms": 24996
+  },
+  {
+   "holder": "S1",
+   "kill_unix_ms": 1793042308704,
+   "tenants": 421,
+   "p50_ms": 5573,
+   "max_ms": 12914
+  },
+  {
+   "holder": "S1",
+   "kill_unix_ms": 1793042331411,
+   "tenants": 486,
+   "p50_ms": 6915,
+   "max_ms": 41602
+  },
+  {
+   "holder": "S1",
+   "kill_unix_ms": 1793042361370,
+   "tenants": 482,
+   "p50_ms": 8754,
+   "max_ms": 44278
+  },
+  {
+   "holder": "S1",
+   "kill_unix_ms": 1793042384740,
+   "tenants": 463,
+   "p50_ms": 7792,
+   "max_ms": 25099
+  }
+ ]
+}

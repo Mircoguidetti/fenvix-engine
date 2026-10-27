@@ -1,0 +1,11 @@
+Rocket.Chat: 3 unsupported -> $meta x4, $search x1, index: text (recorded only) x1
+parse-server: 13 unsupported -> $text x15, $maxDistance x6, $centerSphere x4, $geoIntersects x4, $geoWithin x4, $nearSphere x4, $box x3, $polygon x3, $meta x2, $search x2, $geoNear x1, $geometry x1 ...
+NodeBB: 0 unsupported -> 
+wekan: 0 unsupported -> 
+LibreChat: 1 unsupported -> $text x3
+novu: 0 unsupported -> 
+appsmith: 0 unsupported -> 
+countly-server: 34 unsupported -> index: text (recorded only) x9, $geometry x5, $search x5, $geoWithin x4, $text x4, $centerSphere x3, index: hashed / wildcard (recorded only) x3, $geoIntersects x2, $maxDistance x2, $minDistance x2, $near x2, $nearSphere x2 ...
+payload: 6 unsupported -> $geometry x2, $near x2, index: 2dsphere / 2d (geo) (recorded only) x2, $geoIntersects x1, $geoWithin x1, $text x1
+edx-platform: 1 unsupported -> $text x1
+fully covered: 4/10 ['NodeBB', 'wekan', 'novu', 'appsmith']

@@ -1,0 +1,30 @@
+{
+ "asleep_12s": {
+  "requests_put": 0,
+  "requests_get": 0,
+  "requests_list": 0,
+  "ttl_wakes": 0,
+  "ttl_passes": 0,
+  "open_writers": 0,
+  "open_readers": 0,
+  "docs_expired_physically": 0
+ },
+ "after_read": {
+  "visible_ids": [
+   99
+  ],
+  "docs_expired_physically": 0,
+  "mode": "reader"
+ },
+ "after_write": {
+  "visible_ids": [
+   99,
+   1000
+  ],
+  "docs_expired_physically": 20
+ },
+ "untouched_tenants": {
+  "count": 4,
+  "open_total": 1
+ }
+}

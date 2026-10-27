@@ -1,0 +1,2 @@
++ /home/user/test5/target/release/loadgen run --name s2 --uris mongodb://127.0.0.1:28001 --out /home/user/test5/loadtest/out/s2 --pool-size 256 --worker-threads 2 --sample-secs 5 --proc minio=715 --mode burst --start 30000 --pool 5000 --active 5000 --ramp-secs 60 --hold-secs 120 --rate 1.0 --duration-secs 185 --docs 50
+s2: loadgen exit 0
