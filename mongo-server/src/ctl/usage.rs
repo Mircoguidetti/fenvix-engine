@@ -23,6 +23,14 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 const DAY_MS: i64 = 86_400_000;
+
+/// Test hook: `CTL_USAGE_DAY_OFFSET_MS` shifts the clock that decides which UTC day a counter belongs to, so a test can
+/// cross midnight without waiting for it. Unset in production.
+fn day_now() -> i64 {
+    static OFFSET: std::sync::OnceLock<i64> = std::sync::OnceLock::new();
+    let off = *OFFSET.get_or_init(|| std::env::var("CTL_USAGE_DAY_OFFSET_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(0));
+    (now_ms() + off) / DAY_MS
+}
 const MAX_WAKE_EVENTS: usize = 200;
 
 #[derive(Default, Clone, Debug)]
@@ -123,7 +131,8 @@ pub fn db_of(p: &Path) -> Option<String> {
         "control" => {
             let kind = parts.next()?;
             match kind.as_ref() {
-                "dbs" | "pins" | "usage" | "forks" => parts.next().map(|s| s.as_ref().trim_end_matches(".json").to_string()),
+                "dbs" | "pins" | "forks" => parts.next().map(|s| s.as_ref().trim_end_matches(".json").to_string()),
+                // The usage records themselves are not metered: writing them would make the counters dirty again.
                 "ops" => parts.next().map(|s| s.as_ref().trim_end_matches(".json").to_string()),
                 _ => None,
             }
@@ -142,9 +151,8 @@ impl Usage {
     }
 
     fn with_day<R>(&self, db: &str, f: impl FnOnce(&mut Day) -> R) -> R {
-        let now = now_ms();
         let mut g = self.inner.lock().unwrap();
-        let d = g.days.entry((db.to_string(), now / DAY_MS)).or_default();
+        let d = g.days.entry((db.to_string(), day_now())).or_default();
         d.dirty = true;
         f(d)
     }
@@ -214,7 +222,7 @@ impl Usage {
     /// Counters of one database today (for measuring the cost of an operation: take before and after).
     pub fn today(&self, db: &str) -> Counts {
         let g = self.inner.lock().unwrap();
-        g.days.get(&(db.to_string(), now_ms() / DAY_MS)).map(|d| d.counts.clone()).unwrap_or_default()
+        g.days.get(&(db.to_string(), day_now())).map(|d| d.counts.clone()).unwrap_or_default()
     }
 
     /// Sum of today's counters over several databases (an operation touches its source, target and control records).
@@ -279,7 +287,7 @@ impl Usage {
             }
         }
         // Forget days that are over and written.
-        let cutoff = now_ms() / DAY_MS - 1;
+        let cutoff = day_now() - 1;
         self.inner.lock().unwrap().days.retain(|(_, day), d| d.dirty || *day >= cutoff);
         n
     }
@@ -306,7 +314,7 @@ pub fn spawn_flusher(ctl: &Arc<Ctl>) {
                 let g = ctl.usage.inner.lock().unwrap();
                 g.days
                     .iter()
-                    .filter(|((_, day), d)| *day == now_ms() / DAY_MS && d.dirty && d.storage.map_or(true, |(at, _)| now_ms() - at > 3_600_000))
+                    .filter(|((_, day), d)| *day == day_now() && d.dirty && d.storage.map_or(true, |(at, _)| now_ms() - at > 3_600_000))
                     .map(|((db, _), _)| db.clone())
                     .collect()
             };
@@ -328,7 +336,7 @@ pub async fn query(ctl: &Arc<Ctl>, db: &str, from: Option<&str>, to: Option<&str
     if !super::meta::exists(ctl, db).await? {
         return Err(ApiError::not_found(format!("database {db} does not exist")));
     }
-    let today = now_ms() / DAY_MS;
+    let today = day_now();
     let to_day = match to {
         Some(s) => parse_day(s).ok_or_else(|| ApiError::bad("to must be YYYY-MM-DD"))?,
         None => today,

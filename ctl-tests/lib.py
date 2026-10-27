@@ -60,8 +60,9 @@ def free_port():
 
 
 class Server:
-    def __init__(self, bucket, tag="srv", idle=60, extra=(), holder=None, port=None, admin_port=None, env=None):
+    def __init__(self, bucket, tag="srv", idle=60, extra=(), holder=None, port=None, admin_port=None, env=None, endpoint=None):
         self.bucket, self.tag, self.idle, self.extra = bucket, tag, idle, list(extra)
+        self.endpoint = endpoint or MINIO
         self.port = port or free_port()
         self.admin_port = admin_port or free_port()
         self.holder = holder or f"{tag}-{self.port}"
@@ -71,7 +72,7 @@ class Server:
 
     def start(self, wait=True):
         cmd = [BIN, "--listen", f"127.0.0.1:{self.port}", "--admin-listen", f"127.0.0.1:{self.admin_port}",
-               "--idle-secs", str(self.idle), "--bucket", self.bucket, "--endpoint", MINIO, "--holder", self.holder,
+               "--idle-secs", str(self.idle), "--bucket", self.bucket, "--endpoint", self.endpoint, "--holder", self.holder,
                "--lease-ttl-secs", "6", "--no-ttl"] + self.extra
         env = dict(os.environ, MONGO_ADMIN_TOKEN=TOKEN, **self.env)
         self.log = open(self.log_path, "ab")
