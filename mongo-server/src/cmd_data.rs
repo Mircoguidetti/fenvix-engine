@@ -74,7 +74,7 @@ impl Server {
         }
         let hint_arg = natural_hint.as_ref().or_else(|| cmd.get("hint"));
         let projection = match cmd.get_document("projection") {
-            Ok(p) => parse_projection(p)?,
+            Ok(p) => crate::projfind::parse(p, &filter)?,
             Err(_) => None,
         };
         let skip = int_arg(cmd.get("skip")).unwrap_or(0).max(0) as usize;
@@ -103,7 +103,7 @@ impl Server {
         }
         if let Some(p) = &projection {
             for d in docs.iter_mut() {
-                *d = project(d, p);
+                *d = p.apply(d)?;
             }
         }
         for d in docs.iter_mut() {
@@ -632,9 +632,12 @@ impl Server {
         let want_new = bool_arg(cmd.get("new"), false);
         let upsert = bool_arg(cmd.get("upsert"), false);
         let projection = match cmd.get("fields") {
-            Some(Bson::Document(p)) => parse_projection(p)?,
+            Some(Bson::Document(p)) => crate::projfind::parse(p, &q)?,
             _ => None,
         };
+        if want_new && projection.as_ref().map(|p| p.has_positional()).unwrap_or(false) {
+            return Err(MongoError::bad_value("cannot use a positional projection and return the new document".into()));
+        }
         let u = match cmd.get("update") {
             None => None,
             Some(u @ (Bson::Document(_) | Bson::Array(_))) => Some(Upd::new(u, &q, cmd.get("arrayFilters"), cmd.get("c"))?),
@@ -652,14 +655,14 @@ impl Server {
         if !remove && u.is_none() {
             return Err(MongoError::failed_to_parse("Either an update or remove=true must be specified".into()));
         }
-        let shape = |d: Option<Document>| -> Bson {
-            match d {
+        let shape = |d: Option<Document>| -> R<Bson> {
+            Ok(match d {
                 None => Bson::Null,
                 Some(d) => Bson::Document(match &projection {
-                    Some(p) => project(&d, p),
+                    Some(p) => p.apply(&d)?,
                     None => d,
                 }),
-            }
+            })
         };
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
@@ -680,7 +683,7 @@ impl Server {
                 Some(old) => {
                     w.delete(&mut g, db, coll, &indexes, &old).await?;
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
-                    doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old)), "ok": 1.0 }
+                    doc! { "lastErrorObject": { "n": 1 }, "value": shape(Some(old))?, "ok": 1.0 }
                 }
             });
         }
@@ -693,7 +696,7 @@ impl Server {
                     w.put(&mut g, coll, &ns, &mut indexes, &new, Some(&old)).await?;
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
                 }
-                let value = shape(Some(if want_new { new } else { old }));
+                let value = shape(Some(if want_new { new } else { old }))?;
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": true }, "value": value, "ok": 1.0 })
             }
             None if upsert => {
@@ -709,7 +712,7 @@ impl Server {
                     v
                 });
                 self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
-                let value = if want_new { shape(Some(nd)) } else { Bson::Null };
+                let value = if want_new { shape(Some(nd))? } else { Bson::Null };
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": false, "upserted": id }, "value": value, "ok": 1.0 })
             }
             None => Ok(doc! { "lastErrorObject": { "n": 0, "updatedExisting": false }, "value": Bson::Null, "ok": 1.0 }),

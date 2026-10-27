@@ -28,6 +28,7 @@ mod keyenc;
 mod layout;
 mod lease;
 mod natural;
+mod projfind;
 mod query;
 mod geo;
 mod geo_query;

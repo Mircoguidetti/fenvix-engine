@@ -25,6 +25,8 @@ H.cert = (n) => path.join(CERTS, n);
 // a client factory for one server of a TLS pair: mk({tls:true, tlsCAFile:'ca.pem'}, host) -> MongoClient (file names are resolved in CERTS)
 const pairClient = (port) => ({ gaps_addr: ['localhost', port], mk: (opts = {}, host) => { const o = Object.fromEntries(Object.entries(opts).map(([k, v]) => [k, typeof v === 'string' && v.endsWith('.pem') ? path.join(CERTS, v) : v])); return new MongoClient(`mongodb://${host || 'localhost'}:${port}/`, { serverSelectionTimeoutMS: 3000, ...o }); } });
 
+const deepDiff = (a, b, p = '') => { const out = []; if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) { if (!(k in a)) out.push(`${p}/${k}: only ours = ${JSON.stringify(b[k]).slice(0, 150)}`); else if (!(k in b)) out.push(`${p}/${k}: only real = ${JSON.stringify(a[k]).slice(0, 150)}`); else out.push(...deepDiff(a[k], b[k], `${p}/${k}`)); } } else if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`${p}: real=${JSON.stringify(a)?.slice(0, 150)} ours=${JSON.stringify(b)?.slice(0, 150)}`); return out; };
+
 async function runOn(client, c) {
   const dbname = 'gn_' + Math.random().toString(16).slice(2, 12);
   const db = c.pair ? { databaseName: dbname, dropDatabase: async () => {} } : client.db(dbname);
@@ -55,7 +57,7 @@ async function runOn(client, c) {
     const o = c.pair ? await runOn(pairClient(PAIRS[c.pair][1]), c) : await runOn(c.auth ? oursA : c.rs ? oursRs : ours, c);
     n++; if (r !== o) bad++;
     console.log(r === o ? '.' : 'F', c.name);
-    if (r !== o) console.log('    real:', r.slice(0, 400), '\n    ours:', o.slice(0, 400));
+    if (r !== o) { try { for (const d of deepDiff(JSON.parse(r), JSON.parse(o)).slice(0, 8)) console.log('    diff', d); } catch (e) { console.log('    real:', r.slice(0, 400), '\n    ours:', o.slice(0, 400)); } }
   }
   console.log(`gaps_node: ${n - bad}/${n} identical to mongod 7.0.45`);
   await Promise.all([real, realRs, ours, realA, oursA].filter(Boolean).map((c) => c.close()).concat(oursRs && oursRs !== ours ? [oursRs.close()] : []));
