@@ -25,10 +25,12 @@ Full differential run (`mongo-tests/run_full.sh`, real mongod 7.0 replica set on
 | replset | 89/89 | 89/89 | 89/89 |
 | extra | 49/49 | 49/49 | 46/49, 47/49 |
 
-(Logs: `results-ops/regression_*.log`. The run was done before the last two small usage-accounting fixes; those touch only `ctl/usage.rs`.) The core count differs from results9 (2925 vs 2920) because the suite file has 5 more tests than that report quotes; I did not change any test.
+(Logs: `results-ops/regression_*.log`.) This run was repeated from scratch **after the last fix** (the final binary of the pushed code): pymongo and Node both 2925/2925, 89/89, 49/49 against mongod 7.0.45. The core count differs from results9 (2925 vs 2920) because the suite file has 5 more tests than that report quotes; I did not change any test.
 
 ## 2. Operations
-Test counts are `pytest` runs against MinIO. Last full run of all ctl tests: 110 passed, 1 failed (`test_concurrent_erases_one_wins`, flaky: a usage record was re-created for an erased name); fixed in `ctl/usage.rs`, then `test_05_erase.py` + `test_07_usage.py` re-run twice: 29/29 each. The rest were not re-run after that fix.
+Test counts are `pytest` runs against MinIO.
+* **Final full run of all ctl tests** (create/list/get, fork, fork crash, restore, restore GC/crash/concurrency, export, export vs real mongo, erase, keep awake, usage), on the final binary: **111 passed, 0 failed** (632 s; `results-ops/ctl_final_run.txt`).
+* The earlier flaky `test_concurrent_erases_one_wins` (a usage record re-created for an erased name; fixed in `ctl/usage.rs`) was then run **50 times in a row on the final binary: 50 passed, 0 failed**. (Run alone; it had failed once only inside the full module run, which has since passed 111/111.)
 
 ### 1 Create / list / get — 10 tests
 * Existed: `listDatabases` (names, `sizeOnDisk: 0`), `dbStats` (scans documents), `tenantAdmin` (mode, wakes, closes; request counts are process-wide). No created_at, last_active, forked_from, keep-awake, object-store bytes, HTTP/auth.
