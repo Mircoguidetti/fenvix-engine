@@ -71,7 +71,8 @@ fn metadata_json(coll: &str, indexes: &[Bson]) -> Vec<u8> {
         let h = Sha256::digest(coll.as_bytes());
         h[..16].iter().map(|b| format!("{b:02x}")).collect::<String>()
     };
-    let d = doc! { "options": {}, "indexes": indexes.to_vec(), "uuid": uuid, "collectionName": coll, "type": "collection" };
+    // like mongodump: `options` appears only for a collection that has some (none are stored here)
+    let d = doc! { "indexes": indexes.to_vec(), "uuid": uuid, "collectionName": coll, "type": "collection" };
     serde_json::to_vec(&Bson::Document(d).into_canonical_extjson()).unwrap()
 }
 

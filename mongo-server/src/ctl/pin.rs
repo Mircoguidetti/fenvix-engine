@@ -172,7 +172,6 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
             tick.tick().await;
             let now = Instant::now();
             if now >= next_list {
-                next_list = now + refresh;
                 let listed: Vec<Path> = ctl.store.list(Some(&rec::path(&["control", "pins"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
                 let names: Vec<String> = listed.iter().filter_map(|p| p.filename().map(|s| s.to_string())).collect();
                 let mut g = KNOWN.lock().unwrap();
@@ -181,6 +180,8 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
                 for n in names {
                     known.entry(n).or_insert(Known { next_lease: now, mine: false });
                 }
+                // With no pins at all the listing is only needed to notice a pin made through another process: slower.
+                next_list = now + if known.is_empty() { Duration::from_secs(30) } else { refresh };
             }
             // work on a copy of the table: nothing is held across an await
             let todo: Vec<(String, bool, Instant)> = KNOWN.lock().unwrap().as_ref().map(|m| m.iter().map(|(k, v)| (k.clone(), v.mine, v.next_lease)).collect()).unwrap_or_default();

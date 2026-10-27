@@ -74,7 +74,7 @@ class Server:
     def start(self, wait=True):
         cmd = [self.binary, "--listen", f"127.0.0.1:{self.port}"] + (["--admin-listen", f"127.0.0.1:{self.admin_port}"] if self.admin_enabled else []) + [
                "--idle-secs", str(self.idle), "--bucket", self.bucket, "--endpoint", self.endpoint, "--holder", self.holder,
-               "--lease-ttl-secs", "6", "--no-ttl"] + self.extra
+               "--no-ttl"] + ([] if "--lease-ttl-secs" in self.extra else ["--lease-ttl-secs", "6"]) + self.extra
         env = dict(os.environ, MONGO_ADMIN_TOKEN=TOKEN, **self.env)
         self.log = open(self.log_path, "ab")
         self.proc = subprocess.Popen(cmd, stdout=self.log, stderr=self.log, env=env)

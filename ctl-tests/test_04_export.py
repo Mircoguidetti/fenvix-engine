@@ -89,7 +89,7 @@ def test_download_equals_source(env):
     names = {i["name"]: i for i in m["indexes"]}
     assert set(names) == {"_id_", "grp_n", "name_u", "ttl_tag"}
     assert names["name_u"]["unique"] is True and names["ttl_tag"]["expireAfterSeconds"] == 86400 and dict(names["grp_n"]["key"]) == {"grp": 1, "n": -1}
-    assert m["collectionName"] == "users" and m["options"] == {}
+    assert m["collectionName"] == "users" and "options" not in m
     shutil.rmtree(dest)
 
 
