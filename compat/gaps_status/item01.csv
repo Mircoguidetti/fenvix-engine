@@ -1,0 +1,5 @@
+id,engine_status,evidence,differential_test
+opt:createIndexes.indexes,covered,"passing differential tests against mongod 7.0.45 (mongo-tests/gaps/g01_silent.py, 33/33 pymongo; gaps/node/g01_silent.js, 25/25 Node): g01.createIndexes.* (several indexes in one call, all-or-nothing on error, duplicates, existing+new)",yes
+cmd:createIndexes,covered,"passing differential tests against mongod 7.0.45 (mongo-tests/gaps/g01_silent.py, 33/33 pymongo; gaps/node/g01_silent.js, 25/25 Node): g01.createIndexes.*; whole existing suite rerun",yes
+sorthint:$natural (sort),covered,"passing differential tests against mongod 7.0.45 (mongo-tests/gaps/g01_silent.py, 33/33 pymongo; gaps/node/g01_silent.js, 25/25 Node): g01.natural.sort_natural_asc_desc",yes
+sorthint:$natural (hint),covered,"passing differential tests against mongod 7.0.45 (mongo-tests/gaps/g01_silent.py, 33/33 pymongo; gaps/node/g01_silent.js, 25/25 Node): g01.natural.hint_natural",yes

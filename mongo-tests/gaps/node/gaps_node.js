@@ -12,11 +12,12 @@ const { EJSON } = req('bson');
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '')).map((a) => { const i = a.indexOf('='); return i < 0 ? [a, true] : [a.slice(0, i), a.slice(i + 1)]; }));
 const CASES = [];
-const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs });
+const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs, auth: !!o.auth });
 const sortKeys = (x) => Array.isArray(x) ? x.map(sortKeys) : (x && typeof x === 'object' && !(x instanceof Date) && !x._bsontype && !Buffer.isBuffer(x)) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, sortKeys(x[k])])) : x;
 const canon = (x, sk) => EJSON.stringify(sk ? sortKeys(x === undefined ? null : x) : (x === undefined ? null : x), { relaxed: false });
 const errOf = (e) => ({ __error__: { code: e.code ?? null, codeName: e.codeName ?? null, name: e.code ? undefined : e.name } });
 const H = { C, canon, errOf, MongoClient, ObjectId, Long, EJSON, args };
+H.A = (name, fn, o = {}) => C(name, fn, { ...o, auth: true });
 
 async function runOn(client, c) {
   const dbname = 'gn_' + Math.random().toString(16).slice(2, 12);
@@ -36,10 +37,13 @@ async function runOn(client, c) {
   const realRs = await mk(args['real-rs'] || 'mongodb://localhost:27020/?replicaSet=rs0');
   const ours = await mk(args.ours || 'mongodb://localhost:27018');
   const oursRs = args['ours-rs'] ? await mk(args['ours-rs']) : ours;
+  const realA = args['real-auth'] === 'skip' ? null : await mk(args['real-auth'] || 'mongodb://root:rootpw@localhost:27030/?authSource=admin').catch(() => null);
+  const oursA = args['real-auth'] === 'skip' ? null : await mk(args['ours-auth'] || 'mongodb://root:rootpw@localhost:27028/?authSource=admin').catch(() => null);
   let n = 0, bad = 0;
   for (const c of CASES) {
     if (args.only && !c.name.includes(args.only)) continue;
-    const r = await runOn(c.rs ? realRs : real, c); const o = await runOn(c.rs ? oursRs : ours, c);
+    if (c.auth && !(realA && oursA)) { console.log('S', c.name, '(auth servers not running)'); continue; }
+    const r = await runOn(c.auth ? realA : c.rs ? realRs : real, c); const o = await runOn(c.auth ? oursA : c.rs ? oursRs : ours, c);
     n++; if (r !== o) bad++;
     console.log(r === o ? '.' : 'F', c.name);
     if (r !== o) console.log('    real:', r.slice(0, 400), '\n    ours:', o.slice(0, 400));

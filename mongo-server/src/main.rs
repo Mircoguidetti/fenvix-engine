@@ -5,6 +5,9 @@
 //! standalone compaction and GC).
 
 mod agg;
+mod auth;
+mod authz;
+mod scram;
 mod agg_ext;
 mod agg_more;
 mod json_schema;
@@ -133,10 +136,19 @@ struct Args {
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
+    /// Require authentication and authorization for every command (mongod's --auth).
+    #[arg(long)]
+    auth: bool,
 }
 
 async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64) {
     let _ = stream.set_nodelay(true);
+    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()));
+    handle_connection_inner(&server, stream, conn_id).await;
+    server.auth_connection_closed(conn_id);
+}
+
+async fn handle_connection_inner(server: &Arc<Server>, stream: TcpStream, conn_id: i64) {
     let (r, mut w) = stream.into_split();
     let mut r = BufReader::new(r);
     let mut response_id = 1;
@@ -218,6 +230,7 @@ async fn main() -> Result<()> {
         }
     }
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
+    server.auth.enabled.store(args.auth, std::sync::atomic::Ordering::Relaxed);
     if !args.replica_set.is_empty() {
         let port = args.listen.rsplit(':').next().unwrap_or("27017");
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));

@@ -23,7 +23,7 @@ def start_real(k):
     d = os.path.join(TOOLS, "data", "suite", str(k))
     shutil.rmtree(d, ignore_errors=True)
     os.makedirs(d)
-    sh(f"chown mongotest {d}")
+    sh(f"chown mongotest {d} {os.path.dirname(d)}")
     sh(f"su mongotest -c 'ulimit -n 20000; {MONGOD} --port {port} --dbpath {d} --bind_ip 127.0.0.1 --replSet rs0 --setParameter ttlMonitorSleepSecs=1 --fork --logpath {d}.log' > /dev/null")
     from pymongo import MongoClient
     c = MongoClient("localhost", port, directConnection=True, serverSelectionTimeoutMS=20000)
@@ -103,7 +103,9 @@ def main():
                 print("   FAIL", r["name"], json.dumps(r["detail"])[:300])
     for k in range(a.shards):
         stop_real(k)
-    subprocess.run("pkill -x mongo-server", shell=True)
+    for k in range(a.shards):
+        for port in (28100 + k, 28200 + k):
+            subprocess.run(f"pkill -f '[l]isten 127.0.0.1:{port} '", shell=True)
 
 
 if __name__ == "__main__":

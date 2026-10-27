@@ -23,3 +23,8 @@ futures = "0.3"
 clap = { version = "4", features = ["derive"] }
 rand = "0.8"
 md-5 = "0.11"
+sha1 = "0.11"
+sha2 = "0.11"
+hmac = "0.13"
+pbkdf2 = { version = "0.13", features = ["hmac"] }
+base64 = "0.22"

@@ -29,6 +29,7 @@ pub struct Server {
     cursors: Mutex<HashMap<i64, Cursor>>,
     pub(crate) change_cursors: Mutex<HashMap<i64, crate::cmd_changes::ChangeCursor>>,
     next_conn: AtomicI64,
+    pub(crate) auth: crate::auth::AuthState,
 }
 
 struct Cursor {
@@ -81,7 +82,7 @@ pub(crate) fn write_error(index: usize, code: i32, msg: String) -> Document {
 
 impl Server {
     pub fn new(dbs: Arc<Dbs>, log_commands: bool) -> Arc<Self> {
-        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1) })
+        Arc::new(Self { dbs, builds: Arc::new(Mutex::new(HashSet::new())), sessions: Default::default(), next_txn_id: std::sync::atomic::AtomicU64::new(1), rs: Mutex::new(None), log_commands, cursors: Mutex::new(HashMap::new()), change_cursors: Mutex::new(HashMap::new()), next_conn: AtomicI64::new(1), auth: Default::default() })
     }
 
     pub fn new_connection_id(&self) -> i64 {
@@ -108,9 +109,31 @@ impl Server {
     }
 
     async fn dispatch(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
+        self.authorize(conn_id, db, name, cmd).await?;
         // Commands that do not touch a tenant.
         match name {
-            "hello" | "isMaster" | "ismaster" => return Ok(self.hello(name, conn_id)),
+            "hello" | "isMaster" | "ismaster" => {
+                let mut d = self.hello(name, conn_id);
+                self.auth_hello(cmd, &mut d).await?;
+                return Ok(d);
+            }
+            "saslStart" => return self.sasl_start(conn_id, db, cmd).await,
+            "saslContinue" => return self.sasl_continue(conn_id, cmd).await,
+            "logout" => return self.logout(conn_id, db),
+            "createUser" => return self.create_user(db, cmd).await,
+            "updateUser" => return self.update_user(db, cmd).await,
+            "dropUser" => return self.drop_user(db, cmd).await,
+            "dropAllUsersFromDatabase" => return self.drop_all_users(db).await,
+            "grantRolesToUser" => return self.grant_roles_to_user(db, cmd, false).await,
+            "revokeRolesFromUser" => return self.grant_roles_to_user(db, cmd, true).await,
+            "usersInfo" => return self.users_info(db, cmd).await,
+            "createRole" => return self.create_role(db, cmd).await,
+            "updateRole" => return self.update_role(db, cmd).await,
+            "dropRole" => return self.drop_role(db, cmd).await,
+            "dropAllRolesFromDatabase" => return self.drop_all_roles(db).await,
+            "grantRolesToRole" | "revokeRolesFromRole" | "grantPrivilegesToRole" | "revokePrivilegesFromRole" => return self.role_delta(db, cmd, name).await,
+            "rolesInfo" => return self.roles_info(db, cmd).await,
+            "invalidateUserCache" => return Ok(ok()),
             "ping" => return Ok(ok()),
             "buildInfo" | "buildinfo" => return Ok(build_info()),
             "getParameter" => return get_parameter(cmd),
@@ -119,10 +142,8 @@ impl Server {
             "commitTransaction" => return self.commit_txn(cmd).await,
             "abortTransaction" => return self.abort_txn(cmd).await,
             "whatsmyuri" => return Ok(doc! { "you": "127.0.0.1:0", "ok": 1.0 }),
-            "connectionStatus" => {
-                return Ok(doc! { "authInfo": { "authenticatedUsers": [], "authenticatedUserRoles": [], "authenticatedUserPrivileges": [] }, "ok": 1.0 })
-            }
-            "listDatabases" => return self.list_databases(cmd).await,
+            "connectionStatus" => return self.connection_status(conn_id, cmd).await,
+            "listDatabases" => return self.list_databases(cmd, conn_id).await,
             "tenantStats" => return Ok(self.tenant_stats()),
             "renameCollection" => return self.rename_collection(cmd).await,
             "ttlPass" => {
@@ -211,9 +232,10 @@ impl Server {
 
     // ---- databases and collections ---------------------------------------------------------
 
-    async fn list_databases(&self, cmd: &Document) -> R<Document> {
+    async fn list_databases(&self, cmd: &Document, conn_id: i64) -> R<Document> {
         let name_only = bool_arg(cmd.get("nameOnly"), false);
         let names = self.dbs.list_databases().await?;
+        let names = self.visible_databases(conn_id, names).await?;
         let dbs: Vec<Bson> = names
             .into_iter()
             .map(|n| if name_only { Bson::Document(doc! { "name": n }) } else { Bson::Document(doc! { "name": n, "sizeOnDisk": 0_i64, "empty": false }) })
