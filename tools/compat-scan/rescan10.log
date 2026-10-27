@@ -1,0 +1,21 @@
+== https://github.com/RocketChat/Rocket.Chat
+   scanned (8517 app files, 2429 test files, 3586 operator hits)
+== https://github.com/parse-community/parse-server
+   scanned (216 app files, 161 test files, 334 operator hits)
+== https://github.com/NodeBB/NodeBB
+   scanned (853 app files, 99 test files, 120 operator hits)
+== https://github.com/wekan/wekan
+   scanned (2033 app files, 2848 test files, 3026 operator hits)
+== https://github.com/danny-avila/LibreChat
+   scanned (3679 app files, 2933 test files, 3078 operator hits)
+== https://github.com/novuhq/novu
+   scanned (8314 app files, 1247 test files, 1190 operator hits)
+== https://github.com/appsmithorg/appsmith
+   scanned (6869 app files, 2187 test files, 72 operator hits)
+== https://github.com/Countly/countly-server
+   scanned (850 app files, 297 test files, 2713 operator hits)
+== https://github.com/payloadcms/payload
+   scanned (5283 app files, 2645 test files, 274 operator hits)
+== https://github.com/openedx/edx-platform
+   scanned (3694 app files, 1740 test files, 62 operator hits)
+wrote results_rescan10.json
