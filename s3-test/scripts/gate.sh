@@ -10,8 +10,10 @@ J=s3-test/run.json
 jq -e '.tests|type=="array" and length>0 and all(.[]; .==1 or .==2 or .==3)' $J >/dev/null || { echo "run.json: tests must be a non-empty list of 1, 2, 3"; exit 1; }
 total=$(python3 -I s3-test/scripts/ledger.py total results/s3-test/ledger.json)
 cap=$(jq -r .ledger_cap_usd s3-test/prices.json)
-echo "ledger total: $total USD (cap $cap)"
-awk -v t="$total" -v c="$cap" 'BEGIN{exit !(t>c)}' && { echo "LEDGER CAP REACHED: no new run may start"; exit 1; }
+run=$(jq -r .run_cost_cap_usd s3-test/prices.json)
+echo "ledger total: $total USD, one run may cost up to $run USD, ledger cap $cap USD"
+# A run may start only if the total AFTER a worst-case run still fits under the cap: the total never exceeds it.
+awk -v t="$total" -v r="$run" -v c="$cap" 'BEGIN{exit !(t+r>c)}' && { echo "LEDGER: total $total + one run $run would exceed $cap USD: no new run may start"; exit 1; }
 if jq -e '.tests|any(.==2 or .==3)' $J >/dev/null; then
   want=$(jq -r '.merge_results_blob // ""' $J); got=""
   for ref in origin/main origin/merge-engine; do
