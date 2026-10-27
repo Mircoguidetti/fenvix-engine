@@ -157,3 +157,70 @@ def register(g):
     tb("infinity", [ins("c", vals([1, {"$numberDouble": "Infinity"}])), ba("POWERSOF2", 2), ba("R5", 2), ba("1-2-5", 2)])
     tb("pow2_large", [ins("c", vals([1, 2 ** 40])), ba("POWERSOF2", 1), ba("POWERSOF2", 2), ins("d", vals([2 ** 31, 2 ** 33])), agg("d", [{"$bucketAuto": {"groupBy": "$v", "buckets": 1, "granularity": "POWERSOF2"}}])])
     tb("computed_group_by", [ins("c", [{"_id": i, "a": i, "b": 2} for i in range(1, 20)]), agg("c", [{"$bucketAuto": {"groupBy": {"$multiply": ["$a", "$b"]}, "buckets": 5, "granularity": "E12"}}])])
+
+    # ------------------------------------------------------------------ $near / $nearSphere without $maxDistance (rings)
+    import random as _random
+    rnd = _random.Random(5)
+
+    def pts(n):
+        out = []
+        for i in range(n):
+            lng, lat = round(rnd.uniform(-180, 180), 3), round(rnd.uniform(-89, 89), 3)
+            out.append({"_id": i, "k": i % 5, "loc": {"type": "Point", "coordinates": [lng, lat]}, "xy": [round(lng / 2, 3), round(lat / 2, 3)]})
+        # exact duplicates and near-duplicates test the tie order
+        out.append({"_id": 1000, "k": 1, "loc": {"type": "Point", "coordinates": [10.0, 10.0]}, "xy": [5.0, 5.0]})
+        out.append({"_id": 1001, "k": 2, "loc": {"type": "Point", "coordinates": [10.0, 10.0002]}, "xy": [5.0, 5.0002]})
+        out.append({"_id": 1002, "k": 1, "loc": {"type": "Point", "coordinates": [10.0, 10.0001]}, "xy": [5.0, 5.0001]})
+        out.append({"_id": 1003, "k": 3, "loc": {"type": "Point", "coordinates": [179.999, 0.0]}, "xy": [90.0, 0.0]})
+        out.append({"_id": 1004, "k": 3, "loc": {"type": "Point", "coordinates": [-179.999, 0.0]}, "xy": [-90.0, 0.0]})
+        out.append({"_id": 1005, "k": 4, "loc": {"type": "Point", "coordinates": [0.0, 89.9]}, "xy": [0.0, 44.95]})
+        out.append({"_id": 1006, "k": 4, "loc": {"type": "Point", "coordinates": [0.0, -89.9]}, "xy": [0.0, -44.95]})
+        return out
+
+    PT = pts(300)
+    IX = [{"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, {"op": "create_index", "coll": "c", "keys": [["xy", "2d"]]}]
+
+    def nq(flt, sort=None, **kw):
+        return find("c", flt, projection={"_id": 1}, **({"sort": sort} if sort else {}), **kw)
+
+    def center(lng, lat):
+        return {"type": "Point", "coordinates": [lng, lat]}
+
+    for ci, (lng, lat) in enumerate([(10, 10), (0, 0), (180, 0), (-179.9, 10), (0, 89), (100, -60), (-100, 30)]):
+        steps = [ins("c", PT)] + IX
+        for lim in (1, 3, 10, 40):
+            steps.append(nq({"loc": {"$nearSphere": {"$geometry": center(lng, lat)}}}, limit=lim))
+        steps.append(nq({"loc": {"$near": {"$geometry": center(lng, lat)}}}, limit=7, skip=3))
+        steps.append(nq({"loc": {"$near": {"$geometry": center(lng, lat), "$minDistance": 500000}}}, limit=5))
+        steps.append(nq({"loc": {"$nearSphere": {"$geometry": center(lng, lat), "$maxDistance": 3000000}}}, limit=20))
+        steps.append(nq({"loc": {"$nearSphere": [lng, lat]}}, limit=6))
+        steps.append(nq({"k": 2, "loc": {"$nearSphere": {"$geometry": center(lng, lat)}}}, limit=5))
+        steps.append(nq({"loc": {"$nearSphere": {"$geometry": center(lng, lat)}}, "k": {"$in": [1, 3]}}, limit=9))
+        tc(f"near_rings_sphere_{ci}", steps) if False else add(f"geo.near_rings_sphere_{ci}", steps, "geo: nearest-first rings")
+        steps2 = [ins("c", PT)] + IX
+        for lim in (1, 4, 25):
+            steps2.append(nq({"xy": {"$near": [lng / 2, lat / 2]}}, limit=lim))
+        steps2.append(nq({"xy": {"$near": [lng / 2, lat / 2], "$maxDistance": 30}}, limit=10))
+        steps2.append(nq({"xy": {"$nearSphere": [lng / 2, lat / 2]}}, limit=5))
+        steps2.append(nq({"k": 4, "xy": {"$near": [lng / 2, lat / 2]}}, limit=3))
+        add(f"geo.near_rings_flat_{ci}", steps2, "geo: nearest-first rings")
+    add("geo.near_rings_no_limit", [ins("c", PT[:80])] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}}), nq({"xy": {"$near": [5, 5]}})], "geo: nearest-first rings")
+    add("geo.near_rings_sort_desc", [ins("c", PT[:80])] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, sort={"_id": -1}, limit=5)], "geo: nearest-first rings")
+    add("geo.near_rings_compound_prefix", [ins("c", PT), {"op": "create_index", "coll": "c", "keys": [["k", 1], ["loc", "2dsphere"]]},
+                                          nq({"k": 2, "loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, limit=6), nq({"k": {"$in": [1, 2]}, "loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, limit=6)], "geo: nearest-first rings")
+    add("geo.near_rings_polygons_indexed", [ins("c", [{"_id": i, "loc": {"type": "Polygon", "coordinates": [[[i, i], [i + 3, i], [i + 3, i + 3], [i, i + 3], [i, i]]]}} for i in range(0, 60, 2)]),
+                                           {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(20, 22)}}}, limit=4), nq({"loc": {"$near": {"$geometry": center(-40, -40)}}}, limit=4)], "geo: nearest-first rings")
+    add("geo.near_rings_multikey_points", [ins("c", [{"_id": i, "loc": [{"type": "Point", "coordinates": [i * 3 % 170, i * 7 % 80]}, {"type": "Point", "coordinates": [-i * 3 % 170, -i * 7 % 80]}]} for i in range(40)]),
+                                          {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(30, 30)}}}, limit=6)], "geo: nearest-first rings")
+
+    # Documents at exactly the same distance come out of mongod's search in the pop order of a binary heap; the order is
+    # reproduced for a group that is alone in its search interval.
+    TIES = [{"_id": i, "loc": {"type": "Point", "coordinates": [10.0, 10.0]}, "xy": [5.0, 5.0]} for i in range(1, 8)] + [{"_id": 20 + i, "loc": {"type": "Point", "coordinates": [10.0 + i, 10.0]}, "xy": [5.0 + i, 5.0]} for i in range(1, 6)]
+    for lim in (1, 3, 4, 5, 7, 9):
+        add(f"geo.near_exact_ties_limit_{lim}", [ins("c", TIES)] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}}, limit=lim)], "geo: nearest-first, equal distances")
+        add(f"geo.near_exact_ties_flat_limit_{lim}", [ins("c", TIES)] + IX + [nq({"xy": {"$near": [5, 5]}}, limit=lim)], "geo: nearest-first, equal distances")
+    add("geo.near_exact_ties_no_limit", [ins("c", TIES)] + IX + [nq({"loc": {"$nearSphere": {"$geometry": center(10, 10)}}})], "geo: nearest-first, equal distances")
+
+    # The same place written as longitude 180 and -180.
+    add("geo.near_antimeridian_twins", [ins("c", [{"_id": 1, "loc": {"type": "Point", "coordinates": [180.0, 0.0]}}, {"_id": 2, "loc": {"type": "Point", "coordinates": [-180.0, 0.0]}}, {"_id": 3, "loc": {"type": "Point", "coordinates": [100.0, 0.0]}}]),
+                                       {"op": "create_index", "coll": "c", "keys": [["loc", "2dsphere"]]}, nq({"loc": {"$nearSphere": {"$geometry": center(-179.9, 10)}}}, limit=3)], "geo: nearest-first, equal distances")

@@ -400,11 +400,23 @@ pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &Fi
             }
         }
     } else {
-        // nearest-first needs every candidate before the limit applies
         let o3 = FindOpts { filter: o.filter, sort: o.sort, want: if near.is_some() { None } else { o.want }, hint: o.hint.clone(), ttl: o.ttl, ov: o.ov };
         if near.is_some() && !matches!(plan_for(indexes, &o3), Plan::Ix(s) if matches!(indexes[s.idx].kind, index::Kind::Geo(_))) {
             return Err(MongoError::new(291, "NoQueryExecutionPlans", "error processing query: planner returned error :: caused by :: unable to find index for $geoNear query".to_string()));
         }
+        // nearest first: grow a ring around the query point until the wanted number of documents is certain
+        if let Some((path, n)) = &near {
+            if o.ov.map(|m| m.keys().all(|k| !k.starts_with(&doc_prefix(coll)))).unwrap_or(true) {
+                let spec = indexes.iter().find_map(|i| match &i.kind {
+                    index::Kind::Geo(gs) if gs.field == *path => Some(gs.clone()),
+                    _ => None,
+                });
+                if let Some(r) = near_search(g, coll, indexes, o, path, n, spec.as_ref()).await? {
+                    return Ok(r);
+                }
+            }
+        }
+        // (transactions with writes of their own to the collection: read every candidate)
         (docs, stats, plan) = find_docs_inner(g, coll, indexes, &o3).await?;
     }
     if let Some((path, n)) = near {
@@ -415,6 +427,133 @@ pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &Fi
         docs = order_by_near(docs, &path, &n, spec.as_ref());
     }
     Ok((docs, stats, plan))
+}
+
+/// Nearest-first search over a geo index: rings of growing radius around the query point, each reading only the index
+/// entries the earlier rings did not cover, until `want` documents lie within the covered radius (all of them when the
+/// caller wants everything or the ring reaches `$maxDistance` / the whole index). Same order as sorting every candidate:
+/// distance, then index order of the matched location, then `_id`.
+async fn near_search(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>, path: &str, n: &crate::geo_query::Near, spec: Option<&crate::geo_query::GeoSpec>) -> R<Option<(Vec<Document>, Stats, Plan)>> {
+    let hint = match &o.hint {
+        Hint::Index(i) => Some(*i),
+        _ => None,
+    };
+    // distance units: meters for a GeoJSON query, radians for $nearSphere, coordinate units on a flat index
+    let planar = spec.map(|s| !s.sphere).unwrap_or(false);
+    let (mut radius, limit) = if planar && !n.spherical {
+        let s = spec.unwrap();
+        ((s.max - s.min) / 1000.0, (s.max - s.min) * std::f64::consts::SQRT_2)
+    } else if n.meters {
+        (3000.0, std::f64::consts::PI * crate::geo::EARTH_RADIUS_M)
+    } else {
+        (0.0005, std::f64::consts::PI)
+    };
+    let cap = if n.max.is_finite() { n.max.min(limit) } else { limit };
+    // an explicit sort may reorder the documents: then every candidate is needed
+    let want = if o.sort.is_empty() { o.want } else { None };
+    let mut stats = Stats::default();
+    let mut covered: Vec<(u64, u64)> = Vec::new();
+    let mut seen: HashSet<Vec<u8>> = HashSet::new();
+    let mut pool: Vec<(f64, u64, Vec<u8>, Document)> = Vec::new();
+    let mut first_plan: Option<Plan> = None;
+    loop {
+        let r = radius.min(cap);
+        let Some((scan, cov, whole)) = index::geo_near_scan(indexes, o.filter, hint, n, r, &covered) else { return Ok(None) };
+        covered = cov;
+        let plan = Plan::Ix(scan.clone());
+        let mut c = IxCursor::new(coll, &indexes[scan.idx], &scan);
+        let mut ids: Vec<Vec<u8>> = Vec::new();
+        loop {
+            let b = c.next_batch(g, usize::MAX).await?;
+            if b.is_empty() {
+                break;
+            }
+            stats.keys += b.len();
+            ids.extend(b.iter().filter_map(|k| entry_id(k)).filter(|id| seen.insert(id.to_vec())).map(|id| id.to_vec()));
+        }
+        if !ids.is_empty() {
+            for mut d in docs_by_ids(g, coll, &ids).await? {
+                stats.docs += 1;
+                if !(visible(&d, o) && matches(&d, o.filter)?) {
+                    continue;
+                }
+                let elems: Vec<(crate::geo::Elem, Bson)> = crate::query::path_values(&d, path).iter().flat_map(|v| crate::geo::elements_raw(v)).collect();
+                let (dist, loc) = crate::geo_query::near_distance(n, &elems).unwrap_or((f64::INFINITY, Bson::Null));
+                d.insert(crate::geo::DIST_KEY, dist);
+                d.insert(crate::geo::POINT_KEY, loc);
+                let tie = spec.map(|s| crate::geo_query::tie_key(s, d.get(crate::geo::POINT_KEY).unwrap_or(&Bson::Null))).unwrap_or(0);
+                let id = encode_sortable(d.get("_id").unwrap_or(&Bson::Null));
+                pool.push((dist, tie, id, d));
+            }
+        }
+        first_plan.get_or_insert(plan);
+        let exhausted = whole || r >= cap;
+        let safe = if exhausted { f64::INFINITY } else { r * (1.0 - 1e-9) };
+        let certain = pool.iter().filter(|p| p.0 <= safe).count();
+        if exhausted || want.map(|w| certain >= w).unwrap_or(false) {
+            pool.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal).then(a.1.cmp(&b.1)).then_with(|| a.2.cmp(&b.2)));
+            let ordered: Vec<(f64, Document)> = pool.into_iter().filter(|p| p.0 <= safe).map(|p| (p.0, p.3)).collect();
+            let mut docs: Vec<Document> = heap_ties(ordered).into_iter().map(|(_, d)| d).collect();
+            if let Some(w) = want {
+                docs.truncate(w);
+            }
+            return Ok(Some((docs, stats, first_plan.unwrap())));
+        }
+        radius *= 4.0;
+    }
+}
+
+/// Documents at exactly the same distance come out of mongod's nearest-first search in the pop order of a binary heap
+/// (libstdc++'s `std::priority_queue`), not in insertion order. For a group of four or more the order is reproduced by
+/// running the same push / pop sequence over the group (exact when the group is alone in its search interval).
+fn heap_ties<T>(items: Vec<(f64, T)>) -> Vec<(f64, T)> {
+    // items are in index order, sorted by distance
+    let mut out: Vec<(f64, T)> = Vec::with_capacity(items.len());
+    let mut group: Vec<(f64, T)> = Vec::new();
+    let flush = |group: &mut Vec<(f64, T)>, out: &mut Vec<(f64, T)>| {
+        if group.len() < 4 {
+            out.append(group);
+            return;
+        }
+        let n = group.len();
+        let mut slots: Vec<Option<(f64, T)>> = group.drain(..).map(Some).collect();
+        // heap of positions; all keys are equal, so the comparison is always false
+        let mut h: Vec<usize> = Vec::with_capacity(n);
+        for i in 0..n {
+            h.push(i); // pushing an element equal to its parent never moves it
+        }
+        while !h.is_empty() {
+            let top = h[0];
+            let value = h.pop().unwrap();
+            let len = h.len();
+            if len > 0 {
+                let mut hole = 0usize;
+                let mut second = 0usize;
+                while second < (len - 1) / 2 {
+                    second = 2 * (second + 1); // the right child: equal keys never prefer the left one
+                    h[hole] = h[second];
+                    hole = second;
+                }
+                if len % 2 == 0 && second == (len - 2) / 2 {
+                    second = 2 * (second + 1);
+                    h[hole] = h[second - 1];
+                    hole = second - 1;
+                }
+                h[hole] = value; // the value never moves up again over equal keys
+            }
+            out.push(slots[top].take().unwrap());
+        }
+    };
+    for it in items {
+        if group.last().map(|l| l.0 == it.0).unwrap_or(false) || group.is_empty() {
+            group.push(it);
+        } else {
+            flush(&mut group, &mut out);
+            group.push(it);
+        }
+    }
+    flush(&mut group, &mut out);
+    out
 }
 
 /// Nearest first (ties in index order, then by `_id`), with the distance and the matched location attached as hidden metadata.
@@ -430,7 +569,7 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
         keyed.push((dist, tie, d));
     }
     keyed.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal).then(a.1.cmp(&b.1)));
-    keyed.into_iter().map(|(_, _, d)| d).collect()
+    heap_ties(keyed.into_iter().map(|(dist, _, d)| (dist, d)).collect()).into_iter().map(|(_, d)| d).collect()
 }
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {

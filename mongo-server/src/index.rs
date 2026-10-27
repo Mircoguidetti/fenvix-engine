@@ -1143,6 +1143,91 @@ pub fn geo_scan(indexes: &[IndexDef], filter: &Document, cs: &HashMap<String, Co
     Some(IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: g.prefix.len() + 1, bounds: vec![(path, vec!["[geo]".to_string()])] })
 }
 
+/// Remove the ranges of `b` from the ranges of `a` (both sorted and merged).
+fn subtract_ranges(a: &[(u64, u64)], b: &[(u64, u64)]) -> Vec<(u64, u64)> {
+    let mut out = Vec::new();
+    for &(lo, hi) in a {
+        let mut cur = lo;
+        let mut done = false;
+        for &(blo, bhi) in b {
+            if bhi < cur {
+                continue;
+            }
+            if blo > hi {
+                break;
+            }
+            if blo > cur {
+                out.push((cur, blo - 1));
+            }
+            if bhi >= hi {
+                done = true;
+                break;
+            }
+            cur = bhi + 1;
+        }
+        if !done && cur <= hi {
+            out.push((cur, hi));
+        }
+    }
+    out
+}
+
+/// The next ring of a nearest-first search: the index entries within `radius` of the query point (in the distance units of
+/// `n`) that earlier rings (`prev`, ranges of cell ids) did not cover. Returns the scan, all ranges covered so far, and
+/// whether the whole index has now been covered. `None` when there is no usable geo index.
+pub fn geo_near_scan(indexes: &[IndexDef], filter: &Document, hint: Option<usize>, n: &crate::geo_query::Near, radius: f64, prev: &[(u64, u64)]) -> Option<(IxScan, Vec<(u64, u64)>, bool)> {
+    use crate::geo_query::{cover, merge_ranges, plane_query_bbox, plane_ranges, sphere_ranges, token, Cond, Region};
+    let (path, _) = find_geo_field(filter)?;
+    let (i, g, idx) = indexes.iter().enumerate().find_map(|(i, x)| match &x.kind {
+        Kind::Geo(g) if x.state == State::Ready && g.field == path && hint.map(|h| h == i).unwrap_or(true) => Some((i, g, x)),
+        _ => None,
+    })?;
+    let cs = constraints(filter);
+    let mut prefixes: Vec<Vec<u8>> = vec![Vec::new()];
+    for (p, asc) in &g.prefix {
+        let vals = cs.get(p).and_then(|c| c.eq.clone())?;
+        let mut next = Vec::new();
+        for pre in &prefixes {
+            for v in &vals {
+                let mut k = pre.clone();
+                k.extend(keyenc::component(v, *asc));
+                next.push(k);
+            }
+        }
+        prefixes = next;
+    }
+    let (ranges, whole): (Vec<(u64, u64)>, bool) = if g.sphere {
+        let rad = if n.meters { radius / crate::geo::EARTH_RADIUS_M } else if n.spherical { radius } else { radius.to_radians() };
+        if rad >= std::f64::consts::PI {
+            (vec![(0, u64::MAX)], true)
+        } else {
+            (sphere_ranges(&cover(&crate::geo::Shape::Cap(n.center, rad), 20, 0, 24), g.coarsest, idx.multikey), false)
+        }
+    } else {
+        let bbox = if n.spherical { plane_query_bbox(&Cond::Within(Region::CenterSphere(n.center, radius))) } else { Some(([n.center_xy[0] - radius, n.center_xy[1] - radius], [n.center_xy[0] + radius, n.center_xy[1] + radius])) };
+        match bbox {
+            Some((lo, hi)) if !(lo[0] <= g.min && lo[1] <= g.min && hi[0] >= g.max && hi[1] >= g.max) => (plane_ranges(g, lo, hi), false),
+            _ => (vec![(0, u64::MAX)], true),
+        }
+    };
+    let fresh = subtract_ranges(&ranges, prev);
+    let mut covered: Vec<(u64, u64)> = prev.to_vec();
+    covered.extend(ranges.iter().copied());
+    let covered = merge_ranges(covered);
+    let mut intervals: Vec<Interval> = Vec::new();
+    for p in &prefixes {
+        for (lo, hi) in &fresh {
+            let mut start = p.clone();
+            start.extend(keyenc::component(&Bson::String(token(*lo)), true));
+            let mut hi_key = p.clone();
+            hi_key.extend(keyenc::component(&Bson::String(token(*hi)), true));
+            intervals.push((start, keyenc::prefix_end(&hi_key)));
+        }
+    }
+    intervals.sort();
+    Some((IxScan { idx: i, intervals, reverse: false, sorted: false, bounded_fields: g.prefix.len() + 1, bounds: vec![(path, vec!["[geo]".to_string()])] }, covered, whole))
+}
+
 /// The index scan that answers a `$text` condition: one interval per (prefix value, term). `None` when there is no
 /// text index or a prefix field has no equality (the caller reports the error).
 pub fn text_scan(indexes: &[IndexDef], operand: &Document, cs: &HashMap<String, Constraint>, hint: Option<usize>) -> Option<IxScan> {
