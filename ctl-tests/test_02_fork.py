@@ -221,7 +221,8 @@ def test_fork_then_compaction_and_gc_keep_the_fork_readable(env):
         time.sleep(0.3)
     wait_until(lambda: c.admin.command("tenantStats")["maintenance"]["compactRuns"] > base["compactRuns"], 60, what="compaction of the source")
     objs_after_compaction = {k for k, _ in list_prefix(bucket, "tenants/cg/")}
-    wait_until(lambda: c.admin.command("tenantStats")["maintenance"]["gcRuns"] > base["gcRuns"], 120, what="garbage collection")
+    # the GC pass of this database runs 30 s after its last write session (other databases' passes do not count)
+    wait_until(lambda: objs_after_compaction - {k for k, _ in list_prefix(bucket, "tenants/cg/")}, 150, every=2, what="garbage collection of the source")
     time.sleep(2)
     objs_after_gc = {k for k, _ in list_prefix(bucket, "tenants/cg/")}
     deleted = objs_after_compaction - objs_after_gc
