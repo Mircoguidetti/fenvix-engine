@@ -577,3 +577,110 @@ It is `gc/manifest.boundary`, written by the whole-tenant GC pass 30 s after a t
 - A window that adapts to the number of waiting writes; a window on the local-directory store; all window and durable-read numbers are one 15 s run per cell on one machine.
 - `compat-indexes`: not available here, so the interaction with indexes written in the same batch was not tested (the batch is still one `WriteBatch`, unchanged).
 <!-- round4:end -->
+
+<!-- round5:start -->
+## Round 5 — branch `engine-cost`: cost of the WAL cleanup, cleanup of SSTs and manifests, adaptive batch window
+
+Rules as before: numbers come from files in `loadtest/results/` (`wal/cost-*`, `wal/bulk*`, `objects/`, `open-gc/`, `gc/ad-*`, `suites/`); MinIO built from source, local disk, load generator and server on the same 4 vCPUs. **Comparisons below are only between runs interleaved in one session**: absolute throughput drifted between sessions on this machine (the same code with the cleanup off made 486 ops/s at 10 minutes in one session and 434 in the next; one connection made 265 to 295 ops/s earlier in this branch and 217 to 240 now), so a number from one table must not be compared with a number from another.
+
+After each change the differential suites were rerun (`suites/*-summary.txt`):
+
+| Change (commit) | pymongo core / extra | Node.js core / extra |
+|---|---|---|
+| Incremental bulk WAL cleanup | 1081/1081, 25/49 | 1081/1081, 24/49 |
+| SST / manifest cleanup of an open writer | 1081/1081, 25/49 | 1081/1081, 25/49 |
+| Adaptive window flag | 1081/1081, 25/49 | 1081/1081, 25/49 |
+
+### 1. The throughput cost of the WAL cleanup: measured, explained, reduced
+
+**Measured, repeated.** The cleanup of round 4 (slatedb's own WAL pass every 20 s), `exp_wal_growth.py`, one tenant on MinIO, 8 connections, writes only, 3 runs per cell, cleanup on and off interleaved (ops/s per run; mean):
+
+| Run length | Off | On (round-4 pass) | Cost | p50 / p99 ms off | p50 / p99 ms on | Max WAL objects off / on |
+|---|---|---|---|---|---|---|
+| 1 min | 536, 538, 502 (525) | 498, 509, 510 (506) | **-3.7%** | 14.4 / 33.2 | 14.8 / 38.4 | 18,976 / 11,429 |
+| 5 min | 496, 485, 485 (489) | 461, 448, 460 (456) | **-6.6%** | 16.0 / 31.9 | 17.0 / 39.1 | 107,557 / 12,673 |
+| 10 min | 486, 485, 486 (486) | 438, 450, 453 (447) | **-7.9%** | 16.2 / 31.8 | 17.4 / 38.7 | 220,360 / 12,501 |
+
+So the 15 to 24% of round 4 (one run per cell, from different sessions) was mostly noise and drift; the real cost was 4 to 8%, growing with the run, and p99 was 16 to 22% higher.
+
+**Where it goes** (profile: `exp_objects.py`, 8 connections, 180 s, 3 runs per variant interleaved, same binary; "list-only" = slatedb's listing without deleting; "single" = incremental pass with one DELETE per object; "bulk" = incremental pass with bulk deletes):
+
+| Variant | ops/s (mean of 3) | vs off | p99 ms | MinIO CPU s | Objects deleted | Time in the pass (list / delete) |
+|---|---|---|---|---|---|---|
+| off | 504.7 | | 31.0 | 122 | 0 | |
+| list-only (slatedb listing every pass) | 489.3 | -3.1% | 32.4 | 132 | 0 | 8.1 s (8.0 / 0) |
+| slatedb pass (list + 1 DELETE per object) | 469.5 | -7.0% | 38.1 | 151 | 48,616 | 35.1 s |
+| single (no listing, 1 DELETE per object) | 454.9 | -9.9% | 38.8 | 153 | 47,786 | 29.2 s (0.4 / 28.7) |
+| bulk (no listing, bulk deletes) | 480.7 | -4.8% | 34.7 | 138 | 51,884 | 15.9 s (0.3 / 15.5) |
+
+The run-to-run spread is 9 to 17 ops/s, so single differences of 2 to 3% are not resolved by one table; the pattern across MinIO CPU (+10 s listing, +29 s slatedb, +31 s single, +16 s bulk) and time in the pass is consistent: **the cost is the deletes** (slatedb's pass sends one DELETE per object, about 48,000 per 3 minutes; a MinIO delete removes a directory and its `xl.meta`), **the full-directory listing is small** (3% at most, 8 s of listing in 3 minutes), the interaction with flushes and lock contention was not separable: the pass runs outside the write path (under the tenant's maintenance lock, which only compaction and other cleanup share) and the server's own CPU is unchanged in all variants (205 to 210 s). Batch size and pauses did not help (3 runs each, 3 minutes: batches of 100 with 10 ms pauses 481.3 ops/s, batches of 250 481.2, one stream 481.1, cleanup off 481.7 in that session, whose off baseline contained one slow run of 442; pass time 29 s, 24 s, 16 s): the flags were removed again.
+
+**The fix** (own commit): the default pass reads the manifest, skips if a checkpoint exists, and deletes the ids from where the previous pass stopped up to `replay_after_wal_id` with bulk deletes (one listing the first time a tenant is cleaned in a process); `--wal-gc-mode slatedb` restores the old pass. No object is deleted that slatedb's pass would keep (it keeps the boundary id itself, so does this one).
+
+**Result, matched pairs** (same binary, `--wal-gc-secs 0` against default, interleaved, 3 runs per cell, 8 connections):
+
+| Run length | Off (ops/s) | Bulk pass (ops/s) | Cost | p50 / p99 ms off | p50 / p99 ms on | Max WAL objects off / on | Recovery after SIGKILL (s) |
+|---|---|---|---|---|---|---|---|
+| 1 min | 494, 484, 490 (489) | 486, 481, 486 (484) | **-1.1%** | 15.5 / 33.6 | 15.5 / 35.1 | 20,087 / 8,938 | 1.14 to 1.40 |
+| 5 min | 447, 447, 440 (444) | 427, 443, 440 (437) | **-1.8%** | 17.7 / 34.5 | 17.9 / 36.5 | 93,918 / 9,324 | 0.98 to 1.29 |
+| 10 min | 436, 434, 432 (434) | 413, 428, 422 (421) | **-3.0%** | 18.2 / 34.3 | 18.5 / 37.4 | 194,123 / 10,607 | 0.73 to 1.69 |
+
+Under 5% at every length and the bound kept (maximum 10,607 objects over a 10-minute run, against 194,123 without the cleanup). The cost still grows with the run (1.1, 1.8, 3.0%) and p99 is 4 to 9% higher; the 1.1, 1.8 and 3.0% are means of three runs with a spread of 1 to 8 ops/s, one session. Recovery after SIGKILL is about 1 s with or without the cleanup (replay is only the tail).
+
+**By connections** (`exp_objects.py`, 120 s, 2 runs per cell, interleaved; ops/s, p50 / p99 ms, max WAL objects; "round-4 pass" = `--wal-gc-mode slatedb`):
+
+| Connections | Off | Round-4 pass | Bulk pass |
+|---|---|---|---|
+| 1 | 217 (4.5 / 7.9), 24,441 | 210 (4.5 / 10.3), 7,415, -3.4% | 210 (4.6 / 8.5), 4,932, -3.0% |
+| 8 | 470 (16.6 / 33.8), 36,643 | 448 (17.0 / 40.5), 10,785, -4.7% | 450 (17.3 / 35.8), 8,415, -4.3% |
+| 64 | 463 (139.2 / 243.9), 32,617 | 443 (144.5 / 266.0), 9,785, -4.3% | 451 (144.1 / 256.3), 8,258, -2.6% |
+
+Here the two passes are inside each other's noise (two runs per cell, spread about 3%); the matched 1/5/10-minute runs above are the better evidence for the difference. Durability with the new pass (`test_group_commit.py --secs 60`, SIGKILL after a minute of writes with cleanup passes running): 4 trials, **23,692 acknowledged documents, 0 lost inserts, 0 lost updates**; negative control (`--ack-before-durable`): 11,907 documents, 53 lost inserts and 38 lost updates.
+
+Not done: getting the cost to zero (the deletes are the cost; fewer WAL objects would need a longer group-commit window, which costs more than it saves, see 3); the cost on a store where deletes are cheaper than on MinIO's one-directory-per-object layout (not measured); MinIO's own request counter for the bulk requests (the counter in the server counts objects, not HTTP requests, so that bulk deletes are sent as bulk requests is inferred from `object_store`'s implementation and from the shorter pass time).
+
+### 2. SSTs, manifests and compaction states of an open writer (cleaned up, bounded)
+
+**What it deletes, and when that is safe for a live writer.** Every `--sst-gc-secs` (default 60) for a writer written in the last minute, under the tenant's maintenance lock (no compaction of this process writes a new SST meanwhile): the compacted SSTs that the latest manifest's L0 and sorted runs do not name, the manifests below the latest, and the compaction states below the highest number, but **only once this process has seen the object unreferenced for `--sst-gc-min-unref-secs` (default 120)**. The reason for the wait: a live writer keeps reading the SSTs of the manifest it last loaded (it re-reads it every 30 s), so an SST that a compaction has just replaced must outlive that view; an SST that the writer has uploaded but not yet put in the manifest also looks unreferenced and is covered by the same wait. The clock starts when a pass first sees the object, so a restart only delays deletion. A pass is skipped when a checkpoint or a segment exists. No other reader exists for an open tenant (another process is refused by the lease). slatedb's own GC uses 24 hours for this; 120 s rests on the 30 s poll and on a single owner per tenant, which is a judgment, not something I proved beyond the tests below.
+
+**Object count over a 10-minute hot run** (`exp_objects.py`, 8 connections, 2 runs per setting, `--sst-gc-secs 0` against default, WAL cleanup on in both; objects in the tenant's `compacted/`, `manifest/`, `compactions/`; run 1 of each):
+
+| Seconds | Off: compacted / manifest / compactions | On: compacted / manifest / compactions |
+|---|---|---|
+| 60 | 6 / 10 / 8 | 4 / 6 / 0 |
+| 180 | 20 / 27 / 22 | 21 / 27 / 22 |
+| 300 | 35 / 44 / 40 | 27 / 25 / 24 |
+| 420 | 51 / 64 / 56 | 35 / 26 / 25 |
+| 540 | 66 / 80 / 73 | 29 / 25 / 25 |
+| 590 | 73 / 91 / 81 | 32 / 28 / 26 |
+| **Maximum, both runs** | **73, 72 / 91, 86 / 81, 80** | **39, 43 / 30, 30 / 29, 26** |
+
+Off grows linearly (about 7 SSTs, 9 manifests and 8 compaction states per minute); on is bounded (the window of 120 s plus the 60 s pass interval keeps about three minutes of history; manifests and compaction states about 30). Passes: 9 per run, 40 SSTs and 111 to 116 manifests deleted per run. Throughput and latency are unchanged: 416 and 420 ops/s on against 422 and 414 off, p99 39.6 and 39.4 ms against 37.1 and 38.4.
+
+**Durability, SIGKILL during the cleanup** (`test_open_gc.py`: memtable flush at 1 MiB, manifest re-read every 2 s, cleanup every 5 s with an unreferenced window of 20 s so that many SSTs are deleted; 24 writers insert 2 KB documents and update a counter twice, the test waits for the next "SSTGC begin" in the server log and sends SIGKILL at once): 4 trials of 100 s, **4 of 4 kills landed inside a cleanup pass** (a "begin" line without its "end"), 16 passes per trial, 63 SSTs and 226 manifests/compaction states deleted, **15,227 acknowledged documents (about 45,000 acknowledged writes: an insert and two updates each), 0 lost inserts, 0 lost updates** after the restart. **Negative control** (`--gc-control-delete-live`: the pass also deletes the oldest SST the manifest references): 2 trials, 7,306 acknowledged documents, **all 7,306 unreadable after the restart** (the read fails with "Object ... compacted/....sst not found"), so the test catches a cleanup that deletes too much.
+
+**Correctness of reads during the cleanup:** 8 readers checked 16,213 reads of documents with a known acknowledged counter during those runs: **0 missing, 0 with an older counter, 0 with damaged padding, 0 errors, 0 counts below the number of acknowledged inserts**. Limit: in the control run the readers did **not** see the deleted SST (0 violations during the run, the failure came only at the restart), because the writer served those reads from its memtable and block cache; so this read check has weak power against an SST deleted too early, and the evidence for safety rests on the unreferenced-window reasoning and the restart check, not on the live reads alone.
+
+Not done: the same window under a compaction stall longer than 120 s (not tested); tenants with segments or checkpoints (the pass skips them, untested); the old SSTs left behind by a crash of a process that never cleans that tenant again are collected only when the tenant is closed and collected as a whole.
+
+### 3. Adaptive batch window: not made the default
+
+`--group-commit-adaptive` (with `--group-commit-window-ms W`): the leader of a flush group waits for the window only while another write of the tenant is on its way, that is in flight (from asking for the tenant lock to its reply) but not yet waiting for the flush; when every in-flight write is already in the group, it flushes at once. MinIO, writes only, 15 s per cell, 3 runs per cell, configurations interleaved; cells: ops/s mean (change against window 0), p50 / p99 ms, WAL PUTs per write, writes per flush:
+
+| Window | 1 connection | 8 connections | 64 connections |
+|---|---|---|---|
+| 0 (default) | 240 (4.1 / 6.9), 1.000, 1.00 | 607 (11.4 / 32.1), 0.563, 1.81 | 631 (87.0 / 244.2), 0.489, 1.63 |
+| 2 ms, always waits | 140 (-42%) (7.1 / 9.7), 1.000, 1.00 | 485 (-20%) (14.5 / 36.1), 0.344, 3.07 | 557 (-12%) (114.8 / 232.2), 0.295, 2.76 |
+| 2 ms adaptive | 234 (-2%) (4.1 / 7.5), 1.000, 1.00 | 492 (-19%) (15.6 / 36.3), 0.392, 2.66 | 559 (-11%) (116.4 / 230.7), 0.322, 2.51 |
+| 5 ms adaptive | 237 (-1%) (4.1 / 7.2), 1.000, 1.00 | 481 (-21%) (16.8 / 36.8), 0.277, 3.85 | 556 (-12%) (116.9 / 254.2), 0.215, 3.88 |
+| 10 ms adaptive | 239 (0%) (4.1 / 6.8), 1.000, 1.00 | 462 (-24%) (15.4 / 38.5), 0.216, 5.03 | 562 (-11%) (113.1 / 238.6), 0.141, 6.19 |
+
+The adaptive rule removes the penalty at one connection (-42% becomes -2% to 0%: a lone writer no longer waits), and at 8 and 64 connections it saves PUTs (0.563 to 0.216 and 0.489 to 0.141 per write) at a cost of 11 to 24% throughput and 2 to 4 ms of p50. **It is not better or equal on every cell, so the default stays at window 0 and not adaptive.** Why it still waits at saturation: with 8 or 64 connections there is nearly always a write that has asked for the tenant lock and not yet reached the flush (the write step is serialized at about 1.5 ms each), so the leader waits for the window; flushing as soon as every in-flight write is waiting would need all connections to be in the group at once, which a closed loop with a serialized write step rarely reaches.
+
+### Not measured in this round
+
+- Anything on a store other than local MinIO; the cleanup cost where deletes are cheap, and MinIO's own request counts.
+- A 10-minute run of the final binary with both cleanups and the 1/8/64 table together (the cleanups were measured one at a time, each against its own off setting).
+- The WAL cleanup cost beyond 10 minutes (the cost grew from 1.1% to 3.0% between 1 and 10 minutes; whether it keeps growing was not measured).
+- `compat-indexes`: not available here.
+<!-- round5:end -->
