@@ -93,6 +93,10 @@ struct Args {
     /// database then costs no request. Every process sharing the bucket must use the same setting.
     #[arg(long)]
     process_lease: bool,
+    /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = off, WAL objects
+    /// then stay until the tenant has been idle and is collected as a whole).
+    #[arg(long, default_value_t = 20)]
+    wal_gc_secs: u64,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -151,6 +155,7 @@ async fn main() -> Result<()> {
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
     dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).

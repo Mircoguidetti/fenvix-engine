@@ -408,6 +408,7 @@ impl Entry {
         self.touch();
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
+        tenant_bench::lifecycle::note_write(&self.name);
         self.request_compaction_if_needed();
         let Some(commit) = staged? else { return Ok(()) };
         let mut slot = Some(commit);

@@ -83,6 +83,24 @@ pub static WRITER_POLL_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::A
 /// wake replays it because no clean marker is written).
 pub const CLOSE_FLUSH_TIMEOUT: Duration = Duration::from_secs(20);
 
+/// Writers a process has open right now (garbage collection of a whole tenant is left to its close).
+static OPEN_WRITERS: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+
+/// Tenants written recently, for the WAL-only garbage collection of open writers (see `Maintenance`).
+struct HotGc {
+    last_write: Instant,
+    last_gc: Instant,
+}
+static GC_HOT: std::sync::LazyLock<Mutex<HashMap<String, HotGc>>> = std::sync::LazyLock::new(Default::default);
+/// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = never).
+pub static HOT_GC_EVERY_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(20);
+
+/// Record that a writer of tenant `id` just wrote.
+pub fn note_write(id: &str) {
+    let now = Instant::now();
+    GC_HOT.lock().unwrap().entry(id.to_string()).and_modify(|h| h.last_write = now).or_insert(HotGc { last_write: now, last_gc: now });
+}
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
     let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
@@ -192,6 +210,7 @@ impl Lifecycle {
         let id = id.to_string();
         let db = Db::builder(tenant_path(&id), Arc::clone(&self.store)).with_settings(writer_settings()).build().await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
+        OPEN_WRITERS.lock().unwrap().insert(id.clone());
         Ok(Tenant { lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
     }
 
@@ -336,6 +355,7 @@ impl Tenant {
         }
         self.mode = Some(Mode::Writer(db?));
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
+        OPEN_WRITERS.lock().unwrap().insert(self.id.clone());
         Ok(())
     }
 
@@ -404,6 +424,7 @@ impl Tenant {
             }
             Some(Mode::Writer(db)) => {
                 let _ = db.close().await;
+                OPEN_WRITERS.lock().unwrap().remove(&self.id);
             }
             None => {}
         }
@@ -415,6 +436,7 @@ impl Tenant {
         match self.mode.take() {
             Some(Mode::Reader(r)) => r.close().await?,
             Some(Mode::Writer(db)) => {
+                OPEN_WRITERS.lock().unwrap().remove(&self.id);
                 match tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, db.close()).await {
                     Ok(r) => r?,
                     Err(_) => {
@@ -561,6 +583,31 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, mi
     Ok(GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() })
 }
 
+/// Delete the WAL objects of an open writer that its latest manifest no longer needs (everything before
+/// `replay_after_wal_id`, which advances each time the writer flushes its memtable to an L0 SST). Only the WAL
+/// directory is touched: the writer is live, so manifests, SSTs and compactions are left alone.
+pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
+    let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
+    let store: Arc<dyn ObjectStore> = counting.clone();
+    let opts = GarbageCollectorOptions {
+        manifest_options: None,
+        wal_options: Some(GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false }),
+        compacted_options: None,
+        compactions_options: None,
+        ..GarbageCollectorOptions::default()
+    };
+    Admin::builder(tenant_path(&id), store).build().run_gc_once(opts).await?;
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        let snap = counting.counters.snapshot();
+        MAINT.gc_runs.fetch_add(1, Relaxed);
+        MAINT.gc_deletes.fetch_add(snap.delete, Relaxed);
+        MAINT.gc_lists.fetch_add(snap.list, Relaxed);
+        MAINT.gc_gets.fetch_add(snap.get + snap.get_range + snap.head, Relaxed);
+    }
+    Ok(GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() })
+}
+
 #[derive(Default)]
 pub struct MaintenanceLog {
     pub compactions: Vec<CompactionRecord>,
@@ -629,13 +676,36 @@ impl Maintenance {
                     tokio::time::sleep(Duration::from_secs(2)).await;
                     let due: Vec<String> = {
                         let mut t = touched.lock().unwrap();
+                        let open = OPEN_WRITERS.lock().unwrap();
+                        // A writer still open is collected by the WAL-only pass below and again when it closes.
                         let due: Vec<String> =
-                            t.iter().filter(|(_, at)| at.elapsed() >= gc_after).map(|(id, _)| id.clone()).collect();
+                            t.iter().filter(|(id, at)| at.elapsed() >= gc_after && !open.contains(*id)).map(|(id, _)| id.clone()).collect();
                         for id in &due {
                             t.remove(id);
                         }
                         due
                     };
+                    let every = Duration::from_secs(HOT_GC_EVERY_SECS.load(std::sync::atomic::Ordering::Relaxed));
+                    let hot_due: Vec<String> = if every.is_zero() {
+                        Vec::new()
+                    } else {
+                        let mut m = GC_HOT.lock().unwrap();
+                        m.retain(|_, h| h.last_write.elapsed() < every * 3);
+                        let now = Instant::now();
+                        m.iter_mut().filter(|(_, h)| h.last_gc.elapsed() >= every).map(|(id, h)| { h.last_gc = now; id.clone() }).collect()
+                    };
+                    futures::stream::iter(hot_due)
+                        .for_each_concurrent(GC_CONCURRENCY, |id| {
+                            let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
+                            async move {
+                                let lock = maint_lock(&locks, &id);
+                                let _held = lock.lock().await;
+                                if let Err(e) = gc_tenant_wal(&s3, &id, gc_min_age).await {
+                                    log.lock().unwrap().errors.push(format!("wal gc {id}: {e:#}"));
+                                }
+                            }
+                        })
+                        .await;
                     // Concurrent: a pass costs several LIST and DELETE round trips, so one at a time cannot keep up
                     // when tens of tenants a second go idle (the backlog then grows without bound).
                     futures::stream::iter(due)
