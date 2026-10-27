@@ -74,6 +74,7 @@ class Tenant:
         self.uncertain = set()
         self.next_id = 1
         self.writes = 0
+        self.hist = {}  # _id -> [(op, outcome)] for diagnosing a mismatch
 
 
 def client():
@@ -87,6 +88,10 @@ def make_doc(i, rnd):
     d["p"] = rnd.randint(0, 3)
     d["on"] = rnd.random() < 0.5
     return d
+
+
+def H(t, i, op, out):
+    t.hist.setdefault(i, []).append((round(time.time() % 1000, 2), op, out))
 
 
 def writer(t, stop, seed, stats):
@@ -103,7 +108,9 @@ def writer(t, stop, seed, stats):
                     t.next_id += 1
                 d = make_doc(i, rnd)
                 t.uncertain.add(i)
+                H(t, i, "insert", "sent")
                 coll.insert_one(d)
+                H(t, i, "insert", "ok")
                 t.acked[i] = d
                 t.uncertain.discard(i)
             else:
@@ -113,26 +120,37 @@ def writer(t, stop, seed, stats):
                     was_uncertain = i in t.uncertain  # an earlier failed write to this document may or may not have been applied
                     t.uncertain.add(i)
                     new = rnd.randint(0, 20)
+                    H(t, i, "update", "sent")
                     res = coll.update_one({"_id": i}, {"$set": {"a": new}, "$push": {"m": 99}})
+                    H(t, i, "update", f"ok matched={res.matched_count}")
                     if res.matched_count:
                         t.acked[i] = dict(t.acked[i], a=new, m=t.acked[i]["m"] + [99])
                     if not was_uncertain:
                         t.uncertain.discard(i)
                 elif r < 0.75:
                     t.uncertain.add(i)
+                    H(t, i, "delete", "sent")
                     coll.delete_one({"_id": i})
+                    H(t, i, "delete", "ok")
                     t.acked.pop(i, None)
                     t.uncertain.discard(i)
                 elif r < 0.85:
+                    was_uncertain = i in t.uncertain  # the document may be gone after an earlier failed write
                     t.uncertain.add(i)
                     d = make_doc(i, rnd)
-                    coll.replace_one({"_id": i}, d)
-                    t.acked[i] = d
-                    t.uncertain.discard(i)
+                    H(t, i, "replace", "sent")
+                    res = coll.replace_one({"_id": i}, d)
+                    H(t, i, "replace", f"ok matched={res.matched_count}")
+                    if res.matched_count:
+                        t.acked[i] = d
+                    if not was_uncertain:
+                        t.uncertain.discard(i)
                 elif r < 0.92:
                     was_uncertain = i in t.uncertain
                     t.uncertain.add(i)
+                    H(t, i, "fau", "sent")
                     d = coll.find_one_and_update({"_id": i}, {"$inc": {"b": 1}}, return_document=pymongo.ReturnDocument.AFTER)
+                    H(t, i, "fau", f"ok found={d is not None}")
                     if d is not None:
                         t.acked[i] = d
                     if not was_uncertain:
@@ -141,6 +159,8 @@ def writer(t, stop, seed, stats):
                     # transaction touching two documents
                     j = rnd.choice(list(t.acked))
                     t.uncertain.update((i, j))
+                    H(t, i, "txn", f"sent with {j}")
+                    H(t, j, "txn", f"sent with {i}")
                     with cl.start_session() as s:
                         s.start_transaction()
                         coll.update_one({"_id": i}, {"$inc": {"a": 1}}, session=s)
@@ -151,8 +171,11 @@ def writer(t, stop, seed, stats):
             stats["ops"] += 1
         except errors.DuplicateKeyError:
             stats["dup"] += 1
-        except Exception:
+        except Exception as e:
             stats["errors"] += 1
+            for k in list(t.uncertain):
+                if t.hist.get(k) and t.hist[k][-1][2] == "sent":
+                    H(t, k, "ERR", type(e).__name__)
             time.sleep(0.2)
             try:
                 cl = client()
@@ -161,6 +184,9 @@ def writer(t, stop, seed, stats):
                 pass
         finally:
             t.opgate.release()
+
+
+HISTS = {}
 
 
 def check_tenant(name, acked, uncertain, report, label):
@@ -192,7 +218,7 @@ def check_tenant(name, acked, uncertain, report, label):
                 continue
             got = docs.get(i)
             if got is None:
-                problems.append(("c", "acked-write-missing", i))
+                problems.append(("c", "acked-write-missing", i, HISTS[name].get(i, [])[-8:]))
             else:
                 diff = {k: (d.get(k), got.get(k)) for k in ("a", "b", "c", "u", "m", "s", "p", "on") if got.get(k) != d.get(k)}
                 if diff:
@@ -303,6 +329,7 @@ def main():
         for n in names:
             try:
                 with tenants[n].opgate:
+                    HISTS.update({m: dict(t.hist) for m, t in tenants.items()})
                     check_tenant(n, {m: dict(t.acked) for m, t in tenants.items()}, {m: set(t.uncertain) for m, t in tenants.items()}, report, f"kill {k} ({mode})")
             except Exception as e:  # noqa
                 report["problems"].append({"tenant": n, "at": f"kill {k}", "problems": [f"check failed: {e}"]})

@@ -30,6 +30,7 @@ GROUPS = [
     ("Transactions (`txn.`, replica-set reference)", lambda t: t["name"].startswith("txn.")),
     ("Change streams (`cs.`, replica-set reference)", lambda t: t["name"].startswith("cs.")),
     ("`$where` (`where.`)", lambda t: t["name"].startswith("where.")),
+    ("Step 4 — bitwise query operators and `$bit` (`bits.`)", lambda t: t["name"].startswith("bits.")),
     ("Step 4 — expression operators (`op.`)", lambda t: t["name"].startswith("op.")),
     ("Step 4 — stages and accumulators (`stage7.`)", lambda t: t["name"].startswith("stage7.")),
 ]

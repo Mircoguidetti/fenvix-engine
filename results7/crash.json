@@ -1,0 +1,15 @@
+{
+ "kills": 40,
+ "kills_during_backfill": 9,
+ "kills_during_drop": 10,
+ "backfills_resumed_ok": 1,
+ "drops_resumed_ok": 10,
+ "tenants_checked": 240,
+ "collections_checked": 280,
+ "indexes_validated": 2030,
+ "problems": [],
+ "ops": 207632,
+ "acked_documents_compared": 598024,
+ "worker_errors_during_outage": 283,
+ "acknowledged_writes_tracked": 72913
+}

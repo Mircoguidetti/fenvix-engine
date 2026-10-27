@@ -176,7 +176,7 @@ def _auto_supported():
         return set(), {}
     users = {}
     for t in tests:
-        if t["category"] == "extra" or not re.match(r"^(op|stage7|where|cs|txn|idx|ttl|expr_op|expr|stage|group|lookup|query|upd|regex|fam|find|agg)", t["name"]):
+        if t["category"] == "extra" or not re.match(r"^(op|bits|stage7|where|cs|txn|idx|ttl|expr_op|expr|stage|group|lookup|query|upd|regex|fam|find|agg)", t["name"]):
             continue
         ok = py.get(t["name"], {}).get("status") == "pass" and nd.get(t["name"], {}).get("status") == "pass"
         for key in _operators_of_test(t):
