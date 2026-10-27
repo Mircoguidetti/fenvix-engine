@@ -50,10 +50,11 @@ def main():
     ap.add_argument("--drivers", default="py,node")
     ap.add_argument("--only", default="")
     ap.add_argument("--tests", default="")
+    ap.add_argument("--bin", default=os.path.join(ROOT, "target", "release", "mongo-server"))
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     binp = os.path.join(OUT, "mongo-server")
-    shutil.copy(os.path.join(ROOT, "target", "release", "mongo-server"), binp)
+    shutil.copy(a.bin, binp)
     env = dict(os.environ, MONGO_SERVER_BIN=binp, SERVER_EXTRA="--ttl-sweep-secs 1 --replica-set rs0 --advertise localhost:%PORT%")
     # S3 endpoint
     import socket
