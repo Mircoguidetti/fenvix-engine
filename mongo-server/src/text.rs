@@ -592,7 +592,7 @@ fn find_operand_in(filter: &Document, through_or: bool) -> Option<&Bson> {
 
 /// Remove the hidden score / distance fields from a result document.
 pub fn strip_hidden(d: &mut Document) {
-    for k in [SCORE_KEY, crate::search::SCORE_KEY, crate::geo::DIST_KEY, crate::geo::POINT_KEY] {
+    for k in [SCORE_KEY, crate::search::SCORE_KEY, crate::search_more::HIGHLIGHT_KEY, crate::search_more::META_KEY, crate::geo::DIST_KEY, crate::geo::POINT_KEY] {
         d.remove(k);
     }
 }

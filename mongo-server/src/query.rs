@@ -817,6 +817,7 @@ pub fn parse_projection(spec: &Document) -> R<Option<Projection>> {
             if d.len() == 1 && d.contains_key("$meta") {
                 match d.get_str("$meta") {
                     Ok("textScore") => metas.push((k.clone(), crate::text::SCORE_KEY)),
+                    Ok("searchHighlights") => metas.push((k.clone(), crate::search_more::HIGHLIGHT_KEY)),
                     Ok("geoNearDistance") => metas.push((k.clone(), crate::geo::DIST_KEY)),
                     Ok("geoNearPoint") => metas.push((k.clone(), crate::geo::POINT_KEY)),
                     Ok(other) => return Err(MongoError::new(17308, "Location17308", format!("Unsupported argument to $meta: {other}"))),

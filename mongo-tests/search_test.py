@@ -63,12 +63,12 @@ check("searchMeta lowerBound", list(c.aggregate([{"$searchMeta": T("fox")}])), [
 check("searchMeta total", list(c.aggregate([{"$searchMeta": dict(T("brown"), count={"type": "total"})}])), [{"count": {"total": 4}}])
 check("sort option", [d["_id"] for d in c.aggregate([{"$search": dict(T("brown"), sort={"n": -1})}])], [3, 2, 1, 5])
 check("pipeline continues", list(c.aggregate([{"$search": T("fox")}, {"$match": {"n": {"$gt": 10}}}, {"$project": {"_id": 1}}])), [{"_id": 3}])
-for name, pipe in [("not first", [{"$match": {}}, {"$search": T("fox")}]), ("unknown operator", [{"$search": {"near": {"path": "n", "origin": 1, "pivot": 2}}}]),
-                   ("highlight", [{"$search": dict(T("fox"), highlight={"path": "title"})}]), ("no operator", [{"$search": {"index": "default"}}]),
+for name, pipe in [("not first", [{"$match": {}}, {"$search": T("fox")}]), ("unknown operator", [{"$search": {"noSuchOperator": {"path": "n"}}}]),
+                   ("no operator", [{"$search": {"index": "default"}}]),
                    ("bad compound", [{"$search": {"compound": {}}}]), ("bad fuzzy", [{"$search": T("fox", fuzzy={"maxEdits": 5})}])]:
     try:
         list(c.aggregate(pipe)); fails.append(f"{name}: expected an error")
     except pymongo.errors.OperationFailure:
         pass
-print("search tests:", 47 - len(fails), "passed,", len(fails), "failed"); [print(" ", f) for f in fails]
+print("search tests:", 46 - len(fails), "passed,", len(fails), "failed"); [print(" ", f) for f in fails]
 sys.exit(1 if fails else 0)

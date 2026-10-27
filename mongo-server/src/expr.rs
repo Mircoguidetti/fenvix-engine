@@ -134,6 +134,7 @@ fn variable(sc: &Scope, name_and_path: &str) -> R<Option<Bson>> {
     match name {
         "ROOT" | "CURRENT" => Ok(if rest.is_empty() { Some(Bson::Document(sc.root.clone())) } else { get_path_doc(sc.root, &rest) }),
         "REMOVE" => Ok(None),
+        "SEARCH_META" => Ok(sc.root.get(crate::search_more::META_KEY).and_then(|m| if rest.is_empty() { Some(m.clone()) } else { get_path(m, &rest) })),
         "KEEP" | "PRUNE" | "DESCEND" if rest.is_empty() && !sc.vars.iter().any(|(n, _)| n == name) => Ok(Some(Bson::String(name.to_ascii_lowercase()))),
         "NOW" => Ok(if rest.is_empty() { Some(Bson::DateTime(bson::DateTime::now())) } else { None }),
         _ => {
@@ -389,6 +390,7 @@ fn operator(name: &str, arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
             let hidden = match m {
                 "textScore" => crate::text::SCORE_KEY,
                 "searchScore" => crate::search::SCORE_KEY,
+                "searchHighlights" => crate::search_more::HIGHLIGHT_KEY,
                 "geoNearDistance" => crate::geo::DIST_KEY,
                 "geoNearPoint" => crate::geo::POINT_KEY,
                 other => return Err(err(17308, format!("Unsupported argument to $meta: {other}"))),

@@ -969,7 +969,7 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
         let (name, arg) = sd.iter().next().unwrap();
         // Search scores and geo distances travel with the documents through stages that map one document to one.
         let carried: Option<Vec<Vec<(&'static str, Bson)>>> = if matches!(name.as_str(), "$project" | "$addFields" | "$set" | "$unset" | "$replaceRoot" | "$replaceWith") {
-            let keys = [crate::text::SCORE_KEY, crate::search::SCORE_KEY, crate::geo::DIST_KEY, crate::geo::POINT_KEY];
+            let keys = [crate::text::SCORE_KEY, crate::search::SCORE_KEY, crate::search_more::HIGHLIGHT_KEY, crate::search_more::META_KEY, crate::geo::DIST_KEY, crate::geo::POINT_KEY];
             if docs.iter().any(|d| keys.iter().any(|k| d.contains_key(*k))) {
                 Some(docs.iter().map(|d| keys.iter().filter_map(|k| d.get(*k).map(|v| (*k, v.clone()))).collect()).collect())
             } else {

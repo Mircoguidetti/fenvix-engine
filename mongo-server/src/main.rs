@@ -27,6 +27,7 @@ mod geo;
 mod geo_query;
 mod regex;
 mod search;
+mod search_more;
 mod text;
 mod wild;
 mod ttl;
