@@ -114,6 +114,8 @@ struct Inner {
     seen_wakes: HashMap<String, u64>,
     /// Counters per database as of the start of the current measurement window (see [`Usage::mark`]).
     marks: HashMap<String, Counts>,
+    /// Erased databases: requests attributed to them are not metered until a command or an operation uses the name again.
+    erased: std::collections::HashSet<String>,
 }
 
 pub struct Usage {
@@ -152,6 +154,9 @@ impl Usage {
 
     fn with_day<R>(&self, db: &str, f: impl FnOnce(&mut Day) -> R) -> R {
         let mut g = self.inner.lock().unwrap();
+        if g.erased.contains(db) {
+            return f(&mut Day::default());
+        }
         let d = g.days.entry((db.to_string(), day_now())).or_default();
         d.dirty = true;
         f(d)
@@ -165,6 +170,7 @@ impl Usage {
 
     /// Note activity on a database (a command, an admin operation).
     pub fn touch(&self, db: &str) {
+        self.inner.lock().unwrap().erased.remove(db);
         let now = now_ms();
         self.inner.lock().unwrap().last_active.insert(db.to_string(), now);
         self.with_day(db, |d| d.last_active_ms = now);
@@ -176,6 +182,7 @@ impl Usage {
 
     /// A Mongo command finished. `woke` carries the latency of the request that found the database asleep.
     pub fn command(&self, db: &str, name: &str, woke: Option<Duration>) {
+        self.inner.lock().unwrap().erased.remove(db);
         let now = now_ms();
         self.inner.lock().unwrap().last_active.insert(db.to_string(), now);
         self.with_day(db, |d| {
@@ -210,6 +217,7 @@ impl Usage {
     pub fn drop_db(&self, db: &str) {
         let mut g = self.inner.lock().unwrap();
         g.days.retain(|(d, _), _| d != db);
+        g.erased.insert(db.to_string());
         g.last_active.remove(db);
         g.seen_wakes.remove(db);
     }
