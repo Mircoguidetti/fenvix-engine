@@ -52,7 +52,7 @@ enum Acc {
     NList(Vec<Bson>),
     /// `$top`, `$bottom`, `$topN`, `$bottomN`: (original document with the output under a hidden key)
     Top(Vec<Document>),
-    Js(Bson),
+    Js(Option<Bson>),
 }
 
 const OUT_KEY: &str = "\u{1}out";
@@ -82,9 +82,57 @@ fn parse_accumulators(spec: &Document) -> R<Vec<AccSpec>> {
         if !matches!(op.as_str(), "$sum" | "$avg" | "$min" | "$max" | "$count" | "$first" | "$last" | "$push" | "$addToSet" | "$mergeObjects" | "$stdDevPop" | "$stdDevSamp" | "$firstN" | "$lastN" | "$maxN" | "$minN" | "$top" | "$bottom" | "$topN" | "$bottomN" | "$accumulator" | "$median" | "$percentile") {
             return Err(MongoError::new(15952, "Location15952", format!("unknown group operator '{op}'")));
         }
+        if op == "$accumulator" {
+            validate_js_accumulator(expr)?;
+        }
         out.push(AccSpec { name: name.clone(), op: op.clone(), expr: expr.clone() });
     }
     Ok(out)
+}
+
+/// `$accumulator` specification errors, with MongoDB's codes.
+fn validate_js_accumulator(expr: &Bson) -> R<()> {
+    let Bson::Document(d) = expr else {
+        return Err(MongoError::new(5787900, "Location5787900", "specification of $accumulator must be an object".into()));
+    };
+    let loc = |code: i32, msg: String| {
+        let name = match code {
+            4544702 => "Location4544702",
+            4544705 => "Location4544705",
+            4544706 => "Location4544706",
+            4544707 => "Location4544707",
+            4544708 => "Location4544708",
+            4544709 => "Location4544709",
+            4544710 => "Location4544710",
+            4544711 => "Location4544711",
+            _ => "Location4544712",
+        };
+        MongoError::new(code, name, msg)
+    };
+    for (k, v) in d {
+        match k.as_str() {
+            "init" | "accumulate" | "merge" | "finalize" => {
+                if !matches!(v, Bson::String(_) | Bson::JavaScriptCode(_)) {
+                    return Err(loc(4544702, format!("$accumulator '{k}' must be a string or code")));
+                }
+            }
+            "initArgs" if !matches!(v, Bson::Array(_)) => return Err(loc(4544711, "$accumulator 'initArgs' must be an array".into())),
+            "accumulateArgs" if !matches!(v, Bson::Array(_)) => return Err(loc(4544712, "$accumulator 'accumulateArgs' must be an array".into())),
+            "initArgs" | "accumulateArgs" => {}
+            "lang" => {
+                if !matches!(v, Bson::String(l) if l == "js") {
+                    return Err(loc(4544705, "$accumulator only supports lang: 'js'".into()));
+                }
+            }
+            other => return Err(loc(4544706, format!("$accumulator got an unexpected field '{other}'"))),
+        }
+    }
+    for (k, code) in [("init", 4544707), ("accumulate", 4544708), ("merge", 4544709), ("accumulateArgs", 4544710)] {
+        if !d.contains_key(k) {
+            return Err(loc(code, format!("$accumulator requires '{k}'")));
+        }
+    }
+    Ok(())
 }
 
 fn init(op: &str) -> Acc {
@@ -101,7 +149,7 @@ fn init(op: &str) -> Acc {
         "$stdDevPop" | "$stdDevSamp" => Acc::Std { n: 0, mean: 0.0, m2: 0.0 },
         "$firstN" | "$lastN" | "$maxN" | "$minN" => Acc::NList(Vec::new()),
         "$top" | "$bottom" | "$topN" | "$bottomN" => Acc::Top(Vec::new()),
-        "$accumulator" => Acc::Js(Bson::Null),
+        "$accumulator" => Acc::Js(None),
         _ => Acc::Push(Vec::new()),
     }
 }
@@ -162,12 +210,12 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
                     _ => Ok(vec![]),
                 }
             };
-            if matches!(state, Bson::Null) {
-                *state = crate::js::call_function(&body("init")?, &args("initArgs", &Document::new())?)?;
+            if state.is_none() {
+                *state = Some(crate::js::call_function(&body("init")?, &args("initArgs", &Document::new())?)?);
             }
-            let mut call_args = vec![state.clone()];
+            let mut call_args = vec![state.clone().unwrap_or(Bson::Null)];
             call_args.extend(args("accumulateArgs", doc)?);
-            *state = crate::js::call_function(&body("accumulate")?, &call_args)?;
+            *state = Some(crate::js::call_function(&body("accumulate")?, &call_args)?);
             return Ok(());
         }
         _ => {}
@@ -302,6 +350,7 @@ fn finish_spec(acc: Acc, spec: &AccSpec) -> R<Bson> {
         }
         ("$accumulator", Acc::Js(state)) => {
             let d = arg_doc(spec)?;
+            let state = state.unwrap_or(Bson::Null);
             match d.get("finalize") {
                 Some(Bson::String(f)) => crate::js::call_function(f, &[state])?,
                 Some(Bson::JavaScriptCode(f)) => crate::js::call_function(f, &[state])?,
@@ -316,7 +365,7 @@ fn finish(acc: Acc) -> Bson {
     match acc {
         Acc::Merge(m) => Bson::Document(m),
         Acc::Std { .. } | Acc::NList(_) | Acc::Top(_) => Bson::Null,
-        Acc::Js(s) => s,
+        Acc::Js(s) => s.unwrap_or(Bson::Null),
         Acc::Sum(s) => s,
         Acc::Avg(sum, n) => {
             if n == 0 { Bson::Null } else { Bson::Double(sum / n as f64) }
@@ -982,7 +1031,7 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
             "$match" => {
                 let f = arg.as_document().ok_or_else(|| MongoError::new(15959, "Location15959", "the match filter must be an expression in an object".into()))?;
                 if has_where(f) {
-                    return Err(MongoError::new(2, "BadValue", "$where is not allowed inside of a $match aggregation expression".into()));
+                    return Err(MongoError::new(2, "BadValue", "$where is not allowed in this context".into()));
                 }
                 let mut kept = Vec::new();
                 for d in docs {

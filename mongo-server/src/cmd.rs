@@ -96,7 +96,7 @@ impl Server {
             eprintln!("CMD {name} db={db}");
         }
         let t0 = std::time::Instant::now();
-        let r = self.dispatch(db, &name, &cmd, conn_id).await;
+        let r = crate::js::scoped(self.dispatch(db, &name, &cmd, conn_id)).await;
         let ms = t0.elapsed().as_millis();
         if ms >= 500 {
             eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
@@ -114,6 +114,7 @@ impl Server {
             "ping" => return Ok(ok()),
             "buildInfo" | "buildinfo" => return Ok(build_info()),
             "getParameter" => return get_parameter(cmd),
+            "setParameter" => return set_parameter(cmd),
             "endSessions" => return self.end_sessions(cmd).await,
             "killSessions" | "refreshSessions" => return Ok(ok()),
             "commitTransaction" => return self.commit_txn(cmd).await,
@@ -151,6 +152,7 @@ impl Server {
             "count" => self.count(db, cmd, tx).await,
             "distinct" => self.distinct(db, cmd, tx).await,
             "aggregate" => self.aggregate(db, cmd, tx).await,
+            "mapReduce" | "mapreduce" => self.map_reduce(db, cmd, tx).await,
             "drop" => self.drop_collection(db, cmd).await,
             "create" => self.create(db, cmd).await,
             "dropIndexes" => self.drop_indexes(db, cmd).await,
@@ -417,7 +419,7 @@ fn build_info() -> Document {
         "gitVersion": "none",
         "modules": [],
         "allocator": "system",
-        "javascriptEngine": "none",
+        "javascriptEngine": "quickjs",
         "sysInfo": "deprecated",
         "versionArray": [7, 0, 14, 0],
         "openssl": { "running": "disabled", "compiled": "disabled" },
@@ -431,6 +433,7 @@ fn build_info() -> Document {
 }
 
 fn get_parameter(cmd: &Document) -> R<Document> {
+    use std::sync::atomic::Ordering::Relaxed;
     let all = matches!(cmd.get("getParameter"), Some(Bson::String(s)) if s == "*");
     let mut reply = Document::new();
     let mut found = false;
@@ -438,8 +441,52 @@ fn get_parameter(cmd: &Document) -> R<Document> {
         reply.insert("featureCompatibilityVersion", doc! { "version": "7.0" });
         found = true;
     }
+    if all || cmd.get("internalQueryJavaScriptFnTimeoutMillis").is_some() {
+        reply.insert("internalQueryJavaScriptFnTimeoutMillis", crate::js::TIMEOUT_MS.load(Relaxed) as i32);
+        found = true;
+    }
+    if all || cmd.get("jsHeapLimitMB").is_some() {
+        reply.insert("jsHeapLimitMB", crate::js::HEAP_MB.load(Relaxed) as i32);
+        found = true;
+    }
     if !found {
-        return Err(MongoError::new(2, "BadValue", "no option found to get".into()));
+        return Err(MongoError::new(72, "InvalidOptions", "no option found to get".into()));
+    }
+    reply.insert("ok", 1.0);
+    Ok(reply)
+}
+
+/// `setParameter` for the parameters this server has: the limits of server-side JavaScript.
+fn set_parameter(cmd: &Document) -> R<Document> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let mut reply = Document::new();
+    let mut any = false;
+    for (k, v) in cmd.iter().skip(1) {
+        if matches!(k.as_str(), "$db" | "lsid" | "$clusterTime" | "comment" | "maxTimeMS" | "writeConcern") {
+            continue;
+        }
+        let cell = match k.as_str() {
+            "internalQueryJavaScriptFnTimeoutMillis" => &crate::js::TIMEOUT_MS,
+            "jsHeapLimitMB" => &crate::js::HEAP_MB,
+            other => return Err(MongoError::new(72, "InvalidOptions", format!("attempted to set unrecognized parameter [{other}], use help:true to see options "))),
+        };
+        let n = match v {
+            Bson::Int32(i) => *i as i64,
+            Bson::Int64(i) => *i,
+            Bson::Double(f) if f.fract() == 0.0 => *f as i64,
+            _ => return Err(MongoError::new(2, "BadValue", format!("Failed validating {k}: Unable to coerce value to integral type"))),
+        };
+        if n <= 0 {
+            return Err(MongoError::new(2, "BadValue", format!("Invalid value for parameter {k}: {n} is not greater than 0")));
+        }
+        if !any {
+            reply.insert("was", cell.load(Relaxed) as i32);
+        }
+        cell.store(n as u64, Relaxed);
+        any = true;
+    }
+    if !any {
+        return Err(MongoError::new(72, "InvalidOptions", "no option found to set, use help:true to see options ".into()));
     }
     reply.insert("ok", 1.0);
     Ok(reply)
