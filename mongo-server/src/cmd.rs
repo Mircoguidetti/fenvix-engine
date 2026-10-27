@@ -96,7 +96,7 @@ impl Server {
             eprintln!("CMD {name} db={db}");
         }
         let t0 = std::time::Instant::now();
-        let r = crate::js::scoped(self.dispatch(db, &name, &cmd, conn_id)).await;
+        let r = crate::js::scoped(db, self.dispatch(db, &name, &cmd, conn_id)).await;
         let ms = t0.elapsed().as_millis();
         if ms >= 500 {
             eprintln!("SLOW {name} db={db} ms={ms} ok={}", r.is_ok());
@@ -462,7 +462,7 @@ fn set_parameter(cmd: &Document) -> R<Document> {
     let mut reply = Document::new();
     let mut any = false;
     for (k, v) in cmd.iter().skip(1) {
-        if matches!(k.as_str(), "$db" | "lsid" | "$clusterTime" | "comment" | "maxTimeMS" | "writeConcern") {
+        if k.starts_with('$') || matches!(k.as_str(), "lsid" | "txnNumber" | "comment" | "maxTimeMS" | "writeConcern" | "readConcern" | "apiVersion" | "apiStrict" | "apiDeprecationErrors") {
             continue;
         }
         let cell = match k.as_str() {

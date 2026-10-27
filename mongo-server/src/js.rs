@@ -32,19 +32,23 @@ const MAX_BSON: usize = 16_793_600;
 const MAX_CONTEXTS: usize = 16;
 
 tokio::task_local! {
-    /// Identifies the command being executed, so that it gets a JS context of its own.
-    static SCOPE: u64;
+    /// The command being executed (so that it gets a JS context of its own) and the hash of its database (`$where`
+    /// uses a context per database that lives across commands, as mongod's pooled scopes do).
+    static SCOPE: (u64, u64);
 }
 
 static NEXT_SCOPE: AtomicU64 = AtomicU64::new(1);
 
 /// Run `fut` (a command) with a JS scope of its own.
-pub async fn scoped<F: std::future::Future>(fut: F) -> F::Output {
-    SCOPE.scope(NEXT_SCOPE.fetch_add(1, Relaxed), fut).await
+pub async fn scoped<F: std::future::Future>(db: &str, fut: F) -> F::Output {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    db.hash(&mut h);
+    SCOPE.scope((NEXT_SCOPE.fetch_add(1, Relaxed), h.finish() | (1 << 63)), fut).await
 }
 
-fn scope_id() -> u64 {
-    SCOPE.try_with(|s| *s).unwrap_or(0)
+fn scope_id(pooled: bool) -> u64 {
+    SCOPE.try_with(|s| if pooled { s.1 } else { s.0 }).unwrap_or(0)
 }
 
 struct Engine {
@@ -112,20 +116,7 @@ fn start(rt: &Runtime) -> R<Context> {
                 Md5::digest(s.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
             }))?,
         ))?;
-        native(g.set(
-            "sleep",
-            native(Function::new(c.clone(), |ms: f64| -> rquickjs::Result<()> {
-                let until = Instant::now() + Duration::from_millis(ms.max(0.0) as u64);
-                while Instant::now() < until {
-                    if DEADLINE.with(|d| d.get().map(|t| Instant::now() > t).unwrap_or(false)) {
-                        TIMED_OUT.with(|t| t.set(true));
-                        break;
-                    }
-                    std::thread::sleep(Duration::from_millis(1));
-                }
-                Ok(())
-            }))?,
-        ))?;
+        native(g.set("__nap", native(Function::new(c.clone(), |ms: f64| -> rquickjs::Result<()> { std::thread::sleep(Duration::from_millis(ms.clamp(0.0, 100.0) as u64)); Ok(()) }))?))?;
         c.eval::<(), _>(PRELUDE).map_err(|e| js_err(format!("prelude: {e}")))?;
         // Built-ins MongoDB's engine does not have.
         c.eval::<(), _>("for (const n of ['Reflect', 'atob', 'btoa', 'SharedArrayBuffer', 'Atomics']) delete globalThis[n];").map_err(|e| js_err(e.to_string()))?;
@@ -135,7 +126,11 @@ fn start(rt: &Runtime) -> R<Context> {
 }
 
 fn with_engine<T>(f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
-    let sid = scope_id();
+    with_scope(false, f)
+}
+
+fn with_scope<T>(pooled: bool, f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
+    let sid = scope_id(pooled);
     ENGINES.with(|cell| {
         let mut en = cell.borrow_mut();
         if en.rt.is_none() {
@@ -180,7 +175,7 @@ fn set_deadline() {
 /// Drop the context of the current command (called when it finishes, where possible).
 #[allow(dead_code)]
 pub fn end_scope() {
-    let sid = scope_id();
+    let sid = scope_id(false);
     ENGINES.with(|cell| {
         if let Ok(mut en) = cell.try_borrow_mut() {
             en.by_scope.remove(&sid);
@@ -380,11 +375,9 @@ fn push_doc_plain(d: &Document, out: &mut String) {
         out.push_str("])");
         return;
     }
-    out.push('{');
-    for (i, (k, v)) in d.iter().enumerate() {
-        if i > 0 {
-            out.push(',');
-        }
+    out.push_str("{__proto__:__BP");
+    for (k, v) in d.iter() {
+        out.push(',');
         out.push_str(&quote(k));
         out.push(':');
         push_js(v, out);
@@ -396,6 +389,99 @@ fn js_of(b: &Bson) -> String {
     let mut s = String::new();
     push_js(b, &mut s);
     s
+}
+
+/// The tagged JSON stream (see `parse_ser`) of a value, with every BSON type kept as it is.
+fn ser_text(b: &Bson, out: &mut String) {
+    use std::fmt::Write;
+    match b {
+        Bson::Double(f) => {
+            if f.is_nan() {
+                out.push_str("{\"\u{1}\":\"d\",\"v\":\"NaN\"}")
+            } else if f.is_infinite() {
+                out.push_str(if *f > 0.0 { "{\"\u{1}\":\"d\",\"v\":\"Infinity\"}" } else { "{\"\u{1}\":\"d\",\"v\":\"-Infinity\"}" })
+            } else if *f == 0.0 && f.is_sign_negative() {
+                out.push_str("{\"\u{1}\":\"d\",\"v\":\"-0\"}")
+            } else {
+                let _ = write!(out, "{f:?}");
+            }
+        }
+        Bson::Int32(i) => {
+            let _ = write!(out, "{{\"\u{1}\":\"i\",\"v\":\"{i}\"}}");
+        }
+        Bson::Int64(i) => {
+            let _ = write!(out, "{{\"\u{1}\":\"l\",\"v\":\"{i}\"}}");
+        }
+        Bson::Decimal128(d) => {
+            let _ = write!(out, "{{\"\u{1}\":\"D\",\"v\":{}}}", quote(&d.to_string()));
+        }
+        Bson::String(s) | Bson::Symbol(s) => out.push_str(&quote(s)),
+        Bson::Boolean(v) => out.push_str(if *v { "true" } else { "false" }),
+        Bson::Null | Bson::Undefined | Bson::DbPointer(_) => out.push_str("null"),
+        Bson::Document(d) => {
+            out.push('{');
+            for (i, (k, v)) in d.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                out.push_str(&quote(k));
+                out.push(':');
+                ser_text(v, out);
+            }
+            out.push('}');
+        }
+        Bson::Array(a) => {
+            out.push('[');
+            for (i, x) in a.iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                ser_text(x, out);
+            }
+            out.push(']');
+        }
+        Bson::ObjectId(o) => {
+            let _ = write!(out, "{{\"\u{1}\":\"o\",\"v\":\"{}\"}}", o.to_hex());
+        }
+        Bson::DateTime(d) => {
+            let _ = write!(out, "{{\"\u{1}\":\"t\",\"v\":\"{}\"}}", d.timestamp_millis());
+        }
+        Bson::Timestamp(t) => {
+            let _ = write!(out, "{{\"\u{1}\":\"ts\",\"t\":{},\"i\":{}}}", t.time, t.increment);
+        }
+        Bson::Binary(b) => {
+            let _ = write!(out, "{{\"\u{1}\":\"b\",\"s\":{},\"v\":\"{}\"}}", u8::from(b.subtype), base64(&b.bytes));
+        }
+        Bson::RegularExpression(r) => {
+            let _ = write!(out, "{{\"\u{1}\":\"r\",\"p\":{},\"f\":{}}}", quote(r.pattern.as_str()), quote(r.options.as_str()));
+        }
+        Bson::MinKey => out.push_str("{\"\u{1}\":\"min\"}"),
+        Bson::MaxKey => out.push_str("{\"\u{1}\":\"max\"}"),
+        Bson::JavaScriptCode(c) => {
+            let _ = write!(out, "{{\"\u{1}\":\"c\",\"v\":{}}}", quote(c));
+        }
+        Bson::JavaScriptCodeWithScope(c) => {
+            let _ = write!(out, "{{\"\u{1}\":\"c\",\"v\":{}}}", quote(&c.code));
+        }
+    }
+}
+
+/// A document handed to a function as an argument: JS source for the object that also carries its original BSON, so that
+/// handing it back unmodified returns exactly what came in (also the int32 members of nested arrays).
+fn js_arg(b: &Bson) -> String {
+    match b {
+        Bson::Document(d) => {
+            let mut s = String::from("__bt(");
+            push_doc(d, &mut s);
+            s.push(',');
+            let mut t = String::new();
+            ser_text(b, &mut t);
+            s.push_str(&quote(&t));
+            s.push(')');
+            s
+        }
+        other => js_of(other),
+    }
 }
 
 const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -687,7 +773,7 @@ pub fn validate_filter(filter: &Document) -> R<()> {
 /// Does `this` = `doc` satisfy the `$where` code?
 pub fn eval_where(code: &Bson, doc: &Document) -> R<bool> {
     let code = where_code(code)?;
-    with_engine(|e| {
+    with_scope(true, |e| {
         let id = e.compile(&code)?;
         let mut call = String::from("globalThis.obj = ");
         push_doc(doc, &mut call);
@@ -700,7 +786,7 @@ pub fn eval_where(code: &Bson, doc: &Document) -> R<bool> {
 pub fn call_function(body: &str, args: &[Bson]) -> R<Bson> {
     with_engine(|e| {
         let id = e.compile(body)?;
-        let list: Vec<String> = args.iter().map(js_of).collect();
+        let list: Vec<String> = args.iter().map(js_arg).collect();
         let call = format!("__ser(__f{id}.apply({{}}, [{}]))", list.join(","));
         result(e.eval_str(call)?)
     })
@@ -733,7 +819,7 @@ pub fn map_reduce(map: &str, reduce: &str, finalize: Option<&str>, scope: &Docum
                 if i > 0 {
                     src.push(',');
                 }
-                push_doc(d, &mut src);
+                src.push_str(&js_arg(&Bson::Document(d.clone())));
             }
             src.push_str(&format!("]) __mr_map(__f{mapid}, d);"));
             e.run(src)?;

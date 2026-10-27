@@ -117,6 +117,11 @@ def pick(doc, keys, reduce=None):
         return reduce_explain(doc, False)
     if reduce == "explain_stats":
         return reduce_explain(doc, True)
+    if reduce == "mr_sorted":
+        d = {k: v for k, v in doc.items() if k not in ("operationTime", "$clusterTime", "localTime", "connectionId", "topologyVersion", "$db")}
+        if "results" in d:
+            d["results"] = sorted(d["results"], key=lambda x: json_util.dumps(x.get("_id"), sort_keys=True))
+        return d
     if keys is None:
         return {k: v for k, v in doc.items() if k not in ("operationTime", "$clusterTime", "localTime", "connectionId", "topologyVersion", "$db")}
     return {k: doc[k] for k in keys if k in doc}

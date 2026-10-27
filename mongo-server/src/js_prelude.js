@@ -4,6 +4,7 @@
 (function (g) {
   'use strict';
   const NativeMap = g.Map;
+  const Refl = g.Reflect;
   const hide = (o, k, v) => Object.defineProperty(o, k, { value: v, writable: true, configurable: true, enumerable: false });
   const show = (o, k, v) => Object.defineProperty(o, k, { value: v, writable: true, configurable: true, enumerable: true });
 
@@ -118,7 +119,7 @@
   hide(ObjectId.prototype, 'tojson', function () { return this.toString(); });
   hide(ObjectId.prototype, 'valueOf', function () { return this.str; });
   hide(ObjectId.prototype, 'toJSON', function () { return { $oid: this.str }; });
-  hide(ObjectId.prototype, 'equals', function (o) { return o instanceof ObjectId && o.str === this.str; });
+  hide(ObjectId.prototype, 'equals', function (o) { return this.str == o.str; });
   hide(ObjectId.prototype, 'getTimestamp', function () { return new Date(parseInt(this.str.substr(0, 8), 16) * 1000); });
   hide(ObjectId, 'fromDate', function (d) { return new ObjectId(Math.floor(d.getTime() / 1000).toString(16).padStart(8, '0') + '0000000000000000'); });
   hide(g, 'ObjectId', ObjectId);
@@ -315,6 +316,7 @@
   hide(g, 'printjson', function () {});
   hide(g, 'printjsononeline', function () {});
   hide(g, 'gc', function () {});
+  hide(g, 'sleep', function (ms) { const until = Date.now() + ms; while (Date.now() < until) __nap(1); });
   hide(g, 'assert', function (cond, msg) {
     if (!cond) throw new Error('assert failed' + (msg !== undefined ? ' : ' + (typeof msg === 'function' ? msg() : msg) : ''));
   });
@@ -385,15 +387,33 @@
   // ---------------------------------------------------------------------------------------------------------------
   // Values crossing the boundary
   // ---------------------------------------------------------------------------------------------------------------
-  hide(g, '__mk', function (entries) { const o = {}; for (const [k, v] of entries) Object.defineProperty(o, k, { value: v, writable: true, configurable: true, enumerable: true }); return o; });
+  hide(g, '__mk', function (entries) { const o = Object.create(BP); for (const [k, v] of entries) Object.defineProperty(o, k, { value: v, writable: true, configurable: true, enumerable: true }); return o; });
+  const BP = Object.create(Object.prototype, { [Symbol.toStringTag]: { value: 'BSON', configurable: true } });
+  hide(g, '__BP', BP);
   const intKeys = new WeakMap();
+  const pristine = new WeakMap();
+  // a document argument: a proxy that notices modification, remembering the original BSON for an unmodified hand-back
+  hide(g, '__bt', function (o, text) {
+    const st = { dirty: false, text };
+    const p = new Proxy(o, {
+      set(t, k, v, r) { st.dirty = true; return Refl.set(t, k, v); },
+      defineProperty(t, k, d) { st.dirty = true; return Refl.defineProperty(t, k, d); },
+      deleteProperty(t, k) { st.dirty = true; return Refl.deleteProperty(t, k); },
+      setPrototypeOf(t, pr) { st.dirty = true; return Refl.setPrototypeOf(t, pr); },
+    });
+    pristine.set(p, st);
+    const tk = intKeys.get(o);
+    if (tk) intKeys.set(p, tk);
+    return p;
+  });
   hide(g, '__bo', function (o, keys) { const m = new NativeMap(); for (const k of keys) m.set(k, o[k]); intKeys.set(o, m); return o; });
   hide(g, '__oidv', (h) => new ObjectId(h));
   hide(g, '__nl', (s) => new NumberLong(s));
   hide(g, '__nd', (s) => new NumberDecimal(s));
   hide(g, '__ts', (t, i) => new Timestamp(t, i));
   hide(g, '__bd', (st, b) => new BinData(st, b));
-  hide(g, '__re', (p, f) => { try { return new RegExp(p, f); } catch (e) { return new RegExp(''); } });
+  const fromBson = new WeakSet();
+  hide(g, '__re', (p, f) => { let r; try { r = new RegExp(p, f); } catch (e) { r = new RegExp(''); } fromBson.add(r); return r; });
   hide(g, '__fn', (code) => { try { return (0, eval)('(' + code + ')'); } catch (e) { return code; } });
 
   // Serialisation of a JS value to the server's wire text: a JSON-like stream in which BSON types that JSON lacks are
@@ -418,7 +438,7 @@
       case 'bigint': throw new MongoJsError(2, 'cannot convert a BigInt to BSON');
     }
     if (v instanceof Date) { out.push('{"\u0001":"t","v":"' + (isNaN(v.getTime()) ? 0 : v.getTime()) + '"}'); return; }
-    if (v instanceof RegExp) { out.push('{"\u0001":"r","p":' + JSON.stringify(regexSlash ? v.source + '/' : v.source) + ',"f":' + JSON.stringify(v.flags.replace(/[^imsx]/g, '')) + '}'); return; }
+    if (v instanceof RegExp) { out.push('{"\u0001":"r","p":' + JSON.stringify(regexSlash && !fromBson.has(v) ? v.source + '/' : v.source) + ',"f":' + JSON.stringify(v.flags.replace(/[^imsx]/g, '')) + '}'); return; }
     if (v instanceof ObjectId) { out.push('{"\u0001":"o","v":"' + v.str + '"}'); return; }
     if (v instanceof NumberLong) { out.push('{"\u0001":"l","v":"' + longs.get(v) + '"}'); return; }
     if (v instanceof NumberInt) { out.push('{"\u0001":"i","v":"' + ints.get(v) + '"}'); return; }
@@ -432,6 +452,8 @@
       out.push(']');
       return;
     }
+    const pr = pristine.get(v);
+    if (pr !== undefined && !pr.dirty) { out.push(pr.text); return; }
     out.push('{');
     let first = true;
     const tracked = intKeys.get(v);

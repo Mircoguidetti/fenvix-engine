@@ -87,6 +87,12 @@ const pick = (doc, keys, reduce) => {
   if (reduce === 'collstats') return { nindexes: doc.nindexes, count: doc.count, indexNames: Object.keys(doc.indexSizes).sort(), ok: doc.ok };
   if (reduce === 'explain') return reduceExplain(doc, false);
   if (reduce === 'explain_stats') return reduceExplain(doc, true);
+  if (reduce === 'mr_sorted') {
+    const o = { ...doc };
+    for (const k of ['operationTime', '$clusterTime', 'localTime', 'connectionId', 'topologyVersion', '$db']) delete o[k];
+    if (o.results) o.results = [...o.results].sort((a, b) => { const x = EJSON.stringify(a._id), y = EJSON.stringify(b._id); return x < y ? -1 : x > y ? 1 : 0; });
+    return o;
+  }
   if (!keys) { const o = { ...doc }; for (const k of ['operationTime', '$clusterTime', 'localTime', 'connectionId', 'topologyVersion', '$db']) delete o[k]; return o; }
   return Object.fromEntries(keys.filter((k) => k in doc).map((k) => [k, doc[k]]));
 };
