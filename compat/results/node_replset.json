@@ -1,0 +1,714 @@
+[
+ {
+  "name": "txn.commit_makes_inserts_visible",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.296
+ },
+ {
+  "name": "txn.abort_discards_inserts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.278
+ },
+ {
+  "name": "txn.read_your_own_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.276
+ },
+ {
+  "name": "txn.uncommitted_invisible_to_others_until_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.29
+ },
+ {
+  "name": "txn.update_in_txn_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.276
+ },
+ {
+  "name": "txn.update_in_txn_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.274
+ },
+ {
+  "name": "txn.delete_in_txn_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.288
+ },
+ {
+  "name": "txn.delete_in_txn_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.282
+ },
+ {
+  "name": "txn.replace_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.289
+ },
+ {
+  "name": "txn.upsert_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.278
+ },
+ {
+  "name": "txn.find_one_and_update_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.285
+ },
+ {
+  "name": "txn.find_one_and_delete_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.274
+ },
+ {
+  "name": "txn.multi_collection_atomic_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.276
+ },
+ {
+  "name": "txn.multi_collection_abort_creates_nothing",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.29
+ },
+ {
+  "name": "txn.delete_then_reinsert_same_id",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.262
+ },
+ {
+  "name": "txn.dup_id_in_txn_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.272
+ },
+ {
+  "name": "txn.unique_violation_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.265
+ },
+ {
+  "name": "txn.unique_within_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "txn.unique_key_freed_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.283
+ },
+ {
+  "name": "txn.snapshot_isolation_reads",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.284
+ },
+ {
+  "name": "txn.snapshot_isolation_index_reads",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.297
+ },
+ {
+  "name": "txn.write_conflict_second_writer",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.283
+ },
+ {
+  "name": "txn.write_conflict_after_concurrent_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "txn.write_conflict_with_non_txn_commit_before_write",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.279
+ },
+ {
+  "name": "txn.no_conflict_different_documents",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.291
+ },
+ {
+  "name": "txn.concurrent_insert_same_id_conflicts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.277
+ },
+ {
+  "name": "txn.increment_in_two_sequential_txns",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.287
+ },
+ {
+  "name": "txn.with_transaction_commits",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.276
+ },
+ {
+  "name": "txn.with_transaction_error_aborts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.263
+ },
+ {
+  "name": "txn.find_sort_limit_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.259
+ },
+ {
+  "name": "txn.aggregate_sees_txn_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.269
+ },
+ {
+  "name": "txn.distinct_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.267
+ },
+ {
+  "name": "txn.indexed_find_in_txn_sees_own_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.287
+ },
+ {
+  "name": "txn.index_entries_after_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.274
+ },
+ {
+  "name": "txn.index_entries_after_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.274
+ },
+ {
+  "name": "txn.large_txn_500_inserts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.286
+ },
+ {
+  "name": "txn.unordered_insert_error_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.273
+ },
+ {
+  "name": "txn.drop_not_allowed_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 60.223
+ },
+ {
+  "name": "txn.commit_empty_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "txn.txn_after_failed_txn_works",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.278
+ },
+ {
+  "name": "txn.aborted_txn_rejects_further_ops",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.279
+ },
+ {
+  "name": "txn.ttl_collection_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.279
+ },
+ {
+  "name": "cs.insert",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.299
+ },
+ {
+  "name": "cs.insert_many_in_order",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.442
+ },
+ {
+  "name": "cs.insert_default_has_no_full_document_on_update",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.446
+ },
+ {
+  "name": "cs.update_set",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.421
+ },
+ {
+  "name": "cs.update_inc",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.43
+ },
+ {
+  "name": "cs.update_unset",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.429
+ },
+ {
+  "name": "cs.update_set_nested_existing",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.484
+ },
+ {
+  "name": "cs.update_set_nested_new",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.43
+ },
+ {
+  "name": "cs.update_set_whole_subdoc",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.412
+ },
+ {
+  "name": "cs.update_push_append",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.443
+ },
+ {
+  "name": "cs.update_push_each",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.405
+ },
+ {
+  "name": "cs.update_pull",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.392
+ },
+ {
+  "name": "cs.update_pop",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.442
+ },
+ {
+  "name": "cs.update_addtoset",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.37
+ },
+ {
+  "name": "cs.update_array_index",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.3
+ },
+ {
+  "name": "cs.update_rename",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.324
+ },
+ {
+  "name": "cs.update_noop_emits_nothing",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.277
+ },
+ {
+  "name": "cs.update_many_one_event_per_doc",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.294
+ },
+ {
+  "name": "cs.replace",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.284
+ },
+ {
+  "name": "cs.delete",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.273
+ },
+ {
+  "name": "cs.delete_many",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.271
+ },
+ {
+  "name": "cs.upsert_is_insert",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.272
+ },
+ {
+  "name": "cs.find_one_and_update",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.276
+ },
+ {
+  "name": "cs.find_one_and_delete",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.287
+ },
+ {
+  "name": "cs.update_lookup_returns_current_document",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.264
+ },
+ {
+  "name": "cs.update_lookup_null_when_deleted_later",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.335
+ },
+ {
+  "name": "cs.update_lookup_sees_later_update",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.286
+ },
+ {
+  "name": "cs.only_events_after_open",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "cs.other_collections_not_seen",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.441
+ },
+ {
+  "name": "cs.match_operation_type",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.305
+ },
+ {
+  "name": "cs.match_full_document_field",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.291
+ },
+ {
+  "name": "cs.project_stage",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.276
+ },
+ {
+  "name": "cs.addfields_stage",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.279
+ },
+ {
+  "name": "cs.string_and_compound_ids",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.285
+ },
+ {
+  "name": "cs.many_inserts_keep_order",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.255
+ },
+ {
+  "name": "cs.database_level_sees_all_collections",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.289
+ },
+ {
+  "name": "cs.database_level_drop_event",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.533
+ },
+ {
+  "name": "cs.collection_drop_then_invalidate",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.347
+ },
+ {
+  "name": "cs.resume_after_token",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 15.416
+ },
+ {
+  "name": "cs.start_after_token",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.361
+ },
+ {
+  "name": "cs.resume_with_match",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.444
+ },
+ {
+  "name": "cs.transaction_events_at_commit",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.41
+ },
+ {
+  "name": "cs.aborted_transaction_emits_nothing",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.377
+ },
+ {
+  "name": "cs.unordered_insert_partial_events",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.419
+ },
+ {
+  "name": "cs.ttl_delete_event",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 14.402
+ },
+ {
+  "name": "cs.update_double_and_long_values",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.368
+ },
+ {
+  "name": "cs.date_and_oid_in_documents",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.303
+ }
+]

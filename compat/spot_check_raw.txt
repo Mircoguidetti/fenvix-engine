@@ -1,0 +1,150 @@
+ 1. locale:hi  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: el`Gujarati`gu`Hausa`ha`Hawaiian`haw`Hebrew`he``search`Hindi`hi`Hungarian`hu`Icelandic`is``search`Igbo`ig`Inari Sami`smn``search`Indonesian`id`Irish`ga`Italian`it`Japanese`ja``unihan`Kalaallisut`kl``search`Kannada`kn``tr
+
+ 2. node:BulkOperationBase.execute  [driver api node / BulkOperationBase]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/BulkOperationBase.html
+    page: BulkOperationBase | mongodb
+    ctx: execute<
+
+ 3. js:$accumulator.accumulateArgs  [server-side javascript]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/aggregation/accumulator.md
+    page: $accumulator (accumulator operator)
+    ctx: expression>, // Optional accumulate: <code>, accumulateArgs: <array expression>, merge: <code>, finalize: <code>, // Optional lang: <string> } } ``` | Field | Type | Descr
+
+ 4. node:GridFSBucketWriteStream.done  [driver api node / GridFSBucketWriteStream]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/GridFSBucketWriteStream.html
+    page: GridFSBucketWriteStream | mongodb
+    ctx: done</h
+
+ 5. node:Collection.insertMany  [driver api node / Collection]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/Collection.html
+    page: Collection | mongodb
+    ctx: insertMany<
+
+ 6. locale:ln  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: rchjl``unihan`Kyrgyz`ky`Lakota`lkt`Lao`lo`Latvian`lv`Lingala`ln``phonetic`Lithuanian`lt`Lower Sorbian`dsb`Luxembourgish`lb`Macedonian`mk`Malay`ms`Malayalam`ml`Maltese`mt`Marathi`mr`Mongolian`mn`Nepali`ne`Northern Sami`se
+
+ 7. locale:he@collation=search  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: haric`am`Arabic`ar``compat`Armenian`hy`Assamese`as`Azeri`az``search`Bengali`bn`Belarusian`be`Bengali`bn``traditional`Bosnian`bs``search`Bosnian (Cyrillic)`bs_Cyrl`Bulgarian`bg`Burmese`my`Catalan`ca``search`Cherokee`chr`C
+
+ 8. bson:objectId  [bson types]
+    url: https://www.mongodb.com/docs/v7.0/reference/bson-types.md
+    page: BSON Types
+    ctx: ndefined | 6 | "undefined" | Deprecated. | | ObjectId | 7 | "objectId" | | | Boolean | 8 | "bool" | | | Date | 9 | "date" | | | Null | 10 | "null" | | | Regular Expression | 11 | "regex" | | | DBPointer | 12 | "dbPointer
+
+ 9. node:GridFSBucketWriteStream.bufToStore  [driver api node / GridFSBucketWriteStream]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/GridFSBucketWriteStream.html
+    page: GridFSBucketWriteStream | mongodb
+    ctx: bufToStore<use href="../assets/icons.svg#icon-anc
+
+10. py:pymongo.mongo_client.MongoClient.read_preference  [driver api pymongo / MongoClient]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html
+    page: mongo_client – Tools for connecting to MongoDB - PyMongo 4.19.0 documentation
+    ctx: read_preference¶</dt
+
+11. stage:$sortByCount  [aggregation stages]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/aggregation/sortbycount.md
+    page: $sortByCount (aggregation stage)
+    ctx: et Available tabs: drivers: shell, csharp, nodejs --> # $sortByCount (aggregation stage) ## Definition Groups incoming documents based on the value of a specified expression, then computes the count of documents in
+
+12. stage:$out  [aggregation stages]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/aggregation/out.md
+    page: $out (aggregation stage)
+    ctx: et Available tabs: drivers: shell, csharp, nodejs --> # $out (aggregation stage) ## Definition Takes the documents returned by the aggregation pipeline and writes them to a specified collection. You can specify the
+
+13. node:FindCursor.limit  [driver api node / FindCursor]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/FindCursor.html
+    page: FindCursor | mongodb
+    ctx: limit<
+
+14. bson:javascriptWithScope  [bson types]
+    url: https://www.mongodb.com/docs/v7.0/reference/bson-types.md
+    page: BSON Types
+    ctx: 4 | "symbol" | Deprecated. | | JavaScript with scope | 15 | "javascriptWithScope" | Deprecated. | | 32-bit integer | 16 | "int" | | | Timestamp | 17 | "timestamp" | | | 64-bit integer | 18 | "long" | | | Decimal128 | 19 
+
+15. locale:fa  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: egian Nynorsk`nn``search`Oriya`or`Oromo`om`Pashto`ps`Persian`fa`Persian (Afghanistan)`fa_AF`Polish`pl`Portuguese`pt`Punjabi`pa`Romanian`ro`Russian`ru`Serbian`sr`Serbian (Latin)`sr_Latn``search`Sinhala`si``dictionary`Slov
+
+16. py:pymongo.collection.Collection.rename  [driver api pymongo / Collection]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html
+    page: collection – Collection level operations - PyMongo 4.19.0 documentation
+    ctx: rename(new_name, <em class="s
+
+17. py:pymongo.collection.Collection.bulk_write  [driver api pymongo / Collection]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html
+    page: collection – Collection level operations - PyMongo 4.19.0 documentation
+    ctx: bulk_write(requests, <em clas
+
+18. node:AbstractCursor.close-1  [driver api node / AbstractCursor]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/AbstractCursor.html
+    page: AbstractCursor | mongodb
+    ctx: close</a
+
+19. stage:$replaceRoot  [aggregation stages]
+    url: https://www.mongodb.com/docs/v7.0/reference/operator/aggregation/replaceroot.md
+    page: $replaceRoot (aggregation stage)
+    ctx: et Available tabs: drivers: shell, csharp, nodejs --> # $replaceRoot (aggregation stage) ## Definition Replaces the input document with the specified document. The operation replaces all existing fields in the inpu
+
+20. cmd:getShardMap  [commands / sharding]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/getshardmap.md
+    page: getShardMap (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # getShardMap (database command) [`getShardMap`](https://www.mongodb.com/docs/v7.0/reference/command/getshardmap.md#mongodb-dbcommand-dbcmd.getShardMap) returns 
+
+21. locale:de  [collation locales]
+    url: https://www.mongodb.com/docs/v7.0/reference/collation-locales-defaults.md
+    page: Collation Locales and Default Parameters
+    ctx: French (Canada)`fr_CA`Galician`gl``search`Georgian`ka`German`de``search``eor``phonebook`German (Austria)`de_AT``phonebook`Greek`el`Gujarati`gu`Hausa`ha`Hawaiian`haw`Hebrew`he``search`Hindi`hi`Hungarian`hu`Icelandic`is``s
+
+22. opt:find.allowPartialResults  [command options / find]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/find.md
+    page: find (database command)
+    ctx:  noCursorTimeout: <bool>, awaitData: <bool>, allowPartialResults: <bool>, collation: <document>, allowDiskUse : <bool>, let: <document> // Added in MongoDB 5.0 } ) ``` ### Command Fie
+
+23. cmd:updateUser  [commands / user and role management]
+    url: https://www.mongodb.com/docs/v7.0/reference/command/updateuser.md
+    page: updateUser (database command)
+    ctx: B documentation index, see www.mongodb.com/docs/llms.txt # updateUser (database command) ## Definition Updates the user's profile on the database on which you run the command. An update to a field **completely replace
+
+24. cmd:getDatabaseVersion  [commands / internal]
+    url: https://www.mongodb.com/docs/v7.0/reference/command.md
+    page: Database Commands
+    ctx: (command listed by listCommands only; docs_url is the command index)
+
+25. gridfs:files.chunkSize  [gridfs]
+    url: https://www.mongodb.com/docs/v7.0/core/gridfs.md
+    page: GridFS for Self-Managed Deployments
+    ctx: ``javascript { "_id" : <ObjectId>, "length" : <num>, "chunkSize" : <num>, "uploadDate" : <timestamp>, "md5" : <hash>, "filename" : <string>, "contentType" : <string>, "aliases" : <string array>, "metada
+
+26. node:AggregationCursor.addStage  [driver api node / AggregationCursor]
+    url: https://mongodb.github.io/node-mongodb-native/7.7/classes/AggregationCursor.html
+    page: AggregationCursor | mongodb
+    ctx: addStage</use
+
+27. py:gridfs.GridFSBucket  [driver api pymongo / GridFS]
+    url: https://pymongo.readthedocs.io/en/stable/api/gridfs/index.html
+    page: gridfs – Tools for working with GridFS - PyMongo 4.19.0 documentation
+    ctx: class gridfs.<span class="sig-
+
+28. py:pymongo.cursor.Cursor.__getitem__  [driver api pymongo / Cursor]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/cursor.html
+    page: cursor – Tools for iterating over MongoDB query results - PyMongo 4.19.0 documen
+    ctx: __getitem__(index<
+
+29. cmd:_shardsvrNotifyShardingEvent  [commands / internal]
+    url: https://www.mongodb.com/docs/v7.0/reference/command.md
+    page: Database Commands
+    ctx: (command listed by listCommands only; docs_url is the command index)
+
+30. py:pymongo.database.Database.__getitem__  [driver api pymongo / Database]
+    url: https://pymongo.readthedocs.io/en/stable/api/pymongo/database.html
+    page: database – Database level operations - PyMongo 4.19.0 documentation
+    ctx: __getitem__(name<span class="
+

@@ -1,0 +1,1419 @@
+{
+ "Rocket.Chat": {
+  "commit": "bb43fa4",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collation": {
+    "app": 14,
+    "test": 0,
+    "app_files": [
+     "packages/models/src/models/LivechatContacts.ts",
+     "packages/models/src/models/Users.ts"
+    ]
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "apps/meteor/server/lib/utils/functions/getMongoInfo.ts"
+    ]
+   },
+   "user/role management commands": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "apps/meteor/server/lib/utils/functions/getMongoInfo.ts"
+    ]
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 21,
+    "test": 4,
+    "app_files": [
+     "packages/mongo-adapter/src/filter.ts",
+     "packages/models/src/models/Rooms.ts",
+     "packages/models/src/models/LivechatContacts.ts"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 0,
+    "test": 4,
+    "app_files": []
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 3,
+    "test": 1,
+    "app_files": [
+     "apps/meteor/packages/rocketchat-mongo-config/server/index.js"
+    ]
+   }
+  }
+ },
+ "parse-server": {
+  "commit": "9805d3e",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 15,
+    "test": 9,
+    "app_files": [
+     "types/Options/index.d.ts",
+     "src/Options/Definitions.js",
+     "src/Options/docs.js"
+    ]
+   },
+   "collation": {
+    "app": 3,
+    "test": 0,
+    "app_files": [
+     "src/Adapters/Storage/Mongo/MongoCollection.js",
+     "src/Adapters/Storage/Mongo/MongoStorageAdapter.js"
+    ]
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 11,
+    "test": 0,
+    "app_files": [
+     "src/Adapters/Storage/Mongo/MongoTransform.js"
+    ]
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 0,
+    "test": 5,
+    "app_files": []
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 4,
+    "test": 8,
+    "app_files": [
+     "src/RestQuery.js",
+     "src/Adapters/Storage/Mongo/MongoTransform.js",
+     "src/LiveQuery/ParseLiveQueryServer.ts"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 2,
+    "test": 1,
+    "app_files": [
+     "src/Options/Definitions.js",
+     "src/Options/index.js"
+    ]
+   },
+   "compression option (compressors=)": {
+    "app": 7,
+    "test": 1,
+    "app_files": [
+     "types/Options/index.d.ts",
+     "src/Options/Definitions.js",
+     "src/Options/docs.js"
+    ]
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 15,
+    "test": 3,
+    "app_files": [
+     "types/Options/index.d.ts",
+     "src/Options/Definitions.js",
+     "src/Options/docs.js"
+    ]
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 4,
+    "test": 6,
+    "app_files": [
+     "types/Options/index.d.ts",
+     "src/Options/Definitions.js",
+     "src/Options/docs.js"
+    ]
+   }
+  }
+ },
+ "NodeBB": {
+  "commit": "ce62dcd",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "src/database/mongo.js"
+    ]
+   },
+   "collation": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "src/database/mongo.js"
+    ]
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   }
+  }
+ },
+ "wekan": {
+  "commit": "eade07c",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 15,
+    "test": 11,
+    "app_files": [
+     "docker-compose-multitenancy.yml",
+     "docker-compose-ferretdb-v2-postgresql.yml",
+     "models/lib/databaseErrors.js"
+    ]
+   },
+   "collation": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 1,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 4,
+    "test": 2,
+    "app_files": [
+     "server/lib/continuousBackup/oplog.js",
+     "sandstorm-src/start.js"
+    ]
+   },
+   "$natural sort/hint": {
+    "app": 2,
+    "test": 1,
+    "app_files": [
+     "server/lib/continuousBackup/oplog.js"
+    ]
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 4,
+    "test": 2,
+    "app_files": [
+     "server/statistics.js",
+     "server/lib/databaseHealth.js"
+    ]
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 4,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 52,
+    "test": 47,
+    "app_files": [
+     "server/filterPresets.js",
+     "server/publications/boards.js",
+     "server/publications/cards.js"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "docker-compose-ferretdb-v2-postgresql.yml"
+    ]
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   }
+  }
+ },
+ "LibreChat": {
+  "commit": "8d3da9b",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 3,
+    "test": 37,
+    "app_files": [
+     "packages/data-schemas/misc/ferretdb/jest.ferretdb.config.mjs",
+     "packages/data-schemas/misc/documentdb/jest.documentdb.config.mjs",
+     "helm/librechat/templates/deployment.yaml"
+    ]
+   },
+   "collation": {
+    "app": 0,
+    "test": 6,
+    "app_files": []
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "user/role management commands": {
+    "app": 3,
+    "test": 6,
+    "app_files": [
+     "packages/data-schemas/src/methods/accessRole.ts",
+     "api/server/controllers/UserController.js",
+     "api/server/services/PermissionService.js"
+    ]
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 37,
+    "test": 1,
+    "app_files": [
+     "packages/data-schemas/src/methods/scheduleConsent.ts",
+     "packages/data-schemas/src/methods/insights.ts",
+     "packages/data-schemas/src/methods/schedule.ts"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "packages/data-schemas/src/tenant/probe.ts"
+    ]
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 0,
+    "test": 3,
+    "app_files": []
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 1,
+    "test": 5,
+    "app_files": [
+     "packages/data-schemas/misc/documentdb/jest.documentdb.config.mjs"
+    ]
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 1,
+    "test": 5,
+    "app_files": [
+     "packages/data-schemas/misc/documentdb/jest.documentdb.config.mjs"
+    ]
+   }
+  }
+ },
+ "novu": {
+  "commit": "5f69433",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 4,
+    "test": 0,
+    "app_files": [
+     "libs/dal/src/dal.service.ts",
+     "docker/.env.example",
+     "docker/community/.env.example"
+    ]
+   },
+   "collation": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "libs/dal/src/repositories/localization/localization.schema.ts"
+    ]
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "libs/dal/src/repositories/organization/community.organization.repository.ts",
+     "libs/dal/src/repositories/environment-variable/environment-variable.repository.ts"
+    ]
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 12,
+    "test": 0,
+    "app_files": [
+     "libs/dal/src/repositories/conversation/conversation.repository.ts",
+     "libs/dal/src/repositories/notification-template/notification-template.repository.ts"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 3,
+    "test": 0,
+    "app_files": [
+     "libs/dal/src/dal.service.ts",
+     "libs/dal/src/types/auth.ts"
+    ]
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   }
+  }
+ },
+ "appsmith": {
+  "commit": "5c05b72",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 7,
+    "test": 42,
+    "app_files": [
+     "deploy/helm/templates/configMap.yaml",
+     "app/server/appsmith-plugins/mongoPlugin/src/main/java/com/external/plugins/utils/DatasourceUtils.java",
+     "app/client/src/components/editorComponents/PartialImportExport/PartialExportModal/unitTestUtils.ts"
+    ]
+   },
+   "collation": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 0,
+    "test": 1,
+    "app_files": []
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "app/server/appsmith-plugins/mongoPlugin/src/main/java/com/external/plugins/utils/DatasourceUtils.java"
+    ]
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 2,
+    "test": 4,
+    "app_files": [
+     "app/server/appsmith-plugins/mongoPlugin/src/main/java/com/external/plugins/utils/DatasourceUtils.java",
+     "app/client/packages/mcp/src/governance/store.ts"
+    ]
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 1,
+    "test": 3,
+    "app_files": [
+     "deploy/helm/templates/configMap.yaml"
+    ]
+   }
+  }
+ },
+ "countly-server": {
+  "commit": "025e143",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 16,
+    "test": 1,
+    "app_files": [
+     "frontend/express/config.sample.js",
+     "api/config.sample.js",
+     "api/configs/config.db_out.sample.js"
+    ]
+   },
+   "collation": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "plugins/dbviewer/api/parts/aggregation_guard.js"
+    ]
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 3,
+    "test": 0,
+    "app_files": [
+     "plugins/pluginManager.js",
+     "plugins/dbviewer/api/parts/verify_operators.js"
+    ]
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "plugins/system-utility/api/system.utility.js",
+     "bin/commands/scripts/fs.js"
+    ]
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 4,
+    "test": 0,
+    "app_files": [
+     "plugins/push/frontend/app.js",
+     "bin/upgrade/22.06/scripts/push_all_things.js",
+     "bin/upgrade/22.03/scripts/push_all_things.js"
+    ]
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "plugins/pluginManager.js"
+    ]
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 18,
+    "test": 1,
+    "app_files": [
+     "api/parts/mgmt/apps.js",
+     "plugins/crashes/api/api.js",
+     "plugins/push/api/api-drill.js"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 4,
+    "test": 0,
+    "app_files": [
+     "bin/scripts/expire-data/mongo_expireData.js",
+     "bin/scripts/expire-data/expire_index_on_timeline.js",
+     "bin/scripts/expire-data/old_scripts/countly_multi_app_expireData.js"
+    ]
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "plugins/pluginManager.js"
+    ]
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 4,
+    "test": 0,
+    "app_files": [
+     "plugins/pluginManager.js"
+    ]
+   }
+  }
+ },
+ "payload": {
+  "commit": "cdb8ec4",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 2,
+    "test": 10,
+    "app_files": [
+     ".github/actions/start-services/action.yml"
+    ]
+   },
+   "collation": {
+    "app": 36,
+    "test": 27,
+    "app_files": [
+     "packages/db-mongodb/src/queryDrafts.ts",
+     "packages/db-mongodb/src/countVersions.ts",
+     "packages/db-mongodb/src/findGlobalVersions.ts"
+    ]
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "user/role management commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 3,
+    "test": 0,
+    "app_files": [
+     "packages/db-mongodb/src/queries/sanitizeQueryValue.ts",
+     "packages/db-mongodb/src/queries/buildSearchParams.ts"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "compression option (compressors=)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 1,
+    "test": 0,
+    "app_files": [
+     "templates/plugin/dev/payload.config.ts"
+    ]
+   }
+  }
+ },
+ "edx-platform": {
+  "commit": "03698e2",
+  "features": {
+   "auth: credentials in a connection string or auth options": {
+    "app": 4,
+    "test": 0,
+    "app_files": [
+     "xmodule/mongo_utils.py",
+     "lms/envs/mock.yml"
+    ]
+   },
+   "collation": {
+    "app": 3,
+    "test": 0,
+    "app_files": [
+     "xmodule/contentstore/mongo.py",
+     "cms/envs/mock.yml",
+     "lms/envs/mock.yml"
+    ]
+   },
+   "capped collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collection validation ($jsonSchema, validationLevel, validationAction)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "time series collection": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "view (viewOn / createView)": {
+    "app": 0,
+    "test": 35,
+    "app_files": []
+   },
+   "tailable cursor": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$natural sort/hint": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "diagnostics commands (serverStatus, currentOp, killOp, collStats, dbStats, hostInfo, db.stats())": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "user/role management commands": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     ".github/workflows/migrations-check.yml",
+     ".github/workflows/generate_openapi_schemas.yml"
+    ]
+   },
+   "mapReduce": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "createIndexes with an array of indexes (createIndexes([...]) / create_indexes([...]) / IndexModel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "profiler (setProfilingLevel / profilingLevel)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "positional projection (field.$ : 1)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "$elemMatch (query or projection; scan cannot tell)": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "xmodule/modulestore/split_mongo/mongo_connection.py",
+     "cms/djangoapps/contentstore/management/commands/clean_cert_name.py"
+    ]
+   },
+   "change stream pre/post images and expanded events": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "collMod": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "reIndex": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "returnKey / showRecordId": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "planCache commands": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "X.509 / AWS / OIDC / Kerberos auth mechanisms": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   },
+   "compression option (compressors=)": {
+    "app": 2,
+    "test": 0,
+    "app_files": [
+     "cms/envs/common.py",
+     "lms/envs/common.py"
+    ]
+   },
+   "TLS options (tls=true, ssl=true, tlsCAFile, ...)": {
+    "app": 10,
+    "test": 0,
+    "app_files": [
+     "cms/envs/mock.yml",
+     "lms/envs/mock.yml"
+    ]
+   },
+   "retryable writes (retryWrites mentioned; the drivers enable it by default)": {
+    "app": 0,
+    "test": 0,
+    "app_files": []
+   }
+  }
+ }
+}
