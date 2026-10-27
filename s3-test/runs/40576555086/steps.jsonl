@@ -1,0 +1,18 @@
+{"step":"s3 CreateBucket","status":"ok","detail":""}
+{"step":"s3 PutBucketTagging","status":"failed","detail":"\naws: [ERROR]: An error occurred (AccessDenied) when calling the PutBucketTagging operation: User: arn:aws:sts::865859654353:assumed-role/fenvix-gha-tests/GitHubActions is not authorized to perform: s3:PutBucketTagging on resource: \"arn:aws:s3:::fenvix-test-40576555086\" because no identity-based policy allows the s3:PutBucketTagging action"}
+{"step":"s3 PutObject","status":"ok","detail":""}
+{"step":"s3 GetObject","status":"ok","detail":""}
+{"step":"s3 ListBucket","status":"ok","detail":""}
+{"step":"s3 DeleteObject","status":"ok","detail":""}
+{"step":"ec2 DescribeImages (AL2023)","status":"ok","detail":""}
+{"step":"ec2 DescribeVpcs (default VPC exists)","status":"ok","detail":""}
+{"step":"ec2 DescribeInstances (one at a time)","status":"ok","detail":""}
+{"step":"ec2 RunInstances (dry run)","status":"ok","detail":""}
+{"step":"s3 PutObject (bundle)","status":"ok","detail":""}
+{"step":"ec2 RunInstances","status":"ok","detail":""}
+{"step":"ec2 wait instance-running","status":"ok","detail":""}
+{"step":"ssm instance registered","status":"ok","detail":""}
+{"step":"ssm SendCommand proof","status":"ok","detail":""}
+{"step":"s3 proof file downloaded","status":"ok","detail":""}
+{"step":"start run.sh on instance","status":"ok","detail":""}
+{"step":"engine tests on instance","status":"ok","detail":""}

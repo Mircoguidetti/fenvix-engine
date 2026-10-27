@@ -32,7 +32,18 @@
    "instance_secs": 0,
    "note": "no instance was launched",
    "unknown": false
+  },
+  {
+   "run_id": "40576555086",
+   "ts": 1793132771,
+   "tests": "1",
+   "gross_usd": 0.010308,
+   "put_tier": 1041,
+   "get_tier": 1061,
+   "instance_secs": 157,
+   "note": "counters from run-out/instance/guard/last.json",
+   "unknown": false
   }
  ],
- "total_usd": 0.000726
+ "total_usd": 0.011034
 }

@@ -1,0 +1,7 @@
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+pymongo 4.18.3
+guard up
+== test1: counter check (1000 PUT + 1000 GET through the engine's CountingStore, real S3, instance-profile credentials)
+s3probe rc=0
+{"billedGetTier":1000,"billedPutTier":1000,"counter":{"copy":0,"delete":0,"get":1000,"get_range":0,"head":0,"list":0,"multipart_complete":0,"multipart_create":0,"multipart_part":0,"put":1000},"counterExact":true,"expected":{"get":1000,"put":1000},"getErrors":0,"http":{"delete":0,"deletePost":0,"get":1000,"metadata":3,"put":1000,"throttled":1575,"waitedUs":124980312},"httpBilledGetTier":1000,"httpBilledPutTier":1000,"putErrors":0,"retriesSeenOnlyAtHttpLayer":{"getTier":0,"putTier":0},"secs":5.694962333}
+test 1 finished rc=0

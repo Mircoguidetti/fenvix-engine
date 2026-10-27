@@ -1,0 +1,1 @@
+{"ts": 1793132710, "uptime_secs": 152.39, "put_tier": 1010, "get_tier": 1000, "cost_usd": 0.009990063888888888, "cap_usd": 5.0, "per_port": {"27018": {"acc_put": 0, "acc_get": 0, "last_put": 0, "last_get": 0}, "27019": {"acc_put": 0, "acc_get": 0, "last_put": 0, "last_get": 0}}, "extra": {"put_tier": 1007, "get_tier": 1000}, "guard_uploads": 3, "stopped": null}
