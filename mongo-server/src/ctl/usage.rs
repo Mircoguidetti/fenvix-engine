@@ -131,7 +131,7 @@ pub fn db_of(p: &Path) -> Option<String> {
         "control" => {
             let kind = parts.next()?;
             match kind.as_ref() {
-                "dbs" | "pins" | "forks" => parts.next().map(|s| s.as_ref().trim_end_matches(".json").to_string()),
+                "dbs" | "pins" | "forks" | "staging" | "retention" | "exports" => parts.next().map(|s| s.as_ref().trim_end_matches(".json").to_string()),
                 // The usage records themselves are not metered: writing them would make the counters dirty again.
                 "ops" => parts.next().map(|s| s.as_ref().trim_end_matches(".json").to_string()),
                 _ => None,

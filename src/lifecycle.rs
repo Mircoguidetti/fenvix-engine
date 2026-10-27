@@ -75,6 +75,10 @@ pub static ACK_BEFORE_DURABLE: std::sync::atomic::AtomicBool = std::sync::atomic
 /// periodic flush, which batches concurrent writes into one WAL object at the cost of up to one interval of latency.
 pub static EXPLICIT_FLUSH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
+/// Minimum age of the WAL objects the garbage collector of a tenant may delete, beyond `min_age` (set by the control
+/// layer: restore points need the WAL written after them for the retention window).
+pub static WAL_RETAIN: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::OnceLock::new();
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
     let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
@@ -547,9 +551,10 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, mi
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
     let dir = GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false };
+    let wal_dir = GarbageCollectorDirectoryOptions { min_age: min_age.max(WAL_RETAIN.get().map(|f| f(&id.to_string())).unwrap_or_default()), ..dir };
     let opts = GarbageCollectorOptions {
         manifest_options: Some(dir),
-        wal_options: Some(dir),
+        wal_options: Some(wal_dir),
         compacted_options: Some(dir),
         compactions_options: Some(dir),
         ..GarbageCollectorOptions::default()

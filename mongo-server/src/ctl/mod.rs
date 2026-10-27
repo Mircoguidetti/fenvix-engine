@@ -20,6 +20,7 @@ pub mod http;
 pub mod meta;
 pub mod ops;
 pub mod pin;
+pub mod pitr;
 pub mod purge;
 pub mod rec;
 pub mod usage;
@@ -49,6 +50,10 @@ pub struct CtlArgs {
     /// A new restore point is taken at most this often per database (and only if it was written since the last one).
     #[arg(long, default_value_t = 600)]
     pub retention_interval_secs: u64,
+    /// Expired restore points of sleeping databases are removed this often (slatedb's garbage collector does it for
+    /// databases that are written).
+    #[arg(long, default_value_t = 600)]
+    pub retention_prune_secs: u64,
     /// Usage counters are written to the bucket this often (and at shutdown).
     #[arg(long, default_value_t = 60)]
     pub usage_flush_secs: u64,
@@ -167,6 +172,7 @@ pub async fn start(dbs: Arc<Dbs>, lc: Arc<Lifecycle>, holder: String, args: CtlA
     let store = dbs.raw_store();
     let ctl = Arc::new(Ctl { dbs, store, lc, holder, args: args.clone(), ops: OpLocks::default(), usage, start_ms: rec::now_ms() });
     let _ = CTL.set(Arc::clone(&ctl));
+    pitr::install_wal_retention(&ctl);
     if args.admin_listen.is_none() {
         return Ok(ctl);
     }
@@ -177,12 +183,14 @@ pub async fn start(dbs: Arc<Dbs>, lc: Arc<Lifecycle>, holder: String, args: CtlA
         _ => anyhow::bail!("--admin-listen needs --admin-token-file, --admin-token or MONGO_ADMIN_TOKEN"),
     };
     anyhow::ensure!(token.len() >= 16, "the admin token must be at least 16 characters");
+    pitr::load_settings(&ctl).await;
     if !args.no_ctl_recovery {
         ops::recover(&ctl).await;
     }
     usage::spawn_flusher(&ctl);
     pin::spawn_agent(&ctl);
     export::spawn_agent(&ctl);
+    pitr::spawn_agent(&ctl);
     let listener = tokio::net::TcpListener::bind(args.admin_listen.as_deref().unwrap()).await?;
     eprintln!("admin interface listening on {} (bearer token required)", args.admin_listen.as_deref().unwrap());
     let handler: http::Handler = {

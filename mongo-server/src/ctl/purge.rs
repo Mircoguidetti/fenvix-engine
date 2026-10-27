@@ -27,15 +27,24 @@ pub fn tenant_path(db: &str) -> String {
 
 /// The ancestors (paths) whose SSTs this tenant's latest manifest reads, with the checkpoint that pins each.
 pub async fn ancestors(store: &Store, db: &str) -> Result<Vec<(String, Option<uuid::Uuid>)>> {
-    let admin = Admin::builder(tenant_path(db), Arc::clone(store)).build();
+    ancestors_at(store, &tenant_path(db)).await
+}
+
+/// Like [`ancestors`] for a slatedb database at any path (a restore's scratch database).
+pub async fn ancestors_at(store: &Store, path: &str) -> Result<Vec<(String, Option<uuid::Uuid>)>> {
+    let admin = Admin::builder(path.to_string(), Arc::clone(store)).build();
     let Some(m) = admin.read_manifest(None).await? else { return Ok(vec![]) };
     Ok(m.external_dbs().iter().map(|e| (e.path.clone(), e.final_checkpoint_id)).collect())
 }
 
 /// Remove the pins this tenant holds in its ancestors. Ancestors that no longer exist need nothing.
 pub async fn release_pins(store: &Store, db: &str) -> Result<u32> {
+    release_pins_at(store, &tenant_path(db)).await
+}
+
+pub async fn release_pins_at(store: &Store, path_of_db: &str) -> Result<u32> {
     let mut n = 0;
-    for (path, cp) in ancestors(store, db).await? {
+    for (path, cp) in ancestors_at(store, path_of_db).await? {
         let Some(cp) = cp else { continue };
         let parent = Admin::builder(path.clone(), Arc::clone(store)).build();
         if parent.read_manifest(None).await?.is_none() {
@@ -91,23 +100,26 @@ pub async fn purge_tenant(ctl: &Ctl, db: &str) -> Result<PurgeReport> {
     Ok(rep)
 }
 
-/// Every object still present for a database, from a fresh listing: the proof that an erase is complete.
+/// Every object still present for a database, from a fresh listing: the proof that an erase is complete. Prefixes
+/// are listed as directories; the single-object records (pin, retention marker, intent) are looked up by name.
 pub async fn leftovers(ctl: &Ctl, db: &str) -> Result<Vec<String>> {
     let mut out = Vec::new();
     for prefix in [
         rec::path(&["tenants", db]),
         rec::path(&["ttl-hints", db]),
         rec::path(&["control", "dbs", db]),
-        rec::path(&["control", "pins", db]),
         rec::path(&["control", "usage", db]),
         rec::path(&["control", "forks", db]),
         rec::path(&["control", "exports", db]),
+        rec::path(&["control", "staging", db]),
     ] {
         out.extend(list(&ctl.store, &prefix).await?.into_iter().map(|p| p.to_string()));
     }
-    for exact in [rec::path(&["control", "ops", &format!("{db}.json")])] {
-        if ctl.store.head(&exact).await.is_ok() {
-            out.push(exact.to_string());
+    for exact in [rec::path(&["control", "pins", db]), rec::path(&["control", "retention", db]), rec::path(&["control", "ops", &format!("{db}.json")])] {
+        match ctl.store.head(&exact).await {
+            Ok(_) => out.push(exact.to_string()),
+            Err(object_store::Error::NotFound { .. }) => {}
+            Err(e) => return Err(e.into()),
         }
     }
     Ok(out)
@@ -127,4 +139,17 @@ pub async fn checkpoints(store: &Store, db: &str) -> Result<Vec<serde_json::Valu
             })
         })
         .collect())
+}
+
+/// The latest manifest in brief (diagnostics).
+pub async fn manifest_summary(store: &Store, db: &str, id: Option<u64>) -> Result<Option<serde_json::Value>> {
+    let admin = Admin::builder(tenant_path(db), Arc::clone(store)).build();
+    Ok(admin.read_manifest(id).await?.map(|m| {
+        serde_json::json!({
+            "id": m.id(), "replay_after_wal_id": m.replay_after_wal_id(), "next_wal_sst_id": m.next_wal_sst_id(),
+            "l0_ssts": m.l0().len(), "sorted_runs": m.compacted().len(), "writer_epoch": m.writer_epoch(),
+            "external_dbs": m.external_dbs().iter().map(|e| e.path.clone()).collect::<Vec<_>>(),
+            "checkpoints": m.checkpoints().len(),
+        })
+    }))
 }

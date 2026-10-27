@@ -66,6 +66,7 @@ pub async fn recover(ctl: &Arc<Ctl>) {
         eprintln!("ctl recovery: {kind} of {name} was interrupted; finishing it");
         let r: ApiResult<()> = match kind.as_str() {
             "erase" => super::erase::resume(ctl, &name, &op).await,
+            "restore" => super::pitr::resume(ctl, &name, &op).await,
             "fork" => super::fork::rollback(ctl, &name, &op).await,
             other => Err(ApiError::new(500, "internal", format!("unknown intent kind {other}"))),
         };

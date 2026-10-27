@@ -71,6 +71,27 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("GET", ["v1", "exports", id]) => Ok(Response::json(200, &super::export::get(ctl, id).await?)),
         ("DELETE", ["v1", "exports", id]) => Ok(Response::json(200, &super::export::delete(ctl, id).await?)),
         ("GET", ["v1", "exports", id, "files", rest @ ..]) => super::export::download(ctl, id, &rest.join("/"), &req.headers).await,
+        ("GET", ["v1", "databases", db, "restore-points"]) => Ok(Response::json(200, &super::pitr::list_points(ctl, db).await?)),
+        ("PUT", ["v1", "databases", db, "retention"]) => {
+            let b = body_json(req)?;
+            let w = b["window_secs"].as_u64().ok_or_else(|| ApiError::bad("body needs an integer window_secs (0 switches retention off)"))?;
+            Ok(Response::json(200, &super::pitr::set_retention(ctl, db, w, b["interval_secs"].as_u64()).await?))
+        }
+        ("POST", ["v1", "databases", db, "restore"]) => {
+            let b = body_json(req)?;
+            let to = match &b["to"] {
+                Value::String(s) => super::rec::parse_time(s),
+                Value::Number(n) => n.as_i64(),
+                _ => None,
+            }
+            .ok_or_else(|| ApiError::bad("body needs `to`: an RFC 3339 time or epoch milliseconds"))?;
+            Ok(Response::json(200, &super::pitr::restore(ctl, db, to, b["dry_run"].as_bool().unwrap_or(false)).await?))
+        }
+        ("GET", ["v1", "databases", db, "manifest"]) => {
+            meta::check_name(db)?;
+            let id = req.query.get("id").and_then(|v| v.parse().ok());
+            Ok(Response::json(200, &super::purge::manifest_summary(&ctl.store, db, id).await?.unwrap_or(Value::Null)))
+        }
         (_, ["v1", ..]) => Err(ApiError::new(404, "no_route", format!("no route for {} {}", req.method, req.path))),
         _ => Err(ApiError::new(404, "no_route", "not found")),
     }

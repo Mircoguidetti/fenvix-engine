@@ -21,6 +21,8 @@ pub fn prefixes(db: &str) -> Vec<String> {
         format!("control/usage/{db}/"),
         format!("control/forks/{db}/"),
         format!("control/exports/{db}/"),
+        format!("control/staging/{db}/"),
+        format!("control/retention/{db}"),
         format!("control/ops/{db}.json"),
     ]
 }
@@ -87,11 +89,13 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
+    super::pitr::forget(db);
     super::failpoint("erase.after_tenant").await;
     for a in ancestors {
         rec::delete(&ctl.store, &fork::fork_marker(a, db)).await?;
     }
-    for prefix in [rec::path(&["control", "dbs", db]), rec::path(&["control", "usage", db]), rec::path(&["control", "forks", db]), rec::path(&["control", "exports", db])] {
+    rec::delete(&ctl.store, &rec::path(&["control", "retention", db])).await?;
+    for prefix in [rec::path(&["control", "dbs", db]), rec::path(&["control", "usage", db]), rec::path(&["control", "forks", db]), rec::path(&["control", "exports", db]), rec::path(&["control", "staging", db])] {
         purge::delete_prefix(&ctl.store, &prefix).await?;
     }
     super::failpoint("erase.after_control").await;
