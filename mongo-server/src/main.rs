@@ -105,6 +105,10 @@ struct Args {
     /// and waiting for their group flush (they can disappear if the process dies before the flush).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     durable_reads: bool,
+    /// Test control: slatedb's `l0_max_ssts` for writers (default 8, 0 keeps it). Lowering it makes the stalled-flush
+    /// shutdown fallback reachable with a modest number of writes.
+    #[arg(long, default_value_t = 0)]
+    l0_max_ssts: usize,
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
@@ -166,6 +170,7 @@ async fn main() -> Result<()> {
     tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
     dbs::DURABLE_READS.store(args.durable_reads, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::L0_MAX_SSTS_OVERRIDE.store(args.l0_max_ssts, std::sync::atomic::Ordering::Relaxed);
     dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).

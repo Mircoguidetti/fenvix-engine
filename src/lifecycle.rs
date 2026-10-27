@@ -101,11 +101,20 @@ pub fn note_write(id: &str) {
     GC_HOT.lock().unwrap().entry(id.to_string()).and_modify(|h| h.last_write = now).or_insert(HotGc { last_write: now, last_gc: now });
 }
 
+/// Test control: override slatedb's `l0_max_ssts` (8) for writers, 0 = keep the default. A lower value makes the
+/// memtable-flush stall that the shutdown fallback handles happen after fewer writes.
+pub static L0_MAX_SSTS_OVERRIDE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
     let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
     if ms > 0 {
         s.flush_interval = Some(Duration::from_millis(ms));
+    }
+    let l0_max = L0_MAX_SSTS_OVERRIDE.load(std::sync::atomic::Ordering::Relaxed);
+    if l0_max > 0 {
+        s.l0_max_ssts = l0_max;
+        s.l0_max_ssts_per_key = s.l0_max_ssts_per_key.min(l0_max);
     }
     s.garbage_collector_options = None;
     s.compactor_options = None;

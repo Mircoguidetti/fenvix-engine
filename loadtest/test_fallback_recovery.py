@@ -2,7 +2,7 @@
 """Is everything recovered after the shutdown fallback (close gives up on the final flush after 20 s and closes uncleanly)?
 
 The stall is forced for real: the server runs with --no-maintenance --writer-poll-secs 3600, so nothing compacts its
-tenant and, after 8 L0 SSTs (8 x 4096 WAL objects), the memtable flush stalls. With writers still running, SIGTERM is
+tenant and, once L0 is full (--l0-max-ssts 1 here: after 2 x 4096 WAL objects instead of 8 x 4096), the memtable flush stalls. With writers still running, SIGTERM is
 sent; the server must log "closing without it" and exit. A new server (default flags) is started on the same bucket and
 every acknowledged document (inserts, then an update of each) is compared with what is read back.
 
@@ -37,7 +37,7 @@ def start(flags, tag):
 
 
 def trial(n, secs, threads):
-    p, log = start(["--no-maintenance", "--writer-poll-secs", "3600"], f"t{n}-stall")
+    p, log = start(["--no-maintenance", "--writer-poll-secs", "3600"] + os.environ.get("STALL_FLAGS", "--l0-max-ssts 1").split(), f"t{n}-stall")
     uri = f"mongodb://127.0.0.1:{PORT}"
     db = f"fb{n}_{int(time.time())}"
     c = MongoClient(uri, retryWrites=False, serverSelectionTimeoutMS=3000, maxPoolSize=threads + 2)
