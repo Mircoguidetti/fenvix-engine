@@ -1,0 +1,20 @@
+mongo-server listening on 127.0.0.1:27018 (idle close after 60 s, holder srv-27018, lease ttl 30 s)
+SLOW hello db=admin ms=10001 ok=true
+SLOW insert db=dn0_86185582 ms=12777 ok=false
+SLOW find db=dn0_86185582 ms=2472 ok=false
+SLOW dropDatabase db=dn0_86185582 ms=5218 ok=false
+SLOW insert db=dn1_b885351a ms=2103 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=dn1_b885351a ms=3852 ok=false
+SLOW dropDatabase db=dn1_b885351a ms=2025 ok=false
+SLOW insert db=dn2_788e9a8c ms=4374 ok=false
+SLOW find db=dn2_788e9a8c ms=1624 ok=false
+SLOW hello db=admin ms=10000 ok=true
+SLOW dropDatabase db=dn2_788e9a8c ms=4370 ok=false
+SLOW insert db=dn3_9e9c12bd ms=8827 ok=false
+SLOW hello db=admin ms=10000 ok=true
+SLOW find db=dn3_9e9c12bd ms=3100 ok=false
+SLOW dropDatabase db=dn3_9e9c12bd ms=4276 ok=false
+SLOW insert db=dn4_9a6d06f8 ms=2157 ok=false
+SLOW find db=dn4_9a6d06f8 ms=2875 ok=false
+LEASE acquired tenant=dn4_9a6d06f8 holder=srv-27018 unix_ms=1793216695198 takeover_from=-

@@ -1,0 +1,43 @@
+F tail.json_schema_nested_properties
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"},{"$numberInt":"4"},{"$numberInt":"5"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+F tail.json_schema_title_description
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"},{"$numberInt":"4"},{"$numberInt":"5"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+F tail.json_schema_empty
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"},{"$numberInt":"4"},{"$numberInt":"5"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+F tail.json_schema_dependencies
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"},{"$numberInt":"4"},{"$numberInt":"5"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+F tail.json_schema_type_object
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"},{"$numberInt":"4"},{"$numberInt":"5"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+. tail.json_schema_error_unknown_keyword
+. tail.json_schema_error_bad_type_name
+. tail.json_schema_error_required_not_array
+. tail.json_schema_error_properties_not_object
+. tail.json_schema_error_all_of_empty
+. tail.json_schema_error_enum_not_array
+. tail.json_schema_not_object_error
+. tail.json_schema_in_aggregate_match
+. tail.json_schema_with_other_conditions
+. tail.json_schema_in_or
+. tail.json_schema_update_filter
+. tail.to_decimal
+. tail.to_decimal_type
+. tail.to_decimal_back_to_double
+. tail.convert_to_decimal
+. tail.decimal_compare_in_find
+. tail.decimal_eq_across_types
+. tail.decimal_group_sort
+. tail.ts_second_increment
+. tail.ts_null_missing
+. tail.ts_wrong_type_error
+. tail.ts_second_type
+core: 22/27 passed

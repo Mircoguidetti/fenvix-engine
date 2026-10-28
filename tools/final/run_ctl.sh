@@ -7,6 +7,7 @@ cd "$(dirname "$0")/../.."
 OUT=mongo-tests/out/final; mkdir -p $OUT
 PYV=/tmp/claude-0/venv/bin/python
 tools/final/env_up.sh > /dev/null || exit 1
+tools/final/clean_buckets.sh
 done_file() { [ -f "$1" ] && grep -Eq "[0-9]+ (passed|failed|error).* in [0-9.]+s" "$1"; }
 for f in ctl-tests/test_*.py; do
   n=$(basename $f .py); o=$OUT/ctl_$n.txt
@@ -14,6 +15,7 @@ for f in ctl-tests/test_*.py; do
   tools/final/env_up.sh > /dev/null || exit 1
   (cd ctl-tests && timeout 2400 $PYV -m pytest -q -p no:cacheprovider --tb=short $n.py > ../$o 2>&1)
   echo "ctl $n: $(tail -1 $o)"
+  tools/final/clean_buckets.sh
 done
 for f in ctl-tests/test_0[1-8]*.py; do
   n=$(basename $f .py); o=$OUT/ctlauth_$n.txt
@@ -21,4 +23,5 @@ for f in ctl-tests/test_0[1-8]*.py; do
   tools/final/env_up.sh > /dev/null || exit 1
   (cd ctl-tests && CTL_TEST_AUTH=1 timeout 2400 $PYV -m pytest -q -p no:cacheprovider --tb=short $n.py > ../$o 2>&1)
   echo "ctl(auth) $n: $(tail -1 $o)"
+  tools/final/clean_buckets.sh
 done

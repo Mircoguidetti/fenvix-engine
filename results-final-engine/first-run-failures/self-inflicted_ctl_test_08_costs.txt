@@ -1,0 +1,13 @@
+.F.                                                                      [100%]
+=================================== FAILURES ===================================
+______________________________ test_costs[100000] ______________________________
+test_08_costs.py:135: in test_costs
+    asleep(srv, db)
+test_08_costs.py:71: in asleep
+    wait_until(lambda: srv.admin.get(f"/v1/databases/{db}?storage=0")[1]["state"] == "asleep", 10, what="asleep")
+lib.py:238: in wait_until
+    raise AssertionError(f"timed out waiting for {what}: {last}")
+E   AssertionError: timed out waiting for asleep: 'state'
+=========================== short test summary info ============================
+FAILED test_08_costs.py::test_costs[100000] - AssertionError: timed out waiti...
+1 failed, 2 passed in 403.03s (0:06:43)

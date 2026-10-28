@@ -1,0 +1,243 @@
+[
+ {
+  "name": "tail.json_schema_nested_properties",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "fail",
+  "detail": {
+   "step": 0,
+   "op": "insert_many",
+   "real": "{\"inserted_ids\":[{\"$numberInt\":\"1\"},{\"$numberInt\":\"2\"},{\"$numberInt\":\"3\"},{\"$numberInt\":\"4\"},{\"$numberInt\":\"5\"}]}",
+   "ours": "{\"__bulk_error__\":{\"nInserted\":{\"$numberInt\":\"0\"},\"nMatched\":{\"$numberInt\":\"0\"},\"nModified\":{\"$numberInt\":\"0\"},\"nRemoved\":{\"$numberInt\":\"0\"},\"nUpserted\":{\"$numberInt\":\"0\"},\"writeErrors\":[]}}"
+  },
+  "secs": 20.545
+ },
+ {
+  "name": "tail.json_schema_title_description",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "fail",
+  "detail": {
+   "step": 0,
+   "op": "insert_many",
+   "real": "{\"inserted_ids\":[{\"$numberInt\":\"1\"},{\"$numberInt\":\"2\"},{\"$numberInt\":\"3\"},{\"$numberInt\":\"4\"},{\"$numberInt\":\"5\"}]}",
+   "ours": "{\"__bulk_error__\":{\"nInserted\":{\"$numberInt\":\"0\"},\"nMatched\":{\"$numberInt\":\"0\"},\"nModified\":{\"$numberInt\":\"0\"},\"nRemoved\":{\"$numberInt\":\"0\"},\"nUpserted\":{\"$numberInt\":\"0\"},\"writeErrors\":[]}}"
+  },
+  "secs": 8.044
+ },
+ {
+  "name": "tail.json_schema_empty",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "fail",
+  "detail": {
+   "step": 0,
+   "op": "insert_many",
+   "real": "{\"inserted_ids\":[{\"$numberInt\":\"1\"},{\"$numberInt\":\"2\"},{\"$numberInt\":\"3\"},{\"$numberInt\":\"4\"},{\"$numberInt\":\"5\"}]}",
+   "ours": "{\"__bulk_error__\":{\"nInserted\":{\"$numberInt\":\"0\"},\"nMatched\":{\"$numberInt\":\"0\"},\"nModified\":{\"$numberInt\":\"0\"},\"nRemoved\":{\"$numberInt\":\"0\"},\"nUpserted\":{\"$numberInt\":\"0\"},\"writeErrors\":[]}}"
+  },
+  "secs": 10.488
+ },
+ {
+  "name": "tail.json_schema_dependencies",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "fail",
+  "detail": {
+   "step": 0,
+   "op": "insert_many",
+   "real": "{\"inserted_ids\":[{\"$numberInt\":\"1\"},{\"$numberInt\":\"2\"},{\"$numberInt\":\"3\"},{\"$numberInt\":\"4\"},{\"$numberInt\":\"5\"}]}",
+   "ours": "{\"__bulk_error__\":{\"nInserted\":{\"$numberInt\":\"0\"},\"nMatched\":{\"$numberInt\":\"0\"},\"nModified\":{\"$numberInt\":\"0\"},\"nRemoved\":{\"$numberInt\":\"0\"},\"nUpserted\":{\"$numberInt\":\"0\"},\"writeErrors\":[]}}"
+  },
+  "secs": 16.296
+ },
+ {
+  "name": "tail.json_schema_type_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "fail",
+  "detail": {
+   "step": 0,
+   "op": "insert_many",
+   "real": "{\"inserted_ids\":[{\"$numberInt\":\"1\"},{\"$numberInt\":\"2\"},{\"$numberInt\":\"3\"},{\"$numberInt\":\"4\"},{\"$numberInt\":\"5\"}]}",
+   "ours": "{\"__bulk_error__\":{\"nInserted\":{\"$numberInt\":\"0\"},\"nMatched\":{\"$numberInt\":\"0\"},\"nModified\":{\"$numberInt\":\"0\"},\"nRemoved\":{\"$numberInt\":\"0\"},\"nUpserted\":{\"$numberInt\":\"0\"},\"writeErrors\":[]}}"
+  },
+  "secs": 6.073
+ },
+ {
+  "name": "tail.json_schema_error_unknown_keyword",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "tail.json_schema_error_bad_type_name",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.64
+ },
+ {
+  "name": "tail.json_schema_error_required_not_array",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "tail.json_schema_error_properties_not_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.json_schema_error_all_of_empty",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "tail.json_schema_error_enum_not_array",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.json_schema_not_object_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "tail.json_schema_in_aggregate_match",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "tail.json_schema_with_other_conditions",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "tail.json_schema_in_or",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "tail.json_schema_update_filter",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "tail.to_decimal",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.to_decimal_type",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "tail.to_decimal_back_to_double",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "tail.convert_to_decimal",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "tail.decimal_compare_in_find",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.decimal_eq_across_types",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.decimal_group_sort",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.ts_second_increment",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "tail.ts_null_missing",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "tail.ts_wrong_type_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "tail.ts_second_type",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ }
+]

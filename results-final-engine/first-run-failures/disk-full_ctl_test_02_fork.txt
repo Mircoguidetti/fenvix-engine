@@ -1,0 +1,729 @@
+FFFFFFFFFFFFF                                                            [100%]
+=================================== FAILURES ===================================
+_______________________ test_fork_contents_equal[clone] ________________________
+test_02_fork.py:34: in test_fork_contents_equal
+    c = mk_source(srv, f"s_{mode}")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_clone/_lease in 1.857129025s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_clone/_lease</Resource><RequestId>18E2C9478AD05E35</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_clone/_lease in 1.857129025s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_clone/_lease</Resource><RequestId>18E2C9478AD05E35</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_clone/_lease</Resource><RequestId>18E2C9478AD05E35</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_clone/_lease in 1.857129025s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_clone/_lease</Resource><RequestId>18E2C9478AD05E35</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_clone/_lease in 1.857129025s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_clone/_lease</Resource><RequestId>18E2C9478AD05E35</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_clone/_lease</Resource><RequestId>18E2C9478AD05E35</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+________________________ test_fork_contents_equal[copy] ________________________
+test_02_fork.py:34: in test_fork_contents_equal
+    c = mk_source(srv, f"s_{mode}")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_copy/_lease in 5.051724324s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_copy/_lease</Resource><RequestId>18E2C948C48AFBC6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_copy/_lease in 5.051724324s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_copy/_lease</Resource><RequestId>18E2C948C48AFBC6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_copy/_lease</Resource><RequestId>18E2C948C48AFBC6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_copy/_lease in 5.051724324s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_copy/_lease</Resource><RequestId>18E2C948C48AFBC6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/s_copy/_lease in 5.051724324s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_copy/_lease</Resource><RequestId>18E2C948C48AFBC6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/s_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/s_copy/_lease</Resource><RequestId>18E2C948C48AFBC6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+________________________ test_writes_never_cross[clone] ________________________
+test_02_fork.py:50: in test_writes_never_cross
+    c = mk_source(srv, f"w_{mode}", 200)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_clone/_lease in 2.213939012s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_clone/_lease</Resource><RequestId>18E2C9494DDCEF6D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_clone/_lease in 2.213939012s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_clone/_lease</Resource><RequestId>18E2C9494DDCEF6D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_clone/_lease</Resource><RequestId>18E2C9494DDCEF6D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_clone/_lease in 2.213939012s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_clone/_lease</Resource><RequestId>18E2C9494DDCEF6D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_clone/_lease in 2.213939012s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_clone/_lease</Resource><RequestId>18E2C9494DDCEF6D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_clone/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_clone/_lease</Resource><RequestId>18E2C9494DDCEF6D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+________________________ test_writes_never_cross[copy] _________________________
+test_02_fork.py:50: in test_writes_never_cross
+    c = mk_source(srv, f"w_{mode}", 200)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_copy/_lease in 4.352024517s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_copy/_lease</Resource><RequestId>18E2C94A5763D1B8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_copy/_lease in 4.352024517s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_copy/_lease</Resource><RequestId>18E2C94A5763D1B8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_copy/_lease</Resource><RequestId>18E2C94A5763D1B8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_copy/_lease in 4.352024517s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_copy/_lease</Resource><RequestId>18E2C94A5763D1B8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/w_copy/_lease in 4.352024517s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_copy/_lease</Resource><RequestId>18E2C94A5763D1B8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/w_copy/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/w_copy/_lease</Resource><RequestId>18E2C94A5763D1B8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+__________________________ test_clone_copies_no_data ___________________________
+test_02_fork.py:81: in test_clone_copies_no_data
+    fill(c, "big", "c", 20000)
+lib.py:213: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/big/_lease in 4.103806s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/big/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/big/_lease</Resource><RequestId>18E2C94B51B72C4D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/big/_lease in 4.103806s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/big/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/big/_lease</Resource><RequestId>18E2C94B51B72C4D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/big/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/big/_lease</Resource><RequestId>18E2C94B51B72C4D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/big/_lease in 4.103806s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/big/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/big/_lease</Resource><RequestId>18E2C94B51B72C4D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/big/_lease in 4.103806s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/big/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/big/_lease</Resource><RequestId>18E2C94B51B72C4D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/big/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/big/_lease</Resource><RequestId>18E2C94B51B72C4D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+_________ test_fork_of_awake_source_includes_every_acknowledged_write __________
+test_02_fork.py:106: in test_fork_of_awake_source_includes_every_acknowledged_write
+    c["live"]["c"].insert_one({"_id": 0})
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:875: in insert_one
+    self._insert_one(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:815: in _insert_one
+    self._database.client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:803: in _insert_command
+    result = conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/live/_lease in 3.579200365s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/live/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/live/_lease</Resource><RequestId>18E2C94C2DDBDD42</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/live/_lease in 3.579200365s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/live/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/live/_lease</Resource><RequestId>18E2C94C2DDBDD42</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/live/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/live/_lease</Resource><RequestId>18E2C94C2DDBDD42</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/live/_lease in 3.579200365s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/live/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/live/_lease</Resource><RequestId>18E2C94C2DDBDD42</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/live/_lease in 3.579200365s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/live/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/live/_lease</Resource><RequestId>18E2C94C2DDBDD42</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/live/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/live/_lease</Resource><RequestId>18E2C94C2DDBDD42</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+_______________________________ test_fork_chain ________________________________
+test_02_fork.py:115: in test_fork_chain
+    c = mk_source(srv, "g0", 300)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/g0/_lease in 1.292342901s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/g0/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/g0/_lease</Resource><RequestId>18E2C94C80E9C0F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/g0/_lease in 1.292342901s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/g0/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/g0/_lease</Resource><RequestId>18E2C94C80E9C0F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/g0/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/g0/_lease</Resource><RequestId>18E2C94C80E9C0F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/g0/_lease in 1.292342901s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/g0/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/g0/_lease</Resource><RequestId>18E2C94C80E9C0F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/g0/_lease in 1.292342901s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/g0/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/g0/_lease</Resource><RequestId>18E2C94C80E9C0F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/g0/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/g0/_lease</Resource><RequestId>18E2C94C80E9C0F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+_________________________________ test_errors __________________________________
+test_02_fork.py:129: in test_errors
+    mk_source(srv, "e_src", 10)
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/e_src/_lease in 1.959352186s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/e_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/e_src/_lease</Resource><RequestId>18E2C94CFB20C355</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/e_src/_lease in 1.959352186s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/e_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/e_src/_lease</Resource><RequestId>18E2C94CFB20C355</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/e_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/e_src/_lease</Resource><RequestId>18E2C94CFB20C355</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/e_src/_lease in 1.959352186s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/e_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/e_src/_lease</Resource><RequestId>18E2C94CFB20C355</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/e_src/_lease in 1.959352186s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/e_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/e_src/_lease</Resource><RequestId>18E2C94CFB20C355</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/e_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/e_src/_lease</Resource><RequestId>18E2C94CFB20C355</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+_____________________ test_concurrent_forks_of_one_source ______________________
+test_02_fork.py:145: in test_concurrent_forks_of_one_source
+    c = mk_source(srv, "cc", 500)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cc/_lease in 1.876458096s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cc/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cc/_lease</Resource><RequestId>18E2C94D71FC49D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cc/_lease in 1.876458096s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cc/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cc/_lease</Resource><RequestId>18E2C94D71FC49D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cc/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cc/_lease</Resource><RequestId>18E2C94D71FC49D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cc/_lease in 1.876458096s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cc/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cc/_lease</Resource><RequestId>18E2C94D71FC49D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cc/_lease in 1.876458096s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cc/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cc/_lease</Resource><RequestId>18E2C94D71FC49D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cc/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cc/_lease</Resource><RequestId>18E2C94D71FC49D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+____________________ test_concurrent_forks_into_one_target _____________________
+test_02_fork.py:162: in test_concurrent_forks_into_one_target
+    mk_source(srv, "ct", 100)
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/ct/_lease in 7.056512909s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/ct/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/ct/_lease</Resource><RequestId>18E2C94F1BECC377</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/ct/_lease in 7.056512909s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/ct/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/ct/_lease</Resource><RequestId>18E2C94F1BECC377</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/ct/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/ct/_lease</Resource><RequestId>18E2C94F1BECC377</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/ct/_lease in 7.056512909s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/ct/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/ct/_lease</Resource><RequestId>18E2C94F1BECC377</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/ct/_lease in 7.056512909s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/ct/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/ct/_lease</Resource><RequestId>18E2C94F1BECC377</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/ct/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/ct/_lease</Resource><RequestId>18E2C94F1BECC377</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+______________________ test_fork_while_source_is_written _______________________
+test_02_fork.py:178: in test_fork_while_source_is_written
+    c["hot"]["c"].insert_one({"_id": 0})
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:875: in insert_one
+    self._insert_one(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:815: in _insert_one
+    self._database.client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:803: in _insert_command
+    result = conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/hot/_lease in 2.928856468s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/hot/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/hot/_lease</Resource><RequestId>18E2C94FCF553AB0</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/hot/_lease in 2.928856468s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/hot/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/hot/_lease</Resource><RequestId>18E2C94FCF553AB0</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/hot/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/hot/_lease</Resource><RequestId>18E2C94FCF553AB0</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/hot/_lease in 2.928856468s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/hot/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/hot/_lease</Resource><RequestId>18E2C94FCF553AB0</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/hot/_lease in 2.928856468s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/hot/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/hot/_lease</Resource><RequestId>18E2C94FCF553AB0</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/hot/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/hot/_lease</Resource><RequestId>18E2C94FCF553AB0</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+___________ test_fork_then_compaction_and_gc_keep_the_fork_readable ____________
+test_02_fork.py:214: in test_fork_then_compaction_and_gc_keep_the_fork_readable
+    fill(c, "cg", "c", 1500)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cg/_lease in 2.536033098s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cg/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cg/_lease</Resource><RequestId>18E2C95071DDC42A</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cg/_lease in 2.536033098s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cg/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cg/_lease</Resource><RequestId>18E2C95071DDC42A</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cg/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cg/_lease</Resource><RequestId>18E2C95071DDC42A</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cg/_lease in 2.536033098s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cg/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cg/_lease</Resource><RequestId>18E2C95071DDC42A</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/cg/_lease in 2.536033098s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cg/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cg/_lease</Resource><RequestId>18E2C95071DDC42A</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/cg/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/cg/_lease</Resource><RequestId>18E2C95071DDC42A</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+____________________ test_mongo_dropdatabase_respects_forks ____________________
+test_02_fork.py:243: in test_mongo_dropdatabase_respects_forks
+    c = mk_source(srv, "dd_src", 200)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_02_fork.py:20: in mk_source
+    fill(c, name, "users", n)
+lib.py:216: in fill
+    c.insert_many(docs)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/collection.py:959: in insert_many
+    blk.execute(write_concern, session, _Op.INSERT)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:449: in execute
+    return self.execute_command(generator, write_concern, session, operation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:310: in execute_command
+    _ = client._retryable_write(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2154: in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2024: in _retry_with_session
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+                                             ^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3160: in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:300: in retryable_bulk
+    self._execute_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:244: in _execute_command
+    result, to_send = self._execute_batch(bwc, cmd, ops, client)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:168: in _execute_batch
+    result = self.write_command(bwc, cmd, request_id, msg, to_send, client)  # type: ignore[arg-type]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/bulk.py:86: in write_command
+    result_docs, _, _ = run_bulk_write_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:269: in run_bulk_write_command
+    return _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/dd_src/_lease in 1.842907246s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/dd_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/dd_src/_lease</Resource><RequestId>18E2C950E7B58FA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/dd_src/_lease in 1.842907246s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/dd_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/dd_src/_lease</Resource><RequestId>18E2C950E7B58FA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>
+E   <Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/dd_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/dd_src/_lease</Resource><RequestId>18E2C950E7B58FA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>, full error: {'ok': 0.0, 'errmsg': 'Generic S3 error: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/dd_src/_lease in 1.842907246s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/dd_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/dd_src/_lease</Resource><RequestId>18E2C950E7B58FA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Error performing PUT http://127.0.0.1:9000/ctl-fork-2fb45d7c/tenants/dd_src/_lease in 1.842907246s, after 10 retries, max_retries: 10, retry_timeout: 180s  - Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/dd_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/dd_src/_lease</Resource><RequestId>18E2C950E7B58FA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>: Server returned non-2xx status code: 507 Insufficient Storage: <?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>XMinioStorageFull</Code><Message>Storage backend has reached its minimum free drive threshold. Please delete a few objects to proceed.</Message><Key>tenants/dd_src/_lease</Key><BucketName>ctl-fork-2fb45d7c</BucketName><Resource>/ctl-fork-2fb45d7c/tenants/dd_src/_lease</Resource><RequestId>18E2C950E7B58FA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>', 'code': 1, 'codeName': 'InternalError'}
+=========================== short test summary info ============================
+FAILED test_02_fork.py::test_fork_contents_equal[clone] - pymongo.errors.Oper...
+FAILED test_02_fork.py::test_fork_contents_equal[copy] - pymongo.errors.Opera...
+FAILED test_02_fork.py::test_writes_never_cross[clone] - pymongo.errors.Opera...
+FAILED test_02_fork.py::test_writes_never_cross[copy] - pymongo.errors.Operat...
+FAILED test_02_fork.py::test_clone_copies_no_data - pymongo.errors.OperationF...
+FAILED test_02_fork.py::test_fork_of_awake_source_includes_every_acknowledged_write
+FAILED test_02_fork.py::test_fork_chain - pymongo.errors.OperationFailure: Ge...
+FAILED test_02_fork.py::test_errors - pymongo.errors.OperationFailure: Generi...
+FAILED test_02_fork.py::test_concurrent_forks_of_one_source - pymongo.errors....
+FAILED test_02_fork.py::test_concurrent_forks_into_one_target - pymongo.error...
+FAILED test_02_fork.py::test_fork_while_source_is_written - pymongo.errors.Op...
+FAILED test_02_fork.py::test_fork_then_compaction_and_gc_keep_the_fork_readable
+FAILED test_02_fork.py::test_mongo_dropdatabase_respects_forks - pymongo.erro...
+13 failed in 87.19s (0:01:27)
