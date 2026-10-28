@@ -58,6 +58,9 @@ struct HotArgs {
     warmup_secs: u64,
     #[arg(long, default_value_t = 50)]
     docs: i32,
+    /// Offered load in operations per second over all connections (0 = every connection issues operations back to back).
+    #[arg(long, default_value_t = 0.0)]
+    rate: f64,
     #[arg(long, default_value = "hot-out.json")]
     out: PathBuf,
 }
@@ -75,11 +78,24 @@ async fn hot(a: HotArgs) -> Result<()> {
     for w in 0..a.connections {
         let (client, name, hist, ops, errs) = (client.clone(), name.clone(), Arc::clone(&hist), Arc::clone(&ops), Arc::clone(&errs));
         let (read_pct, docs) = (a.read_pct, a.docs);
+        // each connection issues one operation every `period`, started at a fixed schedule (no catching up after a stall longer than a second)
+        let nconn = a.connections;
+        let period = if a.rate > 0.0 { Some(Duration::from_secs_f64(a.connections as f64 / a.rate)) } else { None };
         tasks.push(tokio::spawn(async move {
             let coll = client.database(&name).collection::<Document>("c");
             let mut rng = StdRng::seed_from_u64(w as u64 + 1);
             let mut n = 0i64;
+            let mut next = Instant::now() + period.map(|p| p.mul_f64(w as f64 / nconn as f64)).unwrap_or_default();
             while Instant::now() < end {
+                if let Some(p) = period {
+                    let now = Instant::now();
+                    if next > now {
+                        tokio::time::sleep(next - now).await;
+                    } else if now - next > Duration::from_secs(1) {
+                        next = now;
+                    }
+                    next += p;
+                }
                 let t0 = Instant::now();
                 let r: Result<(), mongodb::error::Error> = if rng.gen_range(0..100) < read_pct {
                     coll.find_one(doc! { "_id": rng.gen_range(0..docs) }).await.map(|_| ())

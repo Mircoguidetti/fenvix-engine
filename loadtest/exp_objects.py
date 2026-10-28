@@ -33,6 +33,20 @@ def count(d):
         return 0
 
 
+def s3_requests():
+    """MinIO's own count of S3 requests by API (needs MINIO_PROMETHEUS_AUTH_TYPE=public); {} when unreachable."""
+    import urllib.request, re
+    try:
+        op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        txt = op.open(EP + "/minio/v2/metrics/cluster", timeout=10).read().decode()
+    except Exception:
+        return {}
+    out = {}
+    for m in re.finditer(r'^minio_s3_requests_total\{[^}]*api="([^"]+)"[^}]*\} ([0-9.e+]+)', txt, re.M):
+        out[m.group(1)] = out.get(m.group(1), 0) + float(m.group(2))
+    return out
+
+
 def main():
     a = sys.argv[1:]
     extra = a[a.index("--") + 1:] if "--" in a else []
@@ -40,6 +54,7 @@ def main():
     label, binary, secs = a[0], a[1], float(a[2])
     opt = lambda k, d: a[a.index(k) + 1] if k in a else d
     conns, read_pct = int(opt("--conns", 8)), int(opt("--read-pct", 0))
+    rate = float(opt("--rate", 0))
     prefix = f"ob{label[:10].replace('-', '')}{int(time.time()) % 100000}x"
     name = f"{prefix}000000"
     p = subprocess.Popen([binary, "--listen", f"127.0.0.1:{PORT}", "--idle-secs", "3600", "--holder", "O", "--lease-ttl-secs", "30", "--endpoint", EP] + extra,
@@ -54,6 +69,7 @@ def main():
     minio = subprocess.run(["pgrep", "-x", "minio"], capture_output=True, text=True).stdout.split()
     minio_pid = int(minio[0]) if minio else None
     c = MongoClient(uri)
+    s3a = s3_requests()
     s0 = c.admin.command("tenantStats"); cpu0 = (cpu_s(p.pid), cpu_s(minio_pid) if minio_pid else None); t0 = time.time()
     samples, stop = [], threading.Event()
 
@@ -62,10 +78,11 @@ def main():
             samples.append([round(time.time() - t0)] + [count(f"{DATA}/{name}/{d}") for d in DIRS]); stop.wait(10)
     th = threading.Thread(target=sampler); th.start()
     subprocess.run([LOADGEN, "hot", "--uris", uri, "--prefix", prefix, "--tenant", "0", "--connections", str(conns), "--read-pct", str(read_pct),
-                    "--duration-secs", str(int(secs)), "--warmup-secs", "0", "--out", f"/tmp/ob-{label}.json"], check=True, stdout=subprocess.DEVNULL)
+                    "--duration-secs", str(int(secs)), "--warmup-secs", "0", "--rate", str(rate), "--out", f"/tmp/ob-{label}.json"], check=True, stdout=subprocess.DEVNULL)
     stop.set(); th.join()
     wall = time.time() - t0
     s1 = c.admin.command("tenantStats"); cpu1 = (cpu_s(p.pid), cpu_s(minio_pid) if minio_pid else None)
+    s3b = s3_requests()
     final = [count(f"{DATA}/{name}/{d}") for d in DIRS]
     r = json.load(open(f"/tmp/ob-{label}.json"))
     dl = lambda sec, k: s1[sec][k] - s0[sec][k]
@@ -73,6 +90,7 @@ def main():
            "p50_ms": r["p50_ms"], "p99_ms": r["p99_ms"], "objects_final": dict(zip(DIRS, final)),
            "objects_max": {d: max(s[i + 1] for s in samples) for i, d in enumerate(DIRS)}, "samples": samples,
            "server_cpu_s": round(cpu1[0] - cpu0[0], 1), "minio_cpu_s": round(cpu1[1] - cpu0[1], 1) if minio_pid else None, "wall_s": round(wall, 1),
+           "offered_ops_per_sec": rate, "s3_requests_minio": {k: round(s3b.get(k, 0) - s3a.get(k, 0)) for k in sorted(set(s3b) | set(s3a)) if s3b.get(k, 0) - s3a.get(k, 0)},
            "requests": {k: dl("requests", k) for k in ("put", "get", "list", "head", "delete")},
            "walGc": {k: s1.get("walGc", {}).get(k, 0) - s0.get("walGc", {}).get(k, 0) for k in ("passes", "deleted", "listUs", "deleteUs", "totalUs")},
            "sstGc": {k: s1.get("sstGc", {}).get(k, 0) - s0.get("sstGc", {}).get(k, 0) for k in ("passes", "deletedSsts", "deletedManifests")}}

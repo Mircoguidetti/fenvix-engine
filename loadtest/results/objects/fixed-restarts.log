@@ -1,0 +1,13 @@
+2026-10-28 03:27 UTC restart; interrupted fx-m-off1 (started 03:21:47), rerun from scratch
+2026-10-28 03:34 UTC restart; interrupted fx-m-off1 (second attempt, started 03:28:24), rerun from scratch
+2026-10-28 04:31 UTC restart; interrupted fx-e-off3 (started about 04:28), rerun from scratch
+2026-10-28 04:38 UTC restart; interrupted fx-e-off3 (second attempt, started 04:32:20), rerun from scratch
+2026-10-28 05:00 UTC restart; interrupted fx-m-on4 (started about 04:58), rerun from scratch
+2026-10-28 05:05 UTC restart; interrupted fx-m-on4 (second attempt, started 05:01), rerun from scratch
+2026-10-28 05:11 UTC restart; interrupted fx-m-on4 (third attempt, started 05:06:20), rerun from scratch
+2026-10-28 05:35 UTC disk full (MinIO XMinioStorageFull): fx-e-off3, fx-e-on3, fx-m-off4, fx-m-on4, fx-e-off4, fx-e-on4 had 0 operations and 93-103 errors; moved to results/objects/invalid/ and to be rerun (leftover tenants of killed runs, 5.3 GB, removed)
+2026-10-28 05:46 UTC restart; interrupted fx-e-off3 (rerun after disk-full, started 05:41), rerun from scratch
+2026-10-28 06:04 UTC restart; interrupted fx-m-off4 (started about 05:58), rerun from scratch
+2026-10-28 06:11 UTC restart; interrupted fx-m-off4 (second attempt, started 06:05), rerun from scratch
+2026-10-28 06:18 UTC restart; interrupted fx-m-off4 (third attempt, started 06:12), rerun from scratch
+2026-10-28 06:33 UTC restart; interrupted fx-e-off4 (started about 06:31), rerun from scratch
