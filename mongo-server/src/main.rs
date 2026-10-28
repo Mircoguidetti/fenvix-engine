@@ -87,9 +87,14 @@ struct Args {
     /// Close a database's tenant after this many idle seconds.
     #[arg(long, default_value_t = 60)]
     idle_secs: u64,
-    /// S3-compatible endpoint (MinIO).
-    #[arg(long, default_value = "http://localhost:9000")]
+    /// S3 endpoint URL, only for S3-compatible services such as MinIO (also read from AWS_ENDPOINT). Empty: AWS itself.
+    /// An `http://` endpoint switches plain HTTP on.
+    #[arg(long, default_value = "")]
     endpoint: String,
+    /// S3 region (also read from AWS_REGION or AWS_DEFAULT_REGION). With `--store s3` one of the three must be set: the engine
+    /// has no region of its own.
+    #[arg(long)]
+    region: Option<String>,
     #[arg(long, default_value = "bench")]
     bucket: String,
     /// Do not run the background compaction and GC loops (also disables the L0 guard).
@@ -292,16 +297,25 @@ fn main() -> Result<()> {
 async fn run() -> Result<()> {
     let args = Args::parse();
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
-        "s3" => Arc::new(
-            AmazonS3Builder::new()
-                .with_endpoint(&args.endpoint)
-                .with_allow_http(true)
-                .with_region("us-east-1")
-                .with_bucket_name(&args.bucket)
-                .with_access_key_id("minioadmin")
-                .with_secret_access_key("minioadmin")
-                .build()?,
-        ),
+        "s3" => {
+            // The credentials are the standard AWS ones, none is built in: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY /
+            // AWS_SESSION_TOKEN, a web identity token (AWS_WEB_IDENTITY_TOKEN_FILE + AWS_ROLE_ARN), the container credentials
+            // endpoint, or, with none of those set, the instance role through the metadata service (IMDSv2). Region and endpoint
+            // come from the flags or from AWS_REGION / AWS_DEFAULT_REGION / AWS_ENDPOINT. Credentials are never on the command line.
+            let mut b = AmazonS3Builder::from_env().with_bucket_name(&args.bucket);
+            if let Some(r) = &args.region {
+                b = b.with_region(r);
+            }
+            let region_set = args.region.is_some() || ["AWS_REGION", "AWS_DEFAULT_REGION"].iter().any(|k| std::env::var(k).map(|v| !v.is_empty()).unwrap_or(false));
+            anyhow::ensure!(region_set, "no S3 region: pass --region or set AWS_REGION (the engine has no built-in region)");
+            if !args.endpoint.is_empty() {
+                b = b.with_endpoint(&args.endpoint);
+                if args.endpoint.starts_with("http://") {
+                    b = b.with_allow_http(true);
+                }
+            }
+            Arc::new(b.build()?)
+        }
         "local" => {
             std::fs::create_dir_all(&args.local_dir)?;
             Arc::new(object_store::local::LocalFileSystem::new_with_prefix(&args.local_dir)?)

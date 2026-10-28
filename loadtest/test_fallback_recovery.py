@@ -9,6 +9,10 @@ every acknowledged document (inserts, then an update of each) is compared with w
     test_fallback_recovery.py [--trials 10] [--secs 100] [--threads 48] [--store s3]
 """
 import argparse, json, os, signal, subprocess, threading, time
+
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
+    os.environ.setdefault(_k, _v)
 from pymongo import MongoClient
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

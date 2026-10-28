@@ -5,6 +5,8 @@
 set -euo pipefail
 port=${1:?port}; idle=${2:?idle secs}; shift 2
 cd "$(dirname "$0")/.."
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (AWS_* variables, see tools/minio-env.sh).
+. tools/minio-env.sh
 mkdir -p mongo-tests/out
 pidfile=mongo-tests/out/server-$port.pid
 if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then

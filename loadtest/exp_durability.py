@@ -3,6 +3,10 @@
 X ms, one tenant, writes as fast as possible, SIGKILL at a random moment, restart, read back: the age (ack to kill) of the
 oldest acknowledged write that was lost is the measured window. Baseline (durable ack) must lose nothing."""
 import json, os, random, signal, subprocess, sys, time
+
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
+    os.environ.setdefault(_k, _v)
 from pymongo import MongoClient
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BIN = os.path.join(ROOT, "target", "release", "mongo-server")

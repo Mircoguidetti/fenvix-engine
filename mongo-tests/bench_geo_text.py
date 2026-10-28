@@ -4,6 +4,10 @@ on the open tenant), with and without the index, for 10k and 100k documents. The
 object-store counters (`tenantStats`): GETs (+LISTs), bytes read, and client-side latency.
 Output: out/cost_geo_text.json"""
 import argparse, json, os, random, signal, statistics, subprocess, sys, time
+
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
+    os.environ.setdefault(_k, _v)
 import pymongo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bench_cost as B

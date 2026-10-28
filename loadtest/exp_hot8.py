@@ -2,6 +2,10 @@
 """Task 5: single-tenant throughput with 1, 8 and 64 connections for reads only, writes only and a 90/10 mix,
 against MinIO, a local directory and an in-memory store, with reads serialized (before) and shared (after)."""
 import json, os, subprocess, sys, time
+
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
+    os.environ.setdefault(_k, _v)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BIN = os.path.join(ROOT, "target", "release")
 OUT = os.path.join(ROOT, "loadtest", "out", "t5_results8")

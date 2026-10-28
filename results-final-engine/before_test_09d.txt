@@ -1,0 +1,35 @@
+.FFFF.                                                                   [100%]
+=================================== FAILURES ===================================
+E   AssertionError: error: unexpected argument '--region' found
+      
+      Usage: mongo-server.prefix --listen <LISTEN> --idle-secs <IDLE_SECS> --bucket <BUCKET> --no-ttl --holder <HOLDER> --endpoint <ENDPOINT>
+      
+      For more information, try '--help'.
+      
+    assert False
+     +  where False = wait_listening(<Popen: returncode: 2 args: ['/tmp/claude-0/mongo-server.prefix', '--listen'...>, 30575)
+/home/user/test5-compat-indexes/ctl-tests/test_09d_s3_env.py:75: AssertionError: error: unexpected argument '--region' found
+E   AssertionError: the engine wrote to S3 with credentials that are not valid: it must have credentials of its own built in
+    assert not (True and True)
+     +  where True = works(23088)
+/home/user/test5-compat-indexes/ctl-tests/test_09d_s3_env.py:90: AssertionError: the engine wrote to S3 with credentials that are not valid: it must have credentials of its own built in
+E   AssertionError: {('minioadmin', 'us-east-1', 's3')}
+    assert {('minioadmin', 'us-east-1')} == {('AKIAGIVENK... 'eu-west-3')}
+      
+      Extra items in the left set:
+      ('minioadmin', 'us-east-1')
+      Extra items in the right set:
+      ('AKIAGIVENKEY000000', 'eu-west-3')
+      Use -v to get more diff
+/home/user/test5-compat-indexes/ctl-tests/test_09d_s3_env.py:160: AssertionError: {('minioadmin', 'us-east-1', 's3')}
+E   subprocess.TimeoutExpired: Command '['/tmp/claude-0/mongo-server.prefix', '--listen', '127.0.0.1:25905', '--idle-secs', '30', '--bucket', 'ctl-s3env-noregion-69501c70', '--no-ttl', '--holder', 's3env-25905']' timed out after 15 seconds
+
+During handling of the above exception, another exception occurred:
+E   Failed: the engine started without any region: it has a built-in one
+/home/user/test5-compat-indexes/ctl-tests/test_09d_s3_env.py:185: Failed: the engine started without any region: it has a built-in one
+=========================== short test summary info ============================
+FAILED test_09d_s3_env.py::test_credentials_region_and_endpoint_from_flags_and_environment_mix
+FAILED test_09d_s3_env.py::test_wrong_credentials_do_not_work - AssertionErro...
+FAILED test_09d_s3_env.py::test_region_key_and_token_are_the_ones_given - Ass...
+FAILED test_09d_s3_env.py::test_no_region_is_a_clear_error - Failed: the engi...
+4 failed, 2 passed in 24.83s

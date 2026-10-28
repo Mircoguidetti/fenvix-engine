@@ -6,6 +6,10 @@
 Writes results/objects/<label>.json. MINIO_DATA_DIR (default /tmp/minio-data) is where MinIO keeps the bucket.
 """
 import json, os, subprocess, sys, threading, time
+
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
+    os.environ.setdefault(_k, _v)
 from pymongo import MongoClient
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -4,6 +4,10 @@ builds a tenant, closes it, and measures cold queries (tenant closed before ever
 object-store counters. Run with the cost-based document fetch off (MONGO_NO_FETCH_SCAN, the behaviour before) and on.
 Output: out/cold.json"""
 import argparse, json, os, random, signal, statistics, subprocess, sys, time
+
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
+    os.environ.setdefault(_k, _v)
 import boto3, pymongo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bench_cost as B
