@@ -104,5 +104,19 @@ if os.path.exists(sc):
 else:
     md.append("not run\n")
 md.append(open(os.path.join(ROOT, "tools", "final", "report_tail.md")).read().replace("@COMMIT@", COMMIT).replace("@SHA@", SHA).replace("@BUILD@", BUILD))
-open(os.path.join(ROOT, "results-final-engine.md"), "w").write("\n".join(md))
+text = "\n".join(md)
+cm = {n: (p, b) for n, p, b, _ in C}
+
+
+def _ctl(m):
+    n = m.group(1)
+    if n not in cm:
+        return "(non eseguito)"
+    p, b = cm[n]
+    am_ = am.get(n)
+    return "%d passati, %d falliti" % (p, b) + (" (con `--auth`: %d passati, %d falliti)" % am_ if am_ else "")
+
+
+text = re.sub(r"@CTL:([\w]+)@", _ctl, text)
+open(os.path.join(ROOT, "results-final-engine.md"), "w").write(text)
 print("written; ctl", tp, tf, "auth", ap, af)
