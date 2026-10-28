@@ -1,0 +1,278 @@
+[
+ {
+  "name": "g02.login.scram_sha256_default",
+  "status": "pass",
+  "real": "{\"ping\": {\"$numberDouble\": \"1.0\"}, \"status\": true}",
+  "ours": "{\"ping\": {\"$numberDouble\": \"1.0\"}, \"status\": true}"
+ },
+ {
+  "name": "g02.login.explicit_mechanisms",
+  "status": "pass",
+  "real": "{\"SCRAM-SHA-1\": {\"$numberDouble\": \"1.0\"}, \"SCRAM-SHA-256\": {\"$numberDouble\": \"1.0\"}}",
+  "ours": "{\"SCRAM-SHA-1\": {\"$numberDouble\": \"1.0\"}, \"SCRAM-SHA-256\": {\"$numberDouble\": \"1.0\"}}"
+ },
+ {
+  "name": "g02.login.wrong_password",
+  "status": "pass",
+  "real": "{\"null\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-1\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-256\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}",
+  "ours": "{\"null\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-1\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-256\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}"
+ },
+ {
+  "name": "g02.login.unknown_user",
+  "status": "pass",
+  "real": "{\"null\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-1\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-256\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}",
+  "ours": "{\"null\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-1\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"SCRAM-SHA-256\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}"
+ },
+ {
+  "name": "g02.login.authSource_is_the_users_database",
+  "status": "pass",
+  "real": "{\"right_source\": \"ok\", \"admin_source\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"other_source\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}",
+  "ours": "{\"right_source\": \"ok\", \"admin_source\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"other_source\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}"
+ },
+ {
+  "name": "g02.login.same_name_in_two_databases_are_different_users",
+  "status": "pass",
+  "real": "{\"a_one\": \"ok\", \"a_two\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"b_two\": \"ok\", \"b_one\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}",
+  "ours": "{\"a_one\": \"ok\", \"a_two\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"b_two\": \"ok\", \"b_one\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}"
+ },
+ {
+  "name": "g02.login.mechanism_restricted_user",
+  "status": "pass",
+  "real": "{\"null\": \"ok\", \"SCRAM-SHA-1\": \"ok\", \"SCRAM-SHA-256\": {\"code\": {\"$numberInt\": \"334\"}, \"codeName\": \"MechanismUnavailable\"}}",
+  "ours": "{\"null\": \"ok\", \"SCRAM-SHA-1\": \"ok\", \"SCRAM-SHA-256\": {\"code\": {\"$numberInt\": \"334\"}, \"codeName\": \"MechanismUnavailable\"}}"
+ },
+ {
+  "name": "g02.login.uri_with_credentials",
+  "status": "pass",
+  "real": "{\"ok\": \"ok\", \"bad\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"sha1\": \"ok\"}",
+  "ours": "{\"ok\": \"ok\", \"bad\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"sha1\": \"ok\"}"
+ },
+ {
+  "name": "g02.login.special_characters_in_password",
+  "status": "pass",
+  "real": "{\"ok\": \"ok\", \"sha1\": \"ok\"}",
+  "ours": "{\"ok\": \"ok\", \"sha1\": \"ok\"}"
+ },
+ {
+  "name": "g02.login.hello_saslSupportedMechs",
+  "status": "pass",
+  "real": "{\"both\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"], \"one\": [\"SCRAM-SHA-1\"], \"none\": null}",
+  "ours": "{\"both\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"], \"one\": [\"SCRAM-SHA-1\"], \"none\": null}"
+ },
+ {
+  "name": "g02.login.logout",
+  "status": "pass",
+  "real": "{\"before\": {\"$numberInt\": \"1\"}, \"after\": [], \"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}",
+  "ours": "{\"before\": {\"$numberInt\": \"1\"}, \"after\": [], \"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}"
+ },
+ {
+  "name": "g02.login.password_change_takes_effect",
+  "status": "pass",
+  "real": "{\"old\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"new\": \"ok\"}",
+  "ours": "{\"old\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"new\": \"ok\"}"
+ },
+ {
+  "name": "g02.unauth.commands",
+  "status": "pass",
+  "real": "{\"ping\": {\"$numberDouble\": \"1.0\"}, \"hello\": {\"$numberDouble\": \"1.0\"}, \"buildInfo\": {\"$numberDouble\": \"1.0\"}, \"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"listDatabases\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"listCollections\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"createUser\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"usersInfo\": {\"code\": {",
+  "ours": "{\"ping\": {\"$numberDouble\": \"1.0\"}, \"hello\": {\"$numberDouble\": \"1.0\"}, \"buildInfo\": {\"$numberDouble\": \"1.0\"}, \"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"listDatabases\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"listCollections\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"createUser\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"usersInfo\": {\"code\": {"
+ },
+ {
+  "name": "g02.users.createUser_errors",
+  "status": "pass",
+  "real": "{\"first\": \"ok\", \"duplicate\": {\"code\": {\"$numberInt\": \"51003\"}, \"codeName\": \"Location51003\"}, \"empty_pwd\": {\"code\": {\"$numberInt\": \"50687\"}, \"codeName\": \"Location50687\"}, \"no_pwd\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"no_roles\": {\"code\": {\"$numberInt\": \"40414\"}, \"codeName\": \"IDLFailedToParse\"}, \"unknown_role\": {\"code\": {\"$numberInt\": \"31\"}, \"codeName\": \"RoleNotFound\"}, \"role_other_db\": \"ok\", \"pwd_not_string\": {\"code\": {\"$numberInt\": \"14\"}, \"codeName\": \"TypeMismatch\"}, \"empty_na",
+  "ours": "{\"first\": \"ok\", \"duplicate\": {\"code\": {\"$numberInt\": \"51003\"}, \"codeName\": \"Location51003\"}, \"empty_pwd\": {\"code\": {\"$numberInt\": \"50687\"}, \"codeName\": \"Location50687\"}, \"no_pwd\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"no_roles\": {\"code\": {\"$numberInt\": \"40414\"}, \"codeName\": \"IDLFailedToParse\"}, \"unknown_role\": {\"code\": {\"$numberInt\": \"31\"}, \"codeName\": \"RoleNotFound\"}, \"role_other_db\": \"ok\", \"pwd_not_string\": {\"code\": {\"$numberInt\": \"14\"}, \"codeName\": \"TypeMismatch\"}, \"empty_na"
+ },
+ {
+  "name": "g02.users.usersInfo_forms",
+  "status": "pass",
+  "real": "{\"one\": [{\"_id\": \"$DB.alice\", \"user\": \"alice\", \"db\": \"$DB\", \"customData\": {\"team\": \"x\"}, \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"mechanisms\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"]}], \"doc\": [{\"_id\": \"$DB.alice\", \"user\": \"alice\", \"db\": \"$DB\", \"customData\": {\"team\": \"x\"}, \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"mechanisms\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"]}], \"all\": [{\"_id\": \"$DB.alice\", \"user\": \"alice\", \"db\": \"$DB\", \"customData\": {\"team\": \"x\"}, \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"mechanis",
+  "ours": "{\"one\": [{\"_id\": \"$DB.alice\", \"user\": \"alice\", \"db\": \"$DB\", \"customData\": {\"team\": \"x\"}, \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"mechanisms\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"]}], \"doc\": [{\"_id\": \"$DB.alice\", \"user\": \"alice\", \"db\": \"$DB\", \"customData\": {\"team\": \"x\"}, \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"mechanisms\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"]}], \"all\": [{\"_id\": \"$DB.alice\", \"user\": \"alice\", \"db\": \"$DB\", \"customData\": {\"team\": \"x\"}, \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"mechanis"
+ },
+ {
+  "name": "g02.users.update_grant_revoke_drop",
+  "status": "pass",
+  "real": "{\"start\": [], \"granted\": [[\"read\", \"$DB\"], [\"readWrite\", \"$DB\"]], \"granted_again\": [[\"read\", \"$DB\"], [\"readWrite\", \"$DB\"]], \"revoked\": [[\"readWrite\", \"$DB\"]], \"updated\": [[\"dbAdmin\", \"$DB\"]], \"customData\": {\"k\": {\"$numberInt\": \"2\"}}, \"grant_unknown_role\": {\"code\": {\"$numberInt\": \"31\"}, \"codeName\": \"RoleNotFound\"}, \"update_unknown_user\": {\"code\": {\"$numberInt\": \"11\"}, \"codeName\": \"UserNotFound\"}, \"drop\": \"ok\", \"drop_again\": {\"code\": {\"$numberInt\": \"11\"}, \"codeName\": \"UserNotFound\"}, \"grant_unknow",
+  "ours": "{\"start\": [], \"granted\": [[\"read\", \"$DB\"], [\"readWrite\", \"$DB\"]], \"granted_again\": [[\"read\", \"$DB\"], [\"readWrite\", \"$DB\"]], \"revoked\": [[\"readWrite\", \"$DB\"]], \"updated\": [[\"dbAdmin\", \"$DB\"]], \"customData\": {\"k\": {\"$numberInt\": \"2\"}}, \"grant_unknown_role\": {\"code\": {\"$numberInt\": \"31\"}, \"codeName\": \"RoleNotFound\"}, \"update_unknown_user\": {\"code\": {\"$numberInt\": \"11\"}, \"codeName\": \"UserNotFound\"}, \"drop\": \"ok\", \"drop_again\": {\"code\": {\"$numberInt\": \"11\"}, \"codeName\": \"UserNotFound\"}, \"grant_unknow"
+ },
+ {
+  "name": "g02.users.dropAllUsersFromDatabase",
+  "status": "pass",
+  "real": "{\"n\": {\"$numberInt\": \"3\"}, \"left\": []}",
+  "ours": "{\"n\": {\"$numberInt\": \"3\"}, \"left\": []}"
+ },
+ {
+  "name": "g02.users.stored_in_admin_system_users",
+  "status": "pass",
+  "real": "{\"keys\": [\"_id\", \"credentials\", \"db\", \"roles\", \"user\", \"userId\"], \"creds\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"], \"sha256\": [\"iterationCount\", \"salt\", \"serverKey\", \"storedKey\"], \"iter256\": {\"$numberInt\": \"15000\"}, \"iter1\": {\"$numberInt\": \"10000\"}, \"user\": \"s1\", \"db\": \"$DB\", \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}]}",
+  "ours": "{\"keys\": [\"_id\", \"credentials\", \"db\", \"roles\", \"user\", \"userId\"], \"creds\": [\"SCRAM-SHA-1\", \"SCRAM-SHA-256\"], \"sha256\": [\"iterationCount\", \"salt\", \"serverKey\", \"storedKey\"], \"iter256\": {\"$numberInt\": \"15000\"}, \"iter1\": {\"$numberInt\": \"10000\"}, \"user\": \"s1\", \"db\": \"$DB\", \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}]}"
+ },
+ {
+  "name": "g02.roles.custom_role_enforced",
+  "status": "pass",
+  "real": "{\"find_t\": \"ok\", \"find_other\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_t\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"2\"}}",
+  "ours": "{\"find_t\": \"ok\", \"find_other\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_t\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"2\"}}"
+ },
+ {
+  "name": "g02.roles.grant_and_revoke_privileges_and_roles",
+  "status": "pass",
+  "real": "{\"none\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_granted\": \"ok\", \"insert_denied\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_via_role\": \"ok\", \"insert_revoked\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_revoked\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}",
+  "ours": "{\"none\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_granted\": \"ok\", \"insert_denied\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_via_role\": \"ok\", \"insert_revoked\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_revoked\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}"
+ },
+ {
+  "name": "g02.roles.rolesInfo",
+  "status": "pass",
+  "real": "{\"one\": [{\"_id\": \"$DB.top\", \"role\": \"top\", \"db\": \"$DB\", \"roles\": [{\"role\": \"base\", \"db\": \"$DB\"}, {\"role\": \"read\", \"db\": \"$DB\"}], \"inheritedRoles\": [{\"role\": \"base\", \"db\": \"$DB\"}, {\"role\": \"read\", \"db\": \"$DB\"}], \"isBuiltin\": false}], \"priv\": [{\"_id\": \"$DB.base\", \"role\": \"base\", \"db\": \"$DB\", \"privileges\": [{\"resource\": {\"db\": \"$DB\", \"collection\": \"x\"}, \"actions\": [\"find\", \"insert\"]}], \"roles\": [], \"inheritedRoles\": [], \"inheritedPrivileges\": [{\"resource\": {\"db\": \"$DB\", \"collection\": \"x\"}, \"actions",
+  "ours": "{\"one\": [{\"_id\": \"$DB.top\", \"role\": \"top\", \"db\": \"$DB\", \"roles\": [{\"role\": \"base\", \"db\": \"$DB\"}, {\"role\": \"read\", \"db\": \"$DB\"}], \"inheritedRoles\": [{\"role\": \"base\", \"db\": \"$DB\"}, {\"role\": \"read\", \"db\": \"$DB\"}], \"isBuiltin\": false}], \"priv\": [{\"_id\": \"$DB.base\", \"role\": \"base\", \"db\": \"$DB\", \"privileges\": [{\"resource\": {\"db\": \"$DB\", \"collection\": \"x\"}, \"actions\": [\"find\", \"insert\"]}], \"roles\": [], \"inheritedRoles\": [], \"inheritedPrivileges\": [{\"resource\": {\"db\": \"$DB\", \"collection\": \"x\"}, \"actions"
+ },
+ {
+  "name": "g02.roles.errors",
+  "status": "pass",
+  "real": "{\"create\": \"ok\", \"duplicate\": {\"code\": {\"$numberInt\": \"51002\"}, \"codeName\": \"Location51002\"}, \"builtin_name\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"unknown_inherited\": {\"code\": {\"$numberInt\": \"31\"}, \"codeName\": \"RoleNotFound\"}, \"no_privileges\": {\"code\": {\"$numberInt\": \"40414\"}, \"codeName\": \"IDLFailedToParse\"}, \"no_roles\": {\"code\": {\"$numberInt\": \"40414\"}, \"codeName\": \"IDLFailedToParse\"}, \"drop_builtin\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"drop_missing\": {\"co",
+  "ours": "{\"create\": \"ok\", \"duplicate\": {\"code\": {\"$numberInt\": \"51002\"}, \"codeName\": \"Location51002\"}, \"builtin_name\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"unknown_inherited\": {\"code\": {\"$numberInt\": \"31\"}, \"codeName\": \"RoleNotFound\"}, \"no_privileges\": {\"code\": {\"$numberInt\": \"40414\"}, \"codeName\": \"IDLFailedToParse\"}, \"no_roles\": {\"code\": {\"$numberInt\": \"40414\"}, \"codeName\": \"IDLFailedToParse\"}, \"drop_builtin\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"drop_missing\": {\"co"
+ },
+ {
+  "name": "g02.roles.dropRole_removes_it_from_users",
+  "status": "pass",
+  "real": "{\"before\": [\"gone\", \"read\"], \"after\": [\"read\"]}",
+  "ours": "{\"before\": [\"gone\", \"read\"], \"after\": [\"read\"]}"
+ },
+ {
+  "name": "g02.roles.dropAllRolesFromDatabase",
+  "status": "pass",
+  "real": "{\"n\": {\"$numberInt\": \"2\"}, \"left\": []}",
+  "ours": "{\"n\": {\"$numberInt\": \"2\"}, \"left\": []}"
+ },
+ {
+  "name": "g02.roles.role_in_admin_usable_from_other_db_user",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}",
+  "ours": "{\"find\": \"ok\", \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}"
+ },
+ {
+  "name": "g02.matrix.read",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"1\"}, \"aggregate\": \"ok\", ",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"1\"}, \"aggregate\": \"ok\", "
+ },
+ {
+  "name": "g02.matrix.readWrite",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": \"ok\", \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": {\"code\":",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": \"ok\", \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": {\"code\":"
+ },
+ {
+  "name": "g02.matrix.dbAdmin",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.userAdmin",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.dbOwner",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": \"ok\", \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": \"ok\", \"r",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": \"ok\", \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": \"ok\", \"r"
+ },
+ {
+  "name": "g02.matrix.readAnyDatabase",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"1\"}, \"aggregate\": \"ok\", \"aggregate_out\": {\"code\": {\"$numberInt\": \"13\"}, \"codeN",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"1\"}, \"aggregate\": \"ok\", \"aggregate_out\": {\"code\": {\"$numberInt\": \"13\"}, \"codeN"
+ },
+ {
+  "name": "g02.matrix.readWriteAnyDatabase",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": \"ok\", \"insert_other_db\": \"ok\", \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"rename\": \"ok\", \"dropCollection\": \"ok\", \"listDatabases\":",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": \"ok\", \"insert_other_db\": \"ok\", \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"rename\": \"ok\", \"dropCollection\": \"ok\", \"listDatabases\":"
+ },
+ {
+  "name": "g02.matrix.dbAdminAnyDatabase",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.userAdminAnyDatabase",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.clusterAdmin",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.clusterMonitor",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.clusterManager",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.hostManager",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.backup",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"1\"}, \"aggregate\": \"ok\", \"aggregate_out\": {\"code\": {\"$numberInt\": \"13\"}, \"codeN",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"$numberInt\": \"1\"}, \"aggregate\": \"ok\", \"aggregate_out\": {\"code\": {\"$numberInt\": \"13\"}, \"codeN"
+ },
+ {
+  "name": "g02.matrix.restore",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": \"ok\", \"insert_other_db\": \"ok\", \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"aggregate\": {\"code\": {\"$numberInt",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": \"ok\", \"insert_other_db\": \"ok\", \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"count\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"aggregate\": {\"code\": {\"$numberInt"
+ },
+ {
+  "name": "g02.matrix.root",
+  "status": "pass",
+  "real": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": \"ok\", \"insert_other_db\": \"ok\", \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": \"ok\", \"rename\": \"ok\", \"dropCollection\": \"ok\", \"listDatabases\": \"ok\", \"createUser\": \"ok\", \"usersInfo\": \"ok\", \"createR",
+  "ours": "{\"find\": \"ok\", \"find_other_db\": \"ok\", \"insert\": \"ok\", \"insert_other_db\": \"ok\", \"update\": \"ok\", \"upsert\": \"ok\", \"delete\": \"ok\", \"count\": {\"$numberInt\": \"2\"}, \"aggregate\": \"ok\", \"aggregate_out\": \"ok\", \"aggregate_lookup\": \"ok\", \"createCollection\": \"ok\", \"createIndex\": \"ok\", \"listIndexes\": \"ok\", \"dropIndex\": \"ok\", \"listCollections\": \"ok\", \"collStats\": \"ok\", \"dbStats\": \"ok\", \"collMod\": \"ok\", \"rename\": \"ok\", \"dropCollection\": \"ok\", \"listDatabases\": \"ok\", \"createUser\": \"ok\", \"usersInfo\": \"ok\", \"createR"
+ },
+ {
+  "name": "g02.matrix.no_roles_at_all",
+  "status": "pass",
+  "real": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize",
+  "ours": "{\"find\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"find_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"insert_other_db\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"update\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"upsert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"delete\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorize"
+ },
+ {
+  "name": "g02.matrix.cross_database_role_grant",
+  "status": "pass",
+  "real": "{\"read_other\": \"ok\", \"write_other\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"own\": \"ok\"}",
+  "ours": "{\"read_other\": \"ok\", \"write_other\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"own\": \"ok\"}"
+ },
+ {
+  "name": "g02.auth.role_change_applies_to_open_connection",
+  "status": "pass",
+  "real": "{\"before\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"after_grant\": \"ok\", \"after_revoke\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}",
+  "ours": "{\"before\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"after_grant\": \"ok\", \"after_revoke\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}"
+ },
+ {
+  "name": "g02.auth.connectionStatus_showPrivileges",
+  "status": "pass",
+  "real": "{\"users\": [{\"user\": \"u1\", \"db\": \"$DB\"}], \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"privs\": [{\"db\": \"$DB\", \"collection\": \"\"}, {\"db\": \"$DB\", \"collection\": \"system.js\"}]}",
+  "ours": "{\"users\": [{\"user\": \"u1\", \"db\": \"$DB\"}], \"roles\": [{\"role\": \"read\", \"db\": \"$DB\"}], \"privs\": [{\"db\": \"$DB\", \"collection\": \"\"}, {\"db\": \"$DB\", \"collection\": \"system.js\"}]}"
+ },
+ {
+  "name": "g02.login.authenticationRestrictions",
+  "status": "pass",
+  "real": "{\"bad_cidr\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"r1\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"r2\": \"ok\", \"r3\": \"ok\", \"r4\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"info\": [{\"clientSource\": [\"10.1.2.3\"]}]}",
+  "ours": "{\"bad_cidr\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}, \"r1\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"r2\": \"ok\", \"r3\": \"ok\", \"r4\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"info\": [{\"clientSource\": [\"10.1.2.3\"]}]}"
+ }
+]

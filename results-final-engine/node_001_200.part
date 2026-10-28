@@ -1,0 +1,402 @@
+[
+ {
+  "name": "aggregate.count_stage",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.177
+ },
+ {
+  "name": "aggregate.count_stage_zero",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "aggregate.match_or_in",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "aggregate.match_after_group",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "aggregate.empty_pipeline",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "aggregate.limit_zero_error",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "aggregate.skip_negative_error",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "aggregate.unknown_stage_error",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "aggregate.group_without_id_error",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "aggregate.group_unknown_accumulator_error",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.sum_all_missing",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "aggregate.missing_collection",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.072
+ },
+ {
+  "name": "aggregate.cursor_option_required",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "aggregate.1000_docs_group",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.274
+ },
+ {
+  "name": "aggregate.extra.group_first_last",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "aggregate.extra.group_push",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "aggregate.extra.group_add_to_set",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "aggregate.extra.unwind",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "aggregate.extra.lookup",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "aggregate.extra.add_fields",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "aggregate.extra.project_arithmetic",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "aggregate.extra.replace_root",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "aggregate.extra.facet",
+  "group": "aggregate (outside the supported set)",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "update.one.set_basic",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.set_multiple",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "update.one.set_overwrite_existing",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.set_nested_creates_subdoc",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "update.one.set_nested_existing",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "update.one.set_array_index",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "update.one.set_array_index_extends_with_null",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.set_in_array_of_docs",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "update.one.set_same_value_modifies_nothing",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "update.one.set_type_change",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.unset_field",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.unset_nested",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "update.one.unset_missing_is_noop",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "update.one.unset_array_element_makes_null",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.inc_int32",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "update.one.inc_negative",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "update.one.inc_int64_operand",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "update.one.inc_double_operand",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "update.one.inc_double_field",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "update.one.inc_int64_field",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "update.one.inc_missing_field_sets",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "update.one.inc_nested_missing",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "update.one.inc_overflow_int32_to_int64",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "update.one.inc_multiple_fields",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "update.one.inc_non_numeric_field_error",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "update.one.inc_non_numeric_operand_error",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "update.one.set_and_inc_and_unset",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ }
+]

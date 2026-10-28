@@ -1,0 +1,13 @@
+. g04.proj.inclusion_exclusion 
+. g04.proj.expressions 
+. g04.proj.slice 
+. g04.proj.elemMatch 
+. g04.proj.positional 
+. g04.proj.findAndModify_and_findOneAnd 
+. g04.proj.fuzz_11 
+. g04.proj.positional_fuzz_11 
+. g04.proj.fuzz_12 
+. g04.proj.positional_fuzz_12 
+. g04.proj.fuzz_13 
+. g04.proj.positional_fuzz_13 
+gaps_node: 12/12 identical to mongod 7.0.45

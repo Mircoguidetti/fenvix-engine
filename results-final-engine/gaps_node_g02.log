@@ -1,0 +1,19 @@
+. g02.login.scram_default_and_explicit 
+. g02.login.wrong_password_unknown_user 
+. g02.login.authSource_per_database_users 
+. g02.login.special_password 
+. g02.login.mechanism_restricted_user 
+. g02.unauth.commands 
+. g02.users.lifecycle 
+. g02.roles.custom_role_enforced 
+. g02.matrix.read 
+. g02.matrix.readWrite 
+. g02.matrix.dbAdmin 
+. g02.matrix.userAdmin 
+. g02.matrix.dbOwner 
+. g02.matrix.readAnyDatabase 
+. g02.matrix.readWriteAnyDatabase 
+. g02.matrix.clusterAdmin 
+. g02.matrix.root 
+. g02.login.authenticationRestrictions 
+gaps_node: 18/18 identical to mongod 7.0.45

@@ -1,0 +1,14 @@
+. g03.tls.crud_over_tls 
+. g03.tls.uri_options 
+. g03.tls.wrong_ca_and_plain_client 
+. g03.tls.hostname_verification 
+. g03.tls.optional_client_certificate 
+. g03.tls.self_signed_server_certificate 
+. g03.tls.client_certificate_required 
+. g03.tls.preferTLS_accepts_both 
+. g03.x509.authenticate_with_client_certificate 
+. g03.tls.scram_over_tls_with_auth 
+F g03.srv.basic_and_defaults 
+    diff /text: real="The resolution lifetime expired after 21.120 seconds: Server Do53:127.0.0.1@5353 answered The DNS operation timed out.; Server Do53:127.0.0.1@5353 answered The ours="The resolution lifetime expired after 21.130 seconds: Server Do53:127.0.0.1@5353 answered The DNS operation timed out.; Server Do53:127.0.0.1@5353 answered The
+F g03.srv.preferTLS_server_with_tls_false 
+    diff /text: real="The resolution lifetime expired after 21.119 seconds: Server Do53:127.0.0.1@5353 answered The DNS operation timed out.; Server Do53:127.0.0.1@5353 answered The ours="The resolution lifetime expired after 21.120 seconds: Server Do53:127.0.0.1@5353 answered The DNS operation timed out.; Server Do53:127.0.0.1@5353 answered The

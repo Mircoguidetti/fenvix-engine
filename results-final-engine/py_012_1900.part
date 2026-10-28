@@ -1,0 +1,402 @@
+[
+ {
+  "name": "text.case_sensitive_phrase",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.case_sensitive_negation",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.case_sensitive_stemmed_forms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.diacritic_sensitive_plain",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.diacritic_sensitive_accented",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.both_sensitive",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.explicit_false_flags",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_param_none",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_param_english_name",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_param_code",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_param_uppercase",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_param_empty_string",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_param_spanish_stop_words",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.default_language_french",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.default_language_spanish",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.default_language_german",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.default_language_russian",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.default_language_none_no_stemming",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_override_field",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.language_override_custom_name",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.language_override_unsupported_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.language_override_non_string_ignored",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.multiple_languages_in_collection",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.cjk_text_is_one_token_run",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.emoji_and_symbols",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_single_field",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_two_fields",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_weights",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "text.spec_wildcard",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.spec_wildcard_with_weights",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "text.spec_prefix",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_suffix",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_prefix_and_suffix",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_language_options",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_custom_name",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_nested_path",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_extra_weight_field_sorted",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_weight_fraction_truncated",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.spec_text_index_version_2",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "text.spec_with_sparse_option",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "text.two_text_indexes_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.same_text_index_twice_ok",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.same_text_index_different_options_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "text.bad_default_language_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "text.bad_language_override_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "text.bad_weight_zero_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "text.bad_weight_negative_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "text.bad_weight_string_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "text.bad_text_index_version_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "text.mixed_index_plugins_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.04
+ }
+]

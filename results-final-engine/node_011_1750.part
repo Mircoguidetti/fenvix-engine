@@ -1,0 +1,402 @@
+[
+ {
+  "name": "upd8.pos_elemmatch_subfield",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "upd8.pos_dotted_condition",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd8.pos_push_into_inner_array",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd8.pos_pull_from_inner_array",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd8.pos_update_many_each_own_position",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "upd8.pos_no_array_condition_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "upd8.pos_no_match_in_array_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd8.pos_field_not_array_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "upd8.pos_first_position_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd8.pos_two_positional_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd8.pos_with_upsert_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd8.pos_rename_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd8.pos_find_one_and_update",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd8.pos_nested_array_dotted",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "upd8.pos_two_conditions_same_array",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd8.all_set",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "upd8.all_inc",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "upd8.all_empty_array_noop",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "upd8.all_non_array_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd8.all_missing_path_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd8.all_subfield_set",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd8.all_subfield_inc",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd8.all_push_to_inner_arrays",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd8.all_unset_subfield",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd8.all_nested_all",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd8.all_update_many",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "upd8.all_mixed_with_other_operator",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "upd8.all_find_one_and_update",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd8.filtered_scalar_gte",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "upd8.filtered_scalar_eq",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd8.filtered_no_element_matches",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "upd8.filtered_doc_field",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd8.filtered_doc_two_fields",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd8.filtered_with_or",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd8.filtered_with_and",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd8.filtered_two_identifiers",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd8.filtered_nested_arrays",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd8.filtered_combined_with_all",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd8.filtered_update_many",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "upd8.filtered_find_one_and_update",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "upd8.filtered_push_inner",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd8.filtered_unset",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd8.filtered_with_positional_condition_on_other_field",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd8.filtered_unused_filter_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd8.filtered_only_filter_without_use_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd8.filtered_missing_filter_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "upd8.filtered_missing_filter_other_id_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "upd8.filtered_uppercase_identifier_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd8.filtered_two_top_level_names_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "upd8.filtered_duplicate_identifier_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ }
+]

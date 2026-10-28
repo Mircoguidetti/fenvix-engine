@@ -1,0 +1,402 @@
+[
+ {
+  "name": "idx.backfill_3000_docs_then_query",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.65
+ },
+ {
+  "name": "idx.backfill_unique_3000_ok_then_dup_rejected",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.66
+ },
+ {
+  "name": "idx.backfill_multikey",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "idx.backfill_sparse_and_partial",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.37
+ },
+ {
+  "name": "idx.persist_index_survives_tenant_close",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.35
+ },
+ {
+  "name": "idx.collstats_lists_indexes",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.37
+ },
+ {
+  "name": "idx.validate_ok_after_writes",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.28
+ },
+ {
+  "name": "idx.hint_nonexistent_error",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "idx.hint_nonexistent_pattern_error",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.hint_results_same_as_scan",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_or_both_indexed",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.37
+ },
+ {
+  "name": "idx.plan_or_one_unindexed_collscan",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "idx.plan_and_picks_more_selective_compound",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.37
+ },
+ {
+  "name": "idx.plan_unique_index_preferred",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.37
+ },
+ {
+  "name": "idx.plan_eq_null",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_ne_not_indexed_bounds",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_exists_false_collscan_or_ix",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_regex_prefix",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_double_bounds",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_dotted_array_path_multikey",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.res_dotted_array_path",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "ttl.expired_docs_removed",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.expire_after_zero_seconds",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.non_date_values_never_expire",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.array_uses_earliest_date",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.nested_path",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.compound_index_ignores_ttl",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.14
+ },
+ {
+  "name": "ttl.partial_only_matching_docs_expire",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.14
+ },
+ {
+  "name": "ttl.relative_expiry_visible_then_gone",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 14.15
+ },
+ {
+  "name": "ttl.inserted_after_index_expire",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 10.15
+ },
+ {
+  "name": "ttl.index_created_on_existing_expired_docs",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.update_extends_lifetime",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.update_to_past_expires",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.replace_with_new_date",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.count_distinct_aggregate_agree",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.listindexes_shape",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "ttl.survives_tenant_close",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.24
+ },
+ {
+  "name": "ttl.unique_key_freed_after_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.17
+ },
+ {
+  "name": "ttl.id_reusable_after_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.collmod_changes_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 12.16
+ },
+ {
+  "name": "ttl.collmod_by_name",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "ttl.collmod_non_ttl_index_becomes_ttl",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "ttl.collmod_missing_index_error",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "ttl.drop_ttl_index_stops_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.27
+ },
+ {
+  "name": "ttl.delete_and_find_respect_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.update_many_skips_expired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.sort_limit_with_index_skips_expired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.16
+ },
+ {
+  "name": "ttl.lookup_foreign_respects_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.17
+ },
+ {
+  "name": "ttl.array_of_subdocuments_path",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.relative_boundary",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ }
+]

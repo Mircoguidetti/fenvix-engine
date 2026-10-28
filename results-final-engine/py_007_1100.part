@@ -1,0 +1,402 @@
+[
+ {
+  "name": "group.sum_conditional_count",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.sum_literal_one_counts",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "group.sum_missing_and_non_numeric_ignored",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.sum_of_array_field_is_ignored_as_non_numeric",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.sum_types_int_long_double",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.sum_int_overflow_to_long",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.avg_expression",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.min_max_expression",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.first_last_expression",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.push_expression_object",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.push_missing_skipped",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.push_arrays_nested",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.addtoset_scalar_size",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.addtoset_size_after_dedupe",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "group.addtoset_numeric_equivalence_size",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.addtoset_documents_size",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.addtoset_missing_skipped_size",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.addtoset_arrays_whole_value_size",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.addtoset_expression_size",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.addtoset_single_value_exact",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "group.count_accumulator",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.multiple_accumulators_with_expressions",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.then_project_computed",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.unknown_accumulator_error",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.accumulator_not_object_error",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.missing_id_error",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.dotted_accumulator_name_error",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.accumulator_two_keys_error",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "group.then_unwind_then_group",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.pipeline_orders_report",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.plan_eq_ixscan",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.plan_no_index_collscan",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "idx.plan_range_gt_lt",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_range_gte_only",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.plan_range_lte_only",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_in_list",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "idx.plan_string_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_prefix",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_eq_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_eq_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_non_prefix_collscan",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_desc_bounds",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.plan_nested_path",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "idx.plan_sort_by_index_limit",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.plan_sort_desc_backward",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.plan_sort_without_index_has_sort_stage",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "idx.plan_sort_after_equality_prefix",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_mixed_directions_forward",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_compound_mixed_directions_backward",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.plan_compound_mixed_directions_mismatch_sorts",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ }
+]

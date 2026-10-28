@@ -1,0 +1,402 @@
+[
+ {
+  "name": "cs.update_double_and_long_values",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "cs.date_and_oid_in_documents",
+  "group": "change streams",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.expression_string",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.24
+ },
+ {
+  "name": "where.expression_compares_fields",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.function_string",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.return_statement_string",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.array_length",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.array_methods",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "where.string_methods",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.string_length",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.nested_field",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.math_functions",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.regex_test",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.missing_field_is_undefined",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.null_field",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.truthy_number_result",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.combined_with_other_conditions",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.inside_or",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.count_documents",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.delete_many",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "where.update_many",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "where.find_one_and_update",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "where.syntax_error",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.runtime_error",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "where.throws",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "where.not_a_string_error",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "where.not_allowed_in_aggregate_match",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "where.empty_collection",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "where.int64_and_double_fields",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.date_field",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "where.boolean_field",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "where.uses_index_candidates_then_where",
+  "group": "$where",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.24
+ },
+ {
+  "name": "bits.bitsallset_number_mask",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bits.bitsallset_position_array",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.bitsanyset_number_mask",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.bitsanyset_position_array",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "bits.bitsallclear_number_mask",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.bitsallclear_position_array",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.bitsanyclear_number_mask",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.bitsanyclear_position_array",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bits.zero_mask_and_empty_positions",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bits.negative_value_high_bits",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bits.negative_mask_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bits.negative_position_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.fractional_mask_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.string_mask_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.fractional_position_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.combined_with_other_conditions",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bits.with_index",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bits.update_and_or_xor",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

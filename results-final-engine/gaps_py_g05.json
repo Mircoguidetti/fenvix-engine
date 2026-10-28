@@ -1,0 +1,140 @@
+[
+ {
+  "name": "g05.expr.sin",
+  "status": "pass",
+  "real": "{\"0:{'$sin': 0.5}\": {\"$numberDouble\": \"0.479425538604203\"}, \"1:{'$sin': 2}\": {\"$numberDouble\": \"0.9092974268256817\"}, \"2:{'$sin': -2}\": {\"$numberDouble\": \"-0.9092974268256817\"}, \"3:{'$sin': 1}\": {\"$numberDouble\": \"0.8414709848078965\"}, \"4:{'$sin': -1}\": {\"$numberDouble\": \"-0.8414709848078965\"}, \"5:{'$sin': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$sin': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$sin': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$sin': 10}\": {\"$numberDouble\": \"-0.5440211108893698\"}, \"9:{'$sin",
+  "ours": "{\"0:{'$sin': 0.5}\": {\"$numberDouble\": \"0.479425538604203\"}, \"1:{'$sin': 2}\": {\"$numberDouble\": \"0.9092974268256817\"}, \"2:{'$sin': -2}\": {\"$numberDouble\": \"-0.9092974268256817\"}, \"3:{'$sin': 1}\": {\"$numberDouble\": \"0.8414709848078965\"}, \"4:{'$sin': -1}\": {\"$numberDouble\": \"-0.8414709848078965\"}, \"5:{'$sin': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$sin': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$sin': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$sin': 10}\": {\"$numberDouble\": \"-0.5440211108893698\"}, \"9:{'$sin"
+ },
+ {
+  "name": "g05.expr.cos",
+  "status": "pass",
+  "real": "{\"0:{'$cos': 0.5}\": {\"$numberDouble\": \"0.8775825618903728\"}, \"1:{'$cos': 2}\": {\"$numberDouble\": \"-0.4161468365471424\"}, \"2:{'$cos': -2}\": {\"$numberDouble\": \"-0.4161468365471424\"}, \"3:{'$cos': 1}\": {\"$numberDouble\": \"0.5403023058681398\"}, \"4:{'$cos': -1}\": {\"$numberDouble\": \"0.5403023058681398\"}, \"5:{'$cos': 0}\": {\"$numberDouble\": \"1.0\"}, \"6:{'$cos': 0.0}\": {\"$numberDouble\": \"1.0\"}, \"7:{'$cos': -0.0}\": {\"$numberDouble\": \"1.0\"}, \"8:{'$cos': 10}\": {\"$numberDouble\": \"-0.8390715290764524\"}, \"9:{'$cos",
+  "ours": "{\"0:{'$cos': 0.5}\": {\"$numberDouble\": \"0.8775825618903728\"}, \"1:{'$cos': 2}\": {\"$numberDouble\": \"-0.4161468365471424\"}, \"2:{'$cos': -2}\": {\"$numberDouble\": \"-0.4161468365471424\"}, \"3:{'$cos': 1}\": {\"$numberDouble\": \"0.5403023058681398\"}, \"4:{'$cos': -1}\": {\"$numberDouble\": \"0.5403023058681398\"}, \"5:{'$cos': 0}\": {\"$numberDouble\": \"1.0\"}, \"6:{'$cos': 0.0}\": {\"$numberDouble\": \"1.0\"}, \"7:{'$cos': -0.0}\": {\"$numberDouble\": \"1.0\"}, \"8:{'$cos': 10}\": {\"$numberDouble\": \"-0.8390715290764524\"}, \"9:{'$cos"
+ },
+ {
+  "name": "g05.expr.tan",
+  "status": "pass",
+  "real": "{\"0:{'$tan': 0.5}\": {\"$numberDouble\": \"0.5463024898437905\"}, \"1:{'$tan': 2}\": {\"$numberDouble\": \"-2.185039863261519\"}, \"2:{'$tan': -2}\": {\"$numberDouble\": \"2.185039863261519\"}, \"3:{'$tan': 1}\": {\"$numberDouble\": \"1.5574077246549023\"}, \"4:{'$tan': -1}\": {\"$numberDouble\": \"-1.5574077246549023\"}, \"5:{'$tan': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$tan': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$tan': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$tan': 10}\": {\"$numberDouble\": \"0.6483608274590866\"}, \"9:{'$tan':",
+  "ours": "{\"0:{'$tan': 0.5}\": {\"$numberDouble\": \"0.5463024898437905\"}, \"1:{'$tan': 2}\": {\"$numberDouble\": \"-2.185039863261519\"}, \"2:{'$tan': -2}\": {\"$numberDouble\": \"2.185039863261519\"}, \"3:{'$tan': 1}\": {\"$numberDouble\": \"1.5574077246549023\"}, \"4:{'$tan': -1}\": {\"$numberDouble\": \"-1.5574077246549023\"}, \"5:{'$tan': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$tan': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$tan': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$tan': 10}\": {\"$numberDouble\": \"0.6483608274590866\"}, \"9:{'$tan':"
+ },
+ {
+  "name": "g05.expr.asin",
+  "status": "pass",
+  "real": "{\"0:{'$asin': 0.5}\": {\"$numberDouble\": \"0.5235987755982989\"}, \"1:{'$asin': 2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"2:{'$asin': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$asin': 1}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"4:{'$asin': -1}\": {\"$numberDouble\": \"-1.5707963267948966\"}, \"5:{'$asin': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$asin': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$asin': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$asin': 10}\": {\"err\": [{\"$number",
+  "ours": "{\"0:{'$asin': 0.5}\": {\"$numberDouble\": \"0.5235987755982989\"}, \"1:{'$asin': 2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"2:{'$asin': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$asin': 1}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"4:{'$asin': -1}\": {\"$numberDouble\": \"-1.5707963267948966\"}, \"5:{'$asin': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$asin': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$asin': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$asin': 10}\": {\"err\": [{\"$number"
+ },
+ {
+  "name": "g05.expr.acos",
+  "status": "pass",
+  "real": "{\"0:{'$acos': 0.5}\": {\"$numberDouble\": \"1.0471975511965979\"}, \"1:{'$acos': 2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"2:{'$acos': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$acos': 1}\": {\"$numberDouble\": \"0.0\"}, \"4:{'$acos': -1}\": {\"$numberDouble\": \"3.141592653589793\"}, \"5:{'$acos': 0}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"6:{'$acos': 0.0}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"7:{'$acos': -0.0}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"8:{'$acos",
+  "ours": "{\"0:{'$acos': 0.5}\": {\"$numberDouble\": \"1.0471975511965979\"}, \"1:{'$acos': 2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"2:{'$acos': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$acos': 1}\": {\"$numberDouble\": \"0.0\"}, \"4:{'$acos': -1}\": {\"$numberDouble\": \"3.141592653589793\"}, \"5:{'$acos': 0}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"6:{'$acos': 0.0}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"7:{'$acos': -0.0}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"8:{'$acos"
+ },
+ {
+  "name": "g05.expr.atan",
+  "status": "pass",
+  "real": "{\"0:{'$atan': 0.5}\": {\"$numberDouble\": \"0.4636476090008061\"}, \"1:{'$atan': 2}\": {\"$numberDouble\": \"1.1071487177940904\"}, \"2:{'$atan': -2}\": {\"$numberDouble\": \"-1.1071487177940904\"}, \"3:{'$atan': 1}\": {\"$numberDouble\": \"0.7853981633974483\"}, \"4:{'$atan': -1}\": {\"$numberDouble\": \"-0.7853981633974483\"}, \"5:{'$atan': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$atan': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$atan': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$atan': 10}\": {\"$numberDouble\": \"1.4711276743037347\"}, ",
+  "ours": "{\"0:{'$atan': 0.5}\": {\"$numberDouble\": \"0.4636476090008061\"}, \"1:{'$atan': 2}\": {\"$numberDouble\": \"1.1071487177940904\"}, \"2:{'$atan': -2}\": {\"$numberDouble\": \"-1.1071487177940904\"}, \"3:{'$atan': 1}\": {\"$numberDouble\": \"0.7853981633974483\"}, \"4:{'$atan': -1}\": {\"$numberDouble\": \"-0.7853981633974483\"}, \"5:{'$atan': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$atan': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$atan': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$atan': 10}\": {\"$numberDouble\": \"1.4711276743037347\"}, "
+ },
+ {
+  "name": "g05.expr.sinh",
+  "status": "pass",
+  "real": "{\"0:{'$sinh': 0.5}\": {\"$numberDouble\": \"0.5210953054937474\"}, \"1:{'$sinh': 2}\": {\"$numberDouble\": \"3.626860407847019\"}, \"2:{'$sinh': -2}\": {\"$numberDouble\": \"-3.626860407847019\"}, \"3:{'$sinh': 1}\": {\"$numberDouble\": \"1.1752011936438014\"}, \"4:{'$sinh': -1}\": {\"$numberDouble\": \"-1.1752011936438014\"}, \"5:{'$sinh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$sinh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$sinh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$sinh': 10}\": {\"$numberDouble\": \"11013.232874703393\"}, \"9",
+  "ours": "{\"0:{'$sinh': 0.5}\": {\"$numberDouble\": \"0.5210953054937474\"}, \"1:{'$sinh': 2}\": {\"$numberDouble\": \"3.626860407847019\"}, \"2:{'$sinh': -2}\": {\"$numberDouble\": \"-3.626860407847019\"}, \"3:{'$sinh': 1}\": {\"$numberDouble\": \"1.1752011936438014\"}, \"4:{'$sinh': -1}\": {\"$numberDouble\": \"-1.1752011936438014\"}, \"5:{'$sinh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$sinh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$sinh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$sinh': 10}\": {\"$numberDouble\": \"11013.232874703393\"}, \"9"
+ },
+ {
+  "name": "g05.expr.cosh",
+  "status": "pass",
+  "real": "{\"0:{'$cosh': 0.5}\": {\"$numberDouble\": \"1.1276259652063807\"}, \"1:{'$cosh': 2}\": {\"$numberDouble\": \"3.7621956910836314\"}, \"2:{'$cosh': -2}\": {\"$numberDouble\": \"3.7621956910836314\"}, \"3:{'$cosh': 1}\": {\"$numberDouble\": \"1.5430806348152437\"}, \"4:{'$cosh': -1}\": {\"$numberDouble\": \"1.5430806348152437\"}, \"5:{'$cosh': 0}\": {\"$numberDouble\": \"1.0\"}, \"6:{'$cosh': 0.0}\": {\"$numberDouble\": \"1.0\"}, \"7:{'$cosh': -0.0}\": {\"$numberDouble\": \"1.0\"}, \"8:{'$cosh': 10}\": {\"$numberDouble\": \"11013.232920103324\"}, \"9:",
+  "ours": "{\"0:{'$cosh': 0.5}\": {\"$numberDouble\": \"1.1276259652063807\"}, \"1:{'$cosh': 2}\": {\"$numberDouble\": \"3.7621956910836314\"}, \"2:{'$cosh': -2}\": {\"$numberDouble\": \"3.7621956910836314\"}, \"3:{'$cosh': 1}\": {\"$numberDouble\": \"1.5430806348152437\"}, \"4:{'$cosh': -1}\": {\"$numberDouble\": \"1.5430806348152437\"}, \"5:{'$cosh': 0}\": {\"$numberDouble\": \"1.0\"}, \"6:{'$cosh': 0.0}\": {\"$numberDouble\": \"1.0\"}, \"7:{'$cosh': -0.0}\": {\"$numberDouble\": \"1.0\"}, \"8:{'$cosh': 10}\": {\"$numberDouble\": \"11013.232920103324\"}, \"9:"
+ },
+ {
+  "name": "g05.expr.tanh",
+  "status": "pass",
+  "real": "{\"0:{'$tanh': 0.5}\": {\"$numberDouble\": \"0.46211715726000974\"}, \"1:{'$tanh': 2}\": {\"$numberDouble\": \"0.9640275800758169\"}, \"2:{'$tanh': -2}\": {\"$numberDouble\": \"-0.9640275800758169\"}, \"3:{'$tanh': 1}\": {\"$numberDouble\": \"0.7615941559557649\"}, \"4:{'$tanh': -1}\": {\"$numberDouble\": \"-0.7615941559557649\"}, \"5:{'$tanh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$tanh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$tanh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$tanh': 10}\": {\"$numberDouble\": \"0.9999999958776927\"},",
+  "ours": "{\"0:{'$tanh': 0.5}\": {\"$numberDouble\": \"0.46211715726000974\"}, \"1:{'$tanh': 2}\": {\"$numberDouble\": \"0.9640275800758169\"}, \"2:{'$tanh': -2}\": {\"$numberDouble\": \"-0.9640275800758169\"}, \"3:{'$tanh': 1}\": {\"$numberDouble\": \"0.7615941559557649\"}, \"4:{'$tanh': -1}\": {\"$numberDouble\": \"-0.7615941559557649\"}, \"5:{'$tanh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$tanh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$tanh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$tanh': 10}\": {\"$numberDouble\": \"0.9999999958776927\"},"
+ },
+ {
+  "name": "g05.expr.asinh",
+  "status": "pass",
+  "real": "{\"0:{'$asinh': 0.5}\": {\"$numberDouble\": \"0.48121182505960347\"}, \"1:{'$asinh': 2}\": {\"$numberDouble\": \"1.4436354751788103\"}, \"2:{'$asinh': -2}\": {\"$numberDouble\": \"-1.4436354751788103\"}, \"3:{'$asinh': 1}\": {\"$numberDouble\": \"0.881373587019543\"}, \"4:{'$asinh': -1}\": {\"$numberDouble\": \"-0.881373587019543\"}, \"5:{'$asinh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$asinh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$asinh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$asinh': 10}\": {\"$numberDouble\": \"2.998222950297",
+  "ours": "{\"0:{'$asinh': 0.5}\": {\"$numberDouble\": \"0.48121182505960347\"}, \"1:{'$asinh': 2}\": {\"$numberDouble\": \"1.4436354751788103\"}, \"2:{'$asinh': -2}\": {\"$numberDouble\": \"-1.4436354751788103\"}, \"3:{'$asinh': 1}\": {\"$numberDouble\": \"0.881373587019543\"}, \"4:{'$asinh': -1}\": {\"$numberDouble\": \"-0.881373587019543\"}, \"5:{'$asinh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$asinh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$asinh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$asinh': 10}\": {\"$numberDouble\": \"2.998222950297"
+ },
+ {
+  "name": "g05.expr.acosh",
+  "status": "pass",
+  "real": "{\"0:{'$acosh': 0.5}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"1:{'$acosh': 2}\": {\"$numberDouble\": \"1.3169578969248166\"}, \"2:{'$acosh': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$acosh': 1}\": {\"$numberDouble\": \"0.0\"}, \"4:{'$acosh': -1}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"5:{'$acosh': 0}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"6:{'$acosh': 0.0}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"7:{'$acosh': -0.0}\": {\"err\"",
+  "ours": "{\"0:{'$acosh': 0.5}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"1:{'$acosh': 2}\": {\"$numberDouble\": \"1.3169578969248166\"}, \"2:{'$acosh': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$acosh': 1}\": {\"$numberDouble\": \"0.0\"}, \"4:{'$acosh': -1}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"5:{'$acosh': 0}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"6:{'$acosh': 0.0}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"7:{'$acosh': -0.0}\": {\"err\""
+ },
+ {
+  "name": "g05.expr.atanh",
+  "status": "pass",
+  "real": "{\"0:{'$atanh': 0.5}\": {\"$numberDouble\": \"0.5493061443340548\"}, \"1:{'$atanh': 2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"2:{'$atanh': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$atanh': 1}\": {\"$numberDouble\": \"Infinity\"}, \"4:{'$atanh': -1}\": {\"$numberDouble\": \"-Infinity\"}, \"5:{'$atanh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$atanh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$atanh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$atanh': 10}\": {\"err\": [{\"$numberInt\": \"5098",
+  "ours": "{\"0:{'$atanh': 0.5}\": {\"$numberDouble\": \"0.5493061443340548\"}, \"1:{'$atanh': 2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"2:{'$atanh': -2}\": {\"err\": [{\"$numberInt\": \"50989\"}, \"Location50989\"]}, \"3:{'$atanh': 1}\": {\"$numberDouble\": \"Infinity\"}, \"4:{'$atanh': -1}\": {\"$numberDouble\": \"-Infinity\"}, \"5:{'$atanh': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$atanh': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$atanh': -0.0}\": {\"$numberDouble\": \"-0.0\"}, \"8:{'$atanh': 10}\": {\"err\": [{\"$numberInt\": \"5098"
+ },
+ {
+  "name": "g05.expr.degreesToRadians",
+  "status": "pass",
+  "real": "{\"0:{'$degreesToRadians': 0.5}\": {\"$numberDouble\": \"0.008726646259971648\"}, \"1:{'$degreesToRadians': 2}\": {\"$numberDouble\": \"0.03490658503988659\"}, \"2:{'$degreesToRadians': -2}\": {\"$numberDouble\": \"-0.03490658503988659\"}, \"3:{'$degreesToRadians': 1}\": {\"$numberDouble\": \"0.017453292519943295\"}, \"4:{'$degreesToRadians': -1}\": {\"$numberDouble\": \"-0.017453292519943295\"}, \"5:{'$degreesToRadians': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$degreesToRadians': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$degreesToR",
+  "ours": "{\"0:{'$degreesToRadians': 0.5}\": {\"$numberDouble\": \"0.008726646259971648\"}, \"1:{'$degreesToRadians': 2}\": {\"$numberDouble\": \"0.03490658503988659\"}, \"2:{'$degreesToRadians': -2}\": {\"$numberDouble\": \"-0.03490658503988659\"}, \"3:{'$degreesToRadians': 1}\": {\"$numberDouble\": \"0.017453292519943295\"}, \"4:{'$degreesToRadians': -1}\": {\"$numberDouble\": \"-0.017453292519943295\"}, \"5:{'$degreesToRadians': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$degreesToRadians': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$degreesToR"
+ },
+ {
+  "name": "g05.expr.radiansToDegrees",
+  "status": "pass",
+  "real": "{\"0:{'$radiansToDegrees': 0.5}\": {\"$numberDouble\": \"28.64788975654116\"}, \"1:{'$radiansToDegrees': 2}\": {\"$numberDouble\": \"114.59155902616465\"}, \"2:{'$radiansToDegrees': -2}\": {\"$numberDouble\": \"-114.59155902616465\"}, \"3:{'$radiansToDegrees': 1}\": {\"$numberDouble\": \"57.29577951308232\"}, \"4:{'$radiansToDegrees': -1}\": {\"$numberDouble\": \"-57.29577951308232\"}, \"5:{'$radiansToDegrees': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$radiansToDegrees': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$radiansToDegrees': -0",
+  "ours": "{\"0:{'$radiansToDegrees': 0.5}\": {\"$numberDouble\": \"28.64788975654116\"}, \"1:{'$radiansToDegrees': 2}\": {\"$numberDouble\": \"114.59155902616465\"}, \"2:{'$radiansToDegrees': -2}\": {\"$numberDouble\": \"-114.59155902616465\"}, \"3:{'$radiansToDegrees': 1}\": {\"$numberDouble\": \"57.29577951308232\"}, \"4:{'$radiansToDegrees': -1}\": {\"$numberDouble\": \"-57.29577951308232\"}, \"5:{'$radiansToDegrees': 0}\": {\"$numberDouble\": \"0.0\"}, \"6:{'$radiansToDegrees': 0.0}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$radiansToDegrees': -0"
+ },
+ {
+  "name": "g05.expr.atan2",
+  "status": "pass",
+  "real": "{\"0:{'$atan2': [1, 1]}\": {\"$numberDouble\": \"0.7853981633974483\"}, \"1:{'$atan2': [0, 0]}\": {\"$numberDouble\": \"0.0\"}, \"2:{'$atan2': [-1, -1]}\": {\"$numberDouble\": \"-2.356194490192345\"}, \"3:{'$atan2': [1, 0]}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"4:{'$atan2': [0, -1]}\": {\"$numberDouble\": \"3.141592653589793\"}, \"5:{'$atan2': [inf, 1]}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"6:{'$atan2': [1, inf]}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$atan2': [nan, 1]}\": {\"$numberDouble\": \"NaN\"}, \"8:{'$atan2': ['",
+  "ours": "{\"0:{'$atan2': [1, 1]}\": {\"$numberDouble\": \"0.7853981633974483\"}, \"1:{'$atan2': [0, 0]}\": {\"$numberDouble\": \"0.0\"}, \"2:{'$atan2': [-1, -1]}\": {\"$numberDouble\": \"-2.356194490192345\"}, \"3:{'$atan2': [1, 0]}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"4:{'$atan2': [0, -1]}\": {\"$numberDouble\": \"3.141592653589793\"}, \"5:{'$atan2': [inf, 1]}\": {\"$numberDouble\": \"1.5707963267948966\"}, \"6:{'$atan2': [1, inf]}\": {\"$numberDouble\": \"0.0\"}, \"7:{'$atan2': [nan, 1]}\": {\"$numberDouble\": \"NaN\"}, \"8:{'$atan2': ['"
+ },
+ {
+  "name": "g05.expr.bitwise",
+  "status": "pass",
+  "real": "{\"0:{'$bitAnd': [5, 3]}\": {\"$numberInt\": \"1\"}, \"1:{'$bitAnd': [5, 3]}\": {\"$numberLong\": \"1\"}, \"2:{'$bitAnd': []}\": {\"$numberInt\": \"-1\"}, \"3:{'$bitAnd': [5]}\": {\"$numberInt\": \"5\"}, \"4:{'$bitAnd': 5}\": {\"$numberInt\": \"5\"}, \"5:{'$bitAnd': [5, 1.5]}\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"]}, \"6:{'$bitAnd': [5, 2.0]}\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"]}, \"7:{'$bitAnd': [None, 1]}\": null, \"8:{'$bitAnd': ['a', 1]}\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"]}, \"9:{'$bitAnd': [1",
+  "ours": "{\"0:{'$bitAnd': [5, 3]}\": {\"$numberInt\": \"1\"}, \"1:{'$bitAnd': [5, 3]}\": {\"$numberLong\": \"1\"}, \"2:{'$bitAnd': []}\": {\"$numberInt\": \"-1\"}, \"3:{'$bitAnd': [5]}\": {\"$numberInt\": \"5\"}, \"4:{'$bitAnd': 5}\": {\"$numberInt\": \"5\"}, \"5:{'$bitAnd': [5, 1.5]}\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"]}, \"6:{'$bitAnd': [5, 2.0]}\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"]}, \"7:{'$bitAnd': [None, 1]}\": null, \"8:{'$bitAnd': ['a', 1]}\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"]}, \"9:{'$bitAnd': [1"
+ },
+ {
+  "name": "g05.expr.stdDev_as_expression",
+  "status": "pass",
+  "real": "{\"0:{'$stdDevPop': [1, 2, 3, 4]}\": {\"$numberDouble\": \"1.118033988749895\"}, \"1:{'$stdDevPop': [1]}\": {\"$numberDouble\": \"0.0\"}, \"2:{'$stdDevPop': []}\": null, \"3:{'$stdDevPop': ['a', 1, 2]}\": {\"$numberDouble\": \"0.5\"}, \"4:{'$stdDevPop': 1}\": {\"$numberDouble\": \"0.0\"}, \"5:{'$stdDevPop': [1, 2]}\": {\"$numberDouble\": \"0.5\"}, \"6:{'$stdDevPop': {'$literal': [1, 2]}}\": {\"$numberDouble\": \"0.5\"}, \"7:{'$stdDevPop': [1, 2, None]}\": {\"$numberDouble\": \"0.5\"}, \"8:{'$stdDevPop': [Decimal128('1'), Decimal128('3')]}\"",
+  "ours": "{\"0:{'$stdDevPop': [1, 2, 3, 4]}\": {\"$numberDouble\": \"1.118033988749895\"}, \"1:{'$stdDevPop': [1]}\": {\"$numberDouble\": \"0.0\"}, \"2:{'$stdDevPop': []}\": null, \"3:{'$stdDevPop': ['a', 1, 2]}\": {\"$numberDouble\": \"0.5\"}, \"4:{'$stdDevPop': 1}\": {\"$numberDouble\": \"0.0\"}, \"5:{'$stdDevPop': [1, 2]}\": {\"$numberDouble\": \"0.5\"}, \"6:{'$stdDevPop': {'$literal': [1, 2]}}\": {\"$numberDouble\": \"0.5\"}, \"7:{'$stdDevPop': [1, 2, None]}\": {\"$numberDouble\": \"0.5\"}, \"8:{'$stdDevPop': [Decimal128('1'), Decimal128('3')]}\""
+ },
+ {
+  "name": "g05.expr.trig_inside_pipeline_shapes",
+  "status": "pass",
+  "real": "{\"match_expr\": [{\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"8\"}], \"group\": [{\"_id\": null, \"s\": {\"$numberDouble\": \"2.910152830209315\"}, \"m\": {\"$numberDouble\": \"0.24497866312686414\"}}], \"addFields\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberDouble\": \"0.25\"}, \"b\": {\"$numberInt\": \"1\"}, \"r\": {\"$numberDouble\": \"0.017453292519943295\"}, \"bits\": {\"$numberInt\": \"4\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberDouble\": \"0.5\"}, ",
+  "ours": "{\"match_expr\": [{\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"8\"}], \"group\": [{\"_id\": null, \"s\": {\"$numberDouble\": \"2.910152830209315\"}, \"m\": {\"$numberDouble\": \"0.24497866312686414\"}}], \"addFields\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberDouble\": \"0.25\"}, \"b\": {\"$numberInt\": \"1\"}, \"r\": {\"$numberDouble\": \"0.017453292519943295\"}, \"bits\": {\"$numberInt\": \"4\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberDouble\": \"0.5\"}, "
+ },
+ {
+  "name": "g05.sum_avg.double_accumulation",
+  "status": "known",
+  "real": "{\"group\": [{\"_id\": {\"$numberInt\": \"0\"}, \"s\": {\"$numberDouble\": \"-1570565.5686898292\"}, \"a\": {\"$numberDouble\": \"-11720.638572312158\"}, \"si\": {\"$numberInt\": \"89\"}, \"ai\": {\"$numberDouble\": \"0.664179104477612\"}, \"sd\": {\"$numberDouble\": \"362898.72428105987\"}, \"ss\": {\"$numberDouble\": \"364260.45035726984\"}}, {\"_id\": {\"$numberInt\": \"1\"}, \"s\": {\"$numberDouble\": \"-7783162.728497311\"}, \"a\": {\"$numberDouble\": \"-58520.02051501737\"}, \"si\": {\"$numberInt\": \"-49\"}, \"ai\": {\"$numberDouble\": \"-0.3684210526315789\"},",
+  "ours": "{\"group\": [{\"_id\": {\"$numberInt\": \"0\"}, \"s\": {\"$numberDouble\": \"-1570565.5686898292\"}, \"a\": {\"$numberDouble\": \"-11720.638572312158\"}, \"si\": {\"$numberInt\": \"89\"}, \"ai\": {\"$numberDouble\": \"0.664179104477612\"}, \"sd\": {\"$numberDouble\": \"362898.72428105987\"}, \"ss\": {\"$numberDouble\": \"364260.45035726984\"}}, {\"_id\": {\"$numberInt\": \"1\"}, \"s\": {\"$numberDouble\": \"-7783162.7284973115\"}, \"a\": {\"$numberDouble\": \"-58520.02051501738\"}, \"si\": {\"$numberInt\": \"-49\"}, \"ai\": {\"$numberDouble\": \"-0.3684210526315789\"}"
+ },
+ {
+  "name": "g05.sum_avg.integer_types_and_overflow",
+  "status": "pass",
+  "real": "[{\"_id\": \"a\", \"s\": {\"$numberLong\": \"2147483648\"}, \"a\": {\"$numberDouble\": \"1073741824.0\"}}, {\"_id\": \"b\", \"s\": {\"$numberDouble\": \"1.3835058055282164e+19\"}, \"a\": {\"$numberDouble\": \"4.611686018427388e+18\"}}, {\"_id\": \"c\", \"s\": {\"$numberDouble\": \"7.5\"}, \"a\": {\"$numberDouble\": \"3.75\"}}, {\"_id\": \"d\", \"s\": {\"$numberInt\": \"0\"}, \"a\": null}, {\"_id\": \"e\", \"s\": {\"$numberLong\": \"-2147483649\"}, \"a\": {\"$numberDouble\": \"-1073741824.5\"}}]",
+  "ours": "[{\"_id\": \"a\", \"s\": {\"$numberLong\": \"2147483648\"}, \"a\": {\"$numberDouble\": \"1073741824.0\"}}, {\"_id\": \"b\", \"s\": {\"$numberDouble\": \"1.3835058055282164e+19\"}, \"a\": {\"$numberDouble\": \"4.611686018427388e+18\"}}, {\"_id\": \"c\", \"s\": {\"$numberDouble\": \"7.5\"}, \"a\": {\"$numberDouble\": \"3.75\"}}, {\"_id\": \"d\", \"s\": {\"$numberInt\": \"0\"}, \"a\": null}, {\"_id\": \"e\", \"s\": {\"$numberLong\": \"-2147483649\"}, \"a\": {\"$numberDouble\": \"-1073741824.5\"}}]"
+ },
+ {
+  "name": "g05.lookup.let_variables",
+  "status": "pass",
+  "real": "{\"0:[{'$lookup': {'from': 'b', 'let': {'v': '$k'}, 'pipeline': [{'$match': {'$expr': {'$eq': ['$x', '$$v']}}}], 'as': 'j'}}, {'$project': {'j._id': 1}}, {'$sort': {'_id': 1}}]\": [{\"_id\": {\"$numberInt\": \"1\"}, \"j\": [{\"_id\": {\"$numberInt\": \"10\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"j\": [{\"_id\": {\"$numberInt\": \"11\"}}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"j\": [{\"_id\": {\"$numberInt\": \"12\"}}]}, {\"_id\": {\"$numberInt\": \"4\"}, \"j\": [{\"_id\": {\"$numberInt\": \"13\"}}]}], \"1:[{'$lookup': {'from': 'b', 'let': {'v': '$m'}",
+  "ours": "{\"0:[{'$lookup': {'from': 'b', 'let': {'v': '$k'}, 'pipeline': [{'$match': {'$expr': {'$eq': ['$x', '$$v']}}}], 'as': 'j'}}, {'$project': {'j._id': 1}}, {'$sort': {'_id': 1}}]\": [{\"_id\": {\"$numberInt\": \"1\"}, \"j\": [{\"_id\": {\"$numberInt\": \"10\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"j\": [{\"_id\": {\"$numberInt\": \"11\"}}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"j\": [{\"_id\": {\"$numberInt\": \"12\"}}]}, {\"_id\": {\"$numberInt\": \"4\"}, \"j\": [{\"_id\": {\"$numberInt\": \"13\"}}]}], \"1:[{'$lookup': {'from': 'b', 'let': {'v': '$m'}"
+ },
+ {
+  "name": "g05.stage.changeStreamSplitLargeEvent_outside_change_stream",
+  "status": "pass",
+  "real": "{\"0:[{'$changeStreamSplitLargeEvent': {}}]\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\"]}, \"1:[{'$match': {}}, {'$changeStreamSplitLargeEvent': {}}]\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\"]}, \"2:[{'$changeStreamSplitLargeEvent': 1}]\": {\"err\": [{\"$numberInt\": \"7182800\"}, \"Location7182800\"]}}",
+  "ours": "{\"0:[{'$changeStreamSplitLargeEvent': {}}]\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\"]}, \"1:[{'$match': {}}, {'$changeStreamSplitLargeEvent': {}}]\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\"]}, \"2:[{'$changeStreamSplitLargeEvent': 1}]\": {\"err\": [{\"$numberInt\": \"7182800\"}, \"Location7182800\"]}}"
+ },
+ {
+  "name": "g05.stage.changeStreamSplitLargeEvent_in_change_stream",
+  "status": "pass",
+  "real": "[{\"operationType\": \"insert\", \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"x\"}, \"hasSplit\": false}, {\"operationType\": \"update\", \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"y\"}, \"updateDescription\": {\"updatedFields\": {\"v\": \"y\"}, \"removedFields\": [], \"truncatedArrays\": []}, \"hasSplit\": false}]",
+  "ours": "[{\"operationType\": \"insert\", \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"x\"}, \"hasSplit\": false}, {\"operationType\": \"update\", \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"y\"}, \"updateDescription\": {\"updatedFields\": {\"v\": \"y\"}, \"removedFields\": [], \"truncatedArrays\": []}, \"hasSplit\": false}]"
+ }
+]

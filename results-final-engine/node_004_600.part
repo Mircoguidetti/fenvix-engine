@@ -1,0 +1,402 @@
+[
+ {
+  "name": "upd.min_mixed_numeric_types",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.172
+ },
+ {
+  "name": "upd.min_two_fields",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "upd.min_upsert",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "upd.max_higher_applies",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd.max_lower_ignored",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "upd.max_equal_keeps_type",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd.max_missing_sets",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd.max_string_vs_number",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.193
+ },
+ {
+  "name": "upd.max_number_vs_string",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.max_null_vs_number",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd.max_date",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.max_array_value",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "upd.max_int64_vs_double",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd.max_upsert",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd.max_many_docs",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.mul_int",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.mul_double",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd.mul_double_field_by_int",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.mul_int64_field",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.mul_int64_arg",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "upd.mul_missing_sets_zero_int",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.mul_missing_sets_zero_double",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.mul_missing_sets_zero_long",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "upd.mul_non_numeric_field_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "upd.mul_non_numeric_arg_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd.mul_null_field_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd.mul_by_zero",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.mul_negative",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd.mul_nested_creates",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.203
+ },
+ {
+  "name": "upd.mul_many_docs",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "upd.mul_int_overflow_long",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "upd.currentdate_true_is_date",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.currentdate_type_date",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd.currentdate_type_timestamp",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "upd.currentdate_nested",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd.currentdate_false_is_date",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd.currentdate_two_fields",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.currentdate_is_recent",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd.currentdate_invalid_spec_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "upd.currentdate_upsert",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.conflict_set_and_inc_same",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "upd.conflict_set_parent_and_child",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "upd.conflict_set_child_and_parent",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "upd.conflict_push_and_pull_same",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd.conflict_set_and_unset_same",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "upd.conflict_inc_child_unset_parent",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "upd.conflict_min_and_max_same",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.186
+ },
+ {
+  "name": "upd.conflict_addtoset_and_push_same",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd.conflict_setoninsert_and_set_same",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "upd.conflict_same_path_twice_in_one_operator_is_ok_for_different_paths",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ }
+]

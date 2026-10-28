@@ -1,0 +1,402 @@
+[
+ {
+  "name": "js.mapreduce_sort_without_index",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "js.mapreduce_limit_zero",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "js.mapreduce_limit_negative",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_limit_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "js.mapreduce_query_bad",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.mapreduce_sort_bad",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "js.mapreduce_query_where",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.mapreduce_dollar_key",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.mapreduce_key_dotted",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "js.mapreduce_key_date",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "js.mapreduce_key_oid",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.mapreduce_value_numberlong",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "js.mapreduce_reduce_sums_numberlong",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "js.mapreduce_key_order",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.mapreduce_array_sum_array_avg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "js.mapreduce_array_max_array_min_array_stddev",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "js.mapreduce_array_contains_unique",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "js.mapreduce_emit_large",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "js.mapreduce_values_order",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.mapreduce_values_order_sorted_asc",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "js.mapreduce_values_order_sorted_desc",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "js.mapreduce_values_order_sorted_w",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.49
+ },
+ {
+  "name": "js.mapreduce_emit_many_order",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "js.mapreduce_calls_count_100",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.mapreduce_calls_count_2000",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.424
+ },
+ {
+  "name": "js.mapreduce_max_len_2000",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.312
+ },
+ {
+  "name": "js.mapreduce_sort_limit_2",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.mapreduce_query_sort",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.mapreduce_finalize_args",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.mapreduce_finalize_only_single",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "js.mapreduce_this_identity",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "js.mapreduce_emit_array_value",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "js.mapreduce_emit_key_types",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_emit_key_numberint_vs_double",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.mapreduce_emit_key_numberlong",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.mapreduce_emit_key_true",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "js.mapreduce_emit_key_undefined",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_emit_key_nan",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.mapreduce_emit_key_regex",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.136
+ },
+ {
+  "name": "js.mapreduce_emit_key_function",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "js.mapreduce_value_fn",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.mapreduce_value_date",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_reduce_return_null",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.mapreduce_reduce_return_undefined_key",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_reduce_return_numberlong",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.mapreduce_reduce_return_date",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.mapreduce_db_in_map",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "js.mapreduce_print_in_map",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.mapreduce_emit_returns",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.mapreduce_this__id_oid",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ }
+]

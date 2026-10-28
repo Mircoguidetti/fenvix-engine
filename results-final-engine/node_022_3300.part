@@ -1,0 +1,402 @@
+[
+ {
+  "name": "js.ret_new_RegExp",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "js.ret_null",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.ret_nullish",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "js.ret_num_toFixed",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.ret_object",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.ret_object_fn_member",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_object_undefined_member",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "js.ret_optional_chaining",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "js.ret_parseInt",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.ret_regex_lookbehind",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "js.ret_regex_named",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "js.ret_regexp_toString",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_set",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_small",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_sparse_array",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.ret_spread",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.ret_str_methods",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "js.ret_str_num",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_structuredClone",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "js.ret_template",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_tojson",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_tojson_arr",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "js.ret_tojson_date",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "js.ret_tojson_empty",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_tojson_fn",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_tojson_indent",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_tojson_nested",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.ret_tojson_null",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.ret_tojson_num",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.ret_tojson_oid",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_tojson_pretty",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.ret_tojson_str",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.ret_true",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.ret_typed",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.ret_undefined",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "js.ret_with",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "js.where_expr_000",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "js.where_expr_001",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.256
+ },
+ {
+  "name": "js.where_expr_002",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.252
+ },
+ {
+  "name": "js.where_expr_003",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "js.where_expr_004",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.247
+ },
+ {
+  "name": "js.where_expr_005",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.245
+ },
+ {
+  "name": "js.where_expr_006",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.where_expr_007",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "js.where_expr_008",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "js.where_expr_009",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.where_expr_010",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.where_expr_011",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_expr_012",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ }
+]

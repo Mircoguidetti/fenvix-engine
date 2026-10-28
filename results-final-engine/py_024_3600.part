@@ -1,0 +1,402 @@
+[
+ {
+  "name": "js.function_closure",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_date_now",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_random",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_json_roundtrip",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_big_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.13
+ },
+ {
+  "name": "js.function_print",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_sleep",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_assert_fails",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_assert_ok",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_eval",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_function_ctor",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_db",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_bsonWoCompare",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_isNumber",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_version",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_bsonsize_large",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 1.04
+ },
+ {
+  "name": "js.function_string_doubling",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_deep_recursion",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_args_types",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_extra_args",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_unicode_args",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_array_arg_mutate",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_long_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_date_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_oid_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_decimal_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_bindata_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_timestamp_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_regex_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_doc_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_root_keys",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_root_types",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_root_identity",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_root_modified",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_subdoc_identity",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_int_arg_identity",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_literal_object_identity",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_missing_arg_is_null",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_in_match_expr",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_in_group_key",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_in_add_fields",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.function_in_find_expr",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_in_update_pipeline",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "js.function_global_state_within_a_command",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_global_state_not_shared_between_commands",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.function_implicit_global_within_a_command",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_sum",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_finalize",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_init_args",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_init_args_field_ref",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

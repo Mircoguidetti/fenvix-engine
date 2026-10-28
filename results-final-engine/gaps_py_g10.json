@@ -1,0 +1,674 @@
+[
+ {
+  "name": "g10.cluster.reply_fields",
+  "status": "pass",
+  "real": "{\"ping\": {\"has_clusterTime\": true, \"has_operationTime\": true, \"ct_keys\": [\"clusterTime\", \"signature\"], \"sig_keys\": [\"hash\", \"keyId\"], \"hash_len\": {\"$numberInt\": \"20\"}, \"keyId\": {\"$numberInt\": \"0\"}, \"ct_type\": \"Timestamp\", \"op_type\": \"Timestamp\", \"op_le_ct\": true}, \"insert\": {\"has_clusterTime\": true, \"has_operationTime\": true, \"ct_keys\": [\"clusterTime\", \"signature\"], \"sig_keys\": [\"hash\", \"keyId\"], \"hash_len\": {\"$numberInt\": \"20\"}, \"keyId\": {\"$numberInt\": \"0\"}, \"ct_type\": \"Timestamp\", \"op_type\": \"",
+  "ours": "{\"ping\": {\"has_clusterTime\": true, \"has_operationTime\": true, \"ct_keys\": [\"clusterTime\", \"signature\"], \"sig_keys\": [\"hash\", \"keyId\"], \"hash_len\": {\"$numberInt\": \"20\"}, \"keyId\": {\"$numberInt\": \"0\"}, \"ct_type\": \"Timestamp\", \"op_type\": \"Timestamp\", \"op_le_ct\": true}, \"insert\": {\"has_clusterTime\": true, \"has_operationTime\": true, \"ct_keys\": [\"clusterTime\", \"signature\"], \"sig_keys\": [\"hash\", \"keyId\"], \"hash_len\": {\"$numberInt\": \"20\"}, \"keyId\": {\"$numberInt\": \"0\"}, \"ct_type\": \"Timestamp\", \"op_type\": \""
+ },
+ {
+  "name": "g10.cluster.reply_fields_sa",
+  "status": "pass",
+  "real": "{\"ping\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"insert\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"find\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"error\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"hello\": {\"has_clusterTime\": false, \"has_operationTime\": false}}",
+  "ours": "{\"ping\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"insert\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"find\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"error\": {\"has_clusterTime\": false, \"has_operationTime\": false}, \"hello\": {\"has_clusterTime\": false, \"has_operationTime\": false}}"
+ },
+ {
+  "name": "g10.cluster.session_times",
+  "status": "pass",
+  "real": "{\"before\": [true, true], \"after_write\": [true, true, \"Timestamp\"], \"write_advances\": true, \"read_own_writes\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"read_time\": true, \"cluster_ge_op\": true, \"other_session_reads\": {\"$numberInt\": \"2\"}}",
+  "ours": "{\"before\": [true, true], \"after_write\": [true, true, \"Timestamp\"], \"write_advances\": true, \"read_own_writes\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"read_time\": true, \"cluster_ge_op\": true, \"other_session_reads\": {\"$numberInt\": \"2\"}}"
+ },
+ {
+  "name": "g10.cluster.read_concern_rs",
+  "status": "pass",
+  "real": "{\"none.find\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"1\"}, \"atClusterTime\": false}, \"none.count\": {\"ok\": true, \"n\": {\"$numberInt\": \"2\"}, \"values\": null, \"docs\": null, \"atClusterTime\": false}, \"none.aggregate\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"2\"}, \"atClusterTime\": false}, \"none.distinct\": {\"ok\": true, \"n\": null, \"values\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"docs\": null, \"atClusterTime\": false}, \"level_local.find\": {\"ok\": true, \"n\": ",
+  "ours": "{\"none.find\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"1\"}, \"atClusterTime\": false}, \"none.count\": {\"ok\": true, \"n\": {\"$numberInt\": \"2\"}, \"values\": null, \"docs\": null, \"atClusterTime\": false}, \"none.aggregate\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"2\"}, \"atClusterTime\": false}, \"none.distinct\": {\"ok\": true, \"n\": null, \"values\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"docs\": null, \"atClusterTime\": false}, \"level_local.find\": {\"ok\": true, \"n\": "
+ },
+ {
+  "name": "g10.cluster.read_concern_sa",
+  "status": "pass",
+  "real": "{\"none.find\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"1\"}, \"atClusterTime\": false}, \"none.count\": {\"ok\": true, \"n\": {\"$numberInt\": \"1\"}, \"values\": null, \"docs\": null, \"atClusterTime\": false}, \"none.aggregate\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"1\"}, \"atClusterTime\": false}, \"none.distinct\": {\"ok\": true, \"n\": null, \"values\": [{\"$numberInt\": \"1\"}], \"docs\": null, \"atClusterTime\": false}, \"level_local.find\": {\"ok\": true, \"n\": null, \"values\": null,",
+  "ours": "{\"none.find\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"1\"}, \"atClusterTime\": false}, \"none.count\": {\"ok\": true, \"n\": {\"$numberInt\": \"1\"}, \"values\": null, \"docs\": null, \"atClusterTime\": false}, \"none.aggregate\": {\"ok\": true, \"n\": null, \"values\": null, \"docs\": {\"$numberInt\": \"1\"}, \"atClusterTime\": false}, \"none.distinct\": {\"ok\": true, \"n\": null, \"values\": [{\"$numberInt\": \"1\"}], \"docs\": null, \"atClusterTime\": false}, \"level_local.find\": {\"ok\": true, \"n\": null, \"values\": null,"
+ },
+ {
+  "name": "g10.cs.opts_default_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescription\": {\"updatedFields\": {\"",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescription\": {\"updatedFields\": {\""
+ },
+ {
+  "name": "g10.cs.opts_default_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescription\": {\"updatedFields\": {\"",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescription\": {\"updatedFields\": {\""
+ },
+ {
+  "name": "g10.cs.opts_update_lookup_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"up",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"up"
+ },
+ {
+  "name": "g10.cs.opts_update_lookup_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"up",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"up"
+ },
+ {
+  "name": "g10.cs.opts_when_available_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"up",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"up"
+ },
+ {
+  "name": "g10.cs.opts_when_available_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}"
+ },
+ {
+  "name": "g10.cs.opts_required_plain",
+  "status": "pass",
+  "real": "[{\"err\": [{\"$numberInt\": \"47\"}, \"NoMatchingDocument\", \"Executor error during getMore :: caused by :: Change stream was configured to require a post-image for all update events, but the post-image was not found for event: {operationType: \\\"update\\\", ns: {db: \\\"$DB\\\", coll: \\\"c\\\"}, clusterTime: Timestamp(T)}\"]}]",
+  "ours": "[{\"err\": [{\"$numberInt\": \"47\"}, \"NoMatchingDocument\", \"Executor error during getMore :: caused by :: Change stream was configured to require a post-image for all update events, but the post-image was not found for event: {operationType: \\\"update\\\", ns: {db: \\\"$DB\\\", coll: \\\"c\\\"}, clusterTime: Timestamp(T)}\"]}]"
+ },
+ {
+  "name": "g10.cs.opts_required_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}"
+ },
+ {
+  "name": "g10.cs.opts_before_when_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescri",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescri"
+ },
+ {
+  "name": "g10.cs.opts_before_when_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescri",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescri"
+ },
+ {
+  "name": "g10.cs.opts_before_required_plain",
+  "status": "pass",
+  "real": "[{\"err\": [{\"$numberInt\": \"47\"}, \"NoMatchingDocument\", \"Executor error during getMore :: caused by :: Change stream was configured to require a pre-image for all update, delete and replace events, but the pre-image was not found for event: {operationType: \\\"update\\\", ns: {db: \\\"$DB\\\", coll: \\\"c\\\"}, clusterTime: Timestamp(T)}\"]}]",
+  "ours": "[{\"err\": [{\"$numberInt\": \"47\"}, \"NoMatchingDocument\", \"Executor error during getMore :: caused by :: Change stream was configured to require a pre-image for all update, delete and replace events, but the pre-image was not found for event: {operationType: \\\"update\\\", ns: {db: \\\"$DB\\\", coll: \\\"c\\\"}, clusterTime: Timestamp(T)}\"]}]"
+ },
+ {
+  "name": "g10.cs.opts_before_required_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescri",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescri"
+ },
+ {
+  "name": "g10.cs.opts_both_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id"
+ },
+ {
+  "name": "g10.cs.opts_both_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\"",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\""
+ },
+ {
+  "name": "g10.cs.opts_both_required_plain",
+  "status": "pass",
+  "real": "[{\"err\": [{\"$numberInt\": \"47\"}, \"NoMatchingDocument\", \"Executor error during getMore :: caused by :: Change stream was configured to require a pre-image for all update, delete and replace events, but the pre-image was not found for event: {operationType: \\\"update\\\", ns: {db: \\\"$DB\\\", coll: \\\"c\\\"}, clusterTime: Timestamp(T)}\"]}]",
+  "ours": "[{\"err\": [{\"$numberInt\": \"47\"}, \"NoMatchingDocument\", \"Executor error during getMore :: caused by :: Change stream was configured to require a pre-image for all update, delete and replace events, but the pre-image was not found for event: {operationType: \\\"update\\\", ns: {db: \\\"$DB\\\", coll: \\\"c\\\"}, clusterTime: Timestamp(T)}\"]}]"
+ },
+ {
+  "name": "g10.cs.opts_both_required_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\"",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"2\"}}, \"ns\""
+ },
+ {
+  "name": "g10.cs.opts_lookup_before_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id"
+ },
+ {
+  "name": "g10.cs.opts_lookup_before_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": null, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id"
+ },
+ {
+  "name": "g10.cs.opts_bad_full_plain",
+  "status": "pass",
+  "real": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocument' is not a valid value.\"]}",
+  "ours": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocument' is not a valid value.\"]}"
+ },
+ {
+  "name": "g10.cs.opts_bad_full_images",
+  "status": "pass",
+  "real": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocument' is not a valid value.\"]}",
+  "ours": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocument' is not a valid value.\"]}"
+ },
+ {
+  "name": "g10.cs.opts_bad_before_plain",
+  "status": "pass",
+  "real": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocumentBeforeChange' is not a valid value.\"]}",
+  "ours": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocumentBeforeChange' is not a valid value.\"]}"
+ },
+ {
+  "name": "g10.cs.opts_bad_before_images",
+  "status": "pass",
+  "real": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocumentBeforeChange' is not a valid value.\"]}",
+  "ours": "{\"open_err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Enumeration value 'nope' for field '$changeStream.fullDocumentBeforeChange' is not a valid value.\"]}"
+ },
+ {
+  "name": "g10.cs.opts_expanded_plain",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"operationDescription\": {\"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": true, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$n",
+  "ours": "[{\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"operationDescription\": {\"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": true, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$n"
+ },
+ {
+  "name": "g10.cs.opts_expanded_images",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": true, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": true, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescription\": {\"updatedFields\": {\"a\"",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": true, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": true, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}, \"updateDescription\": {\"updatedFields\": {\"a\""
+ },
+ {
+  "name": "g10.cs.update_forms",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"2\"}, \"arr\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"d\": {\"e\": {\"$numberInt\": \"1\"}}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"2\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"docume",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"2\"}, \"arr\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"d\": {\"e\": {\"$numberInt\": \"1\"}}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"2\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"documentKey\", \"updateDescription\"], \"__uuid\": false, \"operationType\": \"update\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"docume"
+ },
+ {
+  "name": "g10.cs.ddl_expanded",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"e1\"}, \"operationDescription\": {\"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"createIndexes\", \"ns\": {\"db\": \"$DB\", \"coll\": \"e1\"}, \"operationDescription\": {\"indexes\": [{\"v\": {\"$numberInt\": \"2\"}, \"unique\": true, \"key\": {\"a\": {\"$n",
+  "ours": "[{\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"e1\"}, \"operationDescription\": {\"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"createIndexes\", \"ns\": {\"db\": \"$DB\", \"coll\": \"e1\"}, \"operationDescription\": {\"indexes\": [{\"v\": {\"$numberInt\": \"2\"}, \"unique\": true, \"key\": {\"a\": {\"$n"
+ },
+ {
+  "name": "g10.cs.ddl_standard",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"e2\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"to\", \"operationType\", \"ns\"], \"__uuid\": false, \"to\": {\"db\": \"$DB\", \"coll\": \"e3\"}, \"operationType\": \"rename\", \"ns\": {\"db\": \"$DB\", \"coll\": \"e1\"}}, {\"__keys\": [\"to\", \"operationType\", \"ns\"], \"__uuid\": false, \"to\": {\"db\": \"$DB\", \"coll\": \"e3\"}, \"operation",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"e2\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"to\", \"operationType\", \"ns\"], \"__uuid\": false, \"to\": {\"db\": \"$DB\", \"coll\": \"e3\"}, \"operationType\": \"rename\", \"ns\": {\"db\": \"$DB\", \"coll\": \"e1\"}}, {\"__keys\": [\"to\", \"operationType\", \"ns\"], \"__uuid\": false, \"to\": {\"db\": \"$DB\", \"coll\": \"e3\"}, \"operation"
+ },
+ {
+  "name": "g10.cs.create_variants",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"p1\"}, \"operationDescription\": {\"capped\": true, \"size\": {\"$numberInt\": \"4096\"}, \"max\": {\"$numberInt\": \"10\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"p2\"}, \"operationDescription\": {\"v",
+  "ours": "[{\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"p1\"}, \"operationDescription\": {\"capped\": true, \"size\": {\"$numberInt\": \"4096\"}, \"max\": {\"$numberInt\": \"10\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}}, {\"__keys\": [\"operationType\", \"ns\", \"operationDescription\"], \"__uuid\": true, \"operationType\": \"create\", \"ns\": {\"db\": \"$DB\", \"coll\": \"p2\"}, \"operationDescription\": {\"v"
+ },
+ {
+  "name": "g10.cs.rename_collection_stream",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"to\", \"operationType\", \"ns\"], \"__uuid\": false, \"to\": {\"db\": \"$DB\", \"coll\": \"c2\"}, \"operationType\": \"rename\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}}, {\"__keys\": [\"operationType\"], \"__uuid\": false, \"operationType\": \"invalidate\"}]",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"to\", \"operationType\", \"ns\"], \"__uuid\": false, \"to\": {\"db\": \"$DB\", \"coll\": \"c2\"}, \"operationType\": \"rename\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}}, {\"__keys\": [\"operationType\"], \"__uuid\": false, \"operationType\": \"invalidate\"}]"
+ },
+ {
+  "name": "g10.cs.drop_database_db_stream",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"z\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\"], \"__uuid\": false, \"operationType\": \"drop\", \"ns\": {\"db\": \"$DB\", \"coll\": \"z\"}}, {\"__keys\": [\"operationType\", \"ns\"], \"__uuid\": false, \"operationType\": \"dropDatabase\", \"ns\": {\"db\": \"$DB\"}}, {\"__keys\": [\"operationType\"], \"__uuid\": f",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"z\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\"], \"__uuid\": false, \"operationType\": \"drop\", \"ns\": {\"db\": \"$DB\", \"coll\": \"z\"}}, {\"__keys\": [\"operationType\", \"ns\"], \"__uuid\": false, \"operationType\": \"dropDatabase\", \"ns\": {\"db\": \"$DB\"}}, {\"__keys\": [\"operationType\"], \"__uuid\": f"
+ },
+ {
+  "name": "g10.cs.drop_database_coll_stream",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\"], \"__uuid\": false, \"operationType\": \"drop\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}}, {\"__keys\": [\"operationType\"], \"__uuid\": false, \"operationType\": \"invalidate\"}]",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}, {\"__keys\": [\"operationType\", \"ns\"], \"__uuid\": false, \"operationType\": \"drop\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}}, {\"__keys\": [\"operationType\"], \"__uuid\": false, \"operationType\": \"invalidate\"}]"
+ },
+ {
+  "name": "g10.cs.image_toggle",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"5\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"5\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"5\"}, \"z\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"5\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"5\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\", \"updateDescription\", \"fullDocumentBeforeChange\"], \"__uuid\": false, \"operationType\": \"update\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"5\"}, \"z\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c"
+ },
+ {
+  "name": "g10.cs.image_option_errors",
+  "status": "pass",
+  "real": "{\"create0\": \"ok\", \"create1\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field 'create.changeStreamPreAndPostImages.enabled' is missing but a required field\"], \"create2\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'create.changeStreamPreAndPostImages' is the wrong type 'bool', expected type 'object'\"], \"create3\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'create.changeStreamPreAndPostImages.enabled' is the wrong type 'string', expected type 'bool'\"], \"create4\": \"ok\", \"cr",
+  "ours": "{\"create0\": \"ok\", \"create1\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field 'create.changeStreamPreAndPostImages.enabled' is missing but a required field\"], \"create2\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'create.changeStreamPreAndPostImages' is the wrong type 'bool', expected type 'object'\"], \"create3\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'create.changeStreamPreAndPostImages.enabled' is the wrong type 'string', expected type 'bool'\"], \"create4\": \"ok\", \"cr"
+ },
+ {
+  "name": "g10.cs.start_at_operation_time",
+  "status": "pass",
+  "real": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"0\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"0\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}]",
+  "ours": "[{\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"0\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"0\"}}}, {\"__keys\": [\"operationType\", \"fullDocument\", \"ns\", \"documentKey\"], \"__uuid\": false, \"operationType\": \"insert\", \"fullDocument\": {\"_id\": {\"$numberInt\": \"1\"}}, \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"documentKey\": {\"_id\": {\"$numberInt\": \"1\"}}}]"
+ },
+ {
+  "name": "g10.cs.option_errors",
+  "status": "pass",
+  "real": "{\"unknown\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field '$changeStream.bogus' is an unknown field.\"], \"resume_bad\": [{\"$numberInt\": \"40647\"}, \"Location40647\", \"Bad resume token: _data of missing or of wrong type. Expected string, got {x: 1}\"], \"start_after_bad\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field '$changeStream.startAfter' is the wrong type 'int', expected type 'object'\"]}",
+  "ours": "{\"unknown\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field '$changeStream.bogus' is an unknown field.\"], \"resume_bad\": [{\"$numberInt\": \"40647\"}, \"Location40647\", \"Bad resume token: _data of missing or of wrong type. Expected string, got {x: 1}\"], \"start_after_bad\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field '$changeStream.startAfter' is the wrong type 'int', expected type 'object'\"]}"
+ },
+ {
+  "name": "g10.collmod.index_hidden",
+  "status": "pass",
+  "real": "{\"s2\": {\"hidden_old\": false, \"hidden_new\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.t\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\", \"hidden\": true}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"b\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"-1\"}}, \"name\": \"b_1_a_-1\"}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"ok\": {\"$numberDouble\": \"1.",
+  "ours": "{\"s2\": {\"hidden_old\": false, \"hidden_new\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.t\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\", \"hidden\": true}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"b\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"-1\"}}, \"name\": \"b_1_a_-1\"}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"ok\": {\"$numberDouble\": \"1."
+ },
+ {
+  "name": "g10.collmod.index_ttl",
+  "status": "pass",
+  "real": "{\"s2\": {\"expireAfterSeconds_old\": {\"$numberLong\": \"3600\"}, \"expireAfterSeconds_new\": {\"$numberLong\": \"100\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"expireAfterSeconds_old\": {\"$numberLong\": \"100\"}, \"expireAfterSeconds_new\": {\"$numberLong\": \"100\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.t\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_",
+  "ours": "{\"s2\": {\"expireAfterSeconds_old\": {\"$numberLong\": \"3600\"}, \"expireAfterSeconds_new\": {\"$numberLong\": \"100\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"expireAfterSeconds_old\": {\"$numberLong\": \"100\"}, \"expireAfterSeconds_new\": {\"$numberLong\": \"100\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.t\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_"
+ },
+ {
+  "name": "g10.collmod.index_unique",
+  "status": "pass",
+  "real": "{\"s4\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"Cannot make index unique with 'prepareUnique=false'. Run collMod to set it first.\"]}, \"s5\": {\"prepareUnique_old\": false, \"prepareUnique_new\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s6\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.t\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\", \"prepareUnique\": true}]}, \"ok\": {\"$numbe",
+  "ours": "{\"s4\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"Cannot make index unique with 'prepareUnique=false'. Run collMod to set it first.\"]}, \"s5\": {\"prepareUnique_old\": false, \"prepareUnique_new\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s6\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.t\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\", \"prepareUnique\": true}]}, \"ok\": {\"$numbe"
+ },
+ {
+  "name": "g10.commitquorum.sa",
+  "status": "pass",
+  "real": "{\"s1\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s6\": {\"err\": [{\"$numberInt\": \"2\"}, \"Ba",
+  "ours": "{\"s1\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"Standalones can't specify commitQuorum\"]}, \"s6\": {\"err\": [{\"$numberInt\": \"2\"}, \"Ba"
+ },
+ {
+  "name": "g10.commitquorum.rs",
+  "status": "pass",
+  "real": "{\"s1\": {\"numIndexesBefore\": {\"$numberInt\": \"1\"}, \"numIndexesAfter\": {\"$numberInt\": \"2\"}, \"createdCollectionAutomatically\": false, \"commitQuorum\": \"votingMembers\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"numIndexesBefore\": {\"$numberInt\": \"2\"}, \"numIndexesAfter\": {\"$numberInt\": \"3\"}, \"createdCollectionAutomatically\": false, \"commitQuorum\": \"majority\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"numIndexesBefore\": {\"$numberInt\": \"3\"}, \"numIndexesAfter\": {\"$numberInt\": \"4\"}, \"createdCollectionAutomati",
+  "ours": "{\"s1\": {\"numIndexesBefore\": {\"$numberInt\": \"1\"}, \"numIndexesAfter\": {\"$numberInt\": \"2\"}, \"createdCollectionAutomatically\": false, \"commitQuorum\": \"votingMembers\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"numIndexesBefore\": {\"$numberInt\": \"2\"}, \"numIndexesAfter\": {\"$numberInt\": \"3\"}, \"createdCollectionAutomatically\": false, \"commitQuorum\": \"majority\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"numIndexesBefore\": {\"$numberInt\": \"3\"}, \"numIndexesAfter\": {\"$numberInt\": \"4\"}, \"createdCollectionAutomati"
+ },
+ {
+  "name": "g10.concern.write_concern_values",
+  "status": "pass",
+  "real": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"writeConcernError\": {\"code\": {\"$numberInt\": \"100\"}, \"codeName\": \"UnsatisfiableWriteConcern\", \"errmsg\": \"Not enough data-bearing nodes\", \"errInfo\": {\"writeConcern\": {\"w\": {\"$numberInt\": \"2\"}, \"wtimeout\": {\"$numberInt\": \"0\"}, \"provenance\": \"clientSupplied\"}}}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"n\": {\"$numberInt\": \"0\"}, \"ok\": {\"",
+  "ours": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"writeConcernError\": {\"code\": {\"$numberInt\": \"100\"}, \"codeName\": \"UnsatisfiableWriteConcern\", \"errmsg\": \"Not enough data-bearing nodes\", \"errInfo\": {\"writeConcern\": {\"w\": {\"$numberInt\": \"2\"}, \"wtimeout\": {\"$numberInt\": \"0\"}, \"provenance\": \"clientSupplied\"}}}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"n\": {\"$numberInt\": \"0\"}, \"ok\": {\""
+ },
+ {
+  "name": "g10.concern.write_concern_values_sa",
+  "status": "pass",
+  "real": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"cannot use 'w' > 1 when a host is not replicated\"]}, \"s3\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"n\": {\"$numberInt\": \"0\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s5\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"cannot use non-majority 'w' mode \\\"nosuchtag\\\" when a host is not a member of a replica set\"]}, \"s6\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble",
+  "ours": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"cannot use 'w' > 1 when a host is not replicated\"]}, \"s3\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"n\": {\"$numberInt\": \"0\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s5\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\", \"cannot use non-majority 'w' mode \\\"nosuchtag\\\" when a host is not a member of a replica set\"]}, \"s6\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble"
+ },
+ {
+  "name": "g10.special.encrypted_rs",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"e1\", \"type\": \"collection\", \"options\": {\"encryptedFields\": {\"escCollection\": \"enxcol_.e1.esc\", \"ecocCollection\": \"enxcol_.e1.ecoc\", \"fields\": [{\"keyId\": {\"$binary\": {\"base64\": \"AAAAAAAAAAAAAAAAAAAAAA==\", \"subType\": \"04\"}}, \"path\": \"a\", \"bsonType\": \"string\", \"queries\": {\"queryType\": \"equality\", \"contention\": {\"$numberLong\": \"8\"}}}]}}, \"info\": {\"readOnly\": false, \"uu",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"e1\", \"type\": \"collection\", \"options\": {\"encryptedFields\": {\"escCollection\": \"enxcol_.e1.esc\", \"ecocCollection\": \"enxcol_.e1.ecoc\", \"fields\": [{\"keyId\": {\"$binary\": {\"base64\": \"AAAAAAAAAAAAAAAAAAAAAA==\", \"subType\": \"04\"}}, \"path\": \"a\", \"bsonType\": \"string\", \"queries\": {\"queryType\": \"equality\", \"contention\": {\"$numberLong\": \"8\"}}}]}}, \"info\": {\"readOnly\": false, \"uu"
+ },
+ {
+  "name": "g10.special.encrypted_sa",
+  "status": "pass",
+  "real": "{\"s0\": {\"err\": [{\"$numberInt\": \"6346402\"}, \"Location6346402\", \"Encrypted collections are not supported on standalone\"]}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": []}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"6346402\"}, \"Location6346402\", \"Encrypted collections are not supported on standalone\"]}}",
+  "ours": "{\"s0\": {\"err\": [{\"$numberInt\": \"6346402\"}, \"Location6346402\", \"Encrypted collections are not supported on standalone\"]}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": []}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"6346402\"}, \"Location6346402\", \"Encrypted collections are not supported on standalone\"]}}"
+ },
+ {
+  "name": "g10.explain.aggregate_flag",
+  "status": "pass",
+  "real": "{\"s2\": {\"explainVersion\": \"str\", \"queryPlanner\": {\"namespace\": \"str\", \"indexFilterSet\": \"bool\", \"parsedQuery\": {\"a\": {\"$gte\": \"num\"}}, \"queryHash\": \"str\", \"planCacheKey\": \"str\", \"optimizationTimeMillis\": \"num\", \"optimizedPipeline\": \"bool\", \"maxIndexedOrSolutionsReached\": \"bool\", \"maxIndexedAndSolutionsReached\": \"bool\", \"maxScansToExplodeReached\": \"bool\", \"winningPlan\": {\"stage\": \"str\", \"limitAmount\": \"num\", \"inputStage\": {\"stage\": \"str\", \"inputStage\": {\"stage\": \"str\", \"keyPattern\": {\"a\": \"num\"},",
+  "ours": "{\"s2\": {\"explainVersion\": \"str\", \"queryPlanner\": {\"namespace\": \"str\", \"indexFilterSet\": \"bool\", \"parsedQuery\": {\"a\": {\"$gte\": \"num\"}}, \"queryHash\": \"str\", \"planCacheKey\": \"str\", \"optimizationTimeMillis\": \"num\", \"optimizedPipeline\": \"bool\", \"maxIndexedOrSolutionsReached\": \"bool\", \"maxIndexedAndSolutionsReached\": \"bool\", \"maxScansToExplodeReached\": \"bool\", \"winningPlan\": {\"stage\": \"str\", \"limitAmount\": \"num\", \"inputStage\": {\"stage\": \"str\", \"inputStage\": {\"stage\": \"str\", \"keyPattern\": {\"a\": \"num\"},"
+ },
+ {
+  "name": "g10.find.min_max_basic",
+  "status": "pass",
+  "real": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"$numberInt\": \"3\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}]}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"c\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"c\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}]}], \"",
+  "ours": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"$numberInt\": \"3\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}]}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"c\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"c\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}]}], \""
+ },
+ {
+  "name": "g10.find.min_max_compound",
+  "status": "pass",
+  "real": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"$numberInt\": \"3\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}]}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"c\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"c\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}]}], \"",
+  "ours": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"$numberInt\": \"3\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}]}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"c\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"c\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"c\": [{\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}]}], \""
+ },
+ {
+  "name": "g10.find.min_max_errors",
+  "status": "pass",
+  "real": "{\"s2\": {\"err\": [{\"$numberInt\": \"51173\"}, \"Location51173\", \"error processing query: ns=$DB.tTree: $and\\nSort: {}\\nProj: {}\\n planner returned error :: caused by :: When using min()/max() a hint of which index to use must be provided\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"51173\"}, \"Location51173\", \"error processing query: ns=$DB.tTree: $and\\nSort: {}\\nProj: {}\\n planner returned error :: caused by :: When using min()/max() a hint of which index to use must be provided\"]}, \"s4\": {\"err\": [{\"$numberInt\":",
+  "ours": "{\"s2\": {\"err\": [{\"$numberInt\": \"51173\"}, \"Location51173\", \"error processing query: ns=$DB.tTree: $and\\nSort: {}\\nProj: {}\\n planner returned error :: caused by :: When using min()/max() a hint of which index to use must be provided\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"51173\"}, \"Location51173\", \"error processing query: ns=$DB.tTree: $and\\nSort: {}\\nProj: {}\\n planner returned error :: caused by :: When using min()/max() a hint of which index to use must be provided\"]}, \"s4\": {\"err\": [{\"$numberInt\":"
+ },
+ {
+  "name": "g10.find.return_key",
+  "status": "pass",
+  "real": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"a\": {\"$numberInt\": \"1\"}}, {\"a\": {\"$numberInt\": \"2\"}}, {\"a\": {\"$numberInt\": \"3\"}}, {\"a\": {\"$numberInt\": \"4\"}}, {\"a\": {\"$numberInt\": \"5\"}}, {\"a\": {\"$numberInt\": \"6\"}}, {\"a\": {\"$numberInt\": \"7\"}}, {\"a\": {\"$numberInt\": \"8\"}}, {\"a\": {\"$numberInt\": \"9\"}}, {\"a\": {\"$numberInt\": \"10\"}}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"a\": {\"$numberInt\": \"1\"}, \"b\": \"s1\"}, {\"a\": {\"$numberInt\": \"2\"}, \"b\": \"s2\"}, {\"a\": {\"",
+  "ours": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"a\": {\"$numberInt\": \"1\"}}, {\"a\": {\"$numberInt\": \"2\"}}, {\"a\": {\"$numberInt\": \"3\"}}, {\"a\": {\"$numberInt\": \"4\"}}, {\"a\": {\"$numberInt\": \"5\"}}, {\"a\": {\"$numberInt\": \"6\"}}, {\"a\": {\"$numberInt\": \"7\"}}, {\"a\": {\"$numberInt\": \"8\"}}, {\"a\": {\"$numberInt\": \"9\"}}, {\"a\": {\"$numberInt\": \"10\"}}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"a\": {\"$numberInt\": \"1\"}, \"b\": \"s1\"}, {\"a\": {\"$numberInt\": \"2\"}, \"b\": \"s2\"}, {\"a\": {\""
+ },
+ {
+  "name": "g10.find.show_record_id",
+  "status": "pass",
+  "real": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}, \"$recordId\": {\"$numberLong\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}, \"$recordId\": {\"$numberLong\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"$numberInt\": \"3\"}, \"$recordId\": {\"$numberLong\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"$recordId\": {\"$numberLong\": \"4\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"$recordId\": {\"$numberLong\": \"5\"}}], \"id\": \"clo",
+  "ours": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}, \"$recordId\": {\"$numberLong\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}, \"$recordId\": {\"$numberLong\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"$numberInt\": \"3\"}, \"$recordId\": {\"$numberLong\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"$recordId\": {\"$numberLong\": \"4\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"$recordId\": {\"$numberLong\": \"5\"}}], \"id\": \"clo"
+ },
+ {
+  "name": "g10.find.show_record_id_after_update",
+  "status": "pass",
+  "real": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"$recordId\": {\"$numberLong\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"$recordId\": {\"$numberLong\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"$recordId\": {\"$numberLong\": \"3\"}}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"$recordId\": {\"$numberLong\": \"1\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"$recordId\": {\"$numberLong\": \"3\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"$recordId\": ",
+  "ours": "{\"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"$recordId\": {\"$numberLong\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"$recordId\": {\"$numberLong\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"$recordId\": {\"$numberLong\": \"3\"}}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"$recordId\": {\"$numberLong\": \"1\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"$recordId\": {\"$numberLong\": \"3\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"$recordId\": "
+ },
+ {
+  "name": "g10.let.find",
+  "status": "pass",
+  "real": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}]}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"arr\": [{\"$numberInt\": \"6\"}, {\"$numberInt\": \"12\"}]}, {\"_id\": {\"$",
+  "ours": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}]}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"arr\": [{\"$numberInt\": \"6\"}, {\"$numberInt\": \"12\"}]}, {\"_id\": {\"$"
+ },
+ {
+  "name": "g10.let.aggregate",
+  "status": "pass",
+  "real": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}]}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"firstBatch\": [{\"a\": {\"$numberInt\": \"1\"}, \"v\": \"hi\"}, {\"a\": {\"$numberInt\": \"2\"}, \"v\": \"hi\"}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\":",
+  "ours": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}]}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"firstBatch\": [{\"a\": {\"$numberInt\": \"1\"}, \"v\": \"hi\"}, {\"a\": {\"$numberInt\": \"2\"}, \"v\": \"hi\"}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\":"
+ },
+ {
+  "name": "g10.let.update_delete",
+  "status": "pass",
+  "real": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"n\": {\"$numberInt\": \"2\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s5\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}},",
+  "ours": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"n\": {\"$numberInt\": \"2\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s5\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}},"
+ },
+ {
+  "name": "g10.let.find_and_modify",
+  "status": "pass",
+  "real": "{\"s1\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}], \"v\": {\"$numberInt\": \"1\"}}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}], \"v\": \"p\"}, \"ok\": {\"$numberDo",
+  "ours": "{\"s1\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}], \"v\": {\"$numberInt\": \"1\"}}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}], \"v\": \"p\"}, \"ok\": {\"$numberDo"
+ },
+ {
+  "name": "g10.let.in_transaction",
+  "status": "pass",
+  "real": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"2\"}, {\"$numberInt\": \"4\"}]}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}}",
+  "ours": "{\"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"2\"}, {\"$numberInt\": \"4\"}]}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}}"
+ },
+ {
+  "name": "g10.params.sa",
+  "status": "pass",
+  "real": "{\"s0\": {\"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"logLevel\": {\"$numberInt\": \"0\"}, \"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ttlMonitorEnabled\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s4\": {\"featureCompatibilityVersion\": {\"value\": {\"version\": \"7.0\"}, \"settableAt",
+  "ours": "{\"s0\": {\"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"logLevel\": {\"$numberInt\": \"0\"}, \"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ttlMonitorEnabled\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s4\": {\"featureCompatibilityVersion\": {\"value\": {\"version\": \"7.0\"}, \"settableAt"
+ },
+ {
+  "name": "g10.params.rs",
+  "status": "pass",
+  "real": "{\"s0\": {\"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"logLevel\": {\"$numberInt\": \"0\"}, \"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ttlMonitorEnabled\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s4\": {\"featureCompatibilityVersion\": {\"value\": {\"version\": \"7.0\"}, \"settableAt",
+  "ours": "{\"s0\": {\"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"logLevel\": {\"$numberInt\": \"0\"}, \"transactionLifetimeLimitSeconds\": {\"$numberInt\": \"60\"}, \"ttlMonitorEnabled\": true, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"72\"}, \"InvalidOptions\", \"no option found to get\"]}, \"s4\": {\"featureCompatibilityVersion\": {\"value\": {\"version\": \"7.0\"}, \"settableAt"
+ },
+ {
+  "name": "g10.repl.cmds_rs",
+  "status": "pass",
+  "real": "{\"s0\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetStatus may only be run against the admin database.\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetConfig may only be run against the admin database.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetStatus may only be run against the admin database.\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"shutdown may only be run against the admin database.\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"",
+  "ours": "{\"s0\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetStatus may only be run against the admin database.\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetConfig may only be run against the admin database.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetStatus may only be run against the admin database.\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"shutdown may only be run against the admin database.\"]}, \"s4\": {\"err\": [{\"$numberInt\": \""
+ },
+ {
+  "name": "g10.repl.cmds_sa",
+  "status": "pass",
+  "real": "{\"s0\": {\"err\": [{\"$numberInt\": \"76\"}, \"NoReplicationEnabled\", \"not running with --replSet\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"76\"}, \"NoReplicationEnabled\", \"not running with --replSet\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetStatus may only be run against the admin database.\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetConfig may only be run against the admin database.\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"59\"}, \"CommandNotFound\", \"no such command: '",
+  "ours": "{\"s0\": {\"err\": [{\"$numberInt\": \"76\"}, \"NoReplicationEnabled\", \"not running with --replSet\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"76\"}, \"NoReplicationEnabled\", \"not running with --replSet\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetStatus may only be run against the admin database.\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"replSetGetConfig may only be run against the admin database.\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"59\"}, \"CommandNotFound\", \"no such command: '"
+ },
+ {
+  "name": "g10.special.clustered",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"cl\", \"type\": \"collection\", \"options\": {\"clusteredIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"myid\", \"unique\": true}}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.cl\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}},",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"cl\", \"type\": \"collection\", \"options\": {\"clusteredIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"myid\", \"unique\": true}}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.cl\", \"firstBatch\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}},"
+ },
+ {
+  "name": "g10.special.timeseries",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s1\", \"type\": \"timeseries\", \"options\": {\"timeseries\": {\"timeField\": \"ts\", \"metaField\": \"m\", \"granularity\": \"seconds\", \"bucketMaxSpanSeconds\": {\"$numberInt\": \"3600\"}}}, \"info\": {\"readOnly\": false}}, {\"name\": \"system.buckets.s1\", \"type\": \"collection\", \"options\": {\"validator\": {\"$jsonSchema\": {\"bsonType\": \"object\", \"required\": [\"_id\", \"control\", \"data\"], \"properties\":",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s1\", \"type\": \"timeseries\", \"options\": {\"timeseries\": {\"timeField\": \"ts\", \"metaField\": \"m\", \"granularity\": \"seconds\", \"bucketMaxSpanSeconds\": {\"$numberInt\": \"3600\"}}}, \"info\": {\"readOnly\": false}}, {\"name\": \"system.buckets.s1\", \"type\": \"collection\", \"options\": {\"validator\": {\"$jsonSchema\": {\"bsonType\": \"object\", \"required\": [\"_id\", \"control\", \"data\"], \"properties\":"
+ },
+ {
+  "name": "g10.special.timeseries_batches",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"2\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"2\"}, \"errmsg\": \"'ts' must be present and contain a valid BSON UTC datetime value\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"2\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"1\"}, \"code\": {\"$numberInt\": \"2\"}, \"errmsg\": \"'ts' must be present and contain a valid BSON UTC datetime value\"}, {\"index\": {\"$numberInt\": \"3\"}, \"code\": {\"$numberI",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"2\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"2\"}, \"errmsg\": \"'ts' must be present and contain a valid BSON UTC datetime value\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"2\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"1\"}, \"code\": {\"$numberInt\": \"2\"}, \"errmsg\": \"'ts' must be present and contain a valid BSON UTC datetime value\"}, {\"index\": {\"$numberInt\": \"3\"}, \"code\": {\"$numberI"
+ },
+ {
+  "name": "g10.stableapi.commands",
+  "status": "pass",
+  "real": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"323\"}, \"APIStrictError\", \"Provided apiStrict:true, but the command distinct is not in API Version 1. Information on supported commands and migrations in API Version 1 can be found at https://dochub.mongodb.org/core/manual-versioned-api\"]}, \"s3\": {\"n\": {\"$numberInt\": \"10\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"err\": [{\"$numberInt\": \"323\"}, \"APIStrictError\", \"Provided apiStrict:true, but the command mapReduce is not in API",
+  "ours": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"323\"}, \"APIStrictError\", \"Provided apiStrict:true, but the command distinct is not in API Version 1. Information on supported commands and migrations in API Version 1 can be found at https://dochub.mongodb.org/core/manual-versioned-api\"]}, \"s3\": {\"n\": {\"$numberInt\": \"10\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"err\": [{\"$numberInt\": \"323\"}, \"APIStrictError\", \"Provided apiStrict:true, but the command mapReduce is not in API"
+ },
+ {
+  "name": "g10.stats.scale",
+  "status": "pass",
+  "real": "{\"s1\": {\"scaleFactor\": {\"$numberInt\": \"1024\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"scaleFactor\": {\"$numberInt\": \"1048576\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"err\": [{\"$numberInt\": \"51024\"}, \"Location51024\", \"BSON field 'scale' value must be >= 1, actual value '0'\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"51024\"}, \"Location51024\", \"BSON field 'scale' value must be >= 1, actual value '-5'\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'collStats.scale' is the wrong type ",
+  "ours": "{\"s1\": {\"scaleFactor\": {\"$numberInt\": \"1024\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"scaleFactor\": {\"$numberInt\": \"1048576\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"err\": [{\"$numberInt\": \"51024\"}, \"Location51024\", \"BSON field 'scale' value must be >= 1, actual value '0'\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"51024\"}, \"Location51024\", \"BSON field 'scale' value must be >= 1, actual value '-5'\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'collStats.scale' is the wrong type "
+ },
+ {
+  "name": "g10.validate.options",
+  "status": "pass",
+  "real": "{\"s2\": {\"ns\": \"$DB.t\", \"uuid\": \"<uuid>\", \"nInvalidDocuments\": {\"$numberInt\": \"0\"}, \"nNonCompliantDocuments\": {\"$numberInt\": \"0\"}, \"nrecords\": {\"$numberInt\": \"50\"}, \"nIndexes\": {\"$numberInt\": \"3\"}, \"keysPerIndex\": {\"_id_\": {\"$numberInt\": \"50\"}, \"a_1\": {\"$numberInt\": \"50\"}, \"b_1\": {\"$numberInt\": \"50\"}}, \"indexDetails\": {\"_id_\": {\"valid\": true}, \"a_1\": {\"valid\": true}, \"b_1\": {\"valid\": true}}, \"valid\": true, \"repaired\": false, \"errors\": [], \"extraIndexEntries\": [], \"missingIndexEntries\": [], \"corru",
+  "ours": "{\"s2\": {\"ns\": \"$DB.t\", \"uuid\": \"<uuid>\", \"nInvalidDocuments\": {\"$numberInt\": \"0\"}, \"nNonCompliantDocuments\": {\"$numberInt\": \"0\"}, \"nrecords\": {\"$numberInt\": \"50\"}, \"nIndexes\": {\"$numberInt\": \"3\"}, \"keysPerIndex\": {\"_id_\": {\"$numberInt\": \"50\"}, \"a_1\": {\"$numberInt\": \"50\"}, \"b_1\": {\"$numberInt\": \"50\"}}, \"indexDetails\": {\"_id_\": {\"valid\": true}, \"a_1\": {\"valid\": true}, \"b_1\": {\"valid\": true}}, \"valid\": true, \"repaired\": false, \"errors\": [], \"extraIndexEntries\": [], \"missingIndexEntries\": [], \"corru"
+ },
+ {
+  "name": "g10.listdb.filter",
+  "status": "pass",
+  "real": "{\"s1\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"listDatabases may only be run against the admin database.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"listDatabases may only be run against the admin database.\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"listDatabases may only be run against the admin database.\"]}, \"s4\": {\"databases\": [{\"name\": \"$DB\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s5\": {\"databases\": [{\"name\": \"$DB\", \"empty\": false}], \"ok\": {\"$numberDouble\": ",
+  "ours": "{\"s1\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"listDatabases may only be run against the admin database.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"listDatabases may only be run against the admin database.\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"listDatabases may only be run against the admin database.\"]}, \"s4\": {\"databases\": [{\"name\": \"$DB\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s5\": {\"databases\": [{\"name\": \"$DB\", \"empty\": false}], \"ok\": {\"$numberDouble\": "
+ },
+ {
+  "name": "g10.validator.jsonschema_insert",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"options\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s\", \"type\": \"collection\", \"options\": {\"validator\": {\"$jsonSchema\": {\"bsonType\": \"object\", \"required\": [\"a\", \"b\"], \"properties\": {\"a\": {\"bsonType\": \"int\", \"minimum\": {\"$numberInt\": \"0\"}}, \"b\": {\"bsonType\": \"string\", \"enum\": [\"x\", \"y\"]}, \"c\": {\"bsonType\": \"array\", \"items\": {\"bsonType\": \"int\"}, \"minItems\": {\"$numberInt\": \"1\"}}}}}}, \"info\": {\"readOnly\": false, \"u",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"options\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s\", \"type\": \"collection\", \"options\": {\"validator\": {\"$jsonSchema\": {\"bsonType\": \"object\", \"required\": [\"a\", \"b\"], \"properties\": {\"a\": {\"bsonType\": \"int\", \"minimum\": {\"$numberInt\": \"0\"}}, \"b\": {\"bsonType\": \"string\", \"enum\": [\"x\", \"y\"]}, \"c\": {\"bsonType\": \"array\", \"items\": {\"bsonType\": \"int\"}, \"minItems\": {\"$numberInt\": \"1\"}}}}}}, \"info\": {\"readOnly\": false, \"u"
+ },
+ {
+  "name": "g10.validator.jsonschema_keywords",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$jsonSchema\", \"schemaRulesNotSatisfied\": [{\"operatorName\": \"properties\", \"propertiesNotSatisfied\": [{\"propertyName\": \"s\", \"details\": [{\"operatorName\": \"minLength\", \"specifiedAs\": {\"minLength\": {\"$numberInt\": \"2\"}}, \"reason\": ",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$jsonSchema\", \"schemaRulesNotSatisfied\": [{\"operatorName\": \"properties\", \"propertiesNotSatisfied\": [{\"propertyName\": \"s\", \"details\": [{\"operatorName\": \"minLength\", \"specifiedAs\": {\"minLength\": {\"$numberInt\": \"2\"}}, \"reason\": "
+ },
+ {
+  "name": "g10.validator.query_expression",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"options\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s\", \"type\": \"collection\", \"options\": {\"validator\": {\"a\": {\"$gt\": {\"$numberInt\": \"0\"}}, \"$or\": [{\"b\": \"x\"}, {\"c\": {\"$exists\": true}}]}}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDo",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"options\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s\", \"type\": \"collection\", \"options\": {\"validator\": {\"a\": {\"$gt\": {\"$numberInt\": \"0\"}}, \"$or\": [{\"b\": \"x\"}, {\"c\": {\"$exists\": true}}]}}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDo"
+ },
+ {
+  "name": "g10.validator.query_operators",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"2\"}, \"details\": {\"operatorName\": \"$and\", \"clausesNotSatisfied\": [{\"index\": {\"$numberInt\": \"0\"}, \"details\": {\"operatorName\": \"$in\", \"specifiedAs\": {\"n\": {\"$in\": [{\"$numberInt\": \"1\"}, {\"$numberIn",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"2\"}, \"details\": {\"operatorName\": \"$and\", \"clausesNotSatisfied\": [{\"index\": {\"$numberInt\": \"0\"}, \"details\": {\"operatorName\": \"$in\", \"specifiedAs\": {\"n\": {\"$in\": [{\"$numberInt\": \"1\"}, {\"$numberIn"
+ },
+ {
+  "name": "g10.validator.expr_and_misc",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"2\"}, \"details\": {\"operatorName\": \"$expr\", \"specifiedAs\": {\"$expr\": {\"$lt\": [\"$lo\", \"$hi\"]}}, \"reason\": \"expression did not match\", \"expressionResult\": false}}}], \"ok\": {\"$numberDouble\": \"1.0\"}}",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"2\"}, \"details\": {\"operatorName\": \"$expr\", \"specifiedAs\": {\"$expr\": {\"$lt\": [\"$lo\", \"$hi\"]}}, \"reason\": \"expression did not match\", \"expressionResult\": false}}}], \"ok\": {\"$numberDouble\": \"1.0\"}}"
+ },
+ {
+  "name": "g10.validator.level_and_action",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"options\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s\", \"type\": \"collection\", \"options\": {\"validator\": {\"a\": {\"$gt\": {\"$numberInt\": \"0\"}}}, \"validationLevel\": \"off\", \"validationAction\": \"error\"}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"options\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"s\", \"type\": \"collection\", \"options\": {\"validator\": {\"a\": {\"$gt\": {\"$numberInt\": \"0\"}}}, \"validationLevel\": \"off\", \"validationAction\": \"error\"}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$"
+ },
+ {
+  "name": "g10.validator.updates_and_upserts",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$gte\", \"specifiedAs\": {\"a\": {\"$gte\": {\"$numberInt\": \"0\"}}}, \"reason\": \"comparison failed\", \"consideredValue\": {\"$numberInt\": \"-1\"}}}}], \"nModified\": {\"$numberI",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$gte\", \"specifiedAs\": {\"a\": {\"$gte\": {\"$numberInt\": \"0\"}}}, \"reason\": \"comparison failed\", \"consideredValue\": {\"$numberInt\": \"-1\"}}}}], \"nModified\": {\"$numberI"
+ },
+ {
+  "name": "g10.validator.transactions",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$gte\", \"specifiedAs\": {\"a\": {\"$gte\": {\"$numberInt\": \"0\"}}}, \"reason\": \"comparison failed\", \"consideredValue\": {\"$numberInt\": \"-1\"}}}}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"251\"}, \"NoSuchTransaction",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$gte\", \"specifiedAs\": {\"a\": {\"$gte\": {\"$numberInt\": \"0\"}}}, \"reason\": \"comparison failed\", \"consideredValue\": {\"$numberInt\": \"-1\"}}}}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"251\"}, \"NoSuchTransaction"
+ },
+ {
+  "name": "g10.validator.index_and_existing_docs",
+  "status": "pass",
+  "real": "{\"s0\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$gte\", \"specifiedAs\": {\"a\": {\"$gte\": {\"$numberInt\": \"0\"}}}, \"reason\": \"comparison failed\", \"c",
+  "ours": "{\"s0\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$gte\", \"specifiedAs\": {\"a\": {\"$gte\": {\"$numberInt\": \"0\"}}}, \"reason\": \"comparison failed\", \"c"
+ },
+ {
+  "name": "g10.validator.explain_matrix",
+  "status": "pass",
+  "real": "{\"s1\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$jsonSchema\", \"schemaRulesNotSatisfied\": [{\"operatorName\": \"properties\", \"propertiesNotSatisfied\": [{\"propertyName\": \"b\", \"details\": [{\"operatorName\": \"bsonType\", \"specifiedAs\": {\"bsonType\": \"int\"}, \"reason\": \"type did not match\", \"consideredValue\": \"x\", \"considere",
+  "ours": "{\"s1\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"121\"}, \"errmsg\": \"Document failed validation\", \"errInfo\": {\"failingDocumentId\": {\"$numberInt\": \"1\"}, \"details\": {\"operatorName\": \"$jsonSchema\", \"schemaRulesNotSatisfied\": [{\"operatorName\": \"properties\", \"propertiesNotSatisfied\": [{\"propertyName\": \"b\", \"details\": [{\"operatorName\": \"bsonType\", \"specifiedAs\": {\"bsonType\": \"int\"}, \"reason\": \"type did not match\", \"consideredValue\": \"x\", \"considere"
+ },
+ {
+  "name": "g10.view.basic",
+  "status": "pass",
+  "real": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"lc\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"system.views\", \"type\": \"collection\", \"options\": {}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}, {\"name\": \"t\", \"type\": \"collection\", \"options\": {}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"",
+  "ours": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"lc\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"system.views\", \"type\": \"collection\", \"options\": {}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}, {\"name\": \"t\", \"type\": \"collection\", \"options\": {}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \""
+ },
+ {
+  "name": "g10.view.create_errors",
+  "status": "pass",
+  "real": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"namespace $DB.v1 already exists, but with pipeline {} rather than { 0: { $match: {} } }\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"namespace $DB.t already exists, but with different options: { uuid: UUID(\\\"<uuid>\\\") }\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"5\"}, \"GraphContainsCycle\", \"View cycle detected: $DB.v2 => $DB.v2 => $DB.v2\"]}, \"s6\": {\"ok\"",
+  "ours": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"namespace $DB.v1 already exists, but with pipeline {} rather than { 0: { $match: {} } }\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"namespace $DB.t already exists, but with different options: { uuid: UUID(\\\"<uuid>\\\") }\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"5\"}, \"GraphContainsCycle\", \"View cycle detected: $DB.v2 => $DB.v2 => $DB.v2\"]}, \"s6\": {\"ok\""
+ },
+ {
+  "name": "g10.view.live_and_nested",
+  "status": "pass",
+  "real": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}], \"w\": {\"$numberInt\": \"40\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}], \"w\": {\"$numberInt\": \"50\"}}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"arr\": [{\"$numberInt\": \"6\"}, ",
+  "ours": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"$numberInt\": \"4\"}, \"b\": \"s1\", \"arr\": [{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}], \"w\": {\"$numberInt\": \"40\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"b\": \"s2\", \"arr\": [{\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}], \"w\": {\"$numberInt\": \"50\"}}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"6\"}, \"b\": \"s0\", \"arr\": [{\"$numberInt\": \"6\"}, "
+ },
+ {
+  "name": "g10.view.lookup_and_other_collections",
+  "status": "pass",
+  "real": "{\"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}, \"us\": [{\"nm\": \"two\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"us\": [{\"nm\": \"five\"}]}], \"id\": \"closed\", \"ns\": \"$DB.vj\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"k\": {\"$numberInt\": \"2\"}, \"v\": [{\"_id\": {\"$numberInt\": \"2\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"k\": {\"$numberInt\": \"5\"}, \"v\": [{\"_id\": {\"$nu",
+  "ours": "{\"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}, \"us\": [{\"nm\": \"two\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"5\"}, \"us\": [{\"nm\": \"five\"}]}], \"id\": \"closed\", \"ns\": \"$DB.vj\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"k\": {\"$numberInt\": \"2\"}, \"v\": [{\"_id\": {\"$numberInt\": \"2\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"k\": {\"$numberInt\": \"5\"}, \"v\": [{\"_id\": {\"$nu"
+ },
+ {
+  "name": "g10.view.explain_and_stats",
+  "status": "pass",
+  "real": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"explainVersion\": \"str\", \"queryPlanner\": {\"namespace\": \"str\", \"indexFilterSet\": \"bool\", \"queryHash\": \"str\", \"planCacheKey\": \"str\", \"optimizationTimeMillis\": \"num\", \"optimizedPipeline\": \"bool\", \"maxIndexedOrSolutionsReached\": \"bool\", \"maxIndexedAndSolutionsReached\": \"bool\", \"maxScansToExplodeReached\": \"bool\", \"rejectedPlans\": []}, \"command\": {\"aggregate\": \"str\", \"pipeline\": [{\"$match\": {\"a\": {\"$gt\": \"num\"}}}], \"cursor\": {}, \"collation\": {\"locale\": \"",
+  "ours": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"explainVersion\": \"str\", \"queryPlanner\": {\"namespace\": \"str\", \"indexFilterSet\": \"bool\", \"queryHash\": \"str\", \"planCacheKey\": \"str\", \"optimizationTimeMillis\": \"num\", \"optimizedPipeline\": \"bool\", \"maxIndexedOrSolutionsReached\": \"bool\", \"maxIndexedAndSolutionsReached\": \"bool\", \"maxScansToExplodeReached\": \"bool\", \"rejectedPlans\": []}, \"command\": {\"aggregate\": \"str\", \"pipeline\": [{\"$match\": {\"a\": {\"$gt\": \"num\"}}}], \"cursor\": {}, \"collation\": {\"locale\": \""
+ },
+ {
+  "name": "g10.view.depth",
+  "status": "pass",
+  "real": "{\"s20\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s21\": {\"err\": [{\"$numberInt\": \"165\"}, \"ViewDepthLimitExceeded\", \"View depth limit exceeded; maximum depth is 20\"]}, \"s22\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s23\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s24\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"id\": \"closed\", \"ns\": \"$DB.d17\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s25\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"id\": \"closed\", \"ns\": \"$DB.d18\"}, \"ok\": {\"$numberDouble\": \"1.0",
+  "ours": "{\"s20\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s21\": {\"err\": [{\"$numberInt\": \"165\"}, \"ViewDepthLimitExceeded\", \"View depth limit exceeded; maximum depth is 20\"]}, \"s22\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s23\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s24\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"id\": \"closed\", \"ns\": \"$DB.d17\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s25\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"id\": \"closed\", \"ns\": \"$DB.d18\"}, \"ok\": {\"$numberDouble\": \"1.0"
+ },
+ {
+  "name": "g11.admin.logrotate",
+  "status": "pass",
+  "real": "{\"s0\": {\"err\": [{\"$numberInt\": \"4\"}, \"NoSuchKey\", \"Log rotation failed due to one or more errors\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"4\"}, \"NoSuchKey\", \"Log rotation failed due to one or more errors\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'logRotate.logRotate' is the wrong type 'object', expected types '[bool, string']\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"logRotate may only be run against the admin database.\"]}, \"s4\": {\"ok\": {\"$numberDouble\": \"1.0\"",
+  "ours": "{\"s0\": {\"err\": [{\"$numberInt\": \"4\"}, \"NoSuchKey\", \"Log rotation failed due to one or more errors\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"4\"}, \"NoSuchKey\", \"Log rotation failed due to one or more errors\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'logRotate.logRotate' is the wrong type 'object', expected types '[bool, string']\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"logRotate may only be run against the admin database.\"]}, \"s4\": {\"ok\": {\"$numberDouble\": \"1.0\""
+ },
+ {
+  "name": "g11.admin.fsync_lock",
+  "status": "pass",
+  "real": "{\"s1\": {\"numFiles\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"fsyncUnlock called when not locked\"]}, \"s3\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"1\"}, \"seeAlso\": \"http://dochub.mongodb.org/core/fsynccommand\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"2\"}, \"seeAlso\": \"http",
+  "ours": "{\"s1\": {\"numFiles\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"fsyncUnlock called when not locked\"]}, \"s3\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"1\"}, \"seeAlso\": \"http://dochub.mongodb.org/core/fsynccommand\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"2\"}, \"seeAlso\": \"http"
+ },
+ {
+  "name": "g11.admin.fsync_lock_rs",
+  "status": "pass",
+  "real": "{\"s1\": {\"numFiles\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"fsyncUnlock called when not locked\"]}, \"s3\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"1\"}, \"seeAlso\": \"http://dochub.mongodb.org/core/fsynccommand\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"2\"}, \"seeAlso\": \"http",
+  "ours": "{\"s1\": {\"numFiles\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"fsyncUnlock called when not locked\"]}, \"s3\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"1\"}, \"seeAlso\": \"http://dochub.mongodb.org/core/fsynccommand\", \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"info\": \"now locked against writes, use db.fsyncUnlock() to unlock\", \"lockCount\": {\"$numberLong\": \"2\"}, \"seeAlso\": \"http"
+ },
+ {
+  "name": "g11.admin.dropconnections",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field 'dropConnections.hostAndPort' is missing but a required field\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'dropConnections.hostAndPort' is the wrong type 'string', expected type 'array'\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'dropConnections.hostAndPort.0' is the wrong type 'int', expected type 'string'\"]}, \"s4\": {\"ok\": {\"$numberD",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field 'dropConnections.hostAndPort' is missing but a required field\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'dropConnections.hostAndPort' is the wrong type 'string', expected type 'array'\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'dropConnections.hostAndPort.0' is the wrong type 'int', expected type 'string'\"]}, \"s4\": {\"ok\": {\"$numberD"
+ },
+ {
+  "name": "g11.admin.rotatecertificates",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'rotateCertificates.message' is the wrong type 'int', expected type 'string'\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"rotateCertificates may only be run against the admin database.\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'rotateCertificates.bogus' is an unknown field.\"]}}",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'rotateCertificates.message' is the wrong type 'int', expected type 'string'\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"rotateCertificates may only be run against the admin database.\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'rotateCertificates.bogus' is an unknown field.\"]}}"
+ },
+ {
+  "name": "g11.admin.userwriteblock_sa",
+  "status": "pass",
+  "real": "{\"s0\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"setUserWriteBlockMode cannot be run on standalones\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"setUserWriteBlockMode cannot be run on standalones\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field 'setUserWriteBlockMode.global' is missing but a required field\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'setUserWriteBlockMode.global' is the wrong type 'string', expected t",
+  "ours": "{\"s0\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"setUserWriteBlockMode cannot be run on standalones\"]}, \"s1\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"setUserWriteBlockMode cannot be run on standalones\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field 'setUserWriteBlockMode.global' is missing but a required field\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'setUserWriteBlockMode.global' is the wrong type 'string', expected t"
+ },
+ {
+  "name": "g11.admin.userwriteblock_rs",
+  "status": "pass",
+  "real": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"371\"}, \"errmsg\": \"User writes blocked\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"371\"}, \"errmsg\": \"User writes blocked\"}, {\"index\": {\"$numberInt\": \"1\"}, \"code\": {\"$numberInt\": \"371\"}, \"errmsg\": \"User writes blocked\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\":",
+  "ours": "{\"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"371\"}, \"errmsg\": \"User writes blocked\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [{\"index\": {\"$numberInt\": \"0\"}, \"code\": {\"$numberInt\": \"371\"}, \"errmsg\": \"User writes blocked\"}, {\"index\": {\"$numberInt\": \"1\"}, \"code\": {\"$numberInt\": \"371\"}, \"errmsg\": \"User writes blocked\"}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\":"
+ },
+ {
+  "name": "g11.admin.setfcv",
+  "status": "pass",
+  "real": "{\"s0\": {\"featureCompatibilityVersion\": {\"version\": \"7.0\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"err\": [{\"$numberInt\": \"7369100\"}, \"Location7369100\", \"Once you have downgraded the FCV, if you choose to downgrade the binary version, it will require support assistance. Please re-run this command with 'confirm: true' to acknowledge this and continue with the FCV downgrade.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"7369100\"}, \"Location7369100\", \"Once you have downgraded the FCV, if you choose to downgra",
+  "ours": "{\"s0\": {\"featureCompatibilityVersion\": {\"version\": \"7.0\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"err\": [{\"$numberInt\": \"7369100\"}, \"Location7369100\", \"Once you have downgraded the FCV, if you choose to downgrade the binary version, it will require support assistance. Please re-run this command with 'confirm: true' to acknowledge this and continue with the FCV downgrade.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"7369100\"}, \"Location7369100\", \"Once you have downgraded the FCV, if you choose to downgra"
+ },
+ {
+  "name": "g11.admin.shutdown",
+  "status": "pass",
+  "real": "{\"s1\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"shutdown may only be run against the admin database.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'shutdown.force' is the wrong type 'string', expected type 'bool'\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'shutdown.timeoutSecs' is the wrong type 'string', expected types '[long, int, decimal, double']\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'shutdown.bogus'",
+  "ours": "{\"s1\": {\"err\": [{\"$numberInt\": \"13\"}, \"Unauthorized\", \"shutdown may only be run against the admin database.\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'shutdown.force' is the wrong type 'string', expected type 'bool'\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"BSON field 'shutdown.timeoutSecs' is the wrong type 'string', expected types '[long, int, decimal, double']\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'shutdown.bogus'"
+ },
+ {
+  "name": "g11.admin.features",
+  "status": "pass",
+  "real": "{\"s0\": {\"js\": {\"utf8\": \"bool\"}, \"oidMachine\": \"num\", \"ok\": \"num\"}, \"s1\": {\"js\": {\"utf8\": \"bool\"}, \"oidMachine\": \"num\", \"ok\": \"num\"}, \"s2\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'features.bogus' is an unknown field.\"]}}",
+  "ours": "{\"s0\": {\"js\": {\"utf8\": \"bool\"}, \"oidMachine\": \"num\", \"ok\": \"num\"}, \"s1\": {\"js\": {\"utf8\": \"bool\"}, \"oidMachine\": \"num\", \"ok\": \"num\"}, \"s2\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'features.bogus' is an unknown field.\"]}}"
+ },
+ {
+  "name": "g11.encryption.compact_rs",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"stats\": {\"ecoc\": {\"read\": {\"$numberLong\": \"0\"}, \"deleted\": {\"$numberLong\": \"0\"}}, \"esc\": {\"read\": {\"$numberLong\": \"0\"}, \"inserted\": {\"$numberLong\": \"0\"}, \"updated\": {\"$numberLong\": \"0\"}, \"deleted\": {\"$numberLong\": \"0\"}}}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"err\": [{\"$numberInt\": \"6346806\"}, \"Location6346806\", \"Compaction tokens object is missing compaction token for the encrypted path 'b.c'\"]}, \"s4\": {\"",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"stats\": {\"ecoc\": {\"read\": {\"$numberLong\": \"0\"}, \"deleted\": {\"$numberLong\": \"0\"}}, \"esc\": {\"read\": {\"$numberLong\": \"0\"}, \"inserted\": {\"$numberLong\": \"0\"}, \"updated\": {\"$numberLong\": \"0\"}, \"deleted\": {\"$numberLong\": \"0\"}}}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"err\": [{\"$numberInt\": \"6346806\"}, \"Location6346806\", \"Compaction tokens object is missing compaction token for the encrypted path 'b.c'\"]}, \"s4\": {\""
+ },
+ {
+  "name": "g11.encryption.compact_sa",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s2\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s4\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"Collection '$DB.e' does not exist\"]}, \"s5\": {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field"
+ },
+ {
+  "name": "g11.validate.full",
+  "status": "pass",
+  "real": "{\"s6\": {\"ns\": \"$DB.a\", \"uuid\": \"<uuid>\", \"nInvalidDocuments\": {\"$numberInt\": \"0\"}, \"nNonCompliantDocuments\": {\"$numberInt\": \"0\"}, \"nrecords\": {\"$numberInt\": \"5\"}, \"nIndexes\": {\"$numberInt\": \"1\"}, \"keysPerIndex\": {\"_id_\": {\"$numberInt\": \"5\"}}, \"indexDetails\": {\"_id_\": {\"valid\": true, \"warnings\": [\"Could not complete validation of table:index-N. This is a transient issue as the collection was actively in use by other operations.\"]}}, \"valid\": true, \"repaired\": false, \"warnings\": [\"Could not comple",
+  "ours": "{\"s6\": {\"ns\": \"$DB.a\", \"uuid\": \"<uuid>\", \"nInvalidDocuments\": {\"$numberInt\": \"0\"}, \"nNonCompliantDocuments\": {\"$numberInt\": \"0\"}, \"nrecords\": {\"$numberInt\": \"5\"}, \"nIndexes\": {\"$numberInt\": \"1\"}, \"keysPerIndex\": {\"_id_\": {\"$numberInt\": \"5\"}}, \"indexDetails\": {\"_id_\": {\"valid\": true, \"warnings\": [\"Could not complete validation of table:index-N. This is a transient issue as the collection was actively in use by other operations.\"]}}, \"valid\": true, \"repaired\": false, \"warnings\": [\"Could not comple"
+ },
+ {
+  "name": "g11.admin.querystats",
+  "status": "pass",
+  "real": "{\"s0\": {\"cursor\": {\"firstBatch\": [], \"id\": \"closed\", \"ns\": \"admin.$cmd.aggregate\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"firstBatch\": [], \"id\": \"closed\", \"ns\": \"admin.$cmd.aggregate\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"$queryStats must be run against the 'admin' database with {aggregate: 1}\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"$queryStats must be run against the 'admin' database with {aggregate: 1}\"]",
+  "ours": "{\"s0\": {\"cursor\": {\"firstBatch\": [], \"id\": \"closed\", \"ns\": \"admin.$cmd.aggregate\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"firstBatch\": [], \"id\": \"closed\", \"ns\": \"admin.$cmd.aggregate\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"$queryStats must be run against the 'admin' database with {aggregate: 1}\"]}, \"s3\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"$queryStats must be run against the 'admin' database with {aggregate: 1}\"]"
+ },
+ {
+  "name": "g11.expr.tohashedindexkey",
+  "status": "pass",
+  "real": "{\"s0\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberLong\": \"5902408780260971510\"}}], \"id\": \"closed\", \"ns\": \"$DB.c\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberLong\": \"2780795045148116090\"}}], \"id\": \"closed\", \"ns\": \"$DB.c\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberLong\": \"2",
+  "ours": "{\"s0\": {\"n\": {\"$numberInt\": \"1\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberLong\": \"5902408780260971510\"}}], \"id\": \"closed\", \"ns\": \"$DB.c\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberLong\": \"2780795045148116090\"}}], \"id\": \"closed\", \"ns\": \"$DB.c\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberLong\": \"2"
+ },
+ {
+  "name": "g11.admin.invalidateusercache",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'invalidateUserCache.foo' is an unknown field.\"]}}",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s4\": {\"err\": [{\"$numberInt\": \"40415\"}, \"IDLUnknownField\", \"BSON field 'invalidateUserCache.foo' is an unknown field.\"]}}"
+ },
+ {
+  "name": "g11.create.storage_engine_and_index_option_defaults",
+  "status": "pass",
+  "real": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"a\", \"type\": \"collection\", \"options\": {\"storageEngine\": {\"wiredTiger\": {\"configString\": \"block_compressor=zlib\"}}}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"id\": \"closed\", \"n",
+  "ours": "{\"s0\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"id\": \"closed\", \"ns\": \"$DB.$cmd.listCollections\", \"firstBatch\": [{\"name\": \"a\", \"type\": \"collection\", \"options\": {\"storageEngine\": {\"wiredTiger\": {\"configString\": \"block_compressor=zlib\"}}}, \"info\": {\"readOnly\": false, \"uuid\": \"<uuid>\"}, \"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}}]}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"s3\": {\"cursor\": {\"id\": \"closed\", \"n"
+ },
+ {
+  "name": "g11.agg.bucketauto_granularity",
+  "status": "pass",
+  "real": "{\"s0\": {\"n\": {\"$numberInt\": \"10\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"min\": {\"$numberDouble\": \"0.01\"}, \"max\": {\"$numberDouble\": \"2.5\"}}, \"count\": {\"$numberInt\": \"4\"}}, {\"_id\": {\"min\": {\"$numberDouble\": \"2.5\"}, \"max\": {\"$numberDouble\": \"63.0\"}}, \"count\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"min\": {\"$numberDouble\": \"63.0\"}, \"max\": {\"$numberDouble\": \"10000.0\"}}, \"count\": {\"$numberInt\": \"3\"}}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\":",
+  "ours": "{\"s0\": {\"n\": {\"$numberInt\": \"10\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s1\": {\"cursor\": {\"firstBatch\": [{\"_id\": {\"min\": {\"$numberDouble\": \"0.01\"}, \"max\": {\"$numberDouble\": \"2.5\"}}, \"count\": {\"$numberInt\": \"4\"}}, {\"_id\": {\"min\": {\"$numberDouble\": \"2.5\"}, \"max\": {\"$numberDouble\": \"63.0\"}}, \"count\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"min\": {\"$numberDouble\": \"63.0\"}, \"max\": {\"$numberDouble\": \"10000.0\"}}, \"count\": {\"$numberInt\": \"3\"}}], \"id\": \"closed\", \"ns\": \"$DB.t\"}, \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\":"
+ },
+ {
+  "name": "g11.mapreduce.options",
+  "status": "pass",
+  "real": "{\"s1\": {\"results\": [{\"_id\": {\"$numberDouble\": \"0.0\"}, \"value\": {\"$numberDouble\": \"18.0\"}}, {\"_id\": {\"$numberDouble\": \"1.0\"}, \"value\": {\"$numberDouble\": \"22.0\"}}, {\"_id\": {\"$numberDouble\": \"2.0\"}, \"value\": {\"$numberDouble\": \"26.0\"}}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"results\": [{\"_id\": {\"$numberDouble\": \"0.0\"}, \"value\": {\"$numberDouble\": \"18.0\"}}, {\"_id\": {\"$numberDouble\": \"1.0\"}, \"value\": {\"$numberDouble\": \"21.0\"}}, {\"_id\": {\"$numberDouble\": \"2.0\"}, \"value\": {\"$numberDouble\": \"24.0\"}}], ",
+  "ours": "{\"s1\": {\"results\": [{\"_id\": {\"$numberDouble\": \"0.0\"}, \"value\": {\"$numberDouble\": \"18.0\"}}, {\"_id\": {\"$numberDouble\": \"1.0\"}, \"value\": {\"$numberDouble\": \"22.0\"}}, {\"_id\": {\"$numberDouble\": \"2.0\"}, \"value\": {\"$numberDouble\": \"26.0\"}}], \"ok\": {\"$numberDouble\": \"1.0\"}}, \"s2\": {\"results\": [{\"_id\": {\"$numberDouble\": \"0.0\"}, \"value\": {\"$numberDouble\": \"18.0\"}}, {\"_id\": {\"$numberDouble\": \"1.0\"}, \"value\": {\"$numberDouble\": \"21.0\"}}, {\"_id\": {\"$numberDouble\": \"2.0\"}, \"value\": {\"$numberDouble\": \"24.0\"}}], "
+ },
+ {
+  "name": "g10.txn.lifetime_limit",
+  "status": "pass",
+  "real": "{\"set\": {\"$numberInt\": \"60\"}, \"insert_after_expiry\": [{\"$numberInt\": \"251\"}, \"NoSuchTransaction\", [\"TransientTransactionError\"]], \"commit_after_expiry\": [{\"$numberInt\": \"251\"}, \"NoSuchTransaction\", [\"TransientTransactionError\"]], \"docs\": [{\"$numberInt\": \"0\"}], \"docs_after\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"3\"}]}",
+  "ours": "{\"set\": {\"$numberInt\": \"60\"}, \"insert_after_expiry\": [{\"$numberInt\": \"251\"}, \"NoSuchTransaction\", [\"TransientTransactionError\"]], \"commit_after_expiry\": [{\"$numberInt\": \"251\"}, \"NoSuchTransaction\", [\"TransientTransactionError\"]], \"docs\": [{\"$numberInt\": \"0\"}], \"docs_after\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"3\"}]}"
+ },
+ {
+  "name": "g10.wire.compression_zlib",
+  "status": "pass",
+  "real": "{\"negotiated\": [\"zlib\"], \"docs\": [{\"_id\": {\"$numberInt\": \"0\"}}, {\"_id\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}}], \"count\": {\"$numberInt\": \"50\"}, \"agg\": [{\"_id\": null, \"n\": {\"$numberInt\": \"50\"}}]}",
+  "ours": "{\"negotiated\": [\"zlib\"], \"docs\": [{\"_id\": {\"$numberInt\": \"0\"}}, {\"_id\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}}], \"count\": {\"$numberInt\": \"50\"}, \"agg\": [{\"_id\": null, \"n\": {\"$numberInt\": \"50\"}}]}"
+ },
+ {
+  "name": "g10.wire.hello_shape_sa",
+  "status": "pass",
+  "real": "{\"hello\": [\"isWritablePrimary\", \"topologyVersion\", \"maxBsonObjectSize\", \"maxMessageSizeBytes\", \"maxWriteBatchSize\", \"localTime\", \"logicalSessionTimeoutMinutes\", \"connectionId\", \"minWireVersion\", \"maxWireVersion\", \"readOnly\", \"ok\"], \"ismaster\": [\"ismaster\", \"topologyVersion\", \"maxBsonObjectSize\", \"maxMessageSizeBytes\", \"maxWriteBatchSize\", \"localTime\", \"logicalSessionTimeoutMinutes\", \"connectionId\", \"minWireVersion\", \"maxWireVersion\", \"readOnly\", \"ok\"], \"ismaster_helloOk\": [\"helloOk\", \"ismaster\",",
+  "ours": "{\"hello\": [\"isWritablePrimary\", \"topologyVersion\", \"maxBsonObjectSize\", \"maxMessageSizeBytes\", \"maxWriteBatchSize\", \"localTime\", \"logicalSessionTimeoutMinutes\", \"connectionId\", \"minWireVersion\", \"maxWireVersion\", \"readOnly\", \"ok\"], \"ismaster\": [\"ismaster\", \"topologyVersion\", \"maxBsonObjectSize\", \"maxMessageSizeBytes\", \"maxWriteBatchSize\", \"localTime\", \"logicalSessionTimeoutMinutes\", \"connectionId\", \"minWireVersion\", \"maxWireVersion\", \"readOnly\", \"ok\"], \"ismaster_helloOk\": [\"helloOk\", \"ismaster\","
+ },
+ {
+  "name": "g10.wire.hello_shape_rs",
+  "status": "pass",
+  "real": "{\"hello\": [\"topologyVersion\", \"hosts\", \"setName\", \"setVersion\", \"isWritablePrimary\", \"secondary\", \"primary\", \"me\", \"electionId\", \"lastWrite\", \"maxBsonObjectSize\", \"maxMessageSizeBytes\", \"maxWriteBatchSize\", \"localTime\", \"logicalSessionTimeoutMinutes\", \"connectionId\", \"minWireVersion\", \"maxWireVersion\", \"readOnly\", \"ok\"], \"lastWrite\": [\"lastWriteDate\", \"majorityOpTime\", \"majorityWriteDate\", \"opTime\"], \"tv\": [\"counter\", \"processId\"]}",
+  "ours": "{\"hello\": [\"topologyVersion\", \"hosts\", \"setName\", \"setVersion\", \"isWritablePrimary\", \"secondary\", \"primary\", \"me\", \"electionId\", \"lastWrite\", \"maxBsonObjectSize\", \"maxMessageSizeBytes\", \"maxWriteBatchSize\", \"localTime\", \"logicalSessionTimeoutMinutes\", \"connectionId\", \"minWireVersion\", \"maxWireVersion\", \"readOnly\", \"ok\"], \"lastWrite\": [\"lastWriteDate\", \"majorityOpTime\", \"majorityWriteDate\", \"opTime\"], \"tv\": [\"counter\", \"processId\"]}"
+ },
+ {
+  "name": "g10.wire.awaitable_hello",
+  "status": "pass",
+  "real": "{\"waited\": true, \"same_tv\": true}",
+  "ours": "{\"waited\": true, \"same_tv\": true}"
+ }
+]

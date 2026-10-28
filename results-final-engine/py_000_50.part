@@ -1,0 +1,402 @@
+[
+ {
+  "name": "insert.unique_on_existing_dups_fails",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "insert.unique_nested_path",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "find.filter.empty",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_number",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "find.filter.eq_int64_equiv",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_double_equiv",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_double_fraction",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_string",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_case_sensitive",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_null",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_null_missing_field",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_nested_doc",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_nested_doc_extra_field",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_array_whole",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_array_whole_wrong_order",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_array_element",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_empty_array",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "find.filter.eq_array_index",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_dotted",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_dotted_deep",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_dotted_missing_parent",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_dotted_array_of_docs",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_dotted_array_of_docs_qty",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_dotted_array_index_doc",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.eq_id",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.eq_id_missing",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_eq",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_eq_null",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "find.filter.op_ne",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_ne_null",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_ne_array_element",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gt_number",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gte_number",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.op_lt_number",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.op_lte_number",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gt_string",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_lt_string",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_range",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gt_on_array",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_lt_on_array",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_range_on_array_same_element",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gt_null_nothing",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gte_null",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_lt_string_vs_number_bracket",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.op_gt_dotted",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_gt_array_of_docs",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_in_numbers",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.op_in_with_null",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.filter.op_in_strings",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter.op_in_array_field",
+  "group": "find: filters and operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

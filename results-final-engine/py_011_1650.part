@@ -1,0 +1,402 @@
+[
+ {
+  "name": "op.datesubtract",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "op.dateadd_leap_day",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.dateadd_bad_unit_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.dateadd_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.datediff",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.datediff_week_start_monday",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.datediff_timezone",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "op.datetrunc",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.datetrunc_binsize",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.datetrunc_timezone",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.function_js",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.function_js_object_result",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.function_js_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.replaceroot_field",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.replaceroot_expression",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.replaceroot_non_object_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.replaceroot_missing_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.replaceroot_no_newroot_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.replacewith_field",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.replacewith_literal_object",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.23
+ },
+ {
+  "name": "stage7.unset_string",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.unset_array",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.unset_nested",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.unset_bad_arg_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.unset_empty_array_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.sortbycount_field",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.sortbycount_expression",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.sortbycount_unwind_tags",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.bucket_basic",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.bucket_output",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.bucket_default",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage7.bucket_no_default_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage7.bucket_unsorted_boundaries_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.bucket_too_few_boundaries_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.bucket_by_string",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.sample_size",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.sample_larger_than_input",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.sample_negative_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_two_pipelines",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_with_limit_skip",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_empty_input",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_after_match",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage7.facet_then_unwind",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_forbidden_stage_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_nested_facet_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_empty_spec_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_non_array_error",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage7.facet_lookup_inside",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage7.unionwith_string",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage7.unionwith_pipeline",
+  "group": "aggregation stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ }
+]

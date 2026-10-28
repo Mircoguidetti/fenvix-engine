@@ -1,0 +1,402 @@
+[
+ {
+  "name": "js.accumulator_two_accumulate_args",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "js.accumulator_object_state",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_array_state",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_no_merge",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_no_init",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_no_accumulate",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_no_accumulate_args",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_no_lang",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_bad_lang",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_extra_field",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_init_not_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_accumulate_args_not_array",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_init_args_not_array",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_finalize_not_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_syntax_error",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_throws",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_init_throws",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_count",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_missing_field_arg",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_accumulate_returns_undefined",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_code_objects",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_state_long",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_state_date",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "js.accumulator_merge_not_called",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_finalize_undefined",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_finalize_type",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_ordering",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_global_state",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "js.accumulator_null_key",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_after_sort",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_two_in_one_group",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_with_builtin",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_in_bucket",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_in_bucket_auto",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_in_add_fields_is_an_error",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.accumulator_in_project_is_an_error",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.accumulator_in_window_fields",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.where_returns_object",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_returns_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_returns_zero",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.where_returns_null",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_returns_undefined",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_returns_empty_array",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "js.where_returns_one",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.where_empty_string",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_db_is_undefined",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "js.where_arguments_empty",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.where_obj_alias",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.where_keys_of_this",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.where_global_state",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ }
+]

@@ -15,12 +15,15 @@ setup() {
   up 27048 && up 27044 && up 27052 || $PYV_SYS $G/tls_env.py start > /dev/null 2>&1
 }
 PYV_SYS=$PWD/mongo-tests/.venv/bin/python          # venv: pymongo and cryptography (needed by tls_env.py to make certificates)
+$PYV_SYS -c "import dnslib" 2>/dev/null || $PYV_SYS -m pip install -q dnslib   # the DNS helper of the mongodb+srv tests (dns_srv.py) needs it
 # the suites phase leaves its own engines (S3 store) on 27018/27019: stop them, the gap tests need local-store engines on a fresh directory
 for port in 27018 27019; do
   pf=mongo-tests/out/server-$port.pid
   [ -f $pf ] && kill -TERM "$(cat $pf)" 2>/dev/null
 done
 for _ in $(seq 1 100); do up 27018 || up 27019 || break; sleep 0.3; done
+# every reference mongod keeps ~300 MB of preallocated journal; the fresh_* directories of earlier restarts fill the (small) disk quota of the session
+rm -rf .tools/data/fresh_* 2>/dev/null
 # engines of the TLS pairs and of the auth server always start fresh with the current binary
 $PYV_SYS $G/tls_env.py stop > /dev/null 2>&1
 $G/auth_env.sh stop > /dev/null 2>&1

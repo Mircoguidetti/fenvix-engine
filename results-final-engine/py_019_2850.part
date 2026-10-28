@@ -1,0 +1,402 @@
+[
+ {
+  "name": "cwild.partial.unhinted",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.partial.counts",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.exclusion.create_list",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.exclusion.hinted",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.exclusion.unhinted",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.exclusion.counts",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.array_in_key_0",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.array_in_key_1",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.array_in_key_2",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.array_in_key_3",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.array_in_key_4",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.array_in_key_update",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.array_in_key_build",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "cwild.dotted_key_field",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.maintenance",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "cwild.spec.no_projection",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.projection_overlap_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.projection_key_below_included",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.07
+ },
+ {
+  "name": "cwild.spec.projection_included_below_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.spec.projection_with_prefix_form",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.exclusion_missing_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.exclusion_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.spec.exclusion_only_id",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.inclusion_with_id",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.spec.id_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.spec.empty_projection",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.two_wildcards",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.overlap_same",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.overlap_child_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.overlap_parent_key",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.disjoint",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.spec.unique",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.07
+ },
+ {
+  "name": "cwild.spec.sparse",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.ttl",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.hashed_prefix",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.hashed_wild",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.text_prefix",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "cwild.spec.geo_wild",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "cwild.spec.named",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.spec.v1",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.07
+ },
+ {
+  "name": "cwild.spec.descending_wild",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.spec.dir_both",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.spec.dotted_regular",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.spec.duplicate_other_name",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.spec.same_twice",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cwild.drop_index",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cwild.many_documents",
+  "group": "compound wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "bucketauto.R5.grid_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.R5.wide_decades",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.R5.on_members",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ }
+]

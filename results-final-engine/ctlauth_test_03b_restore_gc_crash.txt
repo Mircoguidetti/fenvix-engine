@@ -1,0 +1,88 @@
+FF.........                                                              [100%]
+=================================== FAILURES ===================================
+_______ test_restore_after_compaction_and_gc_uses_retained_wal_and_ssts ________
+test_03b_restore_gc_crash.py:52: in test_restore_after_compaction_and_gc_uses_retained_wal_and_ssts
+    states, deleted = gc_scenario(srv, bucket, "g")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_03b_restore_gc_crash.py:34: in gc_scenario
+    c[db].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on g to execute command { tenantAdmin: 1, close: true, $db: "g" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on g to execute command { tenantAdmin: 1, close: true, $db: "g" }', 'code': 13, 'codeName': 'Unauthorized'}
+______ test_negative_control_without_wal_retention_the_restore_is_refused ______
+test_03b_restore_gc_crash.py:72: in test_negative_control_without_wal_retention_the_restore_is_refused
+    states, deleted = gc_scenario(srv, bucket, "g")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_03b_restore_gc_crash.py:34: in gc_scenario
+    c[db].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on g to execute command { tenantAdmin: 1, close: true, $db: "g" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on g to execute command { tenantAdmin: 1, close: true, $db: "g" }', 'code': 13, 'codeName': 'Unauthorized'}
+=========================== short test summary info ============================
+FAILED test_03b_restore_gc_crash.py::test_restore_after_compaction_and_gc_uses_retained_wal_and_ssts
+FAILED test_03b_restore_gc_crash.py::test_negative_control_without_wal_retention_the_restore_is_refused
+2 failed, 9 passed in 83.72s (0:01:23)

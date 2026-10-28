@@ -1,0 +1,402 @@
+[
+ {
+  "name": "bits.update_types",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "bits.update_missing_field_is_zero",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "bits.update_several_ops_one_field",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "bits.update_negative",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "bits.update_non_integer_field_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "bits.update_double_field_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "bits.update_unknown_operator_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "bits.update_double_operand_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "bits.update_not_a_document_error",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "bits.update_many",
+  "group": "bitwise operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.let_basic",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "op.let_vars_are_independent",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.let_nested",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.let_missing_var_is_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "op.let_bad_var_name_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "op.let_missing_in_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.let_unknown_arg_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.switch_first_match",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "op.switch_default",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "op.switch_no_match_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.switch_empty_branches_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "op.switch_missing_then_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.switch_unknown_arg_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "op.switch_truthy_values",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "op.mergeobjects_two",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.mergeobjects_with_null_and_missing",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.mergeobjects_single_arg",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.mergeobjects_non_object_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "op.mergeobjects_empty",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.reduce_sum",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.reduce_concat_strings",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "op.reduce_empty_returns_initial",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "op.reduce_null_input",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.reduce_non_array_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.reduce_object_accumulator",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.objecttoarray",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.objecttoarray_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "op.objecttoarray_non_object_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "op.arraytoobject_pairs",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.arraytoobject_kv_docs",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.arraytoobject_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.arraytoobject_bad_pair_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.arraytoobject_non_string_key_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "op.arraytoobject_duplicate_keys_last_wins",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.getfield_string",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.getfield_with_input",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.getfield_missing",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.getfield_null_input",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "op.setfield_add",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.setfield_replace",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ }
+]

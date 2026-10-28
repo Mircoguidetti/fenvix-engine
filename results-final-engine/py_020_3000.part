@@ -1,0 +1,402 @@
+[
+ {
+  "name": "bucketauto.E6.equal_values",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "bucketauto.E6.integer_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E6.output",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E6.negative",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E6.nan",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E6.string",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E6.null_and_missing",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E6.empty",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E6.tiny_huge",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.grid_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E12.wide_decades",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.on_members",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.zeros",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "bucketauto.E12.zero_mix",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "bucketauto.E12.zero_variants",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E12.single",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E12.equal_values",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E12.integer_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E12.output",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.negative",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.nan",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.string",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.null_and_missing",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E12.empty",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E12.tiny_huge",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.grid_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E24.wide_decades",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E24.on_members",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E24.zeros",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.zero_mix",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E24.zero_variants",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.single",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E24.equal_values",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.E24.integer_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.output",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.negative",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.nan",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.string",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.null_and_missing",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.19
+ },
+ {
+  "name": "bucketauto.E24.empty",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.tiny_huge",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.grid_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.wide_decades",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.on_members",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.zeros",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.zero_mix",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "bucketauto.E48.zero_variants",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.single",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E48.equal_values",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "bucketauto.E48.integer_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ }
+]

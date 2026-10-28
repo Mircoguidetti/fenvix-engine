@@ -1,0 +1,15 @@
+. g08.out.creates_in_the_other_database 
+. g08.out.replaces_and_keeps_indexes_and_options 
+. g08.out.same_database_forms 
+. g08.out.argument_errors 
+. g08.merge.into_the_other_database 
+. g08.merge.on_fields_and_unique_indexes 
+. g08.merge.argument_errors 
+. g08.merge.source_missing_on_field_and_dup_in_target 
+. g08.rename.across_databases 
+. g08.rename.keeps_collection_options_and_natural_order 
+. g08.rename.target_exists_and_dropTarget 
+. g08.rename.errors 
+. g08.rename.same_database 
+. g08.rename.larger_collection 
+gaps_node: 14/14 identical to mongod 7.0.45

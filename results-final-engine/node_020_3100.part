@@ -1,0 +1,402 @@
+[
+ {
+  "name": "bucketauto.POWERSOF2.nan",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "bucketauto.POWERSOF2.string",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "bucketauto.POWERSOF2.null_and_missing",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "bucketauto.POWERSOF2.empty",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "bucketauto.POWERSOF2.tiny_huge",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "bucketauto.R5.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "bucketauto.R5.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.R5.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.2
+ },
+ {
+  "name": "bucketauto.R5.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "bucketauto.R10.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "bucketauto.R10.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "bucketauto.R10.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.206
+ },
+ {
+  "name": "bucketauto.R10.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "bucketauto.R20.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "bucketauto.R20.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "bucketauto.R20.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.215
+ },
+ {
+  "name": "bucketauto.R20.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "bucketauto.R40.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "bucketauto.R40.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.R40.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.208
+ },
+ {
+  "name": "bucketauto.R40.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "bucketauto.R80.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "bucketauto.R80.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "bucketauto.R80.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.205
+ },
+ {
+  "name": "bucketauto.R80.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "bucketauto.1-2-5.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "bucketauto.1-2-5.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "bucketauto.1-2-5.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.202
+ },
+ {
+  "name": "bucketauto.1-2-5.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "bucketauto.E6.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "bucketauto.E6.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "bucketauto.E6.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.201
+ },
+ {
+  "name": "bucketauto.E6.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "bucketauto.E12.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "bucketauto.E12.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "bucketauto.E12.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.207
+ },
+ {
+  "name": "bucketauto.E12.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E24.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "bucketauto.E24.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "bucketauto.E24.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.188
+ },
+ {
+  "name": "bucketauto.E24.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "bucketauto.E48.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "bucketauto.E48.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "bucketauto.E48.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.196
+ },
+ {
+  "name": "bucketauto.E48.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "bucketauto.E96.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "bucketauto.E96.decimal_buckets",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "bucketauto.E96.decimal_special",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.196
+ },
+ {
+  "name": "bucketauto.E96.decimal_mixed_types",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "bucketauto.E192.decimal_each",
+  "group": "$bucketAuto granularity",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.256
+ }
+]

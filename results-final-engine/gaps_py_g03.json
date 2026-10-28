@@ -1,0 +1,86 @@
+[
+ {
+  "name": "g03.tls.crud_over_tls",
+  "status": "pass",
+  "real": "{\"n\": {\"$numberInt\": \"51\"}, \"doc\": {\"$numberInt\": \"1\"}, \"big\": {\"$numberInt\": \"9437184\"}, \"agg\": [{\"_id\": null, \"n\": {\"$numberInt\": \"51\"}}]}",
+  "ours": "{\"n\": {\"$numberInt\": \"51\"}, \"doc\": {\"$numberInt\": \"1\"}, \"big\": {\"$numberInt\": \"9437184\"}, \"agg\": [{\"_id\": null, \"n\": {\"$numberInt\": \"51\"}}]}"
+ },
+ {
+  "name": "g03.tls.uri_options",
+  "status": "pass",
+  "real": "{\"tls\": {\"$numberDouble\": \"1.0\"}, \"ssl_alias\": {\"$numberDouble\": \"1.0\"}, \"insecure\": {\"$numberDouble\": \"1.0\"}, \"allowInvalid\": {\"$numberDouble\": \"1.0\"}, \"no_ca\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}}",
+  "ours": "{\"tls\": {\"$numberDouble\": \"1.0\"}, \"ssl_alias\": {\"$numberDouble\": \"1.0\"}, \"insecure\": {\"$numberDouble\": \"1.0\"}, \"allowInvalid\": {\"$numberDouble\": \"1.0\"}, \"no_ca\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}}"
+ },
+ {
+  "name": "g03.tls.wrong_ca_and_plain_client",
+  "status": "pass",
+  "real": "{\"other_ca\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"allow_invalid\": {\"$numberDouble\": \"1.0\"}, \"insecure\": {\"$numberDouble\": \"1.0\"}}",
+  "ours": "{\"other_ca\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"allow_invalid\": {\"$numberDouble\": \"1.0\"}, \"insecure\": {\"$numberDouble\": \"1.0\"}}"
+ },
+ {
+  "name": "g03.tls.hostname_verification",
+  "status": "pass",
+  "real": "{\"ip_in_san\": {\"$numberDouble\": \"1.0\"}, \"san_name\": {\"$numberDouble\": \"1.0\"}, \"not_in_san\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"not_in_san_allowed\": {\"$numberDouble\": \"1.0\"}}",
+  "ours": "{\"ip_in_san\": {\"$numberDouble\": \"1.0\"}, \"san_name\": {\"$numberDouble\": \"1.0\"}, \"not_in_san\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"not_in_san_allowed\": {\"$numberDouble\": \"1.0\"}}"
+ },
+ {
+  "name": "g03.tls.optional_client_certificate",
+  "status": "pass",
+  "real": "{\"no_cert\": {\"$numberDouble\": \"1.0\"}, \"with_cert\": {\"$numberDouble\": \"1.0\"}, \"untrusted_cert\": {\"exc\": \"ServerSelectionTimeoutError\"}}",
+  "ours": "{\"no_cert\": {\"$numberDouble\": \"1.0\"}, \"with_cert\": {\"$numberDouble\": \"1.0\"}, \"untrusted_cert\": {\"exc\": \"ServerSelectionTimeoutError\"}}"
+ },
+ {
+  "name": "g03.tls.self_signed_server_certificate",
+  "status": "pass",
+  "real": "{\"trusted\": {\"$numberDouble\": \"1.0\"}, \"find\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"wrong_ca\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"insecure\": {\"$numberDouble\": \"1.0\"}}",
+  "ours": "{\"trusted\": {\"$numberDouble\": \"1.0\"}, \"find\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"wrong_ca\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"insecure\": {\"$numberDouble\": \"1.0\"}}"
+ },
+ {
+  "name": "g03.tls.client_certificate_required",
+  "status": "pass",
+  "real": "{\"no_cert\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"client\": {\"$numberDouble\": \"1.0\"}, \"client2\": {\"$numberDouble\": \"1.0\"}, \"untrusted\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}}",
+  "ours": "{\"no_cert\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"client\": {\"$numberDouble\": \"1.0\"}, \"client2\": {\"$numberDouble\": \"1.0\"}, \"untrusted\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"plain\": {\"exc\": \"ServerSelectionTimeoutError\"}}"
+ },
+ {
+  "name": "g03.tls.preferTLS_accepts_both",
+  "status": "pass",
+  "real": "{\"plain\": {\"$numberDouble\": \"1.0\"}, \"tls\": {\"$numberDouble\": \"1.0\"}, \"both_see_both\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]]}",
+  "ours": "{\"plain\": {\"$numberDouble\": \"1.0\"}, \"tls\": {\"$numberDouble\": \"1.0\"}, \"both_see_both\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]]}"
+ },
+ {
+  "name": "g03.x509.authenticate_with_client_certificate",
+  "status": "pass",
+  "real": "{\"status\": [{\"user\": \"CN=client1,OU=Dev,O=Clients,C=US\", \"db\": \"$external\"}], \"own_db_write\": \"ok\", \"other_db_write\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"no_user_cert\": {\"code\": {\"$numberInt\": \"11\"}, \"codeName\": \"UserNotFound\"}, \"explicit_user\": \"ok\", \"wrong_user\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"unauthenticated_cert_only\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"after_drop\": {\"code\": {\"$numberInt\": \"11\"}, \"codeNa",
+  "ours": "{\"status\": [{\"user\": \"CN=client1,OU=Dev,O=Clients,C=US\", \"db\": \"$external\"}], \"own_db_write\": \"ok\", \"other_db_write\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"no_user_cert\": {\"code\": {\"$numberInt\": \"11\"}, \"codeName\": \"UserNotFound\"}, \"explicit_user\": \"ok\", \"wrong_user\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}, \"unauthenticated_cert_only\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}, \"after_drop\": {\"code\": {\"$numberInt\": \"11\"}, \"codeNa"
+ },
+ {
+  "name": "g03.tls.scram_over_tls_with_auth",
+  "status": "pass",
+  "real": "{\"find\": [], \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}",
+  "ours": "{\"find\": [], \"insert\": {\"code\": {\"$numberInt\": \"13\"}, \"codeName\": \"Unauthorized\"}}"
+ },
+ {
+  "name": "g03.srv.basic_and_defaults",
+  "status": "pass",
+  "real": "{\"find\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"nodes\": [\"node1.example.test\"], \"tls_default_on\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"tls_off\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"ssl_off\": {\"exc\": \"ServerSelectionTimeoutError\"}}",
+  "ours": "{\"find\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"nodes\": [\"node1.example.test\"], \"tls_default_on\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"tls_off\": {\"exc\": \"ServerSelectionTimeoutError\"}, \"ssl_off\": {\"exc\": \"ServerSelectionTimeoutError\"}}"
+ },
+ {
+  "name": "g03.srv.preferTLS_server_with_tls_false",
+  "status": "pass",
+  "real": "{\"tls\": {\"$numberDouble\": \"1.0\"}, \"plain\": {\"$numberDouble\": \"1.0\"}}",
+  "ours": "{\"tls\": {\"$numberDouble\": \"1.0\"}, \"plain\": {\"$numberDouble\": \"1.0\"}}"
+ },
+ {
+  "name": "g03.srv.txt_record_supplies_authSource",
+  "status": "pass",
+  "real": "{\"root_authSource_from_txt\": \"ok\", \"user_in_other_db_needs_override\": \"ok\", \"user_default_source_from_txt\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}",
+  "ours": "{\"root_authSource_from_txt\": \"ok\", \"user_in_other_db_needs_override\": \"ok\", \"user_default_source_from_txt\": {\"code\": {\"$numberInt\": \"18\"}, \"codeName\": \"AuthenticationFailed\"}}"
+ },
+ {
+  "name": "g03.srv.errors",
+  "status": "pass",
+  "real": "{\"no_such_name\": {\"exc\": \"ConfigurationError\"}, \"outside_parent_domain\": {\"exc\": \"ConfigurationError\"}, \"txt_disallowed_option\": {\"exc\": \"ConfigurationError\"}, \"srvServiceName\": {\"$numberDouble\": \"1.0\"}, \"srvMaxHosts_with_replicaSet\": {\"exc\": \"InvalidURI\"}}",
+  "ours": "{\"no_such_name\": {\"exc\": \"ConfigurationError\"}, \"outside_parent_domain\": {\"exc\": \"ConfigurationError\"}, \"txt_disallowed_option\": {\"exc\": \"ConfigurationError\"}, \"srvServiceName\": {\"$numberDouble\": \"1.0\"}, \"srvMaxHosts_with_replicaSet\": {\"exc\": \"InvalidURI\"}}"
+ }
+]

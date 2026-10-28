@@ -1,0 +1,402 @@
+[
+ {
+  "name": "stage.addfields_nested_dotted_into_existing_subdoc",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_nested_object_form_merges",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_nested_over_non_document_replaces",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.addfields_nested_into_array_of_docs",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_array_literal",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_literal_values_kept_as_is",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_missing_source_removes_nothing_new",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_missing_source_over_existing_field",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.19
+ },
+ {
+  "name": "stage.addfields_remove_variable_deletes_field",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_id_overwrite",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage.addfields_root_copy",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_then_match_on_new_field",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_then_group",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.set_alias",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.set_alias_overwrite",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.addfields_empty_spec_is_noop",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.set_empty_spec_is_noop",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.addfields_non_object_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.set_non_object_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_path_collision_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_unknown_operator_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_string_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "stage.unwind_object_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_include_array_index",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "stage.unwind_index_type_is_long",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_preserve_null_and_empty",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_preserve_with_index",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_preserve_false_explicit",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_array_of_docs",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_array_of_docs_preserve",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.unwind_then_group_sum",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.unwind_nested_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_nested_field_path_in_subdoc",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.unwind_nonexistent_field_drops_all",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.unwind_nonexistent_field_preserved",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_scalar_is_single_element",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_index_field_nested_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_index_overwrites_existing_field",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_twice",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_after_unwind_array_of_arrays",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage.unwind_then_project_field_from_element",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_then_sort_by_element",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_preserves_order_and_duplicates",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_no_dollar",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_object_no_dollar",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_missing_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_path_not_string",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_index_not_string",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.unwind_error_index_dollar_prefixed",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.unwind_error_preserve_not_bool",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ }
+]

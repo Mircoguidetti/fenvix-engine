@@ -1,0 +1,402 @@
+[
+ {
+  "name": "admin.ping",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.131
+ },
+ {
+  "name": "admin.hello",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.049
+ },
+ {
+  "name": "admin.ismaster",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.045
+ },
+ {
+  "name": "admin.buildinfo",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.043
+ },
+ {
+  "name": "admin.getparameter_fcv",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.061
+ },
+ {
+  "name": "admin.unknown_command",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.033
+ },
+ {
+  "name": "admin.list_databases",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.289
+ },
+ {
+  "name": "admin.list_databases_namesonly_shape",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "admin.session_insert",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "admin.server_api_client",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.076
+ },
+ {
+  "name": "admin.legacy_op_query_handshake",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.046
+ },
+ {
+  "name": "admin.unacknowledged_write_w0",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 1.117
+ },
+ {
+  "name": "admin.client_compression_requested",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.284
+ },
+ {
+  "name": "admin.empty_db_reads",
+  "group": "handshake and admin",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.174
+ },
+ {
+  "name": "insert.one_id_int",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "insert.one_id_string",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "insert.one_id_float",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "insert.one_id_double_integral",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "insert.one_id_int64",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "insert.one_id_date",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "insert.one_id_bool",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "insert.one_id_doc",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "insert.one_id_null",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "insert.one_id_objectid",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "insert.one_no_id_generated",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.174
+ },
+ {
+  "name": "insert.id_first_when_generated",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "insert.id_moved_first_when_supplied_last",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.176
+ },
+ {
+  "name": "insert.id_numeric_equivalence",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.184
+ },
+ {
+  "name": "insert.many_ordered",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "insert.many_unordered",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "insert.many_generated_ids",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "insert.dup_id_int",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "insert.dup_id_string",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "insert.dup_id_objectid",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "insert.dup_id_double",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "insert.dup_id_document",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "insert.dup_in_batch_ordered",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "insert.dup_in_batch_unordered",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "insert.dup_against_existing_batch",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "insert.array_id_rejected",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.081
+ },
+ {
+  "name": "insert.1000_docs",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.492
+ },
+ {
+  "name": "insert.1000_docs_unordered",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.284
+ },
+ {
+  "name": "insert.types_roundtrip",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "insert.big_document",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.345
+ },
+ {
+  "name": "insert.field_order_preserved",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "insert.unique_single",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "insert.unique_compound",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "insert.unique_missing_field_is_null",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "insert.unique_in_batch",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "insert.unique_numeric_equivalence",
+  "group": "insert",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ }
+]

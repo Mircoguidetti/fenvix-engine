@@ -1,0 +1,402 @@
+[
+ {
+  "name": "geo.near_with_sort_by_field",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.173
+ },
+ {
+  "name": "geo.near_limit",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "geo.near_skip_limit",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.near_projection_meta_distance",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.near_projection_meta_point",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.near_sort_by_meta_distance",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "geo.meta_distance_without_near_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "geo.near_with_other_filter",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "geo.near_in_and",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "geo.near_with_name_filter_regex",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "geo.near_in_or_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "geo.near_in_nor_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "geo.near_in_not_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "geo.near_in_elem_match_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.near_without_index_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "geo.near_sphere_without_index_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "geo.near_wrong_field_index_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "geo.near_after_drop_index_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.191
+ },
+ {
+  "name": "geo.near_two_near_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "geo.near_and_nearsphere_same_field_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "geo.near_with_within_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "geo.near_with_text_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "geo.near_count_documents_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "geo.near_count_command",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "geo.near_distinct",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "geo.near_in_aggregate_match_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "geo.near_in_lookup_pipeline_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "geo.near_update_many_filter",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "geo.near_delete_many_filter",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.near_find_one_and_update",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "geo.near_find_one",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "geo.near_hint_index",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "geo.near_hint_other_index",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "geo.near_max_negative_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "geo.near_min_negative_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "geo.near_max_string_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "geo.near_min_gt_max",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "geo.near_bad_geometry_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.near_geometry_polygon_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "geo.near_no_geometry_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "geo.near_scalar_arg_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "geo.near_string_arg_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "geo.near_array_one_elem_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "geo.near_array_non_numeric_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "geo.near_legacy_out_of_range_2dsphere",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "geo.near_point_at_pole",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.187
+ },
+ {
+  "name": "geo.near_point_antimeridian",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.19
+ },
+ {
+  "name": "geo.near_same_point_as_query",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.near_empty_collection",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "geo.near_all_docs_without_loc",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ }
+]

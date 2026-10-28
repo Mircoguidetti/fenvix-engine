@@ -1,0 +1,402 @@
+[
+ {
+  "name": "expr_op.divide_by_zero_and_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "expr_op.mod",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.251
+ },
+ {
+  "name": "expr_op.mod_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "expr_op.math_mixed_nested",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "expr_op.concat",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.249
+ },
+ {
+  "name": "expr_op.concat_type_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "expr_op.tolower_toupper",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.248
+ },
+ {
+  "name": "expr_op.tolower_toupper_non_strings",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "expr_op.tolower_toupper_arity_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "expr_op.size",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "expr_op.size_non_array_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "expr_op.isarray",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.252
+ },
+ {
+  "name": "expr_op.arrayelemat",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "expr_op.arrayelemat_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "expr_op.concatarrays",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.242
+ },
+ {
+  "name": "expr_op.concatarrays_non_array_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "expr_op.setunion",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.249
+ },
+ {
+  "name": "expr_op.setunion_non_array_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.slice",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.248
+ },
+ {
+  "name": "expr_op.slice_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "expr_op.filter",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "expr_op.filter_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "expr_op.filter_uses_outer_fields",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "expr_op.filter_variable_shadowing_root",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "expr_op.map",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.247
+ },
+ {
+  "name": "expr_op.map_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "expr_op.map_nested",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "expr_op.variables",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "expr_op.variable_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "expr_op.field_paths",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "expr_op.field_path_array_of_docs",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "expr_op.field_path_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "expr_op.datetostring_default_format",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "expr_op.datetostring_formats",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.24
+ },
+ {
+  "name": "expr_op.datetostring_week_formats",
+  "group": "aggregation expressions",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "expr_op.datetostring_timezone_utc_variants",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "expr_op.datetostring_onnull",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "expr_op.datetostring_from_objectid_and_timestamp",
+  "group": "aggregation expressions",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "expr_op.datetostring_unknown_timezone_name_extra",
+  "group": "aggregation expressions",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "expr_op.datetostring_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "expr_op.datetostring_other_timezones",
+  "group": "aggregation expressions",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "expr_op.datetostring_range",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "expr_op.datetostring_julian_and_weekday",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "expr_op.unsupported_operators_extra",
+  "group": "aggregation expressions",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "stage.project_rename_field",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.project_include_and_computed",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "stage.project_computed_order_follows_spec_after_included",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "stage.project_computed_replaces_existing_in_place",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.project_id_excluded",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "stage.project_id_computed",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ }
+]

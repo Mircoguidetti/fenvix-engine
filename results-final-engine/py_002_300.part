@@ -1,0 +1,402 @@
+[
+ {
+  "name": "coll.create_existing_is_idempotent",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "coll.create_existing_with_different_options_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "coll.implicit_creation_by_insert",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "coll.drop_existing",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "coll.drop_missing_is_ok",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "coll.drop_then_recreate_empty",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "coll.drop_removes_indexes",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "coll.special_names",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.2
+ },
+ {
+  "name": "coll.prefix_collections_isolated",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "coll.invalid_name_dollar",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.03
+ },
+ {
+  "name": "idx.list_default",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.list_missing_collection_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.04
+ },
+ {
+  "name": "idx.create_single_default_name",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.create_compound_and_desc",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.create_unique_flag_listed",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.create_twice_is_noop",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.create_indexes_response",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.27
+ },
+ {
+  "name": "idx.same_name_different_key_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.same_key_different_name_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.queries_unaffected_by_index",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "idx.extra.drop_index",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "coll.extra.rename",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "coll.extra.coll_stats",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "coll.extra.db_stats",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "persist.idle_close_then_read",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 12.14
+ },
+ {
+  "name": "persist.idle_close_then_write_upgrades",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 24.24
+ },
+ {
+  "name": "persist.read_only_wake_stays_reader",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "persist.forced_close_cycles",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.73
+ },
+ {
+  "name": "persist.1000_docs_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.48
+ },
+ {
+  "name": "persist.indexes_and_collections_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "persist.drop_after_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.24
+ },
+ {
+  "name": "persist.cursor_survives_tenant_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "persist.id_types_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.13
+ },
+ {
+  "name": "persist.restart_server_graceful",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 7.54
+ },
+ {
+  "name": "persist.restart_server_sigkill",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 4.24
+ },
+ {
+  "name": "persist.drop_database",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.35
+ },
+ {
+  "name": "persist.drop_database_races_background_compaction",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 2.11
+ },
+ {
+  "name": "persist.many_collections",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.6
+ },
+ {
+  "name": "concurrency.parallel_inserts_same_db",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.74
+ },
+ {
+  "name": "concurrency.parallel_inc_same_doc",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.49
+ },
+ {
+  "name": "concurrency.parallel_dbs",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.95
+ },
+ {
+  "name": "concurrency.reads_during_writes",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.62
+ },
+ {
+  "name": "regex.string_basic",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.string_anchored",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.string_end_anchor",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.options_i",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.options_before_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "regex.options_m",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "regex.no_options_m_no_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "regex.options_s",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

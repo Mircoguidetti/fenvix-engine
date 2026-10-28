@@ -1,0 +1,402 @@
+[
+ {
+  "name": "js.mapreduce_scope_fn",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "js.mapreduce_scope_value_types",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "js.mapreduce_scope_in_reduce",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "js.mapreduce_scope_in_finalize",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_globals_persist_between_map_calls",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.137
+ },
+ {
+  "name": "js.mapreduce_reduce_sees_global_from_map",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.mapreduce_limit_with_query",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "js.mapreduce_empty_values",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "js.mapreduce_output__id_types",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "js.mapreduce_json_large_key",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.mapreduce_emit_null_value",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.mapreduce_with_cursor",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "js.mapreduce_comment_maxtimems",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.138
+ },
+ {
+  "name": "js.mapreduce_readconcern",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "js.mapreduce_writeconcern",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_let",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.mapreduce_map_using_let",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "js.mapreduce_out_replace_existing",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.173
+ },
+ {
+  "name": "js.mapreduce_out_merge_existing",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "js.mapreduce_out_reduce_existing",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "js.mapreduce_out_reduce_existing_finalize",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "js.mapreduce_out_reduce_twice",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "js.mapreduce_out_merge_twice_with_other_query",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.176
+ },
+ {
+  "name": "js.mapreduce_out_replace_keeps_indexes",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.302
+ },
+ {
+  "name": "js.mapreduce_out_into_source_collection",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "js.mapreduce_results_reply_shape",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "js.mapreduce_out_reply_shape",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.194
+ },
+ {
+  "name": "js.mapreduce_alias_lowercase",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "js.mapreduce_large_input",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.594
+ },
+ {
+  "name": "js.mapreduce_unicode_keys",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "js.mapreduce_typed_values_in_reduce",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.mapreduce_this_is_the_document",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "js.mapreduce_emit_documents",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "js.mapreduce_not_in_transaction_commands_unknown_db",
+  "group": "server-side JavaScript",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.061
+ },
+ {
+  "name": "tail.bucket_auto_7_in_2",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.bucket_auto_7_in_3",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.bucket_auto_7_in_4",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_7_in_5",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "tail.bucket_auto_10_in_2",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.bucket_auto_10_in_3",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "tail.bucket_auto_10_in_4",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.bucket_auto_10_in_5",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "tail.bucket_auto_11_in_2",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "tail.bucket_auto_11_in_3",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "tail.bucket_auto_11_in_4",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.bucket_auto_11_in_5",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_13_in_2",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_13_in_3",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_13_in_4",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "tail.bucket_auto_13_in_5",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ }
+]

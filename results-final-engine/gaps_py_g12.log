@@ -1,0 +1,9 @@
+. g12.py.create_indexes_and_information 
+. g12.py.collection_options 
+. g12.py.cursor_option_members 
+. g12.py.raw_batch_and_command_cursors 
+. g12.py.change_stream_cursors 
+. g12.py.session_times 
+. g12.py.gridfs_legacy 
+. g12.py.change_stream_expanded_ddl_events 
+gaps_py: 8/8 identical to mongod 7.0.45

@@ -1,0 +1,402 @@
+[
+ {
+  "name": "idx.plan_hint_by_name",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.376
+ },
+ {
+  "name": "idx.plan_hint_by_pattern",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.367
+ },
+ {
+  "name": "idx.plan_hint_natural",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.plan_hint_natural_reverse",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "idx.plan_hint_unconstrained_field",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "idx.plan_id_lookup",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "idx.plan_multikey_flag",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "idx.plan_sparse_unconstrained_not_used",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.265
+ },
+ {
+  "name": "idx.plan_sparse_used_when_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.266
+ },
+ {
+  "name": "idx.plan_partial_used_when_implied",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.262
+ },
+ {
+  "name": "idx.plan_partial_not_used_when_not_implied",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "idx.stats_eq_keys_docs",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "idx.stats_range_keys_docs",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.262
+ },
+ {
+  "name": "idx.stats_residual_filter_docs",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "idx.stats_collscan_docs",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "idx.stats_sort_limit_early_stop",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "idx.stats_unique_point",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "idx.res_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.257
+ },
+ {
+  "name": "idx.res_eq_missing_value",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "idx.res_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "idx.res_range_desc_index",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.262
+ },
+ {
+  "name": "idx.res_in",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "idx.res_in_desc_index",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.259
+ },
+ {
+  "name": "idx.res_string_prefix_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.257
+ },
+ {
+  "name": "idx.res_compound_eq_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.252
+ },
+ {
+  "name": "idx.res_compound_desc_second",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.res_compound_desc_first",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.256
+ },
+ {
+  "name": "idx.res_compound_in_then_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.255
+ },
+ {
+  "name": "idx.res_nested",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "idx.res_multikey_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.res_multikey_range_both_bounds",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.251
+ },
+ {
+  "name": "idx.res_multikey_elemmatch_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.252
+ },
+ {
+  "name": "idx.res_multikey_in",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.253
+ },
+ {
+  "name": "idx.res_multikey_sort",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.256
+ },
+ {
+  "name": "idx.res_multikey_whole_array_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "idx.res_multikey_empty_array",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "idx.res_null_matches_missing_and_null",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "idx.res_exists_true",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "idx.res_type_bracketing_numbers_only",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.249
+ },
+ {
+  "name": "idx.res_type_bracketing_strings_only",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.257
+ },
+ {
+  "name": "idx.res_mixed_numeric_types",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.736
+ },
+ {
+  "name": "idx.res_big_int64_distinct",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.255
+ },
+ {
+  "name": "idx.res_negative_and_zero",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.256
+ },
+ {
+  "name": "idx.res_date_range",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.259
+ },
+ {
+  "name": "idx.res_objectid_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.255
+ },
+ {
+  "name": "idx.res_bool_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.251
+ },
+ {
+  "name": "idx.res_embedded_document_eq",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.262
+ },
+ {
+  "name": "idx.res_or_both_indexed",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.372
+ },
+ {
+  "name": "idx.res_or_one_unindexed",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.247
+ },
+ {
+  "name": "idx.res_and_with_in_and_ne",
+  "group": "secondary indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ }
+]

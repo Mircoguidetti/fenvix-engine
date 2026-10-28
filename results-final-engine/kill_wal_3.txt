@@ -1,0 +1,3 @@
+s3 durable 0 {'secs': 60.0, 'acked_ids': 60727, 'acked_writes_before_kill': 121407, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.127}
+TOTAL s3 durable {'acked_ids': 60727, 'lost_inserts': 0, 'lost_updates': 0}
+DONE

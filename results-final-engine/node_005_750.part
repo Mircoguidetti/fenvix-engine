@@ -1,0 +1,402 @@
+[
+ {
+  "name": "query.type_alias_timestamp_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "query.type_alias_decimal_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "query.type_alias_minkey_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "query.type_alias_maxkey_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "query.type_code_1_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "query.type_code_2_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "query.type_code_3_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "query.type_code_4_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "query.type_code_5_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "query.type_code_7_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_code_8_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_code_9_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "query.type_code_10_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "query.type_code_11_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "query.type_code_16_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "query.type_code_18_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "query.type_code_19_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "query.type_code_-1_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "query.type_code_127_on_n",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_on_array_field_array_alias",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "query.type_on_array_field_element_types",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "query.type_array_matches_nested_array_element_only_top_level",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_list_of_types",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "query.type_list_with_number",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "query.type_list_numeric_codes",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "query.type_missing_field_no_match",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "query.type_null_field",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "query.type_object_nested",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "query.type_object_nested_path",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "query.type_double_value",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_nan_is_double",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "query.type_bindata_field",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "query.type_number_alias_with_int64",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "query.type_not",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "query.type_double_code_arg",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "query.type_unknown_alias_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "query.type_invalid_code_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_zero_code_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "query.type_fraction_code_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "query.type_empty_list_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.type_bool_arg_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "query.type_null_arg_error",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "query.type_in_aggregate_match",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "query.mod_basic",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "query.mod_zero_remainder",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "query.mod_negative_divisor",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "query.mod_double_args_truncated",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "query.mod_on_array_elements",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "query.mod_non_numeric_values_ignored",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "query.mod_not",
+  "group": "query operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ }
+]

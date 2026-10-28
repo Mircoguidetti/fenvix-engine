@@ -1,0 +1,402 @@
+[
+ {
+  "name": "hashed.eq_string_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_numeric_string_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_bool_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_doc_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_doc_double_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_doc_order_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_doc_array_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.eq_null_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.eq_empty_string_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_big_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.eq_huge_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_nan_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_inf_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_neg_zero_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_zero_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_long_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.eq_decimal_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.eq_date_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_oid_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_array_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "hashed.eq_op_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.in_list_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.in_empty_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.in_doc_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.in_array_member_error_free_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.in_regex_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.nin_list_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.ne_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.gt_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.range_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.lt_string_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.exists_true_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.exists_false_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.regex_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.type_string_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.not_eq_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.eq_and_range_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "hashed.or_two_eq_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.or_eq_other_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.all_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.and_eq_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.eq_and_eq_conflict_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.elem_eq_on_scalar_field_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.size_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.mod_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.count_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.count_in_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.sort_asc_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "hashed.sort_desc_limit_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "hashed.distinct_hint",
+  "group": "hashed index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ }
+]

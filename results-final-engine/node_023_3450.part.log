@@ -1,0 +1,60 @@
+F js.where_expr_113
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+F js.where_expr_114
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+F js.where_expr_115
+    step 0 insert_many
+    real: {"inserted_ids":[{"$numberInt":"1"},{"$numberInt":"2"},{"$numberInt":"3"}]}
+    ours: {"__bulk_error__":{"nInserted":{"$numberInt":"0"},"nMatched":{"$numberInt":"0"},"nModified":{"$numberInt":"0"},"nRemoved":{"$numberInt":"0"},"nUpserted":{"$numberInt":"0"},"writeErrors":[]}}
+. js.value_expr_116
+. js.value_expr_117
+. js.value_expr_118
+. js.where_expr_119
+. js.value_expr_120
+. js.where_expr_121
+. js.value_expr_122
+. js.value_expr_123
+. js.value_expr_124
+. js.value_expr_125
+. js.value_expr_126
+. js.value_expr_127
+. js.value_expr_128
+. js.value_expr_129
+. js.value_expr_130
+. js.value_expr_131
+. js.value_expr_132
+. js.value_expr_133
+. js.value_expr_134
+. js.value_expr_135
+. js.value_expr_136
+. js.value_expr_137
+. js.value_expr_138
+. js.value_expr_139
+. js.value_expr_140
+. js.value_expr_141
+. js.value_expr_142
+. js.value_expr_143
+. js.value_expr_144
+. js.value_expr_145
+. js.value_expr_146
+. js.value_expr_147
+. js.value_expr_148
+. js.value_expr_149
+. js.value_expr_150
+. js.value_expr_151
+. js.value_expr_152
+. js.value_expr_153
+. js.value_expr_154
+. js.value_expr_155
+. js.value_expr_156
+. js.value_expr_157
+. js.value_expr_158
+. js.value_expr_159
+. js.value_expr_160
+. js.value_expr_161
+. js.value_expr_162
+core: 47/50 passed

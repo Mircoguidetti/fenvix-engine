@@ -1,0 +1,402 @@
+[
+ {
+  "name": "find.sort.asc",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.desc",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.sort.string",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.multi",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.mixed_types",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.sort.array_asc",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.array_desc",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.sort.tags_array",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.nested",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.missing_field",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.sort.id_desc",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.sort.nested_geo_desc",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.skip_limit",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.limit_without_sort_count",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.filter_sort_project_skip_limit",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.find_one",
+  "group": "find: sort, skip, limit",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cursor.batch_size_small",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cursor.paging_1000",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.37
+ },
+ {
+  "name": "cursor.default_first_batch_101",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "cursor.kill_midway",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "cursor.getmore_unknown_id",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cursor.aggregate_batches",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "cursor.list_collections_batches",
+  "group": "cursors: batchSize, getMore, killCursors",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "count.count_documents",
+  "group": "count and distinct",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.22
+ },
+ {
+  "name": "count.estimated",
+  "group": "count and distinct",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "count.legacy_command",
+  "group": "count and distinct",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "count.after_writes",
+  "group": "count and distinct",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "distinct.basic",
+  "group": "count and distinct",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "aggregate.match_only",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.match_group_count",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "aggregate.count_documents_shape",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.group_by_field_sum",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.group_sum_avg_min_max",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.group_all",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.group_count_accumulator",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.group_sum_qty_int_types",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.group_sum_constant",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "aggregate.group_compound_id",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.group_missing_field_key",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "aggregate.group_numeric_key_equivalence",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.group_avg_ignores_non_numeric",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.group_min_max_mixed_types",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.group_min_max_strings",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "aggregate.group_dotted_field",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.group_then_sort_limit",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.sort_skip_limit",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.project_include",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.project_exclude",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "aggregate.project_no_id",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "aggregate.project_field_ref",
+  "group": "aggregate",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ }
+]

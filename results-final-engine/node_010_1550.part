@@ -1,0 +1,402 @@
+[
+ {
+  "name": "op.min_args",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "op.max_array",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.min_array_with_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "op.sum_args",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "op.sum_array",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "op.sum_ignores_non_numeric",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "op.avg_args",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "op.avg_array",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "op.avg_no_numbers_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.cmp_values",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.type_values",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.bsonsize",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.binarysize_string",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.abs",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.abs_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "op.ceil",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "op.floor",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "op.round_places",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "op.round_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.round_bad_place_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.trunc",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.sqrt",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "op.sqrt_negative_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.pow",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.pow_zero_negative_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.exp_ln_log",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.ln_zero_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "op.log_bad_base_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.223
+ },
+ {
+  "name": "op.arithmetic_types",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "op.substr_family",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.substr_numbers_coerced",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.substrbytes_continuation_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.strlen",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.strlen_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.strcasecmp",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "op.trim_default",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "op.trim_chars",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "op.trim_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "op.trim_non_string_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "op.split",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "op.split_null",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.split_empty_delimiter_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "op.indexofbytes",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "op.indexofcp",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "op.replaceone_all",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "op.replace_non_string_error",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "op.regexmatch",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "op.regexmatch_regex_literal",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "op.regexfind",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "op.regexfindall",
+  "group": "aggregation operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ }
+]

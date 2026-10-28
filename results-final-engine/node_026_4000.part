@@ -1,0 +1,402 @@
+[
+ {
+  "name": "tail.window_multiple_outputs",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "tail.window_then_match",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "tail.window_no_sort_whole",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "tail.window_expr_partition",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "tail.window_empty_collection",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "tail.window_error_no_output",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.window_error_unknown_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "tail.window_error_output_not_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.window_error_rank_without_sort",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.window_error_bad_window",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "tail.window_error_bad_bound",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "tail.window_error_unknown_operator",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "tail.window_error_range_without_sort",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "tail.graph_up",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.graph_down",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.graph_max_depth",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "tail.graph_max_depth_zero",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "tail.graph_depth_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.254
+ },
+ {
+  "name": "tail.graph_restrict",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "tail.graph_start_array",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.graph_start_missing",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "tail.graph_cycle",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "tail.graph_array_connect_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.graph_other_collection",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "tail.graph_error_missing_from",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "tail.graph_error_unknown_option",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "tail.graph_error_negative_depth",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "tail.graph_error_not_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.redact_keep_prune",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "tail.redact_descend",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.redact_always_keep",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "tail.redact_always_prune",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "tail.redact_always_descend",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "tail.redact_switch",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "tail.redact_bad_value_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "tail.redact_number_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "tail.documents_basic",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.025
+ },
+ {
+  "name": "tail.documents_pipeline",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.022
+ },
+ {
+  "name": "tail.documents_empty",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.027
+ },
+ {
+  "name": "tail.documents_expression",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.024
+ },
+ {
+  "name": "tail.documents_group",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.025
+ },
+ {
+  "name": "tail.documents_not_first_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.026
+ },
+ {
+  "name": "tail.documents_non_object_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.022
+ },
+ {
+  "name": "tail.documents_not_array_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.023
+ },
+ {
+  "name": "tail.documents_on_collection_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.database_aggregate_without_documents_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.02
+ },
+ {
+  "name": "tail.plan_cache_stats_fresh",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.percentile_group",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "tail.percentile_group_by",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "tail.median_group",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

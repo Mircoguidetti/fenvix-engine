@@ -1,0 +1,21 @@
+. g05.expr.sin 
+. g05.expr.cos 
+. g05.expr.tan 
+. g05.expr.asin 
+. g05.expr.acos 
+. g05.expr.atan 
+. g05.expr.sinh 
+. g05.expr.cosh 
+. g05.expr.tanh 
+. g05.expr.asinh 
+. g05.expr.acosh 
+. g05.expr.atanh 
+. g05.expr.degreesToRadians 
+. g05.expr.radiansToDegrees 
+. g05.expr.atan2 
+. g05.expr.bitwise 
+. g05.expr.stdDev_as_expression 
+. g05.sum_avg.double_accumulation 
+. g05.lookup.let_variables 
+. g05.stage.changeStreamSplitLargeEvent 
+gaps_node: 20/20 identical to mongod 7.0.45

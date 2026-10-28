@@ -1,0 +1,402 @@
+[
+ {
+  "name": "wild.create_ttl_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.09
+ },
+ {
+  "name": "wild.create_partial",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.create_compound_without_projection_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "wild.create_compound_with_projection",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.create_wildcard_first_without_projection_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "wild.create_two_wildcards_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.07
+ },
+ {
+  "name": "wild.create_subtree_then_regular",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.create_hashed_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.07
+ },
+ {
+  "name": "wild.create_text_wildcard",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.create_wildcard_in_middle_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.07
+ },
+ {
+  "name": "wild.create_dollar_field_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "wild.create_dollar_prefix_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.06
+ },
+ {
+  "name": "wild.create_wildcard_and_regular_same_collection",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.create_options_conflict",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.drop",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.create_on_collection_with_docs",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "wild.eq_int",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.range_gt",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.range_both",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.eq_string",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.eq_null",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "wild.eq_doc",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.path_eq",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "wild.path_range",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.deep_path",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "wild.nested_eq",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "wild.path_into_array",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.path_into_array_docs",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.eq_array",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.arr_scalar",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.arr_doc_path",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.eq_empty_doc",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.eq_empty_array",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.exists_true",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.exists_false",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.exists_nested",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.deep_exists",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.in_list",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.in_with_null",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.eq_bool",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "wild.ne",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.lt",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.type_string",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.or_indexed",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "wild.and_two",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.id_eq",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.regex_prefix",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.regex_any",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.eq_date",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.array_element_range",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

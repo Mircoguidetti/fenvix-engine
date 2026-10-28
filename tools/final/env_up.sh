@@ -22,7 +22,7 @@ start() {  # port dbpath extra...
   local port=$1 d=$2; shift 2
   up $port && return 0
   mkdir -p $d; chown -R mongotest $d
-  su mongotest -c "ulimit -n 20000; $BIN/mongod --port $port --dbpath $d --bind_ip 127.0.0.1 --setParameter ttlMonitorSleepSecs=1 $* --fork --logpath $d/mongod.log" > /dev/null 2>&1
+  su mongotest -c "ulimit -n 20000; $BIN/mongod --port $port --dbpath $d --bind_ip 127.0.0.1 --setParameter ttlMonitorSleepSecs=1 --oplogSize 128 --wiredTigerCacheSizeGB 0.25 $* --fork --logpath $d/mongod.log" > /dev/null 2>&1
 }
 start 27017 /tmp/final-mongo/sa
 start 27020 /tmp/final-mongo/rs --replSet rs0

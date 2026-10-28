@@ -1,0 +1,15 @@
+. g03.tls.crud_over_tls 
+. g03.tls.uri_options 
+. g03.tls.wrong_ca_and_plain_client 
+. g03.tls.hostname_verification 
+. g03.tls.optional_client_certificate 
+. g03.tls.self_signed_server_certificate 
+. g03.tls.client_certificate_required 
+. g03.tls.preferTLS_accepts_both 
+. g03.x509.authenticate_with_client_certificate 
+. g03.tls.scram_over_tls_with_auth 
+. g03.srv.basic_and_defaults 
+. g03.srv.preferTLS_server_with_tls_false 
+. g03.srv.txt_record_supplies_authSource 
+. g03.srv.errors 
+gaps_node: 14/14 identical to mongod 7.0.45

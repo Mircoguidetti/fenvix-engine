@@ -1,0 +1,402 @@
+[
+ {
+  "name": "stage.project_id_included_explicit",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.213
+ },
+ {
+  "name": "stage.project_nested_computed_dotted",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "stage.project_nested_computed_object",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "stage.project_nested_include_dotted",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.project_nested_include_object_form",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "stage.project_nested_include_and_computed_same_parent",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "stage.project_computed_missing_field_omitted",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "stage.project_computed_null_kept",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.138
+ },
+ {
+  "name": "stage.project_literal_string_constant",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "stage.project_literal_operator",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "stage.project_number_constant_is_inclusion",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "stage.project_boolean_true_inclusion",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "stage.project_array_expression",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "stage.project_array_of_docs_field_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "stage.project_array_of_docs_nested_include",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "stage.project_array_of_docs_nested_computed",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "stage.project_exclusion_still_works",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "stage.project_exclusion_nested",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.project_cond_expression",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "stage.project_size_of_array",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "stage.project_ifnull",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.project_concat",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "stage.project_remove_variable",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "stage.project_root_variable",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "stage.project_exclusion_and_inclusion_mix_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "stage.project_computed_and_exclusion_mix_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "stage.project_empty_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "stage.project_non_object_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "stage.project_unknown_expression_operator_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "stage.project_path_collision_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "stage.project_path_collision_reverse_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "stage.project_path_collision_include_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "stage.project_unknown_operator_nested_in_args_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "stage.project_unknown_operator_in_subdocument_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "stage.project_computed_after_included_even_if_earlier_in_document",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "stage.project_computed_before_included_in_spec",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "stage.project_id_computed_after_included",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "stage.project_id_computed_between_other_computed",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "stage.project_dotted_computed_and_included_same_parent_order",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "stage.addfields_two_operators_in_expression_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "stage.addfields_nested_into_nested_arrays",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.addfields_object_form_into_arrays",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "stage.addfields_missing_source_removes_existing_field_check",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "stage.project_two_operators_in_expression_error",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "stage.project_then_group",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.addfields_new_field",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.addfields_computed",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.addfields_overwrite_in_place",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "stage.addfields_multiple_see_original_values",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "stage.addfields_nested_dotted_creates",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ }
+]

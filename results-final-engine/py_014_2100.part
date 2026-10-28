@@ -1,0 +1,402 @@
+[
+ {
+  "name": "geo.within_triangle_edge_scan",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_world_ish_scan",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_antimeridian_scan",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_pole_polygon_scan",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.within_empty_result_scan",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_missing_and_mixed_fields_scan",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_polygon_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_polygon_legacy_data_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_polygon_hole_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_multipolygon_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_boundary_points_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_vertex_points_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_triangle_edge_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_world_ish_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "geo.within_antimeridian_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_pole_polygon_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_empty_result_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.19
+ },
+ {
+  "name": "geo.within_missing_and_mixed_fields_ix",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_line_data",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "geo.within_geometry_must_be_polygon",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_geometry_linestring_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_geometry_missing",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_unknown_region",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.within_not_a_document",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_two_regions_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.within_polygon_unclosed_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_polygon_lat_out_of_range_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.within_polygon_self_intersect_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.within_not_operator",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_in_or",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_in_nor",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_with_other_condition",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_dotted_path",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "geo.within_array_of_points",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.within_array_of_legacy_pairs",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.within_unique_docs_option",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_query_ccw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_query_indexed_ccw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_query_cw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_query_indexed_cw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_query_no_crs_cw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_query_indexed_no_crs_cw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_query_no_crs_ccw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_query_indexed_no_crs_ccw",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_stored_geointersects",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_stored_within_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_bad_crs",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_crs_wrong_type",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "geo.big_polygon_crs_epsg4326",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "geo.big_polygon_crs_on_point_error",
+  "group": "geo",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

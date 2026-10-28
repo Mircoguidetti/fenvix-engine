@@ -1,0 +1,402 @@
+[
+ {
+  "name": "regex.in_count_and_distinct",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "regex.in_aggregate_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.in_pull_condition",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "regex.in_find_and_modify_query",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "regex.with_expr_in_same_filter",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_returns_before_by_default",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_returns_after",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_sort_asc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_sort_desc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_sort_two_keys",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_projection_include",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_projection_exclude_id",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_no_match",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_no_match_after",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_upsert_before_returns_null",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_upsert_after_returns_doc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.update_upsert_generated_id",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_upsert_set_on_insert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.update_upsert_existing_is_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.update_upsert_creates_collection",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.update_on_missing_collection_no_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.replace_before",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.replace_after_sorted",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.replace_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.replace_changing_id_error",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.delete_returns_deleted",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.delete_sorted",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.delete_projection",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.delete_no_match",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.delete_then_gone",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.delete_on_missing_collection",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.raw_update_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_update_new_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_update_noop_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_no_match_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_upsert_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_upsert_new_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_upsert_replacement_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.raw_remove_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_remove_no_match_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_fields_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_sort_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.raw_no_query_matches_first",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_lowercase_command_name",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_collection_created_by_upsert_response",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.error_remove_and_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.error_neither_update_nor_remove",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.error_remove_and_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.error_remove_and_new",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "fam.error_invalid_operator_in_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

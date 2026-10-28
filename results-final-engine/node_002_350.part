@@ -1,0 +1,402 @@
+[
+ {
+  "name": "regex.no_options_s_dot_newline",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "regex.options_x",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "regex.options_imsx",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "regex.options_u_accepted",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "regex.options_empty",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "regex.bson_regex_operand",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "regex.bson_regex_operand_plus_options",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.plain_equality_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "regex.plain_equality_regex_array_elem",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "regex.plain_equality_regex_matches_stored_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.plain_equality_regex_stored_different_options",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "regex.regex_vs_array_elements",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "regex.regex_nested_array_of_docs",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "regex.regex_nested_array_of_docs_plain",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "regex.regex_missing_and_null_never_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.in_with_regexes",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "regex.in_only_regexes",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "regex.in_regex_array_field",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.nin_with_regexes",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "regex.not_regex_literal",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "regex.not_regex_operator_doc",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "regex.eq_regex_is_equality",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "regex.lookahead",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.136
+ },
+ {
+  "name": "regex.negative_lookahead",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "regex.lookbehind",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "regex.backreference",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "regex.named_group_backreference",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.138
+ },
+ {
+  "name": "regex.lazy_quantifier",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.posix_class",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "regex.unicode_property_L",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.case_insensitive_non_ascii",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "regex.escaped_dot",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.alternation",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "regex.word_boundary",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "regex.empty_pattern_matches_strings",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "regex.combined_with_other_ops",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.top_level_or",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.error_invalid_pattern_paren",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "regex.error_invalid_pattern_quantifier",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.error_invalid_pattern_class",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.error_invalid_option_flag",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.error_options_without_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "regex.error_options_not_string",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.error_regex_not_string",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.error_regex_both_options",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "regex.error_ne_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "regex.error_in_with_operator_doc",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "regex.error_embedded_null_byte",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.in_update_filter",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "regex.in_delete_filter",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ }
+]

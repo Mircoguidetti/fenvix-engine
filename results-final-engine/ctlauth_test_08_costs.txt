@@ -1,0 +1,92 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_______________________________ test_costs[1000] _______________________________
+test_08_costs.py:84: in test_costs
+    asleep(srv, db)
+test_08_costs.py:70: in asleep
+    srv.client()[db].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on c1000 to execute command { tenantAdmin: 1, close: true, $db: "c1000" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on c1000 to execute command { tenantAdmin: 1, close: true, $db: "c1000" }', 'code': 13, 'codeName': 'Unauthorized'}
+______________________________ test_costs[100000] ______________________________
+test_08_costs.py:84: in test_costs
+    asleep(srv, db)
+test_08_costs.py:70: in asleep
+    srv.client()[db].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on c100000 to execute command { tenantAdmin: 1, close: true, $db: "c100000" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on c100000 to execute command { tenantAdmin: 1, close: true, $db: "c100000" }', 'code': 13, 'codeName': 'Unauthorized'}
+_________________ test_clone_cost_does_not_grow_with_the_data __________________
+test_08_costs.py:150: in test_clone_cost_does_not_grow_with_the_data
+    a, b = RESULTS["1000"]["fork_clone"], RESULTS["100000"]["fork_clone"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'fork_clone'
+=========================== short test summary info ============================
+FAILED test_08_costs.py::test_costs[1000] - pymongo.errors.OperationFailure: ...
+FAILED test_08_costs.py::test_costs[100000] - pymongo.errors.OperationFailure...
+FAILED test_08_costs.py::test_clone_cost_does_not_grow_with_the_data - KeyErr...
+3 failed in 10.89s

@@ -1,0 +1,402 @@
+[
+ {
+  "name": "tail.bucket_auto_ties",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "tail.bucket_auto_all_equal",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_mixed_types",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_missing_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_output",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_output_empty",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_expression_key",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_empty_collection",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_more_buckets_than_docs",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_one_bucket",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_pow2",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_pow2_zero",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_125",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_granularity_negative_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_granularity_string_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_zero_buckets",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_negative_buckets",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_string_buckets",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_no_group_by",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_no_buckets",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_unknown_option",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.bucket_auto_error_output_not_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.bucket_auto_error_not_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.densify_full",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_partition",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_explicit",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_explicit_partitioned",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_explicit_beyond",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_full_partitioned",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_float_step",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.densify_big_step",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_empty",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.densify_missing_field_docs",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dotted",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_unsorted_input",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_duplicates",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.densify_off_grid_values",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dates_day",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dates_hour_step",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dates_month_clamp",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dates_year",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dates_week",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_dates_explicit",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_date_without_unit_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_number_with_unit_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_non_numeric_error",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_step_zero",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_step_negative",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_bad_bounds_string",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_no_range",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ }
+]

@@ -1,0 +1,274 @@
+py 0 0:150 pass 150 / 150 46s
+py 1 150:300 pass 150 / 150 49s
+py 2 300:450 pass 150 / 150 103s
+py 3 450:600 pass 150 / 150 48s
+py 4 600:750 pass 150 / 150 49s
+py 5 750:900 pass 150 / 150 49s
+py 6 900:1050 pass 150 / 150 51s
+py 7 1050:1200 pass 150 / 150 56s
+py 8 1200:1350 pass 150 / 150 347s
+py 9 1350:1500 pass 150 / 150 114s
+py 10 1500:1650 pass 150 / 150 48s
+py 11 1650:1800 pass 150 / 150 48s
+py 12 1800:1950 pass 150 / 150 31s
+py 13 1950:2100 pass 150 / 150 45s
+py 14 2100:2250 pass 150 / 150 47s
+py 15 2250:2400 pass 150 / 150 47s
+py 16 2400:2550 pass 150 / 150 43s
+py 17 2550:2700 pass 150 / 150 31s
+py 18 2700:2850 pass 150 / 150 48s
+py 19 2850:3000 pass 150 / 150 46s
+py 20 3000:3150 pass 150 / 150 49s
+py 21 3150:3300 pass 150 / 150 56s
+py 22 3300:3450 pass 150 / 150 49s
+py 23 3450:3600 pass 150 / 150 48s
+py 24 3600:3750 pass 150 / 150 67s
+py 25 3750:3900 pass 150 / 150 49s
+py 26 3900:4050 pass 150 / 150 47s
+py 27 4050:4127 pass 77 / 77 29s
+node 0 0:150 pass 150 / 150 48s
+node 1 150:300 pass 150 / 150 51s
+node 2 300:450 pass 150 / 150 101s
+node 3 450:600 pass 150 / 150 19s
+node 4 600:750 pass 150 / 150 49s
+node 5 750:900 pass 150 / 150 49s
+node 6 900:1050 pass 150 / 150 51s
+node 7 1050:1200 pass 150 / 150 57s
+node 8 1200:1350 pass 150 / 150 347s
+node 9 1350:1500 pass 150 / 150 501s
+node 10 1500:1650 pass 150 / 150 49s
+node 11 1650:1800 pass 150 / 150 49s
+node 12 1800:1950 pass 150 / 150 53s
+node 13 1950:2100 pass 150 / 150 49s
+node 14 2100:2250 pass 150 / 150 49s
+node 15 2250:2400 pass 150 / 150 49s
+node 16 2400:2550 pass 150 / 150 17s
+node 17 2550:2700 pass 150 / 150 44s
+node 18 2700:2850 pass 150 / 150 45s
+node 19 2850:3000 pass 150 / 150 73s
+node 20 3000:3150 pass 150 / 150 43s
+node 21 3150:3300 pass 150 / 150 60s
+node 22 3300:3450 pass 150 / 150 49s
+node 23 3450:3600 pass 147 / 150 73s
+node 24 3600:3750 pass 150 / 150 37s
+node 25 3750:3900 pass 150 / 150 49s
+node 26 3900:4050 pass 150 / 150 48s
+node 27 4050:4127 pass 72 / 77 90s
+ALL SLICES DONE
+PHASE suites done
+ctl test_01_databases: 10 passed in 13.53s
+ALL SLICES DONE
+PHASE suites done
+ctl test_02_fork: 13 failed in 87.19s (0:01:27)
+ctl test_02b_fork_crash: 9 failed, 3 passed, 3 warnings in 76.39s (0:01:16)
+ctl test_03_restore: 3 failed, 8 passed in 260.35s (0:04:20)
+node 27 4050:4127 pass 77 / 77 11s
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_02_fork: 13 passed in 51.35s
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_02b_fork_crash: 12 passed, 11 warnings in 42.67s
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_03_restore: 11 passed in 118.49s (0:01:58)
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_03b_restore_gc_crash: 11 passed in 150.64s (0:02:30)
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_03c_retention_cost: 1 passed in 89.06s (0:01:29)
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_04_export: 1 failed, 9 passed in 58.88s
+/dev/vda        252G   37G  1.5G  97% /
+ctl test_04b_export_vs_real_mongo: 2 passed in 4.48s
+/dev/vda        252G   37G  1.5G  97% /
+ctl test_05_erase: 19 passed in 52.44s
+/dev/vda        252G   37G  1.5G  97% /
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   37G  1.5G  97% /
+ctl test_06_keepawake: 13 passed in 128.57s (0:02:08)
+/dev/vda        252G   38G  1.2G  97% /
+ctl test_07_usage: 10 passed in 53.06s
+/dev/vda        252G   38G  1.2G  97% /
+ctl test_08_costs: 1 failed, 2 passed in 403.03s (0:06:43)
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_08b_pin_cost: 1 passed in 66.35s (0:01:06)
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_09_security: 30 passed in 4.41s
+/dev/vda        252G   37G  1.8G  96% /
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_04_export: 10 passed in 65.53s (0:01:05)
+/dev/vda        252G   37G  1.6G  96% /
+ctl test_09b_users_restore: 1 passed in 10.36s
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_09c_tls_rotate: 3 passed in 7.43s
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_09d_s3_env: 6 passed in 13.33s
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_09e_local_store: 4 passed in 26.47s
+/dev/vda        252G   37G  1.8G  96% /
+ctl test_09f_wal_retention_guard: 4 passed in 117.25s (0:01:57)
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_09g_export_natural_order: 2 passed in 4.41s
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_10_end_to_end: 1 passed in 14.86s
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_11_tls_modes: 4 passed in 49.28s
+/dev/vda        252G   37G  1.7G  96% /
+ctl test_12_shutdown: 2 passed in 8.60s
+/dev/vda        252G   37G  1.6G  96% /
+ctl(auth) test_01_databases: 10 passed in 10.39s
+/dev/vda        252G   37G  1.6G  96% /
+ctl(auth) test_02_fork: 4 failed, 9 passed in 12.28s
+/dev/vda        252G   37G  1.6G  96% /
+ctl(auth) test_02b_fork_crash: 12 failed in 22.74s
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_03_restore: 2 failed, 9 passed in 110.41s (0:01:50)
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_03b_restore_gc_crash: 2 failed, 9 passed in 83.72s (0:01:23)
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_03c_retention_cost: 1 failed, 2 warnings in 4.63s
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_04_export: 3 failed, 7 passed in 18.36s
+/dev/vda        252G   37G  1.6G  96% /
+ctl(auth) test_04b_export_vs_real_mongo: 2 passed in 4.43s
+/dev/vda        252G   37G  1.6G  96% /
+ctl(auth) test_05_erase: 12 failed, 7 passed in 28.45s
+/dev/vda        252G   37G  1.6G  96% /
+ctl(auth) test_06_keepawake: 3 failed, 10 passed in 97.87s (0:01:37)
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_07_usage: 3 failed, 7 passed in 41.49s
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_08_costs: 3 failed in 10.89s
+/dev/vda        252G   37G  1.7G  96% /
+ctl(auth) test_08b_pin_cost: 1 passed in 67.38s (0:01:07)
+/dev/vda        252G   37G  1.7G  96% /
+PHASE ctl done
+TOTAL s3 durable {'acked_ids': 60877, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 durable {'acked_ids': 56692, 'lost_inserts': 0, 'lost_updates': 0}
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   37G  1.7G  96% /
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   37G  1.6G  96% /
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   37G  1.6G  96% /
+ctl test_08_costs: 3 passed in 347.00s (0:05:46)
+/dev/vda        252G   37G  1.6G  96% /
+PHASE ctl done
+TOTAL s3 durable {'acked_ids': 60727, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 durable {'acked_ids': 61539, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 control {'acked_ids': 40712, 'lost_inserts': 1738, 'lost_updates': 19}
+TOTAL s3 control {'acked_ids': 38070, 'lost_inserts': 1302, 'lost_updates': 20}
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.5G  97% /
+PHASE ctl done
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 58, 'acked_docs': 10263, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 29795, 'missing': 0, 'stal
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 63, 'acked_docs': 10353, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 29028, 'missing': 0, 'stal
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.3G  97% /
+PHASE ctl done
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 47, 'acked_docs': 10045, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 30654, 'missing': 0, 'stal
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 51, 'acked_docs': 10296, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 27179, 'missing': 0, 'stal
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.2G  97% /
+PHASE ctl done
+TOTAL control {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 16, 'acked_docs': 7477, 'lost_inserts': 7477, 'lost_updates': 0, 'read_violations': {'reads_checked': 19876, 'missing': 0, 
+TOTAL control {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 20, 'acked_docs': 7684, 'lost_inserts': 7684, 'lost_updates': 0, 'read_violations': {'reads_checked': 20674, 'missing': 0, 
+PHASE kill done
+gaps py g01: gaps_py: 33/33 identical to mongod 7.0.45
+gaps node g01: gaps_node: 25/25 identical to mongod 7.0.45
+gaps py g02: gaps_py: 46/46 identical to mongod 7.0.45
+gaps node g02: gaps_node: 18/18 identical to mongod 7.0.45
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.2G  98% /
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.2G  98% /
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.2G  98% /
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.2G  98% /
+PHASE ctl done
+PHASE kill done
+gaps py g03: gaps_py: 14/14 identical to mongod 7.0.45
+gaps node g03: gaps_node: 14/14 identical to mongod 7.0.45
+gaps py g04: gaps_py: 17/17 identical to mongod 7.0.45
+gaps node g04: gaps_node: 12/12 identical to mongod 7.0.45
+gaps py g05: gaps_py: 22/23 identical to mongod 7.0.45, 1 known divergences (known_divergences.json)
+gaps node g05: gaps_node: 20/20 identical to mongod 7.0.45
+gaps py g06: gaps_py: 32/32 identical to mongod 7.0.45
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.1G  98% /
+PHASE ctl done
+PHASE kill done
+gaps node g06: gaps_node: 22/22 identical to mongod 7.0.45
+gaps py g07: gaps_py: 426/438 identical to mongod 7.0.45, 12 known divergences (known_divergences.json)
+gaps node g07: gaps_node: 425/437 identical to mongod 7.0.45, 12 known divergences (known_divergences.json)
+gaps py g08: gaps_py: 14/14 identical to mongod 7.0.45
+gaps node g08: gaps_node: 14/14 identical to mongod 7.0.45
+gaps py g09: gaps_py: 140/140 identical to mongod 7.0.45
+gaps node g09: gaps_node: 133/134 identical to mongod 7.0.45
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.1G  98% /
+PHASE ctl done
+PHASE kill done
+gaps py g10: gaps_py: 112/112 identical to mongod 7.0.45
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  505M  99% /
+PHASE ctl done
+PHASE kill done
+gaps node g10: }
+gaps py g11: 
+gaps node g11: 
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  554M  99% /
+PHASE ctl done
+PHASE kill done
+gaps node g10: }
+gaps py g11: 
+gaps node g11: 
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   39G  212M 100% /
+PHASE ctl done
+PHASE kill done
+gaps node g10: }
+gaps py g11: 
+gaps node g11: gaps_node: 0/0 identical to mongod 7.0.45
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   36G  3.3G  92% /
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+/dev/vda        252G   38G  1.3G  97% /
+PHASE ctl done
+PHASE kill done
+gaps node g10: gaps_node: 96/96 identical to mongod 7.0.45
+gaps py g11: gaps_py: 0/0 identical to mongod 7.0.45
+gaps node g11: gaps_node: 0/0 identical to mongod 7.0.45
+gaps py g12: gaps_py: 8/8 identical to mongod 7.0.45
+gaps node g12: gaps_node: 10/10 identical to mongod 7.0.45
+PHASE gaps done
+gaps node g09: gaps_node: 134/134 identical to mongod 7.0.45

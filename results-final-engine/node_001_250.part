@@ -1,0 +1,402 @@
+[
+ {
+  "name": "update.one.replace_whole_doc",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "update.one.modify_id_via_set_error",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "update.one.modify_id_via_replacement_error",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "update.one.set_id_same_value_ok",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.unknown_modifier_error",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.one.no_match_no_change",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "update.one.filter_operator_match",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "update.one_picks_first_in_insertion_order",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "update.many_filter",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "update.many_all",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "update.many_no_match",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "update.many_modified_count",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "update.on_missing_collection",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.086
+ },
+ {
+  "name": "update.upsert_inserts_with_set",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "update.upsert_uses_filter_equalities",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "update.upsert_with_id_in_filter",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "update.upsert_generated_id",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "update.upsert_existing_acts_as_update",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "update.upsert_replacement",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "update.upsert_inc_creates",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "update.upsert_many",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.upsert_creates_collection",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "update.unique_violation",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "update.unique_violation_on_upsert",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "update.many_unordered_error_continues",
+  "group": "update",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "update.extra.push",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.181
+ },
+ {
+  "name": "update.extra.pull",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "update.extra.add_to_set",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "update.extra.rename",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "update.extra.min",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "update.extra.max",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "update.extra.mul",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "update.extra.pop",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "update.extra.positional",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "update.extra.current_date",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "update.extra.pipeline_update",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "update.extra.find_one_and_update",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "update.extra.array_filters",
+  "group": "update operators outside the supported set",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "delete.one_first_match",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "delete.many_filter",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "delete.many_all",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "delete.no_match",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "delete.by_id",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "delete.by_operator",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "delete.from_missing_collection",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.089
+ },
+ {
+  "name": "delete.then_reinsert_same_id",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "delete.frees_unique_key",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "delete.1000",
+  "group": "delete",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.376
+ },
+ {
+  "name": "coll.create_and_list",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "coll.create_duplicate_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ }
+]

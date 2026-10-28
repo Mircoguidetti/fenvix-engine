@@ -1,0 +1,50 @@
+[
+ {
+  "name": "g12.py.create_indexes_and_information",
+  "status": "pass",
+  "real": "{\"names\": [\"a_1\", \"gs\", \"su\"], \"again\": [\"a_1\"], \"info\": {\"_id_\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"_id\", {\"$numberInt\": \"1\"}]]}, \"a_1\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"a\", {\"$numberInt\": \"1\"}]]}, \"gs\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"g\", {\"$numberInt\": \"-1\"}], [\"s\", {\"$numberInt\": \"1\"}]]}, \"su\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"s\", {\"$numberInt\": \"1\"}]], \"unique\": true, \"sparse\": true}}, \"conflict\": {\"err\": [{\"$numberInt\": \"86\"}, \"IndexKeySpecsConflict\"]}, \"empty\": {\"err\": [{\"$",
+  "ours": "{\"names\": [\"a_1\", \"gs\", \"su\"], \"again\": [\"a_1\"], \"info\": {\"_id_\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"_id\", {\"$numberInt\": \"1\"}]]}, \"a_1\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"a\", {\"$numberInt\": \"1\"}]]}, \"gs\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"g\", {\"$numberInt\": \"-1\"}], [\"s\", {\"$numberInt\": \"1\"}]]}, \"su\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": [[\"s\", {\"$numberInt\": \"1\"}]], \"unique\": true, \"sparse\": true}}, \"conflict\": {\"err\": [{\"$numberInt\": \"86\"}, \"IndexKeySpecsConflict\"]}, \"empty\": {\"err\": [{\"$"
+ },
+ {
+  "name": "g12.py.collection_options",
+  "status": "pass",
+  "real": "{\"plain\": {}, \"cap\": {\"capped\": true, \"size\": {\"$numberInt\": \"4096\"}, \"max\": {\"$numberInt\": \"50\"}}, \"val\": {\"validator\": {\"a\": {\"$gt\": {\"$numberInt\": \"0\"}}}, \"validationLevel\": \"moderate\", \"validationAction\": \"warn\"}, \"col\": {\"collation\": {\"locale\": \"fr\", \"caseLevel\": false, \"caseFirst\": \"off\", \"strength\": {\"$numberInt\": \"2\"}, \"numericOrdering\": false, \"alternate\": \"non-ignorable\", \"maxVariable\": \"punct\", \"normalization\": false, \"backwards\": false, \"version\": \"57.1\"}}, \"missing\": {}}",
+  "ours": "{\"plain\": {}, \"cap\": {\"capped\": true, \"size\": {\"$numberInt\": \"4096\"}, \"max\": {\"$numberInt\": \"50\"}}, \"val\": {\"validator\": {\"a\": {\"$gt\": {\"$numberInt\": \"0\"}}}, \"validationLevel\": \"moderate\", \"validationAction\": \"warn\"}, \"col\": {\"collation\": {\"locale\": \"fr\", \"caseLevel\": false, \"caseFirst\": \"off\", \"strength\": {\"$numberInt\": \"2\"}, \"numericOrdering\": false, \"alternate\": \"non-ignorable\", \"maxVariable\": \"punct\", \"normalization\": false, \"backwards\": false, \"version\": \"57.1\"}}, \"missing\": {}}"
+ },
+ {
+  "name": "g12.py.cursor_option_members",
+  "status": "pass",
+  "real": "{\"add_option_tailable_plain\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\"]}, \"add_option_tailable_capped\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_remove\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"add_option_slave_ok\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_option_no_timeout\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_option_partial\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_option_await\": [{\"$numberInt\": \"0\"}, {\"$numbe",
+  "ours": "{\"add_option_tailable_plain\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\"]}, \"add_option_tailable_capped\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_remove\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"add_option_slave_ok\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_option_no_timeout\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_option_partial\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}], \"add_option_await\": [{\"$numberInt\": \"0\"}, {\"$numbe"
+ },
+ {
+  "name": "g12.py.raw_batch_and_command_cursors",
+  "status": "pass",
+  "real": "{\"first_batch_docs\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, \"\\u2026\", {\"$numberInt\": \"10\"}], \"rest\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"5\"}], \"try_next\": {\"$numberInt\": \"10\"}, \"after_close\": {\"exc\": \"StopIteration\", \"msg\": \"\"}, \"to_list\": [{\"$numberInt\": \"7\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"4\"}], \"cc_to_list\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}, {\"$numberInt\": \"25\"}], \"cc",
+  "ours": "{\"first_batch_docs\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, \"\\u2026\", {\"$numberInt\": \"10\"}], \"rest\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"5\"}], \"try_next\": {\"$numberInt\": \"10\"}, \"after_close\": {\"exc\": \"StopIteration\", \"msg\": \"\"}, \"to_list\": [{\"$numberInt\": \"7\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"4\"}], \"cc_to_list\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}, {\"$numberInt\": \"25\"}], \"cc"
+ },
+ {
+  "name": "g12.py.change_stream_cursors",
+  "status": "pass",
+  "real": "{\"collection_empty_try\": null, \"collection_token0\": {\"_data\": \"str\"}, \"collection_event\": {\"operationType\": \"insert\", \"fullDocument\": {\"_id\": \"collection\"}, \"documentKey\": {\"_id\": \"collection\"}}, \"collection_token_type\": [\"dict\", [\"_data\"], true], \"collection_next_blocks_empty\": null, \"collection_alive_after_with\": null, \"database_empty_try\": null, \"database_token0\": {\"_data\": \"str\"}, \"database_event\": {\"operationType\": \"insert\", \"fullDocument\": {\"_id\": \"database\"}, \"documentKey\": {\"_id\": \"datab",
+  "ours": "{\"collection_empty_try\": null, \"collection_token0\": {\"_data\": \"str\"}, \"collection_event\": {\"operationType\": \"insert\", \"fullDocument\": {\"_id\": \"collection\"}, \"documentKey\": {\"_id\": \"collection\"}}, \"collection_token_type\": [\"dict\", [\"_data\"], true], \"collection_next_blocks_empty\": null, \"collection_alive_after_with\": null, \"database_empty_try\": null, \"database_token0\": {\"_data\": \"str\"}, \"database_event\": {\"operationType\": \"insert\", \"fullDocument\": {\"_id\": \"database\"}, \"documentKey\": {\"_id\": \"datab"
+ },
+ {
+  "name": "g12.py.session_times",
+  "status": "pass",
+  "real": "{\"before\": [null, null], \"after_write\": [[\"clusterTime\", \"signature\"], \"Timestamp\"], \"advanced\": [true, true], \"causal_read\": {\"_id\": {\"$numberInt\": \"1\"}}, \"bad_cluster_time\": {\"exc\": \"TypeError\", \"msg\": \"cluster_time must be a subclass of collections.Mapping, not <class 'int'>\"}, \"bad_operation_time\": {\"exc\": \"TypeError\", \"msg\": \"operation_time must be an instance of bson.timestamp.Timestamp, not <class 'int'\"}, \"no_signature\": null, \"older_ignored\": true, \"monotonic\": true}",
+  "ours": "{\"before\": [null, null], \"after_write\": [[\"clusterTime\", \"signature\"], \"Timestamp\"], \"advanced\": [true, true], \"causal_read\": {\"_id\": {\"$numberInt\": \"1\"}}, \"bad_cluster_time\": {\"exc\": \"TypeError\", \"msg\": \"cluster_time must be a subclass of collections.Mapping, not <class 'int'>\"}, \"bad_operation_time\": {\"exc\": \"TypeError\", \"msg\": \"operation_time must be an instance of bson.timestamp.Timestamp, not <class 'int'\"}, \"no_signature\": null, \"older_ignored\": true, \"monotonic\": true}"
+ },
+ {
+  "name": "g12.py.gridfs_legacy",
+  "status": "pass",
+  "real": "{\"new_file\": [true, {\"$numberLong\": \"11\"}, {\"$numberInt\": \"4\"}, \"a.txt\", \"text/plain\"], \"find\": [\"a.txt\", \"a.txt\"], \"find_one\": {\"$binary\": {\"base64\": \"aGVsbG8gd29ybGQ=\", \"subType\": \"00\"}}, \"find_one_none\": null, \"get_version0\": {\"$binary\": {\"base64\": \"aGVsbG8gd29ybGQ=\", \"subType\": \"00\"}}, \"get_version-1\": {\"$binary\": {\"base64\": \"c2Vjb25kIHZlcnNpb24=\", \"subType\": \"00\"}}, \"get_version_missing\": {\"exc\": \"NoFile\"}, \"get_version_noname\": {\"exc\": \"NoFile\"}, \"find_sort_limit\": [{\"$numberLong\": \"14\"}],",
+  "ours": "{\"new_file\": [true, {\"$numberLong\": \"11\"}, {\"$numberInt\": \"4\"}, \"a.txt\", \"text/plain\"], \"find\": [\"a.txt\", \"a.txt\"], \"find_one\": {\"$binary\": {\"base64\": \"aGVsbG8gd29ybGQ=\", \"subType\": \"00\"}}, \"find_one_none\": null, \"get_version0\": {\"$binary\": {\"base64\": \"aGVsbG8gd29ybGQ=\", \"subType\": \"00\"}}, \"get_version-1\": {\"$binary\": {\"base64\": \"c2Vjb25kIHZlcnNpb24=\", \"subType\": \"00\"}}, \"get_version_missing\": {\"exc\": \"NoFile\"}, \"get_version_noname\": {\"exc\": \"NoFile\"}, \"find_sort_limit\": [{\"$numberLong\": \"14\"}],"
+ },
+ {
+  "name": "g12.py.change_stream_expanded_ddl_events",
+  "status": "pass",
+  "real": "{\"events\": [{\"operationType\": \"create\", \"collectionUUID\": \"<uuid>\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"operationDescription\": {\"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {}, \"name\": \"_id_\"}}}, {\"operationType\": \"createIndexes\", \"collectionUUID\": \"<uuid>\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"operationDescription\": {\"indexes\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\"}]}}, {\"operationType\": \"createIndexes\", \"collectionUUID\": \"<uuid>\", \"ns\": {\"db\": \"$DB\", \"coll\":",
+  "ours": "{\"events\": [{\"operationType\": \"create\", \"collectionUUID\": \"<uuid>\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"operationDescription\": {\"idIndex\": {\"v\": {\"$numberInt\": \"2\"}, \"key\": {}, \"name\": \"_id_\"}}}, {\"operationType\": \"createIndexes\", \"collectionUUID\": \"<uuid>\", \"ns\": {\"db\": \"$DB\", \"coll\": \"c\"}, \"operationDescription\": {\"indexes\": [{\"v\": {\"$numberInt\": \"2\"}, \"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\"}]}}, {\"operationType\": \"createIndexes\", \"collectionUUID\": \"<uuid>\", \"ns\": {\"db\": \"$DB\", \"coll\":"
+ }
+]

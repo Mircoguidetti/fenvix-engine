@@ -1,0 +1,402 @@
+[
+ {
+  "name": "coll.create_existing_is_idempotent",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "coll.create_existing_with_different_options_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "coll.implicit_creation_by_insert",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "coll.drop_existing",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "coll.drop_missing_is_ok",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.045
+ },
+ {
+  "name": "coll.drop_then_recreate_empty",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "coll.drop_removes_indexes",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "coll.special_names",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.227
+ },
+ {
+  "name": "coll.prefix_collections_isolated",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.174
+ },
+ {
+  "name": "coll.invalid_name_dollar",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.035
+ },
+ {
+  "name": "idx.list_default",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "idx.list_missing_collection_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.047
+ },
+ {
+  "name": "idx.create_single_default_name",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "idx.create_compound_and_desc",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "idx.create_unique_flag_listed",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "idx.create_twice_is_noop",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "idx.create_indexes_response",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.267
+ },
+ {
+  "name": "idx.same_name_different_key_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "idx.same_key_different_name_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "idx.queries_unaffected_by_index",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "idx.extra.drop_index",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "coll.extra.rename",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "coll.extra.coll_stats",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "coll.extra.db_stats",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "persist.idle_close_then_read",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 12.135
+ },
+ {
+  "name": "persist.idle_close_then_write_upgrades",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 24.242
+ },
+ {
+  "name": "persist.read_only_wake_stays_reader",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "persist.forced_close_cycles",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.754
+ },
+ {
+  "name": "persist.1000_docs_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.578
+ },
+ {
+  "name": "persist.indexes_and_collections_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "persist.drop_after_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.246
+ },
+ {
+  "name": "persist.cursor_survives_tenant_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.252
+ },
+ {
+  "name": "persist.id_types_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.13
+ },
+ {
+  "name": "persist.restart_server_graceful",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 6.84
+ },
+ {
+  "name": "persist.restart_server_sigkill",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 3.942
+ },
+ {
+  "name": "persist.drop_database",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.365
+ },
+ {
+  "name": "persist.drop_database_races_background_compaction",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 2.274
+ },
+ {
+  "name": "persist.many_collections",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.598
+ },
+ {
+  "name": "concurrency.parallel_inserts_same_db",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.836
+ },
+ {
+  "name": "concurrency.parallel_inc_same_doc",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.393
+ },
+ {
+  "name": "concurrency.parallel_dbs",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.944
+ },
+ {
+  "name": "concurrency.reads_during_writes",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.583
+ },
+ {
+  "name": "regex.string_basic",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.string_anchored",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "regex.string_end_anchor",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "regex.options_i",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "regex.options_before_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "regex.options_m",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "regex.no_options_m_no_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.options_s",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ }
+]

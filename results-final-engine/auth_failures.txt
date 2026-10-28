@@ -1,0 +1,14 @@
+test_01_databases                    failed=  0 tenantAdmin_refused=  0 other=  0
+test_02_fork                         failed=  4 tenantAdmin_refused=  4 other=  0
+test_02b_fork_crash                  failed= 12 tenantAdmin_refused= 12 other=  0
+test_03_restore                      failed=  2 tenantAdmin_refused=  2 other=  0
+test_03b_restore_gc_crash            failed=  2 tenantAdmin_refused=  2 other=  0
+test_03c_retention_cost              failed=  1 tenantAdmin_refused=  1 other=  0
+test_04_export                       failed=  3 tenantAdmin_refused=  3 other=  0
+test_04b_export_vs_real_mongo        failed=  0 tenantAdmin_refused=  0 other=  0
+test_05_erase                        failed= 12 tenantAdmin_refused= 12 other=  0
+test_06_keepawake                    failed=  3 tenantAdmin_refused=  3 other=  0
+test_07_usage                        failed=  3 tenantAdmin_refused=  3 other=  0
+test_08_costs                        failed=  3 tenantAdmin_refused=  2 other=  1
+test_08b_pin_cost                    failed=  0 tenantAdmin_refused=  0 other=  0
+TOTAL tenantAdmin_refused=44 other=1

@@ -1,0 +1,402 @@
+[
+ {
+  "name": "fam.error_invalid_query_operator",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "fam.error_update_non_numeric_inc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "fam.error_immutable_id",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "fam.error_duplicate_key_on_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.267
+ },
+ {
+  "name": "fam.error_duplicate_key_on_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.258
+ },
+ {
+  "name": "fam.error_duplicate_id_on_upsert_replacement",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "fam.error_duplicate_id_on_upsert_set",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "fam.error_array_filters",
+  "group": "findAndModify",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "fam.error_pipeline_update",
+  "group": "findAndModify",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "fam.operators_push_pull",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "fam.with_expr_query",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "fam.concurrent_counter_style",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "upd.push_existing",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd.push_missing_creates",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "upd.push_null_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "upd.push_string_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.push_nested_path",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd.push_nested_creates",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd.push_array_value_nests",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "upd.push_document_value",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.192
+ },
+ {
+  "name": "upd.push_each",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd.push_each_empty",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.push_each_missing_creates",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd.push_each_empty_missing_creates",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "upd.push_each_slice_positive",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "upd.push_each_slice_negative",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.push_each_slice_zero",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.push_each_slice_larger_than_array",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "upd.push_each_slice_double_integral",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.push_each_slice_fraction_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.142
+ },
+ {
+  "name": "upd.push_each_slice_string_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "upd.push_each_sort_asc",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.push_each_sort_desc",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd.push_each_sort_mixed_types",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd.push_each_sort_subdoc_field",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "upd.push_each_sort_subdoc_desc",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.push_each_sort_subdoc_multi_key",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "upd.push_each_sort_doc_on_scalars_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.push_each_sort_invalid_direction_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "upd.push_each_sort_empty_doc_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "upd.push_sort_then_slice",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "upd.push_sort_then_slice_negative",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd.push_position_front",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd.push_position_middle",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd.push_position_negative",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.push_position_negative_beyond_start",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd.push_position_beyond_end",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "upd.push_position_slice_sort_together",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "upd.push_position_string_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "upd.push_each_not_array_error",
+  "group": "update operators",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ }
+]

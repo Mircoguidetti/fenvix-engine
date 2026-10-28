@@ -1,0 +1,194 @@
+[
+ {
+  "name": "g06.insert.replay_returns_stored_result_and_does_not_insert_twice",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"2\"}}, \"replay\": {\"n\": {\"$numberInt\": \"2\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}]}, \"count\": {\"$numberInt\": \"2\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"2\"}}, \"replay\": {\"n\": {\"$numberInt\": \"2\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}]}, \"count\": {\"$numberInt\": \"2\"}}"
+ },
+ {
+  "name": "g06.insert.replay_ignores_the_body",
+  "status": "pass",
+  "real": "{\"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"docs\": [{\"$numberInt\": \"1\"}]}",
+  "ours": "{\"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"docs\": [{\"$numberInt\": \"1\"}]}"
+ },
+ {
+  "name": "g06.insert.replay_in_other_collection_and_database",
+  "status": "pass",
+  "real": "{\"coll\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"db\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"u\": {\"$numberInt\": \"0\"}, \"other\": {\"$numberInt\": \"0\"}}",
+  "ours": "{\"coll\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"db\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"u\": {\"$numberInt\": \"0\"}, \"other\": {\"$numberInt\": \"0\"}}"
+ },
+ {
+  "name": "g06.insert.batch_replayed_with_more_statements",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"2\"}}, \"replay\": {\"n\": {\"$numberInt\": \"3\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}]}, \"ids\": [{\"$numberInt\": \"20\"}, {\"$numberInt\": \"21\"}, {\"$numberInt\": \"22\"}]}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"2\"}}, \"replay\": {\"n\": {\"$numberInt\": \"3\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}]}, \"ids\": [{\"$numberInt\": \"20\"}, {\"$numberInt\": \"21\"}, {\"$numberInt\": \"22\"}]}"
+ },
+ {
+  "name": "g06.insert.stmtId_offsets_the_batch",
+  "status": "pass",
+  "real": "{\"replay\": {\"n\": {\"$numberInt\": \"3\"}, \"retriedStmtIds\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"11\"}]}, \"ids\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"8\"}]}",
+  "ours": "{\"replay\": {\"n\": {\"$numberInt\": \"3\"}, \"retriedStmtIds\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"11\"}]}, \"ids\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"8\"}]}"
+ },
+ {
+  "name": "g06.insert.unordered_error_statement_runs_again",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"2\"}, \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"11000\"}]]}, \"replay\": {\"n\": {\"$numberInt\": \"2\"}, \"retriedStmtIds\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"11000\"}]]}, \"count\": {\"$numberInt\": \"3\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"2\"}, \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"11000\"}]]}, \"replay\": {\"n\": {\"$numberInt\": \"2\"}, \"retriedStmtIds\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"11000\"}]]}, \"count\": {\"$numberInt\": \"3\"}}"
+ },
+ {
+  "name": "g06.insert.ordered_error_stops_and_is_not_recorded",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"writeErrors\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"11000\"}]]}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}], \"writeErrors\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"11000\"}]]}, \"ids\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"writeErrors\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"11000\"}]]}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}], \"writeErrors\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"11000\"}]]}, \"ids\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}"
+ },
+ {
+  "name": "g06.update.replay_does_not_apply_twice",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"body_changed\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"x\": {\"$numberInt\": \"1\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"body_changed\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"x\": {\"$numberInt\": \"1\"}}"
+ },
+ {
+  "name": "g06.update.upsert_replay_returns_the_upserted_id",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"0\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"0\"}, \"_id\": {\"$numberInt\": \"5\"}}]}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"0\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"0\"}, \"_id\": {\"$numberInt\": \"5\"}}], \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"count\": {\"$numberInt\": \"1\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"0\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"0\"}, \"_id\": {\"$numberInt\": \"5\"}}]}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"0\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"0\"}, \"_id\": {\"$numberInt\": \"5\"}}], \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"count\": {\"$numberInt\": \"1\"}}"
+ },
+ {
+  "name": "g06.update.batch_of_three_mixed",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"3\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"1\"}, \"_id\": {\"$numberInt\": \"99\"}}]}, \"replay\": {\"n\": {\"$numberInt\": \"3\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"1\"}, \"_id\": {\"$numberInt\": \"99\"}}], \"retriedStmtIds\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, \"docs\": [{\"_id\": {\"$numberInt\": \"50\"}, \"z\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"51\"}, \"z\": {\"$numberInt\": \"0\"}}, ",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"3\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"1\"}, \"_id\": {\"$numberInt\": \"99\"}}]}, \"replay\": {\"n\": {\"$numberInt\": \"3\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"upserted\": [{\"index\": {\"$numberInt\": \"1\"}, \"_id\": {\"$numberInt\": \"99\"}}], \"retriedStmtIds\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, \"docs\": [{\"_id\": {\"$numberInt\": \"50\"}, \"z\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"51\"}, \"z\": {\"$numberInt\": \"0\"}}, "
+ },
+ {
+  "name": "g06.update.statements_that_changed_nothing_run_again",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"0\"}, \"nModified\": {\"$numberInt\": \"0\"}}, \"after_insert\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"again\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"doc\": {\"_id\": {\"$numberInt\": \"7\"}, \"a\": {\"$numberInt\": \"1\"}}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"0\"}, \"nModified\": {\"$numberInt\": \"0\"}}, \"after_insert\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"again\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"doc\": {\"_id\": {\"$numberInt\": \"7\"}, \"a\": {\"$numberInt\": \"1\"}}}"
+ },
+ {
+  "name": "g06.update.unchanged_match_runs_again",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"0\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"v\": {\"$numberInt\": \"1\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"0\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"v\": {\"$numberInt\": \"1\"}}"
+ },
+ {
+  "name": "g06.update.replacement_replay",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"doc\": {\"_id\": {\"$numberInt\": \"4\"}, \"v\": {\"$numberInt\": \"9\"}, \"other\": {\"$numberInt\": \"1\"}}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"nModified\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"doc\": {\"_id\": {\"$numberInt\": \"4\"}, \"v\": {\"$numberInt\": \"9\"}, \"other\": {\"$numberInt\": \"1\"}}}"
+ },
+ {
+  "name": "g06.delete.replay_does_not_delete_again",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"body_changed\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"ids\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}]}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"body_changed\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"ids\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}]}"
+ },
+ {
+  "name": "g06.delete.nothing_deleted_runs_again",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"0\"}}, \"after_insert\": {\"n\": {\"$numberInt\": \"1\"}}, \"count\": {\"$numberInt\": \"0\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"0\"}}, \"after_insert\": {\"n\": {\"$numberInt\": \"1\"}}, \"count\": {\"$numberInt\": \"0\"}}"
+ },
+ {
+  "name": "g06.multi_and_limit0_are_refused",
+  "status": "pass",
+  "real": "{\"update_multi\": {\"n\": {\"$numberInt\": \"0\"}, \"nModified\": {\"$numberInt\": \"0\"}, \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"72\"}]]}, \"delete_limit0\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"72\"}]]}, \"unordered\": {\"n\": {\"$numberInt\": \"2\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"writeErrors\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"72\"}]]}, \"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"k\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"1\"}, \"k\": {\"$numberInt\": \"",
+  "ours": "{\"update_multi\": {\"n\": {\"$numberInt\": \"0\"}, \"nModified\": {\"$numberInt\": \"0\"}, \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"72\"}]]}, \"delete_limit0\": {\"n\": {\"$numberInt\": \"0\"}, \"writeErrors\": [[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"72\"}]]}, \"unordered\": {\"n\": {\"$numberInt\": \"2\"}, \"nModified\": {\"$numberInt\": \"2\"}, \"writeErrors\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"72\"}]]}, \"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"k\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"1\"}, \"k\": {\"$numberInt\": \""
+ },
+ {
+  "name": "g06.findAndModify.remove_replay_returns_the_removed_document",
+  "status": "pass",
+  "real": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"a\"}}, \"replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"a\"}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}, \"ids\": [{\"$numberInt\": \"2\"}]}",
+  "ours": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"a\"}}, \"replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": \"a\"}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}, \"ids\": [{\"$numberInt\": \"2\"}]}"
+ },
+ {
+  "name": "g06.findAndModify.update_replay_returns_stored_image",
+  "status": "pass",
+  "real": "{\"pre\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"1\"}}}, \"pre_replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"1\"}}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}, \"post\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"3\"}}}, \"post_replay\": ",
+  "ours": "{\"pre\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"1\"}}}, \"pre_replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"1\"}}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}, \"post\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"5\"}, \"a\": {\"$numberInt\": \"3\"}}}, \"post_replay\": "
+ },
+ {
+  "name": "g06.findAndModify.upsert_replay",
+  "status": "pass",
+  "real": "{\"new\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": false, \"upserted\": {\"$numberInt\": \"77\"}}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"1\"}}}, \"new_replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": false, \"upserted\": {\"$numberInt\": \"77\"}}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"1\"}}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}, \"pre\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": false, \"upserted\"",
+  "ours": "{\"new\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": false, \"upserted\": {\"$numberInt\": \"77\"}}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"1\"}}}, \"new_replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": false, \"upserted\": {\"$numberInt\": \"77\"}}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"1\"}}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}, \"pre\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": false, \"upserted\""
+ },
+ {
+  "name": "g06.findAndModify.fields_are_applied_to_the_stored_image",
+  "status": "pass",
+  "real": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"2\"}}}, \"replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"2\"}, \"r\": {\"$numberInt\": \"2\"}}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}}",
+  "ours": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"2\"}}}, \"replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"77\"}, \"q\": {\"$numberInt\": \"2\"}, \"r\": {\"$numberInt\": \"2\"}}, \"retriedStmtId\": {\"$numberInt\": \"0\"}}}"
+ },
+ {
+  "name": "g06.findAndModify.no_match_runs_again",
+  "status": "pass",
+  "real": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"0\"}, \"updatedExisting\": false}, \"value\": null}, \"after_insert\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"1000\"}}}}",
+  "ours": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"0\"}, \"updatedExisting\": false}, \"value\": null}, \"after_insert\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"1000\"}}}}"
+ },
+ {
+  "name": "g06.findAndModify.stmtId",
+  "status": "pass",
+  "real": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"2\"}}}, \"replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"2\"}}, \"retriedStmtId\": {\"$numberInt\": \"4\"}}}",
+  "ours": "{\"first\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"2\"}}}, \"replay\": {\"lastErrorObject\": {\"n\": {\"$numberInt\": \"1\"}, \"updatedExisting\": true}, \"value\": {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"2\"}}, \"retriedStmtId\": {\"$numberInt\": \"4\"}}}"
+ },
+ {
+  "name": "g06.number.older_is_too_old",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}}, \"older_insert\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"older_update\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"older_fam\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"same\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"ids\": [{\"$numberInt\": \"1\"}]}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}}, \"older_insert\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"older_update\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"older_fam\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"same\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"ids\": [{\"$numberInt\": \"1\"}]}"
+ },
+ {
+  "name": "g06.number.sessions_are_independent",
+  "status": "pass",
+  "real": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}}, \"s2_replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"count\": {\"$numberInt\": \"2\"}}",
+  "ours": "{\"s1\": {\"n\": {\"$numberInt\": \"1\"}}, \"s2\": {\"n\": {\"$numberInt\": \"1\"}}, \"s2_replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"count\": {\"$numberInt\": \"2\"}}"
+ },
+ {
+  "name": "g06.number.validation",
+  "status": "pass",
+  "real": "{\"int32\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"string\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"negative\": [\"ERR\", {\"$numberInt\": \"72\"}, \"InvalidOptions\"], \"count\": {\"$numberInt\": \"0\"}}",
+  "ours": "{\"int32\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"string\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"negative\": [\"ERR\", {\"$numberInt\": \"72\"}, \"InvalidOptions\"], \"count\": {\"$numberInt\": \"0\"}}"
+ },
+ {
+  "name": "g06.stmtIds.validation",
+  "status": "pass",
+  "real": "{\"both\": [\"ERR\", {\"$numberInt\": \"72\"}, \"InvalidOptions\"], \"short\": [\"ERR\", {\"$numberInt\": \"16\"}, \"InvalidLength\"], \"long\": [\"ERR\", {\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"badtype\": [\"ERR\", {\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"count\": {\"$numberInt\": \"0\"}}",
+  "ours": "{\"both\": [\"ERR\", {\"$numberInt\": \"72\"}, \"InvalidOptions\"], \"short\": [\"ERR\", {\"$numberInt\": \"16\"}, \"InvalidLength\"], \"long\": [\"ERR\", {\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"badtype\": [\"ERR\", {\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"count\": {\"$numberInt\": \"0\"}}"
+ },
+ {
+  "name": "g06.command.not_retryable_with_txnNumber",
+  "status": "pass",
+  "real": "{\"find\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"aggregate\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"count\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"drop\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"create\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"createIndexes\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"]}",
+  "ours": "{\"find\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"aggregate\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"count\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"drop\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"create\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"], \"createIndexes\": [\"ERR\", {\"$numberInt\": \"50768\"}, \"NotARetryableWriteCommand\"]}"
+ },
+ {
+  "name": "g06.transactions.share_the_number_space",
+  "status": "pass",
+  "real": "{\"txn_lower\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"txn_same\": [\"ERR\", {\"$numberInt\": \"117\"}, \"ConflictingOperationInProgress\"], \"txn_higher\": {\"n\": {\"$numberInt\": \"1\"}}, \"commit\": {}, \"write_lower\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"write_same\": [\"ERR\", {\"$numberInt\": \"217\"}, \"IncompleteTransactionHistory\"], \"write_higher\": {\"n\": {\"$numberInt\": \"1\"}}, \"ids\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"5\"}]}",
+  "ours": "{\"txn_lower\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"txn_same\": [\"ERR\", {\"$numberInt\": \"117\"}, \"ConflictingOperationInProgress\"], \"txn_higher\": {\"n\": {\"$numberInt\": \"1\"}}, \"commit\": {}, \"write_lower\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"write_same\": [\"ERR\", {\"$numberInt\": \"217\"}, \"IncompleteTransactionHistory\"], \"write_higher\": {\"n\": {\"$numberInt\": \"1\"}}, \"ids\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"5\"}]}"
+ },
+ {
+  "name": "g06.concurrent_replays_run_once",
+  "status": "pass",
+  "real": "{\"x\": {\"$numberInt\": \"1\"}, \"results\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"1\"}]], \"replayed\": {\"$numberInt\": \"5\"}}",
+  "ours": "{\"x\": {\"$numberInt\": \"1\"}, \"results\": [[{\"$numberInt\": \"1\"}, {\"$numberInt\": \"1\"}]], \"replayed\": {\"$numberInt\": \"5\"}}"
+ },
+ {
+  "name": "g06.session_survives_endSessions",
+  "status": "pass",
+  "real": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"older\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"count\": {\"$numberInt\": \"1\"}}",
+  "ours": "{\"first\": {\"n\": {\"$numberInt\": \"1\"}}, \"replay\": {\"n\": {\"$numberInt\": \"1\"}, \"retriedStmtIds\": [{\"$numberInt\": \"0\"}]}, \"older\": [\"ERR\", {\"$numberInt\": \"225\"}, \"TransactionTooOld\"], \"count\": {\"$numberInt\": \"1\"}}"
+ },
+ {
+  "name": "g06.driver.retryable_helpers_send_txnNumber",
+  "status": "pass",
+  "real": "{\"docs\": [{\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"w\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"10\"}}], \"bulk\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"1\"}]}",
+  "ours": "{\"docs\": [{\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"w\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"10\"}}], \"bulk\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"1\"}]}"
+ },
+ {
+  "name": "g06.standalone.refuses_txnNumber",
+  "status": "pass",
+  "real": "{\"insert\": [\"ERR\", {\"$numberInt\": \"20\"}, \"IllegalOperation\"], \"find\": [\"ERR\", {\"$numberInt\": \"20\"}, \"IllegalOperation\"], \"string\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"count\": {\"$numberInt\": \"0\"}}",
+  "ours": "{\"insert\": [\"ERR\", {\"$numberInt\": \"20\"}, \"IllegalOperation\"], \"find\": [\"ERR\", {\"$numberInt\": \"20\"}, \"IllegalOperation\"], \"string\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\"], \"count\": {\"$numberInt\": \"0\"}}"
+ }
+]

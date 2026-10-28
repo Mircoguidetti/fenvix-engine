@@ -1,0 +1,402 @@
+[
+ {
+  "name": "text.text_on_two_plugins_2dsphere_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.053
+ },
+ {
+  "name": "text.drop_text_index_then_query_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.no_text_index_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "text.two_fields_equal_weights",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "text.weights_change_ranking",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "text.weights_on_wildcard_index",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.wildcard_indexes_every_string_field",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "text.nested_path_and_array_of_documents",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.text_in_other_field_not_searched",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "text.phrase_across_fields_not_joined",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "text.prefix_equality",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "text.prefix_in_list",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "text.prefix_missing_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "text.prefix_range_is_not_equality_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "text.prefix_with_extra_filter",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.188
+ },
+ {
+  "name": "text.prefix_and_and",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "text.suffix_index_still_works",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "text.prefix_numeric_values",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.prefix_array_values",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "text.sort_by_score",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "text.sort_by_score_limit",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "text.sort_by_score_skip",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "text.meta_projection_with_inclusion",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.meta_projection_with_exclusion",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.meta_projection_id_off",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "text.no_meta_no_score_field",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.meta_without_text_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "text.meta_sort_without_text_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "text.meta_unknown_projection_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.find_one_with_text",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "text.count_with_text",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "text.count_with_text_and_filter",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.distinct_with_text",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "text.text_and_other_conditions",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "text.text_with_and_operator",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "text.text_with_hint",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "text.update_many_with_text_filter",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "text.delete_many_with_text_filter",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.find_one_and_update_with_text",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.insert_after_index_creation",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "text.index_built_on_existing_documents",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.249
+ },
+ {
+  "name": "text.update_changes_terms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "text.update_unset_removes_terms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "text.replace_changes_terms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.248
+ },
+ {
+  "name": "text.delete_removes_terms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "text.upsert_into_text_index",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "text.language_override_update",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "text.language_override_bad_on_update_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "text.validate_text_index",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.coll_stats_counts_text_index",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ }
+]

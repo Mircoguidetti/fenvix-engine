@@ -1,0 +1,104 @@
+[
+ {
+  "name": "g04.proj.inclusion_exclusion",
+  "status": "pass",
+  "real": "{\"0:{'b': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"b\": {\"$numberInt\": \"6\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"b\": null}, {\"_id\": {\"$numberInt\": \"4\"}}], \"1:{'b': 0}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}, \"y\": {\"$numberInt\": \"2\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}], \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numb",
+  "ours": "{\"0:{'b': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"b\": {\"$numberInt\": \"6\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"b\": null}, {\"_id\": {\"$numberInt\": \"4\"}}], \"1:{'b': 0}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}, \"y\": {\"$numberInt\": \"2\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}], \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numb"
+ },
+ {
+  "name": "g04.proj.expressions",
+  "status": "pass",
+  "real": "{\"0:{'t': '$b'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"t\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"t\": {\"$numberInt\": \"6\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"t\": null}, {\"_id\": {\"$numberInt\": \"4\"}}], \"1:{'t': '$s', 'b': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}, \"t\": \"str\"}, {\"_id\": {\"$numberInt\": \"2\"}, \"b\": {\"$numberInt\": \"6\"}, \"t\": \"other\"}, {\"_id\": {\"$numberInt\": \"3\"}, \"b\": null}, {\"_id\": {\"$numberInt\": \"4\"}}], \"2:{'t': {'$add': ['$b', 1]}}\": [{\"_id\": {\"$numberInt\": \"1\"},",
+  "ours": "{\"0:{'t': '$b'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"t\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"t\": {\"$numberInt\": \"6\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"t\": null}, {\"_id\": {\"$numberInt\": \"4\"}}], \"1:{'t': '$s', 'b': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}, \"t\": \"str\"}, {\"_id\": {\"$numberInt\": \"2\"}, \"b\": {\"$numberInt\": \"6\"}, \"t\": \"other\"}, {\"_id\": {\"$numberInt\": \"3\"}, \"b\": null}, {\"_id\": {\"$numberInt\": \"4\"}}], \"2:{'t': {'$add': ['$b', 1]}}\": [{\"_id\": {\"$numberInt\": \"1\"},"
+ },
+ {
+  "name": "g04.proj.slice",
+  "status": "pass",
+  "real": "{\"0:{'arr': {'$slice': 2}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}, \"y\": {\"$numberInt\": \"2\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}], \"b\": {\"$numberInt\": \"5\"}, \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"f\": {\"g\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberInt\": \"2\"}}}, \"s\": \"str\", \"n\": null, \"arr\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"mixed\": [",
+  "ours": "{\"0:{'arr': {'$slice': 2}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}, \"y\": {\"$numberInt\": \"2\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}, {\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}], \"b\": {\"$numberInt\": \"5\"}, \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"f\": {\"g\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberInt\": \"2\"}}}, \"s\": \"str\", \"n\": null, \"arr\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}], \"mixed\": ["
+ },
+ {
+  "name": "g04.proj.elemMatch",
+  "status": "pass",
+  "real": "{\"0:{'a': {'$elemMatch': {'x': 2}}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}}], \"1:{'a': {'$elemMatch': {'x': 2, 'y': {'$gt': 3}}}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}}], \"2:{'a': {'$elemMatch': {'x': 9}}}\": [{\"_i",
+  "ours": "{\"0:{'a': {'$elemMatch': {'x': 2}}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}}], \"1:{'a': {'$elemMatch': {'x': 2, 'y': {'$gt': 3}}}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}}], \"2:{'a': {'$elemMatch': {'x': 9}}}\": [{\"_i"
+ },
+ {
+  "name": "g04.proj.positional",
+  "status": "pass",
+  "real": "{\"0:{'a.$': 1} | {'a.x': 2}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}]}], \"1:{'a.$': 1} | {'a': {'$elemMatch': {'x': 2, 'y': 4}}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}]}], \"2:{'a.$': 1} | {'a.y': {'$gt': 3}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}]}], \"3:{'arr.$': 1} | {'arr': {'$gt': 2}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"arr\": [{\"$numberInt\": \"3",
+  "ours": "{\"0:{'a.$': 1} | {'a.x': 2}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"3\"}}]}], \"1:{'a.$': 1} | {'a': {'$elemMatch': {'x': 2, 'y': 4}}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}]}], \"2:{'a.$': 1} | {'a.y': {'$gt': 3}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}, \"y\": {\"$numberInt\": \"4\"}}]}], \"3:{'arr.$': 1} | {'arr': {'$gt': 2}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"arr\": [{\"$numberInt\": \"3"
+ },
+ {
+  "name": "g04.proj.positional_with_sort_limit",
+  "status": "pass",
+  "real": "{\"0:{'arr.$': 1} | {'arr': {'$gt': 1}}\": [{\"_id\": {\"$numberInt\": \"3\"}, \"arr\": {\"$numberInt\": \"5\"}}]}",
+  "ours": "{\"0:{'arr.$': 1} | {'arr': {'$gt': 1}}\": [{\"_id\": {\"$numberInt\": \"3\"}, \"arr\": {\"$numberInt\": \"5\"}}]}"
+ },
+ {
+  "name": "g04.proj.positional_find_one_and_update_and_cursor_apis",
+  "status": "pass",
+  "real": "{\"__error__\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}}",
+  "ours": "{\"__error__\": {\"code\": {\"$numberInt\": \"2\"}, \"codeName\": \"BadValue\"}}"
+ },
+ {
+  "name": "g04.proj.command_forms",
+  "status": "pass",
+  "real": "{\"find_cmd\": {\"err\": [{\"$numberInt\": \"51246\"}, \"Location51246\"]}, \"fields_legacy\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}}], \"findAndModify\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\"]}}",
+  "ours": "{\"find_cmd\": {\"err\": [{\"$numberInt\": \"51246\"}, \"Location51246\"]}, \"fields_legacy\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}}], \"findAndModify\": {\"err\": [{\"$numberInt\": \"2\"}, \"BadValue\"]}}"
+ },
+ {
+  "name": "g04.proj.fuzz_1",
+  "status": "pass",
+  "real": "{\"0:{'a.x': 'lit'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": \"lit\"}, {\"x\": \"lit\"}, {\"x\": \"lit\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": [{\"x\": \"lit\"}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"x\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"x\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": [[{\"x\": \"lit\"}], {\"x\": \"lit\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"x\": \"lit\"}}], \"1:{'empty': {'$elemMatch': {'x': 2}}}\": [{\"_id\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {",
+  "ours": "{\"0:{'a.x': 'lit'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": \"lit\"}, {\"x\": \"lit\"}, {\"x\": \"lit\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": [{\"x\": \"lit\"}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"x\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {\"x\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": [[{\"x\": \"lit\"}], {\"x\": \"lit\"}]}, {\"_id\": {\"$numberInt\": \"6\"}, \"a\": {\"x\": \"lit\"}}], \"1:{'empty': {'$elemMatch': {'x': 2}}}\": [{\"_id\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {"
+ },
+ {
+  "name": "g04.proj.fuzz_2",
+  "status": "pass",
+  "real": "{\"0:{'a.x': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}}, {\"x\": {\"$numberInt\": \"2\"}}, {\"x\": {\"$numberInt\": \"2\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": [{\"x\": {\"$numberInt\": \"3\"}}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"x\": {\"$numberInt\": \"7\"}}}, {\"_id\": {\"$numberInt\": \"4\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": [[{\"x\": {\"$numberInt\": \"1\"}}], {\"x\": {\"$numberInt\": \"2\"}}]}, {\"_id\": {\"$numberInt\": \"6\"}}], \"1:{'zz.y': True, 'c.f': '$a.x'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"f\": [",
+  "ours": "{\"0:{'a.x': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}}, {\"x\": {\"$numberInt\": \"2\"}}, {\"x\": {\"$numberInt\": \"2\"}}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": [{\"x\": {\"$numberInt\": \"3\"}}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"x\": {\"$numberInt\": \"7\"}}}, {\"_id\": {\"$numberInt\": \"4\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": [[{\"x\": {\"$numberInt\": \"1\"}}], {\"x\": {\"$numberInt\": \"2\"}}]}, {\"_id\": {\"$numberInt\": \"6\"}}], \"1:{'zz.y': True, 'c.f': '$a.x'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"f\": ["
+ },
+ {
+  "name": "g04.proj.fuzz_3",
+  "status": "pass",
+  "real": "{\"0:{'nested.arr': 'lit'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"6\"}, \"nested\": {\"arr\": \"lit\"}}], \"1:{'nested.docs.v': {'$slice': 2}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}, \"y\": {\"$numberInt\": \"2\"}}, {\"x\": ",
+  "ours": "{\"0:{'nested.arr': 'lit'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"5\"}, \"nested\": {\"arr\": \"lit\"}}, {\"_id\": {\"$numberInt\": \"6\"}, \"nested\": {\"arr\": \"lit\"}}], \"1:{'nested.docs.v': {'$slice': 2}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"x\": {\"$numberInt\": \"1\"}, \"y\": {\"$numberInt\": \"2\"}}, {\"x\": "
+ },
+ {
+  "name": "g04.proj.fuzz_4",
+  "status": "pass",
+  "real": "{\"0:{'a.y': '$a.x'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"y\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"2\"}]}, {\"y\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"2\"}]}, {\"y\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"2\"}]}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": [{\"y\": [{\"$numberInt\": \"3\"}]}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"y\": {\"$numberInt\": \"7\"}}}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": [[{\"y\": [{\"$numberInt",
+  "ours": "{\"0:{'a.y': '$a.x'}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": [{\"y\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"2\"}]}, {\"y\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"2\"}]}, {\"y\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"2\"}]}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": [{\"y\": [{\"$numberInt\": \"3\"}]}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"a\": {\"y\": {\"$numberInt\": \"7\"}}}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": {}}, {\"_id\": {\"$numberInt\": \"5\"}, \"a\": [[{\"y\": [{\"$numberInt"
+ },
+ {
+  "name": "g04.proj.fuzz_5",
+  "status": "pass",
+  "real": "{\"0:{'n': '$c.d', 'nested': 7, 'mixed.k': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"mixed\": [{\"k\": {\"$numberInt\": \"1\"}}, []], \"n\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"n\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"n\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"nested\": {\"arr\": [{\"$numberInt\": \"1\"}, [{\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], {\"k\": {\"$numberInt\": \"4\"}}], \"docs\": [{\"v\": {\"$numberInt\": \"1\"}, \"w\": [{\"$n",
+  "ours": "{\"0:{'n': '$c.d', 'nested': 7, 'mixed.k': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"mixed\": [{\"k\": {\"$numberInt\": \"1\"}}, []], \"n\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"n\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}}, {\"_id\": {\"$numberInt\": \"4\"}, \"n\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, {\"_id\": {\"$numberInt\": \"5\"}, \"nested\": {\"arr\": [{\"$numberInt\": \"1\"}, [{\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], {\"k\": {\"$numberInt\": \"4\"}}], \"docs\": [{\"v\": {\"$numberInt\": \"1\"}, \"w\": [{\"$n"
+ },
+ {
+  "name": "g04.proj.fuzz_6",
+  "status": "pass",
+  "real": "{\"0:{'empty': 1, 'a': '$c.d', 'b': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}, \"empty\": [], \"a\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"b\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"b\": null}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, {\"_id\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"6\"}, \"b\": {\"$numberInt\": \"1\"}}], \"1:{'empty': 'lit', 's': {'$slice': 2}, 'c.f': 1, 'c.d': {'$elemMatch': {'$",
+  "ours": "{\"0:{'empty': 1, 'a': '$c.d', 'b': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"b\": {\"$numberInt\": \"5\"}, \"empty\": [], \"a\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"b\": {\"$numberInt\": \"6\"}, \"a\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"b\": null}, {\"_id\": {\"$numberInt\": \"4\"}, \"a\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, {\"_id\": {\"$numberInt\": \"5\"}}, {\"_id\": {\"$numberInt\": \"6\"}, \"b\": {\"$numberInt\": \"1\"}}], \"1:{'empty': 'lit', 's': {'$slice': 2}, 'c.f': 1, 'c.d': {'$elemMatch': {'$"
+ },
+ {
+  "name": "g04.proj.positional_fuzz_99",
+  "status": "pass",
+  "real": "{\"0:{'nested.docs.$': 1, 's': 1}|{'b': 5}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"s\": \"str\"}], \"1:{'c.$': 1}|{'arr': {'$in': [8, 2]}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"f\": {\"g\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberInt\": \"2\"}}}}, {\"_id\": {\"$numberInt\": \"2\"}, \"c\": {\"d\": {\"$numberInt\": \"2\"}}}], \"2:{'nested.docs.$': 1}|{'arr': {'$ne': 1}}\": {\"err\": [{\"$numberInt\": \"51246\"}, \"Location51246\"]}, \"3:{'b.$': 1, '",
+  "ours": "{\"0:{'nested.docs.$': 1, 's': 1}|{'b': 5}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"s\": \"str\"}], \"1:{'c.$': 1}|{'arr': {'$in': [8, 2]}}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"f\": {\"g\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberInt\": \"2\"}}}}, {\"_id\": {\"$numberInt\": \"2\"}, \"c\": {\"d\": {\"$numberInt\": \"2\"}}}], \"2:{'nested.docs.$': 1}|{'arr': {'$ne': 1}}\": {\"err\": [{\"$numberInt\": \"51246\"}, \"Location51246\"]}, \"3:{'b.$': 1, '"
+ },
+ {
+  "name": "g04.proj.positional_fuzz_100",
+  "status": "pass",
+  "real": "{\"0:{'zz.$': 1}|{'c.e': 2}\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"1:{'c.$': 1}|{'c.d': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"f\": {\"g\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberInt\": \"2\"}}}}, {\"_id\": {\"$numberInt\": \"4\"}, \"c\": [{\"d\": {\"$numberInt\": \"1\"}}]}], \"2:{'nested.arr.$': 1}|{'arr': {'$not': {'$lt': 2}}}\": {\"err\": [{\"$numberInt\": \"51246\"}, \"Location51246\"]}, \"3:{'a.$': 1}|{'c': {'$elemMatch': {'d': 2}}}",
+  "ours": "{\"0:{'zz.$': 1}|{'c.e': 2}\": [{\"_id\": {\"$numberInt\": \"1\"}}], \"1:{'c.$': 1}|{'c.d': 1}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"d\": {\"$numberInt\": \"1\"}, \"e\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}], \"f\": {\"g\": {\"$numberInt\": \"1\"}, \"h\": {\"$numberInt\": \"2\"}}}}, {\"_id\": {\"$numberInt\": \"4\"}, \"c\": [{\"d\": {\"$numberInt\": \"1\"}}]}], \"2:{'nested.arr.$': 1}|{'arr': {'$not': {'$lt': 2}}}\": {\"err\": [{\"$numberInt\": \"51246\"}, \"Location51246\"]}, \"3:{'a.$': 1}|{'c': {'$elemMatch': {'d': 2}}}"
+ },
+ {
+  "name": "g04.proj.positional_fuzz_101",
+  "status": "pass",
+  "real": "{\"0:{'c.e.$': 1}|{'$and': [{'arr': {'$gt': 1}}, {'a.x': 2}]}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"e\": [{\"$numberInt\": \"2\"}]}}], \"1:{'nested.arr.$': 1}|{'a.x': {'$in': [1, 3]}, 'arr': {'$lt': 9}}\": [{\"_id\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}}], \"2:{'b.$': 1, '_id': 1}|{'arr': {'$regex': 'x'}}\": [], \"3:{'c.e.$': 1}|{'zz': 2}\": [{\"_id\": {\"$numberInt\": \"5\"}}], \"4:{'a.$': 1, 'b': 1}|{'nested.docs.v': 2}\": [{\"_id\": {\"$numberInt\": \"5\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}}]}], \"5:{'b.$': 1",
+  "ours": "{\"0:{'c.e.$': 1}|{'$and': [{'arr': {'$gt': 1}}, {'a.x': 2}]}\": [{\"_id\": {\"$numberInt\": \"1\"}, \"c\": {\"e\": [{\"$numberInt\": \"2\"}]}}], \"1:{'nested.arr.$': 1}|{'a.x': {'$in': [1, 3]}, 'arr': {'$lt': 9}}\": [{\"_id\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}}], \"2:{'b.$': 1, '_id': 1}|{'arr': {'$regex': 'x'}}\": [], \"3:{'c.e.$': 1}|{'zz': 2}\": [{\"_id\": {\"$numberInt\": \"5\"}}], \"4:{'a.$': 1, 'b': 1}|{'nested.docs.v': 2}\": [{\"_id\": {\"$numberInt\": \"5\"}, \"a\": [{\"x\": {\"$numberInt\": \"2\"}}]}], \"5:{'b.$': 1"
+ }
+]

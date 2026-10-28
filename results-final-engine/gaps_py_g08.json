@@ -1,0 +1,86 @@
+[
+ {
+  "name": "g08.out.creates_in_the_other_database",
+  "status": "pass",
+  "real": "{\"result\": [], \"state\": {\"main.src\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s0\"}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"g\": {\"$numberInt\": \"1\"}, \"s\": \"s1\"}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}, \"g\": {\"$numberInt\": \"2\"}, \"s\": \"s2\"}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s3\"}, {\"_id\": {\"$numberInt\": \"4\"}, \"v\": {\"$numberInt\": \"4\"}, \"g\": {\"$numberInt\": \"1\"}, ",
+  "ours": "{\"result\": [], \"state\": {\"main.src\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s0\"}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"g\": {\"$numberInt\": \"1\"}, \"s\": \"s1\"}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}, \"g\": {\"$numberInt\": \"2\"}, \"s\": \"s2\"}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s3\"}, {\"_id\": {\"$numberInt\": \"4\"}, \"v\": {\"$numberInt\": \"4\"}, \"g\": {\"$numberInt\": \"1\"}, "
+ },
+ {
+  "name": "g08.out.replaces_and_keeps_indexes_and_options",
+  "status": "pass",
+  "real": "{\"r1\": [], \"s1\": {\"x.dst\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s0\"}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"g\": {\"$numberInt\": \"1\"}, \"s\": \"s1\"}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\", \"collation\": {\"locale\": \"en\", \"caseLevel\": false, \"caseFirst\": \"off\", \"strength\": {\"$numberInt\": \"2\"}, \"numericOrdering\": false, \"alternate\": \"non-ignorable\", \"maxVariable\": \"punct\", \"normalization\": false, \"ba",
+  "ours": "{\"r1\": [], \"s1\": {\"x.dst\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s0\"}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"g\": {\"$numberInt\": \"1\"}, \"s\": \"s1\"}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\", \"collation\": {\"locale\": \"en\", \"caseLevel\": false, \"caseFirst\": \"off\", \"strength\": {\"$numberInt\": \"2\"}, \"numericOrdering\": false, \"alternate\": \"non-ignorable\", \"maxVariable\": \"punct\", \"normalization\": false, \"ba"
+ },
+ {
+  "name": "g08.out.same_database_forms",
+  "status": "pass",
+  "real": "{\"explicit_db\": [], \"onto_source\": [], \"state\": {\"main.same\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s0\"}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"g\": {\"$numberInt\": \"1\"}, \"s\": \"s1\"}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}, \"g\": {\"$numberInt\": \"2\"}, \"s\": \"s2\"}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s3\"}, {\"_id\": {\"$numberInt\": \"4\"}, \"v\": {\"$numberInt\": \"4\"}, \"",
+  "ours": "{\"explicit_db\": [], \"onto_source\": [], \"state\": {\"main.same\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s0\"}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"g\": {\"$numberInt\": \"1\"}, \"s\": \"s1\"}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}, \"g\": {\"$numberInt\": \"2\"}, \"s\": \"s2\"}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}, \"g\": {\"$numberInt\": \"0\"}, \"s\": \"s3\"}, {\"_id\": {\"$numberInt\": \"4\"}, \"v\": {\"$numberInt\": \"4\"}, \""
+ },
+ {
+  "name": "g08.out.argument_errors",
+  "status": "pass",
+  "real": "[{\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid $out target namespace, $DB\"]}, {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"error with target namespace: Invalid collection name: a$b\"]}, {\"err\": [{\"$numberInt\": \"16990\"}, \"Location16990\", \"$out only supports a string or object argument, but found int\"]}, {\"err\": [{\"$numberInt\": \"16990\"}, \"Location16990\", \"$out only supports a string or object argument, but found null\"]}, {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BS",
+  "ours": "[{\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid $out target namespace, $DB\"]}, {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"error with target namespace: Invalid collection name: a$b\"]}, {\"err\": [{\"$numberInt\": \"16990\"}, \"Location16990\", \"$out only supports a string or object argument, but found int\"]}, {\"err\": [{\"$numberInt\": \"16990\"}, \"Location16990\", \"$out only supports a string or object argument, but found null\"]}, {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BS"
+ },
+ {
+  "name": "g08.merge.into_the_other_database",
+  "status": "pass",
+  "real": "{\"first\": [], \"again_merge\": [], \"replace\": [], \"keep\": [], \"pipeline_let\": [], \"fail\": {\"err\": [{\"$numberInt\": \"11000\"}, \"DuplicateKey\", \"$merge with whenMatched: fail found an existing document with the same values for the 'on' fields :: caused by :: E11000 duplicate key error collection: $DB_x.mrg index: _id_ dup key: { _id: 0 }\"]}, \"discard_new\": [], \"fail_missing\": {\"err\": [{\"$numberInt\": \"13113\"}, \"MergeStageNoMatchingDocument\", \"$merge could not find a matching document in the target coll",
+  "ours": "{\"first\": [], \"again_merge\": [], \"replace\": [], \"keep\": [], \"pipeline_let\": [], \"fail\": {\"err\": [{\"$numberInt\": \"11000\"}, \"DuplicateKey\", \"$merge with whenMatched: fail found an existing document with the same values for the 'on' fields :: caused by :: E11000 duplicate key error collection: $DB_x.mrg index: _id_ dup key: { _id: 0 }\"]}, \"discard_new\": [], \"fail_missing\": {\"err\": [{\"$numberInt\": \"13113\"}, \"MergeStageNoMatchingDocument\", \"$merge could not find a matching document in the target coll"
+ },
+ {
+  "name": "g08.merge.on_fields_and_unique_indexes",
+  "status": "pass",
+  "real": "{\"__error__\": {\"code\": {\"$numberInt\": \"11000\"}}}",
+  "ours": "{\"__error__\": {\"code\": {\"$numberInt\": \"11000\"}}}"
+ },
+ {
+  "name": "g08.merge.argument_errors",
+  "status": "pass",
+  "real": "[{\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"$merge requires a string or object argument, but found int\"]}, {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid $merge target namespace: '$DB.'\"]}, {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field '$merge.into' is missing but a required field\"]}, {\"err\": [{\"$numberInt\": \"51178\"}, \"Location51178\", \"$merge 'into' field  must be either a string or an object, but found int\"]}, {\"err\": [{\"$numberInt\": \"5786801\"}, \"Location57",
+  "ours": "[{\"err\": [{\"$numberInt\": \"14\"}, \"TypeMismatch\", \"$merge requires a string or object argument, but found int\"]}, {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid $merge target namespace: '$DB.'\"]}, {\"err\": [{\"$numberInt\": \"40414\"}, \"IDLFailedToParse\", \"BSON field '$merge.into' is missing but a required field\"]}, {\"err\": [{\"$numberInt\": \"51178\"}, \"Location51178\", \"$merge 'into' field  must be either a string or an object, but found int\"]}, {\"err\": [{\"$numberInt\": \"5786801\"}, \"Location57"
+ },
+ {
+  "name": "g08.merge.source_missing_on_field_and_dup_in_target",
+  "status": "pass",
+  "real": "{\"null\": {\"err\": [{\"$numberInt\": \"51132\"}, \"Location51132\", \"$merge write error: 'on' field 'k' cannot be missing, null, undefined or an array\"]}, \"missing\": {\"err\": [{\"$numberInt\": \"51132\"}, \"Location51132\", \"$merge write error: 'on' field 'k' cannot be missing, null, undefined or an array\"]}, \"array\": {\"err\": [{\"$numberInt\": \"51185\"}, \"Location51185\", \"$merge write error: 'on' field 'k' is an array\"]}, \"ok\": [], \"dup_k\": [], \"state\": {\"x.t2\": {\"docs\": [{\"_id\": {\"$numberInt\": \"1\"}, \"k\": {\"$numb",
+  "ours": "{\"null\": {\"err\": [{\"$numberInt\": \"51132\"}, \"Location51132\", \"$merge write error: 'on' field 'k' cannot be missing, null, undefined or an array\"]}, \"missing\": {\"err\": [{\"$numberInt\": \"51132\"}, \"Location51132\", \"$merge write error: 'on' field 'k' cannot be missing, null, undefined or an array\"]}, \"array\": {\"err\": [{\"$numberInt\": \"51185\"}, \"Location51185\", \"$merge write error: 'on' field 'k' is an array\"]}, \"ok\": [], \"dup_k\": [], \"state\": {\"x.t2\": {\"docs\": [{\"_id\": {\"$numberInt\": \"1\"}, \"k\": {\"$numb"
+ },
+ {
+  "name": "g08.rename.across_databases",
+  "status": "pass",
+  "real": "{\"rename\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"state\": {\"x.dst\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"s\": \"s0\", \"arr\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}]}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"s\": \"s1\", \"arr\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}, \"s\": \"s2\", \"arr\": [{\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}, \"s\": \"s3\", \"arr\":",
+  "ours": "{\"rename\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"state\": {\"x.dst\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}, \"s\": \"s0\", \"arr\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}]}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}, \"s\": \"s1\", \"arr\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}, \"s\": \"s2\", \"arr\": [{\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}]}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}, \"s\": \"s3\", \"arr\":"
+ },
+ {
+  "name": "g08.rename.keeps_collection_options_and_natural_order",
+  "status": "pass",
+  "real": "{\"rename\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"state\": {\"x.c2\": {\"docs\": [{\"_id\": \"a\", \"n\": {\"$numberInt\": \"2\"}}, {\"_id\": \"b\", \"n\": {\"$numberInt\": \"4\"}}, {\"_id\": \"m\", \"n\": {\"$numberInt\": \"1\"}}, {\"_id\": \"Q\", \"n\": {\"$numberInt\": \"3\"}}, {\"_id\": \"z\", \"n\": {\"$numberInt\": \"0\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\", \"collation\": {\"locale\": \"en\", \"caseLevel\": false, \"caseFirst\": \"off\", \"strength\": {\"$numberInt\": \"2\"}, \"numericOrdering\": false, \"alternate\": \"non-ignorable\", \"",
+  "ours": "{\"rename\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"state\": {\"x.c2\": {\"docs\": [{\"_id\": \"a\", \"n\": {\"$numberInt\": \"2\"}}, {\"_id\": \"b\", \"n\": {\"$numberInt\": \"4\"}}, {\"_id\": \"m\", \"n\": {\"$numberInt\": \"1\"}}, {\"_id\": \"Q\", \"n\": {\"$numberInt\": \"3\"}}, {\"_id\": \"z\", \"n\": {\"$numberInt\": \"0\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\", \"collation\": {\"locale\": \"en\", \"caseLevel\": false, \"caseFirst\": \"off\", \"strength\": {\"$numberInt\": \"2\"}, \"numericOrdering\": false, \"alternate\": \"non-ignorable\", \""
+ },
+ {
+  "name": "g08.rename.target_exists_and_dropTarget",
+  "status": "pass",
+  "real": "{\"no_drop\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"target namespace exists\"]}, \"state_after_refusal\": {\"main.src\": {\"docs\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\"}], \"options\": {}}, \"x.dst\": {\"docs\": [{\"_id\": {\"$numberInt\": \"9\"}, \"b\": {\"$numberInt\": \"1\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberI",
+  "ours": "{\"no_drop\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"target namespace exists\"]}, \"state_after_refusal\": {\"main.src\": {\"docs\": [{\"_id\": {\"$numberInt\": \"1\"}, \"a\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"a\": {\"$numberInt\": \"2\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id_\"}, {\"key\": {\"a\": {\"$numberInt\": \"1\"}}, \"name\": \"a_1\"}], \"options\": {}}, \"x.dst\": {\"docs\": [{\"_id\": {\"$numberInt\": \"9\"}, \"b\": {\"$numberInt\": \"1\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberI"
+ },
+ {
+  "name": "g08.rename.errors",
+  "status": "pass",
+  "real": "{\"missing_source\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"source namespace does not exist\"]}, \"same\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"Can't rename a collection to itself\"]}, \"same_cross_name\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"bad_source\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid source namespace: nodot\"]}, \"bad_target\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid target namespace: nodot\"]}, \"system_target\": {\"err\": [{\"$number",
+  "ours": "{\"missing_source\": {\"err\": [{\"$numberInt\": \"26\"}, \"NamespaceNotFound\", \"source namespace does not exist\"]}, \"same\": {\"err\": [{\"$numberInt\": \"20\"}, \"IllegalOperation\", \"Can't rename a collection to itself\"]}, \"same_cross_name\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"bad_source\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid source namespace: nodot\"]}, \"bad_target\": {\"err\": [{\"$numberInt\": \"73\"}, \"InvalidNamespace\", \"Invalid target namespace: nodot\"]}, \"system_target\": {\"err\": [{\"$number"
+ },
+ {
+  "name": "g08.rename.same_database",
+  "status": "pass",
+  "real": "{\"target_exists\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"target namespace exists\"]}, \"ok\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"drop\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"state\": {\"main.other\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id",
+  "ours": "{\"target_exists\": {\"err\": [{\"$numberInt\": \"48\"}, \"NamespaceExists\", \"target namespace exists\"]}, \"ok\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"drop\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"state\": {\"main.other\": {\"docs\": [{\"_id\": {\"$numberInt\": \"0\"}, \"v\": {\"$numberInt\": \"0\"}}, {\"_id\": {\"$numberInt\": \"1\"}, \"v\": {\"$numberInt\": \"1\"}}, {\"_id\": {\"$numberInt\": \"2\"}, \"v\": {\"$numberInt\": \"2\"}}, {\"_id\": {\"$numberInt\": \"3\"}, \"v\": {\"$numberInt\": \"3\"}}], \"indexes\": [{\"key\": {\"_id\": {\"$numberInt\": \"1\"}}, \"name\": \"_id"
+ },
+ {
+  "name": "g08.rename.larger_collection",
+  "status": "pass",
+  "real": "{\"rename\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"count\": {\"$numberInt\": \"3000\"}, \"src_count\": {\"$numberInt\": \"0\"}, \"idx\": {\"$numberInt\": \"60\"}, \"first\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}], \"sum\": {\"$numberInt\": \"73500\"}}",
+  "ours": "{\"rename\": {\"ok\": {\"$numberDouble\": \"1.0\"}}, \"count\": {\"$numberInt\": \"3000\"}, \"src_count\": {\"$numberInt\": \"0\"}, \"idx\": {\"$numberInt\": \"60\"}, \"first\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}], \"sum\": {\"$numberInt\": \"73500\"}}"
+ }
+]

@@ -1,0 +1,402 @@
+[
+ {
+  "name": "wild.elem_match_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "wild.elem_match_doc_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "wild.nested_array_value_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "wild.nested_array_value_range_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "wild.numeric_path_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "wild.numeric_path_doc_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "wild.size_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "wild.not_gt_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "wild.nin_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "wild.all_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "wild.string_range_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "wild.eq_empty_string_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.eq_long_path_missing_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "wild.mixed_types_range_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "wild.count_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "wild.sort_hint_error",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.sort_with_filter_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "wild.distinct_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "wild.hint_by_key_pattern",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "wild.subtree_in_subtree",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "wild.subtree_in_subtree_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "wild.subtree_subtree_root_scalar",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "wild.subtree_subtree_root_scalar_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "wild.subtree_outside_subtree",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "wild.subtree_outside_subtree_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "wild.subtree_subtree_deep",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "wild.subtree_subtree_deep_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "wild.subtree_subtree_range",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "wild.subtree_subtree_range_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "wild.projection_include_included",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "wild.projection_include_included_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "wild.projection_include_included_nested",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "wild.projection_include_included_nested_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "wild.projection_include_not_included",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "wild.projection_include_not_included_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "wild.projection_include_parent_of_included",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "wild.projection_include_parent_of_included_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "wild.projection_include_under_included",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "wild.projection_include_under_included_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "wild.projection_include_sibling_of_included",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "wild.projection_include_sibling_of_included_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "wild.projection_exclude_excluded",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "wild.projection_exclude_excluded_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "wild.projection_exclude_excluded_nested",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "wild.projection_exclude_excluded_nested_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "wild.projection_exclude_other",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "wild.projection_exclude_other_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "wild.projection_exclude_sibling",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "wild.projection_exclude_sibling_hint",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "wild.projection_exclude_under_excluded",
+  "group": "wildcard index",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ }
+]

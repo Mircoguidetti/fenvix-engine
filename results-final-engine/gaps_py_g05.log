@@ -1,0 +1,24 @@
+. g05.expr.sin 
+. g05.expr.cos 
+. g05.expr.tan 
+. g05.expr.asin 
+. g05.expr.acos 
+. g05.expr.atan 
+. g05.expr.sinh 
+. g05.expr.cosh 
+. g05.expr.tanh 
+. g05.expr.asinh 
+. g05.expr.acosh 
+. g05.expr.atanh 
+. g05.expr.degreesToRadians 
+. g05.expr.radiansToDegrees 
+. g05.expr.atan2 
+. g05.expr.bitwise 
+. g05.expr.stdDev_as_expression 
+. g05.expr.trig_inside_pipeline_shapes 
+K g05.sum_avg.double_accumulation (known: mongod's double summation ($sum/$avg of doubles of mixed magnitude) differs from the engine's compensated (Kahan) sum in the last bit for some data; the exact algorithm of mongod was not recovered (see results-gaps.md))
+. g05.sum_avg.integer_types_and_overflow 
+. g05.lookup.let_variables 
+. g05.stage.changeStreamSplitLargeEvent_outside_change_stream 
+. g05.stage.changeStreamSplitLargeEvent_in_change_stream 
+gaps_py: 22/23 identical to mongod 7.0.45, 1 known divergences (known_divergences.json)

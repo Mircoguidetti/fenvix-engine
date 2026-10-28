@@ -1,0 +1,18 @@
+. g04.proj.inclusion_exclusion 
+. g04.proj.expressions 
+. g04.proj.slice 
+. g04.proj.elemMatch 
+. g04.proj.positional 
+. g04.proj.positional_with_sort_limit 
+. g04.proj.positional_find_one_and_update_and_cursor_apis 
+. g04.proj.command_forms 
+. g04.proj.fuzz_1 
+. g04.proj.fuzz_2 
+. g04.proj.fuzz_3 
+. g04.proj.fuzz_4 
+. g04.proj.fuzz_5 
+. g04.proj.fuzz_6 
+. g04.proj.positional_fuzz_99 
+. g04.proj.positional_fuzz_100 
+. g04.proj.positional_fuzz_101 
+gaps_py: 17/17 identical to mongod 7.0.45

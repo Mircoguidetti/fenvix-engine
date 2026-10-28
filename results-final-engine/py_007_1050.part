@@ -1,0 +1,402 @@
+[
+ {
+  "name": "stage.unwind_error_unknown_option",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_number_spec",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "stage.unwind_error_empty_path",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_trailing_dot",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "stage.unwind_error_double_dot",
+  "group": "aggregate: stages",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.basic",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.by_foreign_id",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.no_match_gives_empty_array",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.local_array_matches_any_element",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.foreign_array_matches_any_element",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.null_and_missing_match_null_and_missing_foreign",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.missing_local_matches_missing_foreign",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.numeric_equivalence",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.embedded_document_equality",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.nested_as_path",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.as_overwrites_existing_field",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.as_overwrites_id",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.nested_local_and_foreign_fields",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.from_missing_collection",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.from_same_collection",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.then_unwind",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.then_unwind_preserve",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.then_match_on_joined",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.then_group_count",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.match_before_lookup",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.two_lookups",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.empty_local_collection",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.1000_docs_join",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.29
+ },
+ {
+  "name": "lookup.error_missing_as",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "lookup.error_missing_from",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.error_local_without_foreign",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.error_foreign_without_local",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.error_neither_fields_nor_pipeline",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "lookup.error_unknown_option",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.error_from_not_string",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "lookup.error_as_not_string",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "lookup.error_not_an_object",
+  "group": "aggregate: $lookup",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "lookup.extra_pipeline_form",
+  "group": "aggregate: $lookup",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "lookup.extra_let_pipeline_form",
+  "group": "aggregate: $lookup",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "lookup.extra_local_foreign_with_pipeline",
+  "group": "aggregate: $lookup",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "group.key_expression_cond",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.key_compound_document",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.key_compound_missing_fields_omitted",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.key_nested_path",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "group.key_constant",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "group.key_null_literal",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.key_array_value_groups_by_whole_array",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.key_expression_concat",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.key_numeric_equivalence",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "group.sum_expression_multiply",
+  "group": "aggregate: $group with expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

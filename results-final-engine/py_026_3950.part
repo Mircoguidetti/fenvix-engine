@@ -1,0 +1,402 @@
+[
+ {
+  "name": "tail.densify_error_no_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.densify_error_bounds_reversed",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_bounds_len",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_unknown_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_no_step",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.densify_error_bad_unit",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_locf",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_linear",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_value",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_value_expression",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_partition_by_fields",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_partition_by_expr",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_linear_partitioned",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_two_outputs",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "tail.fill_locf_without_sort",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_sorted_descending",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_new_field_value",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_unsorted_input",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_linear_dates",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_error_bad_method",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_error_both",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_error_empty_output",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_error_no_output",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_error_neither",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.fill_error_partition_both",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_error_linear_no_sort",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.24
+ },
+ {
+  "name": "tail.fill_error_unknown_field",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.fill_error_output_not_object",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_running_sum",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_whole_partition",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_sliding",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_following",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_partitioned_running",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_range",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_range_unbounded",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_push_addtoset",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_first_last",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_min_max",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_stddev",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_rank",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_rank_partitioned",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_shift",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "tail.window_ema",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_ema_alpha",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_derivative",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_integral",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_median",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_percentile",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_locf",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "tail.window_linear_fill",
+  "group": "aggregation tail",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ }
+]

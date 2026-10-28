@@ -1,0 +1,402 @@
+[
+ {
+  "name": "expr.in_distinct",
+  "group": "$expr",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_positive",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_negative",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.projection_slice_zero",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.projection_slice_larger_than_array",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.projection_slice_skip_limit",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_negative_skip_limit",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "find.projection_slice_skip_beyond_end",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_with_inclusion",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "find.projection_slice_with_exclusion",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "find.projection_slice_nested_path",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "find.projection_slice_array_of_docs_nested",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "find.projection_slice_with_id_excluded",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_double_arg",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_limit_zero_error",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_limit_negative_error",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_array_of_three_error",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_string_error",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "find.projection_slice_find_one",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "find.projection_slice_in_find_and_modify",
+  "group": "find: projection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "expr_op.cond_array_form",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.cond_object_form",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.cond_missing_branches_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.cond_branch_missing_field",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.cond_nested",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.ifnull",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.literal",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.array_and_object_literals",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.comparison_numbers",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.comparison_cross_type",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "expr_op.comparison_arrays_docs",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.comparison_dates_strings",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.comparison_wrong_arity_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.and_or_not",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "expr_op.and_or_not_single_non_array_argument",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "expr_op.not_wrong_arity_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.and_short_circuit_hides_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.in_array",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "expr_op.in_non_array_error",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.add",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.26
+ },
+ {
+  "name": "expr_op.add_type_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.add_overflow_promotes",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.add_date_and_numbers",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.subtract",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "expr_op.subtract_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.subtract_overflow",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "expr_op.multiply",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "expr_op.multiply_overflow",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.14
+ },
+ {
+  "name": "expr_op.multiply_errors",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "expr_op.divide",
+  "group": "aggregation expressions",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ }
+]

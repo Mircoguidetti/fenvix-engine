@@ -1,0 +1,402 @@
+[
+ {
+  "name": "ttl.large_batch",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.289
+ },
+ {
+  "name": "ttl.drop_collection_with_ttl_index",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.178
+ },
+ {
+  "name": "ttl.recreate_with_different_ttl_error",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "ttl.sparse_ttl_index",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.147
+ },
+ {
+  "name": "ttl.aggregate_match_group_after_expiry",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.162
+ },
+ {
+  "name": "ttl.find_one_and_update_skips_expired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.157
+ },
+ {
+  "name": "ttl.upsert_after_expiry_creates_new",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.14
+ },
+ {
+  "name": "ttl.two_ttl_indexes_either_expires",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.167
+ },
+ {
+  "name": "ttl.dates_before_1970",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.155
+ },
+ {
+  "name": "ttl.count_documents_only_unexpired",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.15
+ },
+ {
+  "name": "ttl.drop_and_recreate_ttl_index",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.274
+ },
+ {
+  "name": "ttl.expiry_removes_index_entries",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 8.159
+ },
+ {
+  "name": "ttl.unique_ttl_index_values",
+  "group": "TTL indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "txn.commit_makes_inserts_visible",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "txn.abort_discards_inserts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.144
+ },
+ {
+  "name": "txn.read_your_own_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "txn.uncommitted_invisible_to_others_until_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "txn.update_in_txn_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "txn.update_in_txn_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "txn.delete_in_txn_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "txn.delete_in_txn_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "txn.replace_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "txn.upsert_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "txn.find_one_and_update_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "txn.find_one_and_delete_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "txn.multi_collection_atomic_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "txn.multi_collection_abort_creates_nothing",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "txn.delete_then_reinsert_same_id",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.647
+ },
+ {
+  "name": "txn.dup_id_in_txn_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "txn.unique_violation_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "txn.unique_within_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.139
+ },
+ {
+  "name": "txn.unique_key_freed_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "txn.snapshot_isolation_reads",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "txn.snapshot_isolation_index_reads",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "txn.write_conflict_second_writer",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "txn.write_conflict_after_concurrent_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "txn.write_conflict_with_non_txn_commit_before_write",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "txn.no_conflict_different_documents",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "txn.concurrent_insert_same_id_conflicts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "txn.increment_in_two_sequential_txns",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "txn.with_transaction_commits",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "txn.with_transaction_error_aborts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "txn.find_sort_limit_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "txn.aggregate_sees_txn_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "txn.distinct_in_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "txn.indexed_find_in_txn_sees_own_writes",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "txn.index_entries_after_abort",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "txn.index_entries_after_commit",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "txn.large_txn_500_inserts",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "txn.unordered_insert_error_aborts_txn",
+  "group": "transactions",
+  "category": "replset",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ }
+]

@@ -1,0 +1,26 @@
+. g01.createIndexes.several_in_one_call 
+. g01.createIndexes.several_on_new_collection 
+. g01.createIndexes.second_spec_invalid_creates_none 
+. g01.createIndexes.duplicate_in_request 
+. g01.createIndexes.same_key_two_names_in_request 
+. g01.createIndexes.some_existing_some_new 
+. g01.createIndexes.several_unique_violation_on_second 
+. g01.createIndexes.node_createIndexes_helper 
+. g01.natural.find_all 
+. g01.natural.find_filter_unindexed 
+. g01.natural.find_skip_limit 
+. g01.natural.after_update_keeps_position 
+. g01.natural.delete_then_reinsert_goes_last 
+. g01.natural.upsert_appends 
+. g01.natural.sort_natural_asc_desc 
+. g01.natural.hint_natural 
+. g01.natural.find_one_picks_first_inserted 
+. g01.natural.update_one_and_delete_one_pick_first_inserted 
+. g01.natural.find_one_and_update_no_sort 
+. g01.natural.aggregate_match_and_limit 
+. g01.natural.aggregate_out_preserves_order 
+. g01.natural.mixed_type_ids 
+. g01.natural.cursor_getmore_batches 
+. g01.natural.bulk_write_mixed 
+. g01.natural.transaction_inserts_append 
+gaps_node: 25/25 identical to mongod 7.0.45

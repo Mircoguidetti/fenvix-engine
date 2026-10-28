@@ -1,0 +1,200 @@
+[
+ {
+  "name": "g01.createIndexes.several_in_one_call",
+  "status": "pass",
+  "real": "{\"before\": {\"$numberInt\": \"1\"}, \"after\": {\"$numberInt\": \"4\"}, \"created\": false, \"listed\": [[\"_id_\", [[\"_id\", {\"$numberInt\": \"1\"}]]], [\"a_1\", [[\"a\", {\"$numberInt\": \"1\"}]]], [\"b_1\", [[\"b\", {\"$numberInt\": \"-1\"}]]], [\"ca\", [[\"c\", {\"$numberInt\": \"1\"}], [\"a\", {\"$numberInt\": \"1\"}]]]]}",
+  "ours": "{\"before\": {\"$numberInt\": \"1\"}, \"after\": {\"$numberInt\": \"4\"}, \"created\": false, \"listed\": [[\"_id_\", [[\"_id\", {\"$numberInt\": \"1\"}]]], [\"a_1\", [[\"a\", {\"$numberInt\": \"1\"}]]], [\"b_1\", [[\"b\", {\"$numberInt\": \"-1\"}]]], [\"ca\", [[\"c\", {\"$numberInt\": \"1\"}], [\"a\", {\"$numberInt\": \"1\"}]]]]}"
+ },
+ {
+  "name": "g01.createIndexes.several_on_new_collection",
+  "status": "pass",
+  "real": "{\"r\": {\"createdCollectionAutomatically\": true, \"numIndexesBefore\": {\"$numberInt\": \"1\"}, \"numIndexesAfter\": {\"$numberInt\": \"3\"}}, \"listed\": [\"_id_\", \"x_1\", \"y_1\"]}",
+  "ours": "{\"r\": {\"createdCollectionAutomatically\": true, \"numIndexesBefore\": {\"$numberInt\": \"1\"}, \"numIndexesAfter\": {\"$numberInt\": \"3\"}}, \"listed\": [\"_id_\", \"x_1\", \"y_1\"]}"
+ },
+ {
+  "name": "g01.createIndexes.second_spec_invalid_creates_none",
+  "status": "pass",
+  "real": "{\"err\": [{\"$numberInt\": \"67\"}, \"CannotCreateIndex\"], \"listed\": [\"_id_\"]}",
+  "ours": "{\"err\": [{\"$numberInt\": \"67\"}, \"CannotCreateIndex\"], \"listed\": [\"_id_\"]}"
+ },
+ {
+  "name": "g01.createIndexes.duplicate_in_request",
+  "status": "pass",
+  "real": "{\"out\": {\"err\": [{\"$numberInt\": \"96\"}, \"OperationFailed\"]}, \"listed\": [\"_id_\"]}",
+  "ours": "{\"out\": {\"err\": [{\"$numberInt\": \"96\"}, \"OperationFailed\"]}, \"listed\": [\"_id_\"]}"
+ },
+ {
+  "name": "g01.createIndexes.same_key_two_names_in_request",
+  "status": "pass",
+  "real": "{\"out\": [{\"$numberInt\": \"85\"}, \"IndexOptionsConflict\"], \"listed\": [\"_id_\"]}",
+  "ours": "{\"out\": [{\"$numberInt\": \"85\"}, \"IndexOptionsConflict\"], \"listed\": [\"_id_\"]}"
+ },
+ {
+  "name": "g01.createIndexes.some_existing_some_new",
+  "status": "pass",
+  "real": "{\"r\": {\"numIndexesBefore\": {\"$numberInt\": \"2\"}, \"numIndexesAfter\": {\"$numberInt\": \"3\"}, \"note\": \"index already exists\"}, \"listed\": [\"_id_\", \"a_1\", \"b_1\"]}",
+  "ours": "{\"r\": {\"numIndexesBefore\": {\"$numberInt\": \"2\"}, \"numIndexesAfter\": {\"$numberInt\": \"3\"}, \"note\": \"index already exists\"}, \"listed\": [\"_id_\", \"a_1\", \"b_1\"]}"
+ },
+ {
+  "name": "g01.createIndexes.several_used_by_queries",
+  "status": "pass",
+  "real": "{\"plan\": \"b_1\", \"n\": {\"$numberInt\": \"9\"}}",
+  "ours": "{\"plan\": \"b_1\", \"n\": {\"$numberInt\": \"9\"}}"
+ },
+ {
+  "name": "g01.createIndexes.several_unique_violation_on_second",
+  "status": "pass",
+  "real": "{\"out\": [{\"$numberInt\": \"11000\"}, \"DuplicateKey\"], \"listed\": [\"_id_\"]}",
+  "ours": "{\"out\": [{\"$numberInt\": \"11000\"}, \"DuplicateKey\"], \"listed\": [\"_id_\"]}"
+ },
+ {
+  "name": "g01.createIndexes.pymongo_create_indexes_helper",
+  "status": "pass",
+  "real": "{\"names\": [\"a_1\", \"b_-1\", \"cd\"], \"listed\": [\"_id_\", \"a_1\", \"b_-1\", \"cd\"]}",
+  "ours": "{\"names\": [\"a_1\", \"b_-1\", \"cd\"], \"listed\": [\"_id_\", \"a_1\", \"b_-1\", \"cd\"]}"
+ },
+ {
+  "name": "g01.natural.find_all",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]"
+ },
+ {
+  "name": "g01.natural.find_filter_unindexed",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}]"
+ },
+ {
+  "name": "g01.natural.find_skip_limit",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}]",
+  "ours": "[{\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}]"
+ },
+ {
+  "name": "g01.natural.find_projection_only_id",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]"
+ },
+ {
+  "name": "g01.natural.after_update_keeps_position",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]"
+ },
+ {
+  "name": "g01.natural.delete_then_reinsert_goes_last",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"2\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"2\"}]"
+ },
+ {
+  "name": "g01.natural.upsert_appends",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"7\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"7\"}]"
+ },
+ {
+  "name": "g01.natural.sort_natural_asc_desc",
+  "status": "pass",
+  "real": "{\"asc\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}], \"desc\": [{\"$numberInt\": \"50\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"30\"}]}",
+  "ours": "{\"asc\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}], \"desc\": [{\"$numberInt\": \"50\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"30\"}]}"
+ },
+ {
+  "name": "g01.natural.hint_natural",
+  "status": "pass",
+  "real": "{\"fwd\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}], \"rev\": [{\"$numberInt\": \"50\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"30\"}], \"filtered\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"10\"}]}",
+  "ours": "{\"fwd\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}], \"rev\": [{\"$numberInt\": \"50\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"30\"}], \"filtered\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"10\"}]}"
+ },
+ {
+  "name": "g01.natural.find_one_picks_first_inserted",
+  "status": "pass",
+  "real": "{\"one\": {\"_id\": {\"$numberInt\": \"20\"}, \"v\": {\"$numberInt\": \"2\"}}, \"any\": {\"_id\": {\"$numberInt\": \"30\"}, \"v\": {\"$numberInt\": \"0\"}}}",
+  "ours": "{\"one\": {\"_id\": {\"$numberInt\": \"20\"}, \"v\": {\"$numberInt\": \"2\"}}, \"any\": {\"_id\": {\"$numberInt\": \"30\"}, \"v\": {\"$numberInt\": \"0\"}}}"
+ },
+ {
+  "name": "g01.natural.update_one_and_delete_one_pick_first_inserted",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]"
+ },
+ {
+  "name": "g01.natural.find_one_and_update_no_sort",
+  "status": "pass",
+  "real": "{\"r\": {\"_id\": {\"$numberInt\": \"30\"}, \"v\": {\"$numberInt\": \"0\"}}, \"r2\": {\"_id\": {\"$numberInt\": \"10\"}, \"v\": {\"$numberInt\": \"1\"}}}",
+  "ours": "{\"r\": {\"_id\": {\"$numberInt\": \"30\"}, \"v\": {\"$numberInt\": \"0\"}}, \"r2\": {\"_id\": {\"$numberInt\": \"10\"}, \"v\": {\"$numberInt\": \"1\"}}}"
+ },
+ {
+  "name": "g01.natural.aggregate_match_and_project",
+  "status": "pass",
+  "real": "{\"all\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}], \"match\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"50\"}], \"limit\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}]}",
+  "ours": "{\"all\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}], \"match\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"50\"}], \"limit\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}]}"
+ },
+ {
+  "name": "g01.natural.aggregate_group_first_last",
+  "status": "pass",
+  "real": "[{\"_id\": {\"$numberInt\": \"0\"}, \"first\": {\"$numberInt\": \"30\"}, \"last\": {\"$numberInt\": \"99\"}, \"all\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"99\"}]}, {\"_id\": {\"$numberInt\": \"1\"}, \"first\": {\"$numberInt\": \"10\"}, \"last\": {\"$numberInt\": \"1\"}, \"all\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"first\": {\"$numberInt\": \"20\"}, \"last\": {\"$numberInt\": \"50\"}, \"all\": [{\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"50\"}]}]",
+  "ours": "[{\"_id\": {\"$numberInt\": \"0\"}, \"first\": {\"$numberInt\": \"30\"}, \"last\": {\"$numberInt\": \"99\"}, \"all\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"99\"}]}, {\"_id\": {\"$numberInt\": \"1\"}, \"first\": {\"$numberInt\": \"10\"}, \"last\": {\"$numberInt\": \"1\"}, \"all\": [{\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}]}, {\"_id\": {\"$numberInt\": \"2\"}, \"first\": {\"$numberInt\": \"20\"}, \"last\": {\"$numberInt\": \"50\"}, \"all\": [{\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"50\"}]}]"
+ },
+ {
+  "name": "g01.natural.aggregate_out_preserves_order",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}]"
+ },
+ {
+  "name": "g01.natural.distinct_and_unwind",
+  "status": "pass",
+  "real": "{\"distinct\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"30\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"400\"}], \"v\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"9\"}]}",
+  "ours": "{\"distinct\": [{\"$numberInt\": \"1\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"30\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"400\"}], \"v\": [{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"9\"}]}"
+ },
+ {
+  "name": "g01.natural.string_and_objectid_ids",
+  "status": "pass",
+  "real": "[\"zeta\", \"alpha\", \"mid\", {\"$numberInt\": \"5\"}, null, {\"a\": {\"$numberInt\": \"1\"}}]",
+  "ours": "[\"zeta\", \"alpha\", \"mid\", {\"$numberInt\": \"5\"}, null, {\"a\": {\"$numberInt\": \"1\"}}]"
+ },
+ {
+  "name": "g01.natural.insert_many_batches",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"8\"}, {\"$numberInt\": \"9\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"11\"}, {\"$numberInt\": \"12\"}, {\"$numberInt\": \"13\"}, {\"$numberInt\": \"14\"}, {\"$numberInt\": \"15\"}, {\"$numberInt\": \"16\"}, {\"$numberInt\": \"17\"}, {\"$numberInt\": \"18\"}, {\"$numberInt\": \"19\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"21\"}, {\"$numberInt\": \"22\"}, {\"$",
+  "ours": "[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"3\"}, {\"$numberInt\": \"4\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"6\"}, {\"$numberInt\": \"7\"}, {\"$numberInt\": \"8\"}, {\"$numberInt\": \"9\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"11\"}, {\"$numberInt\": \"12\"}, {\"$numberInt\": \"13\"}, {\"$numberInt\": \"14\"}, {\"$numberInt\": \"15\"}, {\"$numberInt\": \"16\"}, {\"$numberInt\": \"17\"}, {\"$numberInt\": \"18\"}, {\"$numberInt\": \"19\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"21\"}, {\"$numberInt\": \"22\"}, {\"$"
+ },
+ {
+  "name": "g01.natural.bulk_write_mixed",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"9\"}]",
+  "ours": "[{\"$numberInt\": \"4\"}, {\"$numberInt\": \"8\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"9\"}]"
+ },
+ {
+  "name": "g01.natural.cursor_getmore_batches",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"37\"}, {\"$numberInt\": \"74\"}, {\"$numberInt\": \"111\"}, {\"$numberInt\": \"148\"}, {\"$numberInt\": \"185\"}, {\"$numberInt\": \"222\"}, {\"$numberInt\": \"259\"}, {\"$numberInt\": \"296\"}, {\"$numberInt\": \"32\"}, {\"$numberInt\": \"69\"}, {\"$numberInt\": \"106\"}, {\"$numberInt\": \"143\"}, {\"$numberInt\": \"180\"}, {\"$numberInt\": \"217\"}, {\"$numberInt\": \"254\"}, {\"$numberInt\": \"291\"}, {\"$numberInt\": \"27\"}, {\"$numberInt\": \"64\"}, {\"$numberInt\": \"101\"}, {\"$numberInt\": \"138\"}, {\"$numberInt\": \"175\"}, {",
+  "ours": "[{\"$numberInt\": \"0\"}, {\"$numberInt\": \"37\"}, {\"$numberInt\": \"74\"}, {\"$numberInt\": \"111\"}, {\"$numberInt\": \"148\"}, {\"$numberInt\": \"185\"}, {\"$numberInt\": \"222\"}, {\"$numberInt\": \"259\"}, {\"$numberInt\": \"296\"}, {\"$numberInt\": \"32\"}, {\"$numberInt\": \"69\"}, {\"$numberInt\": \"106\"}, {\"$numberInt\": \"143\"}, {\"$numberInt\": \"180\"}, {\"$numberInt\": \"217\"}, {\"$numberInt\": \"254\"}, {\"$numberInt\": \"291\"}, {\"$numberInt\": \"27\"}, {\"$numberInt\": \"64\"}, {\"$numberInt\": \"101\"}, {\"$numberInt\": \"138\"}, {\"$numberInt\": \"175\"}, {"
+ },
+ {
+  "name": "g01.natural.list_via_index_hint_uses_index_order",
+  "status": "pass",
+  "real": "{\"filter\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"50\"}], \"sort\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"50\"}]}",
+  "ours": "{\"filter\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"50\"}], \"sort\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"50\"}]}"
+ },
+ {
+  "name": "g01.natural.transaction_inserts_append",
+  "status": "pass",
+  "real": "{\"inside\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"1000\"}, {\"$numberInt\": \"5\"}], \"after\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"1000\"}, {\"$numberInt\": \"5\"}]}",
+  "ours": "{\"inside\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"1000\"}, {\"$numberInt\": \"5\"}], \"after\": [{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"1000\"}, {\"$numberInt\": \"5\"}]}"
+ },
+ {
+  "name": "g01.natural.rename_collection_keeps_order",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"0\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"10\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"25\"}, {\"$numberInt\": \"1\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"0\"}]"
+ },
+ {
+  "name": "g01.natural.collection_copy_via_out_after_deletes",
+  "status": "pass",
+  "real": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"100\"}]",
+  "ours": "[{\"$numberInt\": \"30\"}, {\"$numberInt\": \"20\"}, {\"$numberInt\": \"5\"}, {\"$numberInt\": \"99\"}, {\"$numberInt\": \"50\"}, {\"$numberInt\": \"2\"}, {\"$numberInt\": \"100\"}]"
+ }
+]
