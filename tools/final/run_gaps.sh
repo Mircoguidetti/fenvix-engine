@@ -21,6 +21,9 @@ for port in 27018 27019; do
   [ -f $pf ] && kill -TERM "$(cat $pf)" 2>/dev/null
 done
 for _ in $(seq 1 100); do up 27018 || up 27019 || break; sleep 0.3; done
+# engines of the TLS pairs and of the auth server always start fresh with the current binary
+$PYV_SYS $G/tls_env.py stop > /dev/null 2>&1
+$G/auth_env.sh stop > /dev/null 2>&1
 setup
 for item in g01 g02 g03 g04 g05 g06 g07 g08 g09 g10 g11 g12; do
   o=$OUT/gaps_py_$item.log
