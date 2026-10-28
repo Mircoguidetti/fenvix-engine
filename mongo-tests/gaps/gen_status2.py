@@ -54,6 +54,7 @@ BOTH = {
     "cmd:setClusterParameter": ["g09.diag.cluster_parameter_replset"], "cmd:setDefaultRWConcern": ["g09.diag.rwc_standalone", "g09.diag.rwc_replset"],
     "cmd:mapReduce": ["g11.mapreduce.options"], "opt:validate.full": ["g11.validate.full"],
     "opt:create.storageEngine": ["g11.create.storage_engine_and_index_option_defaults"], "opt:create.indexOptionDefaults": ["g11.create.storage_engine_and_index_option_defaults"],
+    "stage:$bucketAuto": ["g11.agg.bucketauto_granularity"],   # (all 13 granularity series; the earlier note "other series rejected" is obsolete: they were implemented in item 5)
     "stage:$queryStats": [S + "querystats"], "expr:$toHashedIndexKey": ["g11.expr.tohashedindexkey"],
     "stage:$currentOp": ["g09.diag.aggregate_database_stages"], "stage:$listLocalSessions": ["g09.diag.aggregate_database_stages"], "stage:$listSessions": ["g09.diag.aggregate_database_stages"],
 }
@@ -118,7 +119,10 @@ for rid, r in inv.items():
     pool, names = (PYC, PYN) if py else (NDC, NDN)
     pat = re.compile(r"[.\s(]" + re.escape(member) + r"\b\s*(\(|=|\b)") if member not in ALIAS else re.compile(re.escape(ALIAS[member]))
     hit = [n for n, body in pool.items() if pat.search(body) and n in names and (n.startswith("g12.") or n.startswith("g09.") or n.startswith("g10."))]
-    # a member may be called by a test of an earlier item: those are already covered; here only cases that are new or touch the member
+    if any(n.startswith("g12.") for n in hit):      # (the g12 cases were written for these members: prefer them to incidental calls of a common name)
+        hit = [n for n in hit if n.startswith("g12.")]
+    if rid == "node:MongoClient.connect-2":          # purely local (a second connect() on a connected client sends nothing): excluded, not cited
+        continue
     if not hit:
         left.append((rid, "no passing gap test calls the member"))
         continue
@@ -137,10 +141,12 @@ for rid, r in inv.items():
 for rid, r in inv.items():
     if not is_open(rid) or rid in done:
         continue
-    if r["evidence"].startswith("failing audit probes") or r["evidence"].startswith("passing audit probes (compat/probes)"):
+    mixed = r["evidence"].startswith("passing differential tests") and "failing audit probes" in r["evidence"] and "known difference" not in r["evidence"] and "limit" not in r["evidence"]
+    if r["evidence"].startswith("failing audit probes") or r["evidence"].startswith("passing audit probes (compat/probes)") or mixed:
         ok, pnames = probes_ok(rid)
         if ok and pnames:
-            w.writerow([rid, "covered", "passing audit probes (final run, standalone engine vs standalone mongod, replica-set engine vs replica-set mongod): " + ", ".join(pnames[:6]), "yes"])
+            keep = r["evidence"].split("; passing audit probes")[0].split("; failing audit probes")[0] if mixed else ""
+            w.writerow([rid, "covered", (keep + "; " if keep else "") + "passing audit probes (final run, standalone engine vs standalone mongod, replica-set engine vs replica-set mongod): " + ", ".join(pnames[:6]), "yes"])
             done.add(rid)
 for rid in inv:
     if is_open(rid) and rid not in done and not any(rid == l[0] for l in left):

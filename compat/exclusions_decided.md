@@ -15,7 +15,8 @@ Decision applied by `compat/apply_exclusions.py` (column `exclusion_approved` of
 | A3 Undocumented commands | 7 | listed by listCommands on mongo 7.0.45 but absent from the 7.0 manual (undocumented, no driver API uses it) |
 | A3 security.javascriptEnabled (startup option) | 1 | mongod startup configuration option (security.javascriptEnabled), not reachable through a driver |
 | A4 Not producible / not in 7.0 Community | 2 | A4: $vectorSearch does not exist in MongoDB 7.0 Community (Atlas Vector Search only) |
-| **Total** | **524** | |
+| Purely local driver member (founder-allowed, `apply_local_exclusions.py`) | 1 | `node:MongoClient.connect-2`: a second connect() on a connected client sends no request |
+| **Total** | **525** | |
 
 ## Put back in scope (proposed earlier, not excluded)
 

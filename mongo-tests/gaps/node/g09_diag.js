@@ -143,8 +143,9 @@ module.exports = ({ C, Long, ObjectId }) => {
     const pipes = { not_admin: [{ $currentOp: {} }], bad_opt: [{ $currentOp: { foo: 1 } }], arg_type: [{ $currentOp: 5 }], twice: [{ $currentOp: {} }, { $currentOp: {} }], not_first: [{ $match: {} }, { $currentOp: {} }], empty: [], match: [{ $match: {} }], group: [{ $group: { _id: 1 } }], coll_stats: [{ $collStats: {} }], facet: [{ $facet: { a: [] } }], unknown: [{ $nosuchstage: {} }], search: [{ $search: {} }], list_sessions: [{ $listSessions: {} }], list_cached: [{ $listCachedAndActiveUsers: {} }], local_bad_opt: [{ $listLocalSessions: { foo: 1 } }], local_users: [{ $listLocalSessions: { users: [{ user: 'x', db: 'y' }] } }] };
     for (const [n, p] of Object.entries(pipes)) out[n] = await agg(n === 'not_admin' ? db.databaseName : 'admin', p);
     const sid = (await adm(c).command({ startSession: 1 })).id; await db.command({ insert: 't', documents: [{ _id: 1 }], lsid: sid });
-    const sess = await agg('admin', [{ $listLocalSessions: { allUsers: true } }]); const has = (l) => Array.isArray(l) && l.some((s) => s._id.id.toString('hex') === sid.id.toString('hex'));
+    const mine = { $match: { '_id.id': sid.id } };   // (mongod's cache holds the sessions of every client: ask for this one, a first batch of 101 may not reach it)
+    const sess = await agg('admin', [{ $listLocalSessions: { allUsers: true } }, mine]); const has = (l) => Array.isArray(l) && l.some((s) => s._id.id.toString('hex') === sid.id.toString('hex'));
     out.local_sessions = [has(sess), Array.isArray(sess) && sess.length ? Object.keys(sess[0]).sort() : null, Array.isArray(sess) && sess.length ? Object.keys(sess[0]._id).sort() : null];
-    await adm(c).command({ endSessions: [sid] }); out.after_end = !has(await agg('admin', [{ $listLocalSessions: { allUsers: true } }])); out.match_after = await agg('admin', [{ $listLocalSessions: {} }, { $match: { nope: 1 } }]); return out;
+    await adm(c).command({ endSessions: [sid] }); out.after_end = !has(await agg('admin', [{ $listLocalSessions: { allUsers: true } }, mine])); out.match_after = await agg('admin', [{ $listLocalSessions: {} }, { $match: { nope: 1 } }]); return out;
   }, sa);
 };

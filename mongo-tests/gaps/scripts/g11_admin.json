@@ -2180,5 +2180,333 @@
     "__sortarr": "cursor.firstBatch"
    }
   ]
+ },
+ {
+  "name": "g11.agg.bucketauto_granularity",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "v": 0.3
+     },
+     {
+      "_id": 1,
+      "v": 1.7
+     },
+     {
+      "_id": 2,
+      "v": 2.2
+     },
+     {
+      "_id": 3,
+      "v": 9.5
+     },
+     {
+      "_id": 4,
+      "v": 47
+     },
+     {
+      "_id": 5,
+      "v": 123
+     },
+     {
+      "_id": 6,
+      "v": 0.012
+     },
+     {
+      "_id": 7,
+      "v": 555
+     },
+     {
+      "_id": 8,
+      "v": 8000
+     },
+     {
+      "_id": 9,
+      "v": 6.3
+     }
+    ]
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R10"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R20"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R40"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R80"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "1-2-5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E6"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E12"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E24"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E48"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E96"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E192"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "POWERSOF2"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "r5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "BAD"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 3,
+       "granularity": "E24",
+       "output": {
+        "n": {
+         "$sum": 1
+        },
+        "m": {
+         "$max": "$v"
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 2,
+       "granularity": "R10"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "insert": "u",
+    "documents": [
+     {
+      "_id": 1,
+      "v": -1
+     },
+     {
+      "_id": 2,
+      "v": "a"
+     },
+     {
+      "_id": 3,
+      "v": 0
+     }
+    ]
+   },
+   {
+    "aggregate": "u",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 2,
+       "granularity": "R5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "u",
+    "pipeline": [
+     {
+      "$match": {
+       "v": 0
+      }
+     },
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 2,
+       "granularity": "R5"
+      }
+     }
+    ],
+    "cursor": {}
+   }
+  ]
  }
 ]

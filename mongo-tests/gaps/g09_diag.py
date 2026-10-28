@@ -445,10 +445,11 @@ def _agg_db(client, db):
         out[name] = agg(db.name if name == "not_admin" else "admin", pipe)
     sid = client.admin.command("startSession")["id"]
     db.command({"insert": "t", "documents": [{"_id": 1}], "lsid": sid})
-    sess = agg("admin", [{"$listLocalSessions": {"allUsers": True}}])
+    mine = {"$match": {"_id.id": sid["id"]}}      # (the cache of mongod holds the sessions of every client: look for this one, a first batch of 101 may not reach it)
+    sess = agg("admin", [{"$listLocalSessions": {"allUsers": True}}, mine])
     out["local_sessions"] = [isinstance(sess, list) and any(s["_id"]["id"] == sid["id"] for s in sess), sorted(sess[0].keys()) if isinstance(sess, list) and sess else None, sorted(sess[0]["_id"].keys()) if isinstance(sess, list) and sess else None]
     client.admin.command({"endSessions": [sid]})
-    sess2 = agg("admin", [{"$listLocalSessions": {"allUsers": True}}])
+    sess2 = agg("admin", [{"$listLocalSessions": {"allUsers": True}}, mine])
     out["after_end"] = isinstance(sess2, list) and not any(s["_id"]["id"] == sid["id"] for s in sess2)
     out["match_after"] = agg("admin", [{"$listLocalSessions": {}}, {"$match": {"nope": 1}}])
     return out
