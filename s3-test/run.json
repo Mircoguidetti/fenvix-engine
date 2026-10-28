@@ -1,8 +1,8 @@
 {
-  "tests": [
-    1
-  ],
+  "tests": [],
   "note": "Trigger file. Tests 2 and 3 additionally need merge_results_blob = git blob id of results-merge.md (origin/main or origin/merge-engine) after the owner has read it and seen that ALL suites are green.",
   "merge_results_blob": "",
-  "launched_at": "2026-10-28T01:00:00Z"
+  "launched_at": "2026-10-28T01:15:57Z",
+  "mode": "cleanup_dryrun",
+  "wait_minutes": 65
 }
