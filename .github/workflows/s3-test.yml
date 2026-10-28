@@ -20,6 +20,7 @@ jobs:
       AWS_REGION: eu-central-1
       AWS_DEFAULT_REGION: eu-central-1
       AWS_PAGER: ""
+      AWS_ROLE_ARN: arn:aws:iam::865859654353:role/fenvix-gha-tests   # used by aws_refresh.sh
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,6 +38,7 @@ jobs:
           print(json.dumps({k: c.get(k) for k in ("iss", "aud", "sub", "repository", "repository_owner", "ref", "job_workflow_ref")}, indent=1))
           P
           echo "stop=$(jq -r '.stop_after_claims // false' s3-test/run.json)" >> "$GITHUB_OUTPUT"
+          echo "mode=$(jq -r '.mode // "tests"' s3-test/run.json)" >> "$GITHUB_OUTPUT"
 
       - name: Results branch (ledger) -> ./results
         if: steps.claims.outputs.stop != 'true'
@@ -49,26 +51,18 @@ jobs:
           fi
 
       # Everything below that can refuse the run happens BEFORE any AWS credential is requested.
-      - name: Gate (run.json, ledger total <= 30 USD, results-merge.md for tests 2/3)
+      - name: Gate (run.json, ledger total + 5 USD <= 24 USD, results-merge.md for tests 2/3)
         if: steps.claims.outputs.stop != 'true'
         run: bash s3-test/scripts/gate.sh
 
       - name: Build engine (patched) and s3probe in Amazon Linux 2023, make the bundle
-        if: steps.claims.outputs.stop != 'true'
+        if: steps.claims.outputs.stop != 'true' && steps.claims.outputs.mode == 'tests'
         run: bash s3-test/scripts/build.sh
 
-      - name: AWS credentials (OIDC, 4 h)
+      # The role's maximum session is 1 hour. Steps that last longer renew their credentials themselves
+      # (scripts/aws_refresh.sh: new OIDC token + assume-role), and the clean-up logs in again below.
+      - name: AWS credentials (OIDC, 1 h)
         if: steps.claims.outputs.stop != 'true'
-        id: aws4h
-        continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::865859654353:role/fenvix-gha-tests
-          aws-region: eu-central-1
-          role-duration-seconds: 14400
-
-      - name: AWS credentials (OIDC, 1 h fallback)
-        if: (steps.aws4h.outcome == 'failure') && steps.claims.outputs.stop != 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::865859654353:role/fenvix-gha-tests
@@ -76,10 +70,15 @@ jobs:
           role-duration-seconds: 3600
 
       - name: Test run (preflight, then engine tests as selected in run.json)
-        if: steps.claims.outputs.stop != 'true'
+        if: steps.claims.outputs.stop != 'true' && steps.claims.outputs.mode == 'tests'
         id: orchestrate
         continue-on-error: true
         run: bash s3-test/scripts/orchestrate.sh
+
+      - name: Dry run of the clean-up after more than 1 hour (no instance is launched)
+        if: steps.claims.outputs.stop != 'true' && steps.claims.outputs.mode == 'cleanup_dryrun'
+        continue-on-error: true
+        run: bash s3-test/scripts/cleanup_dryrun.sh
 
       # A 1 h session may have expired by now: get a fresh one for the cleanup.
       - name: AWS credentials for cleanup
@@ -94,6 +93,10 @@ jobs:
         if: (always()) && steps.claims.outputs.stop != 'true'
         run: bash s3-test/scripts/cleanup.sh run-out
 
+      - name: Dry run verification (bucket gone, no instance)
+        if: (always()) && steps.claims.outputs.stop != 'true' && steps.claims.outputs.mode == 'cleanup_dryrun'
+        run: bash s3-test/scripts/cleanup_dryrun_verify.sh
+
       - name: Ledger and results -> branch s3-test-results
         if: (always()) && steps.claims.outputs.stop != 'true'
         run: bash s3-test/scripts/finalize.sh
@@ -107,4 +110,5 @@ jobs:
             echo; echo "### Missing permissions / failed steps"
             cat results/s3-test/runs/${{ github.run_id }}/missing-permissions.md 2>/dev/null || echo "(none recorded)"
             echo; echo "### Steps"; echo '```'; cat run-out/steps.jsonl 2>/dev/null || true; echo '```'
+            echo; echo "### Dry run"; cat run-out/dryrun_result.txt 2>/dev/null || echo "(not a dry run)"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -19,7 +19,7 @@ gross=$(python3 -I $H/cost.py "$put" "$get" "$secs")
 [ -n "$unknown" ] && gross=$(python3 -I -c "print($CAP + $secs/3600*0.097)")
 echo "gross cost of this run: $gross USD ($note)"
 echo "$gross" > $OUT/gross_usd.txt
-python3 -I $H/ledger.py add results/s3-test/ledger.json "$GITHUB_RUN_ID" "$(jq -r '.tests|map(tostring)|join(",")' s3-test/run.json)" "$gross" "$put" "$get" "$secs" "$note" $unknown
+python3 -I $H/ledger.py add results/s3-test/ledger.json "$GITHUB_RUN_ID" "$(jq -r 'if (.mode // "tests")=="tests" then (.tests|map(tostring)|join(",")) else .mode end' s3-test/run.json)" "$gross" "$put" "$get" "$secs" "$note" $unknown
 mkdir -p results/s3-test/runs/$GITHUB_RUN_ID; cp -r $OUT/*.jsonl $OUT/*.log $OUT/*.txt $OUT/*.cost $OUT/*.reason $OUT/instance results/s3-test/runs/$GITHUB_RUN_ID/ 2>/dev/null
 touch $OUT/errors.jsonl
 jq -s '.' $OUT/errors.jsonl > results/s3-test/runs/$GITHUB_RUN_ID/errors.json 2>/dev/null

@@ -8,11 +8,13 @@
 # Fail closed. Its own reads (one GET per 30 s) are negligible and added to the ledger by finalize.
 set -u
 ID=$1; B=$2; OUT=$3; R=eu-central-1
-HERE=$(dirname "$0"); CAP=$(jq -r .run_cost_cap_usd "$HERE/../prices.json")
+HERE=$(dirname "$0"); . "$HERE/aws_refresh.sh"; export AWS_CREDS_AT=$(date +%s)
+CAP=$(jq -r .run_cost_cap_usd "$HERE/../prices.json")
 LAUNCH=$(grep '^LAUNCH_EPOCH=' "$OUT/state.env" | cut -d= -f2); : "${LAUNCH:=$(date +%s)}"
 reads=0
 while true; do
   sleep 30
+  refresh_aws_creds || true   # this process outlives the 1 h session: it renews its own credentials
   now=$(date +%s); el=$((now-LAUNCH)); reads=$((reads+1)); echo $reads > "$OUT/watchdog.reads"
   reason=""
   if aws s3 cp "s3://$B/_s3test/guard/counters.json" "$OUT/guard-latest.json" --only-show-errors 2>/dev/null; then

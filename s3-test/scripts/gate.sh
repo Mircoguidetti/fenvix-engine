@@ -7,14 +7,18 @@
 set -eu
 cd "${GITHUB_WORKSPACE:-.}"
 J=s3-test/run.json
+mode=$(jq -r '.mode // "tests"' $J)
+if [ "$mode" = cleanup_dryrun ]; then echo "mode cleanup_dryrun: no tests, no instance"; else
+[ "$mode" = tests ] || { echo "run.json: unknown mode $mode"; exit 1; }
 jq -e '.tests|type=="array" and length>0 and all(.[]; .==1 or .==2 or .==3)' $J >/dev/null || { echo "run.json: tests must be a non-empty list of 1, 2, 3"; exit 1; }
+fi
 total=$(python3 -I s3-test/scripts/ledger.py total results/s3-test/ledger.json)
 cap=$(jq -r .ledger_cap_usd s3-test/prices.json)
 run=$(jq -r .run_cost_cap_usd s3-test/prices.json)
 echo "ledger total: $total USD, one run may cost up to $run USD, ledger cap $cap USD"
 # A run may start only if the total AFTER a worst-case run still fits under the cap: the total never exceeds it.
 awk -v t="$total" -v r="$run" -v c="$cap" 'BEGIN{exit !(t+r>c)}' && { echo "LEDGER: total $total + one run $run would exceed $cap USD: no new run may start"; exit 1; }
-if jq -e '.tests|any(.==2 or .==3)' $J >/dev/null; then
+if [ "$mode" = tests ] && jq -e '.tests|any(.==2 or .==3)' $J >/dev/null; then
   want=$(jq -r '.merge_results_blob // ""' $J); got=""
   for ref in origin/main origin/merge-engine; do
     b=$(git rev-parse "$ref:results-merge.md" 2>/dev/null || true); [ -n "$b" ] && [ "$b" = "$want" ] && got=$b && echo "results-merge.md pinned blob $b found on $ref"
