@@ -158,6 +158,8 @@ pub struct Ctl {
     pub ops: OpLocks,
     pub usage: Arc<usage::Usage>,
     pub start_ms: i64,
+    /// The wire server: the control operations that touch users and roles go through its authentication code.
+    pub server: Arc<crate::cmd::Server>,
 }
 
 static CTL: std::sync::OnceLock<Arc<Ctl>> = std::sync::OnceLock::new();
@@ -168,9 +170,9 @@ pub fn get() -> Option<&'static Arc<Ctl>> {
 
 /// Wire the control layer into the process: usage accounting is always on (it is just counters); the admin port,
 /// background agents and crash recovery start only when `--admin-listen` is given.
-pub async fn start(dbs: Arc<Dbs>, lc: Arc<Lifecycle>, holder: String, args: CtlArgs, usage: Arc<usage::Usage>) -> Result<Arc<Ctl>> {
+pub async fn start(dbs: Arc<Dbs>, server: Arc<crate::cmd::Server>, lc: Arc<Lifecycle>, holder: String, args: CtlArgs, usage: Arc<usage::Usage>) -> Result<Arc<Ctl>> {
     let store = dbs.raw_store();
-    let ctl = Arc::new(Ctl { dbs, store, lc, holder, args: args.clone(), ops: OpLocks::default(), usage, start_ms: rec::now_ms() });
+    let ctl = Arc::new(Ctl { dbs, store, lc, holder, args: args.clone(), ops: OpLocks::default(), usage, start_ms: rec::now_ms(), server });
     let _ = CTL.set(Arc::clone(&ctl));
     pitr::install_wal_retention(&ctl);
     if args.admin_listen.is_none() {

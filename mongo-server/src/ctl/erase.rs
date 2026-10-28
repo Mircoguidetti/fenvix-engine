@@ -86,6 +86,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         }
     }
     ops::phase(ctl, db, "deleting").await?;
+    // The users and roles defined on the database live in admin.system.users / admin.system.roles, not under tenants/{db}:
+    // they go with it (idempotent, so a resumed erase repeats it harmlessly).
+    ctl.server.erase_database_auth(db).await.map_err(|e| ApiError::new(500, "erase_users_failed", format!("could not remove the users of {db}: {e}")))?;
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);

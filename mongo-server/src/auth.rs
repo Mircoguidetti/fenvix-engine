@@ -210,6 +210,20 @@ impl Server {
         Ok(r.get_i32("n").unwrap_or(0) as i64)
     }
 
+    /// Control layer (erase): remove the users and roles defined on database `db` (they live in `admin.system.users` and
+    /// `admin.system.roles`, outside the database's own objects). Open connections lose their privileges at once: the
+    /// generation counter moves, so every connection resolves its privileges again, and a user that is gone has none.
+    pub(crate) async fn erase_database_auth(&self, db: &str) -> R<(i64, i64)> {
+        let users = self.delete_auth_docs(USERS, doc! { "db": db }).await?;
+        let roles = self.delete_auth_docs(ROLES, doc! { "db": db }).await?;
+        Ok((users, roles))
+    }
+
+    /// Control layer (create, fork): does any user or role still exist with `db` as its database?
+    pub(crate) async fn database_has_auth(&self, db: &str) -> R<bool> {
+        Ok(!self.auth_docs(USERS, &doc! { "db": db }).await?.is_empty() || !self.auth_docs(ROLES, &doc! { "db": db }).await?.is_empty())
+    }
+
     async fn any_users(&self) -> R<bool> {
         Ok(!self.auth_docs(USERS, &Document::new()).await?.is_empty())
     }

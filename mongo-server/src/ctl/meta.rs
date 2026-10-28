@@ -150,12 +150,22 @@ pub async fn names(ctl: &Ctl) -> anyhow::Result<Vec<String>> {
 }
 
 /// Create an empty database: the first write makes the tenant exist (an empty collection list).
+/// A new database starts with no users and no roles: a name that still has some (defined before the database existed, or
+/// left by an erase of an older version) is refused, never silently adopted.
+pub async fn ensure_no_auth(ctl: &Ctl, db: &str) -> ApiResult<()> {
+    if ctl.server.database_has_auth(db).await.map_err(|e| ApiError::new(500, "internal", e.to_string()))? {
+        return Err(ApiError::conflict("users_exist", format!("users or roles are still defined on database {db}; drop them (dropAllUsersFromDatabase, dropAllRolesFromDatabase) or erase the database first")));
+    }
+    Ok(())
+}
+
 pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     check_name(db)?;
     let _op = ctl.ops.lock(db).await?;
     if exists(ctl, db).await? {
         return Err(ApiError::conflict("exists", format!("database {db} already exists")));
     }
+    ensure_no_auth(ctl, db).await?;
     // A leftover record of an erased database must not be inherited by a new one with the same name.
     rec::delete(&ctl.store, &meta_path(db)).await?;
     {

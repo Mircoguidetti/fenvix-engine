@@ -87,6 +87,7 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
     if meta::exists(ctl, target).await? || ops::get(ctl, target).await?.is_some() {
         return Err(ApiError::conflict("exists", format!("database {target} already exists")));
     }
+    meta::ensure_no_auth(ctl, target).await?;
     let t0 = std::time::Instant::now();
     let before = ctl.usage.today_sum(&[src, target]);
     let ancestors: Vec<String> = purge::ancestors(&ctl.store, src).await?.into_iter().filter_map(|(p, _)| db_of_path(&p)).collect();
