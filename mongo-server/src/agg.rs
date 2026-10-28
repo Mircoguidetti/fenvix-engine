@@ -326,14 +326,14 @@ fn update_acc(acc: &mut Acc, spec: &AccSpec, doc: &Document) -> R<()> {
         }
         Acc::Min(cur) => {
             if let Some(v) = val.filter(|v| !matches!(v, Bson::Null | Bson::Undefined)) {
-                if cur.as_ref().map(|c| compare(&v, c).is_le()).unwrap_or(true) {
+                if cur.as_ref().map(|c| compare(&v, c).is_lt()).unwrap_or(true) {
                     *cur = Some(v);
                 }
             }
         }
         Acc::Max(cur) => {
             if let Some(v) = val.filter(|v| !matches!(v, Bson::Null | Bson::Undefined)) {
-                if cur.as_ref().map(|c| compare(&v, c).is_ge()).unwrap_or(true) {
+                if cur.as_ref().map(|c| compare(&v, c).is_gt()).unwrap_or(true) {
                     *cur = Some(v);
                 }
             }

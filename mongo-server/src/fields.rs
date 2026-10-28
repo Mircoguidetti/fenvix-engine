@@ -25,9 +25,9 @@ fn specific(name: &str) -> Option<&'static [&'static str]> {
             "aggregate", "pipeline", "cursor", "explain", "allowDiskUse", "bypassDocumentValidation", "collation", "hint", "let", "fromMongos", "needsMerge", "mergeByPBRT", "exchange", "isMapReduceCommand", "runtimeConstants", "collectionUUID", "use44SortKeys",
             "encryptionInformation", "isClusterQueryWithoutShardKeyCmd", "passthroughToShard", "requestReshardingResumeToken", "generateV2ResumeTokens", "includeQueryStatsMetrics", "serializeForQueryAnalysis", "fromRouter",
         ],
-        "insert" => &["insert", "documents", "ordered", "bypassDocumentValidation", "encryptionInformation", "collectionUUID", "sampleId"],
-        "update" => &["update", "updates", "ordered", "bypassDocumentValidation", "let", "encryptionInformation", "runtimeConstants", "sampleId", "collectionUUID"],
-        "delete" => &["delete", "deletes", "ordered", "let", "encryptionInformation", "runtimeConstants", "sampleId", "collectionUUID"],
+        "insert" => &["insert", "documents", "ordered", "stmtIds", "bypassDocumentValidation", "encryptionInformation", "collectionUUID", "sampleId"],
+        "update" => &["update", "updates", "ordered", "stmtIds", "bypassDocumentValidation", "let", "encryptionInformation", "runtimeConstants", "sampleId", "collectionUUID"],
+        "delete" => &["delete", "deletes", "ordered", "stmtIds", "let", "encryptionInformation", "runtimeConstants", "sampleId", "collectionUUID"],
         "findAndModify" | "findandmodify" => &[
             "findAndModify", "findandmodify", "query", "fields", "sort", "update", "remove", "new", "upsert", "bypassDocumentValidation", "collation", "arrayFilters", "hint", "let", "runtimeConstants", "encryptionInformation", "sampleId", "collectionUUID",
         ],
