@@ -199,9 +199,9 @@ Tutti i risultati in tabella sono quelli di esecuzioni complete sul binario `d39
 |---|---|---|---|
 | ctl `test_04_export` (1 test: `test_streaming_uses_bounded_memory`) | "memory grew by 20 MB for a 40 MB export" con soglia `< 20` | **misura al limite della soglia** (20 contro 20); il codice di memoria dell'export non è cambiato dal difetto 8 (solo uno slice) | 4 su 4 passati da solo, poi 10 passati nel file. Rischio: test al limite, **non** un difetto provato |
 | ctl `test_08_costs[100000]` | `NoSuchBucket` | **colpa mia**: lanciando a mano la pulizia dei bucket ho cancellato il bucket del test in corso | rifatto: 3 passati (347 s) |
-| ctl `test_02`, `test_02b`, `test_03`, `test_03b` | errori di scrittura | **disco della sessione pieno** (vedi sotto) | rifatti dopo aver liberato spazio: 13, 12, 11, 11 passati |
-| Node fetta 3450:3600 (`js.where_expr_113-115`) | `insert_many` con errore di scrittura senza dettagli | stessa famiglia (disco quasi pieno); **log del motore perso, causa NON provata** | sotto-fetta 3450:3500 rieseguita: 50/50 |
-| Node fetta 4100:4127 (`tail.json_schema_*`, 5 test) | stesso errore | disco pieno (log del motore conservato) | rieseguita: 77/77 della fetta |
+| ctl `test_02`, `test_02b`, `test_03`, `test_03b` | errori di scrittura | **disco della sessione quasi pieno** (df al 97–99%; coerente con i dati, non provato riga per riga; vedi sotto) | rifatti dopo aver liberato spazio: 13, 12, 11, 11 passati |
+| Node fetta 3450:3600 (`js.where_expr_113-115`) | `insert_many` con errore di scrittura senza dettagli | forse la stessa famiglia (disco quasi pieno); **log del motore perso, causa NON provata** | sotto-fetta 3450:3500 rieseguita: 50/50 |
+| Node fetta 4100:4127 (`tail.json_schema_*`, 5 test) | stesso errore | disco quasi pieno (il log del motore mostra operazioni lentissime e fallite; df al 99% poco dopo; non provato direttamente) | rieseguita: 77/77 della fetta |
 | gaps `g03` pymongo | timeout DNS nei test `srv` (~21 s ciascuno) | **ambiente di test**: modulo `dnslib` mancante nel venv (serve all'assistente DNS dei test `mongodb+srv://`); installato | rifatto: 14/14 |
 | gaps Node `g10`, pymongo `g11`/`g12`, Node `g11` | log vuoti, troncati o `0/0` | scritti a **disco pieno** | rifatti (`g11` ha davvero 0 casi) |
 | gaps Node `g09` | 133/134 | non spiegato (vedi 4.2) | 134/134 |
