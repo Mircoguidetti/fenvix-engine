@@ -316,9 +316,14 @@ impl Server {
         let sess = self.session_entry(lsid_key);
         let s = sess.lock().await;
         if !s.txn && number < s.number {
-            return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {number} }} on session {} because a newer retryable write with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", lsid_text(lsid), s.number)));
+            return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {number} }} on session {} because a newer retryable write with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: -1 }} has already started on this session.", lsid_text(lsid), s.number)));
         }
         Ok(())
+    }
+
+    /// The session's latest number as a write or a transaction (the "active transaction number" of mongod's messages).
+    pub(crate) async fn retry_session_number(&self, lsid_key: &str) -> i64 {
+        self.session_entry(lsid_key).lock().await.number
     }
 
     /// A multi-document transaction starts at `number` on a session: it shares the number space with retryable writes.

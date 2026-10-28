@@ -127,15 +127,16 @@ impl Server {
     pub(crate) async fn txn_acquire(&self, db: &str, tc: &TxnCtx) -> R<Txn> {
         if !tc.start {
             self.retry_txn_continue(&tc.lsid, &tc.lsid_doc, tc.number).await?;
+            let retry_n = self.retry_session_number(&tc.lsid).await;
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(given_msg(&tc, -1)));
+                return Err(no_such(given_msg(&tc, retry_n)));
             };
             if s.number > tc.number {
                 return Err(too_old(&tc, s.number));
             }
             if s.number != tc.number {
-                return Err(no_such(given_msg(&tc, s.number)));
+                return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
             }
             return match std::mem::replace(&mut s.state, State::Active(None)) {
                 State::Active(Some(t)) => Ok(t),
@@ -215,15 +216,16 @@ impl Server {
             return Err(MongoError::new(72, "InvalidOptions", "commitTransaction needs autocommit: false".into()));
         };
         let txn = {
+            let retry_n = self.retry_session_number(&tc.lsid).await;
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(given_msg(&tc, -1)));
+                return Err(no_such(given_msg(&tc, retry_n)));
             };
             if s.number > tc.number {
                 return Err(too_old(&tc, s.number));
             }
             if s.number != tc.number {
-                return Err(no_such(given_msg(&tc, s.number)));
+                return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
             }
             match std::mem::replace(&mut s.state, State::Active(None)) {
                 State::Active(Some(t)) => t,
@@ -260,6 +262,7 @@ impl Server {
         };
         g.end_txn(txn_id);
         drop(g);
+        let retry_n = self.retry_session_number(&tc.lsid).await;
         let mut m = self.sessions.m.lock().unwrap();
         if let Some(s) = m.get_mut(&tc.lsid) {
             s.state = if result.is_ok() { State::Committed } else { State::Aborted };
@@ -272,15 +275,16 @@ impl Server {
             return Err(MongoError::new(72, "InvalidOptions", "abortTransaction needs autocommit: false".into()));
         };
         let taken = {
+            let retry_n = self.retry_session_number(&tc.lsid).await;
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(given_msg(&tc, -1)));
+                return Err(no_such(given_msg(&tc, retry_n)));
             };
             if s.number > tc.number {
                 return Err(too_old(&tc, s.number));
             }
             if s.number != tc.number {
-                return Err(no_such(given_msg(&tc, s.number)));
+                return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
             }
             match std::mem::replace(&mut s.state, State::Aborted) {
                 State::Active(Some(t)) => Some(t),
