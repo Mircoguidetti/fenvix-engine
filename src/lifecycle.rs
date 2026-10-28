@@ -803,6 +803,9 @@ pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display
     // are written (point-in-time restore replays them): it takes slatedb's own pass, which has an object age limit.
     // The incremental pass deletes by id range without looking at ages, so it is for databases without retention.
     let retain = WAL_RETAIN.get().map(|f| f(&id.to_string())).unwrap_or_default();
+    // Negative control of the test suite (`ctl-tests/test_09f_wal_retention_guard.py`): with this variable set the guard is off and
+    // the pass behaves as it did before the correction. Never set in production.
+    let retain = if std::env::var_os("MONGO_TEST_DISABLE_WAL_RETENTION_GUARD").is_some() { Duration::ZERO } else { retain };
     let mode = if retain > Duration::ZERO { 0 } else { WAL_GC_MODE.load(Relaxed) };
     let rec = if mode == 0 {
         gc_tenant_wal_slatedb(s3, &id, min_age.max(retain)).await?

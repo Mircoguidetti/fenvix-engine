@@ -7,9 +7,11 @@ that is what listens there).  usage: run_suite.py [--shards 6] [--drivers py,nod
 Output: mongo-tests/out/suite/{py,node}_<k>.log / .json and a summary on stdout."""
 import argparse, json, os, shutil, subprocess, sys, time, glob
 
-# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh).
+# The engine has no built-in S3 settings: MinIO of the tests, explicit (same values as tools/minio-env.sh). They replace any AWS_* already in the environment: a test must never talk to MinIO with real credentials, nor to real S3 with these.
 for _k, _v in {"AWS_ACCESS_KEY_ID": "minioadmin", "AWS_SECRET_ACCESS_KEY": "minioadmin", "AWS_REGION": "us-east-1", "AWS_ENDPOINT": "http://127.0.0.1:9000", "AWS_ALLOW_HTTP": "true"}.items():
-    os.environ.setdefault(_k, _v)
+    os.environ[_k] = _v
+for _k in ("AWS_SESSION_TOKEN", "AWS_PROFILE", "AWS_WEB_IDENTITY_TOKEN_FILE", "AWS_ROLE_ARN", "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", "AWS_CONTAINER_CREDENTIALS_FULL_URI"):
+    os.environ.pop(_k, None)
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TESTS = os.path.join(ROOT, "mongo-tests")
