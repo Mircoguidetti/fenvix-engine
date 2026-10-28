@@ -14,7 +14,7 @@ setup() {
   up 27028 && up 27030 || $G/auth_env.sh start > /dev/null 2>&1
   up 27048 && up 27044 && up 27052 || $PYV_SYS $G/tls_env.py start > /dev/null 2>&1
 }
-PYV_SYS=python3          # system python has `cryptography`, which tls_env.py needs to make certificates
+PYV_SYS=$PWD/mongo-tests/.venv/bin/python          # venv: pymongo and cryptography (needed by tls_env.py to make certificates)
 # the suites phase leaves its own engines (S3 store) on 27018/27019: stop them, the gap tests need local-store engines on a fresh directory
 for port in 27018 27019; do
   pf=mongo-tests/out/server-$port.pid
