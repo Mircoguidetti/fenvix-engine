@@ -119,7 +119,7 @@ impl Default for Prof {
 }
 
 pub struct Diag {
-    start: Instant,
+    pub(crate) start: Instant,
     /// insert, query, update, delete, getmore, command
     op: [AtomicU64; 6],
     /// inserted, deleted, updated, returned

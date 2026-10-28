@@ -338,3 +338,60 @@ pub fn bucket_catalog() -> Document {
     d.insert("stateManagement", doc! { "bucketsManaged": 0i64, "currentEra": 0i64, "erasWithRemainingBuckets": 0i64, "trackedClearOperations": 0i64 });
     d
 }
+
+/// `create` with `encryptedFields` (Queryable Encryption): validated and listed the way mongod does. The side collections
+/// (`enxcol_.<coll>.esc` / `.ecoc`) are not materialised: mongod hides them, and the encrypted payload handling of writes is the client's.
+pub fn encrypted_fields(coll: &str, v: &Bson, is_rs: bool) -> R<Document> {
+    let missing = |p: &str| MongoError::new(40414, "IDLFailedToParse", format!("BSON field '{p}' is missing but a required field"));
+    let Bson::Document(ef) = v else {
+        return Err(MongoError::type_mismatch(format!("BSON field 'create.encryptedFields' is the wrong type '{}', expected type 'object'", crate::update::type_name(v))));
+    };
+    if !is_rs {
+        return Err(MongoError::new(6346402, "Location6346402", "Encrypted collections are not supported on standalone".into()));
+    }
+    let Some(Bson::Array(fields)) = ef.get("fields") else { return Err(missing("create.encryptedFields.fields")) };
+    let known = ["double", "string", "object", "array", "binData", "undefined", "objectId", "bool", "date", "null", "regex", "dbPointer", "javascript", "symbol", "javascriptWithScope", "int", "timestamp", "long", "decimal", "minKey", "maxKey"];
+    let mut out_fields = Vec::new();
+    let mut key_ids: Vec<Bson> = Vec::new();
+    for f in fields {
+        let Bson::Document(f) = f else {
+            return Err(MongoError::type_mismatch(format!("BSON field 'create.encryptedFields.fields' is the wrong type '{}', expected type 'object'", crate::update::type_name(f))));
+        };
+        let key = match f.get("keyId") {
+            None | Some(Bson::Null) => return Err(missing("create.encryptedFields.fields.keyId")),
+            Some(k) => k.clone(),
+        };
+        let Some(Bson::String(path)) = f.get("path") else { return Err(missing("create.encryptedFields.fields.path")) };
+        let bt = match f.get("bsonType") {
+            Some(Bson::String(bt)) if known.contains(&bt.as_str()) => Some(bt.clone()),
+            Some(Bson::String(bt)) => return Err(MongoError::bad_value(format!("Unknown type name: {bt}"))),
+            _ => None,
+        };
+        if key_ids.contains(&key) {
+            return Err(MongoError::new(6338401, "Location6338401", "Duplicate key ids are not allowed".into()));
+        }
+        key_ids.push(key.clone());
+        let mut o = doc! { "keyId": key, "path": path.clone() };
+        if let Some(bt) = bt {
+            o.insert("bsonType", bt);
+        }
+        let contention = |q: &Document| {
+            let mut q = q.clone();
+            if !q.contains_key("contention") {
+                q.insert("contention", Bson::Int64(8));
+            }
+            Bson::Document(q)
+        };
+        match f.get("queries") {
+            Some(Bson::Document(q)) => { o.insert("queries", contention(q)); }
+            Some(Bson::Array(a)) => { o.insert("queries", a.iter().map(|q| q.as_document().map(contention).unwrap_or_else(|| q.clone())).collect::<Vec<_>>()); }
+            _ => {}
+        }
+        out_fields.push(Bson::Document(o));
+    }
+    Ok(doc! {
+        "escCollection": ef.get_str("escCollection").map(String::from).unwrap_or_else(|_| format!("enxcol_.{coll}.esc")),
+        "ecocCollection": ef.get_str("ecocCollection").map(String::from).unwrap_or_else(|_| format!("enxcol_.{coll}.ecoc")),
+        "fields": out_fields,
+    })
+}

@@ -58,6 +58,7 @@ mod txn;
 mod update;
 mod validation;
 mod views;
+mod repl_cmds;
 mod wc;
 mod wire;
 mod xdb;
@@ -201,6 +202,11 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
             Ok(Some(req)) => {
                 server.diag.note_seq(conn_id, &req.seq_keys);
                 let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
+                if reply.contains_key("$shutdown") {
+                    // `shutdown`: no reply; the connection closes and the process stops
+                    repl_cmds::SHUTDOWN.notify_one();
+                    break;
+                }
                 if req.more_to_come {
                     continue;
                 }
@@ -300,6 +306,7 @@ async fn run() -> Result<()> {
             }
             _ = tokio::signal::ctrl_c() => break,
             _ = term.recv() => break,
+            _ = repl_cmds::SHUTDOWN.notified() => break,
         }
     }
     eprintln!("shutting down: closing tenants cleanly");

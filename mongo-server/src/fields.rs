@@ -33,6 +33,7 @@ fn specific(name: &str) -> Option<&'static [&'static str]> {
         ],
         "getMore" => &["getMore", "collection", "batchSize"],
         "killCursors" => &["killCursors", "cursors"],
+        "shutdown" => &["shutdown", "force", "timeoutSecs"],
         _ => return None,
     })
 }

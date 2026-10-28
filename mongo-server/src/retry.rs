@@ -311,6 +311,16 @@ impl Server {
         Ok(())
     }
 
+    /// A statement of a transaction (not its start) at a number below the session's latest retryable write.
+    pub(crate) async fn retry_txn_continue(&self, lsid_key: &str, lsid: &Document, number: i64) -> R<()> {
+        let sess = self.session_entry(lsid_key);
+        let s = sess.lock().await;
+        if !s.txn && number < s.number {
+            return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {number} }} on session {} because a newer retryable write with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", lsid_text(lsid), s.number)));
+        }
+        Ok(())
+    }
+
     /// A multi-document transaction starts at `number` on a session: it shares the number space with retryable writes.
     pub(crate) async fn retry_txn_start(&self, lsid_key: &str, lsid: &Document, number: i64) -> R<()> {
         let sess = self.session_entry(lsid_key);

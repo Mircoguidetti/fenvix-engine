@@ -1,0 +1,65 @@
+[
+ {
+  "name": "g10.repl.cmds_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "replSetGetStatus": 1,
+    "__shape": true
+   },
+   {
+    "replSetGetConfig": 1,
+    "__shape": true
+   },
+   {
+    "replSetGetStatus": 1,
+    "__db": "test",
+    "__shape": true
+   },
+   {
+    "shutdown": 1,
+    "__db": "test"
+   },
+   {
+    "shutdown": 1,
+    "force": "x",
+    "__db": "admin"
+   },
+   {
+    "shutdown": 1,
+    "timeoutSecs": "x"
+   },
+   {
+    "shutdown": 1,
+    "bogus": 1
+   }
+  ]
+ },
+ {
+  "name": "g10.repl.cmds_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "replSetGetStatus": 1,
+    "__db": "admin"
+   },
+   {
+    "replSetGetConfig": 1,
+    "__db": "admin"
+   },
+   {
+    "replSetGetStatus": 1
+   },
+   {
+    "replSetGetConfig": 1
+   },
+   {
+    "getFreeMonitoringStatus": 1
+   },
+   {
+    "shutdown": 1,
+    "force": "x"
+   }
+  ]
+ }
+]

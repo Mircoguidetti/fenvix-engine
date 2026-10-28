@@ -215,6 +215,8 @@ impl Server {
     async fn dispatch_commands(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         // Commands that do not touch a tenant.
         match name {
+            "replSetGetStatus" | "replSetGetConfig" => return self.repl_cmd(name, db),
+            "shutdown" => return self.shutdown_cmd(db, cmd),
             "hello" | "isMaster" | "ismaster" => {
                 if let Ok(md) = cmd.get_document("client") {
                     self.diag.set_metadata(conn_id, md.clone());
@@ -541,6 +543,9 @@ impl Server {
         let special = crate::special_colls::parse_create(&format!("{db}.{coll}"), cmd, capped.is_some())?;
         if special.options.contains_key("timeseries") { crate::special_colls::SERIES_SEEN.store(true, std::sync::atomic::Ordering::Relaxed); }
         raw.extend(special.options.clone());
+        if let Some(v) = cmd.get("encryptedFields") {
+            raw.insert("encryptedFields", crate::special_colls::encrypted_fields(coll, v, self.is_rs())?);
+        }
         raw.extend(crate::collopts::plain_options("create", cmd)?);
         raw.extend(crate::collopts::validation_options("create", cmd)?);
         if let Some(i) = crate::collopts::images_option("create", cmd)? {

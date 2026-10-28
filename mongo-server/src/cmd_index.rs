@@ -455,7 +455,7 @@ impl Server {
         let coll = collection_name(cmd, "listIndexes")?;
         let mut g = self.dbs.lock(db).await;
         if !g.collections().await?.iter().any(|n| n == coll) {
-            return Err(MongoError::namespace_not_found("ns does not exist".to_string()));
+            return Err(MongoError::namespace_not_found(format!("ns does not exist: {db}.{coll}")));
         }
         let mut docs: VecDeque<Document> = VecDeque::new();
         let indexes = self.load_indexes(&mut g, db, coll).await?;

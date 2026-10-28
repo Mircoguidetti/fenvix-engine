@@ -51,8 +51,8 @@ pub struct TxnCtx {
     pub start: bool,
 }
 
-/// mongod's text for a transaction number that matches no transaction of the session.
-fn given_msg(tc: &TxnCtx, active: i64) -> String {
+/// mongod's text for a session: `<uuid> - <user digest> -  - `.
+fn session_text(tc: &TxnCtx) -> String {
     let uuid = match tc.lsid_doc.get("id") {
         Some(Bson::Binary(b)) if b.bytes.len() == 16 => {
             let h: String = b.bytes.iter().map(|x| format!("{x:02x}")).collect();
@@ -65,7 +65,17 @@ fn given_msg(tc: &TxnCtx, active: i64) -> String {
         use sha2::Digest;
         base64::engine::general_purpose::STANDARD.encode(sha2::Sha256::digest(b""))
     };
-    format!("Given transaction number {} on session {uuid} - {uid} -  -  using txnRetryCounter 0 does not match any in-progress transactions. The active transaction number is {active}", tc.number)
+    format!("{uuid} - {uid} -  - ")
+}
+
+/// mongod's text for a transaction number that matches no transaction of the session.
+fn given_msg(tc: &TxnCtx, active: i64) -> String {
+    format!("Given transaction number {} on session {} using txnRetryCounter 0 does not match any in-progress transactions. The active transaction number is {active}", tc.number, session_text(tc))
+}
+
+/// mongod's text for a transaction number below the session's newest transaction.
+fn too_old(tc: &TxnCtx, newest: i64) -> MongoError {
+    MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {newest}, txnRetryCounter: 0 }} has already started on this session.", tc.number, session_text(tc)))
 }
 
 fn hex(b: &[u8]) -> String {
@@ -116,12 +126,13 @@ impl Server {
     /// Start (`startTransaction: true`) or continue a transaction; the caller owns it until [`Server::txn_release`].
     pub(crate) async fn txn_acquire(&self, db: &str, tc: &TxnCtx) -> R<Txn> {
         if !tc.start {
+            self.retry_txn_continue(&tc.lsid, &tc.lsid_doc, tc.number).await?;
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
                 return Err(no_such(given_msg(&tc, -1)));
             };
             if s.number > tc.number {
-                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
+                return Err(too_old(&tc, s.number));
             }
             if s.number != tc.number {
                 return Err(no_such(given_msg(&tc, s.number)));
@@ -145,7 +156,7 @@ impl Server {
             let mut m = self.sessions.m.lock().unwrap();
             let s = m.entry(tc.lsid.clone()).or_insert(Session { number: -1, state: State::Aborted });
             if tc.number < s.number {
-                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction {} on session {} because a newer transaction {} has already started.", tc.number, tc.lsid, s.number)));
+                return Err(too_old(&tc, s.number));
             }
             if tc.number == s.number {
                 return Err(MongoError::new(50911, "Location50911", format!("Cannot start a transaction at given transaction number {} on session because a transaction with the same number is already started.", tc.number)));
@@ -209,7 +220,7 @@ impl Server {
                 return Err(no_such(given_msg(&tc, -1)));
             };
             if s.number > tc.number {
-                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
+                return Err(too_old(&tc, s.number));
             }
             if s.number != tc.number {
                 return Err(no_such(given_msg(&tc, s.number)));
@@ -266,7 +277,7 @@ impl Server {
                 return Err(no_such(given_msg(&tc, -1)));
             };
             if s.number > tc.number {
-                return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {} }} on session {} because a newer transaction with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: 0 }} has already started on this session.", tc.number, tc.lsid, s.number)));
+                return Err(too_old(&tc, s.number));
             }
             if s.number != tc.number {
                 return Err(no_such(given_msg(&tc, s.number)));
