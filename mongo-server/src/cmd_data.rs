@@ -122,6 +122,12 @@ impl Server {
             attach(&mut g, tx);
             self.find_part(&mut *g, db, coll, &filter, &sort, want, hint_arg, tx_ov(tx)).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?
         };
+        if sort.is_empty() && cmd.get("hint").map(|h| matches!(h, Bson::Document(d) if d.contains_key("$natural"))).unwrap_or(true) {
+            if self.coll_kind(db, coll).await?.map(|k| k.clustered.is_some()).unwrap_or(false) {
+                let rev = natural_hint.as_ref().or_else(|| cmd.get("hint")).and_then(|h| h.as_document()).and_then(|d| d.get("$natural")).map(|n| crate::query::as_f64(n) < 0.0).unwrap_or(false);
+                crate::special_colls::sort_by_id(&mut docs, rev);
+            }
+        }
         sort_docs(&mut docs, &sort);
         let mut docs: VecDeque<Document> = docs.into_iter().skip(skip).collect();
         if limit > 0 {
@@ -191,6 +197,10 @@ impl Server {
         let mut n = n.saturating_sub(skip);
         if limit > 0 {
             n = n.min(limit);
+        }
+        if tx.is_none() && self.coll_kind(db, coll).await?.map(|k| k.series.is_some()).unwrap_or(false) {
+            // counted by an aggregation on a time-series collection, which replies with an integer ok
+            return Ok(doc! { "n": n as i32, "ok": 1 });
         }
         Ok(doc! { "n": n as i32, "ok": 1.0 })
     }
@@ -605,9 +615,12 @@ impl Server {
         let mut w = take_writes(tx);
         w.bypass_validation = bool_arg(cmd.get("bypassDocumentValidation"), false);
         let names = w.names.clone().unwrap_or(names);
+        let kind = g.coll_opts(coll).await?;
         let mut errors: Vec<Bson> = Vec::new();
         let mut n = 0;
         let mut replayed = 0;
+        let mut ts_ordered_fail = false;
+        let docs_len = docs.len();
         for (i, raw) in docs.iter().enumerate() {
             if let Some(b) = rr.as_mut() {
                 if b.run.is_retried(i) {
@@ -621,13 +634,23 @@ impl Server {
                 if ordered { break } else { continue }
             };
             let mut d = d.clone();
+            if let Some((tf, _)) = kind.as_ref().and_then(|k| k.series.as_ref()) {
+                if !matches!(d.get(tf.as_str()), Some(Bson::DateTime(_))) {
+                    errors.push(Bson::Document(write_error(i, 2, format!("'{tf}' must be present and contain a valid BSON UTC datetime value"))));
+                    if ordered { ts_ordered_fail = true; break } else { continue }
+                }
+                if d.get("_id").is_none() {
+                    d.insert(crate::text::TS_AUTO, true);
+                }
+                d = crate::special_colls::series_order(d, kind.as_ref().and_then(|k| k.series.as_ref()).unwrap());
+            }
             if d.get("_id").is_none() {
                 let mut with_id = doc! { "_id": ObjectId::new() };
                 for (k, v) in d {
                     with_id.insert(k, v);
                 }
                 d = with_id;
-            } else if d.keys().next().map(String::as_str) != Some("_id") {
+            } else if d.keys().next().map(String::as_str) != Some("_id") && !kind.as_ref().map(|k| k.series.is_some()).unwrap_or(false) {
                 // MongoDB always stores `_id` as the first field.
                 let id = d.remove("_id").unwrap();
                 let mut with_id = doc! { "_id": id };
@@ -643,7 +666,15 @@ impl Server {
             }
             // An expired-but-not-yet-removed document still holds its _id and its unique keys.
             if w.exists(&mut g, coll, &id).await? {
-                errors.push(Bson::Document(MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id }, g.collation_of(coll).as_deref()).to_write_error(i)));
+                let mut e = MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id.clone() }, g.collation_of(coll).as_deref());
+                if kind.as_ref().map(|k| k.clustered.is_some()).unwrap_or(false) {
+                    // (a clustered collection has no _id index to name)
+                    e.msg = format!("E11000 duplicate key error collection: {ns} dup key: {} found value: {{}}", crate::update::fmt_doc(&doc! { "_id": id.clone() }));
+                    if let Some(x) = e.extra.as_mut() {
+                        x.insert("foundValue", doc! {});
+                    }
+                }
+                errors.push(Bson::Document(e.to_write_error(i)));
                 if ordered { break } else { continue }
             }
             if let Err(e) = w.put(&mut g, coll, &ns, &mut indexes, &d, None).await {
@@ -670,7 +701,7 @@ impl Server {
         if let Some(b) = rr.as_mut() {
             b.run.apply();
         }
-        let mut reply = doc! { "n": (n + replayed) as i32 };
+        let mut reply = doc! { "n": if ts_ordered_fail { docs_len as i32 } else { (n + replayed) as i32 } };
         if !errors.is_empty() {
             reply.insert("writeErrors", errors);
         }
@@ -704,6 +735,7 @@ impl Server {
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
         let ttl_specs = index::ttl_specs(&indexes);
+        let series = g.coll_opts(coll).await?.and_then(|k| k.series.clone());
         let mut w = take_writes(tx);
         w.bypass_validation = bool_arg(cmd.get("bypassDocumentValidation"), false);
         let names = w.names.clone().unwrap_or(names);
@@ -730,7 +762,8 @@ impl Server {
                 }
             }
             let before = (acc.n, acc.n_modified, acc.upserted.len());
-            let step: R<()> = match &cols[i] { Err(e) => Err(e.clone()), Ok(None) => update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc).await, Ok(Some(c)) => crate::collation::scope(Some(c.clone()), update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc)).await };
+            let series_err = series.as_ref().and_then(|t| spec.as_document().and_then(|d| crate::special_colls::series_update_error(t, d)));
+            let step: R<()> = if let Some(e) = series_err { Err(e) } else { match &cols[i] { Err(e) => Err(e.clone()), Ok(None) => update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc).await, Ok(Some(c)) => crate::collation::scope(Some(c.clone()), update_stmt(&mut g, coll, &ns, &mut indexes, &ttl_specs, &mut w, spec, i, &mut acc)).await } };
             if step.is_ok() {
                 if let Some(b) = rr.as_mut() {
                     let modified = acc.n_modified - before.1;
@@ -864,6 +897,9 @@ impl Server {
         }
         let mut g = self.dbs.lock(db).await;
         attach(&mut g, tx);
+        if g.coll_opts(coll).await?.map(|k| k.series.is_some()).unwrap_or(false) {
+            return Err(MongoError::new(166, "CommandNotSupportedOnView", format!("Taking {ns} lock for timeseries is not allowed")));
+        }
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;
@@ -873,7 +909,7 @@ impl Server {
         w.bypass_validation = bool_arg(cmd.get("bypassDocumentValidation"), false);
         let names = w.names.clone().unwrap_or(names);
         let (mut matched, _, _) = find_docs(&mut g, coll, &indexes, &FindOpts { filter: &q, sort: &sort, want: Some(1), hint, ttl: ttl_ctx(&ttl_specs), ov: Some(&w.ov) }).await?;
-        for d in matched.iter_mut() { crate::text::strip_hidden(d); }
+        for d in matched.iter_mut() { crate::text::strip_scores(d); }
         sort_docs(&mut matched, &sort);
         let hit = matched.into_iter().next();
         if remove {
@@ -1020,6 +1056,7 @@ struct UpdAcc {
 
 #[allow(clippy::too_many_arguments)]
 async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<IndexDef>, ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, i: usize, acc: &mut UpdAcc) -> R<()> {
+                let series = g.coll_opts(coll).await?.and_then(|k| k.series.clone());
                 let spec = spec.as_document().ok_or_else(|| MongoError::new(14, "TypeMismatch", "update statement must be an object".into()))?;
                 let q = spec.get_document("q").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'updates.q' is missing but a required field".into()))?;
                 let u = match spec.get("u") {
@@ -1030,7 +1067,7 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                 let upsert = bool_arg(spec.get("upsert"), false);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let (mut matched, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if multi { None } else { Some(1) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
-        for d in matched.iter_mut() { crate::text::strip_hidden(d); }
+        for d in matched.iter_mut() { crate::text::strip_scores(d); }
                 if !multi {
                     matched.truncate(1);
                 }
@@ -1049,7 +1086,10 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                     return Ok(());
                 }
                 for old in matched {
-                    let new = u.apply(&old)?;
+                    let mut new = u.apply(&old)?;
+                    if let Some(t) = &series {
+                        new = crate::special_colls::series_order(new, t);
+                    }
                     acc.n += 1;
                     if !u.take_forced() && new.to_vec()? == old.to_vec()? {
                         continue;
@@ -1069,7 +1109,7 @@ async fn delete_stmt(g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], 
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
                 let ev_start = w.events.len();
                 let (mut found, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if limit == 0 { None } else { Some(limit as usize) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
-        for d in found.iter_mut() { crate::text::strip_hidden(d); }
+        for d in found.iter_mut() { crate::text::strip_scores(d); }
                 if limit > 0 {
                     found.truncate(limit as usize);
                 }

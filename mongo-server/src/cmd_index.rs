@@ -463,8 +463,20 @@ impl Server {
         if let Some(c) = g.collation_of(coll) {
             id_spec.insert("collation", c.to_doc());
         }
-        docs.push_back(id_spec);
-        docs.extend(indexes.iter().filter(|i| i.state == State::Ready).map(|i| i.spec.clone()));
+        let kind = g.coll_opts(coll).await?;
+        match kind.as_ref() {
+            Some(k) if k.clustered.is_some() => {
+                let mut spec = doc! { "v": 2, "key": { "_id": 1 }, "name": k.clustered.clone().unwrap(), "unique": true };
+                if let Some(e) = k.raw.get("expireAfterSeconds").and_then(|e| e.as_i64().or(e.as_i32().map(i64::from))) {
+                    spec.insert("expireAfterSeconds", e.min(i32::MAX as i64) as i32);
+                }
+                spec.insert("clustered", true);
+                docs.push_back(spec)
+            }
+            Some(k) if k.series.is_some() => {}
+            _ => docs.push_back(id_spec),
+        }
+        docs.extend(indexes.iter().filter(|i| i.state == State::Ready && !crate::special_colls::is_internal(i)).map(|i| i.spec.clone()));
         drop(g);
         let batch = cmd.get_document("cursor").ok().and_then(|c| int_arg(c.get("batchSize"))).map(|b| b as usize);
         Ok(self.cursor_reply(format!("{db}.{coll}"), docs, batch, false))
@@ -525,7 +537,8 @@ impl Server {
             indexes = g.indexes(coll).await?;
         }
         let default_collation = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
-        let before = 1 + indexes.len() as i32;
+        let series_base = if g.coll_opts(coll).await?.map(|k| k.series.is_some()).unwrap_or(false) { 0 } else { 1 };
+        let before = series_base + indexes.iter().filter(|i| !crate::special_colls::is_internal(i)).count() as i32;
         let has_docs = existed && !g.scan_range(&doc_prefix(coll), prefix_end(&doc_prefix(coll)).as_deref(), false, Some(1), 4096).await?.is_empty();
         let mut changed = false;
         let mut building = false;
@@ -731,7 +744,7 @@ impl Server {
         }
         g.apply(ops).await?;
         drop(g);
-        let after = 1 + indexes.len() as i32;
+        let after = series_base + indexes.iter().filter(|i| !crate::special_colls::is_internal(i)).count() as i32;
         if building {
             // Backfill in chunks, releasing the database between chunks; a build already running in the background is joined.
             let key = format!("{db}\0{coll}");
@@ -868,6 +881,9 @@ impl Server {
         if cmd.contains_key("cappedSize") || cmd.contains_key("cappedMax") {
             self.coll_mod_capped(&mut g, coll, cmd).await?;
         }
+        if cmd.contains_key("expireAfterSeconds") || cmd.contains_key("timeseries") {
+            self.coll_mod_special(&mut g, db, coll, cmd).await?;
+        }
         let Some(spec) = cmd.get("index") else { return Ok(ok()) };
         self.coll_mod_index(&mut g, db, coll, spec).await
     }
@@ -880,10 +896,18 @@ impl Server {
             return Err(MongoError::namespace_not_found(format!("ns not found {db}.{coll}")));
         }
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
-        let n_was = 1 + indexes.iter().filter(|i| i.state == State::Ready).count() as i32;
+        let kind = g.coll_opts(coll).await?;
+        let base = if kind.as_ref().map(|k| k.series.is_some()).unwrap_or(false) { 0 } else { 1 };
+        let n_was = base + indexes.iter().filter(|i| i.state == State::Ready && !crate::special_colls::is_internal(i)).count() as i32;
         let targets: Vec<usize> = match which {
-            Bson::String(s) if s == "*" => (0..indexes.len()).filter(|i| indexes[*i].state == State::Ready).collect(),
+            Bson::String(s) if s == "*" => (0..indexes.len()).filter(|i| indexes[*i].state == State::Ready && !crate::special_colls::is_internal(&indexes[*i])).collect(),
             Bson::String(s) => {
+                if kind.as_ref().and_then(|k| k.clustered.as_deref()) == Some(s.as_str()) {
+                    return Err(MongoError::new(5979800, "Location5979800", "It is illegal to drop the clusteredIndex".into()));
+                }
+                if s == crate::special_colls::TTL_NAME {
+                    return Err(MongoError::new(27, "IndexNotFound", format!("index not found with name [{s}]")));
+                }
                 if s == "_id_" {
                     return Err(MongoError::new(72, "InvalidOptions", "cannot drop _id index".into()));
                 }

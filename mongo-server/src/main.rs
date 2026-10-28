@@ -47,6 +47,7 @@ mod rc;
 mod regex;
 mod retry;
 mod search;
+mod special_colls;
 mod stable_api;
 mod stats_scale;
 mod search_more;

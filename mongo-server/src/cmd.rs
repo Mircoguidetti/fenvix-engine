@@ -468,24 +468,30 @@ impl Server {
         names.sort();
         let mut options_of: HashMap<String, Document> = HashMap::new();
         let mut uuids: HashMap<String, Vec<u8>> = HashMap::new();
-        if !name_only {
-            for n in &names {
-                if let Some(o) = g.coll_opts(n).await? {
-                    options_of.insert(n.clone(), o.raw.clone());
-                }
+        for n in &names {
+            if let Some(o) = g.coll_opts(n).await? {
+                options_of.insert(n.clone(), o.raw.clone());
+            }
+            if !name_only {
                 uuids.insert(n.clone(), g.collection_uuid(n).await?);
             }
         }
         drop(g);
         let views = self.list_views(db).await?;
         let mut docs = VecDeque::new();
+        let mut extra: Vec<Document> = Vec::new();
         let mut names: Vec<(String, Option<crate::views::ViewDef>)> = names.into_iter().map(|n| (n, None)).chain(views.into_iter().map(|(n, v)| (n, Some(v)))).collect();
         names.sort_by(|a, b| a.0.cmp(&b.0));
         for (n, view) in names {
             let d = if let Some(v) = view {
                 if name_only { doc! { "name": n, "type": "view" } } else { doc! { "name": n, "type": "view", "options": v.options(), "info": { "readOnly": true } } }
             } else if name_only {
-                doc! { "name": n, "type": "collection" }
+                if options_of.get(&n).map(|o| o.contains_key("timeseries")).unwrap_or(false) {
+                    extra.push(doc! { "name": format!("system.buckets.{n}"), "type": "collection" });
+                    doc! { "name": n, "type": "timeseries" }
+                } else {
+                    doc! { "name": n, "type": "collection" }
+                }
             } else {
                 let options = options_of.get(&n).cloned().unwrap_or_default();
                 let mut id_index = doc! { "v": 2, "key": { "_id": 1 }, "name": "_id_" };
@@ -493,12 +499,23 @@ impl Server {
                     id_index.insert("collation", c.clone());
                 }
                 let uuid = Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Uuid, bytes: uuids.get(&n).cloned().unwrap_or_default() });
-                doc! { "name": n, "type": "collection", "options": options, "info": { "readOnly": false, "uuid": uuid }, "idIndex": id_index }
+                if options.contains_key("timeseries") {
+                    let companion = crate::special_colls::buckets_entry(&n, &options, uuid.clone());
+                    if matches(&companion, &filter)? {
+                        extra.push(companion);
+                    }
+                    doc! { "name": n, "type": "timeseries", "options": options.clone(), "info": { "readOnly": false } }
+                } else if options.contains_key("clusteredIndex") {
+                    doc! { "name": n, "type": "collection", "options": options.clone(), "info": { "readOnly": false, "uuid": uuid } }
+                } else {
+                    doc! { "name": n, "type": "collection", "options": options, "info": { "readOnly": false, "uuid": uuid }, "idIndex": id_index }
+                }
             };
             if matches(&d, &filter)? {
                 docs.push_back(d);
             }
         }
+        docs.extend(extra);
         let batch = cmd.get_document("cursor").ok().and_then(|c| int_arg(c.get("batchSize"))).map(|b| b as usize);
         Ok(self.cursor_reply(format!("{db}.$cmd.listCollections"), docs, batch, false))
     }
@@ -521,6 +538,8 @@ impl Server {
         if let Some(c) = &collation {
             raw.insert("collation", c.to_doc());
         }
+        let special = crate::special_colls::parse_create(&format!("{db}.{coll}"), cmd, capped.is_some())?;
+        raw.extend(special.options.clone());
         raw.extend(crate::collopts::plain_options("create", cmd)?);
         raw.extend(crate::collopts::validation_options("create", cmd)?);
         if let Some(i) = crate::collopts::images_option("create", cmd)? {
@@ -553,6 +572,23 @@ impl Server {
         names.push(coll.to_string());
         let mut ops = vec![Entry::collections_op(&names)?];
         let options = raw.clone();
+        {
+            let mut initial: Vec<crate::index::IndexDef> = Vec::new();
+            if let Some(t) = special.options.get_document("timeseries").ok() {
+                if let Ok(meta) = t.get_str("metaField") {
+                    let tf = t.get_str("timeField").unwrap_or_default();
+                    if let Some(ix) = crate::index::IndexDef::from_stored(&doc! { "v": 2, "key": { meta: 1, tf: 1 }, "name": format!("{meta}_1_{tf}_1") }) {
+                        initial.push(ix);
+                    }
+                }
+            }
+            if let Some((field, secs)) = &special.ttl {
+                initial.extend(crate::special_colls::ttl_index(field, *secs));
+            }
+            if !initial.is_empty() {
+                ops.push(Entry::indexes_op(coll, &initial)?);
+            }
+        }
         if !raw.is_empty() {
             ops.push(Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?));
             g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));

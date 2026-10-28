@@ -16,6 +16,10 @@ pub struct CollOpts {
     pub validator: Option<crate::validation::Validator>,
     /// `changeStreamPreAndPostImages: {enabled: true}`: change events keep the document before and after a change.
     pub images: bool,
+    /// `clusteredIndex`: the name of the clustered index (documents come back in `_id` order).
+    pub clustered: Option<String>,
+    /// `timeseries`: the time field and the meta field.
+    pub series: Option<(String, Option<String>)>,
 }
 
 impl CollOpts {
@@ -24,7 +28,13 @@ impl CollOpts {
         let cap = crate::capped::Cap::from_options(&raw);
         let validator = crate::validation::Validator::from_options(&raw);
         let images = raw.get_document("changeStreamPreAndPostImages").ok().and_then(|d| d.get_bool("enabled").ok()).unwrap_or(false);
-        Arc::new(CollOpts { raw, collation, cap, validator, images })
+        let clustered = match raw.get("clusteredIndex") {
+            Some(Bson::Document(c)) => Some(c.get_str("name").unwrap_or("_id_").to_string()),
+            Some(Bson::Boolean(true)) => Some("_id_".to_string()),
+            _ => None,
+        };
+        let series = raw.get_document("timeseries").ok().map(|t| (t.get_str("timeField").unwrap_or_default().to_string(), t.get_str("metaField").ok().map(str::to_string)));
+        Arc::new(CollOpts { raw, collation, cap, validator, images, clustered, series })
     }
 }
 

@@ -692,6 +692,11 @@ impl Entry {
         eprintln!("WARN document failed validation (validationAction warn): _id {:?}", d.get("_id"));
     }
 
+    /// The options of a collection whose options were loaded.
+    pub fn opts_cached(&self, coll: &str) -> Option<Arc<crate::collopts::CollOpts>> {
+        self.copts.get(coll).and_then(|o| o.clone())
+    }
+
     /// Whether a collection whose options were loaded keeps change-stream pre- and post-images.
     pub fn images_of(&self, coll: &str) -> bool {
         self.copts.get(coll).and_then(|o| o.as_ref()).map(|o| o.images).unwrap_or(false)
