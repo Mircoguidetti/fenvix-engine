@@ -194,3 +194,44 @@ def _grid(client, db):
     out["list"] = sorted(fs.list())
     out["gridout_writelines"] = tr(lambda: fs.get_last_version("w.txt").writelines([b"x"]))
     return out
+
+
+def _norm_ev(ev):
+    """A change event without the volatile parts: the ids, the times and every collection UUID."""
+    def rec(x):
+        if isinstance(x, dict):
+            return {k: ("<uuid>" if k in ("uuid", "collectionUUID") else rec(v)) for k, v in x.items() if k not in ("_id", "clusterTime", "wallTime", "lsid", "txnNumber")}
+        if isinstance(x, list):
+            return [rec(v) for v in x]
+        return x
+    return rec(dict(ev))
+
+
+@case("g12.py.change_stream_expanded_ddl_events", rs=True)
+def _cs_ddl(client, db):
+    out = {}
+    with db.watch(show_expanded_events=True, max_await_time_ms=200) as cs:
+        c = db.create_collection("c")
+        c.create_index([("a", 1)], name="a_1")
+        c.create_index([("b", 1)], name="b_1", unique=True)
+        db.command({"collMod": "c", "index": {"name": "a_1", "hidden": True}})
+        db.command({"collMod": "c", "index": {"name": "b_1", "expireAfterSeconds": 100}}) if False else None
+        db.command({"collMod": "c", "validator": {"x": {"$exists": True}}, "validationLevel": "moderate"})
+        db.command({"collMod": "c", "index": {"keyPattern": {"b": 1}, "prepareUnique": True}})
+        c.drop_index("a_1")
+        db.command({"dropIndexes": "c", "index": ["b_1"]})
+        c.create_index([("z", 1)], name="z_1")
+        db.command({"dropIndexes": "c", "index": "*"})
+        db.client.admin.command({"renameCollection": db.name + ".c", "to": db.name + ".d"})
+        db.drop_collection("d")
+        evs = []
+        for _ in range(40):
+            e = cs.try_next()
+            if e is None:
+                if len(evs) >= 11:
+                    break
+                continue
+            evs.append(_norm_ev(e))
+        out["events"] = evs
+        out["types"] = [e["operationType"] for e in evs]
+    return out

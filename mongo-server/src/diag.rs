@@ -352,6 +352,65 @@ pub fn needs_js(name: &str, cmd: &Document) -> bool {
     matches!(name, "mapReduce" | "mapreduce") || has(cmd)
 }
 
+/// `$queryStats`: parses the stage; it only runs as the first stage of `{aggregate: 1}` on `admin` (`db` is `None` for a collection
+/// pipeline). Query statistics are not collected, so the stage yields nothing.
+pub fn query_stats_stage(spec: &Bson, db: Option<&str>) -> R<()> {
+    let Bson::Document(o) = spec else {
+        return Err(MongoError::new(9, "FailedToParse", format!("$queryStats value must be an object. Found: {}", crate::update::type_name(spec))));
+    };
+    for (k, v) in o {
+        match k.as_str() {
+            "transformIdentifiers" => {
+                let Bson::Document(t) = v else {
+                    return Err(MongoError::type_mismatch(format!("BSON field '$queryStats.transformIdentifiers' is the wrong type '{}', expected type 'object'", crate::update::type_name(v))));
+                };
+                let mut hmac = false;
+                for (tk, tv) in t {
+                    match (tk.as_str(), tv) {
+                        ("algorithm", Bson::String(a)) if a == "hmac-sha-256" => hmac = true,
+                        ("algorithm", Bson::String(a)) => return Err(MongoError::new(2, "BadValue", format!("Enumeration value '{a}' for field '$queryStats.transformIdentifiers.algorithm' is not a valid value."))),
+                        ("algorithm", x) => return Err(MongoError::type_mismatch(format!("BSON field '$queryStats.transformIdentifiers.algorithm' is the wrong type '{}', expected type 'string'", crate::update::type_name(x)))),
+                        ("hmacKey", Bson::Binary(b)) => {
+                            use bson::spec::BinarySubtype as B;
+                            if !matches!(b.subtype, B::Sensitive) {
+                                let n = match b.subtype {
+                                    B::Generic => "general",
+                                    B::Function => "function",
+                                    B::BinaryOld => "byteArrayDeprecated",
+                                    B::UuidOld => "UUIDOld",
+                                    B::Uuid => "UUID",
+                                    B::Md5 => "MD5",
+                                    B::Encrypted => "encrypt",
+                                    B::Column => "bsonColumn",
+                                    B::UserDefined(_) => "Custom",
+                                    _ => "invalid",
+                                };
+                                return Err(MongoError::type_mismatch(format!("BSON field '$queryStats.transformIdentifiers.hmacKey' is the wrong binData type '{n}', expected type 'sensitive'")));
+                            }
+                            if b.bytes.len() < 32 {
+                                return Err(MongoError::bad_value(format!("hmacKey must be greater than or equal to 32 bytes, found length: {}", b.bytes.len())));
+                            }
+                        }
+                        ("hmacKey", x) => return Err(MongoError::type_mismatch(format!("BSON field '$queryStats.transformIdentifiers.hmacKey' is the wrong type '{}', expected type 'binData'", crate::update::type_name(x)))),
+                        (other, _) => return Err(MongoError::new(40415, "IDLUnknownField", format!("BSON field '$queryStats.transformIdentifiers.{other}' is an unknown field."))),
+                    }
+                }
+                if !t.contains_key("algorithm") {
+                    return Err(MongoError::new(40414, "IDLFailedToParse", "BSON field '$queryStats.transformIdentifiers.algorithm' is missing but a required field".into()));
+                }
+                if hmac && !t.contains_key("hmacKey") {
+                    return Err(MongoError::new(9, "FailedToParse", "The 'hmacKey' parameter of the $queryStats stage must be specified when applying the hmac-sha-256 algorithm".into()));
+                }
+            }
+            _ => return Err(MongoError::new(40415, "IDLUnknownField", format!("BSON field '$queryStats.{k}' is an unknown field."))),
+        }
+    }
+    if db != Some("admin") {
+        return Err(MongoError::new(73, "InvalidNamespace", "$queryStats must be run against the 'admin' database with {aggregate: 1}".into()));
+    }
+    Ok(())
+}
+
 /// The error of `{aggregate: 1}` when the pipeline does not start with a stage that needs no collection.
 pub fn db_level_error(first: Option<&str>) -> MongoError {
     const NEEDS_COLLECTION: &[&str] = &[
@@ -517,6 +576,7 @@ impl Server {
                 }
                 Ok(out)
             })()),
+            "$queryStats" => Some(query_stats_stage(spec, Some(db)).map(|_| Vec::new())),
             "$listSessions" => Some(Err(MongoError::new(73, "InvalidNamespace", "$listSessions may only be run against config.system.sessions".into()))),
             "$listCachedAndActiveUsers" => Some(Err(MongoError::new(224, "QueryFeatureNotAllowed", "$listCachedAndActiveUsers is not allowed with the current configuration. You may need to enable the corresponding feature flag".into()))),
             _ => None,

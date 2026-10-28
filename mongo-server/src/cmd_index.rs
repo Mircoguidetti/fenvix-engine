@@ -837,6 +837,10 @@ impl Server {
                     desc.insert(k.clone(), v.clone());
                 }
             }
+            if !reply.keys().any(|k| k.ends_with("_old") || k.ends_with("_new")) {
+                // an index change that changed nothing is not part of the event
+                desc.remove("index");
+            }
             let mut state = doc! { "collectionOptions": opts };
             let mut index_opts = Document::new();
             for (k, v) in &reply {
@@ -866,6 +870,13 @@ impl Server {
             let opts = g.coll_opts(coll).await?;
             let mut raw = opts.as_ref().map(|o| o.raw.clone()).unwrap_or_default();
             raw.extend(changes);
+            // collMod stores both validation settings once it touches one of them (the other keeps its default)
+            if !raw.contains_key("validationLevel") {
+                raw.insert("validationLevel", "strict");
+            }
+            if !raw.contains_key("validationAction") {
+                raw.insert("validationAction", "error");
+            }
             let raw = crate::collopts::canonical(&raw);
             g.apply(vec![Op::Put(crate::collopts::meta_key(coll), raw.to_vec()?)]).await?;
             g.set_coll_opts(coll, Some(crate::collopts::CollOpts::parse(raw)));

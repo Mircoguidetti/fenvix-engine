@@ -140,7 +140,7 @@ impl Server {
         }
         reply.extend(hidden_reply);
         if let Some(p) = prepare {
-            if p != idx.prepare_unique {
+            if p != idx.prepare_unique && !idx.unique {
                 reply.insert("prepareUnique_old", idx.prepare_unique);
                 reply.insert("prepareUnique_new", p);
                 if p {

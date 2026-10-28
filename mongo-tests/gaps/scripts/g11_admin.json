@@ -1277,5 +1277,655 @@
     "full": true
    }
   ]
+ },
+ {
+  "name": "g11.admin.querystats",
+  "mode": "sa",
+  "steps": [
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {}
+     },
+     {
+      "$limit": 1
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": 1
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "x": 1
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {}
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "md5"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": 5
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+          "subType": "08"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "00"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": "x"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        },
+        "z": 1
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": 3,
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        },
+        "algorithm": "hmac-sha-256"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "04"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "80"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.expr.tohashedindexkey",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "c",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ]
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": 1
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": "a"
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": null
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "x": 1
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": 1.5
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": [
+          1,
+          2
+         ]
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": true
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$date": "2020-01-01T00:00:00Z"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$oid": "5f0000000000000000000001"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$numberLong": "1"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$numberDecimal": "1"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$regularExpression": {
+           "pattern": "a",
+           "options": "i"
+          }
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$binary": {
+           "base64": "AQI=",
+           "subType": "00"
+          }
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$timestamp": {
+           "t": 1,
+           "i": 2
+          }
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$minKey": 1
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$maxKey": 1
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": ""
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": "$_id"
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": "$missing"
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": [
+         1,
+         2
+        ]
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   }
+  ]
  }
 ]

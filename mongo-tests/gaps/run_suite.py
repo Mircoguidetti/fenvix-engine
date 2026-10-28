@@ -63,7 +63,11 @@ def main():
         subprocess.Popen([os.path.join(TESTS, ".venv", "bin", "moto_server"), "-p", "9000"], stdout=open(os.path.join(OUT, "moto.log"), "w"), stderr=subprocess.STDOUT)
         time.sleep(3)
     import boto3
-    boto3.client("s3", endpoint_url="http://localhost:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1").create_bucket(Bucket="bench")
+    try:
+        boto3.client("s3", endpoint_url="http://localhost:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1").create_bucket(Bucket="bench")
+    except Exception as e:   # (MinIO answers BucketAlreadyOwnedByYou when the bucket exists)
+        if "BucketAlready" not in str(e):
+            raise
     for k in range(a.shards):
         start_real(k)
     results = {}

@@ -1200,6 +1200,10 @@ pub fn run_pipeline(mut docs: Vec<Document>, pipeline: &[Bson], foreign: &Foreig
             }
             other => match crate::agg_ext::run_stage(other, arg, std::mem::take(&mut docs), foreign)? {
                 Some(d) => docs = d,
+                None if other == "$queryStats" => {
+                    crate::diag::query_stats_stage(arg, None)?;
+                    unreachable!()
+                }
                 None => return Err(MongoError::new(40324, "Location40324", format!("Unrecognized pipeline stage name: '{other}'"))),
             },
         }

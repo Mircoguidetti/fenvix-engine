@@ -170,4 +170,20 @@ module.exports = ({ C, Long, ObjectId, bson, mongodb }) => {
     out.revision = await tr(() => read(b.openDownloadStreamByName('f.txt', { revision: 3 })));
     return out;
   });
+
+  const normEv = (ev) => { const rec = (x) => { if (Array.isArray(x)) return x.map(rec); if (x && typeof x === 'object' && !x._bsontype && !(x instanceof Date) && !Buffer.isBuffer(x)) { const o = {}; for (const [k, v] of Object.entries(x)) { if (['_id', 'clusterTime', 'wallTime', 'lsid', 'txnNumber'].includes(k)) continue; o[k] = (k === 'uuid' || k === 'collectionUUID') ? '<uuid>' : rec(v); } return o; } return x; }; return rec(ev); };
+  C('g12.node.change_stream_expanded_ddl_events', async (c, db) => {
+    const out = {}; const cs = db.watch([], { showExpandedEvents: true, maxAwaitTimeMS: 200 });
+    const coll = await db.createCollection('c');
+    await coll.createIndex({ a: 1 }, { name: 'a_1' }); await coll.createIndex({ b: 1 }, { name: 'b_1', unique: true });
+    await db.command({ collMod: 'c', index: { name: 'a_1', hidden: true } });
+    await db.command({ collMod: 'c', validator: { x: { $exists: true } }, validationLevel: 'moderate' });
+    await db.command({ collMod: 'c', index: { keyPattern: { b: 1 }, prepareUnique: true } });
+    await coll.dropIndex('a_1'); await db.command({ dropIndexes: 'c', index: ['b_1'] });
+    await coll.createIndex({ z: 1 }, { name: 'z_1' }); await db.command({ dropIndexes: 'c', index: '*' });
+    await c.db('admin').command({ renameCollection: `${db.databaseName}.c`, to: `${db.databaseName}.d` });
+    await db.dropCollection('d');
+    const evs = []; for (let i = 0; i < 40; i++) { const e = await cs.tryNext(); if (e === null) { if (evs.length >= 11) break; continue; } evs.push(normEv(e)); }
+    out.events = evs; out.types = evs.map((e) => e.operationType); await cs.close(); return out;
+  }, { rs: true });
 };
