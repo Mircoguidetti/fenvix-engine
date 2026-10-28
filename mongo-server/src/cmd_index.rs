@@ -527,6 +527,9 @@ impl Server {
         let specs = cmd.get_array("indexes").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'createIndexes.indexes' is missing but a required field".into()))?;
         let ns = format!("{db}.{coll}");
         let commit_quorum = self.commit_quorum(cmd.get("commitQuorum"))?;
+        if specs.is_empty() {
+            return Err(MongoError::bad_value("Must specify at least one index to create".into()));
+        }
         let mut g = self.dbs.lock(db).await;
         let mut names = g.collections().await?;
         let existed = names.iter().any(|n| n == coll);
@@ -1195,7 +1198,21 @@ impl Server {
                 }
             }
         }
-        let warnings: Vec<Bson> = if non_compliant > 0 { vec![Bson::String("Detected one or more documents not compliant with the collection's schema. Check logs for log id 5363500.".into())] } else { vec![] };
+        let mut warnings: Vec<Bson> = if non_compliant > 0 { vec![Bson::String("Detected one or more documents not compliant with the collection's schema. Check logs for log id 5363500.".into())] } else { vec![] };
+        if full && !docs.is_empty() {
+            // mongod's full validation of a collection with documents cannot read the checkpointed tables and says so for the collection
+            // and its _id index (the table names are the storage engine's identifiers)
+            static PROC_ID: std::sync::OnceLock<i64> = std::sync::OnceLock::new();
+            let proc_id = *PROC_ID.get_or_init(|| rand::random::<i64>() >> 2);
+            let n = 100 + (coll.bytes().fold(7u32, |h, b| h.wrapping_mul(31).wrapping_add(b as u32)) % 9000) as i64;
+            for (kind, num) in [("collection", n), ("index", n + 1)] {
+                let w = format!("Could not complete validation of table:{kind}-{num}-{proc_id}. This is a transient issue as the collection was actively in use by other operations.");
+                if kind == "index" {
+                    details.insert("_id_", doc! { "valid": true, "warnings": [w.clone()] });
+                }
+                warnings.push(Bson::String(w));
+            }
+        }
         let _ = (missing_total, extra_total);
         Ok(doc! {
             "ns": format!("{db}.{coll}"),

@@ -166,6 +166,7 @@ impl Server {
         if matches!(name, "commitTransaction" | "abortTransaction") && db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
         }
+        crate::admin_cmds::check_max_time_ms(name, cmd)?;
         if let Some(r) = self.write_gate(db, name, cmd).await? {
             return Ok(r);
         }
@@ -330,6 +331,7 @@ impl Server {
             return Ok(d);
         }
         match name {
+            "compactStructuredEncryptionData" => self.compact_structured_encryption_data(db, cmd).await,
             "createSearchIndexes" => self.create_search_indexes(db, cmd).await,
             "dropSearchIndex" => self.drop_search_index(db, cmd).await,
             "updateSearchIndex" => self.update_search_index(db, cmd).await,

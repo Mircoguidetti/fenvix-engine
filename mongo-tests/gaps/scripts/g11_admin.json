@@ -800,5 +800,482 @@
     "__db": "admin"
    }
   ]
+ },
+ {
+  "name": "g11.encryption.compact_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "create": "e",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAABw==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "string",
+       "queries": {
+        "queryType": "equality"
+       }
+      },
+      {
+       "path": "b.c",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAACA==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "int"
+      }
+     ]
+    }
+   },
+   {
+    "create": "plain"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "z": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": "x",
+     "b.c": 5
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {}
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": 5
+   },
+   {
+    "compactStructuredEncryptionData": "nope",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "plain",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "bogus": 1
+   },
+   {
+    "compactStructuredEncryptionData": 5,
+    "compactionTokens": {}
+   }
+  ]
+ },
+ {
+  "name": "g11.encryption.compact_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "create": "plain"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "z": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": "x",
+     "b.c": 5
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {}
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": 5
+   },
+   {
+    "compactStructuredEncryptionData": "nope",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "plain",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "bogus": 1
+   },
+   {
+    "compactStructuredEncryptionData": 5,
+    "compactionTokens": {}
+   }
+  ]
+ },
+ {
+  "name": "g11.validate.full",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "a",
+    "documents": [
+     {
+      "_id": 0,
+      "x": 0,
+      "y": 0
+     },
+     {
+      "_id": 1,
+      "x": 1,
+      "y": 1
+     },
+     {
+      "_id": 2,
+      "x": 2,
+      "y": 2
+     },
+     {
+      "_id": 3,
+      "x": 3,
+      "y": 3
+     },
+     {
+      "_id": 4,
+      "x": 4,
+      "y": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "b",
+    "documents": [
+     {
+      "_id": 0,
+      "x": 0,
+      "y": 0
+     },
+     {
+      "_id": 1,
+      "x": 1,
+      "y": 1
+     },
+     {
+      "_id": 2,
+      "x": 2,
+      "y": 2
+     },
+     {
+      "_id": 3,
+      "x": 3,
+      "y": 3
+     },
+     {
+      "_id": 4,
+      "x": 4,
+      "y": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "b",
+    "indexes": [
+     {
+      "key": {
+       "x": 1
+      },
+      "name": "x_1"
+     },
+     {
+      "key": {
+       "y": 1
+      },
+      "name": "y_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "empty",
+    "__skip": true
+   },
+   {
+    "create": "cap",
+    "capped": true,
+    "size": 4096,
+    "__skip": true
+   },
+   {
+    "insert": "cap",
+    "documents": [
+     {
+      "x": 1
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "validate": "a",
+    "full": true
+   },
+   {
+    "validate": "b",
+    "full": true
+   },
+   {
+    "validate": "empty",
+    "full": true
+   },
+   {
+    "validate": "cap",
+    "full": true
+   },
+   {
+    "validate": "a"
+   },
+   {
+    "validate": "a",
+    "metadata": true
+   },
+   {
+    "validate": "a",
+    "checkBSONConformance": true
+   },
+   {
+    "validate": "a",
+    "full": true,
+    "checkBSONConformance": true
+   },
+   {
+    "validate": "a",
+    "background": true
+   },
+   {
+    "validate": "a",
+    "background": true,
+    "full": true
+   },
+   {
+    "validate": "a",
+    "full": true,
+    "metadata": true
+   },
+   {
+    "validate": "a",
+    "full": false
+   },
+   {
+    "validate": "a",
+    "full": 1
+   },
+   {
+    "validate": "nope",
+    "full": true
+   }
+  ]
  }
 ]

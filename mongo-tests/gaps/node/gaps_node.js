@@ -16,7 +16,7 @@ const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs, sa: !!o.sa, a
 const sortKeys = (x) => Array.isArray(x) ? x.map(sortKeys) : (x && typeof x === 'object' && !(x instanceof Date) && !x._bsontype && !Buffer.isBuffer(x)) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, sortKeys(x[k])])) : x;
 const canon = (x, sk) => EJSON.stringify(sk ? sortKeys(x === undefined ? null : x) : (x === undefined ? null : x), { relaxed: false });
 const errOf = (e) => ({ __error__: { code: e.code ?? null, codeName: e.codeName ?? null, name: e.code ? undefined : e.name } });
-const H = { C, canon, errOf, MongoClient, ObjectId, Long, EJSON, args, bson: req('bson') };
+const H = { C, canon, errOf, MongoClient, ObjectId, Long, EJSON, args, bson: req('bson'), mongodb: req('mongodb') };
 H.A = (name, fn, o = {}) => C(name, fn, { ...o, auth: true });
 H.P = (pair, name, fn) => C(name, fn, { pair });
 const PAIRS = { A: [27040, 27048], B: [27041, 27049], C: [27042, 27050], D: [27043, 27051], E: [27044, 27052] };

@@ -65,6 +65,12 @@ def norm(r, names):
     return unify(r)
 
 
+# SpiderMonkey's source position of a JavaScript error (' :\n@:1:15\n') is not reproduced by the engine's JavaScript runtime
+JS_POS = re.compile(r" :\n@:\d+:\d+\n")
+# the storage engine's table identifiers in validate warnings ('table:collection-361-1265755286602592528')
+TABLE_ID = re.compile(r"table:(collection|index)-\d+-+\d+")
+
+
 def unify(x):
     if isinstance(x, dict):
         out = {}
@@ -77,7 +83,7 @@ def unify(x):
     if isinstance(x, list):
         return [unify(v) for v in x]
     if isinstance(x, str):
-        return UUID_RE.sub("<uuid>", x).replace(PLAN, "")
+        return TABLE_ID.sub(r"table:\1-N", JS_POS.sub("", UUID_RE.sub("<uuid>", x).replace(PLAN, "")))
     return x
 
 

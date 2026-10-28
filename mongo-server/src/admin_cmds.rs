@@ -67,6 +67,46 @@ pub fn log_rotate(db: &str, cmd: &Document) -> R<Document> {
 }
 
 impl Server {
+    /// `compactStructuredEncryptionData`: validated like mongod; the engine keeps no ESC/ECOC side collections, so there is nothing to
+    /// compact and the statistics are zeros.
+    pub(crate) async fn compact_structured_encryption_data(&self, db: &str, cmd: &Document) -> R<Document> {
+        crate::fields::check("compactStructuredEncryptionData", cmd)?;
+        let coll = match cmd.get("compactStructuredEncryptionData") {
+            Some(Bson::String(s)) => s.clone(),
+            Some(v) => return Err(MongoError::new(2, "BadValue", format!("collection name has invalid type {}", crate::update::type_name(v)))),
+            None => return Err(missing("compactStructuredEncryptionData.compactStructuredEncryptionData")),
+        };
+        let tokens = match cmd.get("compactionTokens") {
+            Some(Bson::Document(d)) => d.clone(),
+            Some(v) => return Err(type_err("compactStructuredEncryptionData.compactionTokens", v, "type 'object'")),
+            None => return Err(missing("compactStructuredEncryptionData.compactionTokens")),
+        };
+        if cmd.contains_key("writeConcern") {
+            return Err(MongoError::new(72, "InvalidOptions", "Command does not support writeConcern".into()));
+        }
+        let mut g = self.dbs.lock(db).await;
+        let names = g.collections().await?;
+        if names.is_empty() {
+            return Err(MongoError::namespace_not_found(format!("Database '{db}' does not exist")));
+        }
+        if !names.iter().any(|n| n == &coll) {
+            return Err(MongoError::namespace_not_found(format!("Collection '{db}.{coll}' does not exist")));
+        }
+        let paths: Option<Vec<String>> = g
+            .coll_opts(&coll)
+            .await?
+            .and_then(|o| o.raw.get_document("encryptedFields").ok().and_then(|e| e.get_array("fields").ok().map(|a| a.iter().filter_map(|f| f.as_document().and_then(|d| d.get_str("path").ok().map(String::from))).collect())));
+        let Some(paths) = paths else {
+            return Err(MongoError::new(6346807, "Location6346807", "Target namespace is not an encrypted collection".into()));
+        };
+        for p in &paths {
+            if !tokens.contains_key(p) {
+                return Err(MongoError::new(6346806, "Location6346806", format!("Compaction tokens object is missing compaction token for the encrypted path '{p}'")));
+            }
+        }
+        Ok(doc! { "stats": { "ecoc": { "read": Bson::Int64(0), "deleted": Bson::Int64(0) }, "esc": { "read": Bson::Int64(0), "inserted": Bson::Int64(0), "updated": Bson::Int64(0), "deleted": Bson::Int64(0) } }, "ok": 1.0 })
+    }
+
     /// Commands that need no tenant. `None` when `name` is not one of them.
     pub(crate) fn admin_cmd(&self, name: &str, db: &str, cmd: &Document) -> Option<R<Document>> {
         Some(match name {
@@ -226,4 +266,41 @@ fn blocked(db: &str, name: &str, cmd: &Document) -> R<Option<Document>> {
         }
         _ => e("User writes blocked"),
     }
+}
+
+/// `maxTimeMS` of any command: a non-negative integral number up to 2147483647 (mongod's generic check; `aggregate` has its own IDL messages;
+/// `getMore` checks it itself).
+pub fn check_max_time_ms(name: &str, cmd: &Document) -> R<()> {
+    let Some(v) = cmd.get("maxTimeMS") else { return Ok(()) };
+    if name == "getMore" {
+        return Ok(());
+    }
+    let generic = |m: String| MongoError::new(2, "BadValue", m);
+    let f = match v {
+        Bson::Int32(i) => *i as f64,
+        Bson::Int64(i) => *i as f64,
+        Bson::Double(d) => {
+            if d.fract() != 0.0 || !d.is_finite() {
+                return Err(generic("maxTimeMS has non-integral value".into()));
+            }
+            *d
+        }
+        Bson::Decimal128(d) => match d.to_string().parse::<f64>() {
+            Ok(x) if x.fract() == 0.0 => x,
+            _ => return Err(generic("maxTimeMS has non-integral value".into())),
+        },
+        other => {
+            if name == "aggregate" && !matches!(other, Bson::Null | Bson::Undefined) {
+                return Err(type_err("aggregate.maxTimeMS", other, "types '[long, int, decimal, double']"));
+            }
+            return Err(generic("maxTimeMS must be a number".into()));
+        }
+    };
+    if f < 0.0 && name == "aggregate" {
+        return Err(MongoError::new(51024, "Location51024", format!("BSON field 'maxTimeMS' value must be >= 0, actual value '{}'", f as i64)));
+    }
+    if f < 0.0 || f > 2147483647.0 {
+        return Err(generic(format!("{} value for maxTimeMS is out of range [0, 2147483647]", f as i64)));
+    }
+    Ok(())
 }

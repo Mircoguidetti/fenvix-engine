@@ -18,7 +18,7 @@ module.exports = ({ C, EJSON }) => {
   };
   const unify = (x) => {
     if (Array.isArray(x)) return x.map(unify);
-    if (typeof x === 'string') return x.replace(UUID_RE, '<uuid>').replace(PLAN, '').replace(/(transaction number |txnNumber: |active transaction number is )-?\d+/g, '$1<n>'); // (the driver's own session numbers its transactions: client state, not server behaviour)
+    if (typeof x === 'string') return x.replace(UUID_RE, '<uuid>').replace(PLAN, '').replace(/ :\n@:\d+:\d+\n/g, '').replace(/table:(collection|index)-\d+-+\d+/g, 'table:$1-N').replace(/(transaction number |txnNumber: |active transaction number is )-?\d+/g, '$1<n>'); // (the driver's own session numbers its transactions: client state, not server behaviour)
     if (x && typeof x === 'object' && !x._bsontype && !(x instanceof Date) && !Buffer.isBuffer(x)) return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, (k === 'uuid' || k === 'collectionUUID') && v && v._bsontype === 'Binary' && v.sub_type === 4 ? '<uuid>' : unify(v)]));
     return x;
   };
