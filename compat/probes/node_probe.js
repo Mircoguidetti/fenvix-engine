@@ -86,12 +86,13 @@ const deepDiff = (a, b, p = '') => { const out = []; if (a && b && typeof a === 
   const mk = async (uri) => { const c = await new MongoClient(uri).connect(); c.__uri = uri; return c; };
   const real = await mk(args.real || 'mongodb://localhost:27017');
   const realRs = await mk(args['real-rs'] || 'mongodb://localhost:27020/?replicaSet=rs0');
-  const ours = await mk(args.ours || 'mongodb://localhost:27018');
+  const oursRs = await mk(args.ours || 'mongodb://localhost:27018');
+  const oursSa = await mk(args['ours-sa'] || 'mongodb://localhost:27019');   // (standalone engine vs standalone mongod; replica-set probes: rs engine vs rs mongod)
   const results = {}; const byId = {};
   for (const c of CASES) {
     if (args.only && !c.name.includes(args.only)) continue;
-    let r = await runOn(c.rs ? realRs : real, c); let o = await runOn(ours, c);
-    const r2 = await runOn(c.rs ? realRs : real, c); const o2 = await runOn(ours, c);
+    let r = await runOn(c.rs ? realRs : real, c); let o = await runOn(c.rs ? oursRs : oursSa, c);
+    const r2 = await runOn(c.rs ? realRs : real, c); const o2 = await runOn(c.rs ? oursRs : oursSa, c);
     const ok = r === o; const rerr = r.includes('__error__'); const oerr = o.includes('__error__');
     let kind = ok ? '' : (oerr && !rerr ? 'reject' : 'differ'); let status = ok ? 'pass' : 'fail';
     if (ok && rerr && oerr && !c.expectErr) { status = 'invalid'; kind = 'invalid'; }
@@ -101,8 +102,8 @@ const deepDiff = (a, b, p = '') => { const out = []; if (a && b && typeof a === 
     console.log(status === 'pass' ? '.' : status === 'invalid' ? 'I' : 'F', c.name);
     if (status !== 'pass') { console.log('    real:', r.slice(0, 220), '\n    ours:', o.slice(0, 220)); if (args.diff) for (const d of deepDiff(JSON.parse(r), JSON.parse(o)).slice(0, 10)) console.log('      diff', d); }
   }
-  if (!args.only) fs.writeFileSync(path.join(__dirname, '..', 'probe_node_results.json'), JSON.stringify({ cases: results, by_id: byId }, null, 1));
+  if (!args.only) fs.writeFileSync(path.join(__dirname, '..', 'gaps_status', 'probe_node_results_final.json'), JSON.stringify({ cases: results, by_id: byId }, null, 1));
   const n = Object.values(results).filter((x) => x.status === 'pass').length;
   console.log(`${n}/${Object.keys(results).length} node probes identical on both servers`);
-  await Promise.all([real.close(), realRs.close(), ours.close()]);
+  await Promise.all([real.close(), realRs.close(), oursRs.close(), oursSa.close()]);
 })().catch((e) => { console.error(e); process.exit(1); });

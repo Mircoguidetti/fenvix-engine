@@ -1927,5 +1927,258 @@
     "cursor": {}
    }
   ]
+ },
+ {
+  "name": "g11.admin.invalidateusercache",
+  "mode": "std",
+  "steps": [
+   {
+    "invalidateUserCache": 1,
+    "__db": "admin"
+   },
+   {
+    "invalidateUserCache": 1
+   },
+   {
+    "invalidateUserCache": "x",
+    "__db": "admin"
+   },
+   {
+    "invalidateUserCache": 1,
+    "comment": "c",
+    "__db": "admin"
+   },
+   {
+    "invalidateUserCache": 1,
+    "foo": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.create.storage_engine_and_index_option_defaults",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "a",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "block_compressor=zlib"
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "a"
+    }
+   },
+   {
+    "create": "b",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "block_compressor=snappy"
+     }
+    },
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {
+       "configString": "block_compressor=zlib"
+      }
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "b"
+    }
+   },
+   {
+    "createIndexes": "b",
+    "indexes": [
+     {
+      "key": {
+       "x": 1
+      },
+      "name": "x_1"
+     }
+    ]
+   },
+   {
+    "listIndexes": "b"
+   },
+   {
+    "create": "c",
+    "storageEngine": {
+     "nosuch": {}
+    }
+   },
+   {
+    "create": "c2",
+    "storageEngine": 5
+   },
+   {
+    "create": "c3",
+    "storageEngine": {
+     "wiredTiger": 5
+    }
+   },
+   {
+    "create": "c4",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "bogus_option=1"
+     }
+    }
+   },
+   {
+    "create": "c5",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": 5
+     }
+    }
+   },
+   {
+    "create": "c6",
+    "indexOptionDefaults": 5
+   },
+   {
+    "create": "c7",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "nosuch": {}
+     }
+    }
+   },
+   {
+    "create": "c8",
+    "indexOptionDefaults": {
+     "foo": 1
+    }
+   },
+   {
+    "create": "c9",
+    "indexOptionDefaults": {}
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "c9"
+    }
+   },
+   {
+    "collMod": "a",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {
+       "configString": "block_compressor=zlib"
+      }
+     }
+    }
+   },
+   {
+    "collMod": "a",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "block_compressor=zlib"
+     }
+    }
+   },
+   {
+    "createIndexes": "a",
+    "indexes": [
+     {
+      "key": {
+       "y": 1
+      },
+      "name": "y_1",
+      "storageEngine": {
+       "wiredTiger": {
+        "configString": "block_compressor=zlib"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "listIndexes": "a"
+   },
+   {
+    "create": "s1",
+    "storageEngine": {}
+   },
+   {
+    "create": "s2",
+    "storageEngine": {
+     "wiredTiger": {}
+    }
+   },
+   {
+    "create": "s3",
+    "indexOptionDefaults": {
+     "storageEngine": {}
+    }
+   },
+   {
+    "create": "s4",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {}
+     }
+    }
+   },
+   {
+    "create": "s5",
+    "storageEngine": {
+     "wiredTiger": 5
+    }
+   },
+   {
+    "create": "s6",
+    "storageEngine": {
+     "wiredTiger": {
+      "x": 1
+     }
+    }
+   },
+   {
+    "create": "s7",
+    "storageEngine": {
+     "nosuch": 5
+    }
+   },
+   {
+    "create": "s8",
+    "indexOptionDefaults": {
+     "storageEngine": 5
+    }
+   },
+   {
+    "create": "s9",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {
+       "configString": 3
+      }
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "s1",
+       "s2",
+       "s3",
+       "s4"
+      ]
+     }
+    },
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
  }
 ]

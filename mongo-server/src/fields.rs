@@ -36,6 +36,7 @@ fn specific(name: &str) -> Option<&'static [&'static str]> {
         "shutdown" => &["shutdown", "force", "timeoutSecs"],
         "dropConnections" => &["dropConnections", "hostAndPort"],
         "features" => &["features"],
+        "invalidateUserCache" => &["invalidateUserCache"],
         "compactStructuredEncryptionData" => &["compactStructuredEncryptionData", "compactionTokens", "writeConcern"],
         "createSearchIndexes" => &["createSearchIndexes", "indexes"],
         "dropSearchIndex" => &["dropSearchIndex", "name", "id"],

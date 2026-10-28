@@ -17,6 +17,6 @@ fi
 STAMP=$(date +%s%N)
 D=$ROOT/.tools/data/fresh_${TAG}_$STAMP
 mkdir -p "$D" && "$M" --port $RP --dbpath "$D" --bind_ip 127.0.0.1 --fork --logpath "$D.log" --pidfilepath "$D.pid" > /dev/null 2>&1 || { echo "mongod failed" >&2; exit 1; }
-(cd "$ROOT/mongo-tests" && SERVER_EXTRA="--ttl-sweep-secs 1 --store local --local-dir /tmp/fresh-$TAG-$STAMP" ./server.sh $OP 600 > /dev/null 2>&1) || { echo "engine failed" >&2; exit 1; }
+(cd "$ROOT/mongo-tests" && SERVER_EXTRA="--ttl-sweep-secs 1 --store local --local-dir /tmp/fresh-$TAG-$STAMP --no-leases" ./server.sh $OP 600 > /dev/null 2>&1) || { echo "engine failed" >&2; exit 1; }
 echo "$(cat "$D.pid") $(cat "$ROOT/mongo-tests/out/server-$OP.pid")" > "$PIDS"
 echo "$RP $OP"

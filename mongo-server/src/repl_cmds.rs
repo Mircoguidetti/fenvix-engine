@@ -10,10 +10,10 @@ pub static SHUTDOWN: tokio::sync::Notify = tokio::sync::Notify::const_new();
 impl Server {
     /// `shutdown`: checked here; the connection is closed without a reply by the connection loop (the `$shutdown` marker).
     pub(crate) fn shutdown_cmd(&self, db: &str, cmd: &Document) -> R<Document> {
-        crate::fields::check("shutdown", cmd)?;
         if db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", "shutdown may only be run against the admin database.".into()));
         }
+        crate::fields::check("shutdown", cmd)?;
         if let Some(f) = cmd.get("force") {
             if !matches!(f, Bson::Boolean(_)) {
                 return Err(MongoError::type_mismatch(format!("BSON field 'shutdown.force' is the wrong type '{}', expected type 'bool'", crate::update::type_name(f))));

@@ -3,5 +3,5 @@
 # usage: gaps/engine.sh [fresh] [extra args...]   -- "fresh" wipes the store first
 cd "$(dirname "$0")/../.."
 if [ "${1:-}" = fresh ]; then shift; rm -rf /tmp/gaps-store; fi
-export SERVER_EXTRA="--ttl-sweep-secs 1 --replica-set rs0 --advertise localhost:%PORT% --store local --local-dir /tmp/gaps-store $*"
+export SERVER_EXTRA="--ttl-sweep-secs 1 --replica-set rs0 --advertise localhost:%PORT% --store local --local-dir /tmp/gaps-store --no-leases $*"
 exec mongo-tests/server.sh 27018 600

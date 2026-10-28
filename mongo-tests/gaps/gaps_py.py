@@ -108,6 +108,20 @@ def run_side(client, c):
             cleanup_auth(client, dbname)
 
 
+def run_pair(real_uri, ours_uri, c, kw):
+    """One case on mongod and on the engine, each through a client of its own: the implicit sessions (lsid, txnNumber) a case leaves on a
+    server never reach the next case (a raw txnNumber sent by one case would make a later retryable write of the same pooled session fail
+    with TransactionTooOld on that server only)."""
+    out = []
+    for uri in (real_uri, ours_uri):
+        cl = MongoClient(uri, **kw)
+        try:
+            out.append(run_side(cl, c)[0])
+        finally:
+            cl.close()
+    return out[0], out[1]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--real", default="mongodb://localhost:27017")
@@ -157,17 +171,14 @@ def main():
             finally:
                 subprocess.run([os.path.join(HERE, "fresh_pair.sh"), "stop", c["fresh"]])
         elif c.get("sa"):
-            ours_sa = ours_sa or MongoClient(a.ours_sa, **kw)
-            r, _ = run_side(real, c)
-            o, _ = run_side(ours_sa, c)
+            r, o = run_pair(a.real, a.ours_sa, c, kw)
         elif c["auth"]:
             real_a = real_a or MongoClient(a.real_auth, **kw)
             ours_a = ours_a or MongoClient(a.ours_auth, **kw)
             r, _ = run_side(real_a, c)
             o, _ = run_side(ours_a, c)
         else:
-            r, _ = run_side(real_rs if c["rs"] else real, c)
-            o, _ = run_side(ours_rs if c["rs"] else ours, c)
+            r, o = run_pair(a.real_rs if c["rs"] else a.real, (a.ours_rs or a.ours) if c["rs"] else a.ours, c, kw)
         ok = r == o
         known = KNOWN.get(c["name"]) if not ok else None
         bad += not ok and known is None

@@ -72,6 +72,7 @@ def main():
     ap.add_argument("--real", default="mongodb://localhost:27017")
     ap.add_argument("--real-rs", default="mongodb://localhost:27020/?replicaSet=rs0")
     ap.add_argument("--ours", default="mongodb://localhost:27018")
+    ap.add_argument("--ours-sa", default="mongodb://localhost:27019", help="standalone engine, paired with the standalone mongod for the probes that are not replica-set probes")
     ap.add_argument("--only", default="")
     ap.add_argument("--diff", action="store_true", help="print a structured diff for each failing probe")
     ap.add_argument("--repeat", type=int, default=2, help="run every probe this many times; a probe whose verdict changes between runs is reported as 'flaky' and ignored as evidence")
@@ -81,7 +82,7 @@ def main():
         if os.path.exists(os.path.join(HERE, "..", "probes", m + ".py")):
             importlib.import_module(m)
     kw = dict(serverSelectionTimeoutMS=15000, socketTimeoutMS=60000)
-    real, real_rs, ours, ours_rs = MongoClient(a.real, **kw), MongoClient(a.real_rs, **kw), MongoClient(a.ours, **kw), MongoClient(a.ours, **kw)
+    real, real_rs, ours, ours_rs = MongoClient(a.real, **kw), MongoClient(a.real_rs, **kw), MongoClient(a.ours_sa, **kw), MongoClient(a.ours, **kw)
     out, by_id = {}, {}
     for c in CASES:
         if a.only and a.only not in c["name"]:

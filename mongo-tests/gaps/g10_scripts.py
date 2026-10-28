@@ -69,6 +69,8 @@ def norm(r, names):
 JS_POS = re.compile(r" :\n@:\d+:\d+\n")
 # the storage engine's table identifiers in validate warnings ('table:collection-361-1265755286602592528')
 TABLE_ID = re.compile(r"table:(collection|index)-\d+-+\d+")
+# the time and thread of a storage engine configuration error ('[1793179741:16789][243:0x7f82ec7466c0]')
+WT_STAMP = re.compile(r"\[\d+:\d+\]\[\d+:0x[0-9a-f]+\]")
 
 
 def unify(x):
@@ -83,7 +85,7 @@ def unify(x):
     if isinstance(x, list):
         return [unify(v) for v in x]
     if isinstance(x, str):
-        return TABLE_ID.sub(r"table:\1-N", JS_POS.sub("", UUID_RE.sub("<uuid>", x).replace(PLAN, "")))
+        return WT_STAMP.sub("[T][P]", TABLE_ID.sub(r"table:\1-N", JS_POS.sub("", UUID_RE.sub("<uuid>", x).replace(PLAN, ""))))
     return x
 
 

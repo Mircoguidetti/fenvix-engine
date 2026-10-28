@@ -83,11 +83,11 @@
    "ids": [
     "node:Collection.createSearchIndex"
    ],
-   "status": "pass",
-   "kind": "",
+   "status": "fail",
+   "kind": "differ",
    "fail": "partial",
    "real": "{\"__error__\":{\"code\":{\"$numberInt\":\"59\"},\"codeName\":\"CommandNotFound\",\"name\":null}}",
-   "ours": "{\"__error__\":{\"code\":{\"$numberInt\":\"59\"},\"codeName\":\"CommandNotFound\",\"name\":null}}"
+   "ours": "\"created\""
   },
   "node.Db.aggregate": {
    "ids": [
@@ -234,11 +234,11 @@
     "node:Admin.validateCollection",
     "node:Admin.replSetGetStatus"
    ],
-   "status": "fail",
-   "kind": "differ",
+   "status": "invalid",
+   "kind": "invalid",
    "fail": "partial",
    "real": "{\"build\":\"7.0\",\"cmd\":{\"$numberInt\":\"1\"},\"dbs\":true,\"info\":\"7.0\",\"ping\":{\"$numberInt\":\"1\"},\"replSetGetStatus\":{\"__error__\":{\"code\":{\"$numberInt\":\"76\"},\"codeName\":\"NoReplicationEnabled\",\"name\":null}},\"serverStatus\":true,\"val\":{\"__error__\":{\"code\":{\"$numberInt\":\"26\"},\"codeName\":\"NamespaceNotFound\",\"nam",
-   "ours": "{\"build\":\"7.0\",\"cmd\":{\"$numberInt\":\"1\"},\"dbs\":true,\"info\":\"7.0\",\"ping\":{\"$numberInt\":\"1\"},\"replSetGetStatus\":true,\"serverStatus\":true,\"val\":{\"__error__\":{\"code\":{\"$numberInt\":\"26\"},\"codeName\":\"NamespaceNotFound\",\"name\":null}}}"
+   "ours": "{\"build\":\"7.0\",\"cmd\":{\"$numberInt\":\"1\"},\"dbs\":true,\"info\":\"7.0\",\"ping\":{\"$numberInt\":\"1\"},\"replSetGetStatus\":{\"__error__\":{\"code\":{\"$numberInt\":\"76\"},\"codeName\":\"NoReplicationEnabled\",\"name\":null}},\"serverStatus\":true,\"val\":{\"__error__\":{\"code\":{\"$numberInt\":\"26\"},\"codeName\":\"NamespaceNotFound\",\"nam"
   },
   "node.FindCursor.sort_limit_skip_project": {
    "ids": [
@@ -517,8 +517,8 @@
   "node:Collection.createSearchIndex": [
    {
     "name": "node.Collection.createSearchIndex",
-    "status": "pass",
-    "kind": "",
+    "status": "fail",
+    "kind": "differ",
     "fail": "partial"
    }
   ],
@@ -661,64 +661,64 @@
   "node:Admin.buildInfo": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.command": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.listDatabases": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.ping": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.serverInfo": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.serverStatus": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.validateCollection": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],
   "node:Admin.replSetGetStatus": [
    {
     "name": "node.Admin.members",
-    "status": "fail",
-    "kind": "differ",
+    "status": "invalid",
+    "kind": "invalid",
     "fail": "partial"
    }
   ],

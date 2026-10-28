@@ -7,7 +7,7 @@ module.exports = ({ C, Long, ObjectId }) => {
     if (v && v._bsontype) return v._bsontype;
     if (v instanceof Date) return 'datetime';
     if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([k]) => !['$clusterTime', 'operationTime', 'bucketCatalog'].includes(k)).map(([k, x]) => [k, shape(x)]));
-    return typeof v === 'number' ? (Number.isInteger(v) ? 'int' : 'float') : typeof v;
+    return typeof v === 'number' ? 'number' : typeof v;   // (a whole double decodes to the same JS number as an int: the type cannot be compared here, pymongo's shape test does)
   };
   const cmd = (db, c) => tr(() => db.command(c));
   const adm = (c) => c.db('admin');

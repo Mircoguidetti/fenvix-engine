@@ -194,6 +194,9 @@ impl Server {
     }
 
     async fn dispatch_inner(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
+        if name == "shutdown" && db != "admin" {
+            return Err(MongoError::new(13, "Unauthorized", "shutdown may only be run against the admin database.".into()));
+        }
         crate::fields::check(name, cmd)?;
         if let Some(r) = self.diag_command(db, name, cmd).await {
             return r;
@@ -270,7 +273,10 @@ impl Server {
             "dropAllRolesFromDatabase" => return self.drop_all_roles(db).await,
             "grantRolesToRole" | "revokeRolesFromRole" | "grantPrivilegesToRole" | "revokePrivilegesFromRole" => return self.role_delta(db, cmd, name).await,
             "rolesInfo" => return self.roles_info(db, cmd).await,
-            "invalidateUserCache" => return Ok(ok()),
+            "invalidateUserCache" => {
+                crate::fields::check("invalidateUserCache", cmd)?;
+                return Ok(ok());
+            }
             "ping" => return Ok(ok()),
             "buildInfo" | "buildinfo" => return Ok(build_info()),
             "getParameter" => return crate::params::get_parameter(cmd, self.is_rs()),

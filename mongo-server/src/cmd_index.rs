@@ -862,8 +862,10 @@ impl Server {
         if !g.collections().await?.iter().any(|n| n == coll) {
             return Err(MongoError::namespace_not_found("ns does not exist".to_string()));
         }
-        if cmd.contains_key("collation") {
-            return Err(MongoError::new(40415, "IDLUnknownField", "BSON field 'collMod.collation' is an unknown field.".into()));
+        for f in ["collation", "storageEngine", "indexOptionDefaults"] {
+            if cmd.contains_key(f) {
+                return Err(MongoError::new(40415, "IDLUnknownField", format!("BSON field 'collMod.{f}' is an unknown field.")));
+            }
         }
         if cmd.contains_key("validator") || cmd.contains_key("validationLevel") || cmd.contains_key("validationAction") {
             let changes = crate::collopts::validation_options("collMod", cmd)?;
