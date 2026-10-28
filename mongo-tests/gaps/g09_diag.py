@@ -44,6 +44,10 @@ def _ss_shape(client):
     r = client.admin.command("serverStatus")
     r.pop("$clusterTime", None)
     r.pop("operationTime", None)
+    pos = r.get("repl", {}).get("primaryOnlyServices")
+    if pos is not None:   # (mongod lists these in a per-process hash order)
+        r["repl"]["primaryOnlyServices"] = dict(sorted(pos.items()))
+    r.pop("bucketCatalog", None)   # (there once a time-series collection was used in the process)
     cm = r["metrics"].pop("commands")
     r["metrics"].pop("apiVersions", None)   # (the apps that sent an apiVersion to the server so far)
     for k in ("locks", "defaultRWConcern", "transactions", "wiredTiger", "tcmalloc"):   # (what these hold depends on what the server did before)
@@ -103,7 +107,7 @@ def _ss_failed(client, db):
 def _ss_sections(client, db):
     r = client.admin.command({"serverStatus": 1, "repl": 0, "metrics": 0, "locks": 0, "wiredTiger": 0, "mem": 0, "network": 0, "opcounters": 0})
     r2 = client.admin.command({"serverStatus": 1, "connections": 0})
-    return {"keys": sorted(set(r.keys()) - {"$clusterTime", "operationTime"}), "keys2": sorted(set(r2.keys()) - {"$clusterTime", "operationTime"}), "on_db": sorted(client[db.name].command("serverStatus").keys())[:5]}
+    return {"keys": sorted(set(r.keys()) - {"$clusterTime", "operationTime", "bucketCatalog"}), "keys2": sorted(set(r2.keys()) - {"$clusterTime", "operationTime", "bucketCatalog"}), "on_db": sorted(set(client[db.name].command("serverStatus")) - {"bucketCatalog"})[:5]}
 
 
 # ---- hostInfo and the other static commands -----------------------------------------------------
@@ -114,7 +118,7 @@ def _static(client, db):
     for name in ("hostInfo", "connPoolStats", "features", "lockInfo"):
         out[name] = shape(client.admin.command(name))
     out["hostInfo_other_db"] = shape(db.command("hostInfo"))
-    out["serverStatus_other_db"] = sorted(db.command("serverStatus").keys())[:6]
+    out["serverStatus_other_db"] = sorted(set(db.command("serverStatus")) - {"bucketCatalog"})[:6]
     out["getCmdLineOpts"] = sorted(client.admin.command("getCmdLineOpts").keys())
     out["admin_only"] = {n: cmd(client, db.name, n) for n in ("getCmdLineOpts", "currentOp", "top", "lockInfo", "getLog")}
     return out

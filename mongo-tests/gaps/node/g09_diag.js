@@ -1,12 +1,12 @@
 // Item 9 (Node driver): diagnostics and administration commands (see g09_diag.py).
 module.exports = ({ C, Long, ObjectId }) => {
   const clean = (m) => (m || '').replace(/UUID\("[0-9a-f-]+"\)/g, 'UUID(<u>)');
-  const tr = async (f) => { try { const r = await f(); if (r && typeof r === 'object' && !Array.isArray(r)) { delete r.$clusterTime; delete r.operationTime; } return r; } catch (e) { return { err: [e.code, e.codeName, clean(e.errmsg || e.message)] }; } };
+  const tr = async (f) => { try { const r = await f(); if (r && typeof r === 'object' && !Array.isArray(r)) { delete r.$clusterTime; delete r.operationTime; delete r.bucketCatalog; if (r.repl && r.repl.primaryOnlyServices) r.repl.primaryOnlyServices = Object.fromEntries(Object.entries(r.repl.primaryOnlyServices).sort()); } return r; } catch (e) { return { err: [e.code, e.codeName, clean(e.errmsg || e.message)] }; } };
   const shape = (v) => {
     if (Array.isArray(v)) return v.length ? [shape(v[0])] : [];
     if (v && v._bsontype) return v._bsontype;
     if (v instanceof Date) return 'datetime';
-    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([k]) => !['$clusterTime', 'operationTime'].includes(k)).map(([k, x]) => [k, shape(x)]));
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([k]) => !['$clusterTime', 'operationTime', 'bucketCatalog'].includes(k)).map(([k, x]) => [k, shape(x)]));
     return typeof v === 'number' ? (Number.isInteger(v) ? 'int' : 'float') : typeof v;
   };
   const cmd = (db, c) => tr(() => db.command(c));
@@ -16,8 +16,8 @@ module.exports = ({ C, Long, ObjectId }) => {
   const rs = { rs: true };
   const num = (v) => (v && v._bsontype ? Number(v.toString()) : v);
 
-  C('g09.diag.serverstatus_shape', async (c, db) => { const r = await adm(c).command({ serverStatus: 1 }); delete r.$clusterTime; delete r.operationTime; const cm = r.metrics.commands; delete r.metrics.commands; delete r.metrics.apiVersions; for (const k of ['locks', 'defaultRWConcern', 'transactions', 'wiredTiger', 'tcmalloc']) delete r[k]; return { shape: shape(r), entries: [...new Set(Object.values(cm).filter((v) => v && typeof v === 'object' && !v._bsontype).map((v) => JSON.stringify(Object.keys(v).filter((k) => ['failed', 'total'].includes(k)).sort())))].sort() }; }, sa);
-  C('g09.diag.serverstatus_shape_rs', async (c, db) => { const r = await adm(c).command({ serverStatus: 1 }); delete r.$clusterTime; delete r.operationTime; const cm = r.metrics.commands; delete r.metrics.commands; delete r.metrics.apiVersions; for (const k of ['locks', 'defaultRWConcern', 'transactions', 'wiredTiger', 'tcmalloc']) delete r[k]; return { shape: shape(r), entries: [...new Set(Object.values(cm).filter((v) => v && typeof v === 'object' && !v._bsontype).map((v) => JSON.stringify(Object.keys(v).filter((k) => ['failed', 'total'].includes(k)).sort())))].sort() }; }, rs);
+  C('g09.diag.serverstatus_shape', async (c, db) => { const r = await adm(c).command({ serverStatus: 1 }); delete r.$clusterTime; delete r.operationTime; delete r.bucketCatalog; if (r.repl && r.repl.primaryOnlyServices) r.repl.primaryOnlyServices = Object.fromEntries(Object.entries(r.repl.primaryOnlyServices).sort()); const cm = r.metrics.commands; delete r.metrics.commands; delete r.metrics.apiVersions; for (const k of ['locks', 'defaultRWConcern', 'transactions', 'wiredTiger', 'tcmalloc']) delete r[k]; return { shape: shape(r), entries: [...new Set(Object.values(cm).filter((v) => v && typeof v === 'object' && !v._bsontype).map((v) => JSON.stringify(Object.keys(v).filter((k) => ['failed', 'total'].includes(k)).sort())))].sort() }; }, sa);
+  C('g09.diag.serverstatus_shape_rs', async (c, db) => { const r = await adm(c).command({ serverStatus: 1 }); delete r.$clusterTime; delete r.operationTime; delete r.bucketCatalog; if (r.repl && r.repl.primaryOnlyServices) r.repl.primaryOnlyServices = Object.fromEntries(Object.entries(r.repl.primaryOnlyServices).sort()); const cm = r.metrics.commands; delete r.metrics.commands; delete r.metrics.apiVersions; for (const k of ['locks', 'defaultRWConcern', 'transactions', 'wiredTiger', 'tcmalloc']) delete r[k]; return { shape: shape(r), entries: [...new Set(Object.values(cm).filter((v) => v && typeof v === 'object' && !v._bsontype).map((v) => JSON.stringify(Object.keys(v).filter((k) => ['failed', 'total'].includes(k)).sort())))].sort() }; }, rs);
   C('g09.diag.serverstatus_counters', async (c, db) => {
     const a = await adm(c).command({ serverStatus: 1 }); const t = db.collection('t');
     await t.insertMany([0, 1, 2].map((_id) => ({ _id }))); await t.insertOne({ _id: 10 }); await t.find({}).toArray(); await t.updateOne({ _id: 1 }, { $set: { x: 1 } }); await t.updateMany({}, { $set: { y: 1 } }); await t.deleteOne({ _id: 10 });
@@ -28,10 +28,10 @@ module.exports = ({ C, Long, ObjectId }) => {
     out.connections = [b.connections.current >= 1, b.connections.available > 0, num(b.uptimeMillis) >= num(a.uptimeMillis), num(b.pid) > 0, b.version, b.process]; return out;
   }, sa);
   C('g09.diag.serverstatus_failed_counter', async (c, db) => { const a = (await adm(c).command({ serverStatus: 1 })).metrics.commands; await cmd(db, { collMod: 'nope', validator: {} }); await cmd(db, { find: 't', filter: { $bogus: 1 } }); const b = (await adm(c).command({ serverStatus: 1 })).metrics.commands; const o = {}; for (const k of ['collMod', 'find']) o[k] = [num(b[k].total) - num((a[k] || { total: 0 }).total), num(b[k].failed) - num((a[k] || { failed: 0 }).failed)]; return o; }, sa);
-  C('g09.diag.serverstatus_sections', async (c, db) => { const strip = (r) => Object.keys(r).filter((k) => !['$clusterTime', 'operationTime'].includes(k)).sort(); return { keys: strip(await adm(c).command({ serverStatus: 1, repl: 0, metrics: 0, locks: 0, wiredTiger: 0, mem: 0, network: 0, opcounters: 0 })), keys2: strip(await adm(c).command({ serverStatus: 1, connections: 0 })) }; }, sa);
+  C('g09.diag.serverstatus_sections', async (c, db) => { const strip = (r) => Object.keys(r).filter((k) => !['$clusterTime', 'operationTime', 'bucketCatalog'].includes(k)).sort(); return { keys: strip(await adm(c).command({ serverStatus: 1, repl: 0, metrics: 0, locks: 0, wiredTiger: 0, mem: 0, network: 0, opcounters: 0 })), keys2: strip(await adm(c).command({ serverStatus: 1, connections: 0 })) }; }, sa);
   C('g09.diag.static_shapes', async (c, db) => {
     const out = {}; for (const n of ['hostInfo', 'connPoolStats', 'features', 'lockInfo']) out[n] = shape(await adm(c).command({ [n]: 1 }));
-    out.hostInfo_other_db = shape(await db.command({ hostInfo: 1 })); out.serverStatus_other_db = Object.keys(await db.command({ serverStatus: 1 })).sort().slice(0, 6); out.getCmdLineOpts = Object.keys(await adm(c).command({ getCmdLineOpts: 1 })).sort();
+    out.hostInfo_other_db = shape(await db.command({ hostInfo: 1 })); out.serverStatus_other_db = Object.keys(await db.command({ serverStatus: 1 })).filter((k) => k !== 'bucketCatalog').sort().slice(0, 6); out.getCmdLineOpts = Object.keys(await adm(c).command({ getCmdLineOpts: 1 })).sort();
     out.admin_only = {}; for (const n of ['getCmdLineOpts', 'currentOp', 'top', 'lockInfo', 'getLog']) out.admin_only[n] = await cmd(db, { [n]: 1 }); return out;
   }, sa);
   C('g09.diag.list_commands', async (c, db) => { const r = (await adm(c).command({ listCommands: 1 })).commands; const ours = ['find', 'insert', 'update', 'delete', 'aggregate', 'createIndexes', 'serverStatus', 'listCommands', 'currentOp', 'dbHash', 'profile', 'collMod', 'hello', 'ping', 'killOp']; return { entries: Object.fromEntries(ours.filter((k) => k in r).sort().map((k) => [k, r[k]])), has_find: 'find' in r }; }, sa);

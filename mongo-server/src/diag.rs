@@ -593,6 +593,16 @@ impl Server {
                 }
             }
         }
+        if crate::special_colls::SERIES_SEEN.load(Relaxed) {
+            let mut out = Document::new();
+            for (k, v) in std::mem::take(&mut d) {
+                if k == "catalogStats" {
+                    out.insert("bucketCatalog", crate::special_colls::bucket_catalog());
+                }
+                out.insert(k, v);
+            }
+            d = out;
+        }
         // `section: 0` leaves a section out
         for (k, v) in cmd.iter().skip(1) {
             if matches!(v, Bson::Int32(0) | Bson::Int64(0) | Bson::Boolean(false)) || matches!(v, Bson::Double(f) if *f == 0.0) {

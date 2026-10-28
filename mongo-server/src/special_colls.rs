@@ -318,3 +318,23 @@ pub fn series_order(mut d: Document, series: &(String, Option<String>)) -> Docum
     out.extend(d);
     out
 }
+
+/// Set once a time-series collection was created in this process: from then on `serverStatus` has a `bucketCatalog` section.
+pub static SERIES_SEEN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The `bucketCatalog` section of `serverStatus` (the counters are not tracked: the documents are stored flat).
+pub fn bucket_catalog() -> Document {
+    let mut d = Document::new();
+    for k in ["numBuckets", "numOpenBuckets", "numIdleBuckets", "numArchivedBuckets", "memoryUsage"] {
+        d.insert(k, 0i32);
+    }
+    for k in ["numBucketInserts", "numBucketUpdates", "numBucketsOpenedDueToMetadata", "numBucketsClosedDueToCount", "numBucketsClosedDueToSchemaChange", "numBucketsClosedDueToSize", "numBucketsClosedDueToTimeForward", "numBucketsClosedDueToTimeBackward", "numBucketsClosedDueToMemoryThreshold", "numCommits", "numMeasurementsGroupCommitted", "numWaits", "numMeasurementsCommitted"] {
+        d.insert(k, Bson::Int64(0));
+    }
+    d.insert("avgNumMeasurementsPerCommit", Bson::Int64(0));
+    for k in ["numBucketsClosedDueToReopening", "numBucketsArchivedDueToMemoryThreshold", "numBucketsArchivedDueToTimeBackward", "numBucketsReopened", "numBucketsKeptOpenDueToLargeMeasurements", "numBucketsClosedDueToCachePressure", "numBucketsFetched", "numBucketsQueried", "numBucketFetchesFailed", "numBucketQueriesFailed", "numBucketReopeningsFailed", "numDuplicateBucketsReopened", "numBucketDocumentsTooLargeInsert", "numBucketDocumentsTooLargeUpdate"] {
+        d.insert(k, Bson::Int64(0));
+    }
+    d.insert("stateManagement", doc! { "bucketsManaged": 0i64, "currentEra": 0i64, "erasWithRemainingBuckets": 0i64, "trackedClearOperations": 0i64 });
+    d
+}

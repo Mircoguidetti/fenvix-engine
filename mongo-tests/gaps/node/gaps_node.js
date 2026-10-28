@@ -26,13 +26,17 @@ H.cert = (n) => path.join(CERTS, n);
 const pairClient = (port) => ({ gaps_addr: ['localhost', port], mk: (opts = {}, host) => { const o = Object.fromEntries(Object.entries(opts).map(([k, v]) => [k, typeof v === 'string' && v.endsWith('.pem') ? path.join(CERTS, v) : v])); return new MongoClient(`mongodb://${host || 'localhost'}:${port}/`, { serverSelectionTimeoutMS: 3000, ...o }); } });
 
 const KNOWN = Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'known_divergences.json'), 'utf8'))).filter(([k]) => !k.startsWith('_')));
-const deepDiff = (a, b, p = '') => { const out = []; if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) { if (!(k in a)) out.push(`${p}/${k}: only ours = ${JSON.stringify(b[k]).slice(0, 150)}`); else if (!(k in b)) out.push(`${p}/${k}: only real = ${JSON.stringify(a[k]).slice(0, 150)}`); else out.push(...deepDiff(a[k], b[k], `${p}/${k}`)); } } else if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`${p}: real=${JSON.stringify(a)?.slice(0, 150)} ours=${JSON.stringify(b)?.slice(0, 150)}`); return out; };
+const deepDiff = (a, b, p = '') => { const out = []; if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) { if (!(k in a) && ['$clusterTime', 'operationTime', 'commitQuorum'].includes(k)) continue; if (!(k in a)) out.push(`${p}/${k}: only ours = ${JSON.stringify(b[k]).slice(0, 150)}`); else if (!(k in b)) out.push(`${p}/${k}: only real = ${JSON.stringify(a[k]).slice(0, 150)}`); else out.push(...deepDiff(a[k], b[k], `${p}/${k}`)); } } else if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`${p}: real=${JSON.stringify(a)?.slice(0, 150)} ours=${JSON.stringify(b)?.slice(0, 150)}`); return out; };
 
+// Fields only a replica-set engine adds; the plain cases compare it with a standalone mongod.
+const RS_ONLY = ['$clusterTime', 'operationTime', 'commitQuorum'];
+const stripRs = (x) => Array.isArray(x) ? x.map(stripRs) : (x && typeof x === 'object' && !(x instanceof Date) && !x._bsontype && !Buffer.isBuffer(x)) ? Object.fromEntries(Object.entries(x).filter(([k]) => !RS_ONLY.includes(k)).map(([k, v]) => [k, stripRs(v)])) : x;
 async function runOn(client, c) {
   const dbname = 'gn_' + Math.random().toString(16).slice(2, 12);
   const db = c.pair ? { databaseName: dbname, dropDatabase: async () => {} } : client.db(dbname);
   try {
-    return canon(await Promise.race([c.fn(client, db), new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout 40s'), { code: 'TIMEOUT' })), 40000))])).split(dbname).join('$DB');
+    const out = await Promise.race([c.fn(client, db), new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout 40s'), { code: 'TIMEOUT' })), 40000))]);
+    return canon(c.rs ? out : stripRs(out)).split(dbname).join('$DB');
   } catch (e) { return canon(errOf(e)); } finally { try { await db.dropDatabase(); } catch (e) { /* ignore */ } }
 }
 

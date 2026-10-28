@@ -539,6 +539,7 @@ impl Server {
             raw.insert("collation", c.to_doc());
         }
         let special = crate::special_colls::parse_create(&format!("{db}.{coll}"), cmd, capped.is_some())?;
+        if special.options.contains_key("timeseries") { crate::special_colls::SERIES_SEEN.store(true, std::sync::atomic::Ordering::Relaxed); }
         raw.extend(special.options.clone());
         raw.extend(crate::collopts::plain_options("create", cmd)?);
         raw.extend(crate::collopts::validation_options("create", cmd)?);

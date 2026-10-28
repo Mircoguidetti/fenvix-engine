@@ -47,10 +47,15 @@ def uniq(prefix="n"):
     return f"{prefix}{_COUNTER[0]}"
 
 
+# Fields only a replica-set engine adds; the plain cases compare it with a standalone mongod, which has none.
+RS_ONLY = ("$clusterTime", "operationTime", "commitQuorum")
+
+
 def deep_diff(a, b, path=""):
     out = []
     if isinstance(a, dict) and isinstance(b, dict):
         for k in sorted(set(a) | set(b)):
+            if k not in a and k in RS_ONLY: continue
             if k not in a: out.append(f"{path}/{k}: only ours = {json.dumps(b[k])[:160]}")
             elif k not in b: out.append(f"{path}/{k}: only real = {json.dumps(a[k])[:160]}")
             else: out += deep_diff(a[k], b[k], f"{path}/{k}")
@@ -75,12 +80,22 @@ def cleanup_auth(client, dbname):
         print("cleanup failed:", e)
 
 
+def strip_rs(x):
+    """Drop the fields only a replica-set engine adds (the plain cases compare it with a standalone mongod)."""
+    if isinstance(x, dict):
+        return type(x)((k, strip_rs(v)) for k, v in x.items() if k not in RS_ONLY)
+    if isinstance(x, list):
+        return [strip_rs(v) for v in x]
+    return x
+
+
 def run_side(client, c):
     dbname = "gp_" + uuid.uuid4().hex[:10]
     _COUNTER[0] = 0
     try:
         try:
-            return canon(c["f"](client, client[dbname]), c["sort_keys"]).replace(dbname, "$DB"), False
+            out = c["f"](client, client[dbname])
+            return canon(out if c["rs"] else strip_rs(out), c["sort_keys"]).replace(dbname, "$DB"), False
         except Exception as e:  # noqa
             return canon(run_py.err_result(e, False), c["sort_keys"]).replace(dbname, "$DB"), True
     finally:
