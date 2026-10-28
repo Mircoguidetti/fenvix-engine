@@ -1,0 +1,5 @@
+s3 durable 0 {'secs': 60.0, 'acked_ids': 68492, 'acked_writes_before_kill': 136929, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.133}
+s3 durable 1 {'secs': 60.0, 'acked_ids': 69863, 'acked_writes_before_kill': 139683, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.137}
+s3 durable 2 {'secs': 60.0, 'acked_ids': 75503, 'acked_writes_before_kill': 150975, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.133}
+s3 durable 3 {'secs': 60.0, 'acked_ids': 73642, 'acked_writes_before_kill': 147262, 'lost_inserts': 0, 'lost_updates': 0, 'wal_puts_per_write': 0.134}
+TOTAL s3 durable {'acked_ids': 287500, 'lost_inserts': 0, 'lost_updates': 0}

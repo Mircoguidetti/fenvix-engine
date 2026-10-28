@@ -1,0 +1,101 @@
+{
+ "control": false,
+ "trials": [
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 15,
+   "ssts_deleted": 52,
+   "manifests_deleted": 111,
+   "acked_docs": 14560,
+   "acked_updates": 14555,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 54685,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": null,
+   "control_deleted_referenced": false
+  },
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 16,
+   "ssts_deleted": 72,
+   "manifests_deleted": 133,
+   "acked_docs": 15150,
+   "acked_updates": 15147,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 58600,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": null,
+   "control_deleted_referenced": false
+  },
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 15,
+   "ssts_deleted": 68,
+   "manifests_deleted": 137,
+   "acked_docs": 14507,
+   "acked_updates": 14503,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 52998,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": null,
+   "control_deleted_referenced": false
+  },
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 15,
+   "ssts_deleted": 70,
+   "manifests_deleted": 133,
+   "acked_docs": 13203,
+   "acked_updates": 13197,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 52067,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": null,
+   "control_deleted_referenced": false
+  }
+ ],
+ "total": {
+  "trials": 4,
+  "killed_inside_cleanup_pass": 4,
+  "ssts_deleted": 262,
+  "acked_docs": 57420,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "read_violations": {
+   "reads_checked": 218350,
+   "missing": 0,
+   "stale": 0,
+   "padding": 0,
+   "errors": 0,
+   "count_below_acked": 0
+  }
+ }
+}

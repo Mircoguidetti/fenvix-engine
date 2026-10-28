@@ -1,0 +1,61 @@
+{
+ "control": true,
+ "trials": [
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 9,
+   "ssts_deleted": 16,
+   "manifests_deleted": 40,
+   "acked_docs": 9960,
+   "acked_updates": 9953,
+   "lost_inserts": 9960,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 42011,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": "OperationFailure('Data error: object store error (Object at location tenants/og0_1793125365/compacted/01M5Z9KT4F38B5H3DFA7TT2KJR.sst not found: Error performing GET http://127.0.0.1:9000/bench/tenants",
+   "control_deleted_referenced": true
+  },
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 9,
+   "ssts_deleted": 20,
+   "manifests_deleted": 53,
+   "acked_docs": 10258,
+   "acked_updates": 10254,
+   "lost_inserts": 10258,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 39584,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": "OperationFailure('Data error: object store error (Object at location tenants/og1_1793125437/compacted/01M5Z9NP4BCGAF6594TE5PE4S0.sst not found: Error performing GET http://127.0.0.1:9000/bench/tenants",
+   "control_deleted_referenced": true
+  }
+ ],
+ "total": {
+  "trials": 2,
+  "killed_inside_cleanup_pass": 2,
+  "ssts_deleted": 36,
+  "acked_docs": 20218,
+  "lost_inserts": 20218,
+  "lost_updates": 0,
+  "read_violations": {
+   "reads_checked": 81595,
+   "missing": 0,
+   "stale": 0,
+   "padding": 0,
+   "errors": 0,
+   "count_below_acked": 0
+  }
+ }
+}
