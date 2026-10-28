@@ -15,6 +15,12 @@ setup() {
   up 27048 && up 27044 && up 27052 || $PYV_SYS $G/tls_env.py start > /dev/null 2>&1
 }
 PYV_SYS=python3          # system python has `cryptography`, which tls_env.py needs to make certificates
+# the suites phase leaves its own engines (S3 store) on 27018/27019: stop them, the gap tests need local-store engines on a fresh directory
+for port in 27018 27019; do
+  pf=mongo-tests/out/server-$port.pid
+  [ -f $pf ] && kill -TERM "$(cat $pf)" 2>/dev/null
+done
+for _ in $(seq 1 100); do up 27018 || up 27019 || break; sleep 0.3; done
 setup
 for item in g01 g02 g03 g04 g05 g06 g07 g08 g09 g10 g11 g12; do
   o=$OUT/gaps_py_$item.log
