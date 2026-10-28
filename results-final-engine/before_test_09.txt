@@ -1,0 +1,93 @@
+..FFFFFFFFFFFF.FFFFF..FF..FFF.                                           [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   AssertionError: expected Unauthorized, got 51003: User "new_2112979629298130165@app1" already exists, full error: {'ok': 0.0, 'errmsg': 'User "new_2112979629298130165@app1" already exists', 'code': 51003, 'codeName': 'Location51003'}
+    assert 51003 == 13
+     +  where 51003 = OperationFailure('User "new_2112979629298130165@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_2112979629298130165@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}').code
+     +    where OperationFailure('User "new_2112979629298130165@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_2112979629298130165@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') = <ExceptionInfo OperationFailure('User "new_2112979629298130165@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_2112979629298130165@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') tblen=16>.value
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:47: AssertionError: expected Unauthorized, got 51003: User "new_2112979629298130165@app1" already exists, full error: {'ok': 0.0, 'errmsg': 'User "new_2112979629298130165@app1" already exists', 'code': 51003, 'codeName': 'Location51003'}
+E   AssertionError: expected Unauthorized, got 51003: User "new_2112979629298130165@app1" already exists, full error: {'ok': 0.0, 'errmsg': 'User "new_2112979629298130165@app1" already exists', 'code': 51003, 'codeName': 'Location51003'}
+    assert 51003 == 13
+     +  where 51003 = OperationFailure('User "new_2112979629298130165@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_2112979629298130165@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}').code
+     +    where OperationFailure('User "new_2112979629298130165@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_2112979629298130165@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') = <ExceptionInfo OperationFailure('User "new_2112979629298130165@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_2112979629298130165@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') tblen=16>.value
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:47: AssertionError: expected Unauthorized, got 51003: User "new_2112979629298130165@app1" already exists, full error: {'ok': 0.0, 'errmsg': 'User "new_2112979629298130165@app1" already exists', 'code': 51003, 'codeName': 'Location51003'}
+E   AssertionError: expected Unauthorized, got 51003: User "new_5646060166846421416@app1" already exists, full error: {'ok': 0.0, 'errmsg': 'User "new_5646060166846421416@app1" already exists', 'code': 51003, 'codeName': 'Location51003'}
+    assert 51003 == 13
+     +  where 51003 = OperationFailure('User "new_5646060166846421416@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_5646060166846421416@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}').code
+     +    where OperationFailure('User "new_5646060166846421416@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_5646060166846421416@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') = <ExceptionInfo OperationFailure('User "new_5646060166846421416@app1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "new_5646060166846421416@app1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') tblen=16>.value
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:47: AssertionError: expected Unauthorized, got 51003: User "new_5646060166846421416@app1" already exists, full error: {'ok': 0.0, 'errmsg': 'User "new_5646060166846421416@app1" already exists', 'code': 51003, 'codeName': 'Location51003'}
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:45: Failed: DID NOT RAISE OperationFailure
+E   AssertionError: the profile holds a password
+    assert 'Pw-SECRET-9f3c1d7a' not in '[{"op": "co..."user": ""}]'
+      
+      'Pw-SECRET-9f3c1d7a' is contained here:
+      ?           ^^^^^^^^^^^                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ...
+      
+      ...Full output truncated, use '-vv' to show
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:242: AssertionError: the profile holds a password
+E   AssertionError: users/roles left behind: ['tenantA.uA'] ['tenantA.rA']
+    assert ([{'_id': 'ten...enantA', ...}] == []
+      
+      Left contains one more item: {'_id': 'tenantA.uA', 'userId': Binary(b'\x1a\xd3\x85z\xe1\x9f\xf8\x19}y\xa9p0\x05\x1c\xcb', 4), 'user': 'uA', 'db': 'tenantA', ...}
+      Use -v to get more diff)
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:295: AssertionError: users/roles left behind: ['tenantA.uA'] ['tenantA.rA']
+E   AssertionError: assert (['uFd'] == []
+      
+      Left contains one more item: 'uFd'
+      Use -v to get more diff)
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:333: AssertionError: assert (['uFd'] == []
+E   AssertionError: (201, {'name': 'ghost', 'state': 'awake', 'mode': 'writer', 'holder': 'sec-20749', ...})
+    assert (201 == 409)
+/home/user/test5-compat-indexes/ctl-tests/test_09_security.py:343: AssertionError: (201, {'name': 'ghost', 'state': 'awake', 'mode': 'writer', 'holder': 'sec-20749', ...})
+=========================== short test summary info ============================
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles0]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles1]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles2]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles3]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles4]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles5]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles6]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[ua-app1-roles7]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[cr-app1-roles8]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[cr-app1-roles9]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[uaa-app1-roles10]
+FAILED test_09_security.py::test_createuser_cannot_grant_what_the_caller_cannot[uaa-app1-roles11]
+FAILED test_09_security.py::test_updateuser_and_grantroles_cannot_grant_what_the_caller_cannot[roles0]
+FAILED test_09_security.py::test_updateuser_and_grantroles_cannot_grant_what_the_caller_cannot[roles1]
+FAILED test_09_security.py::test_updateuser_and_grantroles_cannot_grant_what_the_caller_cannot[roles2]
+FAILED test_09_security.py::test_updateuser_and_grantroles_cannot_grant_what_the_caller_cannot[roles3]
+FAILED test_09_security.py::test_roles_cannot_be_used_to_smuggle_privileges
+FAILED test_09_security.py::test_unauthorized_errors_of_a_weak_user_carry_no_secret
+FAILED test_09_security.py::test_secrets_are_not_in_the_profile_or_in_currentop
+FAILED test_09_security.py::test_erase_deletes_the_users_and_roles_of_the_database
+FAILED test_09_security.py::test_erase_of_a_database_with_a_fork_keeps_the_users_of_the_fork_clean
+FAILED test_09_security.py::test_create_and_fork_refuse_a_name_that_still_has_users
+22 failed, 8 passed in 4.38s

@@ -51,8 +51,32 @@ fn unauthorized(msg: String) -> MongoError {
     MongoError::new(13, "Unauthorized", msg)
 }
 
+/// mongod's refusal text. The command is shown with its secrets redacted (see `redact_command`).
+fn not_authorized(db: &str, name: &str, cmd: &Document) -> MongoError {
+    let redacted = redact_command(name, cmd);
+    let mut shown: Document = redacted.iter().filter(|(k, _)| !matches!(k.as_str(), "lsid" | "$clusterTime" | "$readPreference")).map(|(k, v)| (k.clone(), v.clone())).collect();
+    shown.insert("$db", db);
+    unauthorized(format!("not authorized on {db} to execute command {}", crate::update::fmt_doc(&shown)))
+}
+
 fn auth_failed() -> MongoError {
     MongoError::new(18, "AuthenticationFailed", "Authentication failed.".into())
+}
+
+
+/// Commands that carry a secret in their own fields: a password, a SCRAM payload, a legacy authentication key.
+const SECRET_COMMANDS: &[&str] = &["createUser", "updateUser", "authenticate", "saslStart", "saslContinue", "changeUserPassword"];
+/// Fields of those commands whose value is a secret (or lets one be derived).
+const SECRET_FIELDS: &[&str] = &["pwd", "password", "payload", "key", "nonce", "proof", "clientProof"];
+
+/// A copy of a command that is safe to put in an error message, in the profile or in `currentOp`: the values of the secret
+/// fields of the commands that carry secrets are replaced by "xxx" (the way mongod redacts `pwd` and `payload`). Every other
+/// command is returned as it is, so the cost is one clone, as before.
+pub(crate) fn redact_command(name: &str, cmd: &Document) -> Document {
+    if !SECRET_COMMANDS.contains(&name) {
+        return cmd.clone();
+    }
+    cmd.iter().map(|(k, v)| (k.clone(), if SECRET_FIELDS.contains(&k.as_str()) { Bson::String("xxx".into()) } else { v.clone() })).collect()
 }
 
 fn bin(b: Vec<u8>) -> Bson {
@@ -293,12 +317,45 @@ impl Server {
         let privs = self.conn_privileges(conn_id).await?;
         let missing: Vec<&Need> = needs.iter().filter(|(r, a)| !authz::allows(&privs, r, a)).collect();
         if missing.is_empty() {
+            if !self.may_grant(&privs, conn_id, db, name, cmd).await? {
+                return Err(not_authorized(db, name, cmd));
+            }
             return Ok(());
         }
-        let shown: Document = cmd.iter().filter(|(k, _)| !matches!(k.as_str(), "lsid" | "$clusterTime" | "$readPreference")).map(|(k, v)| (k.clone(), v.clone())).collect();
-        let mut shown = shown;
-        shown.insert("$db", db);
-        Err(unauthorized(format!("not authorized on {db} to execute command {}", crate::update::fmt_doc(&shown))))
+        Err(not_authorized(db, name, cmd))
+    }
+
+    /// Roles and privileges handed out by `createUser`, `updateUser`, `grantRolesToUser`, `createRole`, `updateRole`,
+    /// `grantRolesToRole` and `grantPrivilegesToRole` must lie within what the caller may hand out. For every privilege the
+    /// role (with everything it inherits) or the command carries:
+    /// * on one named database: the caller needs the `grantRole` action on that database (mongod's rule). A user admin of
+    ///   `app1` can therefore hand out roles on `app1`, and nothing on `app2`, `admin` or the cluster;
+    /// * on the cluster, on every database, on any resource, or on the time-series buckets: the caller must already hold
+    ///   those very privileges (all the actions), so `userAdminAnyDatabase` cannot hand out `root` and a custom role that
+    ///   inherits `root` is no way around it.
+    async fn may_grant(&self, caller: &[Priv], _conn_id: i64, db: &str, name: &str, cmd: &Document) -> R<bool> {
+        let with_roles = matches!(name, "createUser" | "updateUser" | "grantRolesToUser" | "createRole" | "updateRole" | "grantRolesToRole");
+        let with_privs = matches!(name, "createRole" | "updateRole" | "grantPrivilegesToRole");
+        if !with_roles && !with_privs {
+            return Ok(true);
+        }
+        let mut roles: Vec<(String, String)> = Vec::new();
+        if with_roles {
+            for b in cmd.get_array("roles").into_iter().flatten() {
+                if let Ok(p) = role_pair(b, db) {
+                    roles.push(p);
+                }
+            }
+        }
+        let mut wanted = self.role_privileges(&roles).await?;
+        if with_privs {
+            wanted.extend(cmd.get_array("privileges").into_iter().flatten().filter_map(|p| p.as_document()).filter_map(Priv::from_doc));
+        }
+        Ok(wanted.iter().all(|p| match &p.res {
+            Res::Ns { db: pdb, .. } if !pdb.is_empty() => authz::allows(caller, &authz::ns(pdb, ""), "grantRole"),
+            // equal or covered: the buckets resource does not cover itself in `Res::covers`
+            res => p.actions.iter().all(|a| caller.iter().any(|c| (c.res == *res || c.res.covers(res)) && c.actions.iter().any(|x| x == a || x == "anyAction"))),
+        }))
     }
 
     /// The databases a user without the `listDatabases` privilege may see: those with any privilege.

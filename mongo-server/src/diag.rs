@@ -228,7 +228,7 @@ impl Diag {
         }
         let kill = Arc::new(Notify::new());
         self.requests.fetch_add(1, Relaxed);
-        self.ops.lock().unwrap().insert(id, OpRec { conn, db: db.to_string(), name: name.to_string(), cmd: cmd.clone(), start: Instant::now(), kill: Arc::clone(&kill) });
+        self.ops.lock().unwrap().insert(id, OpRec { conn, db: db.to_string(), name: name.to_string(), cmd: crate::auth::redact_command(name, cmd), start: Instant::now(), kill: Arc::clone(&kill) });
         (id, kill)
     }
 
@@ -1063,7 +1063,7 @@ impl Server {
         let count = |k: &str| reply.and_then(|d| d.get(k)).and_then(|v| int_arg(Some(v))).unwrap_or(0);
         let batch_len = reply.and_then(|d| d.get_document("cursor").ok()).map(|c| c.get_array("firstBatch").or_else(|_| c.get_array("nextBatch")).map(|a| a.len() as i64).unwrap_or(0));
         let nreturned = batch_len.unwrap_or_else(|| count("n"));
-        let mut command = cmd.clone();
+        let mut command = crate::auth::redact_command(name, cmd);
         command.remove("$clusterTime");
         command.remove("$readPreference");
         command.insert("$db", db);
