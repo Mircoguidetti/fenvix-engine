@@ -1,0 +1,131 @@
+py 26 3900:4050 pass 150 / 150 24s
+py 27 4050:4127 pass 77 / 77 13s
+node 0 0:150 pass 150 / 150 26s
+node 1 150:300 pass 150 / 150 27s
+node 2 300:450 pass 150 / 150 80s
+node 3 450:600 pass 150 / 150 26s
+node 4 600:750 pass 150 / 150 26s
+node 5 750:900 pass 150 / 150 25s
+node 6 900:1050 pass 150 / 150 26s
+node 7 1050:1200 pass 150 / 150 33s
+node 8 1200:1350 pass 150 / 150 325s
+node 9 1350:1500 pass 150 / 150 476s
+node 10 1500:1650 pass 150 / 150 25s
+node 11 1650:1800 pass 150 / 150 26s
+node 12 1800:1950 pass 150 / 150 25s
+node 13 1950:2100 pass 150 / 150 26s
+node 14 2100:2250 pass 150 / 150 26s
+node 15 2250:2400 pass 150 / 150 26s
+node 16 2400:2550 pass 150 / 150 27s
+node 17 2550:2700 pass 150 / 150 25s
+node 18 2700:2850 pass 150 / 150 28s
+node 19 2850:3000 pass 150 / 150 25s
+node 20 3000:3150 pass 150 / 150 27s
+node 21 3150:3300 pass 150 / 150 35s
+node 22 3300:3450 pass 150 / 150 26s
+node 23 3450:3600 pass 150 / 150 25s
+node 24 3600:3750 pass 150 / 150 45s
+node 25 3750:3900 pass 150 / 150 26s
+node 26 3900:4050 pass 150 / 150 24s
+node 27 4050:4127 pass 77 / 77 14s
+ALL SLICES DONE
+PHASE suites done
+10 passed in 13.62s
+13 passed in 48.98s
+12 passed, 11 warnings in 41.42s
+11 passed in 114.31s (0:01:54)
+11 passed in 147.43s (0:02:27)
+1 passed in 89.75s (0:01:29)
+10 passed in 56.81s
+2 passed in 4.58s
+19 passed in 54.55s
+13 passed in 133.70s (0:02:13)
+10 passed in 51.39s
+ALL SLICES DONE
+PHASE suites done
+10 passed in 11.10s
+13 passed in 51.10s
+12 passed, 11 warnings in 41.52s
+11 passed in 114.41s (0:01:54)
+11 passed in 148.17s (0:02:28)
+1 passed in 89.24s (0:01:29)
+10 passed in 56.88s
+2 passed in 4.44s
+19 passed in 50.43s
+ALL SLICES DONE
+PHASE suites done
+13 passed in 147.18s (0:02:27)
+ALL SLICES DONE
+PHASE suites done
+3 passed in 339.77s (0:05:39)
+1 passed in 65.05s (0:01:05)
+PHASE ctl done
+TOTAL s3 durable {'acked_ids': 56634, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 durable {'acked_ids': 58205, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 durable {'acked_ids': 58267, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 durable {'acked_ids': 59528, 'lost_inserts': 0, 'lost_updates': 0}
+TOTAL s3 control {'acked_ids': 34257, 'lost_inserts': 108, 'lost_updates': 16}
+TOTAL s3 control {'acked_ids': 36907, 'lost_inserts': 996, 'lost_updates': 12}
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 68, 'acked_docs': 12753, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 48716, 'missing': 0, 'stal
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 54, 'acked_docs': 12164, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 47265, 'missing': 0, 'stal
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 53, 'acked_docs': 12177, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 47145, 'missing': 0, 'stal
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 68, 'acked_docs': 12566, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 49598, 'missing': 0, 'stal
+TOTAL control {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 16, 'acked_docs': 8750, 'lost_inserts': 8750, 'lost_updates': 0, 'read_violations': {'reads_checked': 34822, 'missing': 0, 
+TOTAL control {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 20, 'acked_docs': 8938, 'lost_inserts': 8938, 'lost_updates': 0, 'read_violations': {'reads_checked': 33566, 'missing': 0, 
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+PHASE ctl done
+PHASE kill done
+ALL SLICES DONE
+PHASE suites done
+WAL300-DONE
+PHASE wal300 done

@@ -1,0 +1,1202 @@
+[
+ {
+  "name": "coll.create_existing_is_idempotent",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.182
+ },
+ {
+  "name": "coll.create_existing_with_different_options_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.228
+ },
+ {
+  "name": "coll.implicit_creation_by_insert",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "coll.drop_existing",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.179
+ },
+ {
+  "name": "coll.drop_missing_is_ok",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.05
+ },
+ {
+  "name": "coll.drop_then_recreate_empty",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "coll.drop_removes_indexes",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.177
+ },
+ {
+  "name": "coll.special_names",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.229
+ },
+ {
+  "name": "coll.prefix_collections_isolated",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.183
+ },
+ {
+  "name": "coll.invalid_name_dollar",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.029
+ },
+ {
+  "name": "idx.list_default",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "idx.list_missing_collection_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.045
+ },
+ {
+  "name": "idx.create_single_default_name",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "idx.create_compound_and_desc",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "idx.create_unique_flag_listed",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "idx.create_twice_is_noop",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "idx.create_indexes_response",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.281
+ },
+ {
+  "name": "idx.same_name_different_key_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "idx.same_key_different_name_error",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "idx.queries_unaffected_by_index",
+  "group": "collections and indexes",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "idx.extra.drop_index",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "coll.extra.rename",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "coll.extra.coll_stats",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "coll.extra.db_stats",
+  "group": "collections and indexes",
+  "category": "extra",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "persist.idle_close_then_read",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 12.221
+ },
+ {
+  "name": "persist.idle_close_then_write_upgrades",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 24.263
+ },
+ {
+  "name": "persist.read_only_wake_stays_reader",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.277
+ },
+ {
+  "name": "persist.forced_close_cycles",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.961
+ },
+ {
+  "name": "persist.1000_docs_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.505
+ },
+ {
+  "name": "persist.indexes_and_collections_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.264
+ },
+ {
+  "name": "persist.drop_after_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.25
+ },
+ {
+  "name": "persist.cursor_survives_tenant_close",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "persist.id_types_survive",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.238
+ },
+ {
+  "name": "persist.restart_server_graceful",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 7.95
+ },
+ {
+  "name": "persist.restart_server_sigkill",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 3.95
+ },
+ {
+  "name": "persist.drop_database",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.364
+ },
+ {
+  "name": "persist.drop_database_races_background_compaction",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 2.436
+ },
+ {
+  "name": "persist.many_collections",
+  "group": "persistence: idle close and wake",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.707
+ },
+ {
+  "name": "concurrency.parallel_inserts_same_db",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.914
+ },
+ {
+  "name": "concurrency.parallel_inc_same_doc",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.539
+ },
+ {
+  "name": "concurrency.parallel_dbs",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.999
+ },
+ {
+  "name": "concurrency.reads_during_writes",
+  "group": "concurrency",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.519
+ },
+ {
+  "name": "regex.string_basic",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "regex.string_anchored",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "regex.string_end_anchor",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "regex.options_i",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "regex.options_before_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "regex.options_m",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "regex.no_options_m_no_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "regex.options_s",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.no_options_s_dot_newline",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "regex.options_x",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "regex.options_imsx",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "regex.options_u_accepted",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "regex.options_empty",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "regex.bson_regex_operand",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.bson_regex_operand_plus_options",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "regex.plain_equality_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "regex.plain_equality_regex_array_elem",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.172
+ },
+ {
+  "name": "regex.plain_equality_regex_matches_stored_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "regex.plain_equality_regex_stored_different_options",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "regex.regex_vs_array_elements",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "regex.regex_nested_array_of_docs",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "regex.regex_nested_array_of_docs_plain",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "regex.regex_missing_and_null_never_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "regex.in_with_regexes",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.in_only_regexes",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.141
+ },
+ {
+  "name": "regex.in_regex_array_field",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.143
+ },
+ {
+  "name": "regex.nin_with_regexes",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.not_regex_literal",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "regex.not_regex_operator_doc",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.eq_regex_is_equality",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "regex.lookahead",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.negative_lookahead",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "regex.lookbehind",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "regex.backreference",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "regex.named_group_backreference",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "regex.lazy_quantifier",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "regex.posix_class",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "regex.unicode_property_L",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "regex.case_insensitive_non_ascii",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "regex.escaped_dot",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "regex.alternation",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.word_boundary",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "regex.empty_pattern_matches_strings",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.combined_with_other_ops",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "regex.top_level_or",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.148
+ },
+ {
+  "name": "regex.error_invalid_pattern_paren",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.145
+ },
+ {
+  "name": "regex.error_invalid_pattern_quantifier",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.error_invalid_pattern_class",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "regex.error_invalid_option_flag",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "regex.error_options_without_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.154
+ },
+ {
+  "name": "regex.error_options_not_string",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "regex.error_regex_not_string",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.error_regex_both_options",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "regex.error_ne_regex",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "regex.error_in_with_operator_doc",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "regex.error_embedded_null_byte",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.174
+ },
+ {
+  "name": "regex.in_update_filter",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "regex.in_delete_filter",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "regex.in_count_and_distinct",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "regex.in_aggregate_match",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "regex.in_pull_condition",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "regex.in_find_and_modify_query",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.177
+ },
+ {
+  "name": "regex.with_expr_in_same_filter",
+  "group": "regex",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.update_returns_before_by_default",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "fam.update_returns_after",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "fam.update_sort_asc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "fam.update_sort_desc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "fam.update_sort_two_keys",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "fam.update_projection_include",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "fam.update_projection_exclude_id",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "fam.update_no_match",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "fam.update_no_match_after",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "fam.update_upsert_before_returns_null",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "fam.update_upsert_after_returns_doc",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "fam.update_upsert_generated_id",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "fam.update_upsert_set_on_insert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "fam.update_upsert_existing_is_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "fam.update_upsert_creates_collection",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "fam.update_on_missing_collection_no_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "fam.replace_before",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.replace_after_sorted",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "fam.replace_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.replace_changing_id_error",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "fam.delete_returns_deleted",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "fam.delete_sorted",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "fam.delete_projection",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "fam.delete_no_match",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "fam.delete_then_gone",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "fam.delete_on_missing_collection",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "fam.raw_update_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "fam.raw_update_new_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "fam.raw_update_noop_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "fam.raw_no_match_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "fam.raw_upsert_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "fam.raw_upsert_new_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "fam.raw_upsert_replacement_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "fam.raw_remove_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "fam.raw_remove_no_match_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "fam.raw_fields_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "fam.raw_sort_shape",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "fam.raw_no_query_matches_first",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "fam.raw_lowercase_command_name",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "fam.raw_collection_created_by_upsert_response",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "fam.error_remove_and_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.183
+ },
+ {
+  "name": "fam.error_neither_update_nor_remove",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "fam.error_remove_and_upsert",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "fam.error_remove_and_new",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "fam.error_invalid_operator_in_update",
+  "group": "findAndModify",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ }
+]

@@ -1,0 +1,1202 @@
+[
+ {
+  "name": "upd8.filtered_non_array_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.195
+ },
+ {
+  "name": "upd8.filtered_missing_path_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "upd8.filtered_with_replacement_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "upd8.filtered_with_pipeline_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "upd8.filtered_empty_array_filters_ok",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd8.filtered_upsert_missing_path_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "upd8.filtered_bad_identifier_in_path_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.pipe_set_expression",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd8.pipe_addfields_stage",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "upd8.pipe_unset_stage",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "upd8.pipe_unset_string",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "upd8.pipe_project_stage",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "upd8.pipe_replacewith",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.pipe_replaceroot",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "upd8.pipe_multi_stage",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "upd8.pipe_conditional",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.pipe_reference_missing_field",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "upd8.pipe_update_many",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "upd8.pipe_counts",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "upd8.pipe_find_one_and_update",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd8.pipe_upsert_from_filter",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.pipe_upsert_generated_id_count",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "upd8.pipe_change_id_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "upd8.pipe_remove_id_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "upd8.pipe_replacewith_other_id_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.pipe_disallowed_stage_match_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.15
+ },
+ {
+  "name": "upd8.pipe_disallowed_stage_group_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.pipe_empty_pipeline_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "upd8.pipe_two_fields_stage_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "upd8.pipe_bad_expression_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.179
+ },
+ {
+  "name": "upd8.pipe_no_change_modified_zero",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "upd8.pipe_unique_index_violation_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd8.pipe_maintains_secondary_index",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.172
+ },
+ {
+  "name": "upd8.pos_maintains_secondary_index",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "upd8.filtered_maintains_unique_index",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.178
+ },
+ {
+  "name": "upd8.rename_basic",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "upd8.rename_keeps_indexes",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "upd8.rename_keeps_unique_enforced",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "upd8.rename_old_name_is_empty_afterwards",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.175
+ },
+ {
+  "name": "upd8.rename_index_entries_not_left_behind",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.191
+ },
+ {
+  "name": "upd8.rename_target_exists_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "upd8.rename_drop_target",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.177
+ },
+ {
+  "name": "upd8.rename_drop_target_replaces_indexes",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.183
+ },
+ {
+  "name": "upd8.rename_drop_target_false_explicit_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.181
+ },
+ {
+  "name": "upd8.rename_source_missing_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.rename_to_itself_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "upd8.rename_target_with_dollar_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "upd8.rename_to_system_prefix_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "upd8.rename_empty_collection",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "upd8.rename_then_drop_new_name",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.126
+ },
+ {
+  "name": "upd8.rename_chain",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "upd8.rename_with_ttl_index_metadata",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "upd8.rename_many_docs",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.277
+ },
+ {
+  "name": "upd8.rename_collection_stats_follow",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "upd8.rename_name_prefix_does_not_move_other_collection",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.173
+ },
+ {
+  "name": "upd8.rename_missing_to_field_error",
+  "group": "update: positional operators, pipeline updates, renameCollection",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.single_term_scores",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "text.two_terms_or",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.18
+ },
+ {
+  "name": "text.term_frequency_and_length",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.173
+ },
+ {
+  "name": "text.stop_words_only",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.179
+ },
+ {
+  "name": "text.stop_word_ignored_in_query",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "text.stemming_plural",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.stemming_ing_ed",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.stemming_run_forms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "text.stemming_query_inflected",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.case_insensitive_default",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.diacritics_default",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "text.diacritics_query_accented",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.stem_then_strip_diacritics",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.stem_then_strip_plain",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.apostrophe_english",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.apostrophe_possessive",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "text.punctuation_delimiters",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.underscore_is_not_a_delimiter",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "text.numbers_split_on_dot",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "text.empty_and_missing_and_non_string_fields_never_match",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.array_elements_scored_separately",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.raw_equal_boost",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.159
+ },
+ {
+  "name": "text.duplicate_query_terms_count_once",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "text.empty_search_matches_nothing",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.whitespace_search_matches_nothing",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "text.only_negation_matches_nothing",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.153
+ },
+ {
+  "name": "text.long_text_repeated_term",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.phrase_basic",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "text.phrase_order_matters",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.171
+ },
+ {
+  "name": "text.phrase_is_raw_substring",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.phrase_with_punctuation",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.169
+ },
+ {
+  "name": "text.phrase_with_stop_word",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "text.phrase_plus_term",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.two_phrases_and",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.negated_term",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "text.negated_stemmed_term",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.negated_phrase",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "text.phrase_and_negated_term",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "text.dash_inside_word_is_not_negation",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.16
+ },
+ {
+  "name": "text.dash_space_is_ignored",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.unmatched_quote_ignored",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.empty_phrase",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "text.case_sensitive_term",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.case_sensitive_lower",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.case_sensitive_phrase",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.case_sensitive_negation",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.case_sensitive_stemmed_forms",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "text.diacritic_sensitive_plain",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.diacritic_sensitive_accented",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.both_sensitive",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.explicit_false_flags",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "text.language_param_none",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "text.language_param_english_name",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.168
+ },
+ {
+  "name": "text.language_param_code",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.language_param_uppercase",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "text.language_param_empty_string",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.165
+ },
+ {
+  "name": "text.language_param_spanish_stop_words",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.17
+ },
+ {
+  "name": "text.default_language_french",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.172
+ },
+ {
+  "name": "text.default_language_spanish",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.default_language_german",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.173
+ },
+ {
+  "name": "text.default_language_russian",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.default_language_none_no_stemming",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.261
+ },
+ {
+  "name": "text.language_override_field",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.151
+ },
+ {
+  "name": "text.language_override_custom_name",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.156
+ },
+ {
+  "name": "text.language_override_unsupported_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "text.language_override_non_string_ignored",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.multiple_languages_in_collection",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.164
+ },
+ {
+  "name": "text.cjk_text_is_one_token_run",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.emoji_and_symbols",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.spec_single_field",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.167
+ },
+ {
+  "name": "text.spec_two_fields",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.spec_weights",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.146
+ },
+ {
+  "name": "text.spec_wildcard",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.149
+ },
+ {
+  "name": "text.spec_wildcard_with_weights",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.spec_prefix",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "text.spec_suffix",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.spec_prefix_and_suffix",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.162
+ },
+ {
+  "name": "text.spec_language_options",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.158
+ },
+ {
+  "name": "text.spec_custom_name",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.spec_nested_path",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.147
+ },
+ {
+  "name": "text.spec_extra_weight_field_sorted",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.152
+ },
+ {
+  "name": "text.spec_weight_fraction_truncated",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.155
+ },
+ {
+  "name": "text.spec_text_index_version_2",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.157
+ },
+ {
+  "name": "text.spec_with_sparse_option",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.two_text_indexes_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.161
+ },
+ {
+  "name": "text.same_text_index_twice_ok",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.166
+ },
+ {
+  "name": "text.same_text_index_different_options_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.163
+ },
+ {
+  "name": "text.bad_default_language_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.059
+ },
+ {
+  "name": "text.bad_language_override_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.051
+ },
+ {
+  "name": "text.bad_weight_zero_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.048
+ },
+ {
+  "name": "text.bad_weight_negative_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.047
+ },
+ {
+  "name": "text.bad_weight_string_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.044
+ },
+ {
+  "name": "text.bad_text_index_version_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.044
+ },
+ {
+  "name": "text.mixed_index_plugins_error",
+  "group": "text search",
+  "category": "core",
+  "status": "pass",
+  "detail": null,
+  "secs": 0.034
+ }
+]
