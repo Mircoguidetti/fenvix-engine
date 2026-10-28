@@ -2145,6 +2145,7 @@ dependencies = [
  "chrono-tz",
  "clap",
  "fancy-regex",
+ "flate2",
  "futures",
  "hmac",
  "icu_collator",
@@ -2162,11 +2163,13 @@ dependencies = [
  "sha1",
  "sha2",
  "slatedb",
+ "snap",
  "tenant-bench",
  "tokio",
  "tokio-rustls",
  "unicode-normalization",
  "x509-parser",
+ "zstd",
 ]
 
 [[package]]
@@ -3443,6 +3446,12 @@ name = "smallvec"
 version = "1.16.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0d5d4b1981b8bbbb7aed204cae5726d683d5d6ac7e74ec54122ea28f315e7c8"
+
+[[package]]
+name = "snap"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "199905e6153d6405f9728fe44daace35f8f837bbf830bb6e85fbd5828709a886"
 
 [[package]]
 name = "socket2"
