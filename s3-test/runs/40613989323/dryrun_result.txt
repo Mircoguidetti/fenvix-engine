@@ -1,0 +1,6 @@
+phase1: bucket fenvix-test-40613989323 created, tagged, one object written
+waiting 65 minutes with no AWS call and no refresh (started 01:16:15 UTC)
+phase1: old credentials rejected after 65 min, as expected:  aws: [ERROR]: An error occurred (400) when calling the HeadBucket operation: Bad Request 
+ok: bucket fenvix-test-40613989323 is gone
+ok: no tagged instance pending/running
+DRYRUN RESULT: PASS (clean-up works after more than one hour, no instance launched)

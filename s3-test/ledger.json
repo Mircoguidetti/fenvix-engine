@@ -54,7 +54,18 @@
    "instance_secs": 149,
    "note": "counters from run-out/instance/guard/last.json",
    "unknown": false
+  },
+  {
+   "run_id": "40613989323",
+   "ts": 1793154086,
+   "tests": "cleanup_dryrun",
+   "gross_usd": 0.000242,
+   "put_tier": 40,
+   "get_tier": 60,
+   "instance_secs": 0,
+   "note": "no instance was launched",
+   "unknown": false
   }
  ],
- "total_usd": 0.021126
+ "total_usd": 0.021368
 }
