@@ -330,6 +330,9 @@ impl Server {
             return Ok(d);
         }
         match name {
+            "createSearchIndexes" => self.create_search_indexes(db, cmd).await,
+            "dropSearchIndex" => self.drop_search_index(db, cmd).await,
+            "updateSearchIndex" => self.update_search_index(db, cmd).await,
             "insert" => self.insert(db, cmd, tx).await,
             "find" => self.find(db, cmd, tx).await,
             "getMore" => self.get_more(db, cmd).await,

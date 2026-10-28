@@ -269,7 +269,7 @@ impl Server {
             if n == "$geoNear" && i != 0 {
                 return Err(MongoError::new(40603, "Location40603", "$geoNear was not the first stage in the pipeline".to_string()));
             }
-            if (n == "$collStats" || n == "$indexStats") && i != 0 {
+            if (n == "$collStats" || n == "$indexStats" || n == "$listSearchIndexes") && i != 0 {
                 return Err(MongoError::new(40602, "Location40602", format!("{n} is only valid as the first stage in a pipeline.")));
             }
             if (n == "$out" || n == "$merge") && i + 1 != pipeline.len() {
@@ -292,6 +292,10 @@ impl Server {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
             self.index_stats_stage(&mut g, db, coll).await?
+        } else if let Some(spec) = first.and_then(|d| d.get("$listSearchIndexes")) {
+            let mut g = self.dbs.lock(db).await;
+            attach(&mut g, tx);
+            self.list_search_indexes_stage(&mut g, coll, spec).await?
         } else if first.map(|d| d.contains_key("$planCacheStats")).unwrap_or(false) {
             Vec::new()
         } else if let Some((sname, sspec)) = first.and_then(|d| d.iter().find(|(k, _)| matches!(k.as_str(), "$search" | "$searchMeta"))) {
@@ -331,7 +335,7 @@ impl Server {
         };
         let first_is_text_match = first.and_then(|d| d.get_document("$match").ok()).map(crate::text::has_text).unwrap_or(false);
         let first_is_text_match = first_is_text_match || first.map(|d| d.contains_key("$search") || d.contains_key("$searchMeta")).unwrap_or(false);
-        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$geoNear") || d.contains_key("$planCacheStats")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
+        let body_rest: &[Bson] = if first.map(|d| d.contains_key("$collStats") || d.contains_key("$indexStats") || d.contains_key("$listSearchIndexes") || d.contains_key("$geoNear") || d.contains_key("$planCacheStats")).unwrap_or(false) || first_is_text_match { &body[1..] } else { body };
         let mut foreign = crate::agg::Foreign::new();
         for from in crate::agg::lookup_collections(body_rest) {
             let fd = if let Some(v) = Box::pin(self.view_docs(db, &from, tx)).await? {

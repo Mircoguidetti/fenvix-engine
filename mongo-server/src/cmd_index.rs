@@ -361,6 +361,7 @@ impl Server {
         ops.push(Op::Delete(crate::collopts::meta_key(coll)));
         ops.push(Op::Delete(crate::collopts::uuid_key(coll)));
         ops.push(Op::Delete(crate::capped::stat_key(coll)));
+        ops.push(Server::search_idx_delete_op(coll));
         names.remove(pos);
         ops.push(Entry::collections_op(&names)?);
         g.apply(ops).await?;

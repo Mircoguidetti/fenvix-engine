@@ -60,6 +60,7 @@ mod validation;
 mod views;
 mod admin_cmds;
 mod repl_cmds;
+mod search_idx;
 mod wc;
 mod wire;
 mod xdb;

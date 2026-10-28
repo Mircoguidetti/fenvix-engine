@@ -33,8 +33,12 @@ def validate(rows):
         if not r["docs_url"].startswith("https://"): errs.append(f"{r['id']}: no docs_url")
         if r["exclusion_proposed"] == "yes" and not r["exclusion_reason"].strip(): errs.append(f"{r['id']}: exclusion without reason")
         if r["exclusion_approved"] == "yes" and r["exclusion_proposed"] != "yes": errs.append(f"{r['id']}: approved exclusion that was not proposed")
-        if r["engine_status"] == "covered" and (r["differential_test"] != "yes" or "passing differential tests" not in r["evidence"] and "passing" not in r["evidence"]):
-            errs.append(f"{r['id']}: covered without cited passing differential test")
+        if r["engine_status"] == "covered":
+            spec = r["differential_test"] == "no"
+            if spec and not ("passing specification tests" in r["evidence"] and "limit:" in r["evidence"]):
+                errs.append(f"{r['id']}: covered by specification tests only, but the evidence does not say 'passing specification tests' and state the 'limit:'")
+            if not spec and (r["differential_test"] != "yes" or "passing" not in r["evidence"]):
+                errs.append(f"{r['id']}: covered without cited passing differential test")
         if r["engine_status"] == "covered" and r["exclusion_proposed"] != "yes" and not r["evidence"].strip():
             errs.append(f"{r['id']}: covered without evidence")
     return errs
@@ -65,6 +69,8 @@ def main():
     tot = len(inscope); cov = sum(r["engine_status"] == "covered" for r in inscope)
     st = collections.Counter(r["engine_status"] for r in inscope)
     print(f"\nAPPROVED EXCLUSIONS APPLIED (in scope): {cov}/{tot} covered = {100*cov/tot:.1f}%   OPEN {tot-cov} (partial {st['partial']}, untested {st['untested']}, missing {st['missing']})")
+    spec = sum(r["engine_status"] == "covered" and r["differential_test"] == "no" for r in inscope)
+    print(f"covered by specification tests only (no reference server, limit stated in the evidence): {spec}")
     allc = sum(r["engine_status"] == "covered" for r in rows)
     print(f"NO EXCLUSION APPLIED (every row counted): {allc}/{len(rows)} covered = {100*allc/len(rows):.1f}%")
     print(f"rows in inventory: {len(rows)}; approved exclusions: {len(excl)} (not in the denominator); proposed but not approved: {sum(r['exclusion_proposed']=='yes' and r['exclusion_approved']!='yes' for r in rows)}")
