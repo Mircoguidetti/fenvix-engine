@@ -1,0 +1,14 @@
+FFF.                                                                     [100%]
+=================================== FAILURES ===================================
+E   AssertionError: ('clone', {'error': {'code': 'internal', 'message': 'Operation `put_opts` with mode `PutMode::Update` not yet implemented by LocalFileSystem(file:///tmp/localstorej8j4_0st).'}})
+    assert 500 == 201
+/home/user/test5-compat-indexes/ctl-tests/test_09e_local_store.py:59: AssertionError: ('clone', {'error': {'code': 'internal', 'message': 'Operation `put_opts` with mode `PutMode::Update` not yet implemented by LocalFileSystem(file:///tmp/localstorej8j4_0st).'}})
+E   assert 500 == 200
+/home/user/test5-compat-indexes/ctl-tests/test_09e_local_store.py:80: assert 500 == 200
+E   pymongo.errors.OperationFailure: Operation `put_opts` with mode `PutMode::Update` not yet implemented by LocalFileSystem(file:///tmp/localstorefi7t3z3v)., full error: {'ok': 0.0, 'errmsg': 'Operation `put_opts` with mode `PutMode::Update` not yet implemented by LocalFileSystem(file:///tmp/localstorefi7t3z3v).', 'code': 1, 'codeName': 'InternalError'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Operation `put_opts` with mode `PutMode::Update` not yet implemented by LocalFileSystem(file:///tmp/localstorefi7t3z3v)., full error: {'ok': 0.0, 'errmsg': 'Operation `put_opts` with mode `PutMode::Update` not yet implemented by LocalFileSystem(file:///tmp/localstorefi7t3z3v).', 'code': 1, 'codeName': 'InternalError'}
+=========================== short test summary info ============================
+FAILED test_09e_local_store.py::test_create_fork_keepawake_retention_export_erase_on_the_local_store
+FAILED test_09e_local_store.py::test_restore_on_the_local_store - assert 500 ...
+FAILED test_09e_local_store.py::test_a_sleeping_database_wakes_up_with_leases_on
+3 failed, 1 passed in 12.50s

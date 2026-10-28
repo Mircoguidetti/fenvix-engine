@@ -38,6 +38,7 @@ mod js;
 mod keyenc;
 mod layout;
 mod lease;
+mod localcas;
 mod natural;
 mod params;
 mod projfind;
@@ -318,7 +319,8 @@ async fn run() -> Result<()> {
         }
         "local" => {
             std::fs::create_dir_all(&args.local_dir)?;
-            Arc::new(object_store::local::LocalFileSystem::new_with_prefix(&args.local_dir)?)
+            // LocalFileSystem has no conditional overwrite (PutMode::Update); the wrapper adds it for one process.
+            Arc::new(localcas::LocalCas::new(Arc::new(object_store::local::LocalFileSystem::new_with_prefix(&args.local_dir)?)))
         }
         "memory" => Arc::new(object_store::memory::InMemory::new()),
         other => anyhow::bail!("unknown --store {other}"),
