@@ -58,6 +58,9 @@ fn parse_out(v: &Bson) -> R<Out> {
         }
         Bson::Document(d) => {
             if d.contains_key("inline") {
+                if d.len() > 1 {
+                    return Err(MongoError::new(72, "InvalidOptions", "'inline' must be specified alone".into()));
+                }
                 return Ok(Out::Inline);
             }
             let modes: Vec<&String> = d.keys().filter(|k| matches!(k.as_str(), "replace" | "merge" | "reduce")).collect();
@@ -78,7 +81,7 @@ fn parse_out(v: &Bson) -> R<Out> {
             };
             special(&name)?;
             if matches!(d.get("sharded"), Some(Bson::Boolean(true))) && matches!(mode, Mode::Replace) {
-                return Err(MongoError::new(72, "InvalidOptions", "MapReduce internal error :: caused by :: Combination of 'out.sharded' and 'replace' output mode is not supported. Cannot replace an existing sharded collection".into()));
+                return Err(MongoError::new(72, "InvalidOptions", "MapReduce internal error :: caused by :: Combination of 'out.sharded' and 'replace' output mode is not supported. Cannot replace an existing sharded collection or create a new sharded collection. Please create the sharded collection first and use a different output mode or consider using an unsharded collection.".into()));
             }
             let db = match d.get("db") {
                 None => None,
@@ -105,6 +108,16 @@ impl Server {
             Some(v) => parse_out(v)?,
             None => return Err(MongoError::new(40414, "IDLFailedToParse", "BSON field 'mapReduce.out' is missing but a required field".into())),
         };
+        if matches!(out, Out::Inline) && cmd.contains_key("writeConcern") {
+            return Err(MongoError::new(72, "InvalidOptions", "Command does not support writeConcern".into()));
+        }
+        for f in ["jsMode", "verbose", "bypassDocumentValidation"] {
+            if let Some(v) = cmd.get(f) {
+                if !matches!(v, Bson::Boolean(_)) {
+                    return Err(wrong_type(f, v, "type 'bool'"));
+                }
+            }
+        }
         let finalize = code_of(cmd, "finalize", false)?;
         let query = match cmd.get("query") {
             None => Document::new(),
@@ -143,7 +156,13 @@ impl Server {
         }
         let input = self.agg_docs(db, coll, pipeline, tx).await.map_err(|e| if e.code == 2 && e.msg.contains("$where") { bad("MapReduce internal error :: caused by :: $where is not allowed in this context") } else { e })?;
 
-        let results = crate::js::map_reduce(&map, &reduce, finalize.as_deref(), &scope, &input)?;
+        let prefixed = |mut e: MongoError| {
+            if !e.msg.starts_with("MapReduce internal error") {
+                e.msg = format!("MapReduce internal error :: caused by :: {}", e.msg);
+            }
+            e
+        };
+        let results = crate::js::map_reduce(&map, &reduce, finalize.as_deref(), &scope, &input).map_err(prefixed)?;
 
         match out {
             Out::Inline => Ok(doc! { "results": results.into_iter().map(Bson::Document).collect::<Vec<_>>(), "ok": 1.0 }),
@@ -175,7 +194,7 @@ impl Server {
                 };
                 self.agg_write_stage(&target_db, &stage, docs, tx).await?;
                 let result = match out_db {
-                    Some(d) => Bson::Document(doc! { "collection": name, "db": d }),
+                    Some(d) => Bson::Document(doc! { "db": d, "collection": name }),
                     None => Bson::String(name),
                 };
                 Ok(doc! { "result": result, "ok": 1.0 })

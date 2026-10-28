@@ -114,6 +114,10 @@ pub struct Entry {
     pub(crate) changes: Arc<crate::changes::ChangeLog>,
     last_compaction_request: Option<Instant>,
     inflight: Arc<AtomicU64>,
+    /// Natural order: per collection (next sequence number, reserved limit); see `natural.rs`. Cleared whenever the tenant is opened or closed.
+    pub(crate) nat: HashMap<String, (u64, u64)>,
+    /// Collection options (default collation) by collection; cleared with `nat`.
+    pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -164,6 +168,8 @@ impl Dbs {
                     changes: Arc::clone(&self.changes),
                     last_compaction_request: None,
                     inflight: self.inflight_counter(name),
+                    nat: HashMap::new(),
+                    copts: HashMap::new(),
                 }))
             })
             .clone()
@@ -217,6 +223,8 @@ impl Dbs {
                     changes: Arc::clone(&self.changes),
                         last_compaction_request: None,
                         inflight: self.inflight_counter(name),
+                    nat: HashMap::new(),
+                    copts: HashMap::new(),
                     }))
                 })
                 .clone()
@@ -250,22 +258,22 @@ impl Dbs {
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None });
+                return Ok(ReadView { g: None, copts: Default::default() });
             }
-            return Ok(ReadView { g: Some(Guard::Write(w)) });
+            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default() });
         }
         loop {
             {
                 let g = Arc::clone(&e).read_owned().await;
                 if g.tenant.is_some() && g.leases.valid(&g.name) {
                     g.touch();
-                    return Ok(ReadView { g: Some(Guard::Read(g)) });
+                    return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
             if !w.ensure_open().await? {
-                return Ok(ReadView { g: None });
+                return Ok(ReadView { g: None, copts: Default::default() });
             }
         }
     }
@@ -416,6 +424,8 @@ impl Entry {
 
     /// Drop the tenant without clean-close bookkeeping (its lease was lost).
     pub async fn abandon(&mut self) {
+        self.nat.clear();
+        self.copts.clear();
         if let Some(t) = self.tenant.take() {
             t.abandon().await;
             self.closes += 1;
@@ -460,6 +470,8 @@ impl Entry {
                 if took.is_some() || t.unclean {
                     lease::log("takeover_wake", &self.name, &self.leases.holder, &format!("unclean={} takeover_from={}", t.unclean, took.as_deref().unwrap_or("-")));
                 }
+                self.nat.clear();
+        self.copts.clear();
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
@@ -482,6 +494,8 @@ impl Entry {
     pub async fn close(&mut self) -> Result<()> {
         self.write_ttl_hint().await;
         let had = self.tenant.is_some();
+        self.nat.clear();
+        self.copts.clear();
         if let Some(t) = self.tenant.take() {
             let r = t.close().await;
             self.closes += 1;
@@ -530,6 +544,8 @@ impl Entry {
         if !self.ensure_open().await? {
             self.leases.acquire(&self.name).await?;
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
+            self.nat.clear();
+        self.copts.clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -575,6 +591,8 @@ impl Entry {
         if !self.leases.is_held(&self.name) {
             self.leases.acquire(&self.name).await?;
         }
+        self.nat.clear();
+        self.copts.clear();
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -701,6 +719,71 @@ impl Entry {
         Ok(d.get_array("indexes")?.iter().filter_map(|b| b.as_document().and_then(crate::index::IndexDef::from_stored)).collect())
     }
 
+    /// The options of a collection (its default collation), cached until the tenant is closed or the options change.
+    pub async fn coll_opts(&mut self, coll: &str) -> Result<Option<Arc<crate::collopts::CollOpts>>> {
+        if let Some(c) = self.copts.get(coll) {
+            return Ok(c.clone());
+        }
+        let o = match self.get(&crate::collopts::meta_key(coll)).await? {
+            Some(v) => Some(crate::collopts::CollOpts::parse(Document::from_reader(&v[..])?)),
+            None => None,
+        };
+        self.copts.insert(coll.to_string(), o.clone());
+        Ok(o)
+    }
+
+    /// The default collation of a collection whose options were loaded by [`Entry::coll_opts`] (none otherwise).
+    pub fn collation_of(&self, coll: &str) -> Option<Arc<crate::collation::Collation>> {
+        self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.collation.clone())
+    }
+
+    /// Forget the cached options of a collection (they changed behind the cache's back).
+    pub fn forget_coll_opts(&mut self, coll: &str) {
+        self.copts.remove(coll);
+    }
+
+    /// The UUID of a collection: made (and stored) the first time it is asked for.
+    pub async fn collection_uuid(&mut self, coll: &str) -> Result<Vec<u8>> {
+        let key = crate::collopts::uuid_key(coll);
+        if let Some(v) = self.get_live(&key).await? {
+            return Ok(v.to_vec());
+        }
+        let mut id: [u8; 16] = rand::random();
+        id[6] = (id[6] & 0x0f) | 0x40;
+        id[8] = (id[8] & 0x3f) | 0x80;
+        self.apply(vec![Op::Put(key, id.to_vec())]).await?;
+        Ok(id.to_vec())
+    }
+
+    /// The validator of a collection whose options were loaded.
+    pub fn validator_of(&self, coll: &str) -> Option<crate::validation::Validator> {
+        self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.validator.clone())
+    }
+
+    /// A document was written that does not satisfy a validator whose action is `warn`.
+    pub fn log_validation_warning(&self, d: &Document) {
+        eprintln!("WARN document failed validation (validationAction warn): _id {:?}", d.get("_id"));
+    }
+
+    /// The options of a collection whose options were loaded.
+    pub fn opts_cached(&self, coll: &str) -> Option<Arc<crate::collopts::CollOpts>> {
+        self.copts.get(coll).and_then(|o| o.clone())
+    }
+
+    /// Whether a collection whose options were loaded keeps change-stream pre- and post-images.
+    pub fn images_of(&self, coll: &str) -> bool {
+        self.copts.get(coll).and_then(|o| o.as_ref()).map(|o| o.images).unwrap_or(false)
+    }
+
+    /// The capped limits of a collection whose options were loaded.
+    pub fn cap_of(&self, coll: &str) -> Option<crate::capped::Cap> {
+        self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.cap.clone())
+    }
+
+    pub fn set_coll_opts(&mut self, coll: &str, o: Option<Arc<crate::collopts::CollOpts>>) {
+        self.copts.insert(coll.to_string(), o);
+    }
+
     pub fn indexes_op(coll: &str, idx: &[crate::index::IndexDef]) -> Result<Op> {
         let d = doc! { "indexes": idx.iter().map(|i| Bson::Document(i.to_stored())).collect::<Vec<_>>() };
         Ok(Op::Put(layout::index_key(coll), d.to_vec()?))
@@ -753,6 +836,8 @@ impl Entry {
         if !self.ensure_open().await? {
             // The database does not exist yet: create it so the transaction has something to snapshot.
             self.leases.acquire(&self.name).await?;
+            self.nat.clear();
+        self.copts.clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -832,6 +917,7 @@ impl Entry {
 /// error instead of data. `None` inside means the database does not exist.
 pub struct ReadView {
     g: Option<Guard>,
+    copts: std::sync::Mutex<HashMap<String, Option<Arc<crate::collopts::CollOpts>>>>,
 }
 
 enum Guard {
@@ -903,6 +989,25 @@ impl ReadView {
         if let Some(g) = &self.g {
             g.ttl_seen.store(true, Relaxed);
         }
+    }
+
+    /// The names of the collections of the database.
+    pub async fn collections(&self) -> Result<Vec<String>> {
+        let Some(v) = self.get(layout::META_COLLECTIONS).await? else { return Ok(vec![]) };
+        let d = Document::from_reader(&v[..])?;
+        Ok(d.get_array("names")?.iter().filter_map(|b| b.as_str().map(str::to_string)).collect())
+    }
+
+    pub async fn coll_opts(&self, coll: &str) -> Result<Option<Arc<crate::collopts::CollOpts>>> {
+        if let Some(c) = self.copts.lock().unwrap().get(coll) {
+            return Ok(c.clone());
+        }
+        let o = match self.get(&crate::collopts::meta_key(coll)).await? {
+            Some(v) => Some(crate::collopts::CollOpts::parse(Document::from_reader(&v[..])?)),
+            None => None,
+        };
+        self.copts.lock().unwrap().insert(coll.to_string(), o.clone());
+        Ok(o)
     }
 
     pub async fn scan_collection(&self, coll: &str) -> Result<Vec<Document>> {

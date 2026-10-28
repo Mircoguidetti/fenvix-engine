@@ -93,7 +93,8 @@ pub async fn sweep_coll(g: &mut Entry, coll: &str, now_ms: i64, max_passes: usiz
             for v in vals.into_iter().flatten() {
                 let d = decode(&v).map_err(|e| anyhow::anyhow!("{e}"))?;
                 if index::is_expired(&d, &specs, now_ms) {
-                    w.delete(g, &g.name().to_string(), &coll, &indexes, &d).map_err(|e| anyhow::anyhow!("{e}"))?;
+                    let dbn = g.name().to_string();
+                    w.delete(g, &dbn, &coll, &indexes, &d).await.map_err(|e| anyhow::anyhow!("{e}"))?;
                     n += 1;
                 }
             }

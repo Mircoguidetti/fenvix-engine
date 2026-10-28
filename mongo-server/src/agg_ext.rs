@@ -166,6 +166,12 @@ pub fn run_stage(name: &str, arg: &Bson, docs: Vec<Document>, foreign: &Foreign)
             docs.extend(run_pipeline(other, &pipeline, foreign)?);
             docs
         }
+        "$changeStreamSplitLargeEvent" => {
+            if !matches!(arg, Bson::Document(d) if d.is_empty()) {
+                return Err(MongoError::new(7182800, "Location7182800", "$changeStreamSplitLargeEvent spec should be an empty object".into()));
+            }
+            return Err(MongoError::new(20, "IllegalOperation", "$changeStreamSplitLargeEvent can only be used in a $changeStream pipeline".into()));
+        }
         "$documents" => return Err(MongoError::new(73, "InvalidNamespace", "$documents is only valid as the first stage of a database-level aggregate ({aggregate: 1})".to_string())),
         "$bucketAuto" => crate::agg_more::bucket_auto(arg, docs, foreign)?,
         "$densify" => crate::agg_more::densify(arg, docs)?,
@@ -186,7 +192,18 @@ fn bucket(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> R<Vec<Document>
     }
     let group_by = spec.get("groupBy").ok_or_else(|| MongoError::new(40198, "Location40198", "$bucket requires 'groupBy' and 'boundaries' to be specified.".into()))?;
     let bounds = match spec.get("boundaries") {
-        Some(Bson::Array(b)) => b.clone(),
+        Some(Bson::Array(b)) => {
+            // a boundary may be a variable
+            let empty = Document::new();
+            let mut v = Vec::new();
+            for x in b {
+                v.push(match x {
+                    Bson::String(s) if s.starts_with("$$") => crate::expr::eval(x, &crate::expr::Scope::new(&empty))?.unwrap_or(Bson::Null),
+                    other => other.clone(),
+                });
+            }
+            v
+        }
         Some(_) => return Err(MongoError::new(40200, "Location40200", "The $bucket 'boundaries' field must be an array, but found type".to_string())),
         None => return Err(MongoError::new(40198, "Location40198", "$bucket requires 'groupBy' and 'boundaries' to be specified.".into())),
     };

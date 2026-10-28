@@ -808,10 +808,10 @@ fn nullish(v: &Option<Bson>) -> bool {
 fn partition_key(d: &Document, by: &Option<Bson>, fields: &[String]) -> R<Vec<u8>> {
     let mut key = Vec::new();
     if let Some(e) = by {
-        key.extend(crate::layout::encode_sortable(&ev(e, d)?.unwrap_or(Bson::Null)));
+        key.extend(crate::layout::encode_group_key(&ev(e, d)?.unwrap_or(Bson::Null)));
     }
     for f in fields {
-        key.extend(crate::layout::encode_sortable(&get_path(d, f).unwrap_or(Bson::Null)));
+        key.extend(crate::layout::encode_group_key(&get_path(d, f).unwrap_or(Bson::Null)));
     }
     Ok(key)
 }
@@ -989,7 +989,7 @@ pub fn set_window_fields(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> 
     let mut parts: Vec<Vec<Document>> = Vec::new();
     for d in docs {
         let k = match &part_by {
-            Some(e) => crate::layout::encode_sortable(&ev(e, &d)?.unwrap_or(Bson::Null)),
+            Some(e) => crate::layout::encode_group_key(&ev(e, &d)?.unwrap_or(Bson::Null)),
             None => Vec::new(),
         };
         match order.iter().position(|x| *x == k) {
@@ -1027,6 +1027,11 @@ pub fn set_window_fields(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> 
                 }
                 Some(_) => return Err(err(9, "window must be an object")),
             };
+            if let Some((kind, ..)) = &window_kind {
+                if kind == "range" && sort.as_ref().map(|s| s.len()).unwrap_or(0) != 1 {
+                    return Err(err(5339902, "Range-based bounds require sortBy a single field"));
+                }
+            }
             for i in 0..n {
                 let (lo, hi) = window_range(&part, i, &window_kind, &sort)?;
                 let members: Vec<&Document> = part[lo..hi.max(lo)].iter().collect();
@@ -1034,11 +1039,11 @@ pub fn set_window_fields(arg: &Bson, docs: Vec<Document>, foreign: &Foreign) -> 
                     "$documentNumber" => Bson::Int32(i as i32 + 1),
                     "$rank" | "$denseRank" => {
                         let sk = sort.as_ref().ok_or_else(|| err(5371602, format!("{op} requires a sortBy")))?;
-                        let key = |d: &Document| -> Vec<Bson> { sk.iter().map(|(f, _)| get_path(d, f).unwrap_or(Bson::Null)).collect() };
+                        let key = |d: &Document| -> Vec<Option<Bson>> { sk.iter().map(|(f, _)| get_path(d, f)).collect() };
                         let mut rank = 1i64;
                         let mut dense = 1i64;
                         for k in 1..=i {
-                            if key(&part[k]) != key(&part[k - 1]) {
+                            if key(&part[k]).iter().zip(key(&part[k - 1]).iter()).any(|(a, b)| match (a, b) { (Some(a), Some(b)) => !crate::query::equal(a, b), (None, None) => false, _ => true }) {
                                 rank = k as i64 + 1;
                                 dense += 1;
                             }

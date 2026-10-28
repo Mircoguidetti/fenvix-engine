@@ -1,0 +1,155 @@
+[
+ {
+  "name": "g10.special.encrypted_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "create": "e1",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "string",
+       "queries": {
+        "queryType": "equality"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "e1"
+    },
+    "__strip": [
+     "cursor.firstBatch.0.info.uuid"
+    ]
+   },
+   {
+    "create": "e2",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "bsonType": "string"
+      }
+     ]
+    }
+   },
+   {
+    "create": "e3",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+         "subType": "04"
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "create": "e4",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "nope"
+      }
+     ]
+    }
+   },
+   {
+    "create": "e5",
+    "encryptedFields": "x"
+   },
+   {
+    "create": "e6",
+    "encryptedFields": {}
+   },
+   {
+    "insert": "e1",
+    "documents": [
+     {
+      "_id": 1,
+      "b": 2
+     }
+    ]
+   },
+   {
+    "find": "e1"
+   },
+   {
+    "drop": "e1"
+   }
+  ]
+ },
+ {
+  "name": "g10.special.encrypted_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "create": "e1",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "string",
+       "queries": {
+        "queryType": "equality"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "e1"
+    },
+    "__strip": [
+     "cursor.firstBatch.0.info.uuid"
+    ]
+   },
+   {
+    "create": "e3",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAAAA==",
+         "subType": "04"
+        }
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+]

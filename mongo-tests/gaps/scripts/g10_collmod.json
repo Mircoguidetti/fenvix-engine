@@ -1,0 +1,888 @@
+[
+ {
+  "name": "g10.collmod.index_hidden",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "a": 0,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-01T00:00:00Z"
+      }
+     },
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-02T00:00:00Z"
+      }
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "t": {
+       "$date": "2030-01-03T00:00:00Z"
+      }
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-04T00:00:00Z"
+      }
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-05T00:00:00Z"
+      }
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "t": {
+       "$date": "2030-01-06T00:00:00Z"
+      }
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-07T00:00:00Z"
+      }
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-08T00:00:00Z"
+      }
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     },
+     {
+      "key": {
+       "b": 1,
+       "a": -1
+      },
+      "name": "b_1_a_-1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": true
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "keyPattern": {
+      "b": 1,
+      "a": -1
+     },
+     "hidden": true
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": false
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "_id_",
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "nope",
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "keyPattern": {
+      "zz": 1
+     },
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "keyPattern": {
+      "a": 1
+     },
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1"
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": "yes"
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "bogus": 1
+    }
+   },
+   {
+    "collMod": "t",
+    "index": 5
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": true
+    },
+    "validator": {
+     "a": {
+      "$gte": 0
+     }
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": true
+    },
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "filter": {
+     "a": 3
+    },
+    "hint": "a_1"
+   },
+   {
+    "explain": {
+     "find": "t",
+     "filter": {
+      "a": 3
+     }
+    },
+    "verbosity": "queryPlanner",
+    "__strip": [
+     "serverInfo",
+     "serverParameters",
+     "rejectedPlans",
+     "parsedQuery",
+     "queryHash",
+     "planCacheKey",
+     "indexFilterSet",
+     "maxIndexedOrSolutionsReached",
+     "maxIndexedAndSolutionsReached",
+     "maxScansToExplodeReached",
+     "namespace",
+     "optimizationTimeMillis",
+     "command",
+     "filter"
+    ]
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "hidden": false
+    },
+    "__skip": true
+   },
+   {
+    "explain": {
+     "find": "t",
+     "filter": {
+      "a": 3
+     }
+    },
+    "verbosity": "queryPlanner",
+    "__strip": [
+     "serverInfo",
+     "serverParameters",
+     "rejectedPlans",
+     "parsedQuery",
+     "queryHash",
+     "planCacheKey",
+     "indexFilterSet",
+     "maxIndexedOrSolutionsReached",
+     "maxIndexedAndSolutionsReached",
+     "maxScansToExplodeReached",
+     "namespace",
+     "optimizationTimeMillis",
+     "command",
+     "filter"
+    ]
+   },
+   {
+    "collMod": "nocoll",
+    "index": {
+     "name": "a_1",
+     "hidden": true
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1",
+      "hidden": true
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1",
+      "hidden": true
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1"
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_1",
+      "hidden": false
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "c": 1
+      },
+      "name": "c_other"
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "d": 1
+      },
+      "name": "d_1",
+      "hidden": "x"
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_",
+      "hidden": true
+     }
+    ]
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "e": 1
+      },
+      "name": "e_1",
+      "hidden": true,
+      "unique": true
+     }
+    ]
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 500,
+      "e": 1
+     },
+     {
+      "_id": 501,
+      "e": 1
+     }
+    ]
+   },
+   {
+    "dropIndexes": "t",
+    "index": "c_1"
+   }
+  ]
+ },
+ {
+  "name": "g10.collmod.index_ttl",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "a": 0,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-01T00:00:00Z"
+      }
+     },
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-02T00:00:00Z"
+      }
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "t": {
+       "$date": "2030-01-03T00:00:00Z"
+      }
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-04T00:00:00Z"
+      }
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-05T00:00:00Z"
+      }
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "t": {
+       "$date": "2030-01-06T00:00:00Z"
+      }
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-07T00:00:00Z"
+      }
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-08T00:00:00Z"
+      }
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "t": 1
+      },
+      "name": "t_ttl",
+      "expireAfterSeconds": 3600
+     },
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": 100
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "keyPattern": {
+      "t": 1
+     },
+     "expireAfterSeconds": 100
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": -1
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": "x"
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": {
+      "$numberLong": "9999999999"
+     }
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": 2.5
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": 0
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "expireAfterSeconds": 10
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": 50,
+     "hidden": true
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": "off"
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": {
+      "$numberInt": "7"
+     }
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "t_ttl",
+     "expireAfterSeconds": {
+      "$numberDecimal": "8"
+     }
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ },
+ {
+  "name": "g10.collmod.index_unique",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "a": 0,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-01T00:00:00Z"
+      }
+     },
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-02T00:00:00Z"
+      }
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "t": {
+       "$date": "2030-01-03T00:00:00Z"
+      }
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-04T00:00:00Z"
+      }
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-05T00:00:00Z"
+      }
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "t": {
+       "$date": "2030-01-06T00:00:00Z"
+      }
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "t": {
+       "$date": "2030-01-07T00:00:00Z"
+      }
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "t": {
+       "$date": "2030-01-08T00:00:00Z"
+      }
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "u",
+    "documents": [
+     {
+      "_id": 1,
+      "k": 1
+     },
+     {
+      "_id": 2,
+      "k": 1
+     },
+     {
+      "_id": 3,
+      "k": 2
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "u",
+    "indexes": [
+     {
+      "key": {
+       "k": 1
+      },
+      "name": "k_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "unique": true
+    }
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "prepareUnique": true
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 100,
+      "a": 3
+     }
+    ]
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 101,
+      "a": 300
+     }
+    ]
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 101
+      },
+      "u": {
+       "$set": {
+        "a": 3
+       }
+      }
+     }
+    ]
+   },
+   {
+    "collMod": "t",
+    "index": {
+     "name": "a_1",
+     "unique": true
+    }
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 102,
+      "a": 3
+     }
+    ]
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "k_1",
+     "prepareUnique": true
+    }
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "k_1",
+     "unique": true
+    }
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "k_1",
+     "unique": false
+    }
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "k_1",
+     "prepareUnique": false
+    }
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "k_1",
+     "unique": true,
+     "hidden": true
+    }
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "k_1",
+     "prepareUnique": "x"
+    }
+   },
+   {
+    "collMod": "u",
+    "index": {
+     "name": "_id_",
+     "unique": true
+    }
+   },
+   {
+    "createIndexes": "u",
+    "indexes": [
+     {
+      "key": {
+       "p": 1
+      },
+      "name": "p_1",
+      "prepareUnique": true
+     }
+    ]
+   },
+   {
+    "listIndexes": "u",
+    "__sortarr": "cursor.firstBatch"
+   },
+   {
+    "insert": "u",
+    "documents": [
+     {
+      "_id": 10,
+      "p": 1
+     },
+     {
+      "_id": 11,
+      "p": 1
+     }
+    ]
+   },
+   {
+    "createIndexes": "u",
+    "indexes": [
+     {
+      "key": {
+       "q": 1
+      },
+      "name": "q_1",
+      "unique": true,
+      "prepareUnique": true
+     }
+    ]
+   }
+  ]
+ }
+]

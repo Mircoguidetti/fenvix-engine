@@ -94,7 +94,7 @@ fn start(rt: &Runtime) -> R<Context> {
     let ctx = native(Context::full(rt))?;
     ctx.with(|c| -> R<()> {
         let g = c.globals();
-        native(g.set("__serverVersion", native(Function::new(c.clone(), || "7.0.14".to_string()))?))?;
+        native(g.set("__serverVersion", native(Function::new(c.clone(), || "7.0.45".to_string()))?))?;
         native(g.set("__bsonsize", native(Function::new(c.clone(), |s: String| -> rquickjs::Result<i32> { Ok(parse_ser(&s).ok().map(|b| bson_size(&b)).unwrap_or(0) as i32) }))?))?;
         native(g.set(
             "__bsoncmp",
@@ -106,6 +106,16 @@ fn start(rt: &Runtime) -> R<Context> {
                         std::cmp::Ordering::Greater => 1,
                     }),
                     _ => Ok(0),
+                }
+            }))?,
+        ))?;
+        // grouping of the keys `emit` gets follows the collation in force (the key of a string under it; the string itself without one)
+        native(g.set(
+            "__collkey",
+            native(Function::new(c.clone(), |s: String| -> String {
+                match crate::collation::sort_key_current(&s) {
+                    Some(k) => k.iter().map(|b| format!("{b:02x}")).collect(),
+                    None => s,
                 }
             }))?,
         ))?;
@@ -137,7 +147,7 @@ fn with_scope<T>(pooled: bool, f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
             let rt = native(Runtime::new())?;
             rt.set_max_stack_size(512 << 10);
             rt.set_interrupt_handler(Some(Box::new(|| {
-                let over = DEADLINE.with(|d| d.get().map(|t| Instant::now() > t).unwrap_or(false));
+                let over = DEADLINE.with(|d| d.get().map(|t| Instant::now() > t).unwrap_or(false)) || crate::diag::current_killed();
                 if over {
                     TIMED_OUT.with(|t| t.set(true));
                 }

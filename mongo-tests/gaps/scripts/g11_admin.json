@@ -1,0 +1,2512 @@
+[
+ {
+  "name": "g11.admin.logrotate",
+  "mode": "sa",
+  "steps": [
+   {
+    "logRotate": "audit",
+    "__db": "admin"
+   },
+   {
+    "logRotate": "x",
+    "__db": "admin"
+   },
+   {
+    "logRotate": {},
+    "__db": "admin"
+   },
+   {
+    "logRotate": true
+   },
+   {
+    "logRotate": true,
+    "comment": "c",
+    "__db": "admin",
+    "__pause": 1300
+   },
+   {
+    "logRotate": 1.5,
+    "__db": "admin",
+    "__pause": 1300
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.fsync_lock",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "fsync": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "find": "t"
+   },
+   {
+    "count": "t"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": 1
+       }
+      }
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "drop": "t",
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ]
+   },
+   {
+    "find": "t",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "fsync": 1,
+    "lock": "x",
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 4
+     }
+    ],
+    "maxTimeMS": 200
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": 0,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": false,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1
+   },
+   {
+    "fsyncUnlock": 1
+   },
+   {
+    "fsync": 1,
+    "lock": true
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.fsync_lock_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "fsync": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "find": "t"
+   },
+   {
+    "count": "t"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": 1
+       }
+      }
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "drop": "t",
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ]
+   },
+   {
+    "find": "t",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "fsync": 1,
+    "lock": "x",
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 4
+     }
+    ],
+    "maxTimeMS": 200
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": 0,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": false,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1
+   },
+   {
+    "fsyncUnlock": 1
+   },
+   {
+    "fsync": 1,
+    "lock": true
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.dropconnections",
+  "mode": "sa",
+  "steps": [
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     "localhost:9"
+    ],
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": "x",
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     1
+    ],
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [],
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": []
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     "a"
+    ],
+    "bogus": 1,
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     "a",
+     "b:2"
+    ],
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.rotatecertificates",
+  "mode": "sa",
+  "steps": [
+   {
+    "rotateCertificates": 1,
+    "__db": "admin"
+   },
+   {
+    "rotateCertificates": 1,
+    "message": "m",
+    "__db": "admin"
+   },
+   {
+    "rotateCertificates": 1,
+    "message": 5,
+    "__db": "admin"
+   },
+   {
+    "rotateCertificates": 1
+   },
+   {
+    "rotateCertificates": 1,
+    "bogus": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.userwriteblock_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "setUserWriteBlockMode": 1,
+    "global": true,
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": "x",
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "bogus": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.userwriteblock_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": true,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9
+     }
+    ]
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 8
+     },
+     {
+      "_id": 7
+     }
+    ],
+    "ordered": false
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ]
+   },
+   {
+    "find": "t"
+   },
+   {
+    "count": "t"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ]
+   },
+   {
+    "create": "n"
+   },
+   {
+    "drop": "t"
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "off"
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$out": "o"
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 0
+    },
+    "update": {
+     "$set": {
+      "z": 1
+     }
+    }
+   },
+   {
+    "dropDatabase": 1
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9
+     }
+    ]
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.setfcv",
+  "mode": "fresh:fcv",
+  "steps": [
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "confirm": false,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "8.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "5.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "x",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": 7,
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": "x",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": true
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": true,
+    "bogus": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": true,
+    "comment": "c",
+    "writeConcern": {
+     "w": 1
+    },
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.shutdown",
+  "mode": "fresh:sd",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "shutdown": 1
+   },
+   {
+    "shutdown": 1,
+    "force": "x",
+    "__db": "admin"
+   },
+   {
+    "shutdown": 1,
+    "timeoutSecs": "x",
+    "__db": "admin"
+   },
+   {
+    "shutdown": 1,
+    "bogus": 1,
+    "__db": "admin"
+   },
+   {
+    "ping": 1
+   },
+   {
+    "shutdown": 1,
+    "force": true,
+    "timeoutSecs": 0,
+    "__expect_close": true,
+    "__db": "admin"
+   },
+   {
+    "ping": 1,
+    "__expect_close": true,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.features",
+  "mode": "sa",
+  "steps": [
+   {
+    "features": 1,
+    "__shape": true,
+    "__db": "admin"
+   },
+   {
+    "features": 1,
+    "__shape": true
+   },
+   {
+    "features": 1,
+    "bogus": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.encryption.compact_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "create": "e",
+    "encryptedFields": {
+     "fields": [
+      {
+       "path": "a",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAABw==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "string",
+       "queries": {
+        "queryType": "equality"
+       }
+      },
+      {
+       "path": "b.c",
+       "keyId": {
+        "$binary": {
+         "base64": "AAAAAAAAAAAAAAAAAAAACA==",
+         "subType": "04"
+        }
+       },
+       "bsonType": "int"
+      }
+     ]
+    }
+   },
+   {
+    "create": "plain"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "z": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": "x",
+     "b.c": 5
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {}
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": 5
+   },
+   {
+    "compactStructuredEncryptionData": "nope",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "plain",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "bogus": 1
+   },
+   {
+    "compactStructuredEncryptionData": 5,
+    "compactionTokens": {}
+   }
+  ]
+ },
+ {
+  "name": "g11.encryption.compact_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "create": "plain"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "z": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": "x",
+     "b.c": 5
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e"
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {}
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": 5
+   },
+   {
+    "compactStructuredEncryptionData": "nope",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "plain",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "compactStructuredEncryptionData": "e",
+    "compactionTokens": {
+     "a": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     },
+     "b.c": {
+      "$binary": {
+       "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+       "subType": "00"
+      }
+     }
+    },
+    "bogus": 1
+   },
+   {
+    "compactStructuredEncryptionData": 5,
+    "compactionTokens": {}
+   }
+  ]
+ },
+ {
+  "name": "g11.validate.full",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "a",
+    "documents": [
+     {
+      "_id": 0,
+      "x": 0,
+      "y": 0
+     },
+     {
+      "_id": 1,
+      "x": 1,
+      "y": 1
+     },
+     {
+      "_id": 2,
+      "x": 2,
+      "y": 2
+     },
+     {
+      "_id": 3,
+      "x": 3,
+      "y": 3
+     },
+     {
+      "_id": 4,
+      "x": 4,
+      "y": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "insert": "b",
+    "documents": [
+     {
+      "_id": 0,
+      "x": 0,
+      "y": 0
+     },
+     {
+      "_id": 1,
+      "x": 1,
+      "y": 1
+     },
+     {
+      "_id": 2,
+      "x": 2,
+      "y": 2
+     },
+     {
+      "_id": 3,
+      "x": 3,
+      "y": 3
+     },
+     {
+      "_id": 4,
+      "x": 4,
+      "y": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "b",
+    "indexes": [
+     {
+      "key": {
+       "x": 1
+      },
+      "name": "x_1"
+     },
+     {
+      "key": {
+       "y": 1
+      },
+      "name": "y_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "create": "empty",
+    "__skip": true
+   },
+   {
+    "create": "cap",
+    "capped": true,
+    "size": 4096,
+    "__skip": true
+   },
+   {
+    "insert": "cap",
+    "documents": [
+     {
+      "x": 1
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "validate": "a",
+    "full": true
+   },
+   {
+    "validate": "b",
+    "full": true
+   },
+   {
+    "validate": "empty",
+    "full": true
+   },
+   {
+    "validate": "cap",
+    "full": true
+   },
+   {
+    "validate": "a"
+   },
+   {
+    "validate": "a",
+    "metadata": true
+   },
+   {
+    "validate": "a",
+    "checkBSONConformance": true
+   },
+   {
+    "validate": "a",
+    "full": true,
+    "checkBSONConformance": true
+   },
+   {
+    "validate": "a",
+    "background": true
+   },
+   {
+    "validate": "a",
+    "background": true,
+    "full": true
+   },
+   {
+    "validate": "a",
+    "full": true,
+    "metadata": true
+   },
+   {
+    "validate": "a",
+    "full": false
+   },
+   {
+    "validate": "a",
+    "full": 1
+   },
+   {
+    "validate": "nope",
+    "full": true
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.querystats",
+  "mode": "sa",
+  "steps": [
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {}
+     },
+     {
+      "$limit": 1
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$queryStats": {}
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": 1
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "x": 1
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {}
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "md5"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": 5
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+          "subType": "08"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "00"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": "x"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        },
+        "z": 1
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": 3,
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "08"
+         }
+        },
+        "algorithm": "hmac-sha-256"
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "04"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   },
+   {
+    "aggregate": 1,
+    "pipeline": [
+     {
+      "$queryStats": {
+       "transformIdentifiers": {
+        "algorithm": "hmac-sha-256",
+        "hmacKey": {
+         "$binary": {
+          "base64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg=",
+          "subType": "80"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.expr.tohashedindexkey",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "c",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ]
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": 1
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": "a"
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": null
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "x": 1
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": 1.5
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": [
+          1,
+          2
+         ]
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": true
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$date": "2020-01-01T00:00:00Z"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$oid": "5f0000000000000000000001"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$numberLong": "1"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$numberDecimal": "1"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$regularExpression": {
+           "pattern": "a",
+           "options": "i"
+          }
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$binary": {
+           "base64": "AQI=",
+           "subType": "00"
+          }
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$timestamp": {
+           "t": 1,
+           "i": 2
+          }
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$minKey": 1
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": {
+          "$maxKey": 1
+         }
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": {
+         "$literal": ""
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": "$_id"
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": "$missing"
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "c",
+    "pipeline": [
+     {
+      "$project": {
+       "h": {
+        "$toHashedIndexKey": [
+         1,
+         2
+        ]
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.invalidateusercache",
+  "mode": "std",
+  "steps": [
+   {
+    "invalidateUserCache": 1,
+    "__db": "admin"
+   },
+   {
+    "invalidateUserCache": 1
+   },
+   {
+    "invalidateUserCache": "x",
+    "__db": "admin"
+   },
+   {
+    "invalidateUserCache": 1,
+    "comment": "c",
+    "__db": "admin"
+   },
+   {
+    "invalidateUserCache": 1,
+    "foo": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.create.storage_engine_and_index_option_defaults",
+  "mode": "std",
+  "steps": [
+   {
+    "create": "a",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "block_compressor=zlib"
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "a"
+    }
+   },
+   {
+    "create": "b",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "block_compressor=snappy"
+     }
+    },
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {
+       "configString": "block_compressor=zlib"
+      }
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "b"
+    }
+   },
+   {
+    "createIndexes": "b",
+    "indexes": [
+     {
+      "key": {
+       "x": 1
+      },
+      "name": "x_1"
+     }
+    ]
+   },
+   {
+    "listIndexes": "b"
+   },
+   {
+    "create": "c",
+    "storageEngine": {
+     "nosuch": {}
+    }
+   },
+   {
+    "create": "c2",
+    "storageEngine": 5
+   },
+   {
+    "create": "c3",
+    "storageEngine": {
+     "wiredTiger": 5
+    }
+   },
+   {
+    "create": "c4",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "bogus_option=1"
+     }
+    }
+   },
+   {
+    "create": "c5",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": 5
+     }
+    }
+   },
+   {
+    "create": "c6",
+    "indexOptionDefaults": 5
+   },
+   {
+    "create": "c7",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "nosuch": {}
+     }
+    }
+   },
+   {
+    "create": "c8",
+    "indexOptionDefaults": {
+     "foo": 1
+    }
+   },
+   {
+    "create": "c9",
+    "indexOptionDefaults": {}
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": "c9"
+    }
+   },
+   {
+    "collMod": "a",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {
+       "configString": "block_compressor=zlib"
+      }
+     }
+    }
+   },
+   {
+    "collMod": "a",
+    "storageEngine": {
+     "wiredTiger": {
+      "configString": "block_compressor=zlib"
+     }
+    }
+   },
+   {
+    "createIndexes": "a",
+    "indexes": [
+     {
+      "key": {
+       "y": 1
+      },
+      "name": "y_1",
+      "storageEngine": {
+       "wiredTiger": {
+        "configString": "block_compressor=zlib"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "listIndexes": "a"
+   },
+   {
+    "create": "s1",
+    "storageEngine": {}
+   },
+   {
+    "create": "s2",
+    "storageEngine": {
+     "wiredTiger": {}
+    }
+   },
+   {
+    "create": "s3",
+    "indexOptionDefaults": {
+     "storageEngine": {}
+    }
+   },
+   {
+    "create": "s4",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {}
+     }
+    }
+   },
+   {
+    "create": "s5",
+    "storageEngine": {
+     "wiredTiger": 5
+    }
+   },
+   {
+    "create": "s6",
+    "storageEngine": {
+     "wiredTiger": {
+      "x": 1
+     }
+    }
+   },
+   {
+    "create": "s7",
+    "storageEngine": {
+     "nosuch": 5
+    }
+   },
+   {
+    "create": "s8",
+    "indexOptionDefaults": {
+     "storageEngine": 5
+    }
+   },
+   {
+    "create": "s9",
+    "indexOptionDefaults": {
+     "storageEngine": {
+      "wiredTiger": {
+       "configString": 3
+      }
+     }
+    }
+   },
+   {
+    "listCollections": 1,
+    "filter": {
+     "name": {
+      "$in": [
+       "s1",
+       "s2",
+       "s3",
+       "s4"
+      ]
+     }
+    },
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ },
+ {
+  "name": "g11.agg.bucketauto_granularity",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "v": 0.3
+     },
+     {
+      "_id": 1,
+      "v": 1.7
+     },
+     {
+      "_id": 2,
+      "v": 2.2
+     },
+     {
+      "_id": 3,
+      "v": 9.5
+     },
+     {
+      "_id": 4,
+      "v": 47
+     },
+     {
+      "_id": 5,
+      "v": 123
+     },
+     {
+      "_id": 6,
+      "v": 0.012
+     },
+     {
+      "_id": 7,
+      "v": 555
+     },
+     {
+      "_id": 8,
+      "v": 8000
+     },
+     {
+      "_id": 9,
+      "v": 6.3
+     }
+    ]
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R10"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R20"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R40"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "R80"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "1-2-5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E6"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E12"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E24"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E48"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E96"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "E192"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "POWERSOF2"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "r5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 4,
+       "granularity": "BAD"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 3,
+       "granularity": "E24",
+       "output": {
+        "n": {
+         "$sum": 1
+        },
+        "m": {
+         "$max": "$v"
+        }
+       }
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 2,
+       "granularity": "R10"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "insert": "u",
+    "documents": [
+     {
+      "_id": 1,
+      "v": -1
+     },
+     {
+      "_id": 2,
+      "v": "a"
+     },
+     {
+      "_id": 3,
+      "v": 0
+     }
+    ]
+   },
+   {
+    "aggregate": "u",
+    "pipeline": [
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 2,
+       "granularity": "R5"
+      }
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "aggregate": "u",
+    "pipeline": [
+     {
+      "$match": {
+       "v": 0
+      }
+     },
+     {
+      "$bucketAuto": {
+       "groupBy": "$v",
+       "buckets": 2,
+       "granularity": "R5"
+      }
+     }
+    ],
+    "cursor": {}
+   }
+  ]
+ }
+]

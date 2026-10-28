@@ -5,18 +5,32 @@
 //! standalone compaction and GC).
 
 mod agg;
+mod auth;
+mod authz;
+mod scram;
+mod tls;
 mod agg_ext;
 mod agg_more;
 mod json_schema;
+mod capped;
+mod capped_cmds;
 mod changes;
 mod cmd;
 mod cmd_changes;
+mod collation;
+mod collmod_index;
+mod collopts;
 mod coll;
 mod cmd_data;
 mod cmd_index;
 mod cmd_mapreduce;
 mod ctl;
+mod cs_events;
 mod dbs;
+mod diag;
+mod fields;
+mod find_ext;
+mod dsum;
 mod error;
 mod expr;
 mod index;
@@ -24,18 +38,33 @@ mod js;
 mod keyenc;
 mod layout;
 mod lease;
+mod natural;
+mod params;
+mod projfind;
 mod query;
 mod geo;
 mod geo_query;
+mod rc;
 mod regex;
+mod retry;
 mod search;
+mod special_colls;
+mod stable_api;
+mod stats_scale;
 mod search_more;
 mod text;
 mod wild;
 mod ttl;
 mod txn;
 mod update;
+mod validation;
+mod views;
+mod admin_cmds;
+mod repl_cmds;
+mod search_idx;
+mod wc;
 mod wire;
+mod xdb;
 
 use anyhow::Result;
 use clap::Parser;
@@ -188,19 +217,55 @@ struct Args {
     log_commands: bool,
     #[command(flatten)]
     ctl: ctl::CtlArgs,
+    /// Require authentication and authorization for every command (mongod's --auth).
+    #[arg(long)]
+    auth: bool,
+    /// TLS on the client port: disabled, allowTLS, preferTLS or requireTLS (mongod's net.tls.mode).
+    #[arg(long, default_value = "disabled")]
+    tls_mode: String,
+    /// PEM file with the server certificate chain and its private key (net.tls.certificateKeyFile).
+    #[arg(long, default_value = "")]
+    tls_certificate_key_file: String,
+    /// PEM file with the CA certificates client certificates must chain to (net.tls.CAFile).
+    #[arg(long, default_value = "")]
+    tls_ca_file: String,
+    /// With --tls-ca-file: accept clients that present no certificate (net.tls.allowConnectionsWithoutCertificates).
+    #[arg(long)]
+    tls_allow_connections_without_certificates: bool,
 }
 
-async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64) {
-    let _ = stream.set_nodelay(true);
-    let (r, mut w) = stream.into_split();
+async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
+    let stream = match tls.accept(tcp).await {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("conn {conn_id}: TLS handshake failed: {e:#}");
+            return;
+        }
+    };
+    stream.set_nodelay(true);
+    server.diag.conn_opened(conn_id, stream.peer_addr().ok().map(|a| std::net::SocketAddr::new(a.ip(), a.port())));
+    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject());
+    handle_connection_inner(&server, stream, conn_id).await;
+    server.auth_connection_closed(conn_id);
+    server.diag.conn_closed(conn_id);
+}
+
+async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn_id: i64) {
+    let (r, mut w) = tokio::io::split(stream);
     let mut r = BufReader::new(r);
     let mut response_id = 1;
     loop {
         match wire::read_request(&mut r).await {
             Ok(Some(req)) => {
                 let probe = ctl::usage::before(&req.db, &req.command).await;
+                server.diag.note_seq(conn_id, &req.seq_keys);
                 let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
                 ctl::usage::after(probe).await;
+                if reply.contains_key("$shutdown") {
+                    // `shutdown`: no reply; the connection closes and the process stops
+                    repl_cmds::SHUTDOWN.notify_one();
+                    break;
+                }
                 if req.more_to_come {
                     continue;
                 }
@@ -219,8 +284,12 @@ async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64)
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
+    // The futures of the command handlers are large: the workers get stacks that are not the 2 MiB default.
+    tokio::runtime::Builder::new_multi_thread().enable_all().thread_stack_size(64 << 20).build()?.block_on(run())
+}
+
+async fn run() -> Result<()> {
     let args = Args::parse();
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
         "s3" => Arc::new(
@@ -295,6 +364,7 @@ async fn main() -> Result<()> {
         }
     }
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
+    server.auth.enabled.store(args.auth, std::sync::atomic::Ordering::Relaxed);
     if !args.replica_set.is_empty() {
         let port = args.listen.rsplit(':').next().unwrap_or("27017");
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
@@ -302,6 +372,7 @@ async fn main() -> Result<()> {
     server.spawn_txn_janitor();
     ctl::start(Arc::clone(&dbs), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
 
+    let tls_cfg = Arc::new(tls::load(&tls::Options { mode: &args.tls_mode, certificate_key_file: &args.tls_certificate_key_file, ca_file: &args.tls_ca_file, allow_without_certificates: args.tls_allow_connections_without_certificates })?);
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
@@ -311,10 +382,11 @@ async fn main() -> Result<()> {
                 let (stream, _) = accepted?;
                 let server = Arc::clone(&server);
                 let id = server.new_connection_id();
-                tokio::spawn(handle_connection(server, stream, id));
+                tokio::spawn(handle_connection(server, Arc::clone(&tls_cfg), stream, id));
             }
             _ = tokio::signal::ctrl_c() => break,
             _ = term.recv() => break,
+            _ = repl_cmds::SHUTDOWN.notified() => break,
         }
     }
     eprintln!("shutting down: closing tenants cleanly");

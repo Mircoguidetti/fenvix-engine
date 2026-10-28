@@ -591,7 +591,18 @@ fn find_operand_in(filter: &Document, through_or: bool) -> Option<&Bson> {
 }
 
 /// Remove the hidden score / distance fields from a result document.
+/// Marks a document of a time-series collection whose `_id` the server made up (it is not shown).
+pub const TS_AUTO: &str = "\u{1}tsauto";
+
 pub fn strip_hidden(d: &mut Document) {
+    if d.remove(TS_AUTO).is_some() {
+        d.remove("_id");
+    }
+    strip_scores(d);
+}
+
+/// Like `strip_hidden`, for documents that are written back (the generated `_id` of a time-series document stays).
+pub fn strip_scores(d: &mut Document) {
     for k in [SCORE_KEY, crate::search::SCORE_KEY, crate::search_more::HIGHLIGHT_KEY, crate::search_more::META_KEY, crate::geo::DIST_KEY, crate::geo::POINT_KEY] {
         d.remove(k);
     }

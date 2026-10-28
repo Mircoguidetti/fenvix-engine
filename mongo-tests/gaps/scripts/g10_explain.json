@@ -1,0 +1,223 @@
+[
+ {
+  "name": "g10.explain.aggregate_flag",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1"
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2"
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0"
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1"
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2"
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0"
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gte": 2
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 4
+     }
+    ],
+    "explain": true,
+    "__shape": true,
+    "__strip": [
+     "serverInfo",
+     "serverParameters",
+     "executionTimeMillis"
+    ]
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gte": 2
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 4
+     }
+    ],
+    "cursor": {},
+    "explain": true,
+    "__shape": true,
+    "__strip": [
+     "serverInfo",
+     "serverParameters"
+    ]
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [],
+    "explain": true,
+    "__shape": true,
+    "__strip": [
+     "serverInfo",
+     "serverParameters"
+    ]
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gte": 2
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 4
+     }
+    ],
+    "explain": false,
+    "cursor": {}
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gte": 2
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 4
+     }
+    ],
+    "explain": "x"
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gte": 2
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 4
+     }
+    ],
+    "explain": true,
+    "hint": {
+     "a": 1
+    },
+    "__shape": true,
+    "__strip": [
+     "serverInfo",
+     "serverParameters"
+    ]
+   },
+   {
+    "aggregate": "nope",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gte": 2
+       }
+      }
+     },
+     {
+      "$sort": {
+       "a": 1
+      }
+     },
+     {
+      "$limit": 4
+     }
+    ],
+    "explain": true,
+    "__shape": true,
+    "__strip": [
+     "serverInfo",
+     "serverParameters"
+    ]
+   }
+  ]
+ }
+]

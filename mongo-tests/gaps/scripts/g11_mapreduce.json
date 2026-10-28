@@ -1,0 +1,705 @@
+[
+ {
+  "name": "g11.mapreduce.options",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "g": 0,
+      "v": 0,
+      "s": "a"
+     },
+     {
+      "_id": 1,
+      "g": 1,
+      "v": 1,
+      "s": "B"
+     },
+     {
+      "_id": 2,
+      "g": 2,
+      "v": 2,
+      "s": "c"
+     },
+     {
+      "_id": 3,
+      "g": 0,
+      "v": 3,
+      "s": "A"
+     },
+     {
+      "_id": 4,
+      "g": 1,
+      "v": 4,
+      "s": "a"
+     },
+     {
+      "_id": 5,
+      "g": 2,
+      "v": 5,
+      "s": "B"
+     },
+     {
+      "_id": 6,
+      "g": 0,
+      "v": 6,
+      "s": "c"
+     },
+     {
+      "_id": 7,
+      "g": 1,
+      "v": 7,
+      "s": "A"
+     },
+     {
+      "_id": 8,
+      "g": 2,
+      "v": 8,
+      "s": "a"
+     },
+     {
+      "_id": 9,
+      "g": 0,
+      "v": 9,
+      "s": "B"
+     },
+     {
+      "_id": 10,
+      "g": 1,
+      "v": 10,
+      "s": "c"
+     },
+     {
+      "_id": 11,
+      "g": 2,
+      "v": 11,
+      "s": "A"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "query": {
+     "v": {
+      "$gte": 3
+     }
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "sort": {
+     "v": -1
+    },
+    "limit": 5
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "limit": 4,
+    "sort": {
+     "v": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "finalize": {
+     "$code": "function(k,v){return v*2}"
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v*mult)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "scope": {
+     "mult": 3
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "jsMode": true
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "jsMode": false,
+    "verbose": true
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "verbose": false
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "maxTimeMS": 5000
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "comment": "c"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.s,1)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "collation": {
+     "locale": "en",
+     "strength": 2
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.s,1)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "bypassDocumentValidation": true
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "writeConcern": {
+     "w": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "replace": "o1"
+    }
+   },
+   {
+    "find": "o1",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "merge": "o1"
+    },
+    "query": {
+     "v": {
+      "$lt": 3
+     }
+    }
+   },
+   {
+    "find": "o1",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "reduce": "o1"
+    }
+   },
+   {
+    "find": "o1",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": "o2"
+   },
+   {
+    "find": "o2",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "replace": "o3",
+     "db": "$OTHER"
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1,
+     "db": "x"
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "replace": "o1",
+     "sharded": true
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {},
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": 5,
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "out": {
+     "inline": 1
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": 5,
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": "x",
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "finalize": 5
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "scope": 5
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "query": 5
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "sort": 5
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "limit": "x"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "jsMode": "x"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "verbose": "x"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,{a:this.v})}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return {a:vs.length}}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){throw 'boom'}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results"
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "query": {
+     "$where": "this.v>2"
+    }
+   },
+   {
+    "mapReduce": "t",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    },
+    "__sortarr": "results",
+    "bogus": 1
+   },
+   {
+    "mapReduce": "missing",
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    }
+   },
+   {
+    "mapReduce": 1,
+    "map": {
+     "$code": "function(){emit(this.g,this.v)}"
+    },
+    "reduce": {
+     "$code": "function(k,vs){return Array.sum(vs)}"
+    },
+    "out": {
+     "inline": 1
+    }
+   }
+  ]
+ }
+]

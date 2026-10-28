@@ -63,6 +63,19 @@ fn sortable_f64(v: f64) -> [u8; 8] {
 /// Order-preserving, equality-preserving encoding of a BSON value: byte order follows MongoDB's
 /// comparison order for the types that can be `_id`s, and `1`, `1_i64` and `1.0` encode identically.
 pub fn encode_sortable(v: &Bson) -> Vec<u8> {
+    encode_sortable_with(v, None)
+}
+
+/// [`encode_sortable`] for grouping and joining: strings follow the collation in force for the command.
+pub fn encode_group_key(v: &Bson) -> Vec<u8> {
+    match crate::collation::current() {
+        Some(c) => encode_sortable_with(v, Some(&c)),
+        None => encode_sortable_with(v, None),
+    }
+}
+
+/// [`encode_sortable`] with strings replaced by their collation sort keys.
+pub fn encode_sortable_with(v: &Bson, c: Option<&crate::collation::Collation>) -> Vec<u8> {
     let rank = crate::query::type_rank(v);
     let mut out = vec![rank];
     match v {
@@ -91,7 +104,10 @@ pub fn encode_sortable(v: &Bson) -> Vec<u8> {
                 out.extend([0u8; 8]);
             }
         }
-        Bson::String(s) | Bson::Symbol(s) => out.extend(s.as_bytes()),
+        Bson::String(s) | Bson::Symbol(s) => match c {
+            Some(c) => c.sort_key(s, &mut out),
+            None => out.extend(s.as_bytes()),
+        },
         Bson::ObjectId(o) => out.extend(o.bytes()),
         Bson::Boolean(b) => out.push(*b as u8),
         Bson::DateTime(d) => out.extend(sortable_i64(d.timestamp_millis())),
@@ -104,14 +120,14 @@ pub fn encode_sortable(v: &Bson) -> Vec<u8> {
             for (k, val) in d {
                 out.extend(k.as_bytes());
                 out.push(0);
-                let e = encode_sortable(val);
+                let e = encode_sortable_with(val, c);
                 out.extend((e.len() as u32).to_be_bytes());
                 out.extend(e);
             }
         }
         Bson::Array(a) => {
             for val in a {
-                let e = encode_sortable(val);
+                let e = encode_sortable_with(val, c);
                 out.extend((e.len() as u32).to_be_bytes());
                 out.extend(e);
             }

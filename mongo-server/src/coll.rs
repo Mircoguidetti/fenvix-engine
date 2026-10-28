@@ -16,6 +16,7 @@ use crate::query::matches;
 use bson::{Bson, Document};
 use bytes::Bytes;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use tenant_bench::lifecycle::Op;
 
 type R<T> = Result<T, MongoError>;
@@ -30,6 +31,8 @@ pub trait Rd: Send {
     fn indexes(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Vec<IndexDef>>> + Send;
     /// A collection with a TTL index was read: a close of this tenant writes the expiry hint.
     fn note_ttl(&self);
+    /// The options of a collection (its default collation).
+    fn coll_opts(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Option<Arc<crate::collopts::CollOpts>>>> + Send;
 }
 
 impl Rd for Entry {
@@ -50,6 +53,9 @@ impl Rd for Entry {
     }
     fn note_ttl(&self) {
         self.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+    async fn coll_opts(&mut self, coll: &str) -> anyhow::Result<Option<Arc<crate::collopts::CollOpts>>> {
+        Entry::coll_opts(self, coll).await
     }
 }
 
@@ -72,6 +78,9 @@ impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
     fn note_ttl(&self) {
         self.ttl_seen.store(true, std::sync::atomic::Ordering::Relaxed);
     }
+    async fn coll_opts(&mut self, coll: &str) -> anyhow::Result<Option<Arc<crate::collopts::CollOpts>>> {
+        Entry::coll_opts(self, coll).await
+    }
 }
 
 impl Rd for ReadView {
@@ -92,6 +101,9 @@ impl Rd for ReadView {
     }
     fn note_ttl(&self) {
         ReadView::note_ttl(self)
+    }
+    async fn coll_opts(&mut self, coll: &str) -> anyhow::Result<Option<Arc<crate::collopts::CollOpts>>> {
+        ReadView::coll_opts(self, coll).await
     }
 }
 
@@ -133,7 +145,7 @@ pub fn resolve_hint(indexes: &[IndexDef], hint: Option<&Bson>) -> R<Hint> {
             if name == "_id_" {
                 return Ok(Hint::None);
             }
-            indexes.iter().position(|i| i.name == *name && i.state == State::Ready).map(Hint::Index).ok_or_else(bad)
+            indexes.iter().position(|i| i.name == *name && i.state == State::Ready && !i.hidden).map(Hint::Index).ok_or_else(bad)
         }
         Some(Bson::Document(d)) => {
             if let Some(n) = d.get("$natural") {
@@ -143,7 +155,7 @@ pub fn resolve_hint(indexes: &[IndexDef], hint: Option<&Bson>) -> R<Hint> {
             if d.len() == 1 && d.contains_key("_id") {
                 return Ok(Hint::None);
             }
-            indexes.iter().position(|i| i.state == State::Ready && i.key_pattern() == *d).map(Hint::Index).ok_or_else(bad)
+            indexes.iter().position(|i| i.state == State::Ready && !i.hidden && i.key_pattern() == *d).map(Hint::Index).ok_or_else(bad)
         }
         Some(_) => Err(MongoError::new(2, "BadValue", "hint must be either a string or a document".into())),
     }
@@ -160,6 +172,8 @@ pub fn plan_for(indexes: &[IndexDef], o: &FindOpts) -> Plan {
 
 /// Walks the byte intervals of an index scan in batches.
 struct IxCursor {
+    prefix: Vec<u8>,
+    pending: Vec<Bytes>,
     ivs: Vec<(Vec<u8>, Vec<u8>)>,
     reverse: bool,
     i: usize,
@@ -190,35 +204,66 @@ impl IxCursor {
         if scan.reverse {
             ivs.reverse();
         }
-        IxCursor { ivs, reverse: scan.reverse, i: 0, resume: None }
+        IxCursor { prefix, pending: Vec::new(), ivs, reverse: scan.reverse, i: 0, resume: None }
     }
 
-    /// Entries (full keys) of the next batch of at most `n`; empty when exhausted.
+    /// Entries (full keys) of the next batch of at most `n`; empty when exhausted. Runs of equal keys are completed
+    /// and put into insertion order; what exceeds `n` is kept for the next call.
     async fn next_batch(&mut self, g: &mut impl Rd, n: usize) -> R<Vec<Bytes>> {
         tenant_bench::counting::set_phase(1);
+        if !self.pending.is_empty() {
+            let take = n.min(self.pending.len());
+            return Ok(self.pending.drain(..take).collect());
+        }
         let mut out: Vec<Bytes> = Vec::new();
         while out.is_empty() && self.i < self.ivs.len() {
             let (s, e) = &self.ivs[self.i];
-            let rows = if self.reverse {
+            let mut rows = if self.reverse {
                 let end = self.resume.clone().unwrap_or_else(|| e.clone());
                 g.scan_range(s, Some(&end), true, Some(n), INDEX_READ_AHEAD).await?
             } else {
                 let start = self.resume.clone().unwrap_or_else(|| s.clone());
                 g.scan_range(&start, Some(e), false, Some(n), INDEX_READ_AHEAD).await?
             };
-            if rows.len() < n {
+            let fetched = rows.len();
+            if fetched >= n {
+                // complete the last run of equal keys so that it can be put into insertion order
+                loop {
+                    let last = rows.last().unwrap().0.to_vec();
+                    let more = if self.reverse {
+                        g.scan_range(s, Some(&last), true, Some(64), INDEX_READ_AHEAD).await?
+                    } else {
+                        let mut st = last.clone();
+                        st.push(0);
+                        g.scan_range(&st, Some(e), false, Some(64), INDEX_READ_AHEAD).await?
+                    };
+                    let k = more.iter().take_while(|(mk, _)| crate::natural::same_group(&last, mk, &self.prefix)).count();
+                    let full = k == more.len() && !more.is_empty();
+                    rows.extend(more.into_iter().take(k));
+                    if !full {
+                        break;
+                    }
+                }
+            }
+            let scan_last = rows.last().map(|(k, _)| k.to_vec());
+            crate::natural::reorder_ties(&mut rows, &self.prefix, self.reverse);
+            if fetched < n {
                 self.i += 1;
                 self.resume = None;
-            } else if let Some((last, _)) = rows.last() {
+            } else if let Some(last) = scan_last {
                 self.resume = Some(if self.reverse {
-                    last.to_vec()
+                    last
                 } else {
-                    let mut k = last.to_vec();
+                    let mut k = last;
                     k.push(0);
                     k
                 });
             }
-            out.extend(rows.into_iter().map(|(k, _)| k));
+            let mut keys: Vec<Bytes> = rows.into_iter().map(|(k, _)| k).collect();
+            if keys.len() > n {
+                self.pending = keys.split_off(n);
+            }
+            out.extend(keys);
         }
         Ok(out)
     }
@@ -302,13 +347,61 @@ async fn docs_by_scan(g: &mut impl Rd, prefix: &[u8], ids: &[Vec<u8>]) -> R<Vec<
 
 const FETCH_CHUNK: usize = 20_000;
 
+
+/// How an `_id` equality is looked up in a collection that may have a default collation.
+enum IdRes {
+    /// The document key of the value itself (no collation involved).
+    Direct,
+    /// The `_id` is stored under this encoding.
+    Found(Vec<u8>),
+    /// No document has an `_id` equal to it.
+    Absent,
+    /// The query's collation is not the one that decides which `_id`s are equal: every document is a candidate.
+    Scan,
+}
+
+async fn resolve_id(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>) -> R<IdRes> {
+    if !crate::collopts::has_string(id) {
+        return Ok(IdRes::Direct);
+    }
+    let Some(eff) = crate::collation::current() else { return Ok(IdRes::Direct) };
+    let coll_c = g.coll_opts(coll).await?.and_then(|o| o.collation.clone());
+    if !crate::collation::same(&Some(eff.clone()), &coll_c) {
+        return Ok(IdRes::Scan);
+    }
+    let ck = crate::collopts::idc_key(coll, &eff, id);
+    if let Some(v) = ov.and_then(|m| m.get(&ck)) {
+        return Ok(match v {
+            Some(_) => {
+                // written in this transaction: the stored encoding is in the pending ops, the value itself is the best guess
+                IdRes::Direct
+            }
+            None => IdRes::Absent,
+        });
+    }
+    Ok(match g.get(&ck).await? {
+        Some(v) => IdRes::Found(v.to_vec()),
+        None => IdRes::Absent,
+    })
+}
+
 /// Candidate documents of `plan` (index order), still to be filtered.
 async fn plan_docs_ids(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan: &Plan, stats: &mut Stats) -> R<Vec<Vec<u8>>> {
     let mut ids = Vec::new();
     let mut stack = vec![plan];
     while let Some(p) = stack.pop() {
         match p {
-            Plan::Id(id) => ids.push(encode_sortable(id)),
+            Plan::Id(id) => match resolve_id(g, coll, id, None).await? {
+                IdRes::Direct => ids.push(encode_sortable(id)),
+                IdRes::Found(enc) => ids.push(enc),
+                IdRes::Absent => {}
+                IdRes::Scan => {
+                    let prefix = doc_prefix(coll);
+                    for (k, _) in g.scan_range(&prefix, prefix_end(&prefix).as_deref(), false, None, DOC_READ_AHEAD).await? {
+                        ids.push(k[prefix.len()..].to_vec());
+                    }
+                }
+            },
             Plan::Ix(s) => {
                 let mut c = IxCursor::new(coll, &indexes[s.idx], s);
                 loop {
@@ -573,7 +666,17 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
 }
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    let plan = plan_for(indexes, o);
+    let mut plan = plan_for(indexes, o);
+    let mut id_lookup: Option<Vec<u8>> = None;
+    let mut id_absent = false;
+    if let Plan::Id(id) = &plan {
+        match resolve_id(g, coll, id, o.ov).await? {
+            IdRes::Direct => {}
+            IdRes::Found(enc) => id_lookup = Some(enc),
+            IdRes::Absent => id_absent = true,
+            IdRes::Scan => plan = Plan::Coll { reverse: false },
+        }
+    }
     let mut stats = Stats::default();
     let prefix = doc_prefix(coll);
     let ov_coll: Vec<(&Vec<u8>, &Option<Document>)> = o.ov.map(|m| m.iter().filter(|(k, _)| k.starts_with(&prefix)).collect()).unwrap_or_default();
@@ -581,11 +684,20 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
     let sorted_by_plan = o.sort.is_empty() || matches!(&plan, Plan::Ix(s) if s.sorted);
     let early = o.want.filter(|_| sorted_by_plan && ov_coll.is_empty());
     let mut out: Vec<Document> = Vec::new();
+    let mut ov_done: HashSet<Vec<u8>> = HashSet::new();
 
     match &plan {
+        Plan::Id(_) if id_absent => {}
         Plan::Id(id) => {
             stats.keys = 1;
-            let k = doc_key(coll, id);
+            let k = match &id_lookup {
+                Some(enc) => {
+                    let mut k = prefix.clone();
+                    k.extend(enc);
+                    k
+                }
+                None => doc_key(coll, id),
+            };
             if !ov_keys.contains(&k) {
                 if let Some(v) = g.get(&k).await? {
                     stats.docs = 1;
@@ -595,6 +707,56 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                     }
                 }
             }
+        }
+        Plan::Coll { reverse } if crate::natural::enabled(g, coll).await? => {
+            tenant_bench::counting::set_phase(3);
+            let np = crate::natural::prefix(coll);
+            let chunk = early.map(|w| (w * 2).max(256)).unwrap_or(4096);
+            let (mut start, mut stop) = (np.clone(), prefix_end(&np));
+            let mut replaced: HashSet<Vec<u8>> = HashSet::new();
+            'nat: loop {
+                let rows = g.scan_range(&start, stop.as_deref(), *reverse, Some(chunk), INDEX_READ_AHEAD).await?;
+                let n = rows.len();
+                let ids: Vec<Vec<u8>> = rows.iter().map(|(_, v)| v.to_vec()).collect();
+                for stored in docs_by_ids(g, coll, &ids).await? {
+                    stats.docs += 1;
+                    let mut d = stored;
+                    if !ov_keys.is_empty() {
+                        let k = doc_key(coll, d.get("_id").unwrap_or(&Bson::Null));
+                        let mut rk = b"reins/".to_vec();
+                        rk.extend(&k);
+                        if o.ov.map(|m| m.contains_key(&rk)).unwrap_or(false) {
+                            continue; // deleted and inserted again in this transaction: listed at the end
+                        }
+                        if let Some(v) = o.ov.and_then(|m| m.get(&k)) {
+                            replaced.insert(k);
+                            match v {
+                                Some(nd) => d = nd.clone(), // updated in this transaction: same position
+                                None => continue,
+                            }
+                        }
+                    }
+                    if visible(&d, o) && matches(&d, o.filter)? {
+                        out.push(d);
+                        if early.map(|w| out.len() >= w).unwrap_or(false) {
+                            break 'nat;
+                        }
+                    }
+                }
+                if n < chunk {
+                    break;
+                }
+                let last = rows.last().unwrap().0.to_vec();
+                if *reverse {
+                    stop = Some(last);
+                } else {
+                    let mut k = last;
+                    k.push(0);
+                    start = k;
+                }
+            }
+            stats.keys = stats.docs;
+            ov_done = replaced;
         }
         Plan::Coll { reverse } => {
             tenant_bench::counting::set_phase(3);
@@ -675,7 +837,19 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
             }
         }
     }
-    for (_, v) in ov_coll {
+    let mut ov_coll = ov_coll;
+    if let Some(m) = o.ov {
+        let seq_of = |k: &Vec<u8>| {
+            let mut sk = b"oseq/".to_vec();
+            sk.extend(k);
+            m.get(&sk).and_then(|d| d.as_ref()).and_then(|d| d.get_i64("s").ok()).unwrap_or(i64::MAX)
+        };
+        ov_coll.sort_by_key(|(k, _)| seq_of(k));
+    }
+    for (k, v) in ov_coll {
+        if ov_done.contains(k) {
+            continue;
+        }
         if let Some(d) = v {
             if visible(d, o) && matches(d, o.filter)? {
                 out.push(d.clone());
@@ -705,11 +879,44 @@ pub struct Writes {
     pub events: Vec<crate::changes::EvSpec>,
     /// The update document of the next `put` (an operator update); `None` for inserts and replacements.
     pub pending_update: Option<Document>,
+    /// Insertion sequence numbers (see `natural.rs`) of the documents written by this set, by document key.
+    seqs: HashMap<Vec<u8>, u64>,
+    /// Extra store operations applied in the same batch (the retryable-write record of the session).
+    pub extra: Vec<Op>,
+    /// Capped collections: how this write set moves the (document count, byte count) of each.
+    pub cap_delta: HashMap<String, (i64, i64)>,
+    /// A document is being dropped by the cap, not by a user: no counts, no change event.
+    quiet: bool,
+    /// `bypassDocumentValidation` of the command that writes.
+    pub bypass_validation: bool,
 }
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), quiet: false, bypass_validation: false }
+    }
+
+    /// The collection validator on a document that is written: `old` is what an update started from.
+    fn validate_document(&self, g: &mut Entry, v: &crate::validation::Validator, new: &Document, old: Option<&Document>) -> R<()> {
+        use crate::validation::{Action, Level};
+        if v.level == Level::Off || crate::validation::satisfies(new, v)? {
+            return Ok(());
+        }
+        if v.level == Level::Moderate {
+            // moderate: a document that did not satisfy the validator before may be updated without satisfying it
+            if let Some(o) = old {
+                if !crate::validation::satisfies(o, v)? {
+                    return Ok(());
+                }
+            }
+        }
+        match v.action {
+            Action::Error => Err(crate::validation::failure(new, v)),
+            Action::Warn => {
+                g.log_validation_warning(new);
+                Ok(())
+            }
+        }
     }
 
     /// Current version of a document: this write set first, then the store.
@@ -730,7 +937,18 @@ impl Writes {
         if let Some(v) = self.ov.get(&k) {
             return Ok(v.is_some());
         }
-        Ok(g.get_live(&k).await?.is_some())
+        if g.get_live(&k).await?.is_some() {
+            return Ok(true);
+        }
+        // a collection with a default collation: an `_id` equal to this one under the collation
+        if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(id)) {
+            let ck = crate::collopts::idc_key(coll, &c, id);
+            if let Some(v) = self.ov.get(&ck) {
+                return Ok(v.is_some());
+            }
+            return Ok(g.get_live(&ck).await?.is_some());
+        }
+        Ok(false)
     }
 
     /// All ops to apply at commit: the document and index writes, changed index definitions, the collection list.
@@ -742,6 +960,7 @@ impl Writes {
         if let Some(names) = &self.names {
             ops.push(Entry::collections_op(names)?);
         }
+        ops.append(&mut self.extra);
         Ok(ops)
     }
 
@@ -761,6 +980,11 @@ impl Writes {
     pub async fn put(&mut self, g: &mut Entry, coll: &str, ns: &str, indexes: &mut [IndexDef], new: &Document, old: Option<&Document>) -> R<()> {
         let id = new.get("_id").cloned().ok_or_else(|| MongoError::internal("document without _id".into()))?;
         let id_enc = encode_sortable(&id);
+        if !self.quiet && !self.bypass_validation && !coll.starts_with("system.") {
+            if let Some(v) = g.validator_of(coll) {
+                self.validate_document(g, &v, new, old)?;
+            }
+        }
         self.check_conflict(g, &doc_key(coll, &id))?;
         let mut plans: Vec<(usize, Vec<Vec<u8>>, Vec<Vec<u8>>, bool)> = Vec::new(); // (idx, to_add, to_remove, multikey)
         for (i, idx) in indexes.iter().enumerate() {
@@ -774,9 +998,9 @@ impl Writes {
             };
             let add: Vec<Vec<u8>> = new_e.keys().filter(|k| !old_e.contains_key(*k)).cloned().collect();
             let rem: Vec<Vec<u8>> = old_e.keys().filter(|k| !new_e.contains_key(*k)).cloned().collect();
-            if idx.unique && idx.state == State::Ready {
+            if (idx.unique || idx.prepare_unique) && idx.state == State::Ready {
                 for c in &add {
-                    let dup = || MongoError::duplicate_key(ns, &idx.name, &idx.key_pattern(), new_e.get(c).unwrap());
+                    let dup = || MongoError::duplicate_key_c(ns, &idx.name, &idx.key_pattern(), new_e.get(c).unwrap(), idx.collation.as_deref());
                     if let Some(owner) = self.claims.get(&(i, c.clone())) {
                         if *owner != id_enc {
                             return Err(dup());
@@ -797,6 +1021,54 @@ impl Writes {
             }
             plans.push((i, add, rem, mk));
         }
+        let k = doc_key(coll, &id);
+        if g.cap_of(coll).is_some() {
+            if self.txn_id.is_some() || self.snap_seq.is_some() {
+                let db = ns.split('.').next().unwrap_or("");
+                return Err(MongoError::new(263, "OperationNotSupportedInTransaction", format!("Collection '{db}.{coll}' is a capped collection. Writes in transactions are not allowed on capped collections.")));
+            }
+            let e = self.cap_delta.entry(coll.to_string()).or_insert((0, 0));
+            match old {
+                None => {
+                    e.0 += 1;
+                    e.1 += new.to_vec()?.len() as i64;
+                }
+                Some(o) => e.1 += new.to_vec()?.len() as i64 - o.to_vec()?.len() as i64,
+            }
+        }
+        if old.is_none() {
+            if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
+                let ck = crate::collopts::idc_key(coll, &c, &id);
+                // (callers check `exists` first; this one also guards the paths that do not)
+                let taken = match self.ov.get(&ck) {
+                    Some(v) => v.is_some(),
+                    None => g.get_live(&ck).await?.map(|v| v.as_ref() != id_enc.as_slice()).unwrap_or(false),
+                };
+                if taken {
+                    return Err(MongoError::duplicate_key_c(ns, "_id_", &bson::doc! { "_id": 1 }, &bson::doc! { "_id": id.clone() }, Some(&c)));
+                }
+                self.ops.push(Op::Put(ck.clone(), id_enc.clone()));
+                self.ov.insert(ck, Some(Document::new()));
+            }
+        }
+        let mut bytes = new.to_vec()?;
+        let seq = match old {
+            None => {
+                if matches!(self.ov.get(&k), Some(None)) {
+                    // deleted earlier in this write set and inserted again: it moves to the end
+                    let mut rk = b"reins/".to_vec();
+                    rk.extend(&k);
+                    self.ov.insert(rk, Some(Document::new()));
+                }
+                let s = crate::natural::alloc(g, coll).await?;
+                self.ops.push(Op::Put(crate::natural::key(coll, s), id_enc.clone()));
+                Some(s)
+            }
+            Some(_) => match self.seqs.get(&k) {
+                Some(s) => Some(*s),
+                None => crate::natural::stored_seq(g, &k).await?,
+            },
+        };
         // Commit to the write set.
         for (i, add, rem, mk) in plans {
             let idx = &mut indexes[i];
@@ -807,7 +1079,7 @@ impl Writes {
                 self.released.insert((i, c, id_enc.clone()));
             }
             for c in add {
-                self.ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), Vec::new()));
+                self.ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), crate::natural::entry_value(seq)));
                 self.released.remove(&(i, c.clone(), id_enc.clone()));
                 self.claims.insert((i, c), id_enc.clone());
             }
@@ -816,21 +1088,58 @@ impl Writes {
                 self.indexes_dirty = true;
             }
         }
-        let k = doc_key(coll, &id);
-        self.ops.push(Op::Put(k.clone(), new.to_vec()?));
+        if let Some(s) = seq {
+            bytes = crate::natural::with_seq(bytes, s);
+            self.seqs.insert(k.clone(), s);
+            let mut sk = b"oseq/".to_vec();
+            sk.extend(&k);
+            self.ov.insert(sk, Some(bson::doc! { "s": s as i64 })); // lets readers of the overlay list new documents in insertion order
+        }
+        self.ops.push(Op::Put(k.clone(), bytes));
         self.ov.insert(k, Some(new.clone()));
         let db = ns.split('.').next().unwrap_or("").to_string();
-        let spec = match (old, self.pending_update.take()) {
-            (None, _) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "insert", doc_key: Some(id.clone()), full: Some(new.clone()), desc: None, txn: None },
-            (Some(o), Some(u)) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "update", doc_key: Some(id.clone()), full: None, desc: Some(crate::changes::update_description(o, new, &u)), txn: None },
-            (Some(_), None) => crate::changes::EvSpec { db, coll: Some(coll.to_string()), op: "replace", doc_key: Some(id.clone()), full: Some(new.clone()), desc: None, txn: None },
+        let images = g.images_of(coll);
+        let mut spec = match (old, self.pending_update.take()) {
+            (None, _) => crate::changes::EvSpec { doc_key: Some(id.clone()), full: Some(new.clone()), ..crate::changes::EvSpec::on(&db, coll, "insert") },
+            (Some(o), Some(u)) => crate::changes::EvSpec { doc_key: Some(id.clone()), desc: Some(crate::changes::update_description(o, new, &u)), ..crate::changes::EvSpec::on(&db, coll, "update") },
+            (Some(_), None) => crate::changes::EvSpec { doc_key: Some(id.clone()), full: Some(new.clone()), ..crate::changes::EvSpec::on(&db, coll, "replace") },
         };
+        if crate::changes::WANTS_UUID.load(std::sync::atomic::Ordering::Relaxed) {
+            spec.uuid = Some(g.collection_uuid(coll).await?);
+        }
+        if let (true, Some(o)) = (images, old) {
+            spec.images = true;
+            spec.pre = Some(o.clone());
+            spec.post = Some(new.clone());
+        }
         self.events.push(spec);
         Ok(())
     }
 
-    pub fn delete(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
+    /// The documents inserted by this write set into `coll` and still there: (sequence number, encoded `_id`).
+    pub fn batch_docs(&self, coll: &str) -> Vec<(u64, Vec<u8>)> {
+        let prefix = doc_prefix(coll);
+        self.seqs.iter().filter(|(k, _)| k.starts_with(&prefix)).map(|(k, s)| (*s, k[prefix.len()..].to_vec())).collect()
+    }
+
+    /// Delete a document because a capped collection is over its limit: no change event, and the caller keeps the counts.
+    pub async fn delete_quiet(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
+        self.quiet = true;
+        let r = self.delete(g, db, coll, indexes, old).await;
+        self.quiet = false;
+        r
+    }
+
+    pub async fn delete(&mut self, g: &mut Entry, db: &str, coll: &str, indexes: &[IndexDef], old: &Document) -> R<()> {
         let id = old.get("_id").cloned().unwrap_or(Bson::Null);
+        if !self.quiet && g.cap_of(coll).is_some() {
+            if self.txn_id.is_some() || self.snap_seq.is_some() {
+                return Err(MongoError::new(20, "IllegalOperation", format!("Cannot remove from a capped collection in a multi-document transaction: {db}.{coll}")));
+            }
+            let e = self.cap_delta.entry(coll.to_string()).or_insert((0, 0));
+            e.0 -= 1;
+            e.1 -= old.to_vec()?.len() as i64;
+        }
         self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
         for (i, idx) in indexes.iter().enumerate() {
@@ -845,9 +1154,25 @@ impl Writes {
             }
         }
         let k = doc_key(coll, &id);
+        if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
+            let ck = crate::collopts::idc_key(coll, &c, &id);
+            self.ops.push(Op::Delete(ck.clone()));
+            self.ov.insert(ck, None);
+        }
+        let seq = match self.seqs.remove(&k) {
+            Some(s) => Some(s),
+            None => crate::natural::stored_seq(g, &k).await?,
+        };
+        if let Some(s) = seq {
+            self.ops.push(Op::Delete(crate::natural::key(coll, s)));
+        }
         self.ops.push(Op::Delete(k.clone()));
         self.ov.insert(k, None);
-        self.events.push(crate::changes::EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op: "delete", doc_key: Some(id), full: None, desc: None, txn: None });
+        if !self.quiet {
+            let images = g.images_of(coll);
+            let uuid = if crate::changes::WANTS_UUID.load(std::sync::atomic::Ordering::Relaxed) { Some(g.collection_uuid(coll).await?) } else { None };
+            self.events.push(crate::changes::EvSpec { doc_key: Some(id), images, uuid, pre: images.then(|| old.clone()), ..crate::changes::EvSpec::on(db, coll, "delete") });
+        }
         Ok(())
     }
 }

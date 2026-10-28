@@ -13,7 +13,7 @@ if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
 fi
 extra=${SERVER_EXTRA:-}; extra=${extra//%PORT%/$port}
 # shellcheck disable=SC2086
-nohup ${SERVER_BIN:-./target/release/mongo-server} --listen 127.0.0.1:$port --idle-secs "$idle" --holder "srv-$port" $extra "$@" > mongo-tests/out/server-$port.log 2>&1 &
+nohup "${SERVER_BIN:-${MONGO_SERVER_BIN:-./target/release/mongo-server}}" --listen 127.0.0.1:$port --idle-secs "$idle" --holder "srv-$port" $extra "$@" > mongo-tests/out/server-$port.log 2>&1 &
 echo $! > "$pidfile"
 for _ in $(seq 1 50); do
   if (exec 3<>/dev/tcp/127.0.0.1/$port) 2>/dev/null; then echo "mongo-server up on $port (pid $(cat "$pidfile"))"; exit 0; fi

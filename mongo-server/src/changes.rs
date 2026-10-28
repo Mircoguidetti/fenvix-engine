@@ -11,8 +11,16 @@ use tokio::sync::Notify;
 
 const RETAINED: usize = 100_000;
 
+/// Set once a stream with `showExpandedEvents` was opened: data events then carry the UUID of their collection from the start.
+pub static WANTS_UUID: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+tokio::task_local! {
+    /// The cluster time of the last event that the running command published (its operation time).
+    pub static OP_TIME: std::cell::Cell<Option<(u32, u32)>>;
+}
+
 /// What a writer reports.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct EvSpec {
     pub db: String,
     pub coll: Option<String>,
@@ -22,6 +30,28 @@ pub struct EvSpec {
     pub desc: Option<Document>,
     /// Transaction number and session id, for events of a committed transaction.
     pub txn: Option<(i64, Document)>,
+    /// `rename`: the new namespace.
+    pub to: Option<(String, String)>,
+    /// The UUID of the collection (shown by streams with `showExpandedEvents`); looked up when the event is read if not given.
+    pub uuid: Option<Vec<u8>>,
+    /// `operationDescription` of the expanded events (create, createIndexes, dropIndexes, modify, rename).
+    pub op_desc: Option<Document>,
+    /// `stateBeforeChange` of `modify`.
+    pub state_before: Option<Document>,
+    /// The document before and after a change, kept when the collection has `changeStreamPreAndPostImages` enabled.
+    pub pre: Option<Document>,
+    pub post: Option<Document>,
+    /// Whether the collection kept images when the event happened (a missing image is then `null`, or an error for `required`).
+    pub images: bool,
+    /// Only streams with `showExpandedEvents` see the event.
+    pub expanded_only: bool,
+}
+
+impl EvSpec {
+    /// An event of a data change or a DDL operation on `db.coll`.
+    pub fn on(db: &str, coll: &str, op: &'static str) -> EvSpec {
+        EvSpec { db: db.to_string(), coll: Some(coll.to_string()), op, ..Default::default() }
+    }
 }
 
 #[derive(Debug)]
@@ -42,11 +72,13 @@ pub struct ChangeLog {
     inner: Mutex<Inner>,
     pub notify: Notify,
     nonce: u32,
+    /// The cluster time (seconds) before the first write.
+    boot: u32,
 }
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random() }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32 }
     }
 }
 
@@ -78,6 +110,7 @@ impl ChangeLog {
             for s in specs {
                 let (ts, inc) = if g.last_time.0 == secs { (secs, g.last_time.1 + 1) } else { (secs.max(g.last_time.0), 1) };
                 g.last_time = (ts, inc);
+                let _ = OP_TIME.try_with(|c| c.set(Some((ts, inc))));
                 let seq = g.next_seq;
                 g.next_seq += 1;
                 g.events.push_back(Arc::new(Ev { seq, time: Timestamp { time: ts, increment: inc }, wall: now, spec: s }));
@@ -87,6 +120,32 @@ impl ChangeLog {
             }
         }
         self.notify.notify_waiters();
+    }
+
+    /// The cluster time now: the time of the last write, or the wall clock when that is later (a replica set keeps the
+    /// time moving with a no-op write of its own).
+    pub fn cluster_now(&self) -> Timestamp {
+        let g = self.inner.lock().unwrap();
+        let (t, i) = if g.last_time.0 == 0 { (self.boot, 1) } else { g.last_time };
+        Timestamp { time: t, increment: i }
+    }
+
+    /// A new cluster time for a write that published no event.
+    pub fn tick(&self) -> Timestamp {
+        let mut g = self.inner.lock().unwrap();
+        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
+        let (ts, inc) = if g.last_time.0 >= secs { (g.last_time.0, g.last_time.1 + 1) } else { (secs, 1) };
+        g.last_time = (ts, inc);
+        Timestamp { time: ts, increment: inc }
+    }
+
+    /// Move the cluster time forward to one that a client has seen.
+    pub fn advance(&self, ts: Timestamp) {
+        let mut g = self.inner.lock().unwrap();
+        let secs = (bson::DateTime::now().timestamp_millis() / 1000) as u32;
+        if ts.time <= secs.saturating_add(365 * 24 * 3600) && (ts.time, ts.increment) > g.last_time {
+            g.last_time = (ts.time, ts.increment);
+        }
     }
 
     pub fn token(&self, seq: u64) -> String {
@@ -149,6 +208,22 @@ impl ChangeLog {
 /// `updateDescription` of an operator update, derived from the update spec and the documents before and after.
 pub fn update_description(old: &Document, new: &Document, update: &Document) -> Document {
     use crate::query::path_values;
+    if update.contains_key("$pipeline") {
+        // an aggregation-pipeline update: the fields that differ
+        let mut updated = Document::new();
+        let mut removed: Vec<Bson> = Vec::new();
+        for (k, v) in new {
+            if old.get(k) != Some(v) {
+                updated.insert(k.clone(), v.clone());
+            }
+        }
+        for k in old.keys() {
+            if !new.contains_key(k) {
+                removed.push(Bson::String(k.clone()));
+            }
+        }
+        return doc! { "updatedFields": updated, "removedFields": removed, "truncatedArrays": Vec::<Bson>::new() };
+    }
     let mut updated = Document::new();
     let mut removed: Vec<Bson> = Vec::new();
     let exists = |d: &Document, p: &str| !path_values(d, p).is_empty();

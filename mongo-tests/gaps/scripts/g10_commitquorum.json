@@ -1,0 +1,394 @@
+[
+ {
+  "name": "g10.commitquorum.sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "a": 0
+     },
+     {
+      "_id": 1,
+      "a": 1
+     },
+     {
+      "_id": 2,
+      "a": 2
+     },
+     {
+      "_id": 3,
+      "a": 3
+     },
+     {
+      "_id": 4,
+      "a": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_1": 1
+      },
+      "name": "i1"
+     }
+    ],
+    "commitQuorum": "votingMembers"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_2": 1
+      },
+      "name": "i2"
+     }
+    ],
+    "commitQuorum": "majority"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_3": 1
+      },
+      "name": "i3"
+     }
+    ],
+    "commitQuorum": 0
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_4": 1
+      },
+      "name": "i4"
+     }
+    ],
+    "commitQuorum": 1
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_5": 1
+      },
+      "name": "i5"
+     }
+    ],
+    "commitQuorum": 2
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_6": 1
+      },
+      "name": "i6"
+     }
+    ],
+    "commitQuorum": {
+     "$numberLong": "1"
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_7": 1
+      },
+      "name": "i7"
+     }
+    ],
+    "commitQuorum": "nosuchtag"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_8": 1
+      },
+      "name": "i8"
+     }
+    ],
+    "commitQuorum": -1
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_9": 1
+      },
+      "name": "i9"
+     }
+    ],
+    "commitQuorum": "1"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_10": 1
+      },
+      "name": "i10"
+     }
+    ],
+    "commitQuorum": 1.5
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_11": 1
+      },
+      "name": "i11"
+     }
+    ],
+    "commitQuorum": {
+     "w": 1
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_12": 1
+      },
+      "name": "i12"
+     }
+    ],
+    "commitQuorum": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_1": 1
+      },
+      "name": "i1"
+     }
+    ],
+    "commitQuorum": "majority"
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ },
+ {
+  "name": "g10.commitquorum.rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0,
+      "a": 0
+     },
+     {
+      "_id": 1,
+      "a": 1
+     },
+     {
+      "_id": 2,
+      "a": 2
+     },
+     {
+      "_id": 3,
+      "a": 3
+     },
+     {
+      "_id": 4,
+      "a": 4
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_1": 1
+      },
+      "name": "i1"
+     }
+    ],
+    "commitQuorum": "votingMembers"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_2": 1
+      },
+      "name": "i2"
+     }
+    ],
+    "commitQuorum": "majority"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_3": 1
+      },
+      "name": "i3"
+     }
+    ],
+    "commitQuorum": 0
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_4": 1
+      },
+      "name": "i4"
+     }
+    ],
+    "commitQuorum": 1
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_5": 1
+      },
+      "name": "i5"
+     }
+    ],
+    "commitQuorum": 2
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_6": 1
+      },
+      "name": "i6"
+     }
+    ],
+    "commitQuorum": {
+     "$numberLong": "1"
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_7": 1
+      },
+      "name": "i7"
+     }
+    ],
+    "commitQuorum": "nosuchtag"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_8": 1
+      },
+      "name": "i8"
+     }
+    ],
+    "commitQuorum": -1
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_9": 1
+      },
+      "name": "i9"
+     }
+    ],
+    "commitQuorum": "1"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_10": 1
+      },
+      "name": "i10"
+     }
+    ],
+    "commitQuorum": 1.5
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_11": 1
+      },
+      "name": "i11"
+     }
+    ],
+    "commitQuorum": {
+     "w": 1
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_12": 1
+      },
+      "name": "i12"
+     }
+    ],
+    "commitQuorum": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a_1": 1
+      },
+      "name": "i1"
+     }
+    ],
+    "commitQuorum": "majority"
+   },
+   {
+    "listIndexes": "t",
+    "__sortarr": "cursor.firstBatch"
+   }
+  ]
+ }
+]

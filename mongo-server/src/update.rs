@@ -942,7 +942,14 @@ pub fn upsert_document(filter: &Document, update: &Document) -> R<Document> {
     upsert_document_ctx(filter, update, &PosCtx { filter: Some(filter), array_filters: &[] })
 }
 
+fn has_expr(filter: &Document) -> bool {
+    filter.iter().any(|(k, v)| k == "$expr" || (matches!(k.as_str(), "$and" | "$or" | "$nor") && matches!(v, Bson::Array(a) if a.iter().any(|s| matches!(s, Bson::Document(d) if has_expr(d))))))
+}
+
 fn upsert_document_ctx(filter: &Document, update: &Document, ctx: &PosCtx) -> R<Document> {
+    if has_expr(filter) {
+        return Err(MongoError::new(224, "QueryFeatureNotAllowed", "$expr is not allowed in the query predicate for an upsert".into()));
+    }
     let mut base = Document::new();
     collect_equalities(filter, &mut base)?;
     let mut doc = if is_operator_update(update) {
@@ -992,6 +999,8 @@ pub struct Upd {
     /// A pipeline removed `_id` and it was put back: MongoDB counts such a document as modified.
     forced: std::cell::Cell<bool>,
 }
+
+static PIPELINE_MARK: std::sync::LazyLock<Document> = std::sync::LazyLock::new(|| bson::doc! { "$pipeline": 1 });
 
 enum UpdBody {
     Doc(Document),
@@ -1069,7 +1078,8 @@ impl Upd {
     pub fn operators(&self) -> Option<&Document> {
         match &self.body {
             UpdBody::Doc(d) if d.keys().any(|k| k.starts_with('$')) => Some(d),
-            _ => None,
+            UpdBody::Doc(_) => None,
+            _ => Some(&PIPELINE_MARK),
         }
     }
 

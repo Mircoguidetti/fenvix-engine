@@ -1,0 +1,1274 @@
+[
+ {
+  "name": "g10.find.min_max_basic",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "c": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "c": [
+       2,
+       3
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "c": [
+       3,
+       4
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "c": [
+       4,
+       5
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "c": [
+       5,
+       6
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "c": [
+       6,
+       7
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "c": [
+       7,
+       8
+      ]
+     },
+     {
+      "_id": 8,
+      "a": 8,
+      "b": "s2",
+      "c": [
+       8,
+       9
+      ]
+     },
+     {
+      "_id": 9,
+      "a": 9,
+      "b": "s0",
+      "c": [
+       9,
+       10
+      ]
+     },
+     {
+      "_id": 10,
+      "a": 10,
+      "b": "s1",
+      "c": [
+       10,
+       11
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     },
+     {
+      "key": {
+       "a": 1,
+       "b": 1
+      },
+      "name": "a_b"
+     },
+     {
+      "key": {
+       "b": 1,
+       "a": -1
+      },
+      "name": "b_a"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "max": {
+     "a": 4
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    },
+    "sort": {
+     "a": -1
+    }
+   },
+   {
+    "find": "t",
+    "hint": "a_1",
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    },
+    "filter": {
+     "b": "s1"
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 7
+    },
+    "max": {
+     "a": 3
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 3
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3.5
+    },
+    "max": {
+     "a": 7.5
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": {
+      "$minKey": 1
+     }
+    },
+    "max": {
+     "a": {
+      "$maxKey": 1
+     }
+    },
+    "sort": {
+     "a": 1
+    },
+    "limit": 3
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    },
+    "skip": 1,
+    "limit": 2,
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    },
+    "projection": {
+     "_id": 0,
+     "a": 1
+    },
+    "sort": {
+     "a": 1
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.find.min_max_compound",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "c": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "c": [
+       2,
+       3
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "c": [
+       3,
+       4
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "c": [
+       4,
+       5
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "c": [
+       5,
+       6
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "c": [
+       6,
+       7
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "c": [
+       7,
+       8
+      ]
+     },
+     {
+      "_id": 8,
+      "a": 8,
+      "b": "s2",
+      "c": [
+       8,
+       9
+      ]
+     },
+     {
+      "_id": 9,
+      "a": 9,
+      "b": "s0",
+      "c": [
+       9,
+       10
+      ]
+     },
+     {
+      "_id": 10,
+      "a": 10,
+      "b": "s1",
+      "c": [
+       10,
+       11
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     },
+     {
+      "key": {
+       "a": 1,
+       "b": 1
+      },
+      "name": "a_b"
+     },
+     {
+      "key": {
+       "b": 1,
+       "a": -1
+      },
+      "name": "b_a"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1,
+     "b": 1
+    },
+    "min": {
+     "a": 3,
+     "b": "s0"
+    },
+    "max": {
+     "a": 6,
+     "b": "s2"
+    },
+    "sort": {
+     "a": 1,
+     "b": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1,
+     "b": 1
+    },
+    "min": {
+     "a": 3,
+     "b": "s1"
+    },
+    "sort": {
+     "a": 1,
+     "b": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "b": 1,
+     "a": -1
+    },
+    "min": {
+     "b": "s1",
+     "a": 9
+    },
+    "max": {
+     "b": "s2",
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": "b_a",
+    "min": {
+     "b": "s0",
+     "a": {
+      "$maxKey": 1
+     }
+    },
+    "max": {
+     "b": "s1",
+     "a": {
+      "$minKey": 1
+     }
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1,
+     "b": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 6,
+     "b": "s2"
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.find.min_max_errors",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "c": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "c": [
+       2,
+       3
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "c": [
+       3,
+       4
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "c": [
+       4,
+       5
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "c": [
+       5,
+       6
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "c": [
+       6,
+       7
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "c": [
+       7,
+       8
+      ]
+     },
+     {
+      "_id": 8,
+      "a": 8,
+      "b": "s2",
+      "c": [
+       8,
+       9
+      ]
+     },
+     {
+      "_id": 9,
+      "a": 9,
+      "b": "s0",
+      "c": [
+       9,
+       10
+      ]
+     },
+     {
+      "_id": 10,
+      "a": 10,
+      "b": "s1",
+      "c": [
+       10,
+       11
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     },
+     {
+      "key": {
+       "a": 1,
+       "b": 1
+      },
+      "name": "a_b"
+     },
+     {
+      "key": {
+       "b": 1,
+       "a": -1
+      },
+      "name": "b_a"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    }
+   },
+   {
+    "find": "t",
+    "min": {
+     "a": 3
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "b": 3
+    },
+    "max": {
+     "b": 7
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "b": 7
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3,
+     "b": 1
+    },
+    "max": {
+     "a": 7,
+     "b": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": 5
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "max": "x"
+   },
+   {
+    "find": "t",
+    "hint": {
+     "$natural": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {},
+    "max": {}
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1,
+     "b": 1
+    },
+    "min": {
+     "a": 1
+    },
+    "max": {
+     "a": 9,
+     "b": "z"
+    }
+   },
+   {
+    "find": "t",
+    "hint": "nope",
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    },
+    "tailable": true
+   },
+   {
+    "count": "t",
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    },
+    "max": {
+     "a": 7
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [],
+    "cursor": {},
+    "hint": {
+     "a": 1
+    },
+    "min": {
+     "a": 3
+    }
+   }
+  ]
+ },
+ {
+  "name": "g10.find.return_key",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1,
+      "b": "s1",
+      "c": [
+       1,
+       2
+      ]
+     },
+     {
+      "_id": 2,
+      "a": 2,
+      "b": "s2",
+      "c": [
+       2,
+       3
+      ]
+     },
+     {
+      "_id": 3,
+      "a": 3,
+      "b": "s0",
+      "c": [
+       3,
+       4
+      ]
+     },
+     {
+      "_id": 4,
+      "a": 4,
+      "b": "s1",
+      "c": [
+       4,
+       5
+      ]
+     },
+     {
+      "_id": 5,
+      "a": 5,
+      "b": "s2",
+      "c": [
+       5,
+       6
+      ]
+     },
+     {
+      "_id": 6,
+      "a": 6,
+      "b": "s0",
+      "c": [
+       6,
+       7
+      ]
+     },
+     {
+      "_id": 7,
+      "a": 7,
+      "b": "s1",
+      "c": [
+       7,
+       8
+      ]
+     },
+     {
+      "_id": 8,
+      "a": 8,
+      "b": "s2",
+      "c": [
+       8,
+       9
+      ]
+     },
+     {
+      "_id": 9,
+      "a": 9,
+      "b": "s0",
+      "c": [
+       9,
+       10
+      ]
+     },
+     {
+      "_id": 10,
+      "a": 10,
+      "b": "s1",
+      "c": [
+       10,
+       11
+      ]
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     },
+     {
+      "key": {
+       "a": 1,
+       "b": 1
+      },
+      "name": "a_b"
+     },
+     {
+      "key": {
+       "b": 1,
+       "a": -1
+      },
+      "name": "b_a"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "returnKey": true,
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1,
+     "b": 1
+    },
+    "returnKey": true,
+    "sort": {
+     "a": 1,
+     "b": 1
+    },
+    "limit": 4
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "returnKey": true,
+    "filter": {
+     "a": {
+      "$gt": 7
+     }
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "returnKey": true,
+    "filter": {
+     "a": 3
+    }
+   },
+   {
+    "find": "t",
+    "returnKey": true,
+    "filter": {
+     "a": {
+      "$gte": 8
+     }
+    },
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "b": 1,
+     "a": -1
+    },
+    "returnKey": true,
+    "filter": {
+     "b": "s1"
+    }
+   },
+   {
+    "find": "t",
+    "returnKey": true,
+    "sort": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "returnKey": true
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "returnKey": true,
+    "projection": {
+     "a": 1
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "returnKey": false,
+    "sort": {
+     "a": 1
+    },
+    "limit": 2
+   },
+   {
+    "find": "t",
+    "returnKey": true,
+    "filter": {
+     "_id": 3
+    }
+   },
+   {
+    "find": "t",
+    "hint": {
+     "$natural": 1
+    },
+    "returnKey": true,
+    "limit": 2
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "returnKey": true,
+    "showRecordId": true,
+    "sort": {
+     "a": 1
+    },
+    "limit": 2
+   },
+   {
+    "find": "t",
+    "hint": {
+     "a": 1
+    },
+    "returnKey": "yes",
+    "limit": 1
+   }
+  ]
+ },
+ {
+  "name": "g10.find.show_record_id",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     },
+     {
+      "_id": 2,
+      "a": 2
+     },
+     {
+      "_id": 3,
+      "a": 3
+     },
+     {
+      "_id": 4,
+      "a": 4
+     },
+     {
+      "_id": 5,
+      "a": 5
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "filter": {
+     "a": {
+      "$gt": 2
+     }
+    },
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "projection": {
+     "a": 1
+    },
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "projection": {
+     "_id": 0,
+     "a": 1
+    },
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "projection": {
+     "a": 0
+    },
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "find": "t",
+    "showRecordId": false,
+    "limit": 1
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "sort": {
+     "a": -1
+    },
+    "limit": 2
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "limit": 1
+     }
+    ]
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9,
+      "a": 9
+     }
+    ]
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$match": {
+       "a": {
+        "$gt": 3
+       }
+      }
+     }
+    ],
+    "cursor": {},
+    "showRecordId": true
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "hint": {
+     "$natural": -1
+    }
+   },
+   {
+    "find": "t",
+    "showRecordId": "x"
+   }
+  ]
+ },
+ {
+  "name": "g10.find.show_record_id_after_update",
+  "mode": "std",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1,
+      "a": 1
+     },
+     {
+      "_id": 2,
+      "a": 2
+     },
+     {
+      "_id": 3,
+      "a": 3
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {
+       "_id": 2
+      },
+      "u": {
+       "$set": {
+        "a": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+       }
+      }
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "sort": {
+     "_id": 1
+    },
+    "projection": {
+     "a": 0
+    }
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "find": "t",
+    "showRecordId": true,
+    "hint": {
+     "a": 1
+    },
+    "projection": {
+     "a": 0
+    }
+   }
+  ]
+ }
+]

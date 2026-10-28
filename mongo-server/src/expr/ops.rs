@@ -690,20 +690,23 @@ fn agg_over(name: &str, arg: &Bson, sc: &Scope) -> Out {
             some(best.unwrap_or(Bson::Null))
         }
         "$sum" => {
-            let mut acc = Num::I32(0);
-            for v in &vals {
-                if let Some(n) = as_num(v) {
-                    acc = arith('+', acc, n);
-                }
+            let mut acc = crate::dsum::DSum::new();
+            for v in vals.iter().filter(|v| as_num(v).is_some()) {
+                acc.add(v);
             }
-            some(num_bson(acc))
+            some(acc.value())
         }
         _ => {
-            let nums: Vec<f64> = vals.iter().filter_map(as_num).map(to_f).collect();
-            if nums.is_empty() {
+            let mut acc = crate::dsum::DSum::new();
+            let mut n = 0usize;
+            for v in vals.iter().filter(|v| as_num(v).is_some()) {
+                acc.add(v);
+                n += 1;
+            }
+            if n == 0 {
                 null()
             } else {
-                some(Bson::Double(nums.iter().sum::<f64>() / nums.len() as f64))
+                some(Bson::Double(acc.total() / n as f64))
             }
         }
     }

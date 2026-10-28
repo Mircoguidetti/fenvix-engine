@@ -1,0 +1,23 @@
+id,engine_status,evidence,differential_test
+cmd:createRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:createUser,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+cmd:dropAllRolesFromDatabase,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:dropAllUsersFromDatabase,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+cmd:dropRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:dropUser,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+cmd:grantPrivilegesToRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:grantRolesToRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:grantRolesToUser,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+cmd:invalidateUserCache,untested,accepted and a no-op (the engine reads users and roles from the store on every change; no cache to invalidate); not differential-tested on its own,no
+cmd:logout,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.login.*,yes
+cmd:revokePrivilegesFromRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:revokeRolesFromRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:revokeRolesFromUser,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+cmd:rolesInfo,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:saslContinue,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.login.*,yes
+cmd:saslStart,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.login.*,yes
+cmd:updateRole,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.roles.*,yes
+cmd:updateUser,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+cmd:usersInfo,covered,passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.users.*,yes
+authmech:SCRAM-SHA-1,covered,"passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.login.* (SCRAM-SHA-1 explicit, default negotiation, authSource, URI credentials)",yes
+authmech:SCRAM-SHA-256,covered,"passing differential tests against mongod 7.0.45 --auth (mongo-tests/gaps/g02_auth.py 45/45 pymongo; gaps/node/g02_auth.js 17/17 Node): g02.login.* (SCRAM-SHA-256, default negotiation, special characters in the password)",yes

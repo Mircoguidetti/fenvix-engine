@@ -11,6 +11,7 @@ use std::cmp::Ordering;
 
 mod dates;
 mod ops;
+mod trig;
 
 type R<T> = Result<T, MongoError>;
 
@@ -22,6 +23,46 @@ thread_local! {
 /// Stored for a variable whose expression evaluated to "missing" (it reads back as missing, not null).
 pub fn missing_var() -> Bson {
     Bson::Symbol("\u{1}missing".to_string())
+}
+
+tokio::task_local! {
+    /// The variables of the `let` option of the command the task runs.
+    pub static CMD_LET: Vec<(String, Bson)>;
+}
+
+/// The variables a `let` option defines, checked and evaluated like mongod does before the command looks at any document.
+pub fn parse_let(cmd_label: &str, v: &Bson) -> R<Vec<(String, Bson)>> {
+    let Bson::Document(d) = v else {
+        return Err(MongoError::new(14, "TypeMismatch", format!("BSON field '{cmd_label}.let' is the wrong type '{}', expected type 'object'", crate::update::type_name(v))));
+    };
+    fn touches_fields(v: &Bson) -> bool {
+        match v {
+            Bson::String(s) => s.starts_with('$') && (!s.starts_with("$$") || s.starts_with("$$ROOT") || s.starts_with("$$CURRENT")),
+            Bson::Document(d) => d.iter().any(|(k, x)| (k.starts_with('$') && k.as_str() == "$getField") || touches_fields(x)),
+            Bson::Array(a) => a.iter().any(touches_fields),
+            _ => false,
+        }
+    }
+    let empty = Document::new();
+    let mut out: Vec<(String, Bson)> = Vec::new();
+    for (name, val) in d.iter() {
+        if name == "NOW" {
+            return Err(MongoError::new(4738901, "Location4738901", "Attempt to set internal constant: NOW".into()));
+        }
+        if !(valid_var_name(name) || name == "CURRENT") {
+            return Err(MongoError::new(9, "FailedToParse", format!("Invalid 'let' parameter :: caused by :: '{name}' starts with an invalid character for a user variable name")));
+        }
+        if touches_fields(val) {
+            return Err(MongoError::new(4890500, "Location4890500", "Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before the query examines any documents.".into()));
+        }
+        let sc = Scope::new(&empty);
+        let mut sc = sc;
+        for (n, x) in out.iter() {
+            sc = sc.with(n.as_str(), x.clone());
+        }
+        out.push((name.to_string(), eval(val, &sc)?.unwrap_or_else(missing_var)));
+    }
+    Ok(out)
 }
 
 /// Run `f` with extra variables visible to every expression it evaluates.
@@ -148,6 +189,10 @@ fn variable(sc: &Scope, name_and_path: &str) -> R<Option<Bson>> {
                 if matches!(&v, Bson::Symbol(x) if x == "\u{1}missing") { return Ok(None); }
                 return Ok(if rest.is_empty() { Some(v) } else { get_path(&v, &rest) });
             }
+            if let Ok(Some(v)) = CMD_LET.try_with(|vars| vars.iter().rev().find(|(n, _)| n == name).map(|(_, v)| v.clone())) {
+                if matches!(&v, Bson::Symbol(x) if x == "\u{1}missing") { return Ok(None); }
+                return Ok(if rest.is_empty() { Some(v) } else { get_path(&v, &rest) });
+            }
             Err(err(17276, format!("Use of undefined variable: {name}")))
         }
     }
@@ -166,6 +211,8 @@ pub fn is_known_operator(name: &str) -> bool {
             | "$abs" | "$ceil" | "$floor" | "$sqrt" | "$exp" | "$ln" | "$log10" | "$trunc" | "$round" | "$pow" | "$log" | "$substr" | "$substrBytes" | "$substrCP" | "$strLenBytes" | "$strLenCP" | "$strcasecmp" | "$trim" | "$ltrim" | "$rtrim" | "$split"
             | "$indexOfBytes" | "$indexOfCP" | "$replaceOne" | "$replaceAll" | "$regexMatch" | "$regexFind" | "$regexFindAll" | "$convert" | "$toInt" | "$toLong" | "$toDouble" | "$toDecimal" | "$toBool" | "$toDate" | "$toString" | "$toObjectId" | "$function" | "$toHashedIndexKey"
             | "$rand" | "$tsSecond" | "$tsIncrement" | "$median" | "$percentile"
+            | "$sin" | "$cos" | "$tan" | "$asin" | "$acos" | "$atan" | "$atan2" | "$sinh" | "$cosh" | "$tanh" | "$asinh" | "$acosh" | "$atanh" | "$degreesToRadians" | "$radiansToDegrees"
+            | "$bitAnd" | "$bitOr" | "$bitXor" | "$bitNot" | "$stdDevPop" | "$stdDevSamp"
             | "$year" | "$month" | "$dayOfMonth" | "$hour" | "$minute" | "$second" | "$millisecond" | "$dayOfWeek" | "$dayOfYear" | "$week" | "$isoWeek" | "$isoWeekYear" | "$isoDayOfWeek" | "$dateToParts" | "$dateFromParts" | "$dateFromString" | "$dateAdd" | "$dateSubtract" | "$dateDiff" | "$dateTrunc"
     )
 }
@@ -610,7 +657,10 @@ fn operator(name: &str, arg: &Bson, sc: &Scope) -> R<Option<Bson>> {
         "$map" => map(arg, sc),
         other => match ops::operator_ext(other, arg, sc)? {
             Some(v) => Ok(v),
-            None => Err(err(168, format!("Unrecognized expression '{other}'"))),
+            None => match trig::operator(other, arg, sc)? {
+                Some(v) => Ok(v),
+                None => Err(err(168, format!("Unrecognized expression '{other}'"))),
+            },
         },
     }
 }

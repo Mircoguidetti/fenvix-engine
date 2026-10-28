@@ -1,0 +1,37 @@
+category                      covered/total  pct   partial untested missing
+accumulators                     23/23     100.0%       0        0       0
+aggregation expressions         151/151    100.0%       0        0       0
+aggregation stages               41/41     100.0%       0        0       0
+authentication mechanisms         3/3      100.0%       0        0       0
+bson binary subtypes              8/9       88.9%       1        0       0
+bson comparison order            22/22     100.0%       0        0       0
+bson types                       21/21     100.0%       0        0       0
+bulk write                        7/7      100.0%       0        0       0
+change stream events             12/12     100.0%       0        0       0
+change streams                   15/15     100.0%       0        0       0
+collation                         8/10      80.0%       2        0       0
+collation locales               138/150     92.0%      12        0       0
+command options                 236/236    100.0%       0        0       0
+commands                        105/105    100.0%       0        0       0
+cursors                           8/8      100.0%       0        0       0
+driver api node                 144/144    100.0%       0        0       0
+driver api pymongo              139/139    100.0%       0        0       0
+driver protocol                  13/13     100.0%       0        0       0
+gridfs                           17/17     100.0%       0        0       0
+index properties                  6/6      100.0%       0        0       0
+index types                      10/10     100.0%       0        0       0
+projection operators              5/5      100.0%       0        0       0
+query operators                  38/38     100.0%       0        0       0
+read concern                      6/6      100.0%       0        0       0
+read preference                   8/8      100.0%       0        0       0
+server-side javascript           10/10     100.0%       0        0       0
+sort and hint specifications      3/3      100.0%       0        0       0
+transactions                      7/7      100.0%       0        0       0
+update operators                 22/22     100.0%       0        0       0
+window functions                 21/21     100.0%       0        0       0
+write concern                     6/6      100.0%       0        0       0
+
+APPROVED EXCLUSIONS APPLIED (in scope): 1253/1268 covered = 98.8%   OPEN 15 (partial 15, untested 0, missing 0)
+covered by specification tests only (no reference server, limit stated in the evidence): 16
+NO EXCLUSION APPLIED (every row counted): 1253/1793 covered = 69.9%
+rows in inventory: 1793; approved exclusions: 525 (not in the denominator); proposed but not approved: 0
