@@ -15,6 +15,7 @@ mod coll;
 mod cmd_data;
 mod cmd_index;
 mod cmd_mapreduce;
+mod ctl;
 mod dbs;
 mod error;
 mod expr;
@@ -185,6 +186,8 @@ struct Args {
     /// Log every command name and database to stderr.
     #[arg(long)]
     log_commands: bool,
+    #[command(flatten)]
+    ctl: ctl::CtlArgs,
 }
 
 async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64) {
@@ -195,7 +198,9 @@ async fn handle_connection(server: Arc<Server>, stream: TcpStream, conn_id: i64)
     loop {
         match wire::read_request(&mut r).await {
             Ok(Some(req)) => {
+                let probe = ctl::usage::before(&req.db, &req.command).await;
                 let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
+                ctl::usage::after(probe).await;
                 if req.more_to_come {
                     continue;
                 }
@@ -255,6 +260,9 @@ async fn main() -> Result<()> {
     tenant_bench::lifecycle::GROUP_ADAPTIVE.store(args.group_commit_adaptive, std::sync::atomic::Ordering::Relaxed);
     dbs::GROUP_COMMIT.store(!args.no_group_commit, std::sync::atomic::Ordering::Relaxed);
     dbs::SHARED_READS.store(!args.serialize_reads, std::sync::atomic::Ordering::Relaxed);
+    // Requests are attributed to databases by object path (control layer, usage per database).
+    let usage = ctl::usage::Usage::new();
+    let s3 = ctl::usage::wrap(s3, Arc::clone(&usage));
     // One counter for every request this process makes (lifecycle, leases, maintenance, listings).
     let global = Arc::new(CountingStore::new(s3));
     let s3: Arc<dyn ObjectStore> = global.clone();
@@ -273,6 +281,7 @@ async fn main() -> Result<()> {
     leases.process_mode.store(args.process_lease, std::sync::atomic::Ordering::Relaxed);
     leases.disabled.store(args.no_leases, std::sync::atomic::Ordering::Relaxed);
     leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
+    let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
     let (lost_tx, lost_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -291,6 +300,7 @@ async fn main() -> Result<()> {
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
     }
     server.spawn_txn_janitor();
+    ctl::start(Arc::clone(&dbs), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
 
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
@@ -309,6 +319,7 @@ async fn main() -> Result<()> {
     }
     eprintln!("shutting down: closing tenants cleanly");
     dbs.close_all().await;
+    ctl::shutdown().await;
     leases.release_process().await;
     eprintln!("tenants closed; stopping maintenance");
     if let Some(m) = maintenance {

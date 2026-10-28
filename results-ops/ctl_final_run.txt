@@ -1,0 +1,544 @@
+........................................................................ [ 64%]
+.......................................                                  [100%]
+=============================== warnings summary ===============================
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[clone-fork.after_intent]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-13 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[clone-fork.after_markers]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-14 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[clone-fork.after_clone]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-15 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[clone-fork.after_marker]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-16 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[clone-fork.after_meta]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-17 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[copy-fork.after_intent]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-18 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[copy-fork.after_markers]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-19 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[copy-fork.after_clone]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-20 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[copy-fork.after_marker]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-21 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_kill9_at_each_step_rolls_back[copy-fork.after_meta]
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-22 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 41, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid", "mode": mode}, timeout=20)) or None)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+test_02b_fork_crash.py::test_takeover_by_another_process_after_kill9
+  /tmp/claude-0/venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-23 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1044, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/usr/lib/python3.13/threading.py", line 995, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/test_02b_fork_crash.py", line 75, in <lambda>
+      th = threading.Thread(target=lambda: res.update(r=srv.admin.post("/v1/databases/src/fork", {"target": "kid"}, timeout=20)))
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 168, in post
+      return self.call("POST", path, body if body is not None else {}, **kw)
+             ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/home/user/test5/ctl-tests/lib.py", line 150, in call
+      with urllib.request.urlopen(req, timeout=timeout) as r:
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 189, in urlopen
+      return opener.open(url, data, timeout)
+             ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 489, in open
+      response = self._open(req, data)
+    File "/usr/lib/python3.13/urllib/request.py", line 506, in _open
+      result = self._call_chain(self.handle_open, protocol, protocol +
+                                '_open', req)
+    File "/usr/lib/python3.13/urllib/request.py", line 466, in _call_chain
+      result = func(*args)
+    File "/usr/lib/python3.13/urllib/request.py", line 1360, in http_open
+      return self.do_open(http.client.HTTPConnection, req)
+             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/urllib/request.py", line 1335, in do_open
+      r = h.getresponse()
+    File "/usr/lib/python3.13/http/client.py", line 1478, in getresponse
+      response.begin()
+      ~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 343, in begin
+      version, status, reason = self._read_status()
+                                ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/http/client.py", line 312, in _read_status
+      raise RemoteDisconnected("Remote end closed connection without"
+                               " response")
+  http.client.RemoteDisconnected: Remote end closed connection without response
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+111 passed, 11 warnings in 632.08s (0:10:32)

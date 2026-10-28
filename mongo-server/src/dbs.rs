@@ -569,6 +569,7 @@ impl Entry {
     /// lock so no compaction or GC pass can write into it while (or after) it is being deleted:
     /// a pass that finds no manifest does nothing. Repeats the listing until the prefix is empty.
     pub async fn drop_database(&mut self) -> Result<()> {
+        crate::ctl::fork::on_drop(&self.name).await?;
         let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
         let _held = lock.lock().await;
         if !self.leases.is_held(&self.name) {

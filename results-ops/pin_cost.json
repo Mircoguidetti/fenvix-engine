@@ -1,0 +1,19 @@
+{
+ "window_s": 60,
+ "pin_ttl_s": 12,
+ "tenant_lease_ttl_s": 30,
+ "pin_object": {
+  "GET": 14,
+  "PUT": 14
+ },
+ "tenant_prefix": {
+  "PUT": 7,
+  "LIST": 7,
+  "GET": 22
+ },
+ "other_control_prefixes": {
+  "control/pins": {
+   "LIST": 15
+  }
+ }
+}

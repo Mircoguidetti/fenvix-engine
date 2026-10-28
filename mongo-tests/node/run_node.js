@@ -404,6 +404,7 @@ async function main() {
   let tests = EJSON.parse(fs.readFileSync(testsPath, 'utf8'), { relaxed: false });
   if (args.only) tests = tests.filter((t) => t.name.includes(args.only));
   if (args.category) tests = tests.filter((t) => t.category === args.category);
+  if (args.slice) { const [lo, hi] = args.slice.split(':'); tests = tests.slice(Number(lo || 0), hi ? Number(hi) : undefined); }
   const out = args.out || path.join(HERE, 'out', 'results_node.json');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const real = new Ctx(args.real || 'mongodb://localhost:27017', 27017, 0, false);

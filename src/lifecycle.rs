@@ -109,6 +109,10 @@ pub static L0_MAX_SSTS_OVERRIDE: std::sync::atomic::AtomicUsize = std::sync::ato
 /// Test control: memtable size (bytes) at which a writer flushes it to an L0 SST, 0 = slatedb's default.
 pub static L0_SST_BYTES_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+/// Minimum age of the WAL objects the garbage collector of a tenant may delete, beyond `min_age` (set by the control
+/// layer: restore points need the WAL written after them for the retention window).
+pub static WAL_RETAIN: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::OnceLock::new();
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
     let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
@@ -696,7 +700,9 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     // until they expire. Nothing else takes checkpoints in this lifecycle (FollowLatest readers
     // create none), so drop them all once the pass is over. Counted in the pass's requests.
     let admin = Admin::builder(tenant_path(id), cleanup_store).build();
-    let checkpoints = admin.list_checkpoints(None).await?;
+    // Only the compactor's own checkpoints (named nothing, with an expiry). A checkpoint without an expiry pins the SSTs
+    // a shallow fork (control layer) still reads, and a named one is a restore point or an export snapshot.
+    let checkpoints: Vec<_> = admin.list_checkpoints(None).await?.into_iter().filter(|c| c.name.is_none() && c.expire_time.is_some()).collect();
     let checkpoints_deleted = checkpoints.len();
     for cp in checkpoints {
         admin.delete_checkpoint(cp.id).await?;
@@ -723,9 +729,10 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, mi
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
     let dir = GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false };
+    let wal_dir = GarbageCollectorDirectoryOptions { min_age: min_age.max(WAL_RETAIN.get().map(|f| f(&id.to_string())).unwrap_or_default()), ..dir };
     let opts = GarbageCollectorOptions {
         manifest_options: Some(dir),
-        wal_options: Some(dir),
+        wal_options: Some(wal_dir),
         compacted_options: Some(dir),
         compactions_options: Some(dir),
         ..GarbageCollectorOptions::default()
@@ -792,9 +799,13 @@ fn wal_object_path(id: &str, n: u64) -> Path {
 pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     use std::sync::atomic::Ordering::Relaxed;
     let t0 = Instant::now();
-    let mode = WAL_GC_MODE.load(Relaxed);
+    // A database with a retention window (control layer, `WAL_RETAIN`) keeps its WAL objects for that long after they
+    // are written (point-in-time restore replays them): it takes slatedb's own pass, which has an object age limit.
+    // The incremental pass deletes by id range without looking at ages, so it is for databases without retention.
+    let retain = WAL_RETAIN.get().map(|f| f(&id.to_string())).unwrap_or_default();
+    let mode = if retain > Duration::ZERO { 0 } else { WAL_GC_MODE.load(Relaxed) };
     let rec = if mode == 0 {
-        gc_tenant_wal_slatedb(s3, &id, min_age).await?
+        gc_tenant_wal_slatedb(s3, &id, min_age.max(retain)).await?
     } else {
         let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
         let store: Arc<dyn ObjectStore> = counting.clone();

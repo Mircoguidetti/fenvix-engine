@@ -530,6 +530,7 @@ def main():
     ap.add_argument("--tests", default=os.path.join(HERE, "tests.json"))
     ap.add_argument("--only", default="")
     ap.add_argument("--category", default="")
+    ap.add_argument("--slice", default="", help="START:END of the selected tests (for chunked runs)")
     ap.add_argument("--real", default="mongodb://localhost:27017")
     ap.add_argument("--ours", default="mongodb://localhost:27018")
     ap.add_argument("--ours-port", type=int, default=27018)
@@ -546,6 +547,9 @@ def main():
         tests = [t for t in tests if a.only in t["name"]]
     if a.category:
         tests = [t for t in tests if t["category"] == a.category]
+    if a.slice:
+        lo, hi = a.slice.split(":")
+        tests = tests[int(lo or 0):int(hi) if hi else None]
     real = Ctx(a.real, 27017, 0, False, server_script)
     ours = Ctx(a.ours, a.ours_port, a.ours_idle_secs, True, server_script)
     idle = Ctx(a.idle, a.idle_port, a.idle_secs, True, server_script)

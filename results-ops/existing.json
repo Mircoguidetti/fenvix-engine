@@ -1,0 +1,282 @@
+{
+ "1_create_list_get": {
+  "listDatabases": [
+   {
+    "name": "alpha",
+    "sizeOnDisk": 0,
+    "empty": false
+   }
+  ],
+  "dbStats": {
+   "db": "alpha",
+   "collections": 1,
+   "views": 0,
+   "objects": 1000,
+   "avgObjSize": 157.89,
+   "dataSize": 157890,
+   "storageSize": 157890,
+   "indexes": 1,
+   "indexSize": 17000,
+   "totalSize": 174890,
+   "scaleFactor": 1,
+   "ok": 1.0
+  },
+  "tenantAdmin": {
+   "mode": "reader",
+   "wakes": 2,
+   "closes": 1,
+   "uncleanWake": false,
+   "requests": {
+    "putTier": 16,
+    "getTier": 34,
+    "delete": 1
+   },
+   "ok": 1.0
+  },
+  "tenantAdmin_other_db_same_global_requests": true,
+  "create_command": {
+   "ok": 1.0
+  },
+  "gamma_listed_after_create": true,
+  "admin_http": "none (no HTTP interface, no token auth)"
+ },
+ "2_fork": {
+  "copydb": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'copydb', full error: {'ok': 0.0, 'errmsg': \"no such command: 'copydb'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "cloneCollection": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'cloneCollection', full error: {'ok': 0.0, 'errmsg': \"no such command: 'cloneCollection'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "cloneCatalog": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'cloneCatalog', full error: {'ok': 0.0, 'errmsg': \"no such command: 'cloneCatalog'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "cloneDatabase": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'cloneDatabase', full error: {'ok': 0.0, 'errmsg': \"no such command: 'cloneDatabase'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "aggregate_$out_other_db": {
+   "error": "writing to another database is not supported by this server, full error: {'ok': 0.0, 'errmsg': 'writing to another database is not supported by this server', 'code': 238, 'codeName': 'NotImplemented'}"
+  },
+  "rename_collection_across_databases": "not probed",
+  "copy_on_write_or_manifest_clone": "no: a $out/$merge copy re-reads and re-writes every document through the command layer"
+ },
+ "3_restore": {
+  "restoreToPointInTime": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'restoreToPointInTime', full error: {'ok': 0.0, 'errmsg': \"no such command: 'restoreToPointInTime'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "restore": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'restore', full error: {'ok': 0.0, 'errmsg': \"no such command: 'restore'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "rollback": {
+   "error": 59,
+   "codeName": "CommandNotFound",
+   "errmsg": "no such command: 'rollback', full error: {'ok': 0.0, 'errmsg': \"no such command: 'rollback'\", 'code': 59, 'codeName': 'CommandNotFound'}"
+  },
+  "checkpoints_in_the_bucket_after_writes": "none kept: 5 objects, no retention, GC min age 15 s"
+ },
+ "4_export": {
+  "mongodump_against_the_server": {
+   "returncode": 0,
+   "seconds": 0.36,
+   "stderr_tail": "2026-10-27T15:08:01.880+0000\twriting `ex.c` to `/home/user/test5/ctl-tests/out/probe-dump/ex/c.bson`\n2026-10-27T15:08:02.126+0000\tdone dumping `ex.c` (20000 documents)\n",
+   "files": [
+    "c.bson",
+    "c.metadata.json",
+    "prelude.json"
+   ]
+  },
+  "server_side_export": "none; mongodump works through the wire protocol (every document through find/getMore), not resumable, no snapshot"
+ },
+ "5_erase": {
+  "iterations": [
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 23,
+    "has_manifest": true,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 15,
+    "has_manifest": true,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 34,
+    "has_manifest": true,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   },
+   {
+    "objects_before": 79,
+    "objects_left_after_kill": 0,
+    "has_manifest": false,
+    "read_after_restart": "0 of 1200 documents readable",
+    "listed_as_database": false,
+    "after_reuse_of_the_name": "1 documents (1 expected)",
+    "objects_after_second_drop": 0
+   }
+  ],
+  "summary": {
+   "kills_that_left_some_but_not_all_objects": 3,
+   "left_objects_without_manifest (database 'exists' but cannot be opened)": 0,
+   "left_manifest_but_some_data_deleted (opens, data missing or errors)": 3,
+   "read_errors_after_restart": 0,
+   "name_reuse_after_kill_went_wrong (error or old documents back)": 0
+  }
+ },
+ "6_keep_awake": {
+  "idle_close_after_3s": "closed",
+  "per_database_pin": "none: only the process-wide --idle-secs; `tenantAdmin` has no keep-awake option"
+ },
+ "7_usage": {
+  "tenantStats_keys": [
+   "entries",
+   "getByCategory",
+   "holder",
+   "lat",
+   "leases",
+   "leasesHeld",
+   "maintenance",
+   "ok",
+   "openReaders",
+   "openWriters",
+   "pid",
+   "putByCategory",
+   "requests",
+   "ttl",
+   "wakeQueue"
+  ],
+  "requests_are_process_wide": {
+   "put": 12,
+   "copy": 0,
+   "list": 8,
+   "get": 16,
+   "head": 20,
+   "delete": 2,
+   "billedPutTier": 20,
+   "billedGetTier": 36,
+   "putBytes": 107776,
+   "getBytes": 0
+  },
+  "tenantAdmin_a": {
+   "mode": "writer",
+   "wakes": 1,
+   "closes": 0,
+   "uncleanWake": false,
+   "requests": {
+    "putTier": 18,
+    "getTier": 36,
+    "delete": 2
+   },
+   "ok": 1.0
+  },
+  "tenantAdmin_b": {
+   "mode": "writer",
+   "wakes": 1,
+   "closes": 0,
+   "uncleanWake": false,
+   "requests": {
+    "putTier": 18,
+    "getTier": 36,
+    "delete": 2
+   },
+   "ok": 1.0
+  },
+  "per_db_storage_bytes": "dbStats: dataSize from document sizes of an open database (reads every document), not object-store bytes",
+  "per_day": "none",
+  "wake_latency": "none (wakes counted, not timed)"
+ }
+}

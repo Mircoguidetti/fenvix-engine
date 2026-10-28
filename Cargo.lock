@@ -2001,6 +2001,7 @@ name = "mongo-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bson 3.1.0",
  "bytes",
  "chrono",
@@ -2015,10 +2016,12 @@ dependencies = [
  "rust-stemmers",
  "s2",
  "serde_json",
+ "sha2",
  "slatedb",
  "tenant-bench",
  "tokio",
  "unicode-normalization",
+ "uuid",
 ]
 
 [[package]]

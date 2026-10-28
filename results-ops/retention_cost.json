@@ -1,0 +1,118 @@
+{
+ "without_retention": {
+  "retention": false,
+  "write_batches": 142,
+  "seconds": 38.3,
+  "bucket_bytes": 5531387,
+  "objects": 19,
+  "by_directory": {
+   "_clean": {
+    "objects": 1,
+    "bytes": 5
+   },
+   "_lease": {
+    "objects": 1,
+    "bytes": 50
+   },
+   "compacted": {
+    "objects": 5,
+    "bytes": 5527431
+   },
+   "compactions": {
+    "objects": 1,
+    "bytes": 698
+   },
+   "gc": {
+    "objects": 2,
+    "bytes": 3
+   },
+   "manifest": {
+    "objects": 1,
+    "bytes": 1450
+   },
+   "wal": {
+    "objects": 8,
+    "bytes": 1750
+   }
+  },
+  "restore_points": 0,
+  "checkpoints_in_manifest": 0,
+  "requests": {
+   "LIST": 40,
+   "GET": 257,
+   "PUT": 384,
+   "HEAD": 71,
+   "GET_RANGE": 113
+  },
+  "put_bytes": null,
+  "manifest_summary": {
+   "checkpoints": 0,
+   "external_dbs": [],
+   "id": 26,
+   "l0_ssts": 3,
+   "next_wal_sst_id": 302,
+   "replay_after_wal_id": 301,
+   "sorted_runs": 1,
+   "writer_epoch": 7
+  }
+ },
+ "with_retention": {
+  "retention": true,
+  "write_batches": 144,
+  "seconds": 39.0,
+  "bucket_bytes": 17524812,
+  "objects": 325,
+  "by_directory": {
+   "_clean": {
+    "objects": 1,
+    "bytes": 5
+   },
+   "_lease": {
+    "objects": 1,
+    "bytes": 50
+   },
+   "compacted": {
+    "objects": 8,
+    "bytes": 10529728
+   },
+   "compactions": {
+    "objects": 1,
+    "bytes": 698
+   },
+   "gc": {
+    "objects": 2,
+    "bytes": 3
+   },
+   "manifest": {
+    "objects": 7,
+    "bytes": 8878
+   },
+   "wal": {
+    "objects": 305,
+    "bytes": 6985450
+   }
+  },
+  "restore_points": 7,
+  "checkpoints_in_manifest": 7,
+  "requests": {
+   "LIST": 60,
+   "GET": 319,
+   "PUT": 405,
+   "HEAD": 75,
+   "GET_RANGE": 113
+  },
+  "put_bytes": null,
+  "manifest_summary": {
+   "checkpoints": 7,
+   "external_dbs": [],
+   "id": 33,
+   "l0_ssts": 3,
+   "next_wal_sst_id": 306,
+   "replay_after_wal_id": 305,
+   "sorted_runs": 1,
+   "writer_epoch": 7
+  }
+ },
+ "extra_bytes": 11993425,
+ "extra_objects": 306
+}
