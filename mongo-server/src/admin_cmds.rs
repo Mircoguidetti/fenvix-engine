@@ -143,6 +143,7 @@ impl Server {
             }
         }
         admin_only(db, "rotateCertificates")?;
+        crate::tls::rotate().map_err(|e| MongoError::new(96, "OperationFailed", format!("rotateCertificates failed, the previous certificates stay in use: {e:#}")))?;
         Ok(ok())
     }
 

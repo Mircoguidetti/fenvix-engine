@@ -1,0 +1,14 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+E   AssertionError: rotateCertificates answered ok but new connections still get the old certificate
+    assert 'add6503a6d24...67a75b9322c5c' == '5697ea4b3278...96543202ba25f'
+      
+      - 5697ea4b3278f0562ac317b7d60a63ffc16465d6227e32e259e96543202ba25f
+      + add6503a6d2437df72bd4644a04f7591aff808c6594386aac1767a75b9322c5c
+/home/user/test5-compat-indexes/ctl-tests/test_09c_tls_rotate.py:77: AssertionError: rotateCertificates answered ok but new connections still get the old certificate
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5-compat-indexes/ctl-tests/test_09c_tls_rotate.py:88: Failed: DID NOT RAISE OperationFailure
+=========================== short test summary info ============================
+FAILED test_09c_tls_rotate.py::test_rotate_certificates_loads_the_new_certificate
+FAILED test_09c_tls_rotate.py::test_rotate_certificates_with_unusable_files_fails_and_keeps_the_old_certificate
+2 failed, 1 passed in 7.16s

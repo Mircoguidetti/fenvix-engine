@@ -373,6 +373,7 @@ async fn run() -> Result<()> {
     ctl::start(Arc::clone(&dbs), Arc::clone(&server), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
 
     let tls_cfg = Arc::new(tls::load(&tls::Options { mode: &args.tls_mode, certificate_key_file: &args.tls_certificate_key_file, ca_file: &args.tls_ca_file, allow_without_certificates: args.tls_allow_connections_without_certificates })?);
+    tls::install(Arc::clone(&tls_cfg));
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;

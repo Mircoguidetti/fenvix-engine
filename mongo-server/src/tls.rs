@@ -35,7 +35,18 @@ impl Mode {
 
 pub struct TlsConfig {
     pub mode: Mode,
-    acceptor: Option<TlsAcceptor>,
+    /// Swapped by `rotateCertificates`: new connections use whatever is here when they arrive, open ones keep their session.
+    acceptor: std::sync::RwLock<Option<TlsAcceptor>>,
+    /// The files the acceptor was built from (read again by `rotateCertificates`).
+    files: Files,
+}
+
+#[derive(Clone)]
+struct Files {
+    mode: String,
+    certificate_key_file: String,
+    ca_file: String,
+    allow_without_certificates: bool,
 }
 
 pub struct Options<'a> {
@@ -47,8 +58,16 @@ pub struct Options<'a> {
 
 pub fn load(o: &Options) -> Result<TlsConfig> {
     let mode = Mode::parse(o.mode)?;
+    let acceptor = build(o)?;
+    let files = Files { mode: o.mode.to_string(), certificate_key_file: o.certificate_key_file.to_string(), ca_file: o.ca_file.to_string(), allow_without_certificates: o.allow_without_certificates };
+    Ok(TlsConfig { mode, acceptor: std::sync::RwLock::new(acceptor), files })
+}
+
+/// Read the certificate files and build the acceptor (None when TLS is disabled).
+fn build(o: &Options) -> Result<Option<TlsAcceptor>> {
+    let mode = Mode::parse(o.mode)?;
     if mode == Mode::Disabled {
-        return Ok(TlsConfig { mode, acceptor: None });
+        return Ok(None);
     }
     if o.certificate_key_file.is_empty() {
         bail!("--tls-mode {} needs --tls-certificate-key-file", o.mode);
@@ -74,7 +93,7 @@ pub fn load(o: &Options) -> Result<TlsConfig> {
         builder.with_client_cert_verifier(v.build()?)
     };
     let cfg = builder.with_single_cert(certs, key)?;
-    Ok(TlsConfig { mode, acceptor: Some(TlsAcceptor::from(Arc::new(cfg))) })
+    Ok(Some(TlsAcceptor::from(Arc::new(cfg))))
 }
 
 /// A client connection, plain or TLS.
@@ -141,11 +160,32 @@ impl AsyncWrite for Stream {
     }
 }
 
+static INSTALLED: std::sync::OnceLock<Arc<TlsConfig>> = std::sync::OnceLock::new();
+
+/// Make the listener's TLS configuration reachable by `rotateCertificates`.
+pub fn install(cfg: Arc<TlsConfig>) {
+    let _ = INSTALLED.set(cfg);
+}
+
+/// `rotateCertificates`: read the certificate, key and CA files again and use them for every connection accepted from now on
+/// (connections already open keep their session). Nothing changes when the files cannot be used: the error says why and the
+/// previous certificate stays in force. With TLS disabled there is nothing to rotate (mongod answers ok too).
+pub fn rotate() -> Result<()> {
+    let Some(cfg) = INSTALLED.get() else { return Ok(()) };
+    if cfg.mode == Mode::Disabled {
+        return Ok(());
+    }
+    let f = &cfg.files;
+    let acceptor = build(&Options { mode: &f.mode, certificate_key_file: &f.certificate_key_file, ca_file: &f.ca_file, allow_without_certificates: f.allow_without_certificates })?;
+    *cfg.acceptor.write().unwrap() = acceptor;
+    Ok(())
+}
+
 impl TlsConfig {
     /// Accept a connection according to the mode: requireTLS handshakes at once, allowTLS / preferTLS look at the first byte
     /// (0x16 starts a TLS record), disabled never does.
     pub async fn accept(&self, stream: TcpStream) -> Result<Stream> {
-        let Some(acceptor) = &self.acceptor else { return Ok(Stream::Plain(stream)) };
+        let Some(acceptor) = self.acceptor.read().unwrap().clone() else { return Ok(Stream::Plain(stream)) };
         let tls = match self.mode {
             Mode::Disabled => false,
             Mode::Require => true,
