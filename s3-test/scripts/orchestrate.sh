@@ -8,6 +8,7 @@
 set -u
 cd "${GITHUB_WORKSPACE:-.}"
 R=eu-central-1
+. "$(dirname "$0")/aws_refresh.sh"; export AWS_CREDS_AT=$(date +%s)   # the workflow logged in just before this step
 OUT=run-out; mkdir -p "$OUT"
 ERR=$OUT/errors.jsonl; : > "$ERR"
 STEPS=$OUT/steps.jsonl; : > "$STEPS"
@@ -24,6 +25,7 @@ jstep() { jq -cn --arg n "$1" --arg s "$2" --arg d "${3:-}" '{step:$n,status:$s,
 attempt() {
   local name=$1 act=$2 res=$3; shift 3
   local o
+  refresh_aws_creds || true
   if o=$("$@" 2>&1); then LAST=$o; echo "OK      $name"; jstep "$name" ok; return 0; fi
   echo "FAILED  $name: $o"
   local reported; reported=$(printf '%s' "$o" | grep -oiE 'not authorized to perform[^"]{0,200}' | head -1)
@@ -146,7 +148,7 @@ else
         Failed|Cancelled|TimedOut) echo "FAILED  $name: $st"; jstep "$name" failed "$st"; return 1;;
         *AccessDenied*|*not\ authorized*) echo "FAILED $name: $st"
           jq -cn --arg n "$name" --arg m "$st" '{step:$n,access_denied:true,iam_action:"ssm:GetCommandInvocation",resource:"arn:aws:ssm:eu-central-1:*:*",reported_by_aws:"",message:$m}' >> "$ERR"; jstep "$name" failed "$st"; return 1;; esac
-      sleep 5
+      sleep 5; refresh_aws_creds || true
     done
     echo "FAILED  $name: still $st"; jstep "$name" failed "timeout"; return 1
   }
@@ -166,6 +168,7 @@ else
     if ssm_run "start run.sh on instance" "$(jq -cn --arg c "$START" '[$c]')" 300; then
       done_=0
       for _ in $(seq 1 600); do   # up to 100 minutes; the instance's own timer ends at 90
+        refresh_aws_creds || true
         if aws s3api head-object --bucket "$BUCKET" --key _s3test/out/DONE >/dev/null 2>&1; then done_=1; break; fi
         [ -f "$OUT/watchdog.stopped" ] && break
         sleep 10
@@ -175,6 +178,7 @@ else
     else INST_OK=0; fi
     kill $WD 2>/dev/null; wait $WD 2>/dev/null
   fi
+  refresh_aws_creds 0 || true   # fresh credentials for the final downloads
   mkdir -p "$OUT/instance"
   aws s3 cp "s3://$BUCKET/_s3test/" "$OUT/instance/" --recursive --exclude "bundle.tgz" --only-show-errors 2>/dev/null || true
 fi
