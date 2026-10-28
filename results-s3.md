@@ -139,3 +139,30 @@ Tutto ciò che segue è stato letto su `engine-cost`; `merge-engine` può averlo
 - Test 1: massimo calcolato **≈ $0,16** (istanza 90 min = $0,1455 + EBS $0,002 + al massimo ~1.600 richieste PUT-tier e ~1.900 GET-tier ≈ $0,01). Tipico (~15–20 min): $0,03–0,05.
 - Test 2 e 3: **stima, non misura:** da $1 a $3 lordi in tutto (richieste: decine di migliaia di PUT-tier per la creazione di 1.000–2.000 database e per i rinnovi di lease dei database aperti; più ≤ $0,15 di istanza per run). Tetto duro per run: il guard ferma a $4,5.
 - Tutto questo è lordo, prima dei crediti, senza IVA e senza IPv4 pubblico.
+
+
+## 10. Risultati del Test 1 su AWS vero (2026-10-27 / 28)
+
+Dati completi sul branch `s3-test-results`, cartelle `s3-test/runs/<run_id>/`.
+
+| Run | Esito | Costo lordo | Note |
+|---|---|---|---|
+| 40568199783 | fallito prima di AWS | 0,0002 $ | build rotta (`curl` in conflitto con `curl-minimal` in Amazon Linux 2023). Corretto. |
+| 40572465637 | fallito all'accesso AWS | ~0 | partito mentre la trust policy veniva modificata. |
+| 40573793637 | fallito all'accesso AWS | ~0 | trust policy con `sub` sbagliato (vedi sotto). |
+| 40576555086 | quasi tutto ok | 0,0103 $ | unico errore: `s3:PutBucketTagging` non permesso (bucket creato senza tag). |
+| 40612325934 | **tutti i passi verdi** | **0,0101 $** | dopo aver concesso `s3:PutBucketTagging`. |
+
+Registro costi: totale 0,0211 $ (tetto 24 $).
+
+**Verificato su AWS vero (run 40612325934):** bucket creato con tag, oggetto scritto/letto/elencato/cancellato; AMI Amazon Linux 2023 trovata con `ec2:DescribeImages`; una sola c6i.large lanciata col profilo `fenvix-test-instance`; SSM l'ha vista in pochi secondi; comando SSM ha scritto un file su S3 e il file è stato scaricato e confrontato; l'istanza ha parlato ad AWS come `assumed-role/fenvix-test-instance` (nessuna chiave AWS sull'istanza, nessun file di credenziali); `s3probe` (1.000 PUT + 1.000 GET): contatore del motore **esatto** (1.000/1.000), conteggio HTTP identico (1.000/1.000), **zero retry** visti da S3 in questa prova; istanza terminata dopo 149 s, bucket eliminato, nessuna istanza rimasta; il controllo di spesa sull'istanza ha girato (0,0094 $ al momento dell'ultima lettura).
+
+**Cose emerse, da non dimenticare:**
+1. **`sub` OIDC personalizzato.** Il repo manda `repo:Mircoguidetti@17613795/test5@1433234171:ref:refs/heads/<branch>` (con gli ID numerici), non `repo:Mircoguidetti/test5:...`. La trust policy di `fenvix-gha-tests` usa ora il valore con gli ID. Il passo diagnostico del workflow (`stop_after_claims` in `run.json`) lo stampa senza usare AWS.
+2. **Durata massima della sessione del ruolo: 1 ora.** Il passo da 14.400 s fallisce sempre (circa 1,5 minuti sprecati, poi il ripiego a 3.600 s funziona). Si evita alzando la durata massima del ruolo o togliendo il primo passo.
+3. **`iam:PassRole` e SSM:** avevo previsto che mancassero. Non mancavano: la RunInstances reale e SSM hanno funzionato.
+4. **Limitatore di richieste:** nel primo run ha frenato 1.575 richieste su 2.000 (burst di 32 in parallelo contro 300 al secondo): 2.000 richieste in 5,7 s. Per i test 2 e 3 le latenze misurate vanno lette tenendo conto del campo `throttled`.
+5. **Credito da 20 $** "Explore AWS: Launch an instance using EC2" comparso il 27/10, probabilmente per il primo lancio di un'istanza (deduzione, non confermata). I servizi coperti non sono stati verificati.
+6. **Non ancora verificato:** cosa è finito davvero sulla carta (serve Cost Explorer dopo ~24 ore); se `DeleteObjects` è gratuito (non usato in questa prova); costo dell'IPv4 pubblico.
+
+**Non eseguiti:** Test 2 e Test 3. Richiedono `results-merge.md` (su `main` o `merge-engine`) che dica che tutte le suite sono verdi; il file non esiste ancora e `merge-engine` non è pubblicato.
