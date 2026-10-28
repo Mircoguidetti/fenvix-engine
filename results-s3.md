@@ -166,3 +166,18 @@ Registro costi: totale 0,0211 $ (tetto 24 $).
 6. **Non ancora verificato:** cosa è finito davvero sulla carta (serve Cost Explorer dopo ~24 ore); se `DeleteObjects` è gratuito (non usato in questa prova); costo dell'IPv4 pubblico.
 
 **Non eseguiti:** Test 2 e Test 3. Richiedono `results-merge.md` (su `main` o `merge-engine`) che dica che tutte le suite sono verdi; il file non esiste ancora e `merge-engine` non è pubblicato.
+
+
+## 11. Credenziali dei test lunghi e prova a secco della pulizia (2026-10-28)
+
+**Modifiche al workflow (in `s3-test-draft` e `s3-test`):**
+- Un solo login OIDC da 1 ora (il passo da 14.400 s è tolto: la durata massima della sessione del ruolo è 1 ora).
+- `scripts/aws_refresh.sh`: nuovo token OIDC + assume-role, ogni 40 minuti, dentro `orchestrate.sh` e `watchdog.sh`. Se il rinnovo fallisce due volte, `orchestrate.sh` esce subito (codice 3) e il workflow passa alla pulizia; il watchdog termina l'istanza con le credenziali che ha ancora e finisce. Nessun tentativo all'infinito.
+- Prima della pulizia il workflow rifà il login (passo "AWS credentials for cleanup").
+- Timeout del job: 115 minuti. L'attesa dei test sull'istanza è limitata a 95 minuti dal lancio; ogni 30 secondi controlla lo stato dell'istanza e, se risulta terminata o spenta, smette di aspettare e va alla pulizia. I dati dell'istanza si scaricano una sola volta (anche in caso di uscita anticipata).
+- `run.json` accetta `"mode": "cleanup_dryrun"` (con `wait_minutes`): nessun test, nessuna istanza.
+
+**Prova a secco, run 40613989323:** **PASS.** Bucket creato con tag e un oggetto; 65 minuti senza alcuna chiamata AWS; poi pulizia con login nuovo: bucket eliminato, nessuna istanza col tag. Costo lordo 0,000242 $ (registro totale 0,0214 $).
+- Limite della prova: le vecchie credenziali sono state rifiutate con `400 Bad Request` su `HeadBucket`, che non nomina la scadenza (una HEAD non ha corpo). Che la sessione sia scaduta è molto probabile (65 minuti contro 60) ma non dimostrato da un messaggio esplicito. Ciò che la prova dimostra con certezza è che il percorso "login nuovo + pulizia" elimina il bucket dopo più di un'ora.
+- Non provato: il rinnovo dentro `orchestrate.sh`/`watchdog.sh` su AWS vero (provato solo in locale con comandi finti: due tentativi poi stop, attesa interrotta quando l'istanza risulta terminata). Il primo test lungo (Test 2 o 3) sarà la prova reale; il token OIDC del job potrebbe non essere richiedibile dopo molti minuti: da guardare nel log.
+- Test 2 e 3: non eseguiti, in attesa del via di Mirco (`merge-engine` non è ancora finale).
