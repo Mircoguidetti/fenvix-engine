@@ -1,0 +1,37 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____________________ test_same_files_and_bytes_as_mongodump ____________________
+test_04b_export_vs_real_mongo.py:79: in test_same_files_and_bytes_as_mongodump
+    assert rb == ob, f"{coll}.bson differs from mongodump's ({len(rb)} vs {len(ob)} bytes)"
+E   AssertionError: users.bson differs from mongodump's (284890 vs 302890 bytes)
+E   assert b'\x8c\x00\x0...1\x00\x00\x00' == b'\x8c\x00\x0...0\x00\x07\xd0'
+E     
+E     At index 140 diff: b'\x8c' != b'\xfe'
+E     Use -v to get more diff
+----------------------------- Captured stdout call -----------------------------
+mongodump files: ['a.b.bson', 'a.b.metadata.json', 'empty.bson', 'empty.metadata.json', 'prelude.json', 'users.bson', 'users.metadata.json'] 
+export files:    ['a.b.bson', 'a.b.metadata.json', 'empty.bson', 'empty.metadata.json', 'users.bson', 'users.metadata.json']
+_____________________ test_mongorestore_into_a_real_mongod _____________________
+test_04b_export_vs_real_mongo.py:103: in test_mongorestore_into_a_real_mongod
+    assert p.returncode == 0, p.stderr
+E   AssertionError: 2026-10-28T18:05:06.694+0000	preparing collections to restore from
+E     2026-10-28T18:05:06.694+0000	reading metadata for `xp_back.a.b` from `/tmp/ours-584jstyb/xp_src/a.b.metadata.json`
+E     2026-10-28T18:05:06.695+0000	reading metadata for `xp_back.empty` from `/tmp/ours-584jstyb/xp_src/empty.metadata.json`
+E     2026-10-28T18:05:06.695+0000	reading metadata for `xp_back.users` from `/tmp/ours-584jstyb/xp_src/users.metadata.json`
+E     2026-10-28T18:05:06.707+0000	restoring `xp_back.users` from `/tmp/ours-584jstyb/xp_src/users.bson`
+E     2026-10-28T18:05:06.710+0000	restoring `xp_back.empty` from `/tmp/ours-584jstyb/xp_src/empty.bson`
+E     2026-10-28T18:05:06.712+0000	restoring `xp_back.a.b` from `/tmp/ours-584jstyb/xp_src/a.b.bson`
+E     2026-10-28T18:05:06.718+0000	finished restoring `xp_back.users` (0 documents, 0 failures)
+E     2026-10-28T18:05:06.718+0000	Failed: xp_back.users: error restoring from /tmp/ours-584jstyb/xp_src/users.bson: cannot marshal type bson.Raw to a BSON Document: document end byte found before end of document. remaining bytes=[0 0 0 1 140 0 0 0 16 95 105 100 0 1 0 0 0 16 110 0 1 0 0 0 16 103 114 112 0 1 0 0 0 2 110 97 109 101 0 6 0 0 0 117 115 101 114 49 0 2 116 97 103 0 2 0 0 0 121 0 3 110 101 115 116 101 100 0 51 0 0 0 16 107 0 1 0 0 0 4 97 114 114 0 34 0 0 0 16 48 0 1 0 0 0 16 49 0 2 0 0 0 3 50 0 12 0 0 0 16 122 0 1 0 0 0 0 0 0 1 102 0 85 85 85 85 85 85 213 63 18 98 105 103 0 1 0 0 0 0 1 0 0 0 254 0 0 0 0 0 0 0 2 140 0 0 0 16 95 105 100 0 2 0 0 0 16 110 0 2 0 0 0 16 103 114 112 0 2 0 0 0 2 110 97 109 101 0 6 0 0 0 117 115 101 114 50 0 2 116 97 103 0 2 0 0 0 122 0 3 110 101 115 116 101 100 0 51 0 0 0 16 107 0 2 0 0 0 4 97 114 114 0 34 0 0 0 16 48 0 1 0 0 0 16 49 0 2 0]
+E     2026-10-28T18:05:06.718+0000	0 document(s) restored successfully. 0 document(s) failed to restore.
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/tmp/claude-0/mongo-img/root/usr/bin/mongorestore', '--uri', 'mongodb://127.0.0.1:27020/?direc...0 16 49 0 2 0]\n2026-10-28T18:05:06.718+0000\t0 document(s) restored successfully. 0 document(s) failed to restore.\n').returncode
+----------------------------- Captured stdout call -----------------------------
+ 0 1 0 0 0 0 1 0 0 0 254 0 0 0 0 0 0 0 2 140 0 0 0 16 95 105 100 0 2 0 0 0 16 110 0 2 0 0 0 16 103 114 112 0 2 0 0 0 2 110 97 109 101 0 6 0 0 0 117 115 101 114 50 0 2 116 97 103 0 2 0 0 0 122 0 3 110 101 115 116 101 100 0 51 0 0 0 16 107 0 2 0 0 0 4 97 114 114 0 34 0 0 0 16 48 0 1 0 0 0 16 49 0 2 0]
+2026-10-28T18:05:06.718+0000	0 document(s) restored successfully. 0 document(s) failed to restore.
+
+=========================== short test summary info ============================
+FAILED test_04b_export_vs_real_mongo.py::test_same_files_and_bytes_as_mongodump
+FAILED test_04b_export_vs_real_mongo.py::test_mongorestore_into_a_real_mongod
+2 failed in 4.44s

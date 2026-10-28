@@ -1,0 +1,13 @@
+..........F                                                              [100%]
+=================================== FAILURES ===================================
+_______________________ test_restore_and_export_at_once ________________________
+test_03b_restore_gc_crash.py:310: in test_restore_and_export_at_once
+    got = {repr(d["_id"]): d for d in bson.decode_all(open(f"{dest}/{db}/c.bson", "rb").read())}
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/bson/__init__.py:1204: in decode_all
+    return _decode_all(data, DEFAULT_CODEC_OPTIONS)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   bson.errors.InvalidBSON: bad eoo
+=========================== short test summary info ============================
+FAILED test_03b_restore_gc_crash.py::test_restore_and_export_at_once - bson.e...
+1 failed, 10 passed in 154.04s (0:02:34)

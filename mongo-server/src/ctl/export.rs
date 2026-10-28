@@ -232,7 +232,8 @@ async fn stream_collection(ctl: &Arc<Ctl>, reader: DbReader, db: &str, id: &str,
     let mut hasher = Sha256::new();
     let mut buf: Vec<u8> = Vec::with_capacity(512 * 1024);
     while let Some(kv) = it.next().await? {
-        let v = &kv.value[..];
+        // the stored value carries the insertion-order trailer of natural.rs; the dump holds the BSON document only
+        let v = crate::natural::bson_part(&kv.value[..]);
         hasher.update(v);
         let end = offset + v.len() as u64;
         if end > start {

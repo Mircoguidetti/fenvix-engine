@@ -1,0 +1,105 @@
+FF.F...FFF                                                               [100%]
+=================================== FAILURES ===================================
+_________________________ test_download_equals_source __________________________
+test_04_export.py:80: in test_download_equals_source
+    got = read_bson(f"{dest}/src/{coll}.bson")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_04_export.py:67: in read_bson
+    return bson.decode_all(open(path, "rb").read())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/bson/__init__.py:1204: in decode_all
+    return _decode_all(data, DEFAULT_CODEC_OPTIONS)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   bson.errors.InvalidBSON: objsize too large
+__________ test_snapshot_ignores_later_writes_and_survives_compaction __________
+test_04_export.py:115: in test_snapshot_ignores_later_writes_and_survives_compaction
+    got = {repr(d["_id"]): d for d in read_bson(f"{dest}/snap/c.bson")}
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_04_export.py:67: in read_bson
+    return bson.decode_all(open(path, "rb").read())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/bson/__init__.py:1204: in decode_all
+    return _decode_all(data, DEFAULT_CODEC_OPTIONS)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   bson.errors.InvalidBSON: bad eoo
+________________ test_server_kill9_during_download_then_resume _________________
+test_04_export.py:180: in test_server_kill9_during_download_then_resume
+    assert len(read_bson(target)) == 20000
+               ^^^^^^^^^^^^^^^^^
+test_04_export.py:67: in read_bson
+    return bson.decode_all(open(path, "rb").read())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/bson/__init__.py:1204: in decode_all
+    return _decode_all(data, DEFAULT_CODEC_OPTIONS)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   bson.errors.InvalidBSON: bad eoo
+----------------------------- Captured stdout call -----------------------------
+killed after 786432 bytes; {'kd/big.bson': 'ok', 'kd/big.metadata.json': 'ok'}
+______________________ test_concurrent_exports_and_writes ______________________
+test_04_export.py:315: in test_concurrent_exports_and_writes
+    got = sorted(d["_id"] for d in read_bson(f"{dest}/hot/c.bson"))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_04_export.py:67: in read_bson
+    return bson.decode_all(open(path, "rb").read())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/bson/__init__.py:1204: in decode_all
+    return _decode_all(data, DEFAULT_CODEC_OPTIONS)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   bson.errors.InvalidBSON: bad eoo
+______________________ test_mongorestore_imports_the_dump ______________________
+test_04_export.py:336: in test_mongorestore_imports_the_dump
+    assert p.returncode == 0, p.stderr
+E   AssertionError: 2026-10-28T18:04:17.269+0000	preparing collections to restore from
+E     2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.users` from `/tmp/dump-j7wsmop9/mr/users.metadata.json`
+E     2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.with space` from `/tmp/dump-j7wsmop9/mr/with space.metadata.json`
+E     2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.a.b` from `/tmp/dump-j7wsmop9/mr/a.b.metadata.json`
+E     2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.empty` from `/tmp/dump-j7wsmop9/mr/empty.metadata.json`
+E     2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.typed` from `/tmp/dump-j7wsmop9/mr/typed.metadata.json`
+E     2026-10-28T18:04:17.351+0000	restoring `mr_restored.typed` from `/tmp/dump-j7wsmop9/mr/typed.bson`
+E     2026-10-28T18:04:17.351+0000	restoring `mr_restored.a.b` from `/tmp/dump-j7wsmop9/mr/a.b.bson`
+E     2026-10-28T18:04:17.352+0000	restoring `mr_restored.users` from `/tmp/dump-j7wsmop9/mr/users.bson`
+E     2026-10-28T18:04:17.353+0000	restoring `mr_restored.with space` from `/tmp/dump-j7wsmop9/mr/with space.bson`
+E     2026-10-28T18:04:17.365+0000	finished restoring `mr_restored.typed` (0 documents, 0 failures)
+E     2026-10-28T18:04:17.365+0000	Failed: mr_restored.typed: error restoring from /tmp/dump-j7wsmop9/mr/typed.bson: (IDLUnknownField) BSON field 'insert.bypassEmptyTsReplacement' is an unknown field.
+E     2026-10-28T18:04:17.365+0000	0 document(s) restored successfully. 0 document(s) failed to restore.
+E     2026-10-28T18:04:17.365+0000	finished restoring `mr_restored.users` (0 documents, 0 failures)
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/tmp/claude-0/mongo-img/root/usr/bin/mongorestore', '--uri', 'mongodb://127.0.0.1:26842/?direc... failed to restore.\n2026-10-28T18:04:17.365+0000\tfinished restoring `mr_restored.users` (0 documents, 0 failures)\n").returncode
+----------------------------- Captured stdout call -----------------------------
+o restore from
+2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.users` from `/tmp/dump-j7wsmop9/mr/users.metadata.json`
+2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.with space` from `/tmp/dump-j7wsmop9/mr/with space.metadata.json`
+2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.a.b` from `/tmp/dump-j7wsmop9/mr/a.b.metadata.json`
+2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.empty` from `/tmp/dump-j7wsmop9/mr/empty.metadata.json`
+2026-10-28T18:04:17.270+0000	reading metadata for `mr_restored.typed` from `/tmp/dump-j7wsmop9/mr/typed.metadata.json`
+2026-10-28T18:04:17.351+0000	restoring `mr_restored.typed` from `/tmp/dump-j7wsmop9/mr/typed.bson`
+2026-10-28T18:04:17.351+0000	restoring `mr_restored.a.b` from `/tmp/dump-j7wsmop9/mr/a.b.bson`
+2026-10-28T18:04:17.352+0000	restoring `mr_restored.users` from `/tmp/dump-j7wsmop9/mr/users.bson`
+2026-10-28T18:04:17.353+0000	restoring `mr_restored.with space` from `/tmp/dump-j7wsmop9/mr/with space.bson`
+2026-10-28T18:04:17.365+0000	finished restoring `mr_restored.typed` (0 documents, 0 failures)
+2026-10-28T18:04:17.365+0000	Failed: mr_restored.typed: error restoring from /tmp/dump-j7wsmop9/mr/typed.bson: (IDLUnknownField) BSON field 'insert.bypassEmptyTsReplacement' is an unknown field.
+2026-10-28T18:04:17.365+0000	0 document(s) restored successfully. 0 document(s) failed to restore.
+2026-10-28T18:04:17.365+0000	finished restoring `mr_restored.users` (0 documents, 0 failures)
+
+___________ test_snapshot_survives_compaction_and_garbage_collection ___________
+test_04_export.py:378: in test_snapshot_survives_compaction_and_garbage_collection
+    assert {repr(d["_id"]): d for d in read_bson(f"{dest}/gcx/c.bson")} == ref["c"]
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_04_export.py:67: in read_bson
+    return bson.decode_all(open(path, "rb").read())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/bson/__init__.py:1204: in decode_all
+    return _decode_all(data, DEFAULT_CODEC_OPTIONS)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   bson.errors.InvalidBSON: bad eoo
+----------------------------- Captured stdout call -----------------------------
+objects collected by GC while the snapshot existed: 67
+=========================== short test summary info ============================
+FAILED test_04_export.py::test_download_equals_source - bson.errors.InvalidBS...
+FAILED test_04_export.py::test_snapshot_ignores_later_writes_and_survives_compaction
+FAILED test_04_export.py::test_server_kill9_during_download_then_resume - bso...
+FAILED test_04_export.py::test_concurrent_exports_and_writes - bson.errors.In...
+FAILED test_04_export.py::test_mongorestore_imports_the_dump - AssertionError: 2026-10-28T18:04:17.269+0000	preparing collections to restore from
+FAILED test_04_export.py::test_snapshot_survives_compaction_and_garbage_collection
+6 failed, 4 passed in 68.05s (0:01:08)
