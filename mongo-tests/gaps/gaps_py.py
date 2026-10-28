@@ -8,7 +8,7 @@ and must be identical.
 Case modules are gaps/g*_*.py; every case is registered with @case(name, rs=False, ...). A case may return a dict/list/scalar, or raise;
 the error code and codeName are compared. Cases marked rs=True run on the replica-set mongod (27020) and on the engine started with
 --replica-set rs0."""
-import argparse, importlib, json, os, sys, time, uuid, glob
+import subprocess, argparse, importlib, json, os, sys, time, uuid, glob
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, HERE)
@@ -24,12 +24,13 @@ CERTS = os.path.join(os.path.dirname(HERE), "..", ".tools", "certs")
 PAIRS = {"A": (27040, 27048), "B": (27041, 27049), "C": (27042, 27050), "D": (27043, 27051), "E": (27044, 27052)}
 
 
-def case(name, rs=False, sort_keys=False, uri=None, auth=False, pair=None, opts=None, sa=False):
+def case(name, rs=False, sort_keys=False, uri=None, auth=False, pair=None, opts=None, sa=False, fresh=None):
     """auth=True: run on the servers started with --auth (see auth_env.sh), through a client logged in as the root user.
     pair="A".."E": run on the TLS server pair of tls_env.py; the client is built with `opts` (TLS options) and carries .gaps_addr.
-    sa=True: run on a standalone engine (27019, started without --replica-set) against the standalone mongod."""
+    sa=True: run on a standalone engine (27019, started without --replica-set) against the standalone mongod.
+    fresh="fcv"|"sd"|"wb": run on a throwaway pair of empty standalone servers (fresh_pair.sh), started for this case and stopped after it."""
     def deco(f):
-        CASES.append(dict(name=name, rs=rs, f=f, sort_keys=sort_keys, uri=uri, auth=auth, pair=pair, opts=opts or {}, sa=sa))
+        CASES.append(dict(name=name, rs=rs, f=f, sort_keys=sort_keys, uri=uri, auth=auth, pair=pair, opts=opts or {}, sa=sa, fresh=fresh))
         return f
     return deco
 
@@ -143,6 +144,18 @@ def main():
                 outs.append(run_side(cl, c)[0])
                 cl.close()
             r, o = outs
+        elif c.get("fresh"):
+            out = subprocess.run([os.path.join(HERE, "fresh_pair.sh"), "start", c["fresh"]], capture_output=True, text=True)
+            try:
+                rp, op = (int(x) for x in out.stdout.split())
+                outs = []
+                for port in (rp, op):
+                    cl = MongoClient("localhost", port, serverSelectionTimeoutMS=8000, socketTimeoutMS=30000)
+                    outs.append(run_side(cl, c)[0])
+                    cl.close()
+                r, o = outs
+            finally:
+                subprocess.run([os.path.join(HERE, "fresh_pair.sh"), "stop", c["fresh"]])
         elif c.get("sa"):
             ours_sa = ours_sa or MongoClient(a.ours_sa, **kw)
             r, _ = run_side(real, c)

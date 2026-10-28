@@ -58,6 +58,7 @@ mod txn;
 mod update;
 mod validation;
 mod views;
+mod admin_cmds;
 mod repl_cmds;
 mod wc;
 mod wire;

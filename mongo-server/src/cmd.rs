@@ -166,6 +166,9 @@ impl Server {
         if matches!(name, "commitTransaction" | "abortTransaction") && db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
         }
+        if let Some(r) = self.write_gate(db, name, cmd).await? {
+            return Ok(r);
+        }
         let wc = self.command_write_concern(name, cmd)?;
         self.check_read_concern(name, cmd)?;
         let mut r = Box::pin(self.dispatch_inner(db, name, cmd, conn_id)).await?;
@@ -190,6 +193,7 @@ impl Server {
     }
 
     async fn dispatch_inner(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
+        crate::fields::check(name, cmd)?;
         if let Some(r) = self.diag_command(db, name, cmd).await {
             return r;
         }
@@ -217,6 +221,7 @@ impl Server {
         match name {
             "replSetGetStatus" | "replSetGetConfig" => return self.repl_cmd(name, db),
             "shutdown" => return self.shutdown_cmd(db, cmd),
+            "dropConnections" | "rotateCertificates" | "setUserWriteBlockMode" | "setFeatureCompatibilityVersion" => return self.admin_cmd(name, db, cmd).unwrap(),
             "hello" | "isMaster" | "ismaster" => {
                 if let Ok(md) = cmd.get_document("client") {
                     self.diag.set_metadata(conn_id, md.clone());

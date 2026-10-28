@@ -10,6 +10,7 @@ pub static SHUTDOWN: tokio::sync::Notify = tokio::sync::Notify::const_new();
 impl Server {
     /// `shutdown`: checked here; the connection is closed without a reply by the connection loop (the `$shutdown` marker).
     pub(crate) fn shutdown_cmd(&self, db: &str, cmd: &Document) -> R<Document> {
+        crate::fields::check("shutdown", cmd)?;
         if db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", "shutdown may only be run against the admin database.".into()));
         }

@@ -13,7 +13,7 @@ import os
 import re
 import time
 from bson import json_util
-from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure, PyMongoError
 from gaps_py import case
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -115,11 +115,18 @@ def make(c):
                         rec = shape(rec)
                 except OperationFailure as e:
                     rec = {"err": [e.code, e.details.get("codeName"), unify(e.details.get("errmsg") or "")]}
+                except PyMongoError as e:
+                    if not opts.get("__expect_close"):
+                        raise
+                    rec = {"connection": type(e).__name__}   # (`shutdown`: the server closes the connection without a reply)
                 if not opts.get("__skip"):
                     out[opts.get("__as") or f"s{i}"] = rec
             return out
         finally:
-            client.drop_database(other.name)
+            try:
+                client.drop_database(other.name)
+            except PyMongoError:
+                pass
     return f
 
 
@@ -141,4 +148,4 @@ for _path in sorted(glob.glob(os.path.join(HERE, "scripts", "*.json"))):
         _N[0] += 1
         _c["_base"] = _START + _N[0] * 1000
         mode = _c.get("mode", "std")
-        case(_c["name"], rs=(mode == "rs"), sa=(mode == "sa"), sort_keys=bool(_c.get("sort_keys")))(make(_c))
+        case(_c["name"], rs=(mode == "rs"), sa=(mode == "sa"), fresh=(mode.split(":")[1] if mode.startswith("fresh:") else None), sort_keys=bool(_c.get("sort_keys")))(make(_c))

@@ -12,7 +12,7 @@ const { EJSON } = req('bson');
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '')).map((a) => { const i = a.indexOf('='); return i < 0 ? [a, true] : [a.slice(0, i), a.slice(i + 1)]; }));
 const CASES = [];
-const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs, sa: !!o.sa, auth: !!o.auth, pair: o.pair || null });
+const C = (name, fn, o = {}) => CASES.push({ name, fn, rs: !!o.rs, sa: !!o.sa, auth: !!o.auth, pair: o.pair || null, fresh: o.fresh || null });
 const sortKeys = (x) => Array.isArray(x) ? x.map(sortKeys) : (x && typeof x === 'object' && !(x instanceof Date) && !x._bsontype && !Buffer.isBuffer(x)) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, sortKeys(x[k])])) : x;
 const canon = (x, sk) => EJSON.stringify(sk ? sortKeys(x === undefined ? null : x) : (x === undefined ? null : x), { relaxed: false });
 const errOf = (e) => ({ __error__: { code: e.code ?? null, codeName: e.codeName ?? null, name: e.code ? undefined : e.name } });
@@ -59,8 +59,19 @@ async function runOn(client, c) {
   for (const c of CASES) {
     if (args.only && !c.name.includes(args.only)) continue;
     if (c.auth && !(realA && oursA)) { console.log('S', c.name, '(auth servers not running)'); continue; }
-    const r = c.pair ? await runOn(pairClient(PAIRS[c.pair][0]), c) : await runOn(c.auth ? realA : c.rs ? realRs : real, c);
-    const o = c.pair ? await runOn(pairClient(PAIRS[c.pair][1]), c) : await runOn(c.auth ? oursA : c.sa ? oursSa : c.rs ? oursRs : ours, c);
+    let r, o;
+    if (c.fresh) {
+      const out = require('child_process').spawnSync(path.join(__dirname, '..', 'fresh_pair.sh'), ['start', c.fresh], { encoding: 'utf8' });
+      try {
+        const [rp, op] = out.stdout.trim().split(/\s+/).map(Number);
+        const outs = [];
+        for (const port of [rp, op]) { const cl = new MongoClient(`mongodb://localhost:${port}/?directConnection=true`, { serverSelectionTimeoutMS: 8000 }); await cl.connect(); outs.push(await runOn(cl, c)); await cl.close(); }
+        [r, o] = outs;
+      } finally { require('child_process').spawnSync(path.join(__dirname, '..', 'fresh_pair.sh'), ['stop', c.fresh]); }
+    } else {
+    r = c.pair ? await runOn(pairClient(PAIRS[c.pair][0]), c) : await runOn(c.auth ? realA : c.rs ? realRs : real, c);
+    o = c.pair ? await runOn(pairClient(PAIRS[c.pair][1]), c) : await runOn(c.auth ? oursA : c.sa ? oursSa : c.rs ? oursRs : ours, c);
+    }
     n++; const kn = r !== o && KNOWN[c.name]; if (r !== o) { if (kn) known++; else bad++; }
     console.log(r === o ? '.' : (kn ? 'K' : 'F'), c.name, kn ? `(known: ${kn})` : '');
     if (r !== o && !kn) { try { for (const d of deepDiff(JSON.parse(r), JSON.parse(o)).slice(0, 8)) console.log('    diff', d); } catch (e) { console.log('    real:', r.slice(0, 400), '\n    ours:', o.slice(0, 400)); } }

@@ -49,6 +49,7 @@ fn current(name: &str, captured: &Bson) -> Bson {
         "internalQueryJavaScriptFnTimeoutMillis" => return Bson::Int32(crate::js::TIMEOUT_MS.load(Relaxed) as i32),
         "jsHeapLimitMB" => return Bson::Int32(crate::js::HEAP_MB.load(Relaxed) as i32),
         "transactionLifetimeLimitSeconds" => return Bson::Int32(crate::txn::LIFETIME_SECS.load(Relaxed) as i32),
+        "featureCompatibilityVersion" => return Bson::Document(doc! { "version": crate::admin_cmds::fcv() }),
         _ => {}
     }
     overlay().lock().unwrap().get(name).cloned().unwrap_or_else(|| captured.clone())

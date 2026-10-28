@@ -174,6 +174,10 @@ impl Default for Diag {
 }
 
 impl Diag {
+    pub(crate) fn fsync_lock_count(&self) -> i64 {
+        self.fsync_locks.load(Relaxed)
+    }
+
     pub fn log_line(&self, sev: &str, comp: &str, id: i32, ctx: &str, msg: &str, attr: Option<Document>) {
         let mut line = doc! { "t": { "$date": chrono_like(bson::DateTime::now()) }, "s": sev, "c": comp, "id": id, "ctx": ctx, "msg": msg };
         if let Some(a) = attr {
@@ -452,7 +456,7 @@ impl Server {
             "compact" => self.compact(db, cmd).await,
             "filemd5" => self.filemd5(db, cmd).await,
             "setIndexCommitQuorum" => self.set_index_commit_quorum(db, cmd).await,
-            "logRotate" => admin_only(db, name).map(|_| ok()),
+            "logRotate" => crate::admin_cmds::log_rotate(db, cmd),
             "fsync" => self.fsync(db, cmd),
             "fsyncUnlock" => self.fsync_unlock(db),
             "cursorInfo" => Err(MongoError::command_not_found(name)),
@@ -1341,7 +1345,7 @@ impl Server {
 
     fn fsync(&self, db: &str, cmd: &Document) -> R<Document> {
         admin_only(db, "fsync")?;
-        if bool_arg(cmd.get("lock"), false) {
+        if cmd.get("lock").map(|v| !matches!(v, Bson::Boolean(false) | Bson::Null | Bson::Undefined | Bson::Int32(0) | Bson::Int64(0)) && !matches!(v, Bson::Double(f) if *f == 0.0)).unwrap_or(false) {
             let n = self.diag.fsync_locks.fetch_add(1, Relaxed) + 1;
             return Ok(doc! { "info": "now locked against writes, use db.fsyncUnlock() to unlock", "lockCount": Bson::Int64(n), "seeAlso": "http://dochub.mongodb.org/core/fsynccommand", "ok": 1.0 });
         }

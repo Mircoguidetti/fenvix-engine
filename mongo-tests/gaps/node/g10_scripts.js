@@ -40,13 +40,13 @@ module.exports = ({ C, EJSON }) => {
             const sub = subst(st, db.databaseName, other.databaseName); if (sub.lsid === '$LSID') sub.lsid = lsid;
             const cmd = EJSON.parse(JSON.stringify(sub), { relaxed: false });
             let rec;
-            try { rec = norm(await target.command(cmd), opts.__strip || []); if (opts.__sortarr) rec = sortarr(rec, opts.__sortarr); if (opts.__shape) rec = shape(rec); } catch (e) { rec = { err: [e.code, e.codeName, unify(e.errmsg || e.message || '')] }; }
+            try { rec = norm(await target.command(cmd), opts.__strip || []); if (opts.__sortarr) rec = sortarr(rec, opts.__sortarr); if (opts.__shape) rec = shape(rec); } catch (e) { rec = (opts.__expect_close && !e.codeName && !e.code) ? { connection: e.constructor.name === 'MongoServerSelectionError' || /ECONNREFUSED|closed|ENOTFOUND/.test(e.message) ? 'closed' : e.constructor.name } : { err: [e.code, e.codeName, unify(e.errmsg || e.message || '')] }; }
             if (process.env.GAPS_TRACE && c.name.includes(process.env.GAPS_TRACE)) console.log('TRACE', c.name, i, client.s.url.slice(-30), JSON.stringify(cmd).slice(0, 200), JSON.stringify(rec).slice(0, 300));
             if (!opts.__skip) out[opts.__as || `s${i}`] = rec;
           }
           return out;
         } finally { await other.dropDatabase().catch(() => {}); }
-      }, { rs: mode === 'rs', sa: mode === 'sa' });
+      }, { rs: mode === 'rs', sa: mode === 'sa', fresh: mode.startsWith('fresh:') ? mode.split(':')[1] : null });
     }
   }
 };

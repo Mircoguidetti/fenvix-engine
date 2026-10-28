@@ -34,6 +34,11 @@ fn specific(name: &str) -> Option<&'static [&'static str]> {
         "getMore" => &["getMore", "collection", "batchSize"],
         "killCursors" => &["killCursors", "cursors"],
         "shutdown" => &["shutdown", "force", "timeoutSecs"],
+        "dropConnections" => &["dropConnections", "hostAndPort"],
+        "features" => &["features"],
+        "rotateCertificates" => &["rotateCertificates", "message"],
+        "setUserWriteBlockMode" => &["setUserWriteBlockMode", "global"],
+        "setFeatureCompatibilityVersion" => &["setFeatureCompatibilityVersion", "confirm"],
         _ => return None,
     })
 }

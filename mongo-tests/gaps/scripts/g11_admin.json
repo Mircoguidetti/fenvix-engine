@@ -1,0 +1,804 @@
+[
+ {
+  "name": "g11.admin.logrotate",
+  "mode": "sa",
+  "steps": [
+   {
+    "logRotate": "audit",
+    "__db": "admin"
+   },
+   {
+    "logRotate": "x",
+    "__db": "admin"
+   },
+   {
+    "logRotate": {},
+    "__db": "admin"
+   },
+   {
+    "logRotate": true
+   },
+   {
+    "logRotate": true,
+    "comment": "c",
+    "__db": "admin",
+    "__pause": 1300
+   },
+   {
+    "logRotate": 1.5,
+    "__db": "admin",
+    "__pause": 1300
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.fsync_lock",
+  "mode": "sa",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "fsync": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "find": "t"
+   },
+   {
+    "count": "t"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": 1
+       }
+      }
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "drop": "t",
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ]
+   },
+   {
+    "find": "t",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "fsync": 1,
+    "lock": "x",
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 4
+     }
+    ],
+    "maxTimeMS": 200
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": 0,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": false,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1
+   },
+   {
+    "fsyncUnlock": 1
+   },
+   {
+    "fsync": 1,
+    "lock": true
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.fsync_lock_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "fsync": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": true,
+    "__db": "admin"
+   },
+   {
+    "find": "t"
+   },
+   {
+    "count": "t"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": 1
+       }
+      }
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {},
+      "limit": 1
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "drop": "t",
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 2
+     }
+    ],
+    "maxTimeMS": 300
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 3
+     }
+    ]
+   },
+   {
+    "find": "t",
+    "sort": {
+     "_id": 1
+    }
+   },
+   {
+    "fsync": 1,
+    "lock": "x",
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 4
+     }
+    ],
+    "maxTimeMS": 200
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": 0,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1,
+    "lock": false,
+    "__db": "admin"
+   },
+   {
+    "fsync": 1
+   },
+   {
+    "fsyncUnlock": 1
+   },
+   {
+    "fsync": 1,
+    "lock": true
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   },
+   {
+    "fsyncUnlock": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.dropconnections",
+  "mode": "sa",
+  "steps": [
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     "localhost:9"
+    ],
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": "x",
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     1
+    ],
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [],
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": []
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     "a"
+    ],
+    "bogus": 1,
+    "__db": "admin"
+   },
+   {
+    "dropConnections": 1,
+    "hostAndPort": [
+     "a",
+     "b:2"
+    ],
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.rotatecertificates",
+  "mode": "sa",
+  "steps": [
+   {
+    "rotateCertificates": 1,
+    "__db": "admin"
+   },
+   {
+    "rotateCertificates": 1,
+    "message": "m",
+    "__db": "admin"
+   },
+   {
+    "rotateCertificates": 1,
+    "message": 5,
+    "__db": "admin"
+   },
+   {
+    "rotateCertificates": 1
+   },
+   {
+    "rotateCertificates": 1,
+    "bogus": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.userwriteblock_sa",
+  "mode": "sa",
+  "steps": [
+   {
+    "setUserWriteBlockMode": 1,
+    "global": true,
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": "x",
+    "__db": "admin"
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "bogus": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.userwriteblock_rs",
+  "mode": "rs",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 0
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": true,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9
+     }
+    ]
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 8
+     },
+     {
+      "_id": 7
+     }
+    ],
+    "ordered": false
+   },
+   {
+    "update": "t",
+    "updates": [
+     {
+      "q": {},
+      "u": {
+       "$set": {
+        "a": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "delete": "t",
+    "deletes": [
+     {
+      "q": {
+       "_id": 0
+      },
+      "limit": 1
+     }
+    ]
+   },
+   {
+    "find": "t"
+   },
+   {
+    "count": "t"
+   },
+   {
+    "createIndexes": "t",
+    "indexes": [
+     {
+      "key": {
+       "a": 1
+      },
+      "name": "a_1"
+     }
+    ]
+   },
+   {
+    "create": "n"
+   },
+   {
+    "drop": "t"
+   },
+   {
+    "collMod": "t",
+    "validationLevel": "off"
+   },
+   {
+    "aggregate": "t",
+    "pipeline": [
+     {
+      "$out": "o"
+     }
+    ],
+    "cursor": {}
+   },
+   {
+    "findAndModify": "t",
+    "query": {
+     "_id": 0
+    },
+    "update": {
+     "$set": {
+      "z": 1
+     }
+    }
+   },
+   {
+    "dropDatabase": 1
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "__db": "admin"
+   },
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 9
+     }
+    ]
+   },
+   {
+    "setUserWriteBlockMode": 1,
+    "global": false,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.setfcv",
+  "mode": "fresh:fcv",
+  "steps": [
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "confirm": false,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "8.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "5.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "x",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": 7,
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": "x",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": true
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": true,
+    "bogus": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.0",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "confirm": true,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "6.3",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": true,
+    "comment": "c",
+    "writeConcern": {
+     "w": 1
+    },
+    "__db": "admin"
+   },
+   {
+    "getParameter": 1,
+    "featureCompatibilityVersion": 1,
+    "__db": "admin"
+   },
+   {
+    "setFeatureCompatibilityVersion": "7.0",
+    "confirm": 1,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.shutdown",
+  "mode": "fresh:sd",
+  "steps": [
+   {
+    "insert": "t",
+    "documents": [
+     {
+      "_id": 1
+     }
+    ],
+    "__skip": true
+   },
+   {
+    "shutdown": 1
+   },
+   {
+    "shutdown": 1,
+    "force": "x",
+    "__db": "admin"
+   },
+   {
+    "shutdown": 1,
+    "timeoutSecs": "x",
+    "__db": "admin"
+   },
+   {
+    "shutdown": 1,
+    "bogus": 1,
+    "__db": "admin"
+   },
+   {
+    "ping": 1
+   },
+   {
+    "shutdown": 1,
+    "force": true,
+    "timeoutSecs": 0,
+    "__expect_close": true,
+    "__db": "admin"
+   },
+   {
+    "ping": 1,
+    "__expect_close": true,
+    "__db": "admin"
+   }
+  ]
+ },
+ {
+  "name": "g11.admin.features",
+  "mode": "sa",
+  "steps": [
+   {
+    "features": 1,
+    "__shape": true,
+    "__db": "admin"
+   },
+   {
+    "features": 1,
+    "__shape": true
+   },
+   {
+    "features": 1,
+    "bogus": 1,
+    "__db": "admin"
+   }
+  ]
+ }
+]
