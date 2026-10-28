@@ -346,9 +346,6 @@ pub fn encrypted_fields(coll: &str, v: &Bson, is_rs: bool) -> R<Document> {
     let Bson::Document(ef) = v else {
         return Err(MongoError::type_mismatch(format!("BSON field 'create.encryptedFields' is the wrong type '{}', expected type 'object'", crate::update::type_name(v))));
     };
-    if !is_rs {
-        return Err(MongoError::new(6346402, "Location6346402", "Encrypted collections are not supported on standalone".into()));
-    }
     let Some(Bson::Array(fields)) = ef.get("fields") else { return Err(missing("create.encryptedFields.fields")) };
     let known = ["double", "string", "object", "array", "binData", "undefined", "objectId", "bool", "date", "null", "regex", "dbPointer", "javascript", "symbol", "javascriptWithScope", "int", "timestamp", "long", "decimal", "minKey", "maxKey"];
     let mut out_fields = Vec::new();
@@ -388,6 +385,9 @@ pub fn encrypted_fields(coll: &str, v: &Bson, is_rs: bool) -> R<Document> {
             _ => {}
         }
         out_fields.push(Bson::Document(o));
+    }
+    if !is_rs {
+        return Err(MongoError::new(6346402, "Location6346402", "Encrypted collections are not supported on standalone".into()));
     }
     Ok(doc! {
         "escCollection": ef.get_str("escCollection").map(String::from).unwrap_or_else(|_| format!("enxcol_.{coll}.esc")),
