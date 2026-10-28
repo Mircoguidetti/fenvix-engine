@@ -529,6 +529,7 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
         let mut next_prune = std::time::Instant::now() + prune_every;
         loop {
             tick.tick().await;
+            let Some(_gate) = super::agent_gate().await else { return };
             let entries = ctl.dbs.entries_snapshot();
             for e in entries {
                 let (name, writer, _open, seq) = match e.try_read() {

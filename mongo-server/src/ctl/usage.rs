@@ -317,6 +317,7 @@ pub fn spawn_flusher(ctl: &Arc<Ctl>) {
         every.tick().await;
         loop {
             every.tick().await;
+            let Some(_gate) = super::agent_gate().await else { return };
             // Sample the storage of databases that were active, at most hourly.
             let due: Vec<String> = {
                 let g = ctl.usage.inner.lock().unwrap();

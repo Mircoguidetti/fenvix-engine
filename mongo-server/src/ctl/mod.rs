@@ -218,7 +218,29 @@ pub async fn failpoint(name: &str) {
     }
 }
 
-/// Clean shutdown: hand pins over and write the last usage counters. Called after the tenants are closed.
+/// The background agents (keep-awake pins, restore points, export expiry, usage counters) each take this gate for one iteration of
+/// their loop. Shutdown takes it exclusively before the tenants are closed: it waits for the iterations in flight, and no agent starts
+/// another, so none can open a database again (and take its lease, renew its pin) after `close_all`.
+static GATE: tokio::sync::RwLock<()> = tokio::sync::RwLock::const_new(());
+static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// `None` once shutdown began: the agent must return.
+pub async fn agent_gate() -> Option<tokio::sync::RwLockReadGuard<'static, ()>> {
+    let g = GATE.read().await;
+    if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
+        None
+    } else {
+        Some(g)
+    }
+}
+
+/// First step of the shutdown, before `Dbs::close_all`: stop the agents and wait for the iteration each one may be in.
+pub async fn stop_agents() {
+    let _w = GATE.write().await;
+    STOPPING.store(true, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// Clean shutdown: hand pins over and write the last usage counters. Called after the tenants are closed (and after `stop_agents`).
 pub async fn shutdown() {
     if let Some(ctl) = get() {
         if ctl.args.admin_listen.is_some() {

@@ -280,6 +280,7 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
         let mut every = tokio::time::interval(Duration::from_secs(300));
         loop {
             every.tick().await;
+            let Some(_gate) = super::agent_gate().await else { return };
             let listed: Vec<Path> = ctl.store.list(Some(&rec::path(&["control", "exports"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
             for p in listed {
                 if let Ok(Some(r)) = rec::get(&ctl.store, &p).await {

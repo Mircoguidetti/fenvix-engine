@@ -407,6 +407,7 @@ async fn run() -> Result<()> {
         }
     }
     eprintln!("shutting down: closing tenants cleanly");
+    ctl::stop_agents().await;
     dbs.close_all().await;
     ctl::shutdown().await;
     leases.release_process().await;

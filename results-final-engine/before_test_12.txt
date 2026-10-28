@@ -1,0 +1,16 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+E   AssertionError: the pin was not handed over: {'pinned': True, 'holder': 'shut-36240', 'expires_ms': 1793202349578, 'seq': 2, 'since_ms': 1793202318852}
+    assert ({'pinned': True, 'holder': 'shut-36240', 'expires_ms': 1793202349578, 'seq': 2, ...} is not None and 'shut-36240' == ''
+      
+      + shut-36240)
+/home/user/test5-compat-indexes/ctl-tests/test_12_shutdown.py:48: AssertionError: the pin was not handed over: {'pinned': True, 'holder': 'shut-36240', 'expires_ms': 1793202349578, 'seq': 2, 'since_ms': 1793202318852}
+E   AssertionError: the pin was not handed over: {'pinned': True, 'holder': 'shut-25991', 'expires_ms': 1793202351646, 'seq': 2, 'since_ms': 1793202320876}
+    assert ({'pinned': True, 'holder': 'shut-25991', 'expires_ms': 1793202351646, 'seq': 2, ...} is not None and 'shut-25991' == ''
+      
+      + shut-25991)
+/home/user/test5-compat-indexes/ctl-tests/test_12_shutdown.py:48: AssertionError: the pin was not handed over: {'pinned': True, 'holder': 'shut-25991', 'expires_ms': 1793202351646, 'seq': 2, 'since_ms': 1793202320876}
+=========================== short test summary info ============================
+FAILED test_12_shutdown.py::test_clean_exit_releases_pins_usage_and_leases[shutdown-command]
+FAILED test_12_shutdown.py::test_clean_exit_releases_pins_usage_and_leases[sigterm]
+2 failed in 4.54s

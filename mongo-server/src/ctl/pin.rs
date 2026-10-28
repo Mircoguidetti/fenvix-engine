@@ -170,6 +170,7 @@ pub fn spawn_agent(ctl: &Arc<Ctl>) {
         let mut tick = tokio::time::interval(Duration::from_millis(500));
         loop {
             tick.tick().await;
+            let Some(_gate) = super::agent_gate().await else { return };
             let now = Instant::now();
             if now >= next_list {
                 let listed: Vec<Path> = ctl.store.list(Some(&rec::path(&["control", "pins"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
