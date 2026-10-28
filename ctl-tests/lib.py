@@ -76,17 +76,34 @@ class Server:
         self.proc = None
         self.log_path = os.path.join(OUT, f"{tag}-{self.port}.log")
         self.env = env or {}
+        # CTL_TEST_AUTH=1: run the server with --auth and give the tests an authenticated client (root created through the localhost
+        # exception), to run the whole control-layer suite with access control on. Servers a test starts with its own --auth are left alone.
+        self.auth = os.environ.get("CTL_TEST_AUTH") == "1" and "--auth" not in self.extra
 
     def start(self, wait=True):
         cmd = [self.binary, "--listen", f"127.0.0.1:{self.port}"] + (["--admin-listen", f"127.0.0.1:{self.admin_port}"] if self.admin_enabled else []) + [
                "--idle-secs", str(self.idle), "--bucket", self.bucket, "--endpoint", self.endpoint, "--holder", self.holder,
-               "--no-ttl"] + ([] if "--lease-ttl-secs" in self.extra else ["--lease-ttl-secs", "6"]) + self.extra
+               "--no-ttl"] + ([] if "--lease-ttl-secs" in self.extra else ["--lease-ttl-secs", "6"]) + (["--auth"] if self.auth else []) + self.extra
         env = dict(os.environ, MONGO_ADMIN_TOKEN=TOKEN, **self.env)
         self.log = open(self.log_path, "ab")
         self.proc = subprocess.Popen(cmd, stdout=self.log, stderr=self.log, env=env)
         if wait:
             self.wait_ready()
         return self
+
+    def ensure_root(self):
+        """With CTL_TEST_AUTH=1: create the root user through the localhost exception (a restart finds it already there)."""
+        if not self.auth:
+            return
+        from pymongo import MongoClient
+        from pymongo.errors import OperationFailure
+        c = MongoClient(f"mongodb://127.0.0.1:{self.port}/?directConnection=true", serverSelectionTimeoutMS=20000)
+        try:
+            c.admin.command("createUser", "root", pwd="rootpw", roles=[{"role": "root", "db": "admin"}])
+        except OperationFailure:
+            pass          # already created by an earlier start of this server
+        finally:
+            c.close()
 
     def wait_ready(self, timeout=30):
         t0 = time.time()
@@ -98,9 +115,11 @@ class Server:
                     self.admin.get("/v1/health")
                 import socket
                 socket.create_connection(("127.0.0.1", self.port), timeout=1).close()
-                return
             except Exception:
                 time.sleep(0.1)
+                continue
+            self.ensure_root()
+            return
         raise RuntimeError("server did not start")
 
     @property
@@ -109,6 +128,8 @@ class Server:
 
     @property
     def uri(self):
+        if self.auth:
+            return f"mongodb://root:rootpw@127.0.0.1:{self.port}/?directConnection=true&authSource=admin"
         return f"mongodb://127.0.0.1:{self.port}/?directConnection=true"
 
     def client(self, **kw):
