@@ -15,7 +15,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-22.04
-    timeout-minutes: 150
+    timeout-minutes: 115   # build 8 + launch 4 + wait up to 95 + downloads 2 + clean-up 5 + margin
     env:
       AWS_REGION: eu-central-1
       AWS_DEFAULT_REGION: eu-central-1

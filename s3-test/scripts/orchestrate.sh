@@ -25,7 +25,7 @@ jstep() { jq -cn --arg n "$1" --arg s "$2" --arg d "${3:-}" '{step:$n,status:$s,
 attempt() {
   local name=$1 act=$2 res=$3; shift 3
   local o
-  refresh_aws_creds || true
+  refresh_or_stop
   if o=$("$@" 2>&1); then LAST=$o; echo "OK      $name"; jstep "$name" ok; return 0; fi
   echo "FAILED  $name: $o"
   local reported; reported=$(printf '%s' "$o" | grep -oiE 'not authorized to perform[^"]{0,200}' | head -1)
@@ -36,6 +36,21 @@ attempt() {
   LAST=""; return 1
 }
 skipped() { echo "SKIPPED $1 ($2)"; jstep "$1" skipped "$2"; }
+
+# Renew the credentials (new OIDC token + assume-role) when they are older than 40 min. Two attempts, then STOP: the script
+# exits at once (code 3) and the workflow goes straight to the clean-up; it never retries forever.
+refresh_or_stop() {
+  refresh_aws_creds && return 0
+  sleep 5; refresh_aws_creds && return 0
+  echo "STOP: the AWS credentials could not be renewed (2 attempts). Going straight to the clean-up."
+  jq -cn '{step:"credential renewal",access_denied:false,iam_action:"sts:AssumeRoleWithWebIdentity (role trust policy / GitHub OIDC token)",resource:"role fenvix-gha-tests",reported_by_aws:"",message:"renewal failed twice; run stopped"}' >> "$ERR"
+  jstep "credential renewal" failed "renewal failed twice; stopped"
+  exit 3
+}
+COLLECTED=0; WD=""
+collect() { mkdir -p "$OUT/instance"; aws s3 cp "s3://$BUCKET/_s3test/" "$OUT/instance/" --recursive --exclude "bundle.tgz" --only-show-errors 2>/dev/null || true; COLLECTED=1; }
+on_exit() { [ -n "$WD" ] && kill $WD 2>/dev/null; if [ "${BUCKET_OK:-0}" = 1 ] && [ $COLLECTED = 0 ]; then collect; fi; }
+trap on_exit EXIT
 
 echo "== account $ACCT, run $GITHUB_RUN_ID, tests $TESTS, bucket $BUCKET"
 LEDGER_OK=1
@@ -148,7 +163,7 @@ else
         Failed|Cancelled|TimedOut) echo "FAILED  $name: $st"; jstep "$name" failed "$st"; return 1;;
         *AccessDenied*|*not\ authorized*) echo "FAILED $name: $st"
           jq -cn --arg n "$name" --arg m "$st" '{step:$n,access_denied:true,iam_action:"ssm:GetCommandInvocation",resource:"arn:aws:ssm:eu-central-1:*:*",reported_by_aws:"",message:$m}' >> "$ERR"; jstep "$name" failed "$st"; return 1;; esac
-      sleep 5; refresh_aws_creds || true
+      sleep 5; refresh_or_stop
     done
     echo "FAILED  $name: still $st"; jstep "$name" failed "timeout"; return 1
   }
@@ -166,20 +181,24 @@ else
     bash s3-test/scripts/watchdog.sh "$ID" "$BUCKET" "$OUT" & WD=$!
     START="aws s3 cp s3://$BUCKET/_s3test/bundle.tgz /tmp/b.tgz --region $R --only-show-errors && mkdir -p /opt/s3test && tar xzf /tmp/b.tgz -C /opt/s3test && chmod +x /opt/s3test/scripts/*.sh && (setsid nohup bash /opt/s3test/scripts/run.sh $BUCKET $TESTS >/dev/null 2>&1 < /dev/null &) ; echo started"
     if ssm_run "start run.sh on instance" "$(jq -cn --arg c "$START" '[$c]')" 300; then
-      done_=0
-      for _ in $(seq 1 600); do   # up to 100 minutes; the instance's own timer ends at 90
-        refresh_aws_creds || true
+      done_=0; n=0
+      LAUNCH=$(grep '^LAUNCH_EPOCH=' "$STATE" | cut -d= -f2); deadline=$((LAUNCH + 95*60))   # the instance's own timer ends at 90 min
+      while [ "$(date +%s)" -lt "$deadline" ]; do
+        refresh_or_stop
         if aws s3api head-object --bucket "$BUCKET" --key _s3test/out/DONE >/dev/null 2>&1; then done_=1; break; fi
         [ -f "$OUT/watchdog.stopped" ] && break
-        sleep 10
+        if [ $((n % 3)) -eq 0 ]; then   # every 30 s: has the instance already gone (own timer, guard, watchdog)? then stop waiting
+          st=$(aws ec2 describe-instances --region $R --instance-ids "$ID" --query 'Reservations[0].Instances[0].State.Name' --output text 2>/dev/null)
+          case $st in terminated|shutting-down|stopped|stopping) echo "instance is $st: no more waiting, going to the clean-up"; break;; esac
+        fi
+        n=$((n+1)); sleep 10
       done
       if [ $done_ = 1 ]; then echo "OK      engine tests on instance finished"; jstep "engine tests on instance" ok
       else echo "FAILED  engine tests on instance: no DONE marker (stopped by guard/watchdog or timer)"; jstep "engine tests on instance" failed "no DONE marker"; fi
     else INST_OK=0; fi
-    kill $WD 2>/dev/null; wait $WD 2>/dev/null
+    kill $WD 2>/dev/null; wait $WD 2>/dev/null; WD=""
   fi
   refresh_aws_creds 0 || true   # fresh credentials for the final downloads
-  mkdir -p "$OUT/instance"
-  aws s3 cp "s3://$BUCKET/_s3test/" "$OUT/instance/" --recursive --exclude "bundle.tgz" --only-show-errors 2>/dev/null || true
+  collect
 fi
 echo "ERRORS: $(wc -l < "$ERR") recorded"

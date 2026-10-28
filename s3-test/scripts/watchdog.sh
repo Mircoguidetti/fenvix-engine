@@ -14,7 +14,13 @@ LAUNCH=$(grep '^LAUNCH_EPOCH=' "$OUT/state.env" | cut -d= -f2); : "${LAUNCH:=$(d
 reads=0
 while true; do
   sleep 30
-  refresh_aws_creds || true   # this process outlives the 1 h session: it renews its own credentials
+  # this process outlives the 1 h session: it renews its own credentials; if that fails twice it stops the instance
+  # with the credentials it still has (fail closed) and ends.
+  if ! refresh_aws_creds; then sleep 5; refresh_aws_creds || {
+    echo "$(date +%s) WATCHDOG: cannot renew the AWS credentials: terminating $ID with the current ones and stopping" | tee -a "$OUT/watchdog.log"
+    echo "credential renewal failed" > "$OUT/watchdog.reason"
+    aws ec2 terminate-instances --region $R --instance-ids "$ID" >> "$OUT/watchdog.log" 2>&1
+    touch "$OUT/watchdog.stopped"; exit 0; }; fi
   now=$(date +%s); el=$((now-LAUNCH)); reads=$((reads+1)); echo $reads > "$OUT/watchdog.reads"
   reason=""
   if aws s3 cp "s3://$B/_s3test/guard/counters.json" "$OUT/guard-latest.json" --only-show-errors 2>/dev/null; then
