@@ -1,0 +1,160 @@
+..FFF......F.                                                            [100%]
+=================================== FAILURES ===================================
+________________________ test_writes_never_cross[clone] ________________________
+test_02_fork.py:73: in test_writes_never_cross
+    c[db].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on w_clone to execute command { tenantAdmin: 1, close: true, $db: "w_clone" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on w_clone to execute command { tenantAdmin: 1, close: true, $db: "w_clone" }', 'code': 13, 'codeName': 'Unauthorized'}
+________________________ test_writes_never_cross[copy] _________________________
+test_02_fork.py:73: in test_writes_never_cross
+    c[db].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on w_copy to execute command { tenantAdmin: 1, close: true, $db: "w_copy" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on w_copy to execute command { tenantAdmin: 1, close: true, $db: "w_copy" }', 'code': 13, 'codeName': 'Unauthorized'}
+__________________________ test_clone_copies_no_data ___________________________
+test_02_fork.py:82: in test_clone_copies_no_data
+    c["big"].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on big to execute command { tenantAdmin: 1, close: true, $db: "big" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on big to execute command { tenantAdmin: 1, close: true, $db: "big" }', 'code': 13, 'codeName': 'Unauthorized'}
+___________ test_fork_then_compaction_and_gc_keep_the_fork_readable ____________
+test_02_fork.py:215: in test_fork_then_compaction_and_gc_keep_the_fork_readable
+    c["cg"].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on cg to execute command { tenantAdmin: 1, close: true, $db: "cg" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on cg to execute command { tenantAdmin: 1, close: true, $db: "cg" }', 'code': 13, 'codeName': 'Unauthorized'}
+=========================== short test summary info ============================
+FAILED test_02_fork.py::test_writes_never_cross[clone] - pymongo.errors.Opera...
+FAILED test_02_fork.py::test_writes_never_cross[copy] - pymongo.errors.Operat...
+FAILED test_02_fork.py::test_clone_copies_no_data - pymongo.errors.OperationF...
+FAILED test_02_fork.py::test_fork_then_compaction_and_gc_keep_the_fork_readable
+4 failed, 9 passed in 8.30s

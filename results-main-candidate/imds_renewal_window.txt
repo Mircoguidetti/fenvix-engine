@@ -1,0 +1,7 @@
+renewal_window: ttl 320s, rotate_after None, 50s of traffic, engine pid 4767 alive at the end: True
+writes acknowledged 184, failed 0; S3 requests 513, refused 0, not supported by the fake 0
+IMDS: 3 token PUTs, 6 GETs (0 without a valid token), 3 credentials issued
+key: issued at / expires at (s from start) | used on S3 from .. to | requests | refused
+  FAKEKEY0001: 0.05 / 319.1 | 0.10 .. 18.91 | 152 | 0
+  FAKEKEY0002: 19.17 / 339.1 | 19.21 .. 39.09 | 193 | 0
+  FAKEKEY0003: 39.39 / 359.1 | 39.44 .. 51.06 | 168 | 0

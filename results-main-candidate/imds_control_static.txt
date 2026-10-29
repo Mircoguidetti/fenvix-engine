@@ -1,0 +1,1 @@
+control: static key, expires 12 s after start; writes acknowledged 42, failed 1; keys used ['FAKESTATIC01']; requests refused ExpiredToken 256

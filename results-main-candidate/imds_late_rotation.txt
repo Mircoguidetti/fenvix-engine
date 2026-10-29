@@ -1,0 +1,6 @@
+late_rotation: ttl 320s, rotate_after 25, 40s of traffic, engine pid 4794 alive at the end: True
+writes acknowledged 143, failed 0; S3 requests 380, refused 0, not supported by the fake 0
+IMDS: 21 token PUTs, 42 GETs (0 without a valid token), 2 credentials issued
+key: issued at / expires at (s from start) | used on S3 from .. to | requests | refused
+  FAKEKEY0001: 0.05 / 319.29 | 0.10 .. 24.82 | 218 | 0
+  FAKEKEY0002: 25.11 / 344.29 | 25.16 .. 40.43 | 162 | 0

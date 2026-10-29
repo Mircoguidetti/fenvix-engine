@@ -1,0 +1,12 @@
+....F.....                                                               [100%]
+=================================== FAILURES ===================================
+______________________ test_streaming_uses_bounded_memory ______________________
+test_04_export.py:230: in test_streaming_uses_bounded_memory
+    assert peak[0] - base_rss < size // 1_000_000 // 2, f"memory grew by {peak[0] - base_rss} MB for a {size // 1_000_000} MB export"
+E   AssertionError: memory grew by 22 MB for a 40 MB export
+E   assert (495 - 473) < ((40900000 // 1000000) // 2)
+----------------------------- Captured stdout call -----------------------------
+exported 40 MB; server RSS 473 -> 495 MB
+=========================== short test summary info ============================
+FAILED test_04_export.py::test_streaming_uses_bounded_memory - AssertionError...
+1 failed, 9 passed in 54.72s

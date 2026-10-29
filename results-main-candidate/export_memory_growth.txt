@@ -1,0 +1,10 @@
+ws 1: MEMGROWTH 16 MB 1 passed 
+ws 2: MEMGROWTH 17 MB 1 passed 
+ws 3: MEMGROWTH 16 MB 1 passed 
+ws 4: MEMGROWTH 8 MB 1 passed 
+ws 5: MEMGROWTH 12 MB 1 passed 
+p 1: MEMGROWTH 9 MB 1 passed 
+p 2: MEMGROWTH 12 MB 1 passed 
+p 3: MEMGROWTH 13 MB 1 passed 
+p 4: MEMGROWTH 2 MB 1 passed 
+p 5: MEMGROWTH 12 MB 1 passed 
