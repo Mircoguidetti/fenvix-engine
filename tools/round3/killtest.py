@@ -38,7 +38,7 @@ for t in range(a.trials):
         os.remove(f)
     wc = "j0" if a.mode == "relaxed" else "default"
     t_start = time.time() + 2
-    load = subprocess.Popen(R.load_cmd(eng, dbs, a.rate, "write", a.secs + 10, os.path.join(WORK, f"{name}-load.json"), wc, t_start, extra=["--acked", acked]),
+    load = subprocess.Popen(R.load_cmd(eng, dbs, a.rate, "write", a.secs + 10, os.path.join(WORK, f"{name}-load.json"), wc, t_start, extra=["--acked", acked, "--socket-timeout-ms", "5000"]),
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(max(0, t_start + a.secs - time.time()))
     eng.kill9()

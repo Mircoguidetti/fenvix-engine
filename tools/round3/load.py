@@ -29,7 +29,7 @@ PAD = "y" * 900
 async def db_loop(db, args, t_start, t_end, lat, errs, acked, rng, k):
     from pymongo import AsyncMongoClient, WriteConcern
     c = AsyncMongoClient("127.0.0.1", args.port, directConnection=True, maxPoolSize=args.pool, serverSelectionTimeoutMS=60000,
-                         socketTimeoutMS=120000, retryWrites=False, retryReads=False, appname=f"round3-{db}")
+                         socketTimeoutMS=args.socket_timeout_ms, retryWrites=False, retryReads=False, appname=f"round3-{db}")
     wc = WriteConcern(w=1, j=False) if args.wc == "j0" else None
     coll = c[db].get_collection("events", write_concern=wc) if wc else c[db].events
     items = c[db].items
@@ -120,6 +120,7 @@ def main():
     ap.add_argument("--burst-on", type=float, default=30)
     ap.add_argument("--burst-every", type=float, default=300)
     ap.add_argument("--t-start", type=float, default=None)
+    ap.add_argument("--socket-timeout-ms", type=int, default=120000)
     ap.add_argument("--first-at-start", action="store_true", help="first request of every database within 0.3 s of the start")
     ap.add_argument("--lat-after", type=float, default=0, help="also report percentiles of the requests started after this many seconds")
     args = ap.parse_args()
