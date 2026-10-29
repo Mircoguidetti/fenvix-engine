@@ -33,6 +33,8 @@ MUT = {
                       '        let ok = builtin(x, "grantable_check").is_some();', T17),
     # --grantable-roles at run time: a listed role is not checked again for user administration (redundant with startup_check)
     "runtime_power_check": (AUTH, "                Some((privs, _)) if authz::confined_without_user_admin(&privs, &rdb) => {}", "                Some(_) => {}", T17),
+    # point 4: the database parameter of DELETE /v1/network/blocks/{ip} is ignored (every block of the address goes)
+    "unblock_one_database": ("mongo-server/src/ctl/allowlist.rs", 'netguard::get().unblock_db(addr, db)', 'netguard::get().unblock(addr)', "test_18_unblock_per_database.py"),
 }
 names = sys.argv[1:] or list(MUT)
 summary = []
