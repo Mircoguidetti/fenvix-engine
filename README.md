@@ -48,7 +48,11 @@ database itself** (a user defined on `admin` with `read` on the customer databas
 
 All counters and blocks are in memory, per process. Trusted networks (`--trusted-networks`) are never counted, blocked or
 limited. The values in force are shown by `GET /v1/network` on the admin port (`config`), with the blocked addresses;
-`DELETE /v1/network/blocks/{ip}` lifts the blocks of an address.
+`DELETE /v1/network/blocks/{ip}` lifts every block of an address and forgets its counts (the address-wide block and the
+blocks of every database: the operator's tool). `DELETE /v1/network/blocks/{ip}?database=<db>` lifts **only** the block
+of the pair (address, database) and forgets that pair's counts: the address-wide block and the other databases' blocks
+stay. The reply says `{"ip", "database", "unblocked"}`, where `unblocked` is false when the pair had nothing tracked; an
+empty `database` is a 400.
 
 | flag | default | effect |
 |---|---|---|

@@ -84,8 +84,13 @@ pub fn state() -> Value {
     netguard::get().state()
 }
 
-pub fn unblock(ip: &str) -> ApiResult<Value> {
+/// `DELETE /v1/network/blocks/{ip}`: every block and count of the address. With `?database=<db>`: only the pair (address,
+/// database); the address-wide block and the other databases' blocks stay.
+pub fn unblock(ip: &str, database: Option<&str>) -> ApiResult<Value> {
     let addr: std::net::IpAddr = ip.parse().map_err(|_| ApiError::bad("not an IPv4 or IPv6 address"))?;
-    let was = netguard::get().unblock(addr);
-    Ok(json!({ "ip": addr.to_string(), "unblocked": was }))
+    match database {
+        None => Ok(json!({ "ip": addr.to_string(), "unblocked": netguard::get().unblock(addr) })),
+        Some("") => Err(ApiError::bad("database must not be empty")),
+        Some(db) => Ok(json!({ "ip": addr.to_string(), "database": db, "unblocked": netguard::get().unblock_db(addr, db) })),
+    }
 }

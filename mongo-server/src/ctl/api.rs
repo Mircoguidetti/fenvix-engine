@@ -91,7 +91,7 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("GET", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::get(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::clear(ctl, db).await?)),
         ("GET", ["v1", "network"]) => Ok(Response::json(200, &super::allowlist::state())),
-        ("DELETE", ["v1", "network", "blocks", ip]) => Ok(Response::json(200, &super::allowlist::unblock(ip)?)),
+        ("DELETE", ["v1", "network", "blocks", ip]) => Ok(Response::json(200, &super::allowlist::unblock(ip, req.query.get("database").map(|s| s.as_str()))?)),
         ("GET", ["v1", "databases", db, "manifest"]) => {
             meta::check_name(db)?;
             let id = req.query.get("id").and_then(|v| v.parse().ok());

@@ -498,6 +498,13 @@ impl NetGuard {
         }
     }
 
+    /// Lift only the block (and forget the counts) of the pair (address, database): the address-wide block and the other
+    /// databases' blocks stay. Returns whether the pair was tracked.
+    pub fn unblock_db(&self, ip: IpAddr, db: &str) -> bool {
+        let mut m = self.clients.lock().unwrap();
+        m.get_mut(&self.key(ip)).map(|c| c.dbs.remove(db).is_some()).unwrap_or(false)
+    }
+
     fn prune_map(m: &mut HashMap<IpAddr, Client>, now: Instant, cfg: &Cfg) {
         m.retain(|_, c| {
             c.dbs.retain(|_, t| !t.idle(now, cfg));
