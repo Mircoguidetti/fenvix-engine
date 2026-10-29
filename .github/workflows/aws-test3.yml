@@ -1,0 +1,102 @@
+# aws-test3: dormant databases of the final engine (commit 41ed169) on real S3, eu-central-1. Runs on the GitHub runner:
+# no EC2, no other AWS service than S3 (+ STS for the OIDC role session). One trigger only: a push to branch aws-test3
+# that touches aws-test3/run.json. No keys: OIDC role from the repository secret AWS_ROLE_ARN (masked, never printed).
+name: aws-test3
+on:
+  push:
+    branches: [aws-test3]
+    paths: ['aws-test3/run.json']
+permissions:
+  id-token: write
+  contents: write      # the runner commits results-aws-test3/ to this branch
+concurrency:
+  group: fenvix-aws-test3
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330   # driver budget 290 min + clean-up + publish
+    env:
+      AWS_REGION: eu-central-1
+      AWS_DEFAULT_REGION: eu-central-1
+      AWS_PAGER: ""
+      T3_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      ENGINE_COMMIT: 41ed169
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mask identity values (account id, role name) derived from the secret
+        run: |
+          [ -n "$T3_ROLE" ] || { echo "repository secret AWS_ROLE_ARN is not set"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$T3_ROLE"); role=${T3_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          echo "T3_ACCT=$acct" >> "$GITHUB_ENV"; echo "T3_ROLE_NAME=$role" >> "$GITHUB_ENV"
+          echo "T3_DEADLINE_EPOCH=$(( $(date +%s) + 290*60 ))" >> "$GITHUB_ENV"
+
+      - name: Official S3 prices of eu-central-1 (public price list, no AWS credentials)
+        run: python3 aws-test3/prices.py results-aws-test3
+
+      - name: Build the engine from commit 41ed169 (no AWS yet)
+        run: |
+          git worktree add /tmp/eng "$ENGINE_COMMIT"
+          (cd /tmp/eng && cargo build --release --locked -p mongo-server)
+          echo "ENGINE_BIN=/tmp/eng/target/release/mongo-server" >> "$GITHUB_ENV"
+          echo "ENGINE_SHA256=$(sha256sum /tmp/eng/target/release/mongo-server | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Test certificate (TLS, self-signed CA) and pymongo
+        run: |
+          mkdir -p t3-cert && cd t3-cert
+          openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=t3-test-ca" -keyout ca.key -out ca.pem 2>/dev/null
+          openssl req -newkey rsa:2048 -nodes -subj "/CN=localhost" -keyout server.key -out server.csr 2>/dev/null
+          printf "subjectAltName=DNS:localhost,IP:127.0.0.1\n" > san.ext
+          openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 2 -extfile san.ext -out server.crt 2>/dev/null
+          cat server.crt server.key > server.pem
+          python3 -m pip install --quiet "pymongo==4.18.3"
+
+      - name: AWS credentials (OIDC, 1 h; the driver renews them itself)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Create the test bucket (new name, tag, lifecycle 1 day)
+        id: bucket
+        run: bash aws-test3/bucket.sh create
+
+      - name: Part A and part B
+        id: driver
+        continue-on-error: true
+        run: python3 -u aws-test3/driver.py
+
+      - name: AWS credentials for the clean-up
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Clean-up (empty and delete the bucket, check it is gone)
+        if: always()
+        run: bash aws-test3/bucket.sh delete
+
+      - name: Secret scan, then publish results-aws-test3/ to this branch
+        if: always()
+        run: |
+          rm -rf t3-cert
+          find results-aws-test3/engine-logs -name '*.log' -size +20M -exec sh -c 'tail -c 20000000 "$1" > "$1.tail" && mv "$1.tail" "$1"' _ {} \; 2>/dev/null || true
+          python3 aws-test3/scan.py results-aws-test3
+          git add results-aws-test3
+          git -c user.name=github-actions -c user.email=actions@users.noreply.github.com commit -qm "aws-test3 run ${{ github.run_id }}: raw results" || true
+          git push origin HEAD:aws-test3
+
+      - name: Summary
+        if: always()
+        run: |
+          { echo "## aws-test3 run ${{ github.run_id }}"; jq -c '{status, spend_estimate_usd, duration_secs}' results-aws-test3/run.json 2>/dev/null || echo "no run.json";
+            echo; cat results-aws-test3/bucket_delete.json 2>/dev/null; } >> "$GITHUB_STEP_SUMMARY"
