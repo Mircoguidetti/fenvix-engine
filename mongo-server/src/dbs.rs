@@ -659,6 +659,7 @@ impl Entry {
                         }
                     }
                 }
+        tenant_bench::lifecycle::forget_wal_state(&self.name);
             }
         }
         Ok(best)

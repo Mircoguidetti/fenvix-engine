@@ -411,6 +411,8 @@ async fn run() -> Result<()> {
     } else {
         Lifecycle::new(counting, Some(Arc::clone(&queue)))
     };
+            // S3 lists keys in order: the WAL cleanup finds the oldest WAL object with one LIST.
+            tenant_bench::lifecycle::LIST_SORTED.store(true, std::sync::atomic::Ordering::Relaxed);
     let maintenance = (!args.no_maintenance).then(|| {
         Maintenance::start(Arc::clone(&s3), Arc::clone(&s3), queue, rx, Arc::clone(&lc.touched), Arc::clone(&lc.maint_locks), 2, Duration::from_secs(30), Duration::from_secs(15))
     });
