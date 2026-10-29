@@ -1,0 +1,186 @@
+{
+ "comment": "round3 real S3 plan: a push to branch round3 that changes this file starts .github/workflows/round3-s3.yml",
+ "rev": 1,
+ "steps": [
+  {
+   "name": "s3-before-r1",
+   "mode": "before",
+   "dbs": 1,
+   "rate": 1,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-before-r10",
+   "mode": "before",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-before-r100",
+   "mode": "before",
+   "dbs": 1,
+   "rate": 100,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-immediate-r1",
+   "mode": "immediate",
+   "dbs": 1,
+   "rate": 1,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-immediate-r10",
+   "mode": "immediate",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-immediate-r100",
+   "mode": "immediate",
+   "dbs": 1,
+   "rate": 100,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-adaptive-r1",
+   "mode": "adaptive",
+   "dbs": 1,
+   "rate": 1,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-adaptive-r10",
+   "mode": "adaptive",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-adaptive-r100",
+   "mode": "adaptive",
+   "dbs": 1,
+   "rate": 100,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-relaxed-r1",
+   "mode": "relaxed",
+   "dbs": 1,
+   "rate": 1,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-relaxed-r10",
+   "mode": "relaxed",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-relaxed-r100",
+   "mode": "relaxed",
+   "dbs": 1,
+   "rate": 100,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-local-r1",
+   "mode": "local",
+   "dbs": 1,
+   "rate": 1,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-local-r10",
+   "mode": "local",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-local-r100",
+   "mode": "local",
+   "dbs": 1,
+   "rate": 100,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-fleet100-before",
+   "mode": "before",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-fleet100-immediate",
+   "mode": "immediate",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-fleet100-adaptive",
+   "mode": "adaptive",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-fleet100-relaxed",
+   "mode": "relaxed",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3-fleet100-local",
+   "mode": "local",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  }
+ ]
+}

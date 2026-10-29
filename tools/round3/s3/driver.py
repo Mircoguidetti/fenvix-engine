@@ -17,7 +17,7 @@ import time
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
+ROOT = os.path.dirname(HERE)  # tools/round3
 REPO = os.path.dirname(os.path.dirname(ROOT))
 OUT = os.path.join(REPO, "results-round3", "real-s3")
 os.makedirs(OUT, exist_ok=True)
@@ -85,7 +85,7 @@ class Live:
     def poll(cls):
         try:
             from pymongo import MongoClient
-            st = MongoClient("127.0.0.1", 27200, directConnection=True, serverSelectionTimeoutMS=2000).admin.command("tenantStats")
+            st = MongoClient("127.0.0.1", int(os.environ.get("ROUND3_PORT", "27200")), directConnection=True, serverSelectionTimeoutMS=2000).admin.command("tenantStats")
             r = st["requests"]
             lst = r.get("list", 0)
             with cls.lock:
@@ -163,7 +163,7 @@ def main():
         if os.path.exists(os.path.join(OUT, f"{name}.json")):
             continue
         put, get = estimate(step)
-        est = priced(put, get)
+        est = priced(put, get) * float(os.environ.get("R3_TEST_ESTIMATE_SCALE", "1"))  # (scale: only for the local test of the automatic stop)
         spend["usd"] = max(spend["usd"], round(Live.totals()[3], 4))
         log(f"step {name}: estimate {put:.0f} PUT-tier + {get:.0f} GET-tier = {est:.4f} USD; spent so far {spend['usd']:.4f} USD")
         if spend["usd"] + est > SPEND_STOP:

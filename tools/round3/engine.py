@@ -50,7 +50,7 @@ def bucket_bytes(name, prefix=""):
 
 
 class Engine:
-    def __init__(self, tag, bucket, flags, port=27200, admin_port=27201, holder="round3", bin=None, env=None, pin=True):
+    def __init__(self, tag, bucket, flags, port=int(os.environ.get("ROUND3_PORT", "27200")), admin_port=int(os.environ.get("ROUND3_PORT", "27200")) + 1, holder="round3", bin=None, env=None, pin=True):
         self.tag, self.bucket, self.flags, self.port, self.admin_port, self.holder = tag, bucket, flags, port, admin_port, holder
         self.bin = bin or ENGINE_BIN
         self.env = env or {}
