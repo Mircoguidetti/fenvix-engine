@@ -493,11 +493,32 @@ impl Tenant {
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
             Err(e) => return Err(e.into()),
+        let adaptive = ADAPTIVE.load(Relaxed);
+        if adaptive {
+            let now = mono_us();
+            let last = self.group.last_arrival_us.swap(now, Relaxed);
+            if last > 0 {
+                ewma(&self.group.gap_ewma_us, now.saturating_sub(last).min(10_000_000));
+            }
+        }
         }
         let db = db?;
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
+                if adaptive && window.is_zero() {
+                    let flush = self.group.flush_ewma_us.load(Relaxed);
+                    let gap = self.group.gap_ewma_us.load(Relaxed);
+                    let w = (flush / 2).min(ADAPTIVE_MAX_US.load(Relaxed));
+                    let others = |g: &GroupFlush| g.inflight.get().map_or(0, |c| c.load(Acquire)).saturating_sub(g.waiting.load(Acquire));
+                    if w > 0 && (gap > 0 && gap <= 2 * w || others(&self.group) > 0) {
+                        let t = Instant::now();
+                        let deadline = t + Duration::from_micros(w);
+                        tokio::time::sleep_until(deadline.into()).await;
+                        ADAPTIVE_WAITS.fetch_add(1, Relaxed);
+                        ADAPTIVE_WAIT_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
+                    }
+                }
         Ok(())
     }
 
@@ -517,6 +538,9 @@ impl Tenant {
         // requests, fetch in parallel, and keep the blocks.
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: 4 << 20,
+                if adaptive {
+                    ewma(&self.group.flush_ewma_us, t.elapsed().as_micros() as u64);
+                }
             max_fetch_tasks: 4,
             cache_blocks: true,
             durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
