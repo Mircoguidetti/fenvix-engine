@@ -55,8 +55,9 @@ pub struct CtlArgs {
     /// databases that are written).
     #[arg(long, default_value_t = 600)]
     pub retention_prune_secs: u64,
-    /// Usage counters are written to the bucket this often (and at shutdown).
-    #[arg(long, default_value_t = 60)]
+    /// Usage counters are written to the bucket this often (and at shutdown): one PUT per database used in the interval
+    /// (60 s, the old default, was ~43 000 PUT a month for a database in use all the time; 300 s is a fifth of that).
+    #[arg(long, default_value_t = 300)]
     pub usage_flush_secs: u64,
     /// Keep-awake leases last this long and are renewed every third of it.
     #[arg(long, default_value_t = 30)]

@@ -172,8 +172,9 @@ struct Args {
     #[arg(long)]
     no_group_commit: bool,
     /// Seconds between manifest reads of an open writer (it learns of compactions, and retries a memtable flush that
-    /// stalled on a full L0, at this pace). One GET per open writer per interval.
-    #[arg(long, default_value_t = 30)]
+    /// stalled on a full L0, at this pace). One LIST and one GET per open writer per interval: 60 s is ~86 000 requests
+    /// a month per database open for writing (30 s, the old default, twice that). Must stay below --sst-gc-min-unref-secs.
+    #[arg(long, default_value_t = 60)]
     writer_poll_secs: u64,
     /// One lease per process (`processes/{holder}/_lease`, renewed every third of the ttl) plus a per-database owner
     /// record written when the database is opened, instead of one lease object renewed per open database (6 PUT per minute
