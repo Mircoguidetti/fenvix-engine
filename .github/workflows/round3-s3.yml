@@ -2,7 +2,8 @@
 # 100 requests/s on one database, and a fleet of 100 databases at 1 write/s each. Runs on the GitHub runner: no EC2, no
 # other AWS service than S3 (+ STS for the OIDC role session). One trigger only: a push to branch round3 that changes
 # tools/round3/s3/run.json. No keys: the OIDC role comes from the repository secret AWS_ROLE_ARN (masked, never printed).
-# Spend cap 5 USD: the driver estimates every step before running it and stops at 4.5 USD (tools/round3/s3/driver.py).
+# Spend cap 10 USD: the driver estimates every step before running it, prints the live spend every minute (cost_live.csv)
+# and stops by itself at 8 USD; the clean-up below always deletes the bucket (tools/round3/s3/driver.py).
 name: round3-s3
 on:
   push:
@@ -65,7 +66,7 @@ jobs:
       - name: Create the test bucket (new name, tags, lifecycle 1 day; eu-west-1, else eu-central-1)
         run: bash tools/round3/s3/bucket.sh create
 
-      - name: Steps (estimate before each, stop before 5 USD)
+      - name: Steps (estimate before each, live spend every minute, automatic stop at 8 USD, cap 10 USD)
         id: driver
         continue-on-error: true
         env:
