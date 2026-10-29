@@ -124,8 +124,8 @@ Il motivo è `token.rs:95`, descritto in 5.1: in caso di errore la cache non rip
 
 ## 6. Scansione dei segreti (`tools/main-candidate/secret_scan.py`, `results-main-candidate/secret_scan.json`)
 
-* **Log e output:** 771 file, 23 valori cercati (password dei test, token admin, coppia MinIO e i valori finti di test_19: segreti, token di sessione, token IMDS). **Nessuno trovato.**
-* **File del repo:** i 152 file nuovi o modificati rispetto a `origin/engine-round2`. Pattern cercati: chiavi cloud, chiavi private, token dei provider, credenziali negli URL e, in più, **ARN AWS con ID account e ID account a 12 cifre** (i file di aws-test3 vengono da un'esecuzione reale). **Nessuno trovato.**
+* **Log e output:** 775 file, 23 valori cercati (password dei test, token admin, coppia MinIO e i valori finti di test_19: segreti, token di sessione, token IMDS). **Nessuno trovato.**
+* **File del repo:** i 158 file nuovi o modificati (questo report compreso) rispetto a `origin/engine-round2`. Pattern cercati: chiavi cloud, chiavi private, token dei provider, credenziali negli URL e, in più, **ARN AWS con ID account e ID account a 12 cifre** (i file di aws-test3 vengono da un'esecuzione reale). **Nessuno trovato.**
 * Controllo a mano dei file di aws-test3 (`grep` di `arn:`, `AKIA`/`ASIA`, numeri a 12 cifre, host `amazonaws.com`):
   * i numeri lunghi sono timestamp `unix_ms` a 13 cifre;
   * il nome del bucket compare come `fenvix-test-t3-40846615265` (id del run, bucket già cancellato secondo il report aws-test3);
