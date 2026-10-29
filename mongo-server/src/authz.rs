@@ -256,6 +256,10 @@ pub fn required(name: &str, db: &str, cmd: &Document) -> Option<Vec<Need>> {
         "compact" => vec![(n(), "compact")],
         "reIndex" => vec![(n(), "reIndex")],
         "convertToCapped" => vec![(n(), "convertToCapped")],
+        // mongod: the cluster action rotateCertificates (root, hostManager, clusterAdmin, or a custom role that carries it)
+        "rotateCertificates" => vec![(cl, "rotateCertificates")],
+        // the S3 request counters of the whole process: root only, checked on the roles (`Server::authorize`)
+        "tenantStats" => vec![],
         _ => vec![(Res::Any, "anyAction")], // unknown commands need everything (only __system has it)
     })
 }
@@ -347,4 +351,57 @@ pub fn action_known(a: &str) -> bool {
         set
     })
     .contains(a)
+}
+
+/// Actions that let a holder manage users or roles (or act as any user): a role carrying one of them is never grantable
+/// under `--grantable-roles`.
+const USER_ADMIN_ACTIONS: &[&str] =
+    &["anyAction", "createUser", "dropUser", "grantRole", "revokeRole", "createRole", "dropRole", "changePassword", "changeCustomData", "setAuthenticationRestriction", "invalidateUserCache", "impersonate", "authSchemaUpgrade", "internal"];
+
+/// Do the privileges stay on database `db` (no cluster, any-resource, every-database or bucket resource) and carry no user or
+/// role administration action?
+pub fn confined_without_user_admin(privs: &[Priv], db: &str) -> bool {
+    privs.iter().all(|p| matches!(&p.res, Res::Ns { db: d, .. } if d == db) && !p.actions.iter().any(|a| USER_ADMIN_ACTIONS.contains(&a.as_str())))
+}
+
+/// `--grantable-roles`: empty means no restriction (`None`); otherwise a comma-separated list of built-in database roles that
+/// stay on their database and carry no user administration (read, readWrite, dbAdmin). Anything else is refused at startup.
+pub fn parse_grantable(v: &str) -> Result<Option<Vec<String>>, String> {
+    if v.is_empty() {
+        return Ok(None);
+    }
+    let mut out: Vec<String> = Vec::new();
+    for x in v.split(',') {
+        if x.is_empty() || x.trim() != x || x.contains('@') {
+            return Err(format!("--grantable-roles: '{x}' is not a role name (comma-separated built-in role names, e.g. readWrite,read)"));
+        }
+        // checked on a placeholder customer database
+        let ok = builtin(x, "grantable_check").map(|(p, _)| confined_without_user_admin(&p, "grantable_check")).unwrap_or(false);
+        if !ok {
+            return Err(format!(
+                "--grantable-roles: '{x}' cannot be granted by a provisioner: only built-in roles of one database without user administration ({}) are allowed",
+                builtin_names("grantable_check").into_iter().filter(|n| builtin(n, "grantable_check").map(|(p, _)| confined_without_user_admin(&p, "grantable_check")).unwrap_or(false)).collect::<Vec<_>>().join(", ")
+            ));
+        }
+        if !out.iter().any(|o| o == x) {
+            out.push(x.to_string());
+        }
+    }
+    Ok(Some(out))
+}
+
+#[cfg(test)]
+mod grantable_tests {
+    use super::*;
+
+    #[test]
+    fn grantable_values() {
+        assert_eq!(parse_grantable("").unwrap(), None);
+        assert_eq!(parse_grantable("readWrite,read").unwrap(), Some(vec!["readWrite".to_string(), "read".to_string()]));
+        assert_eq!(parse_grantable("read,read").unwrap(), Some(vec!["read".to_string()]));
+        assert!(parse_grantable("dbAdmin").is_ok());
+        for bad in ["dbOwner", "userAdmin", "root", "clusterAdmin", "userAdminAnyDatabase", "readAnyDatabase", "enableSharding", "nosuch", "read,,readWrite", " read", "read@admin", ","] {
+            assert!(parse_grantable(bad).is_err(), "{bad}");
+        }
+    }
 }

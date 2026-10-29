@@ -229,6 +229,14 @@ struct Args {
     /// Require authentication and authorization for every command (mongod's --auth).
     #[arg(long)]
     auth: bool,
+    /// With --auth: the only roles a caller that holds neither root nor clusterAdmin (a provisioner, a customer's user
+    /// administrator) may hand out with createUser, updateUser and grantRolesToUser, comma-separated, e.g. `readWrite,read`.
+    /// When set, such a caller may manage users only on customer databases (never admin, local, config, $external), may
+    /// grant only the listed built-in roles of the database the user is defined on, never one of its own roles, and may not
+    /// create or change roles. Only built-in roles of one database without user administration are accepted (read,
+    /// readWrite, dbAdmin). Empty: no restriction (mongod's rules).
+    #[arg(long, default_value = "")]
+    grantable_roles: String,
     /// TLS on the client port: disabled, allowTLS, preferTLS or requireTLS (mongod's net.tls.mode).
     #[arg(long, default_value = "disabled")]
     tls_mode: String,
@@ -341,6 +349,7 @@ fn main() -> Result<()> {
 async fn run() -> Result<()> {
     let args = Args::parse();
     netguard::install(&args.net)?;
+    let grantable = authz::parse_grantable(&args.grantable_roles).map_err(|e| anyhow::anyhow!(e))?;
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
         "s3" => {
             // The credentials are the standard AWS ones, none is built in: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY /
@@ -425,6 +434,10 @@ async fn run() -> Result<()> {
     }
     let server = Server::new(Arc::clone(&dbs), args.log_commands);
     server.auth.enabled.store(args.auth, std::sync::atomic::Ordering::Relaxed);
+    if let Some(g) = grantable {
+        eprintln!("grantable roles (callers without root or clusterAdmin): {}", g.join(","));
+        let _ = server.auth.grantable.set(g);
+    }
     if !args.replica_set.is_empty() {
         let port = args.listen.rsplit(':').next().unwrap_or("27017");
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));

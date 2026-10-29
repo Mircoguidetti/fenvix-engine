@@ -22,6 +22,9 @@ pub struct AuthState {
     pub enabled: AtomicBool,
     /// Bumped by every user or role change; connections re-resolve their privileges when it moved.
     gen: AtomicU64,
+    /// `--grantable-roles`: when set, the only roles a caller without root or clusterAdmin may hand out (see `grant_policy`).
+    /// Unset: mongod's rules.
+    pub grantable: std::sync::OnceLock<Vec<String>>,
     conns: Mutex<HashMap<i64, Conn>>,
 }
 
@@ -48,6 +51,14 @@ struct ConvState {
     /// Refused before the password is looked at (address blocked, or not in the database's allow list): the conversation
     /// goes on exactly like one with a wrong password and ends with the same error.
     refused: Option<crate::netguard::Verdict>,
+}
+
+/// Databases on which `--grantable-roles` never lets a caller without root or clusterAdmin manage users.
+const PROTECTED_DBS: &[&str] = &["admin", "local", "config", "$external"];
+
+/// Does a (fully expanded) role set hold the built-in `name` role of admin? `__system` holds everything.
+fn holds_admin_role(roles: &[(String, String)], name: &str) -> bool {
+    roles.iter().any(|(r, d)| d == "admin" && (r == name || r == "__system"))
 }
 
 fn unauthorized(msg: String) -> MongoError {
@@ -372,12 +383,81 @@ impl Server {
         let privs = self.conn_privileges(conn_id).await?;
         let missing: Vec<&Need> = needs.iter().filter(|(r, a)| !authz::allows(&privs, r, a)).collect();
         if missing.is_empty() {
+            // tenantStats shows the S3 requests of the whole process (every tenant): root only
+            if name == "tenantStats" && !holds_admin_role(&self.conn_roles(conn_id).await?, "root") {
+                return Err(not_authorized(db, name, cmd));
+            }
             if !self.may_grant(&privs, conn_id, db, name, cmd).await? {
+                return Err(not_authorized(db, name, cmd));
+            }
+            if !self.grant_policy(conn_id, db, name, cmd).await? {
                 return Err(not_authorized(db, name, cmd));
             }
             return Ok(());
         }
         Err(not_authorized(db, name, cmd))
+    }
+
+    /// Every role of the connection's users, with everything they inherit.
+    async fn conn_roles(&self, conn_id: i64) -> R<Vec<(String, String)>> {
+        let users = self.with_conn(conn_id, |c| c.users.clone());
+        let mut roles = Vec::new();
+        for (u, db) in &users {
+            roles.extend(self.user_roles_of(u, db).await?);
+        }
+        self.inherited_roles(&roles).await
+    }
+
+    /// `--grantable-roles`. When it is set, a caller that holds neither root nor clusterAdmin (directly or through a role that
+    /// inherits them):
+    /// * may not create, change or drop roles (a custom role could carry anything);
+    /// * may manage users only on a customer database: never on admin, local, config or $external (so it can neither create a
+    ///   second provisioner nor change, drop or revoke the users of admin);
+    /// * may hand out (createUser, updateUser with roles, grantRolesToUser) only roles of the list, as built-in roles of the
+    ///   database the user is defined on, never one of its own roles, never a role with any user or role administration
+    ///   action or with a resource outside that database (checked again here, on top of the check of the flag at startup).
+    /// Revoking roles, changing passwords and custom data, and dropping users of a customer database stay allowed.
+    async fn grant_policy(&self, conn_id: i64, db: &str, name: &str, cmd: &Document) -> R<bool> {
+        let Some(list) = self.auth.grantable.get() else { return Ok(true) };
+        let user_cmd = matches!(name, "createUser" | "updateUser" | "dropUser" | "dropAllUsersFromDatabase" | "grantRolesToUser" | "revokeRolesFromUser");
+        let role_cmd = matches!(
+            name,
+            "createRole" | "updateRole" | "dropRole" | "dropAllRolesFromDatabase" | "grantRolesToRole" | "revokeRolesFromRole" | "grantPrivilegesToRole" | "revokePrivilegesFromRole"
+        );
+        if !user_cmd && !role_cmd {
+            return Ok(true);
+        }
+        let mine = self.conn_roles(conn_id).await?;
+        if holds_admin_role(&mine, "root") || holds_admin_role(&mine, "clusterAdmin") {
+            return Ok(true);
+        }
+        if role_cmd {
+            return Ok(false);
+        }
+        if PROTECTED_DBS.contains(&db) {
+            return Ok(false);
+        }
+        let handed_out = match name {
+            "createUser" | "grantRolesToUser" => cmd.get("roles"),
+            "updateUser" => cmd.get("roles"),
+            _ => None,
+        };
+        let entries: Vec<&Bson> = match handed_out {
+            None => vec![],
+            Some(Bson::Array(a)) => a.iter().collect(),
+            Some(_) => return Ok(false),
+        };
+        for b in entries {
+            let Ok((r, rdb)) = role_pair(b, db) else { return Ok(false) };
+            if rdb != db || !list.iter().any(|x| *x == r) || mine.iter().any(|(m, mdb)| *m == r && *mdb == rdb) {
+                return Ok(false);
+            }
+            match authz::builtin(&r, &rdb) {
+                Some((privs, _)) if authz::confined_without_user_admin(&privs, &rdb) => {}
+                _ => return Ok(false),
+            }
+        }
+        Ok(true)
     }
 
     /// Roles and privileges handed out by `createUser`, `updateUser`, `grantRolesToUser`, `createRole`, `updateRole`,

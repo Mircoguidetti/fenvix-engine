@@ -23,21 +23,25 @@ pub struct NetArgs {
     /// `127.0.0.0/8,::1/128,172.17.0.0/16`. Never put a network through which outside clients arrive here.
     #[arg(long, default_value = "127.0.0.0/8,::1/128")]
     pub trusted_networks: String,
-    /// Failed authentications from one address within --auth-fail-window-secs that block the address (on every database).
-    #[arg(long, default_value_t = 10)]
+    /// Failed authentications from one address within --auth-fail-window-secs that block the address on every database
+    /// (the failure that reaches the number starts the block; 0: never). High on purpose: a platform with one database per
+    /// customer connects from few addresses, and one wrong password rotation must not block all its databases.
+    #[arg(long, default_value_t = 100)]
     pub auth_fail_max: u32,
-    /// Failed authentications from one address on one database within the window that block the address on that database.
+    /// Failed authentications from one address on one database within --auth-fail-window-secs that block the address on
+    /// that database only (0: never).
     #[arg(long, default_value_t = 5)]
     pub auth_fail_max_per_db: u32,
+    /// Length of the sliding window, in seconds, in which failed authentications are counted for both thresholds.
     #[arg(long, default_value_t = 60)]
     pub auth_fail_window_secs: u64,
-    /// Length of a first block; every new block of the same address (or address and database) doubles it.
+    /// Length of a first block, in seconds; every new block of the same address (or address and database) doubles it.
     #[arg(long, default_value_t = 300)]
     pub auth_block_secs: u64,
-    /// Longest block.
+    /// Longest block, in seconds (the doubling stops here).
     #[arg(long, default_value_t = 3600)]
     pub auth_block_max_secs: u64,
-    /// Without a new block for this long, the doubling starts again from --auth-block-secs.
+    /// Without a new block for this many seconds, the doubling starts again from --auth-block-secs.
     #[arg(long, default_value_t = 86400)]
     pub auth_block_forget_secs: u64,
     /// Connections at once from one address (0: no limit). Further connections are closed at once.
@@ -59,13 +63,17 @@ pub struct NetArgs {
     /// Most client addresses whose failures are tracked at once (memory bound).
     #[arg(long, default_value_t = 100_000)]
     pub netguard_max_tracked: usize,
+    /// Most databases whose failures are tracked at once for one address (memory bound); beyond it, failures on further
+    /// databases count only toward the per-address threshold.
+    #[arg(long, default_value_t = 1000)]
+    pub netguard_max_dbs_per_ip: usize,
 }
 
 impl Default for NetArgs {
     fn default() -> Self {
         NetArgs {
             trusted_networks: "127.0.0.0/8,::1/128".into(),
-            auth_fail_max: 10,
+            auth_fail_max: 100,
             auth_fail_max_per_db: 5,
             auth_fail_window_secs: 60,
             auth_block_secs: 300,
@@ -77,6 +85,7 @@ impl Default for NetArgs {
             ip_allowlist_refresh_secs: 5,
             ipv6_group_prefix: 64,
             netguard_max_tracked: 100_000,
+            netguard_max_dbs_per_ip: 1000,
         }
     }
 }
@@ -278,6 +287,7 @@ struct Cfg {
     refresh: Duration,
     v6_prefix: u8,
     max_tracked: usize,
+    max_dbs: usize,
 }
 
 #[derive(Default)]
@@ -348,6 +358,7 @@ impl NetGuard {
                 refresh: Duration::from_secs(a.ip_allowlist_refresh_secs),
                 v6_prefix: a.ipv6_group_prefix,
                 max_tracked: a.netguard_max_tracked.max(1),
+                max_dbs: a.netguard_max_dbs_per_ip.max(1),
             },
             clients: Mutex::new(HashMap::new()),
             lists: Mutex::new(HashMap::new()),
@@ -457,9 +468,9 @@ impl NetGuard {
             eprintln!("netguard: client {shown} blocked for {} s (block {strike}) after {} failed authentications in {} s", d.as_secs(), self.cfg.fail_max, self.cfg.window.as_secs());
             return;
         }
-        if c.dbs.len() >= 1000 && !c.dbs.contains_key(db) {
+        if c.dbs.len() >= self.cfg.max_dbs && !c.dbs.contains_key(db) {
             c.dbs.retain(|_, t| !t.idle(now, &self.cfg));
-            if c.dbs.len() >= 1000 {
+            if c.dbs.len() >= self.cfg.max_dbs {
                 return;
             }
         }
@@ -616,6 +627,7 @@ impl NetGuard {
                 "auth_block_secs": self.cfg.block.as_secs(), "auth_block_max_secs": self.cfg.block_max.as_secs(), "auth_block_forget_secs": self.cfg.forget.as_secs(),
                 "max_conns_per_ip": self.cfg.max_conns, "handshake_timeout_secs": self.cfg.handshake.map(|d| d.as_secs()).unwrap_or(0),
                 "pre_auth_max_message_bytes": self.cfg.pre_auth_max, "ip_allowlist_refresh_secs": self.cfg.refresh.as_secs(), "ipv6_group_prefix": self.cfg.v6_prefix,
+                "netguard_max_tracked": self.cfg.max_tracked, "netguard_max_dbs_per_ip": self.cfg.max_dbs,
             },
             "blocked": blocked,
             "failing": failing,
@@ -720,6 +732,20 @@ mod tests {
         assert!(n("2001:db8::/127").contains(ip("2001:db8::1")) && !n("2001:db8::/127").contains(ip("2001:db8::2")));
         assert_eq!(canonical_ip(ip("::1")), ip("::1"));                 // not 0.0.0.1
         assert_eq!(canonical_ip(ip("::ffff:1.2.3.4")), ip("1.2.3.4"));
+    }
+
+    #[test]
+    fn defaults_of_the_flags() {
+        #[derive(clap::Parser)]
+        struct P {
+            #[command(flatten)]
+            net: NetArgs,
+        }
+        let parsed = <P as clap::Parser>::parse_from(["x"]).net;
+        let d = NetArgs::default();
+        assert_eq!((parsed.auth_fail_max, parsed.auth_fail_max_per_db, parsed.auth_fail_window_secs), (100, 5, 60));
+        assert_eq!((d.auth_fail_max, d.auth_fail_max_per_db, d.auth_fail_window_secs), (100, 5, 60));
+        assert_eq!(format!("{parsed:?}"), format!("{d:?}"));
     }
 
     fn guard(f: impl FnOnce(&mut NetArgs)) -> NetGuard {
