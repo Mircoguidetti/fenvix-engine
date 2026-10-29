@@ -1,0 +1,8 @@
+ip_check -> 14 failed, 80 passed in 50.52s
+block -> 4 failed, 90 passed in 44.56s
+conn_limit -> 2 failed, 92 passed in 58.55s
+handshake_timeout -> 1 failed, 93 passed in 54.51s
+pre_auth_size -> 1 failed, 93 passed in 58.52s
+distinct_refusal -> 4 failed, 90 passed in 56.60s
+    Finished `release` profile [optimized] target(s) in 1m 19s
+source restored: clean

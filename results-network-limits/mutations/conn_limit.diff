@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 01172de..c662ab4 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -391,7 +391,7 @@ impl NetGuard {
+         let limited = self.cfg.max_conns > 0 && !self.is_trusted(ip);
+         let mut m = self.clients.lock().unwrap();
+         let c = m.entry(k).or_default();
+-        if limited && c.conns >= self.cfg.max_conns {
++        if false && limited && c.conns >= self.cfg.max_conns {
+             self.totals.rejected_connections.fetch_add(1, Relaxed);
+             let now = Instant::now();
+             if c.last_reject_log.map(|t| now.duration_since(t) >= Duration::from_secs(60)).unwrap_or(true) {

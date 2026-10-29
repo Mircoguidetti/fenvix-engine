@@ -1,0 +1,11 @@
+........................................................................ [ 76%]
+.................FF...                                                   [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE any of (ConnectionError, OSError)
+/home/user/test5/ctl-tests/test_14_auth_limits.py:207: Failed: DID NOT RAISE any of (ConnectionError, OSError)
+E   Failed: DID NOT RAISE any of (ConnectionError, OSError)
+/home/user/test5/ctl-tests/test_14_auth_limits.py:237: Failed: DID NOT RAISE any of (ConnectionError, OSError)
+=========================== short test summary info ============================
+FAILED test_14_auth_limits.py::test_connection_limit_per_address - Failed: DI...
+FAILED test_14_auth_limits.py::test_default_connection_limit_is_200 - Failed:...
+2 failed, 92 passed in 58.55s

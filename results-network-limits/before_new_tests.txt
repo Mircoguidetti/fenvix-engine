@@ -1,0 +1,273 @@
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 76%]
+EFF.....EEEFEEEFFFFFFE                                                   [100%]
+==================================== ERRORS ====================================
+_____________________ ERROR at setup of test_set_get_clear _____________________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/33'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_________ ERROR at setup of test_hostile_entries_are_refused['::/129'] _________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.1/8'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_hostile_entries_are_refused['2001:db8::1/32'] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['300.1.1.1'] ________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_________ ERROR at setup of test_hostile_entries_are_refused['1.2.3'] __________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['1.2.3.4.5'] ________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['010.0.0.1'] ________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/08'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/+8'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/-1'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/'] ________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___________ ERROR at setup of test_hostile_entries_are_refused['/8'] ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+____________ ERROR at setup of test_hostile_entries_are_refused[''] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___________ ERROR at setup of test_hostile_entries_are_refused[' '] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused[' 10.0.0.0/8'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/8 '] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/8\\n'] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+____ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/8\\x00'] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['fe80::1%eth0'] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_hostile_entries_are_refused['fe80::1%25eth0'] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___ ERROR at setup of test_hostile_entries_are_refused['::ffff:1.2.3.4/200'] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___ ERROR at setup of test_hostile_entries_are_refused['::ffff:10.0.0.0/90'] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_entries_are_refused['abc'] ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['localhost'] ________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___________ ERROR at setup of test_hostile_entries_are_refused['*'] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_entries_are_refused['0/0'] ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__ ERROR at setup of test_hostile_entries_are_refused['\u0661\u0660.0.0.0/8'] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/8;rm -rf /'] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_ ERROR at setup of test_hostile_entries_are_refused['<script>alert(1)</script>'] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/8,11.0.0.0/8'] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0 /8'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_hostile_entries_are_refused['1.2.3.4/32/32'] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_entries_are_refused['0x0a.0.0.1'] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0\\t/8'] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_ ERROR at setup of test_hostile_entries_are_refused['11111111111111111111111111111] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_ ERROR at setup of test_hostile_entries_are_refused['10.0.0.0/8                   ] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+____________ ERROR at setup of test_hostile_bodies_are_refused[dup] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_hostile_bodies_are_refused[dup-canonical] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+________ ERROR at setup of test_hostile_bodies_are_refused[dup-mapped] _________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_________ ERROR at setup of test_hostile_bodies_are_refused[dup-case] __________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+____________ ERROR at setup of test_hostile_bodies_are_refused[101] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_bodies_are_refused[string] ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+____________ ERROR at setup of test_hostile_bodies_are_refused[int] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___________ ERROR at setup of test_hostile_bodies_are_refused[null] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_bodies_are_refused[nested] ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_bodies_are_refused[object] ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_bodies_are_refused[missing] __________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__________ ERROR at setup of test_hostile_bodies_are_refused[unknown] __________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___________ ERROR at setup of test_hostile_bodies_are_refused[none] ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_body_that_is_not_json_and_the_limit_of_100 _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+________ ERROR at setup of test_no_equivalent_command_on_the_data_port _________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+________________ ERROR at setup of test_allowed_and_not_allowed ________________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries0-127.0.0.3-True] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries1-127.0.0.2-True] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries2-127.0.0.3-True] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries3-127.0.0.4-False] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries4-127.0.0.4-True] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries5-127.0.0.5-False] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_boundary_networks[entries6-127.0.0.250-True] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_boundary_networks[entries7-127.0.0.250-True] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_boundary_networks[entries8-127.0.0.250-False] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries9-127.0.0.6-True] _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries10-127.0.0.7-True] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_boundary_networks[entries11-127.0.0.3-False] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_____ ERROR at setup of test_boundary_networks[entries12-127.0.0.3-False] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+______ ERROR at setup of test_boundary_networks[entries13-127.0.0.3-True] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_______ ERROR at setup of test_refusal_is_identical_to_a_wrong_password ________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+___________ ERROR at setup of test_refusal_is_logged_without_secrets ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_________ ERROR at setup of test_list_survives_sleep_wake_and_restart __________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+____________ ERROR at setup of test_fork_does_not_inherit_the_list _____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+________________ ERROR at setup of test_erase_deletes_the_list _________________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_________ ERROR at setup of test_admin_port_is_not_subject_to_the_list _________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+__ ERROR at setup of test_proxy_protocol_and_client_metadata_are_not_trusted ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+_ ERROR at setup of test_connections_already_authenticated_lose_the_database_when_the_list_excludes_them _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allow-26335.log
+________________ ERROR at setup of test_brute_force_is_blocked _________________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/lim-38095.log
+______________ ERROR at setup of test_unblock_from_the_admin_port ______________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/lim-38095.log
+___________ ERROR at setup of test_trusted_address_is_never_blocked ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/lim-38095.log
+___________ ERROR at setup of test_no_password_or_secret_in_the_log ____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/lim-38095.log
+=================================== FAILURES ===================================
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allowrst-35516.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/allowrst-35516.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/trust-default-33765.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/trust-default-33765.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/noauth-29058.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/noauth-29058.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limexp-36752.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limexp-36752.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limpair-37020.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limpair-37020.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limconn-31964.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limconn-31964.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limconn200-26753.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limconn200-26753.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limslow-26809.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limslow-26809.log
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limsize-34558.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/limsize-34558.log
+=========================== short test summary info ============================
+FAILED test_13_ip_allowlist.py::test_restore_leaves_the_list_alone - RuntimeE...
+FAILED test_13_ip_allowlist.py::test_trusted_networks_skip_the_list - Runtime...
+FAILED test_13_ip_allowlist.py::test_list_is_reported_as_not_enforced_without_auth
+FAILED test_14_auth_limits.py::test_block_expires_and_grows - RuntimeError: s...
+FAILED test_14_auth_limits.py::test_counters_per_address_and_per_database - R...
+FAILED test_14_auth_limits.py::test_connection_limit_per_address - RuntimeErr...
+FAILED test_14_auth_limits.py::test_default_connection_limit_is_200 - Runtime...
+FAILED test_14_auth_limits.py::test_slow_handshake_is_closed - RuntimeError: ...
+FAILED test_14_auth_limits.py::test_message_size_before_authentication - Runt...
+ERROR test_13_ip_allowlist.py::test_set_get_clear - RuntimeError: server exit...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/33']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['::/129'] - R...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.1/8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['2001:db8::1/32']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['300.1.1.1']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['1.2.3'] - Ru...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['1.2.3.4.5']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['010.0.0.1']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/08']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/+8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/-1']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['/8'] - Runti...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused[''] - Runtime...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused[' '] - Runtim...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused[' 10.0.0.0/8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/8 ']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/8\\n']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/8\\x00']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['fe80::1%eth0']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['fe80::1%25eth0']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['::ffff:1.2.3.4/200']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['::ffff:10.0.0.0/90']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['abc'] - Runt...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['localhost']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['*'] - Runtim...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['0/0'] - Runt...
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['\u0661\u0660.0.0.0/8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/8;rm -rf /']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['<script>alert(1)</script>']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/8,11.0.0.0/8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0 /8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['1.2.3.4/32/32']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['0x0a.0.0.1']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0\\t/8']
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['11111111111111111111111111111]
+ERROR test_13_ip_allowlist.py::test_hostile_entries_are_refused['10.0.0.0/8                   ]
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[dup] - Runtime...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[dup-canonical]
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[dup-mapped] - ...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[dup-case] - Ru...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[101] - Runtime...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[string] - Runt...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[int] - Runtime...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[null] - Runtim...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[nested] - Runt...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[object] - Runt...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[missing] - Run...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[unknown] - Run...
+ERROR test_13_ip_allowlist.py::test_hostile_bodies_are_refused[none] - Runtim...
+ERROR test_13_ip_allowlist.py::test_body_that_is_not_json_and_the_limit_of_100
+ERROR test_13_ip_allowlist.py::test_no_equivalent_command_on_the_data_port - ...
+ERROR test_13_ip_allowlist.py::test_allowed_and_not_allowed - RuntimeError: s...
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries0-127.0.0.3-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries1-127.0.0.2-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries2-127.0.0.3-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries3-127.0.0.4-False]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries4-127.0.0.4-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries5-127.0.0.5-False]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries6-127.0.0.250-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries7-127.0.0.250-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries8-127.0.0.250-False]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries9-127.0.0.6-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries10-127.0.0.7-True]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries11-127.0.0.3-False]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries12-127.0.0.3-False]
+ERROR test_13_ip_allowlist.py::test_boundary_networks[entries13-127.0.0.3-True]
+ERROR test_13_ip_allowlist.py::test_refusal_is_identical_to_a_wrong_password
+ERROR test_13_ip_allowlist.py::test_refusal_is_logged_without_secrets - Runti...
+ERROR test_13_ip_allowlist.py::test_list_survives_sleep_wake_and_restart - Ru...
+ERROR test_13_ip_allowlist.py::test_fork_does_not_inherit_the_list - RuntimeE...
+ERROR test_13_ip_allowlist.py::test_erase_deletes_the_list - RuntimeError: se...
+ERROR test_13_ip_allowlist.py::test_admin_port_is_not_subject_to_the_list - R...
+ERROR test_13_ip_allowlist.py::test_proxy_protocol_and_client_metadata_are_not_trusted
+ERROR test_13_ip_allowlist.py::test_connections_already_authenticated_lose_the_database_when_the_list_excludes_them
+ERROR test_14_auth_limits.py::test_brute_force_is_blocked - RuntimeError: ser...
+ERROR test_14_auth_limits.py::test_unblock_from_the_admin_port - RuntimeError...
+ERROR test_14_auth_limits.py::test_trusted_address_is_never_blocked - Runtime...
+ERROR test_14_auth_limits.py::test_no_password_or_secret_in_the_log - Runtime...
+9 failed, 5 passed, 80 errors in 2.30s

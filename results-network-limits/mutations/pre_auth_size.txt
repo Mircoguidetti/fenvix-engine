@@ -1,0 +1,8 @@
+........................................................................ [ 76%]
+....................F.                                                   [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE any of (ConnectionError, OSError)
+/home/user/test5/ctl-tests/test_14_auth_limits.py:298: Failed: DID NOT RAISE any of (ConnectionError, OSError)
+=========================== short test summary info ============================
+FAILED test_14_auth_limits.py::test_message_size_before_authentication - Fail...
+1 failed, 93 passed in 58.52s

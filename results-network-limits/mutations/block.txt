@@ -1,0 +1,33 @@
+........................................................................ [ 76%]
+............FF.FF.....                                                   [100%]
+=================================== FAILURES ===================================
+E   AssertionError: ({'conversationId': 1, 'done': False, 'payload': b'r=QMDFdjZ7n3kgrRpF3RjTwhFBXxiUpBWygTvo7G5VBsadNhXiYoKtUg6K,s=GE4dp/...k': 1.0}, {'conversationId': 1, 'done': True, 'payload': b'v=c/WPuHJj0uxSyeSvMILjmnPQUUSDxJF4A0WQQiIWgVo=', 'ok': 1.0})
+    assert {'conversatio...=', 'ok': 1.0} == {'ok': 0.0, '...cationFailed'}
+      
+      Differing items:
+      {'ok': 1.0} != {'ok': 0.0}
+      Left contains 3 more items:
+      {'conversationId': 1,
+       'done': True,
+       'payload': b'v=c/WPuHJj0uxSyeSvMILjmnPQUUSDxJF4A0WQQiIWgVo='}...
+      
+      ...Full output truncated, use '-vv' to show
+/home/user/test5/ctl-tests/test_14_auth_limits.py:85: AssertionError: ({'conversationId': 1, 'done': False, 'payload': b'r=QMDFdjZ7n3kgrRpF3RjTwhFBXxiUpBWygTvo7G5VBsadNhXiYoKtUg6K,s=GE4dp/...k': 1.0}, {'conversationId': 1, 'done': True, 'payload': b'v=c/WPuHJj0uxSyeSvMILjmnPQUUSDxJF4A0WQQiIWgVo=', 'ok': 1.0})
+E   AssertionError: assert not True
+     +  where True = scram_ok(30153, '127.0.0.40', 'bf', 'u1', 'Limit-SECRET-2e8d4f6a')
+     +    where 30153 = <lib.Server object at 0x7f8c2d4d7110>.port
+/home/user/test5/ctl-tests/test_14_auth_limits.py:114: AssertionError: assert not True
+E   AssertionError: assert not True
+     +  where True = scram_ok(30684, '127.0.0.6', 'e', 'u1', 'Limit-SECRET-2e8d4f6a')
+     +    where 30684 = <lib.Server object at 0x7f8c2f0fc410>.port
+/home/user/test5/ctl-tests/test_14_auth_limits.py:137: AssertionError: assert not True
+E   AssertionError: assert not True
+     +  where True = scram_ok(37814, '127.0.0.8', 'p1', 'u1', 'Limit-SECRET-2e8d4f6a')
+     +    where 37814 = <lib.Server object at 0x7f8c2f0f84b0>.port
+/home/user/test5/ctl-tests/test_14_auth_limits.py:176: AssertionError: assert not True
+=========================== short test summary info ============================
+FAILED test_14_auth_limits.py::test_brute_force_is_blocked - AssertionError: ...
+FAILED test_14_auth_limits.py::test_unblock_from_the_admin_port - AssertionEr...
+FAILED test_14_auth_limits.py::test_block_expires_and_grows - AssertionError:...
+FAILED test_14_auth_limits.py::test_counters_per_address_and_per_database - A...
+4 failed, 90 passed in 44.56s

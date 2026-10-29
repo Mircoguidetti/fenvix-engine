@@ -1,0 +1,33 @@
+.....................................................F..............FF.. [ 76%]
+.........F............                                                   [100%]
+=================================== FAILURES ===================================
+E   AssertionError: {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'}
+    assert (18 == 18 and 'address not allowed' == 'Authentication failed.'
+     +  where 18 = OperationFailure("address not allowed, full error: {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'}").code
+     +    where OperationFailure("address not allowed, full error: {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'}") = <ExceptionInfo OperationFailure("address not allowed, full error: {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'}") tblen=22>.value
+      
+      - Authentication failed.
+      + address not allowed)
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:198: AssertionError: {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   AssertionError: ({'conversationId': 1, 'done': False, 'payload': b'r=71KYOLO0A0WUrw5ls4iUz5uaG3QzwR4EFfakmhUht7dFE1lw9xdR1hXe,s=4K4Qt9...g==,i=15000', 'ok': 1.0}, {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'})
+    assert {'keys': ['co...ons': '15000'} == {'ok': 0.0, '...cationFailed'}
+      
+      Left contains 4 more items:
+      {'done': False,
+       'iterations': '15000',
+       'keys': ['conversationId', 'done', 'ok', 'payload'],
+       'payload_keys': ['r', 's', 'i']}
+      Right contains 4 more items:...
+      
+      ...Full output truncated, use '-vv' to show
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:241: AssertionError: ({'conversationId': 1, 'done': False, 'payload': b'r=71KYOLO0A0WUrw5ls4iUz5uaG3QzwR4EFfakmhUht7dFE1lw9xdR1hXe,s=4K4Qt9...g==,i=15000', 'ok': 1.0}, {'ok': 0.0, 'errmsg': 'address not allowed', 'code': 18, 'codeName': 'AuthenticationFailed'})
+E   TypeError: 'NoneType' object is not subscriptable
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:286: TypeError: 'NoneType' object is not subscriptable
+E   TypeError: 'NoneType' object is not subscriptable
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:432: TypeError: 'NoneType' object is not subscriptable
+=========================== short test summary info ============================
+FAILED test_13_ip_allowlist.py::test_allowed_and_not_allowed - AssertionError...
+FAILED test_13_ip_allowlist.py::test_refusal_is_identical_to_a_wrong_password
+FAILED test_13_ip_allowlist.py::test_refusal_is_logged_without_secrets - Type...
+FAILED test_13_ip_allowlist.py::test_proxy_protocol_and_client_metadata_are_not_trusted
+4 failed, 90 passed in 56.60s

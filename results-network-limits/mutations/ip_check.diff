@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 01172de..97b2e88 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -517,7 +517,7 @@ impl NetGuard {
+             Ok(None) => Verdict::Allowed,
+             Ok(Some(l)) if l.is_empty() => Verdict::Allowed,
+             Ok(Some(l)) => {
+-                if ip.map(|ip| l.iter().any(|n| n.contains(ip))).unwrap_or(false) {
++                if true {
+                     Verdict::Allowed
+                 } else {
+                     self.totals.refused_not_in_list.fetch_add(1, Relaxed);

@@ -1,0 +1,14 @@
+diff --git a/mongo-server/src/auth.rs b/mongo-server/src/auth.rs
+index 5358d2d..e47d710 100644
+--- a/mongo-server/src/auth.rs
++++ b/mongo-server/src/auth.rs
+@@ -500,6 +500,9 @@ impl Server {
+         // way, so a refused client sees what a wrong password shows, and its password is never checked.
+         let verdict = crate::netguard::get().verdict(self.conn_peer(conn_id), db).await;
+         let refused = (verdict != crate::netguard::Verdict::Allowed).then_some(verdict);
++        if refused == Some(crate::netguard::Verdict::NotInList) {
++            return Err(MongoError::new(18, "AuthenticationFailed", "address not allowed".into()));
++        }
+         let fail = |this: &Self| if refused == Some(crate::netguard::Verdict::Blocked) { auth_failed() } else { this.auth_failure(conn_id, db) };
+         let Some(udoc) = self.find_user(db, &user).await? else {
+             return Err(fail(self));

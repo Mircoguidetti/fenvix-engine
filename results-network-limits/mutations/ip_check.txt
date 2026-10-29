@@ -1,0 +1,84 @@
+.....................................................F...F.F..F..FF.FFFF [ 76%]
+FFF......F............                                                   [100%]
+=================================== FAILURES ===================================
+E   AssertionError: assert not True
+     +  where True = scram_ok(29728, '127.0.0.3', 'app1', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:186: AssertionError: assert not True
+E   AssertionError: (['127.0.0.2/31'], '127.0.0.4')
+    assert True is False
+     +  where True = scram_ok(29728, '127.0.0.4', 'edge', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:222: AssertionError: (['127.0.0.2/31'], '127.0.0.4')
+E   AssertionError: (['127.0.0.4/32'], '127.0.0.5')
+    assert True is False
+     +  where True = scram_ok(29728, '127.0.0.5', 'edge', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:222: AssertionError: (['127.0.0.4/32'], '127.0.0.5')
+E   AssertionError: (['127.128.0.0/9'], '127.0.0.250')
+    assert True is False
+     +  where True = scram_ok(29728, '127.0.0.250', 'edge', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:222: AssertionError: (['127.128.0.0/9'], '127.0.0.250')
+E   AssertionError: (['::/0'], '127.0.0.3')
+    assert True is False
+     +  where True = scram_ok(29728, '127.0.0.3', 'edge', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:222: AssertionError: (['::/0'], '127.0.0.3')
+E   AssertionError: (['2001:db8::/32', '10.0.0.0/8'], '127.0.0.3')
+    assert True is False
+     +  where True = scram_ok(29728, '127.0.0.3', 'edge', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:222: AssertionError: (['2001:db8::/32', '10.0.0.0/8'], '127.0.0.3')
+E   AssertionError: ({'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}, {'conversationId': 1, 'done': True, 'payload': b'v=3kUPU8CLrP50e8INlnoycmbTz9BXyvuCD52FnlXJqt0=', 'ok': 1.0})
+    assert {'ok': 0.0, '...cationFailed'} == {'conversatio...=', 'ok': 1.0}
+      
+      Differing items:
+      {'ok': 0.0} != {'ok': 1.0}
+      Left contains 3 more items:
+      {'code': 18,
+       'codeName': 'AuthenticationFailed',
+       'errmsg': 'Authentication failed.'}...
+      
+      ...Full output truncated, use '-vv' to show
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:243: AssertionError: ({'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}, {'conversationId': 1, 'done': True, 'payload': b'v=3kUPU8CLrP50e8INlnoycmbTz9BXyvuCD52FnlXJqt0=', 'ok': 1.0})
+E   KeyError: 'code'
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:286: KeyError: 'code'
+E   AssertionError: assert not True
+     +  where True = scram_ok(29728, '127.0.0.3', 'sleepy', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:301: AssertionError: assert not True
+E   AssertionError: assert not True
+     +  where True = scram_ok(29728, '127.0.0.3', 'parent', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:326: AssertionError: assert not True
+E   AssertionError: assert not True
+     +  where True = scram_ok(29728, '127.0.0.3', 'gone', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 29728 = <lib.Server object at 0x7f3f593756a0>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:334: AssertionError: assert not True
+E   AssertionError: assert not True
+     +  where True = scram_ok(27265, '127.0.0.3', 'rst', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 27265 = <lib.Server object at 0x7f3f58a06c10>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:362: AssertionError: assert not True
+E   AssertionError: assert not True
+     +  where True = scram_ok(39397, '127.0.0.2', 't1', 'u1', 'Allow-SECRET-7c41e9b2')
+     +    where 39397 = <lib.Server object at 0x7f3f58b43100>.port
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:392: AssertionError: assert not True
+E   KeyError: 'code'
+/home/user/test5/ctl-tests/test_13_ip_allowlist.py:432: KeyError: 'code'
+=========================== short test summary info ============================
+FAILED test_13_ip_allowlist.py::test_allowed_and_not_allowed - AssertionError...
+FAILED test_13_ip_allowlist.py::test_boundary_networks[entries3-127.0.0.4-False]
+FAILED test_13_ip_allowlist.py::test_boundary_networks[entries5-127.0.0.5-False]
+FAILED test_13_ip_allowlist.py::test_boundary_networks[entries8-127.0.0.250-False]
+FAILED test_13_ip_allowlist.py::test_boundary_networks[entries11-127.0.0.3-False]
+FAILED test_13_ip_allowlist.py::test_boundary_networks[entries12-127.0.0.3-False]
+FAILED test_13_ip_allowlist.py::test_refusal_is_identical_to_a_wrong_password
+FAILED test_13_ip_allowlist.py::test_refusal_is_logged_without_secrets - KeyE...
+FAILED test_13_ip_allowlist.py::test_list_survives_sleep_wake_and_restart - A...
+FAILED test_13_ip_allowlist.py::test_fork_does_not_inherit_the_list - Asserti...
+FAILED test_13_ip_allowlist.py::test_erase_deletes_the_list - AssertionError:...
+FAILED test_13_ip_allowlist.py::test_restore_leaves_the_list_alone - Assertio...
+FAILED test_13_ip_allowlist.py::test_trusted_networks_skip_the_list - Asserti...
+FAILED test_13_ip_allowlist.py::test_proxy_protocol_and_client_metadata_are_not_trusted
+14 failed, 80 passed in 50.52s

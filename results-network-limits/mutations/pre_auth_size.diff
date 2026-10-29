@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 01172de..ed4104f 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -360,7 +360,7 @@ impl NetGuard {
+     }
+ 
+     pub fn pre_auth_max(&self) -> usize {
+-        self.cfg.pre_auth_max
++        usize::MAX
+     }
+ 
+     pub fn is_trusted(&self, ip: IpAddr) -> bool {

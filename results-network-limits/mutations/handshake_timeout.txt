@@ -1,0 +1,10 @@
+........................................................................ [ 76%]
+...................F..                                                   [100%]
+=================================== FAILURES ===================================
+E   assert False
+     +  where False = closed_within(6)
+     +    where closed_within = <netlib.Wire object at 0x7f13a465ba70>.closed_within
+/home/user/test5/ctl-tests/test_14_auth_limits.py:254: assert False
+=========================== short test summary info ============================
+FAILED test_14_auth_limits.py::test_slow_handshake_is_closed - assert False
+1 failed, 93 passed in 54.51s

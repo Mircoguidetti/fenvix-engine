@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 01172de..b75adbc 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -415,7 +415,7 @@ impl NetGuard {
+ 
+     /// Is `ip` blocked (on every database, or on `db`)? Trusted addresses never are.
+     pub fn is_blocked(&self, ip: IpAddr, db: &str) -> bool {
+-        if self.is_trusted(ip) {
++        if true {
+             return false;
+         }
+         let now = Instant::now();

@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 01172de..2198926 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -356,7 +356,7 @@ impl NetGuard {
+     }
+ 
+     pub fn handshake_timeout(&self) -> Option<Duration> {
+-        self.cfg.handshake
++        None
+     }
+ 
+     pub fn pre_auth_max(&self) -> usize {

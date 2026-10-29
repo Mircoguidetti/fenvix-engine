@@ -1,0 +1,8 @@
+test netguard::tests::matches_boundaries ... ok
+test netguard::tests::blocks_per_address_and_per_database ... ok
+test netguard::tests::ipv6_is_counted_by_its_prefix_and_trusted_is_never_blocked ... ok
+test netguard::tests::connection_slots ... ok
+test netguard::tests::progressive_blocks ... ok
+test netguard::tests::parses_and_canonicalizes ... ok
+test netguard::tests::refuses_bad_entries ... ok
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 0.00s
