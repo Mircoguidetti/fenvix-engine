@@ -1,0 +1,2 @@
+08:18:18 ctl test_04_export (9 passed, 1 skipped) and test_04b (2 skipped) of the new binary: mongorestore/mongodump not found at /tmp/claude-0/mongo-img/root/usr/bin (environment rebuilt in this session puts them in /tmp/mongo7-bin). Symlink added, both files run again on the same binary: 10 passed, 2 passed.
+08:18:18 06:08-08:03: the machine restarted during the Node suites (slice 3450:3600); the regression was resumed at 08:03 from the finished slices; a watchdog restarts the runner from then on.
