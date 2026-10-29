@@ -740,9 +740,8 @@ mod tests {
         g.record_failure(a, "x");
         assert!(g.is_blocked(a, "x") && !g.is_blocked(a, "y"));
         g.record_failure(a, "y");
-        g.record_failure(a, "z");
         assert!(!g.is_blocked(a, "w"));
-        g.record_failure(a, "w");
+        g.record_failure(a, "z"); // the 4th failure of the address: blocked everywhere
         assert!(g.is_blocked(a, "w") && g.is_blocked(a, "anything"));
         assert!(!g.is_blocked(ip("203.0.113.2"), "x"));
         assert!(g.unblock(a) && !g.is_blocked(a, "x"));
