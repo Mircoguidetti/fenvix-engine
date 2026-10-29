@@ -154,6 +154,8 @@ async fn do_fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str, chain: &[S
         let mut m = m;
         m["forked_from"] = fm;
         rec::put(&ctl.store, &meta::meta_path(target), &m).await?;
+        // a fresh record: the fork has no allow list (like it has no users)
+        crate::netguard::get().forget_cached(target);
         super::failpoint("fork.after_meta").await;
         Ok::<_, anyhow::Error>(manifest_id)
     }

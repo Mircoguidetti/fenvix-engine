@@ -45,6 +45,9 @@ struct ConvState {
     conv: scram::Conv,
     skip_empty: bool,
     stage: u8,
+    /// Refused before the password is looked at (address blocked, or not in the database's allow list): the conversation
+    /// goes on exactly like one with a wrong password and ends with the same error.
+    refused: Option<crate::netguard::Verdict>,
 }
 
 fn unauthorized(msg: String) -> MongoError {
@@ -163,6 +166,44 @@ impl Server {
     pub fn auth_connection_opened(&self, conn_id: i64, peer: Option<std::net::IpAddr>, server: Option<std::net::IpAddr>, x509: Option<String>) {
         let local = peer.map(|a| a.is_loopback()).unwrap_or(false);
         self.auth.conns.lock().unwrap().insert(conn_id, Conn { local, peer, server, x509, next_conv: 1, ..Default::default() });
+    }
+
+    /// Has the connection authenticated as some user?
+    pub fn conn_authenticated(&self, conn_id: i64) -> bool {
+        self.auth.conns.lock().unwrap().get(&conn_id).map(|c| !c.users.is_empty()).unwrap_or(false)
+    }
+
+    /// The canonical TCP peer address of a connection.
+    fn conn_peer(&self, conn_id: i64) -> Option<std::net::IpAddr> {
+        self.with_conn(conn_id, |c| c.peer).map(crate::netguard::canonical_ip)
+    }
+
+    /// A failed authentication on `db`, counted for the connection's address.
+    fn auth_failure(&self, conn_id: i64, db: &str) -> MongoError {
+        if let Some(ip) = self.conn_peer(conn_id) {
+            crate::netguard::get().record_failure(ip, db);
+        }
+        auth_failed()
+    }
+
+    /// A database's allow list changed: connections authenticated on it whose address the list does not allow (and that are
+    /// not trusted) lose that authentication at once. Returns how many connections lost it.
+    pub(crate) fn drop_auth_outside(&self, db: &str, allowed: &[crate::netguard::Net]) -> usize {
+        if allowed.is_empty() {
+            return 0;
+        }
+        let g = crate::netguard::get();
+        let mut n = 0;
+        for c in self.auth.conns.lock().unwrap().values_mut() {
+            let Some(ip) = c.peer.map(crate::netguard::canonical_ip) else { continue };
+            if g.is_trusted(ip) || allowed.iter().any(|a| a.contains(ip)) || !c.users.iter().any(|(_, d)| d == db) {
+                continue;
+            }
+            c.users.retain(|(_, d)| d != db);
+            c.privs = None;
+            n += 1;
+        }
+        n
     }
 
     pub fn auth_connection_closed(&self, conn_id: i64) {
@@ -455,19 +496,26 @@ impl Server {
         let (user, bare, cnonce) = scram::parse_client_first(&payload).ok_or_else(|| MongoError::new(2, "BadValue", "Invalid SCRAM client-first message".into()))?;
         let opts = cmd.get_document("options").ok();
         let skip_empty = opts.map(|o| bool_arg(o.get("skipEmptyExchange"), false)).unwrap_or(false);
+        // The address is checked first (blocks, then the database's allow list); the rest of the exchange is the same either
+        // way, so a refused client sees what a wrong password shows, and its password is never checked.
+        let verdict = crate::netguard::get().verdict(self.conn_peer(conn_id), db).await;
+        let refused = (verdict != crate::netguard::Verdict::Allowed).then_some(verdict);
+        let fail = |this: &Self| if refused == Some(crate::netguard::Verdict::Blocked) { auth_failed() } else { this.auth_failure(conn_id, db) };
         let Some(udoc) = self.find_user(db, &user).await? else {
-            return Err(auth_failed());
+            return Err(fail(self));
         };
         let creds = udoc.get_document("credentials").ok().and_then(|c| c.get_document(mech.name()).ok()).and_then(scram::Creds::from_doc);
         let Some(creds) = creds else {
             return Err(MongoError::new(334, "MechanismUnavailable", format!("Unable to use {} based authentication for user: {user}", mech.name())));
         };
-        self.check_restrictions(conn_id, &udoc)?;
+        if self.check_restrictions(conn_id, &udoc).is_err() {
+            return Err(fail(self));
+        }
         let (conv, first) = scram::server_first(mech, &user, &bare, &cnonce, creds);
         let id = self.with_conn(conn_id, |c| {
             let id = c.next_conv;
             c.next_conv += 1;
-            c.conv = Some(ConvState { id, db: db.to_string(), conv, skip_empty, stage: 1 });
+            c.conv = Some(ConvState { id, db: db.to_string(), conv, skip_empty, stage: 1, refused });
             id
         });
         Ok(doc! { "conversationId": id, "done": false, "payload": bin(first.into_bytes()), "ok": 1.0 })
@@ -501,8 +549,19 @@ impl Server {
                 Ok(doc! { "conversationId": cid, "done": true, "payload": bin(vec![]), "ok": 1.0 })
             }
             Next::Final(mut cs, msg) => {
+                // Refused at the start, or blocked since (another connection's failures): the proof is not checked.
+                let blocked_now = self.conn_peer(conn_id).map(|ip| crate::netguard::get().is_blocked(ip, &cs.db)).unwrap_or(false);
+                match cs.refused {
+                    Some(crate::netguard::Verdict::Blocked) => return Err(auth_failed()),
+                    Some(_) => return Err(self.auth_failure(conn_id, &cs.db)),
+                    None if blocked_now => {
+                        crate::netguard::get().note_refused_while_blocked();
+                        return Err(auth_failed());
+                    }
+                    None => {}
+                }
                 let Some(v) = scram::server_final(&cs.conv, &msg) else {
-                    return Err(auth_failed());
+                    return Err(self.auth_failure(conn_id, &cs.db));
                 };
                 if cs.skip_empty {
                     self.sasl_success(conn_id, &cs);
@@ -552,12 +611,16 @@ impl Server {
         if db != "$external" {
             return Err(MongoError::new(2, "BadValue", "MONGODB-X509 authentication must be done against $external".into()));
         }
-        let Some(subject) = self.with_conn(conn_id, |c| c.x509.clone()) else {
+        if self.conn_peer(conn_id).map(|ip| crate::netguard::get().is_blocked(ip, db)).unwrap_or(false) {
+            crate::netguard::get().note_refused_while_blocked();
             return Err(auth_failed());
+        }
+        let Some(subject) = self.with_conn(conn_id, |c| c.x509.clone()) else {
+            return Err(self.auth_failure(conn_id, db));
         };
         if let Ok(user) = cmd.get_str("user") {
             if user != subject {
-                return Err(auth_failed());
+                return Err(self.auth_failure(conn_id, db));
             }
         }
         if self.find_user("$external", &subject).await?.is_none() {

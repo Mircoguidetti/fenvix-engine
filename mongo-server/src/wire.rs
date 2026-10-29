@@ -51,31 +51,83 @@ fn read_doc(b: &[u8], pos: &mut usize) -> Result<Document> {
 
 /// Read one message. `Ok(None)` on a clean EOF between messages.
 pub async fn read_request<R: AsyncRead + Unpin>(r: &mut R) -> Result<Option<Request>> {
+    read_request_bounded(r, MAX_MESSAGE, None, None).await
+}
+
+/// A message did not arrive in time (handshake timeout, or a slow sender before authentication).
+#[derive(Debug)]
+pub struct ReadTimeout;
+
+impl std::fmt::Display for ReadTimeout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "message not received in time")
+    }
+}
+
+impl std::error::Error for ReadTimeout {}
+
+/// A message larger than allowed (before authentication), refused from its header: nothing of it is allocated or read.
+#[derive(Debug)]
+pub struct TooLarge(pub usize, pub usize);
+
+impl std::fmt::Display for TooLarge {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "message of {} bytes is larger than the {} allowed", self.0, self.1)
+    }
+}
+
+impl std::error::Error for TooLarge {}
+
+/// Read one message of at most `max_len` bytes (also after decompression). `first_byte_by`: the first byte must arrive by
+/// then; `rest_within`: once the first byte has arrived, the rest must arrive within this time.
+pub async fn read_request_bounded<R: AsyncRead + Unpin>(r: &mut R, max_len: usize, first_byte_by: Option<tokio::time::Instant>, rest_within: Option<std::time::Duration>) -> Result<Option<Request>> {
     let mut header = [0u8; 16];
-    match r.read_exact(&mut header).await {
+    let first = match first_byte_by {
+        Some(d) => tokio::time::timeout_at(d, r.read(&mut header[..1])).await.map_err(|_| anyhow::Error::new(ReadTimeout))?,
+        None => r.read(&mut header[..1]).await,
+    };
+    match first {
+        Ok(0) => return Ok(None),
         Ok(_) => {}
         Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
         Err(e) => return Err(e.into()),
     }
-    let len = i32::from_le_bytes(header[0..4].try_into().unwrap()) as usize;
-    let request_id = i32::from_le_bytes(header[4..8].try_into().unwrap());
-    let opcode = i32::from_le_bytes(header[12..16].try_into().unwrap());
-    if !(16..=MAX_MESSAGE).contains(&len) {
-        bail!("invalid message length {len}");
+    let rest = async move {
+        r.read_exact(&mut header[1..]).await?;
+        let len = i32::from_le_bytes(header[0..4].try_into().unwrap()) as usize;
+        let request_id = i32::from_le_bytes(header[4..8].try_into().unwrap());
+        let opcode = i32::from_le_bytes(header[12..16].try_into().unwrap());
+        if !(16..=MAX_MESSAGE).contains(&len) {
+            bail!("invalid message length {len}");
+        }
+        if len > max_len {
+            return Err(anyhow::Error::new(TooLarge(len, max_len)));
+        }
+        let mut body = vec![0u8; len - 16];
+        r.read_exact(&mut body).await?;
+        parse_body(request_id, opcode, &body, max_len)
+    };
+    match rest_within {
+        Some(t) => tokio::time::timeout(t, rest).await.map_err(|_| anyhow::Error::new(ReadTimeout))?,
+        None => rest.await,
     }
-    let mut body = vec![0u8; len - 16];
-    r.read_exact(&mut body).await?;
+}
+
+fn parse_body(request_id: i32, opcode: i32, body: &[u8], max_len: usize) -> Result<Option<Request>> {
     match opcode {
-        OP_MSG => parse_msg(request_id, &body).map(Some),
-        OP_QUERY => parse_query(request_id, &body).map(Some),
+        OP_MSG => parse_msg(request_id, body).map(Some),
+        OP_QUERY => parse_query(request_id, body).map(Some),
         OP_COMPRESSED => {
             let mut pos = 0;
-            let original = read_i32(&body, &mut pos)?;
-            let size = read_i32(&body, &mut pos)? as usize;
+            let original = read_i32(body, &mut pos)?;
+            let size = read_i32(body, &mut pos)? as usize;
             let id = *body.get(pos).ok_or_else(|| anyhow!("truncated message"))?;
             pos += 1;
             if size > MAX_MESSAGE {
                 bail!("invalid uncompressed size {size}");
+            }
+            if size + 16 > max_len {
+                return Err(anyhow::Error::new(TooLarge(size + 16, max_len)));
             }
             let plain = decompress(id, &body[pos..], size)?;
             let mut req = match original {
@@ -143,13 +195,23 @@ fn decompress(id: u8, data: &[u8], size: usize) -> Result<Vec<u8>> {
     use std::io::Read;
     let out = match id {
         0 => data.to_vec(),
-        1 => snap::raw::Decoder::new().decompress_vec(data).map_err(|e| anyhow!("snappy: {e}"))?,
+        // every decoder stops one byte past the announced size: a small message cannot expand without bound
+        1 => {
+            if snap::raw::decompress_len(data).map_err(|e| anyhow!("snappy: {e}"))? != size {
+                bail!("uncompressed size mismatch");
+            }
+            snap::raw::Decoder::new().decompress_vec(data).map_err(|e| anyhow!("snappy: {e}"))?
+        }
         2 => {
             let mut v = Vec::with_capacity(size);
-            flate2::read::ZlibDecoder::new(data).read_to_end(&mut v)?;
+            flate2::read::ZlibDecoder::new(data).take(size as u64 + 1).read_to_end(&mut v)?;
             v
         }
-        3 => zstd::stream::decode_all(data)?,
+        3 => {
+            let mut v = Vec::with_capacity(size);
+            zstd::stream::read::Decoder::new(data)?.take(size as u64 + 1).read_to_end(&mut v)?;
+            v
+        }
         other => bail!("unknown compressor {other}"),
     };
     if out.len() != size {

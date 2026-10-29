@@ -101,6 +101,8 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     for prefix in [rec::path(&["control", "dbs", db]), rec::path(&["control", "usage", db]), rec::path(&["control", "forks", db]), rec::path(&["control", "exports", db]), rec::path(&["control", "staging", db])] {
         purge::delete_prefix(&ctl.store, &prefix).await?;
     }
+    // the allow list went with the metadata record: forget it at once (a database created again with this name has none)
+    crate::netguard::get().forget_cached(db);
     super::failpoint("erase.after_control").await;
 
     // Proof, part one: nothing is left but the intent record.

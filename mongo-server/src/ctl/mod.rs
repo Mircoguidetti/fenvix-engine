@@ -4,7 +4,7 @@
 //! bucket (never inside `tenants/`, so `listDatabases` and the tenant lifecycle are unaffected).
 //!
 //! Layout of `control/` (all JSON, written with conditional puts):
-//! * `control/dbs/{db}/meta.json`            created_at, forked_from, keep_awake, retention
+//! * `control/dbs/{db}/meta.json`            created_at, forked_from, keep_awake, retention, ip_allowlist
 //! * `control/pins/{db}`                     keep-awake lease `{holder, expires_ms, seq}`
 //! * `control/forks/{ancestor}/{db}`         `db` reads SSTs owned by `ancestor` (blocks erasing the ancestor)
 //! * `control/ops/{db}.json`                 intent of a fork / restore / erase in progress (resumed after a crash)
@@ -12,6 +12,7 @@
 //! * `control/usage/{db}/{day}/{holder}-{nonce}.json`   usage counters, one file per process and day
 //! * `control/staging/{op}/...`              scratch slatedb databases of a restore
 
+pub mod allowlist;
 pub mod api;
 pub mod erase;
 pub mod export;

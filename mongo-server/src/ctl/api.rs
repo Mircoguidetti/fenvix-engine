@@ -87,6 +87,11 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
             .ok_or_else(|| ApiError::bad("body needs `to`: an RFC 3339 time or epoch milliseconds"))?;
             Ok(Response::json(200, &super::pitr::restore(ctl, db, to, b["dry_run"].as_bool().unwrap_or(false)).await?))
         }
+        ("PUT", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::set(ctl, db, &body_json(req)?).await?)),
+        ("GET", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::get(ctl, db).await?)),
+        ("DELETE", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::clear(ctl, db).await?)),
+        ("GET", ["v1", "network"]) => Ok(Response::json(200, &super::allowlist::state())),
+        ("DELETE", ["v1", "network", "blocks", ip]) => Ok(Response::json(200, &super::allowlist::unblock(ip)?)),
         ("GET", ["v1", "databases", db, "manifest"]) => {
             meta::check_name(db)?;
             let id = req.query.get("id").and_then(|v| v.parse().ok());

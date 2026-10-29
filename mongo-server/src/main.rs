@@ -40,6 +40,7 @@ mod layout;
 mod lease;
 mod localcas;
 mod natural;
+mod netguard;
 mod params;
 mod projfind;
 mod query;
@@ -223,6 +224,8 @@ struct Args {
     log_commands: bool,
     #[command(flatten)]
     ctl: ctl::CtlArgs,
+    #[command(flatten)]
+    net: netguard::NetArgs,
     /// Require authentication and authorization for every command (mongod's --auth).
     #[arg(long)]
     auth: bool,
@@ -241,7 +244,25 @@ struct Args {
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
-    let stream = match tls.accept(tcp).await {
+    // The client address is the TCP peer: nothing in front of the engine rewrites it, and nothing the client sends changes it.
+    let guard = netguard::get();
+    let peer = tcp.peer_addr().ok().map(|a| netguard::canonical_ip(a.ip()));
+    let Some(_slot) = guard.open_connection(peer) else {
+        return; // over the per-address limit: closed at once
+    };
+    let deadline = guard.handshake_timeout().map(|t| tokio::time::Instant::now() + t);
+    let accepted = match deadline {
+        Some(d) => match tokio::time::timeout_at(d, tls.accept(tcp)).await {
+            Ok(r) => r,
+            Err(_) => {
+                guard.totals.handshake_timeouts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("conn {conn_id}: closed: TLS handshake not done within the handshake timeout (peer {})", peer.map(|p| p.to_string()).unwrap_or_default());
+                return;
+            }
+        },
+        None => tls.accept(tcp).await,
+    };
+    let stream = match accepted {
         Ok(s) => s,
         Err(e) => {
             eprintln!("conn {conn_id}: TLS handshake failed: {e:#}");
@@ -251,17 +272,30 @@ async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: T
     stream.set_nodelay(true);
     server.diag.conn_opened(conn_id, stream.peer_addr().ok().map(|a| std::net::SocketAddr::new(a.ip(), a.port())));
     server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject());
-    handle_connection_inner(&server, stream, conn_id).await;
+    handle_connection_inner(&server, stream, conn_id, deadline, peer).await;
     server.auth_connection_closed(conn_id);
     server.diag.conn_closed(conn_id);
 }
 
-async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn_id: i64) {
+async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn_id: i64, first_deadline: Option<tokio::time::Instant>, peer: Option<std::net::IpAddr>) {
+    let guard = netguard::get();
     let (r, mut w) = tokio::io::split(stream);
     let mut r = BufReader::new(r);
     let mut response_id = 1;
+    let mut first = true;
     loop {
-        match wire::read_request(&mut r).await {
+        // The first message must arrive whole before the handshake deadline. With --auth, until the connection has
+        // authenticated, a message must arrive whole within the handshake timeout once it started, and may not be larger than
+        // the pre-authentication limit. Idle time between messages is not limited (a driver's monitoring connection never
+        // authenticates and waits between its hello commands).
+        let pre_auth = server.auth.enabled.load(std::sync::atomic::Ordering::Relaxed) && !server.conn_authenticated(conn_id);
+        let (first_by, rest_within) = match (first, first_deadline) {
+            (true, Some(d)) => (Some(d), Some(d.saturating_duration_since(tokio::time::Instant::now()))),
+            _ => (None, if pre_auth { guard.handshake_timeout() } else { None }),
+        };
+        let max_len = if pre_auth { guard.pre_auth_max() } else { usize::MAX };
+        first = false;
+        match wire::read_request_bounded(&mut r, max_len, first_by, rest_within).await {
             Ok(Some(req)) => {
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
@@ -283,7 +317,16 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
             }
             Ok(None) => break,
             Err(e) => {
-                eprintln!("conn {conn_id}: {e:#}");
+                let shown = peer.map(|p| p.to_string()).unwrap_or_default();
+                if e.downcast_ref::<wire::ReadTimeout>().is_some() {
+                    guard.totals.handshake_timeouts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    eprintln!("conn {conn_id}: closed: message not received within the handshake timeout (peer {shown})");
+                } else if let Some(t) = e.downcast_ref::<wire::TooLarge>() {
+                    guard.totals.oversized_before_auth.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    eprintln!("conn {conn_id}: closed: {t} before authentication (peer {shown})");
+                } else {
+                    eprintln!("conn {conn_id}: {e:#}");
+                }
                 break;
             }
         }
@@ -297,6 +340,7 @@ fn main() -> Result<()> {
 
 async fn run() -> Result<()> {
     let args = Args::parse();
+    netguard::install(&args.net)?;
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
         "s3" => {
             // The credentials are the standard AWS ones, none is built in: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY /

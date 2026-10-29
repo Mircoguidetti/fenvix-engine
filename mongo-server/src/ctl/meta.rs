@@ -174,6 +174,7 @@ pub async fn create(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     }
     let m = default_meta(db, now_ms(), "admin");
     rec::put(&ctl.store, &meta_path(db), &m).await?;
+    crate::netguard::get().forget_cached(db);
     ctl.usage.touch(db);
     describe(ctl, db, true).await
 }
