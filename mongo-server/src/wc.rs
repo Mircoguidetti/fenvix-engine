@@ -147,6 +147,17 @@ impl WriteConcern {
         }
     }
 
+    /// The client accepts an acknowledgement before the write is durable: `j: false` with `w` 1 (or no `w`), or `w: 0`
+    /// without `j: true`. Only databases with relaxed durability switched on use it (`ctl/durability.rs`).
+    pub(crate) fn relaxed(&self) -> bool {
+        let j = self.echo.get_bool("j").ok();
+        match self.w {
+            W::Num(0) => j != Some(true),
+            W::Num(1) | W::None => j == Some(false),
+            _ => false,
+        }
+    }
+
     fn unacknowledged(&self) -> bool {
         matches!(self.w, W::Num(0)) && self.echo.get_bool("j").ok() != Some(true)
     }

@@ -97,6 +97,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     for a in ancestors {
         rec::delete(&ctl.store, &fork::fork_marker(a, db)).await?;
     }
+    if super::durability::forget(db) {
+        let _ = super::rec::delete(&ctl.store, &super::rec::path(&["control", "durability", db])).await;
+    }
     rec::delete(&ctl.store, &rec::path(&["control", "retention", db])).await?;
     for prefix in [rec::path(&["control", "dbs", db]), rec::path(&["control", "usage", db]), rec::path(&["control", "forks", db]), rec::path(&["control", "exports", db]), rec::path(&["control", "staging", db])] {
         purge::delete_prefix(&ctl.store, &prefix).await?;

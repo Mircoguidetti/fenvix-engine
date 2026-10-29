@@ -404,6 +404,34 @@ impl Commit {
         if !ACK_BEFORE_DURABLE.load(Relaxed) {
             self.handle.await_durable().await?;
         }
+    /// Adaptive group commit: when the last write arrived, the average gap between writes and the average flush time
+    /// (microseconds, exponential moving averages).
+    last_arrival_us: std::sync::atomic::AtomicU64,
+    gap_ewma_us: std::sync::atomic::AtomicU64,
+    flush_ewma_us: std::sync::atomic::AtomicU64,
+}
+
+/// Adaptive group commit (`--adaptive-group-commit`): the leader of a flush waits a short window, only when more writes of
+/// the same database are expected within it (their average gap is at most twice the window) or already on their way.
+/// The window is half the database's average flush time, at most `ADAPTIVE_MAX_US`: short next to the flush itself, so
+/// it costs little latency, and zero for a database that is written rarely (a lone write never waits).
+pub static ADAPTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub static ADAPTIVE_MAX_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(5_000);
+/// Flushes for which the adaptive leader waited, and the microseconds waited in total.
+pub static ADAPTIVE_WAITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static ADAPTIVE_WAIT_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Writes acknowledged before they were durable (relaxed durability).
+pub static RELAXED_ACKS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn mono_us() -> u64 {
+    static T0: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+    T0.get_or_init(Instant::now).elapsed().as_micros() as u64
+}
+
+fn ewma(cell: &std::sync::atomic::AtomicU64, sample: u64) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let old = cell.load(Relaxed);
+    cell.store(if old == 0 { sample } else { (old * 7 + sample) / 8 }, Relaxed);
         Ok(())
     }
 }

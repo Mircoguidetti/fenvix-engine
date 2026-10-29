@@ -166,11 +166,11 @@ impl Server {
     async fn dispatch_durable(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         crate::dbs::TOKENS
             .scope(Default::default(), async {
-                let (mut r, mut commits) = crate::dbs::PENDING
-                    .scope(Default::default(), async {
+                let (mut r, commits, relax) = crate::dbs::RELAX
+                    .scope(std::cell::Cell::new(false), crate::dbs::PENDING.scope(Default::default(), async {
                         let r = crate::js::scoped(db, self.dispatch(db, name, cmd, conn_id)).await;
-                        (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())))
-                    })
+                        (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())), crate::dbs::RELAX.with(|c| c.get()))
+                    }))
                     .await;
                 if let Some(last) = commits.pop() {
                     // Later commits flush after earlier ones, so waiting for the last covers all of them.
@@ -203,6 +203,9 @@ impl Server {
             // a snapshot read says the time it read at
             let at = self.dbs.changes.cluster_now();
             if let Ok(c) = r.get_document_mut("cursor") {
+        if wc.as_ref().map_or(false, |w| w.relaxed()) && !cmd.contains_key("autocommit") {
+            let _ = crate::dbs::RELAX.try_with(|c| c.set(true));
+        }
                 c.insert("atClusterTime", Bson::Timestamp(at));
             } else if name == "distinct" {
                 let ok = r.remove("ok");

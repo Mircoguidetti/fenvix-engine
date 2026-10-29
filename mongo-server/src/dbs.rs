@@ -54,12 +54,19 @@ tokio::task_local! {
     pub static TOKENS: std::cell::RefCell<Vec<InflightToken>>;
     /// Commits staged by the command being handled on this task, awaited before its reply is sent.
     pub static PENDING: std::cell::RefCell<Vec<Commit>>;
+    /// The command's write concern accepts an acknowledgement before durability (`{w: 1, j: false}`, see `wc.rs`).
+    pub static RELAX: std::cell::Cell<bool>;
 }
 
 /// Reads (find, count, distinct, aggregate) see only durable data: a write that is staged and waiting for its group
 /// flush is invisible to them until its flush is done. Commands that write still see their own staged data, which
 /// they need to decide (duplicate keys, unique indexes). False (`--durable-reads false`) lets reads see staged data.
 pub static DURABLE_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Reads of a database with relaxed durability see the writes acknowledged before they were durable (read-your-writes).
+fn durable_reads(db: &str) -> bool {
+    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0
+}
 
 pub fn set_wake_limit(n: usize) {
     let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });
@@ -947,14 +954,14 @@ impl ReadView {
     pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
-        let r = if DURABLE_READS.load(Relaxed) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
         self.done(r)
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
         let t = g.tenant.as_ref().unwrap();
-        let r = if DURABLE_READS.load(Relaxed) { t.get_durable(key).await? } else { t.get(key).await? };
+        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
         self.done(r)
     }
 

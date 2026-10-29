@@ -14,6 +14,7 @@
 
 pub mod allowlist;
 pub mod api;
+pub mod durability;
 pub mod erase;
 pub mod export;
 pub mod fork;
@@ -188,6 +189,7 @@ pub async fn start(dbs: Arc<Dbs>, server: Arc<crate::cmd::Server>, lc: Arc<Lifec
     };
     anyhow::ensure!(token.len() >= 16, "the admin token must be at least 16 characters");
     pitr::load_settings(&ctl).await;
+    durability::load_settings(&ctl).await;
     if !args.no_ctl_recovery {
         ops::recover(&ctl).await;
     }
