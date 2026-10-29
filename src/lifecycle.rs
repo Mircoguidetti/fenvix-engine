@@ -104,6 +104,21 @@ struct HotGc {
     last_write: Instant,
     last_gc: Instant,
     last_sst_gc: Instant,
+    /// The writer's manifest version at the last SST cleanup pass (a pass is due again only after something changed).
+    sst_manifest: u64,
+    /// The last pass saw unreferenced objects that were not old enough yet: run again at this time.
+    sst_retry_at: Option<Instant>,
+}
+/// Tenants a compaction of this process rewrote since their last SST cleanup pass (the compaction left replaced SSTs).
+static COMPACTED: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+/// An SST cleanup pass is also due once the writer's manifest has moved this many versions since the last pass (old
+/// manifests pile up: one per memtable flush, checkpoint or compaction).
+pub const SST_GC_MANIFEST_STEP: u64 = 16;
+/// SST cleanup passes that were due by time but skipped because nothing had changed (no request made).
+pub static SST_GC_NOOP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn writer_manifest_id(id: &str) -> Option<u64> {
+    WRITER_DBS.lock().unwrap().get(id).map(|db| db.manifest().id())
 }
 static GC_HOT: std::sync::LazyLock<Mutex<HashMap<String, HotGc>>> = std::sync::LazyLock::new(Default::default);
 /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = never).
@@ -161,11 +176,12 @@ fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
 }
 
 async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool) -> Result<DbReader> {
-    Ok(DbReader::builder(tenant_path(id), Arc::clone(store))
-        .with_reader_mode(DbReaderMode::FollowLatest)
-        .with_options(reader_options(skip_wal_replay))
-        .build()
-        .await?)
+    let b = DbReader::builder(tenant_path(id), Arc::clone(store)).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
+    let b = match cache_scope() {
+        Some((c, scope)) => b.with_db_cache(c, scope),
+        None => b,
+    };
+    Ok(b.build().await?)
 }
 
 // ---------------------------------------------------------------------------
@@ -198,6 +214,12 @@ impl CompactionQueue {
                 let _ = self.tx.send(Some(id.to_string()));
             }
         }
+    }
+    let mem = MEMTABLE_MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
+    if mem > 0 {
+        s.l0_sst_size_bytes = mem as usize;
+        // Writes pause once this much is waiting for object storage (slatedb's default is 1 GiB per database).
+        s.max_unflushed_bytes = (mem as usize * 4).max(16 << 20);
     }
 
     fn finish(&self, id: &str, l0_after: usize) {
@@ -248,7 +270,7 @@ impl Lifecycle {
     /// There is no marker to delete: a tenant without a database has never been written.
     pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
-        let db = Db::builder(tenant_path(&id), Arc::clone(&self.store)).with_settings(writer_settings()).build().await?;
+        let db = writer_builder(&id, &self.store).build().await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
         Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
@@ -466,7 +488,7 @@ impl Tenant {
         let marker = marker_path(&self.id);
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            Db::builder(tenant_path(&self.id), Arc::clone(store)).with_settings(writer_settings()).build()
+            writer_builder(&self.id, store).build()
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
@@ -831,10 +853,22 @@ fn wal_object_path(id: &str, n: u64) -> Path {
     Path::from(format!("{}/wal/{:020}.sst", tenant_path(id), n))
 }
 
-/// Delete the WAL objects of an open writer that its latest manifest no longer needs (every id below
-/// `replay_after_wal_id`, which advances each time the writer flushes its memtable to an L0 SST). Only the WAL
-/// directory is touched: the writer is live, so manifests, SSTs and compactions are left alone. The default pass
-/// remembers where the last one stopped, so it neither lists the directory nor deletes object by object.
+/// Delete the WAL objects of an open writer that nothing can need any more.
+///
+/// A WAL object `n` is needed while `n >= replay_after_wal_id` of the live database (its data is not yet in an L0 SST) or
+/// while some checkpoint's manifest has a replay boundary `<= n` (restoring or cloning that checkpoint replays it). Restore
+/// points are checkpoints, so for a database with a retention window this keeps every WAL object from the oldest restore
+/// point on: everything a point-in-time restore can use, which is the WAL of the window. Objects below the oldest
+/// checkpoint can serve no restore (there is no point to start from) and are deleted.
+///
+/// The pass reads the writer's own view of the manifest (no request). That view can be up to `--writer-poll-secs`
+/// behind the store, but only for checkpoints taken meanwhile, and a checkpoint taken after the view was read has a
+/// replay boundary at least the view's (boundaries only grow with the manifest version), so nothing it needs is below
+/// the limit used here. The boundary of the oldest checkpoint costs one GET, once per checkpoint. The lowest existing
+/// WAL id is found once per tenant and process (one LIST on a sorted store) and remembered. A pass with nothing new
+/// to delete makes no request; one that deletes makes one bulk delete per 1000 objects. So the cost of a pass depends on
+/// how many objects became deletable, not on how long the history is (the slatedb pass, `--wal-gc-mode slatedb`, lists
+/// the whole WAL directory and reads every manifest at every pass).
 pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     use std::sync::atomic::Ordering::Relaxed;
     let t0 = Instant::now();
