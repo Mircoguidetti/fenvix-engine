@@ -1,0 +1,82 @@
+..F...F....                                                              [100%]
+=================================== FAILURES ===================================
+_______________ test_other_databases_are_untouched_byte_for_byte _______________
+test_03_restore.py:123: in test_other_databases_are_untouched_byte_for_byte
+    c[name].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on by1 to execute command { tenantAdmin: 1, close: true, $db: "by1" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on by1 to execute command { tenantAdmin: 1, close: true, $db: "by1" }', 'code': 13, 'codeName': 'Unauthorized'}
+_____________________ test_points_follow_writes_and_expire _____________________
+test_03_restore.py:231: in test_points_follow_writes_and_expire
+    c["pt"].command("tenantAdmin", close=True)
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:946: in command
+    return self._client._retryable_read(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2116: in _retryable_read
+    return self._retry_internal(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/_csot.py:126: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2077: in _retry_internal
+    ).run()
+      ^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:2947: in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py:3187: in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:934: in inner
+    return self._command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/database.py:773: in _command
+    return conn.command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/helpers.py:50: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/pool.py:405: in command
+    return run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:440: in run_command
+    docs, _, _ = _run_command(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py:214: in _run_command
+    helpers_shared._check_command_response(
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+E   pymongo.errors.OperationFailure: not authorized on pt to execute command { tenantAdmin: 1, close: true, $db: "pt" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on pt to execute command { tenantAdmin: 1, close: true, $db: "pt" }', 'code': 13, 'codeName': 'Unauthorized'}
+=========================== short test summary info ============================
+FAILED test_03_restore.py::test_other_databases_are_untouched_byte_for_byte
+FAILED test_03_restore.py::test_points_follow_writes_and_expire - pymongo.err...
+2 failed, 9 passed in 112.56s (0:01:52)
