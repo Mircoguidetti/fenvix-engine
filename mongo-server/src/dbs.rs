@@ -182,6 +182,27 @@ impl Dbs {
             .clone()
     }
 
+    /// Without waiting: is the database open in this process (a busy entry counts as open)?
+    pub fn is_open_hint(&self, name: &str) -> bool {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => false,
+            Some(e) => e.try_read().map(|g| g.tenant.is_some()).unwrap_or(true),
+        }
+    }
+
+    /// "writer", "reader" or "closed", without waiting (a busy entry reads as "busy").
+    pub fn state_hint(&self, name: &str) -> String {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => "closed".into(),
+            Some(e) => match e.try_read() {
+                Ok(g) => match &g.tenant { None => "closed".into(), Some(t) if t.is_writer() => "writer".into(), Some(_) => "reader".into() },
+                Err(_) => "busy".into(),
+            },
+        }
+    }
+
     pub fn entry_count(&self) -> usize {
         self.entries.lock().unwrap().len()
     }
@@ -512,6 +533,7 @@ impl Entry {
         self.nat.clear();
         self.copts.clear();
         if let Some(t) = self.tenant.take() {
+            crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
             if r.is_ok() {
                 if let Some(l) = crate::locallog::get() {
@@ -604,6 +626,7 @@ impl Entry {
                 }
             }
         }
+        crate::fair::note_written(&self.name, ops.iter().map(|o| match o { Op::Put(k, v) => k.len() + v.len(), Op::Delete(k) => k.len() } as u64).sum(), false);
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
         tenant_bench::lifecycle::note_write(&self.name);

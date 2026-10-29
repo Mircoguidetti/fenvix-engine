@@ -109,6 +109,15 @@ impl Server {
         if self.log_commands {
             eprintln!("CMD {name} db={db}");
         }
+        // fair queue between databases under saturation, safety limits, per-database metrics (fair.rs)
+        let _permit = if crate::fair::exempt(&name) {
+            None
+        } else {
+            match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {
+                Ok(p) => Some(p),
+                Err(reply) => return reply,
+            }
+        };
         let t0 = std::time::Instant::now();
         let (opid, kill) = self.diag.begin(conn_id, db, &name, &cmd);
         let killable = crate::diag::killable(&name);
@@ -118,7 +127,7 @@ impl Server {
                 self.dbs.changes.advance(*ts);
             }
         }
-        let (r, op_time) = crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) }).await;
+        let (r, op_time) = crate::fair::timed(db, crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
         let r: R<Document> = r;
         let micros = t0.elapsed().as_micros() as i64;
         self.diag.end(opid, db, &name, &cmd, &r, micros);

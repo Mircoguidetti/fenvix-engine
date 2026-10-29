@@ -32,6 +32,7 @@ mod fields;
 mod find_ext;
 mod dsum;
 mod error;
+mod fair;
 mod expr;
 mod index;
 mod js;
@@ -197,6 +198,17 @@ struct Args {
     local_log_dir: String,
     #[arg(long, default_value_t = 30)]
     local_log_upload_secs: u64,
+    /// Fair queue between databases, only while the server is saturated: when the runtime runs a 10 ms timer late by more
+    /// than this (moving average, ms), new commands wait in their database's queue and start in turn (wakes first) as
+    /// others finish; below it every command starts at once. 0 = off. See fair.rs.
+    #[arg(long, default_value_t = 10.0)]
+    fair_lag_ms: f64,
+    /// Safety limit per database, only against runaway clients: commands running or queued at once (0 = none).
+    #[arg(long, default_value_t = 10_000)]
+    db_max_inflight: u64,
+    /// Safety limit per database, only against runaway clients: commands in one second (0 = none).
+    #[arg(long, default_value_t = 100_000)]
+    db_max_rate: u64,
     /// Test control only: never treat a lease as expired or lost. Demonstrates what the ownership checks prevent.
     #[arg(long)]
     unsafe_skip_ownership_checks: bool,
@@ -433,6 +445,7 @@ async fn run() -> Result<()> {
     }
     changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
     ctl::durability::install(args.relaxed_flush_ms)?;
+    fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate);
     let local_log_old = if args.local_log_dir.is_empty() { None } else { Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?) };
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);

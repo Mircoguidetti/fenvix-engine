@@ -96,6 +96,10 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("PUT", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::set(ctl, db, &body_json(req)?).await?)),
         ("GET", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::get(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::clear(ctl, db).await?)),
+        ("GET", ["v1", "metrics", "databases"]) => {
+            let dbs = Arc::clone(&ctl.dbs);
+            Ok(Response::json(200, &crate::fair::metrics(move |d| dbs.state_hint(d))))
+        }
         ("GET", ["v1", "network"]) => Ok(Response::json(200, &super::allowlist::state())),
         ("DELETE", ["v1", "network", "blocks", ip]) => Ok(Response::json(200, &super::allowlist::unblock(ip, req.query.get("database").map(|s| s.as_str()))?)),
         ("GET", ["v1", "databases", db, "manifest"]) => {
