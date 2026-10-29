@@ -1,0 +1,104 @@
+# round3 on real S3: the write modes (immediate, adaptive, relaxed, local log) and the engine before this work, at 1, 10 and
+# 100 requests/s on one database, and a fleet of 100 databases at 1 write/s each. Runs on the GitHub runner: no EC2, no
+# other AWS service than S3 (+ STS for the OIDC role session). One trigger only: a push to branch round3 that changes
+# tools/round3/s3/run.json. No keys: the OIDC role comes from the repository secret AWS_ROLE_ARN (masked, never printed).
+# Spend cap 5 USD: the driver estimates every step before running it and stops at 4.5 USD (tools/round3/s3/driver.py).
+name: round3-s3
+on:
+  push:
+    branches: [round3]
+    paths: ['tools/round3/s3/run.json']
+permissions:
+  id-token: write
+  contents: write      # the runner commits results-round3/real-s3/ to this branch
+concurrency:
+  group: fenvix-round3-s3
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    env:
+      AWS_PAGER: ""
+      R3_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      BEFORE_COMMIT: c9a4beb
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mask identity values (account id, role name) derived from the secret
+        run: |
+          [ -n "$R3_ROLE" ] || { echo "repository secret AWS_ROLE_ARN is not set"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$R3_ROLE"); role=${R3_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          echo "R3_ACCT=$acct" >> "$GITHUB_ENV"; echo "R3_ROLE_NAME=$role" >> "$GITHUB_ENV"
+          echo "R3_DEADLINE_EPOCH=$(( $(date +%s) + 290*60 ))" >> "$GITHUB_ENV"
+
+      - name: AWS credentials (OIDC, 1 h; the driver renews them itself) - first, so a refused role stops the run before the builds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Build the engine of this commit and the engine before this work (no AWS)
+        run: |
+          cargo build --release --locked -p mongo-server
+          mkdir -p /tmp/r3bin && cp target/release/mongo-server /tmp/r3bin/after
+          git worktree add /tmp/before "$BEFORE_COMMIT"
+          (cd /tmp/before && CARGO_TARGET_DIR=$GITHUB_WORKSPACE/target cargo build --release --locked -p mongo-server)
+          cp target/release/mongo-server /tmp/r3bin/before
+          sha256sum /tmp/r3bin/after /tmp/r3bin/before | tee -a "$GITHUB_STEP_SUMMARY"
+          python3 -m pip install --quiet "pymongo==4.19.0" boto3
+
+      - name: AWS credentials (fresh, for the run)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Create the test bucket (new name, tags, lifecycle 1 day; eu-west-1, else eu-central-1)
+        run: bash tools/round3/s3/bucket.sh create
+
+      - name: Steps (estimate before each, stop before 5 USD)
+        id: driver
+        continue-on-error: true
+        env:
+          ROUND3_ENGINE_BIN: /tmp/r3bin/after
+          ROUND3_BEFORE_BIN: /tmp/r3bin/before
+          ROUND3_WORK: /tmp/r3work
+        run: python3 -u tools/round3/s3/driver.py
+
+      - name: AWS credentials for the clean-up
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Clean-up (empty and delete the bucket, check it is gone)
+        if: always()
+        run: bash tools/round3/s3/bucket.sh delete
+
+      - name: Secret scan, then publish results-round3/real-s3/ to this branch
+        if: always()
+        run: |
+          mkdir -p results-round3/real-s3/engine-logs
+          for f in /tmp/r3work/logs/*.log; do [ -f "$f" ] && tail -c 2000000 "$f" | gzip > results-round3/real-s3/engine-logs/$(basename $f).gz; done
+          python3 tools/round3/s3/scan.py results-round3/real-s3
+          git add results-round3/real-s3
+          git -c user.name=github-actions -c user.email=actions@users.noreply.github.com commit -qm "round3-s3 run ${{ github.run_id }}: raw results" || true
+          for i in 1 2 3; do git pull --rebase -q origin round3 && git push origin HEAD:round3 && break; sleep 5; done
+
+      - name: Summary
+        if: always()
+        run: |
+          { echo "## round3-s3 run ${{ github.run_id }}"; cat results-round3/real-s3/spend.json 2>/dev/null || echo "no spend.json";
+            echo; cat results-round3/real-s3/bucket_create.json results-round3/real-s3/bucket_delete.json 2>/dev/null; } >> "$GITHUB_STEP_SUMMARY"
