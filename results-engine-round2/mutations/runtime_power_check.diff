@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/auth.rs b/mongo-server/src/auth.rs
+index e175c21..416b565 100644
+--- a/mongo-server/src/auth.rs
++++ b/mongo-server/src/auth.rs
+@@ -453,7 +453,7 @@ impl Server {
+                 return Ok(false);
+             }
+             match authz::builtin(&r, &rdb) {
+-                Some((privs, _)) if authz::confined_without_user_admin(&privs, &rdb) => {}
++                Some(_) => {}
+                 _ => return Ok(false),
+             }
+         }

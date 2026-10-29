@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 949fa93..249a2f9 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -475,7 +475,7 @@ impl NetGuard {
+             }
+         }
+         let t = c.dbs.entry(db.to_string()).or_default();
+-        if let Some((d, strike)) = t.fail(now, self.cfg.fail_max_db, &self.cfg) {
++        if let Some((d, strike)) = t.fail(now, 0, &self.cfg) {
+             self.totals.blocks.fetch_add(1, Relaxed);
+             eprintln!("netguard: client {shown} blocked on database {db} for {} s (block {strike}) after {} failed authentications in {} s", d.as_secs(), self.cfg.fail_max_db, self.cfg.window.as_secs());
+         }

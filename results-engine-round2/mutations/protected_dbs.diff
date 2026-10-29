@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/auth.rs b/mongo-server/src/auth.rs
+index e175c21..c3704f3 100644
+--- a/mongo-server/src/auth.rs
++++ b/mongo-server/src/auth.rs
+@@ -434,7 +434,7 @@ impl Server {
+         if role_cmd {
+             return Ok(false);
+         }
+-        if PROTECTED_DBS.contains(&db) {
++        if false && PROTECTED_DBS.contains(&db) {
+             return Ok(false);
+         }
+         let handed_out = match name {

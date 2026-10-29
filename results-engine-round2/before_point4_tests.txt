@@ -1,0 +1,30 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+E   AssertionError: {'ip': '127.0.0.50', 'unblocked': True}
+    assert (200 == 200 and {'ip': '127.0...locked': True} == {'ip': '127.0...locked': True}
+      
+      Omitting 2 identical items, use -vv to show
+      Right contains 1 more item:
+      {'database': 'ua'}
+      Use -v to get more diff)
+/home/user/test5/ctl-tests/test_18_unblock_per_database.py:36: AssertionError: {'ip': '127.0.0.50', 'unblocked': True}
+E   AssertionError: assert [] == ['*', 'ub']
+      
+      Right contains 2 more items, first extra item: '*'
+      Use -v to get more diff
+/home/user/test5/ctl-tests/test_18_unblock_per_database.py:50: AssertionError: assert [] == ['*', 'ub']
+E   AssertionError: {}
+    assert {} == {None: 2, 'ub': 1}
+      
+      Right contains 2 more items:
+      {None: 2, 'ub': 1}
+      Use -v to get more diff
+/home/user/test5/ctl-tests/test_18_unblock_per_database.py:72: AssertionError: {}
+E   assert 200 == 400
+/home/user/test5/ctl-tests/test_18_unblock_per_database.py:76: assert 200 == 400
+=========================== short test summary info ============================
+FAILED test_18_unblock_per_database.py::test_pair_unblock_leaves_the_other_databases
+FAILED test_18_unblock_per_database.py::test_pair_unblock_leaves_the_address_block
+FAILED test_18_unblock_per_database.py::test_pair_unblock_forgets_the_pair_counts_only
+FAILED test_18_unblock_per_database.py::test_bad_requests - assert 200 == 400
+4 failed in 2.56s

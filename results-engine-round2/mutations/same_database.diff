@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/auth.rs b/mongo-server/src/auth.rs
+index e175c21..04a03e1 100644
+--- a/mongo-server/src/auth.rs
++++ b/mongo-server/src/auth.rs
+@@ -449,7 +449,7 @@ impl Server {
+         };
+         for b in entries {
+             let Ok((r, rdb)) = role_pair(b, db) else { return Ok(false) };
+-            if rdb != db || !list.iter().any(|x| *x == r) || mine.iter().any(|(m, mdb)| *m == r && *mdb == rdb) {
++            if !list.iter().any(|x| *x == r) || mine.iter().any(|(m, mdb)| *m == r && *mdb == rdb) {
+                 return Ok(false);
+             }
+             match authz::builtin(&r, &rdb) {

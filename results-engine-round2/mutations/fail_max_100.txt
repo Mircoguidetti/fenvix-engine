@@ -1,0 +1,20 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 28s
+
+FF...                                                                    [100%]
+=================================== FAILURES ===================================
+E   AssertionError: ('auth_fail_max', 10, 100)
+    assert 10 == 100
+     +  where 10 = <built-in method get of dict object at 0x7fd25a8910c0>('auth_fail_max')
+     +    where <built-in method get of dict object at 0x7fd25a8910c0> = {'auth_block_forget_secs': 86400, 'auth_block_max_secs': 3600, 'auth_block_secs': 300, 'auth_fail_max': 10, ...}.get
+/home/user/test5/ctl-tests/test_16_block_defaults.py:50: AssertionError: ('auth_fail_max', 10, 100)
+E   AssertionError: assert ([{'database':...ike': 1, ...}] == []
+      
+      Left contains one more item: {'database': None, 'ip': '127.0.0.30', 'remaining_secs': 300, 'strike': 1, ...}
+      Use -v to get more diff)
+/home/user/test5/ctl-tests/test_16_block_defaults.py:60: AssertionError: assert ([{'database':...ike': 1, ...}] == []
+=========================== short test summary info ============================
+FAILED test_16_block_defaults.py::test_status_shows_the_defaults - AssertionE...
+FAILED test_16_block_defaults.py::test_99_failures_on_different_databases_do_not_block_the_100th_does
+2 failed, 3 passed in 6.47s

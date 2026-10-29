@@ -1,0 +1,20 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 29s
+
+..F..                                                                    [100%]
+=================================== FAILURES ===================================
+E   AssertionError: assert {'conversatio...=', 'ok': 1.0} == {'ok': 0.0, '...cationFailed'}
+      
+      Differing items:
+      {'ok': 1.0} != {'ok': 0.0}
+      Left contains 3 more items:
+      {'conversationId': 1,
+       'done': True,
+       'payload': b'v=A94qv/X16CtZKQpjtkHQkaAPC7ifx23Dmb5j3Y5G3no='}...
+      
+      ...Full output truncated, use '-vv' to show
+/home/user/test5/ctl-tests/test_16_block_defaults.py:82: AssertionError: assert {'conversatio...=', 'ok': 1.0} == {'ok': 0.0, '...cationFailed'}
+=========================== short test summary info ============================
+FAILED test_16_block_defaults.py::test_5_failures_on_one_pair_block_only_that_database
+1 failed, 4 passed in 6.38s

@@ -1,0 +1,31 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 29s
+
+........................................................................ [ 76%]
+............FF........                                                   [100%]
+=================================== FAILURES ===================================
+E   AssertionError: ('dbOwner', '{closure#0}>
+         5: mongo_server::main
+         6: std::sys::backtrace::__rust_begin_short_backtrace::<fn() ->...tart_call_main.h:58:16
+        11: __libc_start_main_impl
+                   at ./csu/../csu/libc-start.c:360:3
+        12: _start
+      ')
+    assert '--grantable-roles' in 'grantable roles (callers without root or clusterAdmin): dbOwner\nError: --admin-listen needs --admin-token-file, --ad...start_call_main.h:58:16\n  11: __libc_start_main_impl\n             at ./csu/../csu/libc-start.c:360:3\n  12: _start\n'
+     +  where 'grantable roles (callers without root or clusterAdmin): dbOwner\nError: --admin-listen needs --admin-token-file, --ad...start_call_main.h:58:16\n  11: __libc_start_main_impl\n             at ./csu/../csu/libc-start.c:360:3\n  12: _start\n' = CompletedProcess(args=['/tmp/claude-0/r2/bin/mut_startup_check', '--grantable-roles', 'dbOwner', '--listen', '127.0.0....tart_call_main.h:58:16\n  11: __libc_start_main_impl\n             at ./csu/../csu/libc-start.c:360:3\n  12: _start\n').stderr
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:250: AssertionError: ('dbOwner', '{closure#0}>
+E   AssertionError: ('readWrite,userAdmin', '{closure#0}>
+         5: mongo_server::main
+         6: std::sys::backtrace::__rust_begin_short_backtra...tart_call_main.h:58:16
+        11: __libc_start_main_impl
+                   at ./csu/../csu/libc-start.c:360:3
+        12: _start
+      ')
+    assert '--grantable-roles' in 'grantable roles (callers without root or clusterAdmin): readWrite,userAdmin\nError: --admin-listen needs --admin-toke...start_call_main.h:58:16\n  11: __libc_start_main_impl\n             at ./csu/../csu/libc-start.c:360:3\n  12: _start\n'
+     +  where 'grantable roles (callers without root or clusterAdmin): readWrite,userAdmin\nError: --admin-listen needs --admin-toke...start_call_main.h:58:16\n  11: __libc_start_main_impl\n             at ./csu/../csu/libc-start.c:360:3\n  12: _start\n' = CompletedProcess(args=['/tmp/claude-0/r2/bin/mut_startup_check', '--grantable-roles', 'readWrite,userAdmin', '--listen...tart_call_main.h:58:16\n  11: __libc_start_main_impl\n             at ./csu/../csu/libc-start.c:360:3\n  12: _start\n').stderr
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:250: AssertionError: ('readWrite,userAdmin', '{closure#0}>
+=========================== short test summary info ============================
+FAILED test_17_grantable_roles.py::test_bad_values_refuse_to_start[dbOwner]
+FAILED test_17_grantable_roles.py::test_bad_values_refuse_to_start[readWrite,userAdmin]
+2 failed, 92 passed in 22.50s

@@ -1,0 +1,105 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 31s
+
+................FFFF....................................FFFFFFFFFFFFFFFF [ 76%]
+FFFFFFFFFF............                                                   [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   AssertionError: ('read_at_admin', {'ok': 0.0, 'errmsg': 'User "h6@admin" already exists', 'code': 51003, 'codeName': 'Location51003'})
+    assert 51003 == 13
+     +  where 51003 = OperationFailure('User "h6@admin" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h6@admin" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}').code
+     +    where OperationFailure('User "h6@admin" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h6@admin" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') = <ExceptionInfo OperationFailure('User "h6@admin" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h6@admin" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') tblen=15>.value
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:211: AssertionError: ('read_at_admin', {'ok': 0.0, 'errmsg': 'User "h6@admin" already exists', 'code': 51003, 'codeName': 'Location51003'})
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   AssertionError: ('no_roles_at_admin', {'ok': 0.0, 'errmsg': 'User "h6b@admin" already exists', 'code': 51003, 'codeName': 'Location51003'})
+    assert 51003 == 13
+     +  where 51003 = OperationFailure('User "h6b@admin" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h6b@admin" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}').code
+     +    where OperationFailure('User "h6b@admin" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h6b@admin" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') = <ExceptionInfo OperationFailure('User "h6b@admin" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h6b@admin" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') tblen=15>.value
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:211: AssertionError: ('no_roles_at_admin', {'ok': 0.0, 'errmsg': 'User "h6b@admin" already exists', 'code': 51003, 'codeName': 'Location51003'})
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+E   pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: Authentication failed., full error: {'ok': 0.0, 'errmsg': 'Authentication failed.', 'code': 18, 'codeName': 'AuthenticationFailed'}
+=========================== short test summary info ============================
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[read_at_admin-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[read_at_admin-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[no_roles_at_admin-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[no_roles_at_admin-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[take_over_root_password-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[take_over_root_password-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[drop_root-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[drop_root-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[revoke_root-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[revoke_root-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_local-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_local-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_config-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_config-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_external-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_external-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_user_admin-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_user_admin-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_inheriting_provisioner-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_inheriting_provisioner-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_read-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_read-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_root_to_own_role-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_root_to_own_role-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_privileges_to_own_role-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_privileges_to_own_role-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[update_custom_role-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[update_custom_role-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_role_to_custom_role-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_role_to_custom_role-uaad]
+30 failed, 64 passed in 18.39s

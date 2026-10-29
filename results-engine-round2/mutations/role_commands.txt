@@ -1,0 +1,27 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 31s
+
+.....................................................................F.. [ 76%]
+.F....FFFF............                                                   [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+=========================== short test summary info ============================
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_user_admin-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_read-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[update_custom_role-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[update_custom_role-uaad]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_role_to_custom_role-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_role_to_custom_role-uaad]
+6 failed, 88 passed in 22.43s

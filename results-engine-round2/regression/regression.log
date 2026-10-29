@@ -1,0 +1,115 @@
+py 0 0:150 pass 150 / 150 46s
+py 1 150:300 pass 150 / 150 49s
+py 2 300:450 pass 150 / 150 103s
+py 3 450:600 pass 150 / 150 49s
+py 4 600:750 pass 150 / 150 49s
+py 5 750:900 pass 150 / 150 50s
+py 6 900:1050 pass 150 / 150 51s
+py 7 1050:1200 pass 150 / 150 56s
+py 8 1200:1350 pass 150 / 150 350s
+py 9 1350:1500 pass 150 / 150 117s
+py 10 1500:1650 pass 150 / 150 49s
+py 11 1650:1800 pass 150 / 150 49s
+py 12 1800:1950 pass 150 / 150 48s
+py 13 1950:2100 pass 150 / 150 49s
+py 14 2100:2250 pass 150 / 150 49s
+py 15 2250:2400 pass 150 / 150 52s
+py 16 2400:2550 pass 150 / 150 50s
+py 17 2550:2700 pass 150 / 150 48s
+py 18 2700:2850 pass 150 / 150 50s
+py 19 2850:3000 pass 150 / 150 47s
+py 20 3000:3150 pass 150 / 150 49s
+py 21 3150:3300 pass 150 / 150 61s
+py 22 3300:3450 pass 150 / 150 49s
+py 23 3450:3600 pass 150 / 150 49s
+py 24 3600:3750 pass 150 / 150 63s
+py 25 3750:3900 pass 150 / 150 49s
+py 26 3900:4050 pass 150 / 150 48s
+py 27 4050:4127 pass 77 / 77 29s
+node 0 0:150 pass 150 / 150 49s
+node 1 150:300 pass 150 / 150 51s
+node 2 300:450 pass 150 / 150 105s
+node 3 450:600 pass 150 / 150 49s
+node 4 600:750 pass 150 / 150 49s
+node 5 750:900 pass 150 / 150 50s
+node 6 900:1050 pass 150 / 150 51s
+node 7 1050:1200 pass 150 / 150 57s
+node 8 1200:1350 pass 150 / 150 350s
+node 9 1350:1500 pass 150 / 150 500s
+node 10 1500:1650 pass 150 / 150 43s
+node 11 1650:1800 pass 150 / 150 45s
+node 12 1800:1950 pass 150 / 150 44s
+node 13 1950:2100 pass 150 / 150 45s
+node 14 2100:2250 pass 150 / 150 47s
+node 15 2250:2400 pass 150 / 150 47s
+node 16 2400:2550 pass 150 / 150 47s
+node 17 2550:2700 pass 150 / 150 47s
+node 18 2700:2850 pass 150 / 150 49s
+node 19 2850:3000 pass 150 / 150 45s
+node 20 3000:3150 pass 150 / 150 48s
+node 21 3150:3300 pass 150 / 150 57s
+node 22 3300:3450 pass 150 / 150 47s
+node 23 3450:3600 pass 150 / 150 45s
+node 24 3600:3750 pass 150 / 150 62s
+node 25 3750:3900 pass 150 / 150 48s
+node 26 3900:4050 pass 150 / 150 42s
+node 27 4050:4127 pass 77 / 77 25s
+ALL SLICES DONE
+PHASE suites done /dev/vda        252G   13G   27G  32% /
+ctl test_01_databases: 10 passed in 10.40s
+ctl test_02_fork: 13 passed in 46.91s
+ctl test_02b_fork_crash: 12 passed, 11 warnings in 41.51s
+ctl test_03_restore: 11 passed in 114.71s (0:01:54)
+ctl test_03b_restore_gc_crash: 11 passed in 152.18s (0:02:32)
+ctl test_03c_retention_cost: 1 passed in 89.63s (0:01:29)
+ctl test_04_export: 10 passed in 56.85s
+ctl test_04b_export_vs_real_mongo: 2 passed in 2.50s
+ctl test_05_erase: 19 passed in 54.60s
+ctl test_06_keepawake: 13 passed in 125.70s (0:02:05)
+ctl test_07_usage: 10 passed in 53.15s
+ctl test_08_costs: 3 passed in 342.57s (0:05:42)
+ctl test_08b_pin_cost: 1 passed in 66.30s (0:01:06)
+ctl test_09_security: 30 passed in 4.42s
+ctl test_09b_users_restore: 1 passed in 10.45s
+ctl test_09c_tls_rotate: 3 passed in 7.19s
+ctl test_09d_s3_env: 6 passed in 12.89s
+ctl test_09e_local_store: 4 passed in 26.64s
+ctl test_09f_wal_retention_guard: 4 passed in 117.27s (0:01:57)
+ctl test_09g_export_natural_order: 2 passed in 4.48s
+ctl test_10_end_to_end: 1 passed in 15.17s
+ctl test_11_tls_modes: 4 passed in 49.00s
+ctl test_12_shutdown: 2 passed in 8.79s
+ctl test_13_ip_allowlist: 84 passed in 22.58s
+ctl test_14_auth_limits: 10 passed in 36.48s
+ctl test_15_admin_cmd_privileges: 54 passed in 4.45s
+ctl test_16_block_defaults: 5 passed in 6.56s
+ctl test_17_grantable_roles: 94 passed in 22.53s
+ctl test_18_unblock_per_database: 4 passed in 2.42s
+ctl(auth) test_01_databases: 10 passed in 10.38s
+ctl(auth) test_02_fork: 4 failed, 9 passed in 12.42s
+ctl(auth) test_02b_fork_crash: 12 failed in 22.65s
+ctl(auth) test_03_restore: 2 failed, 9 passed in 110.36s (0:01:50)
+ctl(auth) test_03b_restore_gc_crash: 2 failed, 9 passed in 79.60s (0:01:19)
+ctl(auth) test_03c_retention_cost: 1 failed, 2 warnings in 4.55s
+ctl(auth) test_04_export: 3 failed, 7 passed in 16.33s
+ctl(auth) test_04b_export_vs_real_mongo: 2 passed in 4.41s
+ctl(auth) test_05_erase: 12 failed, 7 passed in 28.36s
+ctl(auth) test_06_keepawake: 3 failed, 10 passed in 97.89s (0:01:37)
+ctl(auth) test_07_usage: 3 failed, 7 passed in 41.66s
+ctl(auth) test_08_costs: 3 failed in 10.44s
+ctl(auth) test_08b_pin_cost: 1 passed in 66.91s (0:01:06)
+PHASE ctl done /dev/vda        252G   13G   27G  32% /
+kill wal_1: TOTAL s3 durable {'acked_ids': 54307, 'lost_inserts': 0, 'lost_updates': 0}
+kill wal_2: TOTAL s3 durable {'acked_ids': 55539, 'lost_inserts': 0, 'lost_updates': 0}
+kill wal_3: TOTAL s3 durable {'acked_ids': 58191, 'lost_inserts': 0, 'lost_updates': 0}
+kill wal_4: TOTAL s3 durable {'acked_ids': 60354, 'lost_inserts': 0, 'lost_updates': 0}
+kill walctl_1: TOTAL s3 control {'acked_ids': 36692, 'lost_inserts': 656, 'lost_updates': 18}
+kill walctl_2: TOTAL s3 control {'acked_ids': 33339, 'lost_inserts': 308, 'lost_updates': 22}
+kill sst_1: TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 64, 'acked_docs': 10714, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'re
+kill sst_2: TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 66, 'acked_docs': 11133, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'re
+kill sst_3: TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 65, 'acked_docs': 10898, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'re
+kill sst_4: TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 65, 'acked_docs': 11018, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'re
+kill sstctl_1: TOTAL control {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 20, 'acked_docs': 8122, 'lost_inserts': 8122, 'lost_updates': 0, 'read_violations':
+kill sstctl_2: TOTAL control {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 20, 'acked_docs': 8341, 'lost_inserts': 8341, 'lost_updates': 0, 'read_violations':
+PHASE kill done /dev/vda        252G   13G   26G  33% /
+ALL DONE r2

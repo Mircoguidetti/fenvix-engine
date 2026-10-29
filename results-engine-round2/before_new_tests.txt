@@ -1,0 +1,300 @@
+FFFF.........FF......................................FFF.FFEEEEEEEEEEEEE [ 47%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE... [ 94%]
+........F                                                                [100%]
+==================================== ERRORS ====================================
+____________ ERROR at setup of test_control_plane_flows_work[prov] _____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____________ ERROR at setup of test_control_plane_flows_work[uaad] _____________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_______ ERROR at setup of test_root_and_cluster_admin_keep_mongods_rules _______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+__________ ERROR at setup of test_customer_user_admin_is_limited_too ___________
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[dbOwner_on_customer-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[dbOwner_on_customer-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[dbOwner_as_string-prov] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[dbOwner_as_string-uaad] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[userAdmin_on_customer-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[userAdmin_on_customer-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[dbAdmin_not_in_list-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[dbAdmin_not_in_list-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[enableSharding_not_in_list-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[enableSharding_not_in_list-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[userAdmin_at_admin-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[userAdmin_at_admin-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[read_at_admin-prov] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[read_at_admin-uaad] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[no_roles_at_admin-prov] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[no_roles_at_admin-uaad] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[readWrite_on_admin_from_customer-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[readWrite_on_admin_from_customer-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[root_at_admin-prov] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[root_at_admin-uaad] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[root_on_customer_user-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[root_on_customer_user-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____ ERROR at setup of test_hostile_requests_are_refused[clusterAdmin-prov] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____ ERROR at setup of test_hostile_requests_are_refused[clusterAdmin-uaad] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____ ERROR at setup of test_hostile_requests_are_refused[hostManager-prov] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____ ERROR at setup of test_hostile_requests_are_refused[hostManager-uaad] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[clusterMonitor-prov] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[clusterMonitor-uaad] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[userAdminAnyDatabase-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[userAdminAnyDatabase-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[readWriteAnyDatabase-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[readWriteAnyDatabase-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[own_role_on_customer_user-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[own_role_on_customer_user-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[second_provisioner-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[second_provisioner-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[custom_role_with_dbOwner-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[custom_role_with_dbOwner-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[custom_role_with_read_only-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[custom_role_with_read_only-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[role_of_another_database-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[role_of_another_database-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[mixed_good_and_bad-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[mixed_good_and_bad-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_dbOwner_to_existing-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_dbOwner_to_existing-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[update_roles_to_userAdmin-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[update_roles_to_userAdmin-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_root_to_self-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_root_to_self-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_userAdminAnyDatabase_to_self-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_userAdminAnyDatabase_to_self-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[take_over_root_password-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[take_over_root_password-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_____ ERROR at setup of test_hostile_requests_are_refused[drop_root-prov] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_____ ERROR at setup of test_hostile_requests_are_refused[drop_root-uaad] ______
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____ ERROR at setup of test_hostile_requests_are_refused[revoke_root-prov] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+____ ERROR at setup of test_hostile_requests_are_refused[revoke_root-uaad] _____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[user_on_local-prov] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[user_on_local-uaad] ____
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[user_on_config-prov] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+___ ERROR at setup of test_hostile_requests_are_refused[user_on_config-uaad] ___
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+__ ERROR at setup of test_hostile_requests_are_refused[user_on_external-prov] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+__ ERROR at setup of test_hostile_requests_are_refused[user_on_external-uaad] __
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[create_role_with_user_admin-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[create_role_with_user_admin-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[create_role_inheriting_provisioner-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[create_role_inheriting_provisioner-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[create_role_with_read-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[create_role_with_read-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_root_to_own_role-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_root_to_own_role-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_privileges_to_own_role-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_privileges_to_own_role-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[update_custom_role-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[update_custom_role-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_role_to_custom_role-prov] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+_ ERROR at setup of test_hostile_requests_are_refused[grant_role_to_custom_role-uaad] _
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2grant-32047.log
+=================================== FAILURES ===================================
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { tenantStats: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { tenantStats: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { tenantStats: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { tenantStats: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { tenantStats: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { tenantStats: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { tenantStats: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { tenantStats: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   AssertionError: ('auth_fail_max', 10, 100)
+    assert 10 == 100
+     +  where 10 = <built-in method get of dict object at 0x7fe18c2242c0>('auth_fail_max')
+     +    where <built-in method get of dict object at 0x7fe18c2242c0> = {'auth_block_forget_secs': 86400, 'auth_block_max_secs': 3600, 'auth_block_secs': 300, 'auth_fail_max': 10, ...}.get
+/home/user/test5/ctl-tests/test_16_block_defaults.py:50: AssertionError: ('auth_fail_max', 10, 100)
+E   AssertionError: assert ([{'database':...ike': 1, ...}] == []
+      
+      Left contains one more item: {'database': None, 'ip': '127.0.0.30', 'remaining_secs': 300, 'strike': 1, ...}
+      Use -v to get more diff)
+/home/user/test5/ctl-tests/test_16_block_defaults.py:60: AssertionError: assert ([{'database':...ike': 1, ...}] == []
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2limcfg-38072.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2limcfg-38072.log
+E   AssertionError: ('--auth-fail-window-secs', '          [default: 60]
+      ')
+    assert 2 >= 4
+     +  where 2 = len(['[default:', '60]'])
+     +    where ['[default:', '60]'] = <built-in method split of str object at 0x7fe18c21dcf0>()
+     +      where <built-in method split of str object at 0x7fe18c21dcf0> = '          [default: 60]\n'.split
+/home/user/test5/ctl-tests/test_16_block_defaults.py:110: AssertionError: ('--auth-fail-window-secs', '          [default: 60]
+E   RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2gv-20251.log
+/home/user/test5/ctl-tests/lib.py:112: RuntimeError: server exited with 2; see /home/user/test5/ctl-tests/out/r2gv-20251.log
+=========================== short test summary info ============================
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[root]
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[hm]
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[ca]
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[rotator]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_root[root] - pymong...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_root[rootlike] - py...
+FAILED test_15_admin_cmd_privileges.py::test_rotation_with_tls_reloads_for_each_allowed_role
+FAILED test_16_block_defaults.py::test_status_shows_the_defaults - AssertionE...
+FAILED test_16_block_defaults.py::test_99_failures_on_different_databases_do_not_block_the_100th_does
+FAILED test_16_block_defaults.py::test_status_shows_the_values_in_force - Run...
+FAILED test_16_block_defaults.py::test_every_threshold_and_duration_has_a_documented_flag
+FAILED test_17_grantable_roles.py::test_good_values_start - RuntimeError: ser...
+ERROR test_17_grantable_roles.py::test_control_plane_flows_work[prov] - Runti...
+ERROR test_17_grantable_roles.py::test_control_plane_flows_work[uaad] - Runti...
+ERROR test_17_grantable_roles.py::test_root_and_cluster_admin_keep_mongods_rules
+ERROR test_17_grantable_roles.py::test_customer_user_admin_is_limited_too - R...
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[dbOwner_on_customer-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[dbOwner_on_customer-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[dbOwner_as_string-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[dbOwner_as_string-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[userAdmin_on_customer-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[userAdmin_on_customer-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[dbAdmin_not_in_list-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[dbAdmin_not_in_list-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[enableSharding_not_in_list-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[enableSharding_not_in_list-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[userAdmin_at_admin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[userAdmin_at_admin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[read_at_admin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[read_at_admin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[no_roles_at_admin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[no_roles_at_admin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[readWrite_on_admin_from_customer-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[readWrite_on_admin_from_customer-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[root_at_admin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[root_at_admin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[root_on_customer_user-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[root_on_customer_user-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[clusterAdmin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[clusterAdmin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[hostManager-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[hostManager-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[clusterMonitor-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[clusterMonitor-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[userAdminAnyDatabase-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[userAdminAnyDatabase-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[readWriteAnyDatabase-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[readWriteAnyDatabase-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[own_role_on_customer_user-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[own_role_on_customer_user-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[second_provisioner-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[second_provisioner-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[custom_role_with_dbOwner-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[custom_role_with_dbOwner-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[custom_role_with_read_only-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[custom_role_with_read_only-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[role_of_another_database-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[role_of_another_database-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[mixed_good_and_bad-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[mixed_good_and_bad-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_dbOwner_to_existing-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_dbOwner_to_existing-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[update_roles_to_userAdmin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[update_roles_to_userAdmin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_root_to_self-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_root_to_self-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_userAdminAnyDatabase_to_self-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_userAdminAnyDatabase_to_self-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[take_over_root_password-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[take_over_root_password-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[drop_root-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[drop_root-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[revoke_root-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[revoke_root-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_local-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_local-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_config-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_config-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_external-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[user_on_external-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_user_admin-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_user_admin-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_inheriting_provisioner-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_inheriting_provisioner-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_read-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[create_role_with_read-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_root_to_own_role-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_root_to_own_role-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_privileges_to_own_role-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_privileges_to_own_role-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[update_custom_role-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[update_custom_role-uaad]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_role_to_custom_role-prov]
+ERROR test_17_grantable_roles.py::test_hostile_requests_are_refused[grant_role_to_custom_role-uaad]
+12 failed, 59 passed, 82 errors in 10.91s

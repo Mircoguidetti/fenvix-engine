@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/netguard.rs b/mongo-server/src/netguard.rs
+index 949fa93..88e0b92 100644
+--- a/mongo-server/src/netguard.rs
++++ b/mongo-server/src/netguard.rs
+@@ -26,7 +26,7 @@ pub struct NetArgs {
+     /// Failed authentications from one address within --auth-fail-window-secs that block the address on every database
+     /// (the failure that reaches the number starts the block; 0: never). High on purpose: a platform with one database per
+     /// customer connects from few addresses, and one wrong password rotation must not block all its databases.
+-    #[arg(long, default_value_t = 100)]
++    #[arg(long, default_value_t = 10)]
+     pub auth_fail_max: u32,
+     /// Failed authentications from one address on one database within --auth-fail-window-secs that block the address on
+     /// that database only (0: never).

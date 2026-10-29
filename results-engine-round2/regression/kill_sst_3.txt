@@ -1,0 +1,3 @@
+0 {'killed_inside_cleanup_pass': True, 'cleanup_passes': 15, 'ssts_deleted': 65, 'manifests_deleted': 131, 'acked_docs': 10898, 'acked_updates': 10892, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 29386, 'missing': 0, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}, 'recovery_read_error': None, 'control_deleted_referenced': False}
+TOTAL safe {'trials': 1, 'killed_inside_cleanup_pass': 1, 'ssts_deleted': 65, 'acked_docs': 10898, 'lost_inserts': 0, 'lost_updates': 0, 'read_violations': {'reads_checked': 29386, 'missing': 0, 'stale': 0, 'padding': 0, 'errors': 0, 'count_below_acked': 0}}
+DONE

@@ -1,0 +1,112 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 30s
+
+...............FFFFFFFFFFFFFFFFFFFFFFFF.............FF                   [100%]
+=================================== FAILURES ===================================
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rw', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'dbo', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'ua', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'ro', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'hm', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'ca', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'cm', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'cmon', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'uaad', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rwad', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'dbaad', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rotator', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rw', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'dbo', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'ua', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'ro', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'hm', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'ca', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'cm', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'cmon', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'uaad', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rwad', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'dbaad', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rotator', 't1', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:113: AssertionError: assert 0 == 13
+E   AssertionError: ('admin', 'tenantStats')
+    assert 0 == 13
+     +  where 0 = code_of(<lib.Server object at 0x7f049abffcb0>, 'rw', 'admin', 'tenantStats')
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:137: AssertionError: ('admin', 'tenantStats')
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_15_admin_cmd_privileges.py:195: Failed: DID NOT RAISE OperationFailure
+=========================== short test summary info ============================
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-rw]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-dbo]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-ua]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-ro]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-hm]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-ca]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-cm]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-cmon]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-uaad]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-rwad]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-dbaad]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[admin-rotator]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-rw] - As...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-dbo] - A...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-ua] - As...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-ro] - As...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-hm] - As...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-ca] - As...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-cm] - As...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-cmon] - ...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-uaad] - ...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-rwad] - ...
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-dbaad]
+FAILED test_15_admin_cmd_privileges.py::test_tenant_stats_refused[t1-rotator]
+FAILED test_15_admin_cmd_privileges.py::test_readwrite_user_gets_13_on_both
+FAILED test_15_admin_cmd_privileges.py::test_rotation_with_tls_reloads_for_each_allowed_role
+26 failed, 28 passed in 4.40s

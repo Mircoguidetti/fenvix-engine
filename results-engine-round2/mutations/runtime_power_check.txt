@@ -1,0 +1,7 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 28s
+
+........................................................................ [ 76%]
+......................                                                   [100%]
+94 passed in 22.49s

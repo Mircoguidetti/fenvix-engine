@@ -1,0 +1,12 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 32s
+
+...F.................................................................... [ 76%]
+......................                                                   [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:145: Failed: DID NOT RAISE OperationFailure
+=========================== short test summary info ============================
+FAILED test_17_grantable_roles.py::test_customer_user_admin_is_limited_too - ...
+1 failed, 93 passed in 22.55s

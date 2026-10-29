@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/auth.rs b/mongo-server/src/auth.rs
+index e175c21..4d8a914 100644
+--- a/mongo-server/src/auth.rs
++++ b/mongo-server/src/auth.rs
+@@ -431,7 +431,7 @@ impl Server {
+         if holds_admin_role(&mine, "root") || holds_admin_role(&mine, "clusterAdmin") {
+             return Ok(true);
+         }
+-        if role_cmd {
++        if false && role_cmd {
+             return Ok(false);
+         }
+         if PROTECTED_DBS.contains(&db) {

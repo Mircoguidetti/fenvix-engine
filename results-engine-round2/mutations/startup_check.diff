@@ -1,0 +1,13 @@
+diff --git a/mongo-server/src/authz.rs b/mongo-server/src/authz.rs
+index 8b2eeca..3764aea 100644
+--- a/mongo-server/src/authz.rs
++++ b/mongo-server/src/authz.rs
+@@ -376,7 +376,7 @@ pub fn parse_grantable(v: &str) -> Result<Option<Vec<String>>, String> {
+             return Err(format!("--grantable-roles: '{x}' is not a role name (comma-separated built-in role names, e.g. readWrite,read)"));
+         }
+         // checked on a placeholder customer database
+-        let ok = builtin(x, "grantable_check").map(|(p, _)| confined_without_user_admin(&p, "grantable_check")).unwrap_or(false);
++        let ok = builtin(x, "grantable_check").is_some();
+         if !ok {
+             return Err(format!(
+                 "--grantable-roles: '{x}' cannot be granted by a provisioner: only built-in roles of one database without user administration ({}) are allowed",

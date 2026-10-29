@@ -1,0 +1,12 @@
+diff --git a/mongo-server/src/authz.rs b/mongo-server/src/authz.rs
+index 8b2eeca..2f667b1 100644
+--- a/mongo-server/src/authz.rs
++++ b/mongo-server/src/authz.rs
+@@ -257,7 +257,6 @@ pub fn required(name: &str, db: &str, cmd: &Document) -> Option<Vec<Need>> {
+         "reIndex" => vec![(n(), "reIndex")],
+         "convertToCapped" => vec![(n(), "convertToCapped")],
+         // mongod: the cluster action rotateCertificates (root, hostManager, clusterAdmin, or a custom role that carries it)
+-        "rotateCertificates" => vec![(cl, "rotateCertificates")],
+         // the S3 request counters of the whole process: root only, checked on the roles (`Server::authorize`)
+         "tenantStats" => vec![],
+         _ => vec![(Res::Any, "anyAction")], // unknown commands need everything (only __system has it)

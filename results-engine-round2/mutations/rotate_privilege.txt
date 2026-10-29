@@ -1,0 +1,23 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 55 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 24 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 40s
+
+FFFF.................................................F                   [100%]
+=================================== FAILURES ===================================
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+E   pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+/tmp/claude-0/venv/lib/python3.13/site-packages/pymongo/helpers_shared.py:327: pymongo.errors.OperationFailure: not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }, full error: {'ok': 0.0, 'errmsg': 'not authorized on admin to execute command { rotateCertificates: 1, $db: "admin" }', 'code': 13, 'codeName': 'Unauthorized'}
+=========================== short test summary info ============================
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[root]
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[hm]
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[ca]
+FAILED test_15_admin_cmd_privileges.py::test_rotate_certificates_allowed[rotator]
+FAILED test_15_admin_cmd_privileges.py::test_rotation_with_tls_reloads_for_each_allowed_role
+5 failed, 49 passed in 4.44s

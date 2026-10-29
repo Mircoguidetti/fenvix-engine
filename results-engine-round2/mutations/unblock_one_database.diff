@@ -1,0 +1,12 @@
+diff --git a/mongo-server/src/ctl/allowlist.rs b/mongo-server/src/ctl/allowlist.rs
+index dbb60c9..59c3a14 100644
+--- a/mongo-server/src/ctl/allowlist.rs
++++ b/mongo-server/src/ctl/allowlist.rs
+@@ -91,6 +91,6 @@ pub fn unblock(ip: &str, database: Option<&str>) -> ApiResult<Value> {
+     match database {
+         None => Ok(json!({ "ip": addr.to_string(), "unblocked": netguard::get().unblock(addr) })),
+         Some("") => Err(ApiError::bad("database must not be empty")),
+-        Some(db) => Ok(json!({ "ip": addr.to_string(), "database": db, "unblocked": netguard::get().unblock_db(addr, db) })),
++        Some(db) => Ok(json!({ "ip": addr.to_string(), "database": db, "unblocked": netguard::get().unblock(addr) })),
+     }
+ }

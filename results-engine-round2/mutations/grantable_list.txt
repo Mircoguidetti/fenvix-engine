@@ -1,0 +1,18 @@
+build: 
+warning: `mongo-server` (bin "mongo-server") generated 56 warnings (run `cargo fix --bin "mongo-server" -p mongo-server` to apply 25 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 29s
+
+..........FF............................................................ [ 76%]
+......................                                                   [100%]
+=================================== FAILURES ===================================
+E   Failed: DID NOT RAISE OperationFailure
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:209: Failed: DID NOT RAISE OperationFailure
+E   AssertionError: ('dbAdmin_not_in_list', {'ok': 0.0, 'errmsg': 'User "h4@c1" already exists', 'code': 51003, 'codeName': 'Location51003'})
+    assert 51003 == 13
+     +  where 51003 = OperationFailure('User "h4@c1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h4@c1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}').code
+     +    where OperationFailure('User "h4@c1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h4@c1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') = <ExceptionInfo OperationFailure('User "h4@c1" already exists, full error: {\'ok\': 0.0, \'errmsg\': \'User "h4@c1" already exists\', \'code\': 51003, \'codeName\': \'Location51003\'}') tblen=15>.value
+/home/user/test5/ctl-tests/test_17_grantable_roles.py:211: AssertionError: ('dbAdmin_not_in_list', {'ok': 0.0, 'errmsg': 'User "h4@c1" already exists', 'code': 51003, 'codeName': 'Location51003'})
+=========================== short test summary info ============================
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[dbAdmin_not_in_list-prov]
+FAILED test_17_grantable_roles.py::test_hostile_requests_are_refused[dbAdmin_not_in_list-uaad]
+2 failed, 92 passed in 22.47s
