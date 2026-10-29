@@ -176,9 +176,11 @@ struct Args {
     #[arg(long, default_value_t = 30)]
     writer_poll_secs: u64,
     /// One lease per process (`processes/{holder}/_lease`, renewed every third of the ttl) plus a per-database owner
-    /// record written when the database is opened, instead of one lease object renewed per open database: an idle open
-    /// database then costs no request. Every process sharing the bucket must use the same setting.
-    #[arg(long)]
+    /// record written when the database is opened, instead of one lease object renewed per open database (6 PUT per minute
+    /// for every open database with the default ttl): an open database then costs no lease request. On by default;
+    /// `--process-lease false` goes back to one lease per database. Every process sharing the bucket should use the same
+    /// setting (a mix is safe, see lease.rs: each mode refuses the other's live records).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, num_args = 0..=1, default_missing_value = "true")]
     process_lease: bool,
     /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = off, WAL objects
     /// then stay until the tenant has been idle and is collected as a whole).

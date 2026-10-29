@@ -9,7 +9,9 @@ from proxy import CountingProxy
 def test_pin_renewal_cost():
     bucket = make_bucket("pincost")
     proxy = CountingProxy()
-    srv = Server(bucket, "pc", idle=600, endpoint=proxy.endpoint, extra=["--usage-flush-secs", "3600", "--pin-lease-ttl-secs", "12", "--lease-ttl-secs", "30"]).start()
+    # round3: one lease per process is the default now; this test measures the per-database lease (an open database renews
+    # its own lease), so it asks for that mode. The per-process mode is measured in test_20_process_lease.py.
+    srv = Server(bucket, "pc", idle=600, endpoint=proxy.endpoint, extra=["--usage-flush-secs", "3600", "--pin-lease-ttl-secs", "12", "--lease-ttl-secs", "30", "--process-lease", "false"]).start()
     try:
         c = srv.client()
         fill(c, "p", "c", 100)
