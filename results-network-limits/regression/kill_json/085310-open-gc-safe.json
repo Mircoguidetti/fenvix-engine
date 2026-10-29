@@ -1,0 +1,41 @@
+{
+ "control": false,
+ "trials": [
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 15,
+   "ssts_deleted": 65,
+   "manifests_deleted": 128,
+   "acked_docs": 10818,
+   "acked_updates": 10812,
+   "lost_inserts": 0,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 28492,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": null,
+   "control_deleted_referenced": false
+  }
+ ],
+ "total": {
+  "trials": 1,
+  "killed_inside_cleanup_pass": 1,
+  "ssts_deleted": 65,
+  "acked_docs": 10818,
+  "lost_inserts": 0,
+  "lost_updates": 0,
+  "read_violations": {
+   "reads_checked": 28492,
+   "missing": 0,
+   "stale": 0,
+   "padding": 0,
+   "errors": 0,
+   "count_below_acked": 0
+  }
+ }
+}

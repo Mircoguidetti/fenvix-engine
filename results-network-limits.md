@@ -5,7 +5,7 @@ Nessuna attività AWS, nessun load test, nessun segreto reale. Ambiente ricostru
 
 * **Commit del motore:** `1c9fee7` (i commit successivi toccano solo test, strumenti e risultati: `git diff 1c9fee7..HEAD -- mongo-server src Cargo.toml Cargo.lock` è vuoto).
 * **Binario:** `cargo build --release -p mongo-server`, `target/release/mongo-server`, **SHA-256 `8b3d7b71e63326d4a6a1913a96ace4fb1e0c3f6efd8ee26161ab48be677632f4`**. Tutte le verifiche "dopo" sono state eseguite su questo file.
-* **Binario "prima":** ricompilato qui da `e038db7` (SHA-256 `0d1c8b6fbe52ab79f8214173299e101825cf53cdc7207794ad90ec290981da7e`). Non è identico byte per byte a quello del rapporto di final-engine (`d39e4038…`, compilato in un altro container); per questo i numeri "prima" sono stati rimisurati qui, sullo stesso ambiente.
+* **Numeri "prima" della regressione: vengono da `results-final-engine.md`**, cioè da **un altro ambiente** (un altro container, binario `d39e4038…` compilato dal commit `41ed169`). La passata "prima" in questo ambiente era partita sul binario ricompilato qui da `e038db7` (SHA-256 `0d1c8b6fbe52ab79f8214173299e101825cf53cdc7207794ad90ec290981da7e`, non identico a `d39e4038…`), ma è stata **fermata** per mancanza di tempo dopo la prima fetta (pymongo 0:150, 150/150), e i suoi risultati parziali non sono usati. Il binario ricompilato da `e038db7` è stato usato solo per eseguire i test nuovi "prima" del codice (sezione 3.1).
 
 ## 1. Cosa è stato costruito
 
@@ -72,8 +72,8 @@ Nessun test esistente è stato modificato.
 
 | file | test | esito sul binario finale |
 |---|---|---|
-| `test_13_ip_allowlist.py` | 84 | @T13@ |
-| `test_14_auth_limits.py` | 10 | @T14@ |
+| `test_13_ip_allowlist.py` | 84 | 84 passati (anche nella passata ctl della regressione) |
+| `test_14_auth_limits.py` | 10 | 10 passati (anche nella passata ctl della regressione) |
 | unitari `netguard.rs` | 7 | 7 passati (`results-network-limits/unit_tests.txt`) |
 
 Coperti: IP ammesso e non ammesso (wire grezzo e pymongo); bordi `/0`, `/31`, `/32`, `/8`, `/9`, forma IPv4-mappata nella lista, rete IPv6 contro peer IPv4; 37 voci ostili e 13 corpi ostili, limite di 100; persistenza dopo sleep, wake e riavvio; fork che non eredita; erase che cancella; restore che non tocca; reti fidate (predefinita, personalizzata, non valida); porta admin non soggetta; PROXY protocol e campi del client ignorati; connessioni già autenticate che perdono il database; risposta identica (primo passo, sale, documento d'errore, eccezione pymongo, tempi); log senza segreti. Limiti: forza bruta bloccata con la password giusta rifiutata; blocco che scade e raddoppia fino al massimo; finestra; contatori per indirizzo e per (indirizzo, database), utenti inesistenti contati; sblocco dalla porta admin; limite di connessioni (5 e predefinito 200) con fidati esenti; mittente lento e connessione muta chiusi, connessione di monitoraggio inattiva lasciata aperta; messaggio troppo grande prima dell'autenticazione e intestazione da 40 MB rifiutati, 1 MB dopo l'autenticazione accettato; stato senza nomi utente né password; log senza password.
@@ -96,7 +96,77 @@ Ogni controllo è stato tolto con una modifica di una riga, il motore ricompilat
 | `pre_auth_size` | nessun tetto prima dell'autenticazione | **1** |
 | `distinct_refusal` | l'IP escluso riceve un messaggio diverso ("address not allowed") | **4** |
 
-@REGRESSION@
+## 4. Regressione sul binario finale
+
+"Prima" = numeri di `results-final-engine.md` (**altro ambiente**, vedi in alto). "Dopo" = questo ambiente, binario `8b3d7b71…`. Output grezzi in `results-network-limits/regression/new/`.
+
+### 4.1 Suite differenziali (4127 test, mongod 7.0.45 di riferimento, fette da 150, `tools/netlimits/run_suites.py`)
+
+| driver | categoria | prima (final-engine, altro ambiente) | dopo |
+|---|---|---|---|
+| pymongo | core | 3989/3989 | **3989/3989** |
+| pymongo | extra | 49/49 | **49/49** |
+| pymongo | replset | 89/89 | **89/89** |
+| Node | core | 3989/3989 | **3989/3989** |
+| Node | extra | 49/49 | **49/49** |
+| Node | replset | 89/89 | **89/89** |
+
+### 4.2 ctl (`ctl-tests/`)
+
+| file | prima | dopo | dopo con `--auth` (prima: stessi numeri) |
+|---|---|---|---|
+| test_01_databases | 10 | 10 | 10 / 0 |
+| test_02_fork | 13 | 13 | 9 / 4 |
+| test_02b_fork_crash | 12 | 12 | 0 / 12 |
+| test_03_restore | 11 | 11 | 9 / 2 |
+| test_03b_restore_gc_crash | 11 | 11 | 9 / 2 |
+| test_03c_retention_cost | 1 | 1 | 0 / 1 |
+| test_04_export | 10 | 10 (vedi nota) | 7 / 3 |
+| test_04b_export_vs_real_mongo | 2 | 2 (vedi nota) | 2 / 0 |
+| test_05_erase | 19 | 19 | 7 / 12 |
+| test_06_keepawake | 13 | 13 | 10 / 3 |
+| test_07_usage | 10 | 10 | 7 / 3 |
+| test_08_costs | 3 | 3 | 0 / 3 |
+| test_08b_pin_cost | 1 | 1 | 1 / 0 |
+| **test_09_security** | 30 | **30** | - |
+| test_09b_users_restore | 1 | 1 | - |
+| test_09c_tls_rotate | 3 | 3 | - |
+| test_09d_s3_env | 6 | 6 | - |
+| test_09e_local_store | 4 | 4 | - |
+| test_09f_wal_retention_guard | 4 | 4 | - |
+| test_09g_export_natural_order | 2 | 2 | - |
+| test_10_end_to_end | 1 | 1 | - |
+| test_11_tls_modes | 4 | 4 | - |
+| test_12_shutdown | 2 | 2 | - |
+| test_13_ip_allowlist (nuovo) | - | 84 | - |
+| test_14_auth_limits (nuovo) | - | 10 | - |
+| **totale** | **173 passati, 0 falliti** | **267 passati, 0 falliti** (173 esistenti + 94 nuovi) | **71 / 45** (prima: 71 / 45) |
+
+Con `--auth` i 45 fallimenti sono **gli stessi** di final-engine, file per file: il limite noto di `tenantAdmin` (rifiuto `Unauthorized` sulla porta dati anche per root; controllato nell'output, es. `ctlauth_test_02_fork.txt`). Non è una regressione.
+
+**Nota su test_04_export / test_04b (prima esecuzione non passata):** nella passata ctl il primo giro ha dato `9 passed, 1 skipped` e `2 skipped`: l'ambiente ricostruito aveva `mongodump`/`mongorestore` in `/tmp/mongo7-bin`, i test li cercano in `/tmp/claude-0/mongo-img/root/usr/bin`. Aggiunto il collegamento, rieseguiti due volte sullo stesso binario: **10 passati, 2 passati** (`results-network-limits/rerun_test_04_export.txt`, `rerun_test_04b_export_vs_real_mongo.txt`). Problema dell'ambiente, non del motore.
+
+### 4.3 SIGKILL (`loadtest/test_group_commit.py`, `loadtest/test_open_gc.py`)
+
+| prova | prima (final-engine) | dopo |
+|---|---|---|
+| wal_1..4 (protezioni attive) | 0 inserimenti e 0 aggiornamenti persi in tutte | **0 / 0 in tutte** (60895, 64735, 67414, 64167 scritture confermate) |
+| walctl_1..2 (conferma prima della durabilità: deve perdere) | 1738/19 e 1302/20 persi | **292/21 e 741/17 persi** (il controllo funziona) |
+| sst_1..4 (kill dentro una pulizia) | 0 persi, 0 letture mancanti o vecchie | **0 persi, 0 mancanti, 0 vecchie** in tutte (11033, 11088, 10818, 11040 documenti) |
+| sstctl_1..2 (la pulizia cancella un SST in uso: deve perdere) | 7477/7477 e 7684/7684 persi | **8351/8351 e 8725/8725 persi** (il controllo funziona) |
+
+I JSON delle prove (che lo script riscrive in `loadtest/results/`, file di final-engine già nel repository) sono copiati in `results-network-limits/regression/kill_json/`; i file tracciati sono stati ripristinati com'erano.
+
+### 4.4 Altro
+* Test unitari Rust di `netguard.rs`: 7 passati. Gli altri 51 test unitari del crate **non** sono stati eseguiti.
+* Test "gaps" g01–g12 di compat-gaps (auth e TLS con i driver): **non eseguiti** in questa sessione (non richiesti; il limite di 64 KiB prima dell'autenticazione e il timeout potrebbero toccarli solo se un test mandasse comandi grandi prima di autenticarsi).
+* **Riavvio della macchina** alle 06:08 durante le suite Node: la regressione è ripresa alle 08:03 dalle fette finite (tutte le fette sono state eseguite intere sul binario finale); da lì un watchdog ha controllato il runner (`results-network-limits/first-run-notes.txt`).
+
+## 5. Scansione dei segreti (`tools/netlimits/secret_scan.py`, `results-network-limits/secret_scan.json`)
+
+* **Log e output:** 877 file (log del motore di ogni server di test, output pytest, risultati), 15 valori cercati (tutte le password dei test vecchi e nuovi, il nonce marcato, il token admin, la coppia MinIO). **Nessuno nei log del motore.** Le password finte di test_13/test_14 compaiono solo in 2 output pytest delle mutazioni (`mutations/ip_check.txt`, `mutations/block.txt`): sono le righe del sorgente del test che pytest stampa quando un test fallisce di proposito.
+* **File del repository:** i 154 file nuovi o cambiati rispetto a `origin/final-engine` cercati per chiavi AWS, chiavi private, token GitHub/Slack/Google/API, credenziali negli URL: **nessuno trovato**. I valori fissi dei test (password finte, token di test, `minioadmin`) sono elencati a parte nel JSON: non sono segreti.
+
 
 
 ## 6. Decisioni che servono a te
@@ -114,6 +184,9 @@ Ogni controllo è stato tolto con una modifica di una riga, il motore ricompilat
 * **D11 — le connessioni inattive non autenticate non scadono** (quelle di monitoraggio dei driver ne hanno bisogno); il tetto di 200 per indirizzo le limita. Non c'è un tetto globale di connessioni (non richiesto).
 
 ## 7. Cosa NON ho potuto verificare
+
+* **Numeri "prima" nello stesso ambiente:** non misurati (passata fermata per tempo); i "prima" della sezione 4 vengono da `results-final-engine.md`, altro container e altro binario.
+* **Test gaps g01–g12** e gli altri **51 test unitari** del crate: non eseguiti sul binario finale.
 
 * **IPv6 end to end** e peer IPv4-mappati reali: il kernel del sandbox non ha IPv6 (nemmeno `::1`). Coperti solo dai test unitari (parsing, confronto, raggruppamento per /64, peer mappato).
 * **Indirizzi diversi da 127.0.0.x:** i client "esterni" dei test sono connessioni dal loopback con sorgente 127.0.0.2…250 (stesso percorso di codice, il peer TCP è quello). Nessuna prova da una rete vera.

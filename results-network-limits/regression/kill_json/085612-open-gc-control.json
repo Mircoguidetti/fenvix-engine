@@ -1,0 +1,41 @@
+{
+ "control": true,
+ "trials": [
+  {
+   "killed_inside_cleanup_pass": true,
+   "cleanup_passes": 9,
+   "ssts_deleted": 16,
+   "manifests_deleted": 42,
+   "acked_docs": 8351,
+   "acked_updates": 8346,
+   "lost_inserts": 8351,
+   "lost_updates": 0,
+   "read_violations": {
+    "reads_checked": 19233,
+    "missing": 0,
+    "stale": 0,
+    "padding": 0,
+    "errors": 0,
+    "count_below_acked": 0
+   },
+   "recovery_read_error": "OperationFailure('Data error: object store error (Object at location tenants/og0_1793264091/compacted/01M63DXCG5PTYJZ6RZV73F55JE.sst not found: Error performing GET http://127.0.0.1:9000/bench/tenants",
+   "control_deleted_referenced": true
+  }
+ ],
+ "total": {
+  "trials": 1,
+  "killed_inside_cleanup_pass": 1,
+  "ssts_deleted": 16,
+  "acked_docs": 8351,
+  "lost_inserts": 8351,
+  "lost_updates": 0,
+  "read_violations": {
+   "reads_checked": 19233,
+   "missing": 0,
+   "stale": 0,
+   "padding": 0,
+   "errors": 0,
+   "count_below_acked": 0
+  }
+ }
+}
