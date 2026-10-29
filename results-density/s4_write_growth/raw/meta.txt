@@ -1,0 +1,8 @@
+name=s4_write_growth
+mode=steady
+n=20
+duration=900.0
+extra=--rate 10 --mix insert=1 --procs 1 --offset 1000
+T_START 1793286933.883
+engine_cmd=taskset -c 0,1 /home/user/eng-1c9fee7/target/release/mongo-server --listen 127.0.0.1:27100 --admin-listen 127.0.0.1:27101 --holder density --auth --tls-mode requireTLS --tls-certificate-key-file /home/user/density-work/tls/server.pem --store s3 --bucket density --endpoint http://127.0.0.1:9000 --region us-east-1 --idle-secs 60 --retention-window-secs 604800 --wal-gc-mode bulk
+engine_exit=0

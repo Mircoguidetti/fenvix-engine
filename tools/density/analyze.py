@@ -36,10 +36,14 @@ def load(name):
     meta = dict(l.strip().split("=", 1) for l in open(os.path.join(d, "meta.txt")) if "=" in l)
     t_start = float([l for l in open(os.path.join(d, "meta.txt")) if l.startswith("T_START")][0].split()[1])
     rows = []
-    for f in sorted(glob.glob(os.path.join(d, "lat.p*.csv"))):
+    import re
+    step_s = float(re.search(r"--step-s (\S+)", meta.get("extra", "")).group(1)) if "--step-s" in meta.get("extra", "") else 0.0
+    for f in sorted(glob.glob(os.path.join(d, "lat*.p*.csv"))):
+        m = re.search(r"lat\.step(\d+)\.", os.path.basename(f))
+        off = int(m.group(1)) * step_s if m else 0.0   # ramp: each step's clients count time from their own start
         with open(f) as fh:
             for r in csv.DictReader(fh):
-                rows.append((float(r["t"]), int(r["db"]), r["op"], float(r["lat_ms"]), int(r["ok"]), float(r["late_ms"]), r["err"]))
+                rows.append((float(r["t"]) + off, int(r["db"]), r["op"], float(r["lat_ms"]), int(r["ok"]), float(r["late_ms"]), r["err"]))
     samples = [json.loads(l) for l in open(os.path.join(d, "samples.jsonl"))]
     return d, meta, t_start, rows, samples
 
@@ -54,7 +58,7 @@ def lease_events(name):
     with open(os.path.join(WORK, "logs", f"engine-{name}.log"), errors="replace") as f:
         for l in f:
             m = LEASE_RE.match(l.strip())
-            if m and m.group(2) != "-":
+            if m and m.group(2) not in ("-", "admin"):   # `admin` is the engine's own database, not a customer's
                 ev.append((int(m.group(3)) / 1000, m.group(1), m.group(2), m.group(4)))
     ev.sort()
     return ev

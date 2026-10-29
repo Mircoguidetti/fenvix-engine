@@ -14,7 +14,7 @@
  "steady": {
   "client_req_per_s": 50.18,
   "client_requests": 27099,
-  "closes": 1,
+  "closes": 0,
   "engine_cpu_ms_per_request": 1.625,
   "engine_cpu_pct_of_1core": 8.2,
   "engine_cpu_s": 44.03,
@@ -50,7 +50,7 @@
  "whole": {
   "client_req_per_s": 50.13,
   "client_requests": 30078,
-  "closes": 1,
+  "closes": 0,
   "engine_cpu_ms_per_request": 1.653,
   "engine_cpu_pct_of_1core": 8.3,
   "engine_cpu_s": 49.71,

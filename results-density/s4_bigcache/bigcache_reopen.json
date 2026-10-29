@@ -1,0 +1,26 @@
+{
+ "k": 8,
+ "rss_start_mb": 27.9,
+ "cycles": [
+  {
+   "cycle": 0,
+   "rss_after_reading_all_mb": 485.4,
+   "rss_after_idle_close_mb": 485.0
+  },
+  {
+   "cycle": 1,
+   "rss_after_reading_all_mb": 500.4,
+   "rss_after_idle_close_mb": 500.4
+  },
+  {
+   "cycle": 2,
+   "rss_after_reading_all_mb": 518.6,
+   "rss_after_idle_close_mb": 488.9
+  },
+  {
+   "cycle": 3,
+   "rss_after_reading_all_mb": 516.3,
+   "rss_after_idle_close_mb": 516.3
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+name=s4_ramp
+mode=ramp
+n=2000
+duration=1621
+extra=--step 250 --step-s 180 --period 20 --max-n 2000 --limit-mb 3072 --hold-s 180
+T_START 1793283859.416
+engine_cmd=taskset -c 0,1 /home/user/eng-1c9fee7/target/release/mongo-server --listen 127.0.0.1:27100 --admin-listen 127.0.0.1:27101 --holder density --auth --tls-mode requireTLS --tls-certificate-key-file /home/user/density-work/tls/server.pem --store s3 --bucket density --endpoint http://127.0.0.1:9000 --region us-east-1 --idle-secs 60 --retention-window-secs 604800 --wal-gc-mode bulk
+stopped_at=None
+engine_exit=0

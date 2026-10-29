@@ -1,0 +1,15 @@
+part,op,count,errors,p50_ms,p95_ms,p99_ms,max_ms,late_gt1s
+whole,read_id,0,0,,,,,0
+whole,read_idx,0,0,,,,,0
+whole,update,0,0,,,,,0
+whole,insert,179450,0,6.026,59.631,122.784,738.806,151
+whole,all_reads,0,0,,,,,0
+whole,all_writes,179450,0,6.026,59.631,122.784,738.806,151
+whole,all,179450,0,6.026,59.631,122.784,738.806,151
+steady,read_id,0,0,,,,,0
+steady,read_idx,0,0,,,,,0
+steady,update,0,0,,,,,0
+steady,insert,167475,0,6.213,62.208,125.245,738.806,151
+steady,all_reads,0,0,,,,,0
+steady,all_writes,167475,0,6.213,62.208,125.245,738.806,151
+steady,all,167475,0,6.213,62.208,125.245,738.806,151

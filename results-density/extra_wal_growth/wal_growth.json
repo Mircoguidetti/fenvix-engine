@@ -1,0 +1,53 @@
+{
+ "writes_before": 20000,
+ "load_secs": 18.9,
+ "secs": 180.0,
+ "objects": {
+  "walnew": {
+   "_clean": 1,
+   "_lease": 1,
+   "compacted": 1,
+   "manifest": 5,
+   "wal": 3
+  },
+  "walold": {
+   "_clean": 1,
+   "_lease": 1,
+   "compacted": 2,
+   "manifest": 6,
+   "wal": 5402
+  }
+ },
+ "runs": {
+  "walnew": {
+   "span_s": 180.0,
+   "updates": 180,
+   "minio": {
+    "GetObject": 197.0,
+    "ListObjectsV2": 42.0,
+    "PutObject": 209.0
+   },
+   "per_min": {
+    "GetObject": 65.7,
+    "ListObjectsV2": 14.0,
+    "PutObject": 69.7
+   }
+  },
+  "walold": {
+   "span_s": 180.0,
+   "updates": 180,
+   "minio": {
+    "DeleteMultipleObjects": 7.0,
+    "GetObject": 212.0,
+    "ListObjectsV2": 130.0,
+    "PutObject": 203.0
+   },
+   "per_min": {
+    "DeleteMultipleObjects": 2.3,
+    "GetObject": 70.7,
+    "ListObjectsV2": 43.3,
+    "PutObject": 67.7
+   }
+  }
+ }
+}

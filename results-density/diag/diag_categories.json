@@ -1,0 +1,235 @@
+{
+ "mix": {
+  "span_s": 240.1,
+  "client_requests": 12098,
+  "n": 50,
+  "open_writers_end": 50,
+  "open_readers_end": 0,
+  "requests": {
+   "put": 2620,
+   "copy": 0,
+   "list": 2096,
+   "get": 21901,
+   "head": 0,
+   "delete": 0,
+   "billedPutTier": 4716,
+   "billedGetTier": 21901,
+   "putBytes": 1685336,
+   "getBytes": 25736964
+  },
+  "putByCategory": {
+   "wal": 1194,
+   "manifest": 25,
+   "lease": 1200,
+   "other": 201
+  },
+  "getByCategory": {
+   "manifest": 17595,
+   "compacted_sst": 178,
+   "other": 4128
+  },
+  "walGc": {
+   "passes": 547,
+   "deleted": 0,
+   "listUs": 0,
+   "deleteUs": 0,
+   "totalUs": 90861351
+  },
+  "sstGc": {
+   "passes": 0,
+   "deletedSsts": 0,
+   "deletedManifests": 0
+  },
+  "leases": {
+   "acquired": 0,
+   "takeovers": 0,
+   "refused": 0,
+   "renewals": 1200,
+   "renewFailures": 0,
+   "lost": 0
+  },
+  "maintenance": {
+   "compactRuns": 0,
+   "compactPuts": 0,
+   "compactGets": 0,
+   "gcRuns": 547,
+   "gcDeletes": 0,
+   "gcLists": 1641,
+   "gcGets": 20032
+  }
+ },
+ "reads": {
+  "span_s": 240.0,
+  "client_requests": 12128,
+  "n": 50,
+  "open_writers_end": 0,
+  "open_readers_end": 50,
+  "requests": {
+   "put": 1401,
+   "copy": 0,
+   "list": 9,
+   "get": 130,
+   "head": 0,
+   "delete": 0,
+   "billedPutTier": 1410,
+   "billedGetTier": 130,
+   "putBytes": 168040,
+   "getBytes": 503911
+  },
+  "putByCategory": {
+   "lease": 1200,
+   "other": 201
+  },
+  "getByCategory": {
+   "compacted_sst": 130
+  },
+  "walGc": {
+   "passes": 0,
+   "deleted": 0,
+   "listUs": 0,
+   "deleteUs": 0,
+   "totalUs": 0
+  },
+  "sstGc": {
+   "passes": 0,
+   "deletedSsts": 0,
+   "deletedManifests": 0
+  },
+  "leases": {
+   "acquired": 0,
+   "takeovers": 0,
+   "refused": 0,
+   "renewals": 1200,
+   "renewFailures": 0,
+   "lost": 0
+  },
+  "maintenance": {
+   "compactRuns": 0,
+   "compactPuts": 0,
+   "compactGets": 0,
+   "gcRuns": 0,
+   "gcDeletes": 0,
+   "gcLists": 0,
+   "gcGets": 0
+  }
+ },
+ "writes": {
+  "span_s": 240.1,
+  "client_requests": 12128,
+  "n": 50,
+  "open_writers_end": 50,
+  "open_readers_end": 0,
+  "requests": {
+   "put": 13552,
+   "copy": 0,
+   "list": 2107,
+   "get": 23041,
+   "head": 0,
+   "delete": 0,
+   "billedPutTier": 15659,
+   "billedGetTier": 23041,
+   "putBytes": 14671852,
+   "getBytes": 29112328
+  },
+  "putByCategory": {
+   "wal": 12128,
+   "manifest": 24,
+   "lease": 1200,
+   "other": 200
+  },
+  "getByCategory": {
+   "manifest": 18537,
+   "compacted_sst": 356,
+   "other": 4148
+  },
+  "walGc": {
+   "passes": 550,
+   "deleted": 0,
+   "listUs": 0,
+   "deleteUs": 0,
+   "totalUs": 239769417
+  },
+  "sstGc": {
+   "passes": 0,
+   "deletedSsts": 0,
+   "deletedManifests": 0
+  },
+  "leases": {
+   "acquired": 0,
+   "takeovers": 0,
+   "refused": 0,
+   "renewals": 1200,
+   "renewFailures": 0,
+   "lost": 0
+  },
+  "maintenance": {
+   "compactRuns": 0,
+   "compactPuts": 0,
+   "compactGets": 0,
+   "gcRuns": 550,
+   "gcDeletes": 0,
+   "gcLists": 1650,
+   "gcGets": 20988
+  }
+ },
+ "idle_open": {
+  "span_s": 239.8,
+  "client_requests": 240,
+  "n": 50,
+  "open_writers_end": 25,
+  "open_readers_end": 25,
+  "requests": {
+   "put": 1465,
+   "copy": 0,
+   "list": 243,
+   "get": 3450,
+   "head": 153,
+   "delete": 17,
+   "billedPutTier": 1708,
+   "billedGetTier": 3603,
+   "putBytes": 307187,
+   "getBytes": 5390692
+  },
+  "putByCategory": {
+   "wal": 49,
+   "manifest": 33,
+   "lease": 1183,
+   "other": 200
+  },
+  "getByCategory": {
+   "wal": 153,
+   "manifest": 2244,
+   "compacted_sst": 624,
+   "other": 582
+  },
+  "walGc": {
+   "passes": 54,
+   "deleted": 0,
+   "listUs": 0,
+   "deleteUs": 0,
+   "totalUs": 5833748
+  },
+  "sstGc": {
+   "passes": 0,
+   "deletedSsts": 0,
+   "deletedManifests": 0
+  },
+  "leases": {
+   "acquired": 0,
+   "takeovers": 0,
+   "refused": 0,
+   "renewals": 1183,
+   "renewFailures": 0,
+   "lost": 0
+  },
+  "maintenance": {
+   "compactRuns": 0,
+   "compactPuts": 0,
+   "compactGets": 0,
+   "gcRuns": 54,
+   "gcDeletes": 0,
+   "gcLists": 162,
+   "gcGets": 2332
+  }
+ }
+}

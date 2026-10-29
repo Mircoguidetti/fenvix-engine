@@ -10,3 +10,9 @@ echo "$(date +%T) start s4_write_growth" >> $W/progress.log
 $PY run_scenario.py s4_write_growth steady 20 900 --rate 10 --mix insert=1 --procs 1 --offset 1000 >> $W/progress.log 2>&1
 $PY analyze.py s4_write_growth >> $W/progress.log 2>&1
 echo "$(date +%T) EXTRA DONE" >> $W/progress.log
+echo "$(date +%T) start bigcache_reopen" >> $W/progress.log
+$PY bigcache_reopen.py 8 4 >> $W/progress.log 2>&1
+echo "$(date +%T) EXTRA2 DONE" >> $W/progress.log
+echo "$(date +%T) start wal_growth" >> $W/progress.log
+$PY wal_growth.py 20000 180 >> $W/progress.log 2>&1
+echo "$(date +%T) EXTRA3 DONE" >> $W/progress.log
