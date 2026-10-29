@@ -1,5 +1,5 @@
 # Builds the engine and publishes it to the FENVIX artifacts bucket: a private S3 bucket in the founder's AWS account,
-# created by the infrastructure stack (Mircoguidetti/olvix-app, infra/; docs/deploy-checklist.md there).
+# created by the infrastructure stack (Mircoguidetti/fenvix-app, infra/; docs/deploy-checklist.md there).
 #
 # Run it by hand: Actions > release-engine > Run workflow. Inputs: the engine commit (or tag/branch) to build, the CPU of
 # the server, and whether to upload. At the end the job summary prints the two stack settings to copy:
@@ -46,14 +46,14 @@ env:
   # Pinned toolchain: the same compiler for every release.
   RUST_TOOLCHAIN: "1.97.0"
   # The engine binary built by the mongo-server package. If the engine is renamed, change this line (and
-  # ENGINE_BINARY_NAME in olvix-app infra/lib/engine-command.ts, where the server installs it). The object in the bucket is
+  # ENGINE_BINARY_NAME in fenvix-app infra/lib/engine-command.ts, where the server installs it). The object in the bucket is
   # always called "engine", so no key changes.
   ENGINE_BINARY_NAME: mongo-server
   AWS_REGION: eu-west-1
 
 jobs:
   build:
-    if: github.repository == 'Mircoguidetti/test5'
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
     runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 60
     permissions:
