@@ -1,0 +1,150 @@
+# Builds the engine and publishes it to the FENVIX artifacts bucket: a private S3 bucket in the founder's AWS account,
+# created by the infrastructure stack (Mircoguidetti/olvix-app, infra/; docs/deploy-checklist.md there).
+#
+# Run it by hand: Actions > release-engine > Run workflow. Inputs: the engine commit (or tag/branch) to build, the CPU of
+# the server, and whether to upload. At the end the job summary prints the two stack settings to copy:
+# engineVersion and engineSha256. The server installs the binary only if its SHA-256 equals that setting.
+#
+# This repository's logs are public. Nothing private leaves the runner: no GitHub artifact, no release, no cache of the
+# binary; AWS is reached with short-lived OIDC credentials of a role that can only write engine/ in the bucket; the role
+# ARN and the bucket name come from repository secrets (masked), the account id and the role name are masked as well,
+# and AWS error messages are printed with account numbers and ARNs blanked out.
+#
+# Repository secrets (Settings > Secrets and variables > Actions), values from the stack outputs:
+#   AWS_PUBLISH_ROLE_ARN  output PublishEngineRoleArn
+#   ARTIFACTS_BUCKET      output ArtifactsBucketName
+# The role trusts this repository on the branches listed in the stack setting engineRepoBranches (default: main); a
+# workflow_dispatch run must start from one of them (GitHub also requires this file on the default branch).
+name: release-engine
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Engine commit, tag or branch to build
+        required: true
+        type: string
+      arch:
+        description: CPU of the server (t3.medium and c6i.large are x86_64, c7g.large is aarch64)
+        required: true
+        type: choice
+        options: [x86_64, aarch64]
+        default: x86_64
+      publish:
+        description: Upload to the artifacts bucket (off = build and print the SHA-256 only)
+        required: true
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: release-engine
+  cancel-in-progress: false
+
+env:
+  # Pinned toolchain: the same compiler for every release.
+  RUST_TOOLCHAIN: "1.97.0"
+  # The engine binary built by the mongo-server package. If the engine is renamed, change this line (and
+  # ENGINE_BINARY_NAME in olvix-app infra/lib/engine-command.ts, where the server installs it). The object in the bucket is
+  # always called "engine", so no key changes.
+  ENGINE_BINARY_NAME: mongo-server
+  AWS_REGION: eu-west-1
+
+jobs:
+  build:
+    if: github.repository == 'Mircoguidetti/test5'
+    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARCH: ${{ inputs.arch }}
+    steps:
+      - name: Check the inputs
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          [[ "$REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$ ]] || { echo "::error::ref must be a commit, a tag or a branch name"; exit 1; }
+          [[ "$ARCH" = x86_64 || "$ARCH" = aarch64 ]] || { echo "::error::arch must be x86_64 or aarch64"; exit 1; }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Rust toolchain (pinned)
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
+          rustc +"$RUST_TOOLCHAIN" --version
+
+      - name: Build
+        run: cargo +"$RUST_TOOLCHAIN" build --release --workspace --locked
+
+      - name: Version and SHA-256
+        id: meta
+        run: |
+          set -euo pipefail
+          bin="target/release/$ENGINE_BINARY_NAME"
+          [ -x "$bin" ] || { echo "::error::$bin was not built: is ENGINE_BINARY_NAME still the engine's binary name?"; exit 1; }
+          [ "$(uname -m)" = "$ARCH" ] || { echo "::error::runner is $(uname -m), asked for $ARCH"; exit 1; }
+          commit="$(git rev-parse HEAD)"
+          version="$(date -u +%Y%m%d)-${commit:0:12}-r${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          sha="$(sha256sum "$bin" | cut -d' ' -f1)"
+          {
+            echo "file=$bin"
+            echo "version=$version"
+            echo "sha256=$sha"
+            echo "key=engine/$version/$ARCH/engine"
+          } >> "$GITHUB_OUTPUT"
+          echo "engine $version ($ARCH, commit $commit): SHA-256 $sha"
+
+      - name: Publish (OIDC, write-only role, never overwrites)
+        if: inputs.publish
+        env:
+          ROLE_ARN: ${{ secrets.AWS_PUBLISH_ROLE_ARN }}
+          BUCKET: ${{ secrets.ARTIFACTS_BUCKET }}
+          FILE: ${{ steps.meta.outputs.file }}
+          KEY: ${{ steps.meta.outputs.key }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          SHA: ${{ steps.meta.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          # AWS messages can name the account and the role: print them with both blanked out.
+          scrub() { sed -E 's/arn:aws[a-z-]*:[^ "]*/<arn>/g; s/[0-9]{12}/<account>/g' "$1" >&2; }
+          err="$(mktemp)"
+          [ -n "$ROLE_ARN" ] && [ -n "$BUCKET" ] || { echo "::error::set the repository secrets AWS_PUBLISH_ROLE_ARN and ARTIFACTS_BUCKET (stack outputs)"; exit 1; }
+          [[ "$ROLE_ARN" =~ ^arn:aws:iam::([0-9]{12}):role/([A-Za-z0-9+=,.@_-]+)$ ]] || { echo "::error::AWS_PUBLISH_ROLE_ARN is not an IAM role ARN"; exit 1; }
+          echo "::add-mask::${BASH_REMATCH[1]}"
+          echo "::add-mask::${BASH_REMATCH[2]}"
+          [[ "$KEY" =~ ^engine/[A-Za-z0-9._-]+/(x86_64|aarch64)/engine$ ]] || { echo "::error::unexpected key"; exit 1; }
+          # GitHub OIDC token for AWS STS, exchanged for 15-minute credentials of the publish role.
+          tok="$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)"
+          echo "::add-mask::$tok"
+          creds="$(aws sts assume-role-with-web-identity --region "$AWS_REGION" --role-arn "$ROLE_ARN" \
+            --role-session-name "github-$GITHUB_RUN_ID" --web-identity-token "$tok" --duration-seconds 900 \
+            --query Credentials --output json 2>"$err")" || { echo "::error::AWS refused the OIDC token (trust policy: repository, branch)"; scrub "$err"; exit 1; }
+          for f in AccessKeyId SecretAccessKey SessionToken; do echo "::add-mask::$(jq -r ".$f" <<<"$creds")"; done
+          AWS_ACCESS_KEY_ID="$(jq -r .AccessKeyId <<<"$creds")"
+          AWS_SECRET_ACCESS_KEY="$(jq -r .SecretAccessKey <<<"$creds")"
+          AWS_SESSION_TOKEN="$(jq -r .SessionToken <<<"$creds")"
+          export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+          unset creds tok
+          # S3 checks the upload against the SHA-256 (no corrupted copy), and --if-none-match refuses to replace a
+          # version already published (a version name is never reused).
+          b64="$(openssl dgst -sha256 -binary "$FILE" | base64)"
+          [ "$(printf '%s' "$b64" | base64 -d | od -An -tx1 | tr -d ' \n')" = "$SHA" ] || { echo "::error::SHA-256 changed since it was computed"; exit 1; }
+          aws s3api put-object --region "$AWS_REGION" --bucket "$BUCKET" --key "$KEY" --body "$FILE" \
+            --checksum-sha256 "$b64" --if-none-match '*' >/dev/null 2>"$err" || { echo "::error::upload refused"; scrub "$err"; exit 1; }
+          echo "uploaded $KEY"
+          {
+            echo "### Engine published"
+            echo
+            echo "Stack settings for this release (infra, docs/deploy-checklist.md):"
+            echo
+            echo '```'
+            echo "engineVersion=$VERSION"
+            echo "engineSha256=$SHA"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
