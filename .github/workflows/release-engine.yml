@@ -80,7 +80,7 @@ jobs:
           rustc +"$RUST_TOOLCHAIN" --version
 
       - name: Build
-        run: cargo +"$RUST_TOOLCHAIN" build --release --workspace --locked
+        run: cargo +"$RUST_TOOLCHAIN" build --release -p mongo-server --locked
 
       - name: Version and SHA-256
         id: meta
