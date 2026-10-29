@@ -1,0 +1,13 @@
+{
+ "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/eu-central-1/index.json",
+ "publication_date": "2026-10-15T17:35:40Z",
+ "read_utc": "2026-10-29T09:03:23Z",
+ "descriptions": {
+  "put_tier_usd_per_request": "$0.0054 per 1,000 PUT, COPY, POST, or LIST requests",
+  "storage_usd_per_gb_month": "$0.0245 per GB - first 50 TB / month of storage used",
+  "get_tier_usd_per_request": "$0.0043 per 10,000 GET and all other requests"
+ },
+ "put_tier_usd_per_request": 5.4e-06,
+ "storage_usd_per_gb_month": 0.0245,
+ "get_tier_usd_per_request": 4.3e-07
+}

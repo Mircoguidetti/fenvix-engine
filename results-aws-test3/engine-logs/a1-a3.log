@@ -1,0 +1,53 @@
+mongo-server listening on 127.0.0.1:27100 (idle close after 60 s, holder t3-a, lease ttl 30 s)
+conn 1: TLS handshake failed: tls handshake eof
+LEASE acquired tenant=admin holder=t3-a unix_ms=1793264923585 takeover_from=-
+LEASE acquired tenant=admin holder=t3-a unix_ms=1793264924748 takeover_from=-
+LEASE acquired tenant=admin holder=t3-a unix_ms=1793264925776 takeover_from=-
+LEASE acquired tenant=admin holder=t3-a unix_ms=1793264926959 takeover_from=- new=true
+LEASE writer_open tenant=admin holder=t3-a unix_ms=1793264928973 
+SLOW createUser db=admin ms=6397 ok=true
+LEASE acquired tenant=cycle holder=t3-a unix_ms=1793264929532 takeover_from=-
+LEASE acquired tenant=cycle holder=t3-a unix_ms=1793264930543 takeover_from=-
+LEASE acquired tenant=cycle holder=t3-a unix_ms=1793264931553 takeover_from=- new=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE writer_open tenant=cycle holder=t3-a unix_ms=1793264933329 
+SLOW insert db=cycle ms=4607 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_close tenant=admin holder=t3-a unix_ms=1793264994157 
+LEASE release_begin tenant=admin holder=t3-a unix_ms=1793264994157 
+LEASE release tenant=admin holder=t3-a unix_ms=1793264994330 ok=true
+LEASE writer_close tenant=cycle holder=t3-a unix_ms=1793264996358 
+LEASE release_begin tenant=cycle holder=t3-a unix_ms=1793264996358 
+LEASE release tenant=cycle holder=t3-a unix_ms=1793264996537 ok=true
+LEASE acquired tenant=admin holder=t3-a unix_ms=1793264996879 takeover_from=-
+SLOW ismaster db=admin ms=1494 ok=true
+LEASE acquired tenant=cycle holder=t3-a unix_ms=1793264998369 takeover_from=-
+SLOW find db=cycle ms=2082 ok=true
+SLOW find db=cycle ms=526 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=admin holder=t3-a unix_ms=1793265000622 
+LEASE release_begin tenant=cycle holder=t3-a unix_ms=1793265000622 
+LEASE release tenant=admin holder=t3-a unix_ms=1793265000804 ok=true
+LEASE release tenant=cycle holder=t3-a unix_ms=1793265000808 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
+mongo-server listening on 127.0.0.1:27100 (idle close after 60 s, holder t3-a, lease ttl 30 s)
+conn 1: TLS handshake failed: tls handshake eof
+LEASE acquired tenant=admin holder=t3-a unix_ms=1793265004644 takeover_from=-
+SLOW createUser db=admin ms=2228 ok=false
+LEASE acquired tenant=cycle holder=t3-a unix_ms=1793265006397 takeover_from=-
+SLOW find db=cycle ms=2111 ok=true
+SLOW find db=cycle ms=521 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=cycle holder=t3-a unix_ms=1793265008659 
+LEASE release_begin tenant=admin holder=t3-a unix_ms=1793265008660 
+LEASE release tenant=admin holder=t3-a unix_ms=1793265008847 ok=true
+LEASE release tenant=cycle holder=t3-a unix_ms=1793265008848 ok=true
+tenants closed; stopping maintenance
+maintenance stopped

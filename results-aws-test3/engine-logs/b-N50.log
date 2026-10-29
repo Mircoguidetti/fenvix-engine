@@ -1,0 +1,963 @@
+mongo-server listening on 127.0.0.1:27200 (idle close after 60 s, holder t3-b, lease ttl 30 s)
+conn 1: TLS handshake failed: tls handshake eof
+LEASE acquired tenant=admin holder=t3-b unix_ms=1793268950742 takeover_from=-
+SLOW createUser db=admin ms=2260 ok=false
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=d00011 holder=t3-b unix_ms=1793269012660 takeover_from=-
+LEASE acquired tenant=d00014 holder=t3-b unix_ms=1793269012663 takeover_from=-
+LEASE acquired tenant=d00019 holder=t3-b unix_ms=1793269012792 takeover_from=-
+LEASE acquired tenant=d00017 holder=t3-b unix_ms=1793269012798 takeover_from=-
+LEASE acquired tenant=d00020 holder=t3-b unix_ms=1793269012805 takeover_from=-
+LEASE acquired tenant=d00022 holder=t3-b unix_ms=1793269012809 takeover_from=-
+LEASE acquired tenant=d00024 holder=t3-b unix_ms=1793269012810 takeover_from=-
+LEASE acquired tenant=d00013 holder=t3-b unix_ms=1793269012813 takeover_from=-
+LEASE acquired tenant=d00015 holder=t3-b unix_ms=1793269012813 takeover_from=-
+LEASE acquired tenant=d00021 holder=t3-b unix_ms=1793269012814 takeover_from=-
+LEASE acquired tenant=d00023 holder=t3-b unix_ms=1793269012818 takeover_from=-
+LEASE acquired tenant=d00010 holder=t3-b unix_ms=1793269012821 takeover_from=-
+LEASE acquired tenant=d00012 holder=t3-b unix_ms=1793269012822 takeover_from=-
+LEASE acquired tenant=d00016 holder=t3-b unix_ms=1793269012824 takeover_from=-
+LEASE acquired tenant=d00025 holder=t3-b unix_ms=1793269012828 takeover_from=-
+LEASE acquired tenant=d00018 holder=t3-b unix_ms=1793269012838 takeover_from=-
+LEASE acquired tenant=d00014 holder=t3-b unix_ms=1793269013852 takeover_from=-
+LEASE acquired tenant=d00019 holder=t3-b unix_ms=1793269013854 takeover_from=-
+LEASE acquired tenant=d00017 holder=t3-b unix_ms=1793269013854 takeover_from=-
+LEASE acquired tenant=d00020 holder=t3-b unix_ms=1793269013859 takeover_from=-
+LEASE acquired tenant=d00011 holder=t3-b unix_ms=1793269013860 takeover_from=-
+LEASE acquired tenant=d00022 holder=t3-b unix_ms=1793269013860 takeover_from=-
+LEASE acquired tenant=d00024 holder=t3-b unix_ms=1793269013875 takeover_from=-
+LEASE acquired tenant=d00013 holder=t3-b unix_ms=1793269013879 takeover_from=-
+LEASE acquired tenant=d00015 holder=t3-b unix_ms=1793269013944 takeover_from=-
+LEASE acquired tenant=d00023 holder=t3-b unix_ms=1793269013949 takeover_from=-
+LEASE acquired tenant=d00021 holder=t3-b unix_ms=1793269013952 takeover_from=-
+LEASE acquired tenant=d00010 holder=t3-b unix_ms=1793269013979 takeover_from=-
+LEASE acquired tenant=d00018 holder=t3-b unix_ms=1793269013997 takeover_from=-
+LEASE acquired tenant=d00016 holder=t3-b unix_ms=1793269014000 takeover_from=-
+LEASE acquired tenant=d00012 holder=t3-b unix_ms=1793269014004 takeover_from=-
+LEASE acquired tenant=d00025 holder=t3-b unix_ms=1793269014014 takeover_from=-
+SLOW listCollections db=d00014 ms=2382 ok=true
+SLOW listCollections db=d00011 ms=2389 ok=true
+SLOW listCollections db=d00019 ms=2371 ok=true
+SLOW listCollections db=d00017 ms=2393 ok=true
+SLOW listCollections db=d00024 ms=2382 ok=true
+SLOW listCollections db=d00022 ms=2398 ok=true
+SLOW listCollections db=d00020 ms=2403 ok=true
+SLOW listCollections db=d00013 ms=2403 ok=true
+SLOW listCollections db=d00015 ms=2464 ok=true
+SLOW listCollections db=d00023 ms=2470 ok=true
+SLOW listCollections db=d00021 ms=2512 ok=true
+SLOW listCollections db=d00010 ms=2497 ok=true
+SLOW listCollections db=d00018 ms=2501 ok=true
+SLOW listCollections db=d00012 ms=2516 ok=true
+SLOW listCollections db=d00016 ms=2531 ok=true
+SLOW listCollections db=d00025 ms=2534 ok=true
+LEASE acquired tenant=d00014 holder=t3-b unix_ms=1793269014861 takeover_from=-
+LEASE acquired tenant=d00011 holder=t3-b unix_ms=1793269014867 takeover_from=-
+LEASE acquired tenant=d00017 holder=t3-b unix_ms=1793269014873 takeover_from=-
+LEASE acquired tenant=d00019 holder=t3-b unix_ms=1793269014878 takeover_from=-
+LEASE acquired tenant=d00024 holder=t3-b unix_ms=1793269014881 takeover_from=-
+LEASE acquired tenant=d00022 holder=t3-b unix_ms=1793269014890 takeover_from=-
+LEASE acquired tenant=d00013 holder=t3-b unix_ms=1793269014905 takeover_from=-
+LEASE acquired tenant=d00020 holder=t3-b unix_ms=1793269014948 takeover_from=-
+LEASE acquired tenant=d00015 holder=t3-b unix_ms=1793269014961 takeover_from=-
+LEASE acquired tenant=d00023 holder=t3-b unix_ms=1793269014977 takeover_from=-
+LEASE acquired tenant=d00010 holder=t3-b unix_ms=1793269015010 takeover_from=-
+LEASE acquired tenant=d00021 holder=t3-b unix_ms=1793269015015 takeover_from=-
+LEASE acquired tenant=d00016 holder=t3-b unix_ms=1793269015021 takeover_from=-
+LEASE acquired tenant=d00018 holder=t3-b unix_ms=1793269015023 takeover_from=-
+LEASE acquired tenant=d00012 holder=t3-b unix_ms=1793269015029 takeover_from=-
+LEASE acquired tenant=d00025 holder=t3-b unix_ms=1793269015044 takeover_from=-
+LEASE acquired tenant=d00011 holder=t3-b unix_ms=1793269015899 takeover_from=-
+LEASE acquired tenant=d00024 holder=t3-b unix_ms=1793269015899 takeover_from=-
+LEASE acquired tenant=d00014 holder=t3-b unix_ms=1793269015900 takeover_from=-
+LEASE acquired tenant=d00017 holder=t3-b unix_ms=1793269015902 takeover_from=-
+LEASE acquired tenant=d00019 holder=t3-b unix_ms=1793269015910 takeover_from=-
+LEASE acquired tenant=d00022 holder=t3-b unix_ms=1793269015927 takeover_from=-
+LEASE acquired tenant=d00013 holder=t3-b unix_ms=1793269015941 takeover_from=-
+LEASE acquired tenant=d00020 holder=t3-b unix_ms=1793269015981 takeover_from=-
+LEASE acquired tenant=d00015 holder=t3-b unix_ms=1793269015981 takeover_from=-
+LEASE acquired tenant=d00023 holder=t3-b unix_ms=1793269015995 takeover_from=-
+LEASE acquired tenant=d00016 holder=t3-b unix_ms=1793269016048 takeover_from=-
+LEASE acquired tenant=d00010 holder=t3-b unix_ms=1793269016056 takeover_from=-
+LEASE acquired tenant=d00018 holder=t3-b unix_ms=1793269016061 takeover_from=-
+LEASE acquired tenant=d00012 holder=t3-b unix_ms=1793269016062 takeover_from=-
+LEASE acquired tenant=d00021 holder=t3-b unix_ms=1793269016079 takeover_from=-
+LEASE acquired tenant=d00025 holder=t3-b unix_ms=1793269016085 takeover_from=-
+LEASE acquired tenant=d00014 holder=t3-b unix_ms=1793269016903 takeover_from=- new=true
+LEASE acquired tenant=d00011 holder=t3-b unix_ms=1793269016912 takeover_from=- new=true
+LEASE acquired tenant=d00024 holder=t3-b unix_ms=1793269016919 takeover_from=- new=true
+LEASE acquired tenant=d00019 holder=t3-b unix_ms=1793269016922 takeover_from=- new=true
+LEASE acquired tenant=d00017 holder=t3-b unix_ms=1793269016928 takeover_from=- new=true
+LEASE acquired tenant=d00022 holder=t3-b unix_ms=1793269016979 takeover_from=- new=true
+LEASE acquired tenant=d00013 holder=t3-b unix_ms=1793269016994 takeover_from=- new=true
+LEASE acquired tenant=d00023 holder=t3-b unix_ms=1793269017065 takeover_from=- new=true
+LEASE acquired tenant=d00015 holder=t3-b unix_ms=1793269017072 takeover_from=- new=true
+LEASE acquired tenant=d00012 holder=t3-b unix_ms=1793269017072 takeover_from=- new=true
+LEASE acquired tenant=d00020 holder=t3-b unix_ms=1793269017073 takeover_from=- new=true
+LEASE acquired tenant=d00016 holder=t3-b unix_ms=1793269017081 takeover_from=- new=true
+LEASE acquired tenant=d00010 holder=t3-b unix_ms=1793269017092 takeover_from=- new=true
+LEASE acquired tenant=d00018 holder=t3-b unix_ms=1793269017095 takeover_from=- new=true
+LEASE acquired tenant=d00021 holder=t3-b unix_ms=1793269017163 takeover_from=- new=true
+LEASE acquired tenant=d00025 holder=t3-b unix_ms=1793269017247 takeover_from=- new=true
+LEASE writer_open tenant=d00014 holder=t3-b unix_ms=1793269018805 
+LEASE writer_open tenant=d00024 holder=t3-b unix_ms=1793269018809 
+LEASE writer_open tenant=d00011 holder=t3-b unix_ms=1793269018825 
+LEASE writer_open tenant=d00019 holder=t3-b unix_ms=1793269018850 
+LEASE writer_open tenant=d00017 holder=t3-b unix_ms=1793269018877 
+LEASE writer_open tenant=d00022 holder=t3-b unix_ms=1793269018902 
+LEASE writer_open tenant=d00013 holder=t3-b unix_ms=1793269018907 
+LEASE writer_open tenant=d00012 holder=t3-b unix_ms=1793269018937 
+LEASE writer_open tenant=d00020 holder=t3-b unix_ms=1793269018937 
+LEASE writer_open tenant=d00016 holder=t3-b unix_ms=1793269018951 
+LEASE writer_open tenant=d00015 holder=t3-b unix_ms=1793269018976 
+SLOW create db=d00014 ms=4465 ok=true
+SLOW create db=d00024 ms=4452 ok=true
+SLOW create db=d00011 ms=4482 ok=true
+SLOW create db=d00019 ms=4497 ok=true
+LEASE writer_open tenant=d00023 holder=t3-b unix_ms=1793269019037 
+LEASE writer_open tenant=d00018 holder=t3-b unix_ms=1793269019040 
+SLOW create db=d00017 ms=4535 ok=true
+LEASE writer_open tenant=d00010 holder=t3-b unix_ms=1793269019070 
+SLOW create db=d00022 ms=4536 ok=true
+SLOW create db=d00013 ms=4535 ok=true
+SLOW create db=d00012 ms=4436 ok=true
+SLOW create db=d00020 ms=4583 ok=true
+SLOW create db=d00016 ms=4449 ok=true
+LEASE writer_open tenant=d00025 holder=t3-b unix_ms=1793269019138 
+LEASE writer_open tenant=d00021 holder=t3-b unix_ms=1793269019158 
+SLOW create db=d00015 ms=4555 ok=true
+SLOW create db=d00023 ms=4600 ok=true
+SLOW create db=d00018 ms=4552 ok=true
+SLOW create db=d00010 ms=4592 ok=true
+SLOW create db=d00025 ms=4631 ok=true
+SLOW create db=d00021 ms=4683 ok=true
+LEASE acquired tenant=d00026 holder=t3-b unix_ms=1793269019685 takeover_from=-
+LEASE acquired tenant=d00028 holder=t3-b unix_ms=1793269019693 takeover_from=-
+LEASE acquired tenant=d00029 holder=t3-b unix_ms=1793269019701 takeover_from=-
+LEASE acquired tenant=d00027 holder=t3-b unix_ms=1793269019745 takeover_from=-
+LEASE acquired tenant=d00031 holder=t3-b unix_ms=1793269019752 takeover_from=-
+LEASE acquired tenant=d00030 holder=t3-b unix_ms=1793269019812 takeover_from=-
+LEASE acquired tenant=d00032 holder=t3-b unix_ms=1793269019816 takeover_from=-
+LEASE acquired tenant=d00033 holder=t3-b unix_ms=1793269019825 takeover_from=-
+LEASE acquired tenant=d00034 holder=t3-b unix_ms=1793269019851 takeover_from=-
+LEASE acquired tenant=d00035 holder=t3-b unix_ms=1793269019874 takeover_from=-
+LEASE acquired tenant=d00036 holder=t3-b unix_ms=1793269019906 takeover_from=-
+LEASE acquired tenant=d00038 holder=t3-b unix_ms=1793269019915 takeover_from=-
+LEASE acquired tenant=d00037 holder=t3-b unix_ms=1793269019917 takeover_from=-
+LEASE acquired tenant=d00039 holder=t3-b unix_ms=1793269019970 takeover_from=-
+LEASE acquired tenant=d00040 holder=t3-b unix_ms=1793269020015 takeover_from=-
+LEASE acquired tenant=d00041 holder=t3-b unix_ms=1793269020080 takeover_from=-
+LEASE acquired tenant=d00029 holder=t3-b unix_ms=1793269020697 takeover_from=-
+LEASE acquired tenant=d00028 holder=t3-b unix_ms=1793269020698 takeover_from=-
+LEASE acquired tenant=d00026 holder=t3-b unix_ms=1793269020705 takeover_from=-
+LEASE acquired tenant=d00027 holder=t3-b unix_ms=1793269020752 takeover_from=-
+LEASE acquired tenant=d00031 holder=t3-b unix_ms=1793269020770 takeover_from=-
+LEASE acquired tenant=d00030 holder=t3-b unix_ms=1793269020821 takeover_from=-
+LEASE acquired tenant=d00033 holder=t3-b unix_ms=1793269020847 takeover_from=-
+LEASE acquired tenant=d00032 holder=t3-b unix_ms=1793269020850 takeover_from=-
+LEASE acquired tenant=d00034 holder=t3-b unix_ms=1793269020871 takeover_from=-
+LEASE acquired tenant=d00035 holder=t3-b unix_ms=1793269020885 takeover_from=-
+LEASE acquired tenant=d00038 holder=t3-b unix_ms=1793269020910 takeover_from=-
+LEASE acquired tenant=d00036 holder=t3-b unix_ms=1793269020923 takeover_from=-
+LEASE acquired tenant=d00037 holder=t3-b unix_ms=1793269020934 takeover_from=-
+LEASE acquired tenant=d00040 holder=t3-b unix_ms=1793269021035 takeover_from=-
+LEASE acquired tenant=d00039 holder=t3-b unix_ms=1793269021047 takeover_from=-
+LEASE acquired tenant=d00041 holder=t3-b unix_ms=1793269021117 takeover_from=-
+SLOW listCollections db=d00028 ms=2011 ok=true
+SLOW listCollections db=d00029 ms=1994 ok=true
+SLOW listCollections db=d00026 ms=2034 ok=true
+SLOW listCollections db=d00027 ms=2059 ok=true
+SLOW listCollections db=d00031 ms=2030 ok=true
+SLOW listCollections db=d00030 ms=2074 ok=true
+SLOW listCollections db=d00033 ms=2036 ok=true
+SLOW listCollections db=d00032 ms=2049 ok=true
+SLOW listCollections db=d00035 ms=2020 ok=true
+SLOW listCollections db=d00038 ms=2007 ok=true
+SLOW listCollections db=d00036 ms=2026 ok=true
+SLOW listCollections db=d00037 ms=2028 ok=true
+SLOW listCollections db=d00034 ms=2109 ok=true
+LEASE acquired tenant=d00029 holder=t3-b unix_ms=1793269021712 takeover_from=-
+SLOW listCollections db=d00039 ms=2098 ok=true
+SLOW listCollections db=d00040 ms=2033 ok=true
+LEASE acquired tenant=d00028 holder=t3-b unix_ms=1793269021718 takeover_from=-
+LEASE acquired tenant=d00026 holder=t3-b unix_ms=1793269021730 takeover_from=-
+LEASE acquired tenant=d00031 holder=t3-b unix_ms=1793269021799 takeover_from=-
+LEASE acquired tenant=d00027 holder=t3-b unix_ms=1793269021817 takeover_from=-
+SLOW listCollections db=d00041 ms=2094 ok=true
+LEASE acquired tenant=d00032 holder=t3-b unix_ms=1793269021870 takeover_from=-
+LEASE acquired tenant=d00030 holder=t3-b unix_ms=1793269021879 takeover_from=-
+LEASE acquired tenant=d00033 holder=t3-b unix_ms=1793269021881 takeover_from=-
+LEASE acquired tenant=d00035 holder=t3-b unix_ms=1793269021907 takeover_from=-
+LEASE acquired tenant=d00038 holder=t3-b unix_ms=1793269021933 takeover_from=-
+LEASE acquired tenant=d00037 holder=t3-b unix_ms=1793269022014 takeover_from=-
+LEASE acquired tenant=d00036 holder=t3-b unix_ms=1793269022028 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=d00034 holder=t3-b unix_ms=1793269022045 takeover_from=-
+LEASE acquired tenant=d00040 holder=t3-b unix_ms=1793269022068 takeover_from=-
+LEASE acquired tenant=d00039 holder=t3-b unix_ms=1793269022072 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=d00041 holder=t3-b unix_ms=1793269022179 takeover_from=-
+LEASE acquired tenant=d00029 holder=t3-b unix_ms=1793269022729 takeover_from=-
+LEASE acquired tenant=d00028 holder=t3-b unix_ms=1793269022745 takeover_from=-
+LEASE acquired tenant=d00026 holder=t3-b unix_ms=1793269022746 takeover_from=-
+LEASE acquired tenant=d00031 holder=t3-b unix_ms=1793269022803 takeover_from=-
+LEASE acquired tenant=d00027 holder=t3-b unix_ms=1793269022833 takeover_from=-
+LEASE acquired tenant=d00030 holder=t3-b unix_ms=1793269022868 takeover_from=-
+LEASE acquired tenant=d00032 holder=t3-b unix_ms=1793269022880 takeover_from=-
+LEASE acquired tenant=d00033 holder=t3-b unix_ms=1793269022902 takeover_from=-
+LEASE acquired tenant=d00035 holder=t3-b unix_ms=1793269022929 takeover_from=-
+LEASE acquired tenant=d00038 holder=t3-b unix_ms=1793269022951 takeover_from=-
+LEASE acquired tenant=d00037 holder=t3-b unix_ms=1793269023026 takeover_from=-
+LEASE acquired tenant=d00036 holder=t3-b unix_ms=1793269023065 takeover_from=-
+LEASE acquired tenant=d00034 holder=t3-b unix_ms=1793269023071 takeover_from=-
+LEASE acquired tenant=d00039 holder=t3-b unix_ms=1793269023082 takeover_from=-
+LEASE acquired tenant=d00040 holder=t3-b unix_ms=1793269023112 takeover_from=-
+LEASE acquired tenant=d00041 holder=t3-b unix_ms=1793269023223 takeover_from=-
+LEASE acquired tenant=d00028 holder=t3-b unix_ms=1793269023755 takeover_from=- new=true
+LEASE acquired tenant=d00029 holder=t3-b unix_ms=1793269023761 takeover_from=- new=true
+LEASE acquired tenant=d00026 holder=t3-b unix_ms=1793269023773 takeover_from=- new=true
+LEASE acquired tenant=d00031 holder=t3-b unix_ms=1793269023812 takeover_from=- new=true
+LEASE acquired tenant=d00027 holder=t3-b unix_ms=1793269023856 takeover_from=- new=true
+LEASE acquired tenant=d00030 holder=t3-b unix_ms=1793269023871 takeover_from=- new=true
+LEASE acquired tenant=d00032 holder=t3-b unix_ms=1793269023915 takeover_from=- new=true
+LEASE acquired tenant=d00033 holder=t3-b unix_ms=1793269023920 takeover_from=- new=true
+LEASE acquired tenant=d00035 holder=t3-b unix_ms=1793269023934 takeover_from=- new=true
+LEASE acquired tenant=d00038 holder=t3-b unix_ms=1793269023962 takeover_from=- new=true
+LEASE acquired tenant=d00037 holder=t3-b unix_ms=1793269024045 takeover_from=- new=true
+LEASE acquired tenant=d00036 holder=t3-b unix_ms=1793269024080 takeover_from=- new=true
+LEASE acquired tenant=d00034 holder=t3-b unix_ms=1793269024088 takeover_from=- new=true
+LEASE acquired tenant=d00041 holder=t3-b unix_ms=1793269024251 takeover_from=- new=true
+LEASE acquired tenant=d00040 holder=t3-b unix_ms=1793269024377 takeover_from=- new=true
+LEASE acquired tenant=d00039 holder=t3-b unix_ms=1793269024451 takeover_from=- new=true
+LEASE writer_open tenant=d00028 holder=t3-b unix_ms=1793269025474 
+LEASE writer_open tenant=d00029 holder=t3-b unix_ms=1793269025487 
+LEASE writer_open tenant=d00026 holder=t3-b unix_ms=1793269025527 
+LEASE writer_open tenant=d00031 holder=t3-b unix_ms=1793269025555 
+LEASE writer_open tenant=d00027 holder=t3-b unix_ms=1793269025581 
+LEASE writer_open tenant=d00030 holder=t3-b unix_ms=1793269025593 
+LEASE writer_open tenant=d00032 holder=t3-b unix_ms=1793269025631 
+SLOW create db=d00028 ms=4289 ok=true
+SLOW create db=d00029 ms=4287 ok=true
+LEASE writer_open tenant=d00038 holder=t3-b unix_ms=1793269025685 
+LEASE writer_open tenant=d00035 holder=t3-b unix_ms=1793269025694 
+LEASE writer_open tenant=d00033 holder=t3-b unix_ms=1793269025697 
+SLOW create db=d00026 ms=4322 ok=true
+LEASE writer_open tenant=d00037 holder=t3-b unix_ms=1793269025724 
+SLOW create db=d00031 ms=4277 ok=true
+LEASE writer_open tenant=d00036 holder=t3-b unix_ms=1793269025734 
+SLOW create db=d00027 ms=4343 ok=true
+SLOW create db=d00030 ms=4278 ok=true
+LEASE writer_open tenant=d00034 holder=t3-b unix_ms=1793269025789 
+SLOW create db=d00032 ms=4274 ok=true
+SLOW create db=d00038 ms=4284 ok=true
+SLOW create db=d00033 ms=4362 ok=true
+SLOW create db=d00035 ms=4329 ok=true
+SLOW create db=d00037 ms=4293 ok=true
+SLOW create db=d00036 ms=4310 ok=true
+SLOW create db=d00034 ms=4344 ok=true
+LEASE writer_open tenant=d00041 holder=t3-b unix_ms=1793269025977 
+LEASE writer_open tenant=d00040 holder=t3-b unix_ms=1793269026070 
+LEASE writer_open tenant=d00039 holder=t3-b unix_ms=1793269026152 
+SLOW create db=d00041 ms=4327 ok=true
+SLOW create db=d00040 ms=4534 ok=true
+SLOW create db=d00039 ms=4619 ok=true
+LEASE acquired tenant=d00043 holder=t3-b unix_ms=1793269026356 takeover_from=-
+LEASE acquired tenant=d00042 holder=t3-b unix_ms=1793269026357 takeover_from=-
+LEASE acquired tenant=d00044 holder=t3-b unix_ms=1793269026403 takeover_from=-
+LEASE acquired tenant=d00045 holder=t3-b unix_ms=1793269026419 takeover_from=-
+LEASE acquired tenant=d00046 holder=t3-b unix_ms=1793269026451 takeover_from=-
+LEASE acquired tenant=d00047 holder=t3-b unix_ms=1793269026473 takeover_from=-
+LEASE acquired tenant=d00048 holder=t3-b unix_ms=1793269026485 takeover_from=-
+LEASE acquired tenant=d00049 holder=t3-b unix_ms=1793269026587 takeover_from=-
+LEASE acquired tenant=d00042 holder=t3-b unix_ms=1793269027355 takeover_from=-
+LEASE acquired tenant=d00043 holder=t3-b unix_ms=1793269027368 takeover_from=-
+LEASE acquired tenant=d00045 holder=t3-b unix_ms=1793269027413 takeover_from=-
+LEASE acquired tenant=d00044 holder=t3-b unix_ms=1793269027414 takeover_from=-
+LEASE acquired tenant=d00046 holder=t3-b unix_ms=1793269027469 takeover_from=-
+LEASE acquired tenant=d00048 holder=t3-b unix_ms=1793269027487 takeover_from=-
+LEASE acquired tenant=d00047 holder=t3-b unix_ms=1793269027490 takeover_from=-
+LEASE acquired tenant=d00049 holder=t3-b unix_ms=1793269027594 takeover_from=-
+SLOW listCollections db=d00043 ms=2021 ok=true
+SLOW listCollections db=d00042 ms=2034 ok=true
+SLOW listCollections db=d00045 ms=2000 ok=true
+SLOW listCollections db=d00044 ms=2030 ok=true
+SLOW listCollections db=d00046 ms=2030 ok=true
+SLOW listCollections db=d00048 ms=2000 ok=true
+SLOW listCollections db=d00047 ms=2030 ok=true
+SLOW listCollections db=d00049 ms=2006 ok=true
+LEASE acquired tenant=d00043 holder=t3-b unix_ms=1793269028376 takeover_from=-
+LEASE acquired tenant=d00042 holder=t3-b unix_ms=1793269028384 takeover_from=-
+LEASE acquired tenant=d00045 holder=t3-b unix_ms=1793269028420 takeover_from=-
+LEASE acquired tenant=d00044 holder=t3-b unix_ms=1793269028433 takeover_from=-
+LEASE acquired tenant=d00046 holder=t3-b unix_ms=1793269028488 takeover_from=-
+LEASE acquired tenant=d00047 holder=t3-b unix_ms=1793269028495 takeover_from=-
+LEASE acquired tenant=d00048 holder=t3-b unix_ms=1793269028495 takeover_from=-
+LEASE acquired tenant=d00049 holder=t3-b unix_ms=1793269028598 takeover_from=-
+LEASE acquired tenant=d00043 holder=t3-b unix_ms=1793269029409 takeover_from=-
+LEASE acquired tenant=d00042 holder=t3-b unix_ms=1793269029419 takeover_from=-
+LEASE acquired tenant=d00044 holder=t3-b unix_ms=1793269029449 takeover_from=-
+LEASE acquired tenant=d00046 holder=t3-b unix_ms=1793269029490 takeover_from=-
+LEASE acquired tenant=d00045 holder=t3-b unix_ms=1793269029501 takeover_from=-
+LEASE acquired tenant=d00047 holder=t3-b unix_ms=1793269029505 takeover_from=-
+LEASE acquired tenant=d00048 holder=t3-b unix_ms=1793269029580 takeover_from=-
+LEASE acquired tenant=d00049 holder=t3-b unix_ms=1793269029700 takeover_from=-
+LEASE acquired tenant=d00043 holder=t3-b unix_ms=1793269030411 takeover_from=- new=true
+LEASE acquired tenant=d00042 holder=t3-b unix_ms=1793269030435 takeover_from=- new=true
+LEASE acquired tenant=d00045 holder=t3-b unix_ms=1793269030508 takeover_from=- new=true
+LEASE acquired tenant=d00046 holder=t3-b unix_ms=1793269030517 takeover_from=- new=true
+LEASE acquired tenant=d00047 holder=t3-b unix_ms=1793269030522 takeover_from=- new=true
+LEASE acquired tenant=d00044 holder=t3-b unix_ms=1793269030536 takeover_from=- new=true
+LEASE acquired tenant=d00048 holder=t3-b unix_ms=1793269030638 takeover_from=- new=true
+LEASE acquired tenant=d00049 holder=t3-b unix_ms=1793269030716 takeover_from=- new=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+LEASE writer_open tenant=d00043 holder=t3-b unix_ms=1793269032347 
+LEASE writer_open tenant=d00042 holder=t3-b unix_ms=1793269032410 
+LEASE writer_open tenant=d00045 holder=t3-b unix_ms=1793269032422 
+LEASE writer_open tenant=d00046 holder=t3-b unix_ms=1793269032471 
+LEASE writer_open tenant=d00047 holder=t3-b unix_ms=1793269032516 
+SLOW create db=d00043 ms=4479 ok=true
+LEASE writer_open tenant=d00044 holder=t3-b unix_ms=1793269032533 
+LEASE writer_open tenant=d00048 holder=t3-b unix_ms=1793269032573 
+SLOW create db=d00042 ms=4540 ok=true
+SLOW create db=d00045 ms=4510 ok=true
+SLOW create db=d00046 ms=4500 ok=true
+LEASE writer_open tenant=d00049 holder=t3-b unix_ms=1793269032663 
+SLOW create db=d00047 ms=4529 ok=true
+SLOW create db=d00044 ms=4619 ok=true
+SLOW create db=d00048 ms=4594 ok=true
+SLOW create db=d00049 ms=4586 ok=true
+SLOW insert db=d00015 ms=506 ok=true
+SLOW insert db=d00022 ms=506 ok=true
+SLOW insert db=d00019 ms=502 ok=true
+SLOW insert db=d00020 ms=509 ok=true
+SLOW insert db=d00025 ms=506 ok=true
+SLOW insert db=d00018 ms=648 ok=true
+SLOW insert db=d00025 ms=501 ok=true
+SLOW insert db=d00021 ms=651 ok=true
+SLOW insert db=d00027 ms=524 ok=true
+SLOW insert db=d00038 ms=502 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE release_begin tenant=admin holder=t3-b unix_ms=1793269072540 
+LEASE release tenant=admin holder=t3-b unix_ms=1793269072731 ok=true
+SSTGC begin tenant=d00011 unix_ms=1793269079052
+SSTGC begin tenant=d00012 unix_ms=1793269079052
+SSTGC begin tenant=d00024 unix_ms=1793269079052
+SSTGC begin tenant=d00023 unix_ms=1793269079053
+SSTGC begin tenant=d00019 unix_ms=1793269079053
+SSTGC begin tenant=d00013 unix_ms=1793269079053
+SSTGC begin tenant=d00020 unix_ms=1793269079053
+SSTGC begin tenant=d00018 unix_ms=1793269079053
+SSTGC begin tenant=d00016 unix_ms=1793269079053
+SSTGC begin tenant=d00017 unix_ms=1793269079053
+SSTGC begin tenant=d00014 unix_ms=1793269079054
+SSTGC begin tenant=d00022 unix_ms=1793269079054
+SSTGC begin tenant=d00015 unix_ms=1793269079054
+SSTGC end tenant=d00024 unix_ms=1793269080591 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00011 unix_ms=1793269080595 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00012 unix_ms=1793269080595 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00019 unix_ms=1793269080625 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00023 unix_ms=1793269080625 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00013 unix_ms=1793269080633 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00020 unix_ms=1793269080645 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00018 unix_ms=1793269080647 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00016 unix_ms=1793269080662 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00014 unix_ms=1793269080682 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00017 unix_ms=1793269080687 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00022 unix_ms=1793269080722 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00015 unix_ms=1793269080744 deleted_ssts=0 deleted_manifests=0 referenced=0
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=d00025 unix_ms=1793269082745
+SSTGC begin tenant=d00010 unix_ms=1793269082745
+SSTGC begin tenant=d00021 unix_ms=1793269082745
+SSTGC end tenant=d00025 unix_ms=1793269084247 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00021 unix_ms=1793269084261 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00010 unix_ms=1793269084280 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC begin tenant=d00036 unix_ms=1793269088807
+SSTGC begin tenant=d00031 unix_ms=1793269088807
+SSTGC begin tenant=d00040 unix_ms=1793269088807
+SSTGC begin tenant=d00033 unix_ms=1793269088807
+SSTGC begin tenant=d00034 unix_ms=1793269088807
+SSTGC begin tenant=d00030 unix_ms=1793269088807
+SSTGC begin tenant=d00037 unix_ms=1793269088807
+SSTGC begin tenant=d00038 unix_ms=1793269088807
+SSTGC begin tenant=d00028 unix_ms=1793269088807
+SSTGC begin tenant=d00032 unix_ms=1793269088807
+SSTGC begin tenant=d00026 unix_ms=1793269088808
+SSTGC begin tenant=d00035 unix_ms=1793269088808
+SSTGC begin tenant=d00027 unix_ms=1793269088808
+SSTGC begin tenant=d00041 unix_ms=1793269088808
+SSTGC begin tenant=d00039 unix_ms=1793269088808
+SSTGC begin tenant=d00029 unix_ms=1793269088808
+SSTGC end tenant=d00029 unix_ms=1793269090286 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00040 unix_ms=1793269090290 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00028 unix_ms=1793269090294 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00031 unix_ms=1793269090295 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00026 unix_ms=1793269090295 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00030 unix_ms=1793269090297 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00035 unix_ms=1793269090300 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00039 unix_ms=1793269090307 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00037 unix_ms=1793269090309 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00027 unix_ms=1793269090315 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00034 unix_ms=1793269090323 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00041 unix_ms=1793269090324 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00032 unix_ms=1793269090332 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00038 unix_ms=1793269090335 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00036 unix_ms=1793269090335 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00033 unix_ms=1793269090350 deleted_ssts=0 deleted_manifests=0 referenced=0
+SLOW hello db=admin ms=10000 ok=true
+SSTGC begin tenant=d00049 unix_ms=1793269094837
+SSTGC begin tenant=d00045 unix_ms=1793269094837
+SSTGC begin tenant=d00042 unix_ms=1793269094837
+SSTGC begin tenant=d00044 unix_ms=1793269094837
+SSTGC begin tenant=d00046 unix_ms=1793269094837
+SSTGC begin tenant=d00043 unix_ms=1793269094838
+SSTGC begin tenant=d00047 unix_ms=1793269094838
+SSTGC begin tenant=d00048 unix_ms=1793269094838
+LEASE writer_close tenant=d00018 holder=t3-b unix_ms=1793269096011 
+LEASE release_begin tenant=d00018 holder=t3-b unix_ms=1793269096011 
+LEASE writer_close tenant=d00010 holder=t3-b unix_ms=1793269096055 
+LEASE release_begin tenant=d00010 holder=t3-b unix_ms=1793269096055 
+LEASE writer_close tenant=d00012 holder=t3-b unix_ms=1793269096056 
+LEASE release_begin tenant=d00012 holder=t3-b unix_ms=1793269096056 
+LEASE writer_close tenant=d00015 holder=t3-b unix_ms=1793269096074 
+LEASE release_begin tenant=d00015 holder=t3-b unix_ms=1793269096074 
+LEASE writer_close tenant=d00017 holder=t3-b unix_ms=1793269096079 
+LEASE release_begin tenant=d00017 holder=t3-b unix_ms=1793269096079 
+LEASE writer_close tenant=d00016 holder=t3-b unix_ms=1793269096094 
+LEASE release_begin tenant=d00016 holder=t3-b unix_ms=1793269096094 
+LEASE writer_close tenant=d00013 holder=t3-b unix_ms=1793269096154 
+LEASE release_begin tenant=d00013 holder=t3-b unix_ms=1793269096155 
+LEASE writer_close tenant=d00014 holder=t3-b unix_ms=1793269096160 
+LEASE release_begin tenant=d00014 holder=t3-b unix_ms=1793269096160 
+LEASE writer_close tenant=d00011 holder=t3-b unix_ms=1793269096173 
+LEASE release_begin tenant=d00011 holder=t3-b unix_ms=1793269096173 
+LEASE release tenant=d00018 holder=t3-b unix_ms=1793269096199 ok=true
+LEASE writer_close tenant=d00027 holder=t3-b unix_ms=1793269096228 
+LEASE release_begin tenant=d00027 holder=t3-b unix_ms=1793269096228 
+LEASE release tenant=d00012 holder=t3-b unix_ms=1793269096235 ok=true
+LEASE release tenant=d00010 holder=t3-b unix_ms=1793269096248 ok=true
+LEASE release tenant=d00015 holder=t3-b unix_ms=1793269096262 ok=true
+LEASE release tenant=d00017 holder=t3-b unix_ms=1793269096263 ok=true
+LEASE release tenant=d00016 holder=t3-b unix_ms=1793269096280 ok=true
+LEASE release tenant=d00013 holder=t3-b unix_ms=1793269096341 ok=true
+LEASE release tenant=d00014 holder=t3-b unix_ms=1793269096345 ok=true
+LEASE release tenant=d00011 holder=t3-b unix_ms=1793269096359 ok=true
+SSTGC end tenant=d00049 unix_ms=1793269096373 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00044 unix_ms=1793269096390 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00045 unix_ms=1793269096397 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00046 unix_ms=1793269096398 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00043 unix_ms=1793269096404 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00047 unix_ms=1793269096405 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00048 unix_ms=1793269096407 deleted_ssts=0 deleted_manifests=0 referenced=0
+SSTGC end tenant=d00042 unix_ms=1793269096410 deleted_ssts=0 deleted_manifests=0 referenced=0
+LEASE release tenant=d00027 holder=t3-b unix_ms=1793269096413 ok=true
+LEASE writer_close tenant=d00028 holder=t3-b unix_ms=1793269096456 
+LEASE release_begin tenant=d00028 holder=t3-b unix_ms=1793269096456 
+LEASE writer_close tenant=d00019 holder=t3-b unix_ms=1793269096475 
+LEASE release_begin tenant=d00019 holder=t3-b unix_ms=1793269096475 
+LEASE writer_close tenant=d00021 holder=t3-b unix_ms=1793269096524 
+LEASE release_begin tenant=d00021 holder=t3-b unix_ms=1793269096524 
+LEASE writer_close tenant=d00022 holder=t3-b unix_ms=1793269096530 
+LEASE release_begin tenant=d00022 holder=t3-b unix_ms=1793269096530 
+LEASE writer_close tenant=d00026 holder=t3-b unix_ms=1793269096538 
+LEASE release_begin tenant=d00026 holder=t3-b unix_ms=1793269096538 
+LEASE writer_close tenant=d00024 holder=t3-b unix_ms=1793269096541 
+LEASE release_begin tenant=d00024 holder=t3-b unix_ms=1793269096541 
+LEASE writer_close tenant=d00020 holder=t3-b unix_ms=1793269096572 
+LEASE release_begin tenant=d00020 holder=t3-b unix_ms=1793269096572 
+LEASE writer_close tenant=d00025 holder=t3-b unix_ms=1793269096584 
+LEASE release_begin tenant=d00025 holder=t3-b unix_ms=1793269096584 
+LEASE writer_close tenant=d00042 holder=t3-b unix_ms=1793269096624 
+LEASE release_begin tenant=d00042 holder=t3-b unix_ms=1793269096624 
+LEASE writer_close tenant=d00034 holder=t3-b unix_ms=1793269096630 
+LEASE release_begin tenant=d00034 holder=t3-b unix_ms=1793269096630 
+LEASE release tenant=d00028 holder=t3-b unix_ms=1793269096652 ok=true
+LEASE release tenant=d00019 holder=t3-b unix_ms=1793269096658 ok=true
+LEASE writer_close tenant=d00023 holder=t3-b unix_ms=1793269096690 
+LEASE release_begin tenant=d00023 holder=t3-b unix_ms=1793269096690 
+LEASE release tenant=d00021 holder=t3-b unix_ms=1793269096698 ok=true
+LEASE writer_close tenant=d00029 holder=t3-b unix_ms=1793269096713 
+LEASE release_begin tenant=d00029 holder=t3-b unix_ms=1793269096713 
+LEASE release tenant=d00022 holder=t3-b unix_ms=1793269096715 ok=true
+LEASE release tenant=d00026 holder=t3-b unix_ms=1793269096717 ok=true
+LEASE release tenant=d00024 holder=t3-b unix_ms=1793269096724 ok=true
+LEASE release tenant=d00020 holder=t3-b unix_ms=1793269096759 ok=true
+LEASE release tenant=d00025 holder=t3-b unix_ms=1793269096768 ok=true
+LEASE release tenant=d00042 holder=t3-b unix_ms=1793269096808 ok=true
+LEASE release tenant=d00034 holder=t3-b unix_ms=1793269096826 ok=true
+LEASE release tenant=d00023 holder=t3-b unix_ms=1793269096871 ok=true
+LEASE release tenant=d00029 holder=t3-b unix_ms=1793269096896 ok=true
+LEASE writer_close tenant=d00033 holder=t3-b unix_ms=1793269096923 
+LEASE release_begin tenant=d00033 holder=t3-b unix_ms=1793269096923 
+LEASE writer_close tenant=d00037 holder=t3-b unix_ms=1793269096925 
+LEASE release_begin tenant=d00037 holder=t3-b unix_ms=1793269096925 
+LEASE writer_close tenant=d00035 holder=t3-b unix_ms=1793269096964 
+LEASE release_begin tenant=d00035 holder=t3-b unix_ms=1793269096964 
+LEASE writer_close tenant=d00032 holder=t3-b unix_ms=1793269096980 
+LEASE release_begin tenant=d00032 holder=t3-b unix_ms=1793269096980 
+LEASE writer_close tenant=d00030 holder=t3-b unix_ms=1793269097011 
+LEASE release_begin tenant=d00030 holder=t3-b unix_ms=1793269097011 
+LEASE writer_close tenant=d00041 holder=t3-b unix_ms=1793269097053 
+LEASE release_begin tenant=d00041 holder=t3-b unix_ms=1793269097053 
+LEASE writer_close tenant=d00039 holder=t3-b unix_ms=1793269097065 
+LEASE release_begin tenant=d00039 holder=t3-b unix_ms=1793269097065 
+LEASE writer_close tenant=d00031 holder=t3-b unix_ms=1793269097079 
+LEASE release_begin tenant=d00031 holder=t3-b unix_ms=1793269097079 
+LEASE writer_close tenant=d00038 holder=t3-b unix_ms=1793269097102 
+LEASE release_begin tenant=d00038 holder=t3-b unix_ms=1793269097102 
+LEASE release tenant=d00033 holder=t3-b unix_ms=1793269097110 ok=true
+LEASE release tenant=d00037 holder=t3-b unix_ms=1793269097112 ok=true
+LEASE writer_close tenant=d00036 holder=t3-b unix_ms=1793269097143 
+LEASE release_begin tenant=d00036 holder=t3-b unix_ms=1793269097143 
+LEASE release tenant=d00035 holder=t3-b unix_ms=1793269097146 ok=true
+LEASE release tenant=d00032 holder=t3-b unix_ms=1793269097164 ok=true
+LEASE writer_close tenant=d00040 holder=t3-b unix_ms=1793269097197 
+LEASE release_begin tenant=d00040 holder=t3-b unix_ms=1793269097197 
+LEASE release tenant=d00030 holder=t3-b unix_ms=1793269097206 ok=true
+LEASE release tenant=d00041 holder=t3-b unix_ms=1793269097250 ok=true
+LEASE release tenant=d00039 holder=t3-b unix_ms=1793269097258 ok=true
+LEASE release tenant=d00031 holder=t3-b unix_ms=1793269097261 ok=true
+LEASE release tenant=d00038 holder=t3-b unix_ms=1793269097285 ok=true
+LEASE release tenant=d00036 holder=t3-b unix_ms=1793269097332 ok=true
+LEASE release tenant=d00040 holder=t3-b unix_ms=1793269097417 ok=true
+LEASE writer_close tenant=d00043 holder=t3-b unix_ms=1793269097453 
+LEASE release_begin tenant=d00043 holder=t3-b unix_ms=1793269097453 
+LEASE writer_close tenant=d00049 holder=t3-b unix_ms=1793269097464 
+LEASE release_begin tenant=d00049 holder=t3-b unix_ms=1793269097464 
+LEASE writer_close tenant=d00044 holder=t3-b unix_ms=1793269097465 
+LEASE release_begin tenant=d00044 holder=t3-b unix_ms=1793269097465 
+LEASE writer_close tenant=d00046 holder=t3-b unix_ms=1793269097546 
+LEASE release_begin tenant=d00046 holder=t3-b unix_ms=1793269097546 
+LEASE writer_close tenant=d00045 holder=t3-b unix_ms=1793269097562 
+LEASE release_begin tenant=d00045 holder=t3-b unix_ms=1793269097562 
+LEASE writer_close tenant=d00047 holder=t3-b unix_ms=1793269097574 
+LEASE release_begin tenant=d00047 holder=t3-b unix_ms=1793269097574 
+LEASE release tenant=d00043 holder=t3-b unix_ms=1793269097642 ok=true
+LEASE release tenant=d00049 holder=t3-b unix_ms=1793269097656 ok=true
+LEASE release tenant=d00044 holder=t3-b unix_ms=1793269097658 ok=true
+LEASE release tenant=d00046 holder=t3-b unix_ms=1793269097728 ok=true
+LEASE release tenant=d00045 holder=t3-b unix_ms=1793269097754 ok=true
+LEASE release tenant=d00047 holder=t3-b unix_ms=1793269097758 ok=true
+LEASE writer_close tenant=d00048 holder=t3-b unix_ms=1793269097769 
+LEASE release_begin tenant=d00048 holder=t3-b unix_ms=1793269097769 
+LEASE release tenant=d00048 holder=t3-b unix_ms=1793269097958 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=admin holder=t3-b unix_ms=1793270900276 takeover_from=-
+SLOW ismaster db=admin ms=2054 ok=true
+LEASE acquired tenant=d00000 holder=t3-b unix_ms=1793270902051 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00000 ms=1987 ok=true
+LEASE acquired tenant=d00001 holder=t3-b unix_ms=1793270904162 takeover_from=-
+SLOW find db=d00001 ms=2161 ok=true
+LEASE acquired tenant=d00002 holder=t3-b unix_ms=1793270906516 takeover_from=-
+SLOW find db=d00002 ms=1947 ok=true
+LEASE acquired tenant=d00003 holder=t3-b unix_ms=1793270908690 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00003 ms=2023 ok=true
+LEASE acquired tenant=d00004 holder=t3-b unix_ms=1793270910853 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00004 ms=1938 ok=true
+LEASE acquired tenant=d00005 holder=t3-b unix_ms=1793270912962 takeover_from=-
+SLOW find db=d00005 ms=1922 ok=true
+LEASE acquired tenant=d00006 holder=t3-b unix_ms=1793270915055 takeover_from=-
+SLOW find db=d00006 ms=1943 ok=true
+LEASE acquired tenant=d00007 holder=t3-b unix_ms=1793270917190 takeover_from=-
+SLOW find db=d00007 ms=1908 ok=true
+LEASE acquired tenant=d00008 holder=t3-b unix_ms=1793270919248 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00008 ms=1943 ok=true
+LEASE acquired tenant=d00009 holder=t3-b unix_ms=1793270921371 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00009 ms=1932 ok=true
+LEASE acquired tenant=d00010 holder=t3-b unix_ms=1793270923477 takeover_from=-
+SLOW find db=d00010 ms=1893 ok=true
+LEASE acquired tenant=d00011 holder=t3-b unix_ms=1793270925555 takeover_from=-
+SLOW find db=d00011 ms=1930 ok=true
+LEASE acquired tenant=d00012 holder=t3-b unix_ms=1793270927654 takeover_from=-
+SLOW find db=d00012 ms=2075 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=d00013 holder=t3-b unix_ms=1793270929898 takeover_from=-
+SLOW find db=d00013 ms=1866 ok=true
+LEASE acquired tenant=d00014 holder=t3-b unix_ms=1793270931939 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00014 ms=1874 ok=true
+LEASE acquired tenant=d00015 holder=t3-b unix_ms=1793270933817 takeover_from=-
+SLOW find db=d00015 ms=1926 ok=true
+LEASE acquired tenant=d00016 holder=t3-b unix_ms=1793270935920 takeover_from=-
+SLOW find db=d00016 ms=1911 ok=true
+LEASE acquired tenant=d00017 holder=t3-b unix_ms=1793270937999 takeover_from=-
+SLOW find db=d00017 ms=1914 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=d00018 holder=t3-b unix_ms=1793270940086 takeover_from=-
+SLOW find db=d00018 ms=1893 ok=true
+LEASE acquired tenant=d00019 holder=t3-b unix_ms=1793270942160 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00019 ms=1944 ok=true
+LEASE acquired tenant=d00020 holder=t3-b unix_ms=1793270944269 takeover_from=-
+SLOW find db=d00020 ms=1900 ok=true
+LEASE acquired tenant=d00021 holder=t3-b unix_ms=1793270946530 takeover_from=-
+SLOW find db=d00021 ms=1896 ok=true
+LEASE acquired tenant=d00022 holder=t3-b unix_ms=1793270948606 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00022 ms=1902 ok=true
+LEASE acquired tenant=d00023 holder=t3-b unix_ms=1793270950672 takeover_from=-
+SLOW find db=d00023 ms=1902 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=d00024 holder=t3-b unix_ms=1793270952756 takeover_from=-
+SLOW find db=d00024 ms=1899 ok=true
+LEASE acquired tenant=d00025 holder=t3-b unix_ms=1793270954830 takeover_from=-
+SLOW find db=d00025 ms=1923 ok=true
+LEASE acquired tenant=d00026 holder=t3-b unix_ms=1793270956939 takeover_from=-
+SLOW find db=d00026 ms=1945 ok=true
+LEASE acquired tenant=d00027 holder=t3-b unix_ms=1793270959075 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00027 ms=1934 ok=true
+LEASE acquired tenant=d00028 holder=t3-b unix_ms=1793270961185 takeover_from=-
+LEASE release_begin tenant=admin holder=t3-b unix_ms=1793270961773 
+LEASE release tenant=admin holder=t3-b unix_ms=1793270961981 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00028 ms=1915 ok=true
+LEASE acquired tenant=d00029 holder=t3-b unix_ms=1793270963268 takeover_from=-
+LEASE release_begin tenant=d00000 holder=t3-b unix_ms=1793270964278 
+LEASE release tenant=d00000 holder=t3-b unix_ms=1793270964468 ok=true
+SLOW find db=d00029 ms=1895 ok=true
+LEASE acquired tenant=d00030 holder=t3-b unix_ms=1793270965348 takeover_from=-
+LEASE release_begin tenant=d00001 holder=t3-b unix_ms=1793270966282 
+LEASE release tenant=d00001 holder=t3-b unix_ms=1793270966483 ok=true
+SLOW find db=d00030 ms=2096 ok=true
+LEASE acquired tenant=d00031 holder=t3-b unix_ms=1793270967625 takeover_from=-
+LEASE release_begin tenant=d00002 holder=t3-b unix_ms=1793270968289 
+LEASE release tenant=d00002 holder=t3-b unix_ms=1793270968473 ok=true
+SLOW find db=d00031 ms=1933 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=d00032 holder=t3-b unix_ms=1793270969722 takeover_from=-
+LEASE release_begin tenant=d00003 holder=t3-b unix_ms=1793270970795 
+LEASE release tenant=d00003 holder=t3-b unix_ms=1793270970981 ok=true
+SLOW find db=d00032 ms=1923 ok=true
+LEASE acquired tenant=d00033 holder=t3-b unix_ms=1793270971844 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+LEASE release_begin tenant=d00004 holder=t3-b unix_ms=1793270972800 
+LEASE release tenant=d00004 holder=t3-b unix_ms=1793270972991 ok=true
+SLOW find db=d00033 ms=1962 ok=true
+LEASE acquired tenant=d00034 holder=t3-b unix_ms=1793270973974 takeover_from=-
+LEASE release_begin tenant=d00005 holder=t3-b unix_ms=1793270974804 
+LEASE release tenant=d00005 holder=t3-b unix_ms=1793270974998 ok=true
+SLOW find db=d00034 ms=1926 ok=true
+LEASE acquired tenant=d00035 holder=t3-b unix_ms=1793270976064 takeover_from=-
+LEASE release_begin tenant=d00006 holder=t3-b unix_ms=1793270977308 
+LEASE release tenant=d00006 holder=t3-b unix_ms=1793270977489 ok=true
+SLOW find db=d00035 ms=1949 ok=true
+LEASE acquired tenant=d00036 holder=t3-b unix_ms=1793270978396 takeover_from=-
+LEASE release_begin tenant=d00007 holder=t3-b unix_ms=1793270979313 
+LEASE release tenant=d00007 holder=t3-b unix_ms=1793270979499 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00036 ms=2016 ok=true
+LEASE acquired tenant=d00037 holder=t3-b unix_ms=1793270980569 takeover_from=-
+LEASE release_begin tenant=d00008 holder=t3-b unix_ms=1793270981317 
+LEASE release tenant=d00008 holder=t3-b unix_ms=1793270981506 ok=true
+SLOW find db=d00037 ms=1947 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=d00038 holder=t3-b unix_ms=1793270982696 takeover_from=-
+LEASE release_begin tenant=d00009 holder=t3-b unix_ms=1793270983321 
+LEASE release tenant=d00009 holder=t3-b unix_ms=1793270983508 ok=true
+SLOW find db=d00038 ms=1918 ok=true
+LEASE acquired tenant=d00039 holder=t3-b unix_ms=1793270984793 takeover_from=-
+LEASE release_begin tenant=d00010 holder=t3-b unix_ms=1793270985326 
+LEASE release tenant=d00010 holder=t3-b unix_ms=1793270985512 ok=true
+SLOW find db=d00039 ms=1904 ok=true
+LEASE acquired tenant=d00040 holder=t3-b unix_ms=1793270986879 takeover_from=-
+LEASE release_begin tenant=d00011 holder=t3-b unix_ms=1793270987330 
+LEASE release tenant=d00011 holder=t3-b unix_ms=1793270987522 ok=true
+SLOW find db=d00040 ms=1936 ok=true
+LEASE acquired tenant=d00041 holder=t3-b unix_ms=1793270988999 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+LEASE release_begin tenant=d00012 holder=t3-b unix_ms=1793270989836 
+LEASE release tenant=d00012 holder=t3-b unix_ms=1793270990027 ok=true
+SLOW find db=d00041 ms=1928 ok=true
+LEASE acquired tenant=d00042 holder=t3-b unix_ms=1793270991111 takeover_from=-
+LEASE release_begin tenant=d00013 holder=t3-b unix_ms=1793270991841 
+LEASE release tenant=d00013 holder=t3-b unix_ms=1793270992032 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00042 ms=1966 ok=true
+LEASE acquired tenant=d00043 holder=t3-b unix_ms=1793270993072 takeover_from=-
+LEASE release_begin tenant=d00014 holder=t3-b unix_ms=1793270993845 
+LEASE release tenant=d00014 holder=t3-b unix_ms=1793270994038 ok=true
+SLOW find db=d00043 ms=1942 ok=true
+LEASE acquired tenant=d00044 holder=t3-b unix_ms=1793270995199 takeover_from=-
+LEASE release_begin tenant=d00015 holder=t3-b unix_ms=1793270995849 
+LEASE release tenant=d00015 holder=t3-b unix_ms=1793270996033 ok=true
+SLOW find db=d00044 ms=1968 ok=true
+LEASE acquired tenant=d00045 holder=t3-b unix_ms=1793270997361 takeover_from=-
+LEASE release_begin tenant=d00016 holder=t3-b unix_ms=1793270997855 
+LEASE release tenant=d00016 holder=t3-b unix_ms=1793270998041 ok=true
+SLOW find db=d00045 ms=1979 ok=true
+LEASE acquired tenant=d00046 holder=t3-b unix_ms=1793270999508 takeover_from=-
+SLOW hello db=admin ms=10001 ok=true
+LEASE release_begin tenant=d00017 holder=t3-b unix_ms=1793270999860 
+LEASE release tenant=d00017 holder=t3-b unix_ms=1793271000051 ok=true
+SLOW find db=d00046 ms=1942 ok=true
+LEASE acquired tenant=d00047 holder=t3-b unix_ms=1793271001612 takeover_from=-
+LEASE release_begin tenant=d00018 holder=t3-b unix_ms=1793271001865 
+LEASE release tenant=d00018 holder=t3-b unix_ms=1793271002055 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW find db=d00047 ms=1937 ok=true
+LEASE acquired tenant=d00048 holder=t3-b unix_ms=1793271003732 takeover_from=-
+LEASE release_begin tenant=d00019 holder=t3-b unix_ms=1793271004370 
+LEASE release tenant=d00019 holder=t3-b unix_ms=1793271004556 ok=true
+SLOW find db=d00048 ms=1928 ok=true
+LEASE acquired tenant=d00049 holder=t3-b unix_ms=1793271005836 takeover_from=-
+LEASE release_begin tenant=d00020 holder=t3-b unix_ms=1793271006374 
+LEASE release tenant=d00020 holder=t3-b unix_ms=1793271006571 ok=true
+SLOW find db=d00049 ms=1954 ok=true
+shutting down: closing tenants cleanly
+LEASE release_begin tenant=d00044 holder=t3-b unix_ms=1793271007604 
+LEASE release_begin tenant=d00049 holder=t3-b unix_ms=1793271007604 
+LEASE release_begin tenant=d00039 holder=t3-b unix_ms=1793271007605 
+LEASE release_begin tenant=d00042 holder=t3-b unix_ms=1793271007605 
+LEASE release_begin tenant=d00029 holder=t3-b unix_ms=1793271007605 
+LEASE release_begin tenant=d00035 holder=t3-b unix_ms=1793271007605 
+LEASE release_begin tenant=d00028 holder=t3-b unix_ms=1793271007605 
+LEASE release_begin tenant=d00038 holder=t3-b unix_ms=1793271007605 
+LEASE release_begin tenant=d00025 holder=t3-b unix_ms=1793271007606 
+LEASE release_begin tenant=d00021 holder=t3-b unix_ms=1793271007606 
+LEASE release_begin tenant=d00036 holder=t3-b unix_ms=1793271007606 
+LEASE release_begin tenant=d00047 holder=t3-b unix_ms=1793271007606 
+LEASE release_begin tenant=d00046 holder=t3-b unix_ms=1793271007607 
+LEASE release_begin tenant=d00030 holder=t3-b unix_ms=1793271007607 
+LEASE release_begin tenant=d00043 holder=t3-b unix_ms=1793271007607 
+LEASE release_begin tenant=d00027 holder=t3-b unix_ms=1793271007607 
+LEASE release_begin tenant=d00032 holder=t3-b unix_ms=1793271007608 
+LEASE release_begin tenant=d00040 holder=t3-b unix_ms=1793271007608 
+LEASE release_begin tenant=d00023 holder=t3-b unix_ms=1793271007608 
+LEASE release_begin tenant=d00037 holder=t3-b unix_ms=1793271007608 
+LEASE release_begin tenant=d00026 holder=t3-b unix_ms=1793271007608 
+LEASE release_begin tenant=d00024 holder=t3-b unix_ms=1793271007609 
+LEASE release_begin tenant=d00031 holder=t3-b unix_ms=1793271007609 
+LEASE release_begin tenant=d00033 holder=t3-b unix_ms=1793271007609 
+LEASE release_begin tenant=d00048 holder=t3-b unix_ms=1793271007610 
+LEASE release_begin tenant=d00041 holder=t3-b unix_ms=1793271007610 
+LEASE release_begin tenant=d00022 holder=t3-b unix_ms=1793271007610 
+LEASE release_begin tenant=d00034 holder=t3-b unix_ms=1793271007610 
+LEASE release_begin tenant=d00045 holder=t3-b unix_ms=1793271007610 
+LEASE release tenant=d00049 holder=t3-b unix_ms=1793271007791 ok=true
+LEASE release tenant=d00044 holder=t3-b unix_ms=1793271007793 ok=true
+LEASE release tenant=d00039 holder=t3-b unix_ms=1793271007793 ok=true
+LEASE release tenant=d00042 holder=t3-b unix_ms=1793271007796 ok=true
+LEASE release tenant=d00038 holder=t3-b unix_ms=1793271007975 ok=true
+LEASE release tenant=d00029 holder=t3-b unix_ms=1793271007979 ok=true
+LEASE release tenant=d00035 holder=t3-b unix_ms=1793271007979 ok=true
+LEASE release tenant=d00028 holder=t3-b unix_ms=1793271007980 ok=true
+LEASE release tenant=d00046 holder=t3-b unix_ms=1793271008111 ok=true
+LEASE release tenant=d00027 holder=t3-b unix_ms=1793271008115 ok=true
+LEASE release tenant=d00021 holder=t3-b unix_ms=1793271008116 ok=true
+LEASE release tenant=d00032 holder=t3-b unix_ms=1793271008116 ok=true
+LEASE release tenant=d00043 holder=t3-b unix_ms=1793271008120 ok=true
+LEASE release tenant=d00036 holder=t3-b unix_ms=1793271008120 ok=true
+LEASE release tenant=d00026 holder=t3-b unix_ms=1793271008121 ok=true
+LEASE release tenant=d00047 holder=t3-b unix_ms=1793271008121 ok=true
+LEASE release tenant=d00030 holder=t3-b unix_ms=1793271008121 ok=true
+LEASE release tenant=d00040 holder=t3-b unix_ms=1793271008121 ok=true
+LEASE release tenant=d00041 holder=t3-b unix_ms=1793271008124 ok=true
+LEASE release tenant=d00024 holder=t3-b unix_ms=1793271008125 ok=true
+LEASE release tenant=d00023 holder=t3-b unix_ms=1793271008126 ok=true
+LEASE release tenant=d00022 holder=t3-b unix_ms=1793271008126 ok=true
+LEASE release tenant=d00037 holder=t3-b unix_ms=1793271008127 ok=true
+LEASE release tenant=d00025 holder=t3-b unix_ms=1793271008127 ok=true
+LEASE release tenant=d00033 holder=t3-b unix_ms=1793271008129 ok=true
+LEASE release tenant=d00045 holder=t3-b unix_ms=1793271008139 ok=true
+LEASE release tenant=d00031 holder=t3-b unix_ms=1793271008140 ok=true
+LEASE release tenant=d00048 holder=t3-b unix_ms=1793271008146 ok=true
+LEASE release tenant=d00034 holder=t3-b unix_ms=1793271008147 ok=true
+tenants closed; stopping maintenance
+SLOW hello db=admin ms=10001 ok=true
+maintenance stopped

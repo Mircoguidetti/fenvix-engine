@@ -1,0 +1,1 @@
+{"bucket":"fenvix-test-t3-40846615265","action":"create","steps":[{"step":"create-bucket","ok":true,"error":""},{"step":"tag","ok":true,"error":""},{"step":"lifecycle-1-day","ok":true,"error":""}]}

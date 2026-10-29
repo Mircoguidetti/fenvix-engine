@@ -1,0 +1,338 @@
+[
+ {
+  "N": 5,
+  "startup_requests_60s": {
+   "put": 7,
+   "copy": 0,
+   "list": 1,
+   "get": 9,
+   "head": 1,
+   "delete": 0,
+   "billedPutTier": 8,
+   "billedGetTier": 10,
+   "putBytes": 378,
+   "getBytes": 1395
+  },
+  "objects": {
+   "total_objects": 98,
+   "total_bytes": 2252693,
+   "databases_listed": 5,
+   "objects_per_db_median": 13,
+   "bytes_per_db_median": 374320,
+   "objects_per_db_max": 13,
+   "bytes_per_db_max": 374813,
+   "other_prefixes": {
+    "objects": 33,
+    "bytes": 381516
+   }
+  },
+  "rest_secs": 1800,
+  "rest_requests": {
+   "put": 5,
+   "copy": 0,
+   "list": 35,
+   "get": 110,
+   "head": 0,
+   "delete": 15,
+   "billedPutTier": 40,
+   "billedGetTier": 110,
+   "putBytes": 5,
+   "getBytes": 4660
+  },
+  "wake_sample": 5,
+  "first_ms_p50": 1883.0,
+  "first_ms_p95": 2031.3,
+  "first_ms_max": 2031.3,
+  "second_ms_p50": 170.2,
+  "second_ms_p95": 175.4,
+  "second_ms_max": 175.4,
+  "requests_per_first_wake_median": {
+   "get": 11,
+   "list": 1,
+   "head": 1,
+   "put": 1,
+   "delete": 0
+  },
+  "spend_so_far_usd": 0.002533
+ },
+ {
+  "N": 10,
+  "startup_requests_60s": {
+   "put": 7,
+   "copy": 0,
+   "list": 1,
+   "get": 9,
+   "head": 1,
+   "delete": 0,
+   "billedPutTier": 8,
+   "billedGetTier": 10,
+   "putBytes": 378,
+   "getBytes": 1395
+  },
+  "objects": {
+   "total_objects": 153,
+   "total_bytes": 4121763,
+   "databases_listed": 10,
+   "objects_per_db_median": 12.0,
+   "bytes_per_db_median": 373589.0,
+   "objects_per_db_max": 13,
+   "bytes_per_db_max": 377191,
+   "other_prefixes": {
+    "objects": 33,
+    "bytes": 381516
+   }
+  },
+  "rest_secs": 1800,
+  "rest_requests": {
+   "put": 5,
+   "copy": 0,
+   "list": 35,
+   "get": 110,
+   "head": 0,
+   "delete": 15,
+   "billedPutTier": 40,
+   "billedGetTier": 110,
+   "putBytes": 5,
+   "getBytes": 4660
+  },
+  "wake_sample": 10,
+  "first_ms_p50": 1910.7,
+  "first_ms_p95": 2123.6,
+  "first_ms_max": 2123.6,
+  "second_ms_p50": 175.0,
+  "second_ms_p95": 182.8,
+  "second_ms_max": 182.8,
+  "requests_per_first_wake_median": {
+   "get": 11.0,
+   "list": 1.0,
+   "head": 1.0,
+   "put": 2.0,
+   "delete": 0.0
+  },
+  "spend_so_far_usd": 0.004542
+ },
+ {
+  "N": 50,
+  "startup_requests_60s": {
+   "put": 7,
+   "copy": 0,
+   "list": 1,
+   "get": 9,
+   "head": 1,
+   "delete": 0,
+   "billedPutTier": 8,
+   "billedGetTier": 10,
+   "putBytes": 378,
+   "getBytes": 1395
+  },
+  "objects": {
+   "total_objects": 664,
+   "total_bytes": 19067762,
+   "databases_listed": 50,
+   "objects_per_db_median": 13.0,
+   "bytes_per_db_median": 373822.0,
+   "objects_per_db_max": 14,
+   "bytes_per_db_max": 378287,
+   "other_prefixes": {
+    "objects": 33,
+    "bytes": 381516
+   }
+  },
+  "rest_secs": 1800,
+  "rest_requests": {
+   "put": 60,
+   "copy": 0,
+   "list": 428,
+   "get": 1348,
+   "head": 0,
+   "delete": 120,
+   "billedPutTier": 488,
+   "billedGetTier": 1348,
+   "putBytes": 60,
+   "getBytes": 55940
+  },
+  "wake_sample": 50,
+  "first_ms_p50": 1933.0,
+  "first_ms_p95": 2075.5,
+  "first_ms_max": 2161.8,
+  "second_ms_p50": 174.4,
+  "second_ms_p95": 184.1,
+  "second_ms_max": 358.2,
+  "requests_per_first_wake_median": {
+   "get": 11.0,
+   "list": 1.0,
+   "head": 1.0,
+   "put": 5.0,
+   "delete": 0.0
+  },
+  "spend_so_far_usd": 0.022314
+ },
+ {
+  "N": 100,
+  "startup_requests_60s": {
+   "put": 7,
+   "copy": 0,
+   "list": 1,
+   "get": 9,
+   "head": 1,
+   "delete": 0,
+   "billedPutTier": 8,
+   "billedGetTier": 10,
+   "putBytes": 378,
+   "getBytes": 1395
+  },
+  "objects": {
+   "total_objects": 1219,
+   "total_bytes": 37730770,
+   "databases_listed": 100,
+   "objects_per_db_median": 12.0,
+   "bytes_per_db_median": 373578.5,
+   "objects_per_db_max": 13,
+   "bytes_per_db_max": 378829,
+   "other_prefixes": {
+    "objects": 33,
+    "bytes": 381516
+   }
+  },
+  "rest_secs": 1800,
+  "rest_requests": {
+   "put": 50,
+   "copy": 0,
+   "list": 414,
+   "get": 1260,
+   "head": 0,
+   "delete": 118,
+   "billedPutTier": 464,
+   "billedGetTier": 1260,
+   "putBytes": 50,
+   "getBytes": 46616
+  },
+  "wake_sample": 50,
+  "first_ms_p50": 1932.2,
+  "first_ms_p95": 2061.3,
+  "first_ms_max": 2096.7,
+  "second_ms_p50": 175.2,
+  "second_ms_p95": 186.1,
+  "second_ms_max": 350.5,
+  "requests_per_first_wake_median": {
+   "get": 11.0,
+   "list": 1.0,
+   "head": 1.0,
+   "put": 5.0,
+   "delete": 0.0
+  },
+  "spend_so_far_usd": 0.043545
+ },
+ {
+  "N": 1000,
+  "startup_requests_60s": {
+   "put": 7,
+   "copy": 0,
+   "list": 1,
+   "get": 9,
+   "head": 1,
+   "delete": 0,
+   "billedPutTier": 8,
+   "billedGetTier": 10,
+   "putBytes": 378,
+   "getBytes": 1395
+  },
+  "objects": {
+   "total_objects": 14561,
+   "total_bytes": 375149285,
+   "databases_listed": 1000,
+   "objects_per_db_median": 16.0,
+   "bytes_per_db_median": 374762.0,
+   "objects_per_db_max": 17,
+   "bytes_per_db_max": 379287,
+   "other_prefixes": {
+    "objects": 33,
+    "bytes": 381516
+   }
+  },
+  "rest_secs": 1800,
+  "rest_requests": {
+   "put": 0,
+   "copy": 0,
+   "list": 0,
+   "get": 0,
+   "head": 0,
+   "delete": 0,
+   "billedPutTier": 0,
+   "billedGetTier": 0,
+   "putBytes": 0,
+   "getBytes": 0
+  },
+  "wake_sample": 50,
+  "first_ms_p50": 2251.9,
+  "first_ms_p95": 2319.7,
+  "first_ms_max": 2359.4,
+  "second_ms_p50": 174.3,
+  "second_ms_p95": 181.7,
+  "second_ms_max": 337.3,
+  "requests_per_first_wake_median": {
+   "get": 13.0,
+   "list": 1.0,
+   "head": 1.0,
+   "put": 7.0,
+   "delete": 0.0
+  },
+  "spend_so_far_usd": 0.424684
+ },
+ {
+  "N": 2000,
+  "startup_requests_60s": {
+   "put": 7,
+   "copy": 0,
+   "list": 1,
+   "get": 9,
+   "head": 1,
+   "delete": 0,
+   "billedPutTier": 8,
+   "billedGetTier": 10,
+   "putBytes": 378,
+   "getBytes": 1395
+  },
+  "objects": {
+   "total_objects": 28502,
+   "total_bytes": 749430906,
+   "databases_listed": 2000,
+   "objects_per_db_median": 13.0,
+   "bytes_per_db_median": 374530.5,
+   "objects_per_db_max": 17,
+   "bytes_per_db_max": 379483,
+   "other_prefixes": {
+    "objects": 33,
+    "bytes": 381516
+   }
+  },
+  "rest_secs": 1800,
+  "rest_requests": {
+   "put": 0,
+   "copy": 0,
+   "list": 0,
+   "get": 0,
+   "head": 0,
+   "delete": 0,
+   "billedPutTier": 0,
+   "billedGetTier": 0,
+   "putBytes": 0,
+   "getBytes": 0
+  },
+  "wake_sample": 50,
+  "first_ms_p50": 2225.8,
+  "first_ms_p95": 2310.4,
+  "first_ms_max": 2315.6,
+  "second_ms_p50": 171.5,
+  "second_ms_p95": 183.4,
+  "second_ms_max": 352.9,
+  "requests_per_first_wake_median": {
+   "get": 13.0,
+   "list": 1.0,
+   "head": 1.0,
+   "put": 6.0,
+   "delete": 0.0
+  },
+  "spend_so_far_usd": 0.848784
+ }
+]
