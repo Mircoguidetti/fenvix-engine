@@ -1,0 +1,3 @@
+s3 control 0 {'secs': 30.0, 'acked_ids': 38725, 'acked_writes_before_kill': 77402, 'lost_inserts': 292, 'lost_updates': 21, 'wal_puts_per_write': 0.0}
+TOTAL s3 control {'acked_ids': 38725, 'lost_inserts': 292, 'lost_updates': 21}
+DONE
