@@ -630,7 +630,7 @@ def part_b(engines):
 def main():
     engines = []
     meta = {"bucket_name_pattern": "fenvix-test-t3-<run id>", "region": R, "engine_commit": os.environ.get("ENGINE_COMMIT"),
-            "engine_sha256": os.environ.get("ENGINE_SHA256"), "steps": STEPS, "rest_secs": REST_SECS, "cap_usd": CAP,
+            "engine_sha256": os.environ.get("ENGINE_SHA256"), "engine_patch": os.environ.get("ENGINE_PATCH"), "steps": STEPS, "rest_secs": REST_SECS, "cap_usd": CAP,
             "prices": PRICES, "local_dry_check": LOCAL, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     th = threading.Thread(target=monitor, args=(engines,), daemon=True)
     th.start()

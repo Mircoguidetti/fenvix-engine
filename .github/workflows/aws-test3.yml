@@ -38,9 +38,13 @@ jobs:
       - name: Official S3 prices of eu-central-1 (public price list, no AWS credentials)
         run: python3 aws-test3/prices.py results-aws-test3
 
-      - name: Build the engine from commit 41ed169 (no AWS yet)
+      - name: Build the engine from commit 41ed169 + the declared one-line patch (no AWS yet)
         run: |
           git worktree add /tmp/eng "$ENGINE_COMMIT"
+          # The only change: tenantStats (process-wide S3 request counters) allowed with the serverStatus privilege (root,
+          # clusterMonitor). Without it no user can read the counters of an engine running with --auth. See the report.
+          (cd /tmp/eng && git apply "$GITHUB_WORKSPACE/aws-test3/tenantstats-auth.patch" && git diff --stat)
+          echo "ENGINE_PATCH=aws-test3/tenantstats-auth.patch sha256 $(sha256sum aws-test3/tenantstats-auth.patch | cut -d' ' -f1)" >> "$GITHUB_ENV"
           (cd /tmp/eng && cargo build --release --locked -p mongo-server)
           echo "ENGINE_BIN=/tmp/eng/target/release/mongo-server" >> "$GITHUB_ENV"
           echo "ENGINE_SHA256=$(sha256sum /tmp/eng/target/release/mongo-server | cut -d' ' -f1)" >> "$GITHUB_ENV"

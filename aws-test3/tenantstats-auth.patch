@@ -1,0 +1,14 @@
+diff --git a/mongo-server/src/authz.rs b/mongo-server/src/authz.rs
+index b4c9902..1981526 100644
+--- a/mongo-server/src/authz.rs
++++ b/mongo-server/src/authz.rs
+@@ -237,6 +237,9 @@ pub fn required(name: &str, db: &str, cmd: &Document) -> Option<Vec<Need>> {
+         "invalidateUserCache" => vec![(cl, "invalidateUserCache")],
+         "getParameter" => vec![(cl, "getParameter")],
+         "serverStatus" => vec![(cl, "serverStatus")],
++        // aws-test3: the process-wide counters (tenantStats) need the same privilege as serverStatus (clusterMonitor, root),
++        // instead of anyAction, which no user can hold: without this an engine running with --auth cannot be measured.
++        "tenantStats" => vec![(cl, "serverStatus")],
+         "currentOp" => vec![(cl, "inprog")],
+         "killOp" => vec![(cl, "killop")],
+         "top" => vec![(cl, "top")],
