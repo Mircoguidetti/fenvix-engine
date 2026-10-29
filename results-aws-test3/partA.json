@@ -1,0 +1,123 @@
+{
+ "A1_credentials": {
+  "ok": true,
+  "how": "engine started with --region eu-central-1, no --endpoint, credentials only from the Actions environment (OIDC role session); 200 documents written and acknowledged"
+ },
+ "A3_full_cycle": {
+  "documents_expected": 200,
+  "after_rest": 200,
+  "after_rest_and_engine_restart": 200,
+  "identical_after_rest": true,
+  "identical_after_restart": true,
+  "seconds_to_rest": 62.0,
+  "ok": true
+ },
+ "A2_leases": {
+  "ok": true,
+  "second_refused_while_first_holds": true,
+  "takeover_after_secs": 20.7,
+  "first_fenced_after_losing_lease": true,
+  "documents_finally_present": [
+   "p1-1",
+   "p2-2"
+  ],
+  "lease_ttl_secs": 10,
+  "p1_lease_stats": {
+   "acquired": 3,
+   "takeovers": 0,
+   "refused": 2,
+   "renewals": 0,
+   "renewFailures": 0,
+   "lost": 1
+  },
+  "p2_lease_stats": {
+   "acquired": 1,
+   "takeovers": 1,
+   "refused": 4,
+   "renewals": 2,
+   "renewFailures": 0,
+   "lost": 0
+  },
+  "timeline": [
+   {
+    "t": 0.0,
+    "who": "P1",
+    "op": "insert p1-1",
+    "result": "ok"
+   },
+   {
+    "t": 5.2,
+    "who": "P2",
+    "op": "insert p2-1 while P1 holds the lease",
+    "result": "refused",
+    "code": 134,
+    "error": "tenant leasedb is owned by server process t3-holder-1 (lease valid for another 6829 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant leasedb is owned by server process t3-holder-1 (lease valid for another 6829 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWr"
+   },
+   {
+    "t": 5.9,
+    "who": "P2",
+    "op": "read while P1 holds the lease",
+    "result": "refused",
+    "code": 134,
+    "error": "tenant leasedb is owned by server process t3-holder-1 (lease valid for another 6829 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant leasedb is owned by server process t3-holder-1 (lease valid for another 6829 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWr"
+   },
+   {
+    "t": 5.9,
+    "who": "P1",
+    "op": "SIGSTOP (P1 frozen: no renewals)"
+   },
+   {
+    "t": 8.9,
+    "who": "P2",
+    "op": "insert p2-2 (waiting for the lease to expire)",
+    "result": "refused",
+    "code": 134,
+    "error": "tenant leasedb is owned by server process t3-holder-1 (lease valid for another 3652 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant leasedb is owned by server process t3-holder-1 (lease valid for another 3652 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWr"
+   },
+   {
+    "t": 12.1,
+    "who": "P2",
+    "op": "insert p2-2 (waiting for the lease to expire)",
+    "result": "refused",
+    "code": 134,
+    "error": "tenant leasedb is owned by server process t3-holder-1 (lease valid for another 476 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant leasedb is owned by server process t3-holder-1 (lease valid for another 476 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWrit"
+   },
+   {
+    "t": 15.3,
+    "who": "P2",
+    "op": "insert p2-2 (waiting for the lease to expire)",
+    "result": "ok"
+   },
+   {
+    "t": 20.7,
+    "who": "P1",
+    "op": "SIGCONT (P1 resumes, believes it may still own the database)"
+   },
+   {
+    "t": 20.7,
+    "who": "P1",
+    "op": "insert p1-2 after losing the lease",
+    "result": "refused",
+    "code": 134,
+    "error": "tenant leasedb is owned by server process t3-holder-2 (lease valid for another 6848 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant leasedb is owned by server process t3-holder-2 (lease valid for another 6848 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWr"
+   },
+   {
+    "t": 23.9,
+    "who": "P1",
+    "op": "insert p1-3, 2 s later",
+    "result": "refused",
+    "code": 134,
+    "error": "tenant leasedb is owned by server process t3-holder-2 (lease valid for another 8068 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant leasedb is owned by server process t3-holder-2 (lease valid for another 8068 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWr"
+   },
+   {
+    "t": 24.1,
+    "who": "P2",
+    "op": "read all",
+    "result": [
+     "p1-1",
+     "p2-2"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+mongo-server listening on 127.0.0.1:27102 (idle close after 300 s, holder t3-holder-2, lease ttl 10 s)
+SLOW insert db=leasedb ms=674 ok=false
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=leasedb holder=t3-holder-2 unix_ms=1793265025585 takeover_from=t3-holder-1
+LEASE takeover_wake tenant=leasedb holder=t3-holder-2 unix_ms=1793265028331 unclean=true takeover_from=t3-holder-1
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_open tenant=leasedb holder=t3-holder-2 unix_ms=1793265030446 
+SLOW insert db=leasedb ms=5389 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+LEASE writer_close tenant=leasedb holder=t3-holder-2 unix_ms=1793265035954 
+LEASE release_begin tenant=leasedb holder=t3-holder-2 unix_ms=1793265035955 
+LEASE release tenant=leasedb holder=t3-holder-2 unix_ms=1793265036136 ok=true
+tenants closed; stopping maintenance
+maintenance stopped
