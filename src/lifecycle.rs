@@ -147,8 +147,79 @@ pub static L0_SST_BYTES_OVERRIDE: std::sync::atomic::AtomicU64 = std::sync::atom
 /// layer: restore points need the WAL written after them for the retention window).
 pub static WAL_RETAIN: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::OnceLock::new();
 
+/// Memtable size (bytes) at which a writer flushes it to an L0 SST (`--memtable-max-mb`). slatedb's default is 64 MiB per
+/// database, with no limit across databases; a database written slowly kept growing its memtable for hours.
+pub static MEMTABLE_MAX_BYTES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(8 << 20);
+
+/// One block and metadata cache for every database of the process (`--block-cache-mb`, `--meta-cache-mb`), instead of
+/// slatedb's default of a 512 MiB block cache and a 128 MiB metadata cache per open database, without any limit across them.
+static DB_CACHE: std::sync::OnceLock<Arc<dyn slatedb::db_cache::DbCache>> = std::sync::OnceLock::new();
+/// Cache scope of each opened `Db`/`DbReader`: a new id per open, so entries of a database that was dropped or rewritten by
+/// another process can never be served (WAL objects reuse their numbers after a drop). Old scopes age out of the cache.
+static CACHE_SCOPE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+pub fn install_shared_cache(block_bytes: u64, meta_bytes: u64) {
+    use slatedb::db_cache::foyer::{FoyerCache, FoyerCacheOptions};
+    let block: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(FoyerCache::new_with_opts(FoyerCacheOptions { max_capacity: block_bytes, ..Default::default() }));
+    let meta: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(FoyerCache::new_with_opts(FoyerCacheOptions { max_capacity: meta_bytes, ..Default::default() }));
+    let split = slatedb::db_cache::SplitCache::new().with_block_cache(Some(block)).with_meta_cache(Some(meta)).build();
+    let _ = DB_CACHE.set(Arc::new(split));
+}
+
+fn cache_scope() -> Option<(Arc<dyn slatedb::db_cache::DbCache>, u64)> {
+    DB_CACHE.get().map(|c| (Arc::clone(c), CACHE_SCOPE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)))
+}
+
+/// Relaxed durability window of a database (control layer, `ctl/durability.rs`): its writer flushes the WAL on its own at
+/// least this often, so writes acknowledged before they were durable (`{w: 1, j: false}`) are durable within it.
+pub static RELAXED_WINDOW: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::OnceLock::new();
+
+/// Local log (prototype, `mongo-server/src/locallog.rs`): writers flush their WAL on their own only this often (seconds, 0 =
+/// off); the local log's uploader flushes them explicitly on the same schedule.
+pub static LOCAL_LOG_FLUSH_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Flush the WAL of the open writer of `id` to object storage. Ok(false): no writer is open.
+pub async fn flush_writer(id: &str) -> Result<bool> {
+    let db = WRITER_DBS.lock().unwrap().get(id).cloned();
+    match db {
+        Some(db) => {
+            db.flush().await?;
+            Ok(true)
+        }
+        None => Ok(false),
+    }
+}
+
+pub fn relaxed_window(id: &str) -> Duration {
+    RELAXED_WINDOW.get().map(|f| f(id)).unwrap_or_default()
+}
+
+fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
+    let mut settings = writer_settings();
+    let relaxed = relaxed_window(id);
+    let local = LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed);
+    if local > 0 {
+        // Writes are durable on the local disk; object storage gets them in blocks.
+        settings.flush_interval = Some(Duration::from_secs(local));
+    } else if !relaxed.is_zero() && EXPLICIT_FLUSH.load(std::sync::atomic::Ordering::Relaxed) {
+        // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
+        settings.flush_interval = Some(relaxed);
+    }
+    let b = Db::builder(tenant_path(id), Arc::clone(store)).with_settings(settings);
+    match cache_scope() {
+        Some((c, scope)) => b.with_db_cache(c, scope),
+        None => b,
+    }
+}
+
 pub fn writer_settings() -> Settings {
     let mut s = Settings::default();
+    let mem = MEMTABLE_MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
+    if mem > 0 {
+        s.l0_sst_size_bytes = mem as usize;
+        // Writes pause once this much is waiting for object storage (slatedb's default is 1 GiB per database).
+        s.max_unflushed_bytes = (mem as usize * 4).max(16 << 20);
+    }
     let ms = FLUSH_INTERVAL_MS.load(std::sync::atomic::Ordering::Relaxed);
     if ms > 0 {
         s.flush_interval = Some(Duration::from_millis(ms));
@@ -214,12 +285,6 @@ impl CompactionQueue {
                 let _ = self.tx.send(Some(id.to_string()));
             }
         }
-    }
-    let mem = MEMTABLE_MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
-    if mem > 0 {
-        s.l0_sst_size_bytes = mem as usize;
-        // Writes pause once this much is waiting for object storage (slatedb's default is 1 GiB per database).
-        s.max_unflushed_bytes = (mem as usize * 4).max(16 << 20);
     }
 
     fn finish(&self, id: &str, l0_after: usize) {
@@ -339,71 +404,6 @@ pub struct GroupFlush {
     inflight: std::sync::OnceLock<Arc<std::sync::atomic::AtomicU64>>,
     /// Writes currently inside `Commit::wait` (staged, waiting for a flush).
     waiting: std::sync::atomic::AtomicU64,
-}
-
-/// With a window set, wait for it only while another write of the tenant is still on its way to the flush (in flight but
-/// not yet waiting); when none is, flush at once. False: always wait the full window.
-pub static GROUP_ADAPTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-/// Microseconds the leader of a group waits before flushing so that more writes can join (0 = flush at once).
-pub static GROUP_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-/// Writes waited for (`commits`) and flushes issued for them (`flushes`): writes per WAL object = commits / flushes.
-pub static GROUP_COMMITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-pub static GROUP_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-/// A staged write batch waiting to become durable.
-pub struct Commit {
-    db: Db,
-    handle: WriteHandle,
-    group: Arc<GroupFlush>,
-}
-
-impl Commit {
-    /// Wait until the batch is in a durable WAL object. Writes staged while a flush is in flight are flushed
-    /// together by the next one.
-    pub async fn wait(mut self) -> Result<()> {
-        use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
-        struct Waiting<'a>(&'a std::sync::atomic::AtomicU64);
-        impl Drop for Waiting<'_> {
-            fn drop(&mut self) {
-                self.0.fetch_sub(1, std::sync::atomic::Ordering::Release);
-            }
-        }
-        self.group.waiting.fetch_add(1, Release);
-        let group = Arc::clone(&self.group);
-        let _waiting = Waiting(&group.waiting);
-        GROUP_COMMITS.fetch_add(1, Relaxed);
-        let seq = self.handle.seqnum();
-        // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
-        if EXPLICIT_FLUSH.load(Relaxed) && self.group.flushed_seq.load(Acquire) < seq {
-            let _lead = self.group.lock.lock().await;
-            if self.group.flushed_seq.load(Acquire) < seq {
-                let window = Duration::from_micros(GROUP_WINDOW_US.load(Relaxed));
-                if !window.is_zero() {
-                    if GROUP_ADAPTIVE.load(Relaxed) {
-                        let deadline = Instant::now() + window;
-                        loop {
-                            let inflight = self.group.inflight.get().map_or(0, |c| c.load(Acquire));
-                            let others = inflight.saturating_sub(self.group.waiting.load(Acquire));
-                            let left = deadline.saturating_duration_since(Instant::now());
-                            if others == 0 || left.is_zero() {
-                                break;
-                            }
-                            tokio::time::sleep(left.min(Duration::from_micros(100))).await;
-                        }
-                    } else {
-                        tokio::time::sleep(window).await;
-                    }
-                }
-                let target = self.group.staged_seq.load(Acquire);
-                self.db.flush().await?;
-                GROUP_FLUSHES.fetch_add(1, Relaxed);
-                self.group.flushed_seq.fetch_max(target, Release);
-            }
-        }
-        if !ACK_BEFORE_DURABLE.load(Relaxed) {
-            self.handle.await_durable().await?;
-        }
     /// Adaptive group commit: when the last write arrived, the average gap between writes and the average flush time
     /// (microseconds, exponential moving averages).
     last_arrival_us: std::sync::atomic::AtomicU64,
@@ -432,6 +432,122 @@ fn ewma(cell: &std::sync::atomic::AtomicU64, sample: u64) {
     use std::sync::atomic::Ordering::Relaxed;
     let old = cell.load(Relaxed);
     cell.store(if old == 0 { sample } else { (old * 7 + sample) / 8 }, Relaxed);
+}
+
+/// With a window set, wait for it only while another write of the tenant is still on its way to the flush (in flight but
+/// not yet waiting); when none is, flush at once. False: always wait the full window.
+pub static GROUP_ADAPTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Microseconds the leader of a group waits before flushing so that more writes can join (0 = flush at once).
+pub static GROUP_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Writes waited for (`commits`) and flushes issued for them (`flushes`): writes per WAL object = commits / flushes.
+pub static GROUP_COMMITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static GROUP_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// A staged write batch waiting to become durable.
+pub struct Commit {
+    db: Db,
+    handle: WriteHandle,
+    group: Arc<GroupFlush>,
+    tenant: String,
+    /// Local log (prototype): the batch is durable once this resolves (its record is on the local disk).
+    local: Option<oneshot::Receiver<std::result::Result<(), String>>>,
+}
+
+impl Commit {
+    /// Make the batch's durability the local log's fsync instead of the WAL flush to object storage.
+    pub fn with_local(mut self, rx: oneshot::Receiver<std::result::Result<(), String>>) -> Self {
+        self.local = Some(rx);
+        self
+    }
+
+    /// The database the batch was written to.
+    pub fn tenant(&self) -> &str {
+        &self.tenant
+    }
+
+    /// Acknowledge without waiting for durability (relaxed durability, see `ctl/durability.rs`): the batch is in the
+    /// memtable and the WAL buffer, and the writer's periodic flush (the database's relaxed window) makes it durable.
+    pub fn relax(self) {
+        use std::sync::atomic::Ordering::Relaxed;
+        GROUP_COMMITS.fetch_add(1, Relaxed);
+        RELAXED_ACKS.fetch_add(1, Relaxed);
+    }
+
+    /// Wait until the batch is in a durable WAL object. Writes staged while a flush is in flight are flushed
+    /// together by the next one.
+    pub async fn wait(mut self) -> Result<()> {
+        use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+        if let Some(rx) = self.local.take() {
+            GROUP_COMMITS.fetch_add(1, Relaxed);
+            return rx.await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e));
+        }
+        struct Waiting<'a>(&'a std::sync::atomic::AtomicU64);
+        impl Drop for Waiting<'_> {
+            fn drop(&mut self) {
+                self.0.fetch_sub(1, std::sync::atomic::Ordering::Release);
+            }
+        }
+        self.group.waiting.fetch_add(1, Release);
+        let group = Arc::clone(&self.group);
+        let _waiting = Waiting(&group.waiting);
+        GROUP_COMMITS.fetch_add(1, Relaxed);
+        let seq = self.handle.seqnum();
+        let adaptive = ADAPTIVE.load(Relaxed);
+        if adaptive {
+            let now = mono_us();
+            let last = self.group.last_arrival_us.swap(now, Relaxed);
+            if last > 0 {
+                ewma(&self.group.gap_ewma_us, now.saturating_sub(last).min(10_000_000));
+            }
+        }
+        // Flush now: waiting for the periodic flush (100 ms) would add up to that much to every write.
+        if EXPLICIT_FLUSH.load(Relaxed) && self.group.flushed_seq.load(Acquire) < seq {
+            let _lead = self.group.lock.lock().await;
+            if self.group.flushed_seq.load(Acquire) < seq {
+                let window = Duration::from_micros(GROUP_WINDOW_US.load(Relaxed));
+                if adaptive && window.is_zero() {
+                    let flush = self.group.flush_ewma_us.load(Relaxed);
+                    let gap = self.group.gap_ewma_us.load(Relaxed);
+                    let w = (flush / 2).min(ADAPTIVE_MAX_US.load(Relaxed));
+                    let others = |g: &GroupFlush| g.inflight.get().map_or(0, |c| c.load(Acquire)).saturating_sub(g.waiting.load(Acquire));
+                    if w > 0 && (gap > 0 && gap <= 2 * w || others(&self.group) > 0) {
+                        let t = Instant::now();
+                        let deadline = t + Duration::from_micros(w);
+                        tokio::time::sleep_until(deadline.into()).await;
+                        ADAPTIVE_WAITS.fetch_add(1, Relaxed);
+                        ADAPTIVE_WAIT_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
+                    }
+                }
+                if !window.is_zero() {
+                    if GROUP_ADAPTIVE.load(Relaxed) {
+                        let deadline = Instant::now() + window;
+                        loop {
+                            let inflight = self.group.inflight.get().map_or(0, |c| c.load(Acquire));
+                            let others = inflight.saturating_sub(self.group.waiting.load(Acquire));
+                            let left = deadline.saturating_duration_since(Instant::now());
+                            if others == 0 || left.is_zero() {
+                                break;
+                            }
+                            tokio::time::sleep(left.min(Duration::from_micros(100))).await;
+                        }
+                    } else {
+                        tokio::time::sleep(window).await;
+                    }
+                }
+                let target = self.group.staged_seq.load(Acquire);
+                let t = Instant::now();
+                self.db.flush().await?;
+                if adaptive {
+                    ewma(&self.group.flush_ewma_us, t.elapsed().as_micros() as u64);
+                }
+                GROUP_FLUSHES.fetch_add(1, Relaxed);
+                self.group.flushed_seq.fetch_max(target, Release);
+            }
+        }
+        if !ACK_BEFORE_DURABLE.load(Relaxed) {
+            self.handle.await_durable().await?;
+        }
         Ok(())
     }
 }
@@ -521,32 +637,11 @@ impl Tenant {
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
             Err(e) => return Err(e.into()),
-        let adaptive = ADAPTIVE.load(Relaxed);
-        if adaptive {
-            let now = mono_us();
-            let last = self.group.last_arrival_us.swap(now, Relaxed);
-            if last > 0 {
-                ewma(&self.group.gap_ewma_us, now.saturating_sub(last).min(10_000_000));
-            }
-        }
         }
         let db = db?;
         writer_opened(&self.id, &db);
         self.mode = Some(Mode::Writer(db));
         self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
-                if adaptive && window.is_zero() {
-                    let flush = self.group.flush_ewma_us.load(Relaxed);
-                    let gap = self.group.gap_ewma_us.load(Relaxed);
-                    let w = (flush / 2).min(ADAPTIVE_MAX_US.load(Relaxed));
-                    let others = |g: &GroupFlush| g.inflight.get().map_or(0, |c| c.load(Acquire)).saturating_sub(g.waiting.load(Acquire));
-                    if w > 0 && (gap > 0 && gap <= 2 * w || others(&self.group) > 0) {
-                        let t = Instant::now();
-                        let deadline = t + Duration::from_micros(w);
-                        tokio::time::sleep_until(deadline.into()).await;
-                        ADAPTIVE_WAITS.fetch_add(1, Relaxed);
-                        ADAPTIVE_WAIT_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
-                    }
-                }
         Ok(())
     }
 
@@ -566,9 +661,6 @@ impl Tenant {
         // requests, fetch in parallel, and keep the blocks.
         let opts = slatedb::config::ScanOptions {
             read_ahead_bytes: 4 << 20,
-                if adaptive {
-                    ewma(&self.group.flush_ewma_us, t.elapsed().as_micros() as u64);
-                }
             max_fetch_tasks: 4,
             cache_blocks: true,
             durability_filter: if durable { slatedb::config::DurabilityLevel::Remote } else { slatedb::config::DurabilityLevel::Memory },
@@ -611,7 +703,6 @@ impl Tenant {
             max_fetch_tasks: 4,
             cache_blocks: true,
             order: if reverse { slatedb::IterationOrder::Descending } else { slatedb::IterationOrder::Ascending },
-                let t = Instant::now();
             ..Default::default()
         };
         if let Some(e) = end {
@@ -664,7 +755,7 @@ impl Tenant {
         }
         let handle = db.write(batch).await?;
         self.group.staged_seq.fetch_max(handle.seqnum(), std::sync::atomic::Ordering::Release);
-        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group) }))
+        Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None }))
     }
 
     pub async fn put(&mut self, key: &str, value: &[u8]) -> Result<WriteHandle> {
@@ -681,8 +772,8 @@ impl Tenant {
                 let _ = r.close().await;
             }
             Some(Mode::Writer(db)) => {
-                let _ = db.close().await;
                 writer_closed(&self.id);
+                let _ = db.close().await;
             }
             None => {}
         }
@@ -694,6 +785,7 @@ impl Tenant {
         match self.mode.take() {
             Some(Mode::Reader(r)) => r.close().await?,
             Some(Mode::Writer(db)) => {
+                writer_closed(&self.id);
                 match tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, db.close()).await {
                     Ok(r) => r?,
                     Err(_) => {
@@ -801,6 +893,8 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     for cp in checkpoints {
         admin.delete_checkpoint(cp.id).await?;
     }
+    COMPACTED.lock().unwrap().insert(id.to_string());
+    COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
     {
         use std::sync::atomic::Ordering::Relaxed;
@@ -843,9 +937,56 @@ pub async fn gc_tenant(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, mi
     Ok(GcRecord { tenant: id.to_string(), requests: counting.counters.snapshot() })
 }
 
+/// Tenants compacted since their last full close-time pass, and the manifest version that pass saw.
+static FULL_GC: std::sync::LazyLock<Mutex<HashMap<String, u64>>> = std::sync::LazyLock::new(Default::default);
+static COMPACTED_SINCE_FULL: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
+/// Close-time passes that skipped slatedb's full pass (nothing could have become garbage outside the WAL).
+pub static CLOSE_GC_LIGHT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// The pass after a tenant closed (`Maintenance`, with `--wal-gc-mode` bulk or single). The WAL is cleaned with the bounded
+/// pass (latest manifest: one LIST and one GET). slatedb's own pass over the manifests, compacted SSTs and compaction states
+/// lists those directories and reads the manifest of every checkpoint (a database with a retention window has one per restore
+/// point: hundreds after a few days), so it runs only when something there can be garbage: after a compaction of this
+/// process, once the manifest moved `SST_GC_MANIFEST_STEP` versions since the last full pass, or the first time this
+/// process closes the tenant.
+pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
+    use std::sync::atomic::Ordering::Relaxed;
+    let id = id.to_string();
+    let mode = WAL_GC_MODE.load(Relaxed);
+    if mode == 0 || mode == 1 {
+        return gc_tenant(s3, &id, min_age).await;
+    }
+    let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
+    let store: Arc<dyn ObjectStore> = counting.clone();
+    let admin = Admin::builder(tenant_path(&id), Arc::clone(&store)).build();
+    let Some(m) = admin.read_manifest(None).await? else { return Ok(GcRecord { tenant: id, requests: counting.counters.snapshot() }) };
+    gc_wal_with(&store, &id, mode, &m).await?;
+    let last_full = FULL_GC.lock().unwrap().get(&id).copied();
+    let compacted = COMPACTED_SINCE_FULL.lock().unwrap().remove(&id);
+    if compacted || last_full.map_or(true, |v| m.id() >= v + SST_GC_MANIFEST_STEP) {
+        let dir = GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false };
+        let opts = GarbageCollectorOptions {
+            manifest_options: Some(dir),
+            wal_options: None,
+            compacted_options: Some(dir),
+            compactions_options: Some(dir),
+            ..GarbageCollectorOptions::default()
+        };
+        admin.run_gc_once(opts).await?;
+        FULL_GC.lock().unwrap().insert(id.clone(), m.id());
+    } else {
+        CLOSE_GC_LIGHT.fetch_add(1, Relaxed);
+    }
+    let snap = counting.counters.snapshot();
+    MAINT.gc_runs.fetch_add(1, Relaxed);
+    MAINT.gc_deletes.fetch_add(snap.delete, Relaxed);
+    MAINT.gc_lists.fetch_add(snap.list, Relaxed);
+    MAINT.gc_gets.fetch_add(snap.get + snap.get_range + snap.head, Relaxed);
+    Ok(GcRecord { tenant: id, requests: snap })
+}
+
 /// Delete the WAL objects of an open writer that its latest manifest no longer needs (everything before
 /// `replay_after_wal_id`, which advances each time the writer flushes its memtable to an L0 SST). Only the WAL
-                writer_closed(&self.id);
 /// directory is touched: the writer is live, so manifests, SSTs and compactions are left alone.
 async fn gc_tenant_wal_slatedb(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
@@ -927,6 +1068,12 @@ pub async fn gc_tenant_wal(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display
     let id = id.to_string();
     let mode = WAL_GC_MODE.load(Relaxed);
     let rec = if mode == 0 {
+        // slatedb's own pass has no idea of checkpoints-as-restore-points beyond what it reads, so a database with a retention
+        // window (control layer, `WAL_RETAIN`) keeps its WAL objects for that long by object age.
+        let retain = WAL_RETAIN.get().map(|f| f(&id)).unwrap_or_default();
+        // Negative control of the test suite (`ctl-tests/test_09f_wal_retention_guard.py`): with this variable set the age guard
+        // is off and the slatedb pass deletes WAL objects that restores need. Never set in production.
+        let retain = if std::env::var_os("MONGO_TEST_DISABLE_WAL_RETENTION_GUARD").is_some() { Duration::ZERO } else { retain };
         gc_tenant_wal_slatedb(s3, &id, min_age.max(retain)).await?
     } else {
         let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
@@ -1031,12 +1178,12 @@ async fn gc_wal_with(store: &Arc<dyn ObjectStore>, id: &str, mode: u8, m: &slate
                     Ok(_) | Err(object_store::Error::NotFound { .. }) => {}
                     Err(e) => return Err(e.into()),
                 }
-    COMPACTED.lock().unwrap().insert(id.to_string());
-    COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
             }
         }
         WAL_GC_DELETED.fetch_add(n, Relaxed);
         WAL_GC_DELETE_US.fetch_add(t.elapsed().as_micros() as u64, Relaxed);
+    } else if st.floor.is_some() {
+        WAL_GC_NOOP.fetch_add(1, Relaxed);
     }
     st.floor = Some(floor.max(limit));
     WAL_STATE.lock().unwrap().insert(id.to_string(), st);
@@ -1078,54 +1225,6 @@ pub async fn gc_tenant_ssts(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<bool>
     // (the checkpoints are in the manifest just read: no second read)
     if !m.segments().is_empty() || !m.checkpoints().is_empty() {
         eprintln!("SSTGC skip tenant={id} (segments or checkpoints present)");
-/// Tenants compacted since their last full close-time pass, and the manifest version that pass saw.
-static FULL_GC: std::sync::LazyLock<Mutex<HashMap<String, u64>>> = std::sync::LazyLock::new(Default::default);
-static COMPACTED_SINCE_FULL: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
-/// Close-time passes that skipped slatedb's full pass (nothing could have become garbage outside the WAL).
-pub static CLOSE_GC_LIGHT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-/// The pass after a tenant closed (`Maintenance`, with `--wal-gc-mode` bulk or single). The WAL is cleaned with the bounded
-/// pass (latest manifest: one LIST and one GET). slatedb's own pass over the manifests, compacted SSTs and compaction states
-/// lists those directories and reads the manifest of every checkpoint (a database with a retention window has one per restore
-/// point: hundreds after a few days), so it runs only when something there can be garbage: after a compaction of this
-/// process, once the manifest moved `SST_GC_MANIFEST_STEP` versions since the last full pass, or the first time this
-/// process closes the tenant.
-pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, min_age: Duration) -> Result<GcRecord> {
-    use std::sync::atomic::Ordering::Relaxed;
-    let id = id.to_string();
-    let mode = WAL_GC_MODE.load(Relaxed);
-    if mode == 0 || mode == 1 {
-        return gc_tenant(s3, &id, min_age).await;
-    }
-    let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
-    let store: Arc<dyn ObjectStore> = counting.clone();
-    let admin = Admin::builder(tenant_path(&id), Arc::clone(&store)).build();
-    let Some(m) = admin.read_manifest(None).await? else { return Ok(GcRecord { tenant: id, requests: counting.counters.snapshot() }) };
-    gc_wal_with(&store, &id, mode, &m).await?;
-    let last_full = FULL_GC.lock().unwrap().get(&id).copied();
-    let compacted = COMPACTED_SINCE_FULL.lock().unwrap().remove(&id);
-    if compacted || last_full.map_or(true, |v| m.id() >= v + SST_GC_MANIFEST_STEP) {
-        let dir = GarbageCollectorDirectoryOptions { interval: None, min_age, dry_run: false };
-        let opts = GarbageCollectorOptions {
-            manifest_options: Some(dir),
-            wal_options: None,
-            compacted_options: Some(dir),
-            compactions_options: Some(dir),
-            ..GarbageCollectorOptions::default()
-        };
-        admin.run_gc_once(opts).await?;
-        FULL_GC.lock().unwrap().insert(id.clone(), m.id());
-    } else {
-        CLOSE_GC_LIGHT.fetch_add(1, Relaxed);
-    }
-    let snap = counting.counters.snapshot();
-    MAINT.gc_runs.fetch_add(1, Relaxed);
-    MAINT.gc_deletes.fetch_add(snap.delete, Relaxed);
-    MAINT.gc_lists.fetch_add(snap.list, Relaxed);
-    MAINT.gc_gets.fetch_add(snap.get + snap.get_range + snap.head, Relaxed);
-    Ok(GcRecord { tenant: id, requests: snap })
-}
-
         return Ok(false);
     }
     let latest = m.id();
@@ -1156,6 +1255,7 @@ pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Disp
     let mut doomed: Vec<Path> = Vec::new();
     let (mut n_ssts, mut n_manifests) = (0u64, 0u64);
     let mut live_old: Vec<(i64, Path)> = Vec::new();
+    let mut waiting = 0u64;
     {
         let mut track = SST_UNREF.lock().unwrap();
         let t = track.entry(id.to_string()).or_default();
@@ -1180,6 +1280,9 @@ pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Disp
                 continue;
             }
             let first = *t.entry(key).or_insert(now);
+            if now.duration_since(first) < min_unref {
+                waiting += 1;
+            }
             if now.duration_since(first) >= min_unref {
                 if dir == "compacted" { n_ssts += 1 } else { n_manifests += 1 }
                 doomed.push(meta.location);
@@ -1197,12 +1300,6 @@ pub async fn gc_tenant_closed(s3: &Arc<dyn ObjectStore>, id: impl std::fmt::Disp
         }
     }
     if !doomed.is_empty() {
-        // slatedb's own pass has no idea of checkpoints-as-restore-points beyond what it reads, so a database with a retention
-        // window (control layer, `WAL_RETAIN`) keeps its WAL objects for that long by object age.
-        let retain = WAL_RETAIN.get().map(|f| f(&id)).unwrap_or_default();
-        // Negative control of the test suite (`ctl-tests/test_09f_wal_retention_guard.py`): with this variable set the age guard
-        // is off and the slatedb pass deletes WAL objects that restores need. Never set in production.
-        let retain = if std::env::var_os("MONGO_TEST_DISABLE_WAL_RETENTION_GUARD").is_some() { Duration::ZERO } else { retain };
         let mut del = s3.delete_stream(futures::stream::iter(doomed.into_iter().map(Ok)).boxed());
         while let Some(r) = del.next().await {
             match r {
@@ -1271,8 +1368,6 @@ impl Maintenance {
                                 log.lock().unwrap().errors.push(format!("compact {id}: {e:#}"));
                                 usize::MAX / 2
                             }
-    } else if st.floor.is_some() {
-        WAL_GC_NOOP.fetch_add(1, Relaxed);
                         };
                         queue.finish(&id, l0_after);
                         drop(permit);
@@ -1363,7 +1458,6 @@ impl Maintenance {
                         })
                         .await;
                     // Concurrent: a pass costs several LIST and DELETE round trips, so one at a time cannot keep up
-    let mut waiting = 0u64;
                     // when tens of tenants a second go idle (the backlog then grows without bound).
                     futures::stream::iter(due)
                         .for_each_concurrent(GC_CONCURRENCY, |id| {
@@ -1388,9 +1482,6 @@ impl Maintenance {
     pub async fn shutdown(self) -> Arc<Mutex<MaintenanceLog>> {
         self.queue.stop();
         let _ = self.dispatcher.await;
-            if now.duration_since(first) < min_unref {
-                waiting += 1;
-            }
         let _ = self.sem.acquire_many(self.workers as u32).await;
         self.gc_stop.store(true, std::sync::atomic::Ordering::Relaxed);
         let _ = self.gc_task.await;

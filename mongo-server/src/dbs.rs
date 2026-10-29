@@ -433,6 +433,14 @@ impl Entry {
     pub async fn abandon(&mut self) {
         self.nat.clear();
         self.copts.clear();
+        if let Some(l) = crate::locallog::get() {
+            // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
+            // not apply those records over the new owner's writes.
+            if l.has_pending(&self.name) {
+                eprintln!("local log: ownership of {} lost with writes not yet in object storage; they are lost", self.name);
+                let _ = l.append_drop(&self.name).await;
+            }
+        }
         if let Some(t) = self.tenant.take() {
             t.abandon().await;
             self.closes += 1;
@@ -505,6 +513,11 @@ impl Entry {
         self.copts.clear();
         if let Some(t) = self.tenant.take() {
             let r = t.close().await;
+            if r.is_ok() {
+                if let Some(l) = crate::locallog::get() {
+                    l.closed(&self.name);
+                }
+            }
             self.closes += 1;
             self.sync_gauges();
             self.leases.release(&self.name).await;
@@ -545,9 +558,30 @@ impl Entry {
 
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, true).await
+    }
+
+    /// Like [`Entry::apply`] but always durable in object storage before it returns, also with the local log on (the
+    /// restart of the local log applies its records this way).
+    pub async fn apply_durable(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, false).await
+    }
+
+    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool) -> Result<()> {
         if ops.is_empty() {
             return Ok(());
         }
+        // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
+        let local = if use_local_log { crate::locallog::get() } else { None };
+        let local_seq = local.map(|l| {
+            let seq = l.next_seq();
+            ops.push(l.marker_op(seq));
+            seq
+        });
+        let record = local.map(|l| (l, ops.iter().map(|o| match o {
+            Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
+            Op::Delete(k) => Op::Delete(k.clone()),
+        }).collect::<Vec<Op>>()));
         if !self.ensure_open().await? {
             self.leases.acquire(&self.name).await?;
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
@@ -577,7 +611,10 @@ impl Entry {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
         self.request_compaction_if_needed();
-        let Some(commit) = staged? else { return Ok(()) };
+        let Some(mut commit) = staged? else { return Ok(()) };
+        if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
+            commit = commit.with_local(log.append(seq, &self.name, &rec_ops));
+        }
         let mut slot = Some(commit);
         if GROUP_COMMIT.load(Relaxed) {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
@@ -593,6 +630,10 @@ impl Entry {
     /// a pass that finds no manifest does nothing. Repeats the listing until the prefix is empty.
     pub async fn drop_database(&mut self) -> Result<()> {
         crate::ctl::fork::on_drop(&self.name).await?;
+        if let Some(l) = crate::locallog::get() {
+            // A restart must not apply the database's earlier records again.
+            l.append_drop(&self.name).await.map_err(|_| anyhow::anyhow!("local log stopped"))?.map_err(|e| anyhow::anyhow!(e))?;
+        }
         let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
         let _held = lock.lock().await;
         if !self.leases.is_held(&self.name) {
@@ -618,6 +659,7 @@ impl Entry {
         }
         self.lc.touched.lock().unwrap().remove(&self.name);
         self.leases.forget(&self.name);
+        tenant_bench::lifecycle::forget_wal_state(&self.name);
         Ok(())
     }
 
@@ -666,7 +708,6 @@ impl Entry {
                         }
                     }
                 }
-        tenant_bench::lifecycle::forget_wal_state(&self.name);
             }
         }
         Ok(best)

@@ -172,9 +172,18 @@ impl Server {
                         (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())), crate::dbs::RELAX.with(|c| c.get()))
                     }))
                     .await;
-                if let Some(last) = commits.pop() {
-                    // Later commits flush after earlier ones, so waiting for the last covers all of them.
-                    if let Err(e) = last.wait().await {
+                // Later commits of a database flush after its earlier ones, so waiting for the last one of each database
+                // covers all of them (a command can write to more than one database: $out, renameCollection).
+                let mut last: Vec<tenant_bench::lifecycle::Commit> = Vec::new();
+                for c in commits.into_iter().rev() {
+                    if !last.iter().any(|l| l.tenant() == c.tenant()) {
+                        last.push(c);
+                    }
+                }
+                for c in last {
+                    if relax && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none() {
+                        c.relax();
+                    } else if let Err(e) = c.wait().await {
                         r = Err(e.into());
                     }
                 }
@@ -194,6 +203,9 @@ impl Server {
             return Ok(r);
         }
         let wc = self.command_write_concern(name, cmd)?;
+        if wc.as_ref().map_or(false, |w| w.relaxed()) && !cmd.contains_key("autocommit") {
+            let _ = crate::dbs::RELAX.try_with(|c| c.set(true));
+        }
         self.check_read_concern(name, cmd)?;
         let mut r = Box::pin(self.dispatch_inner(db, name, cmd, conn_id)).await?;
         if let Some(wc) = &wc {
@@ -203,9 +215,6 @@ impl Server {
             // a snapshot read says the time it read at
             let at = self.dbs.changes.cluster_now();
             if let Ok(c) = r.get_document_mut("cursor") {
-        if wc.as_ref().map_or(false, |w| w.relaxed()) && !cmd.contains_key("autocommit") {
-            let _ = crate::dbs::RELAX.try_with(|c| c.set(true));
-        }
                 c.insert("atClusterTime", Bson::Timestamp(at));
             } else if name == "distinct" {
                 let ok = r.remove("ok");
@@ -677,9 +686,10 @@ impl Server {
                 "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
                 "putBytes": self.dbs.global.counters.put_bytes.load(Relaxed) as i64, "getBytes": self.dbs.global.counters.get_bytes.load(Relaxed) as i64,
             },
-            "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64 },
-            "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64 },
-            "sstGc": { "passes": tenant_bench::lifecycle::SST_GC_PASSES.load(Relaxed) as i64, "deletedSsts": tenant_bench::lifecycle::SST_GC_DELETED_SSTS.load(Relaxed) as i64, "deletedManifests": tenant_bench::lifecycle::SST_GC_DELETED_MANIFESTS.load(Relaxed) as i64 },
+            "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64, "adaptiveWaits": tenant_bench::lifecycle::ADAPTIVE_WAITS.load(Relaxed) as i64, "adaptiveWaitUs": tenant_bench::lifecycle::ADAPTIVE_WAIT_US.load(Relaxed) as i64, "relaxedAcks": tenant_bench::lifecycle::RELAXED_ACKS.load(Relaxed) as i64 },
+            "localLog": { "records": crate::locallog::RECORDS.load(Relaxed) as i64, "fsyncs": crate::locallog::FSYNCS.load(Relaxed) as i64, "uploads": crate::locallog::UPLOADS.load(Relaxed) as i64, "replayed": crate::locallog::REPLAYED.load(Relaxed) as i64 },
+            "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64, "noop": tenant_bench::lifecycle::WAL_GC_NOOP.load(Relaxed) as i64 },
+            "sstGc": { "passes": tenant_bench::lifecycle::SST_GC_PASSES.load(Relaxed) as i64, "deletedSsts": tenant_bench::lifecycle::SST_GC_DELETED_SSTS.load(Relaxed) as i64, "deletedManifests": tenant_bench::lifecycle::SST_GC_DELETED_MANIFESTS.load(Relaxed) as i64, "noop": tenant_bench::lifecycle::SST_GC_NOOP.load(Relaxed) as i64, "closeLight": tenant_bench::lifecycle::CLOSE_GC_LIGHT.load(Relaxed) as i64 },
             "putByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.put_cat[i].load(Relaxed) as i64))).collect::<Document>(),
             "getByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.get_cat[i].load(Relaxed) as i64))).collect::<Document>(),
             "maintenance": {
