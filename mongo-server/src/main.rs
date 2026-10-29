@@ -154,8 +154,11 @@ struct Args {
     store: String,
     #[arg(long, default_value = "/tmp/mongo-server-store")]
     local_dir: String,
-    /// Cold wakes allowed at once; more queue (0 = unlimited).
-    #[arg(long, default_value_t = 0)]
+    /// Cold wakes allowed at once; more queue (0 = unlimited). A wake makes ~10-15 requests one after the other (S3 latency
+    /// each): after a restart every database that receives a request wakes at once, and with no limit hundreds of
+    /// wakes share the CPU and the connections to S3, so every one of them is slow (p99 of the writes 1.8 s with 500
+    /// databases on MinIO). 32 keeps the store busy without letting the queue of a wake storm reach every client.
+    #[arg(long, default_value_t = 32)]
     max_concurrent_wakes: usize,
     /// Test control only: never treat a lease as expired or lost. Demonstrates what the ownership checks prevent.
     #[arg(long)]
