@@ -74,13 +74,30 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
 
-      - name: Rust toolchain (pinned)
+      # The server runs Amazon Linux 2023 (glibc 2.34). A binary built on the runner's newer Linux (glibc 2.39) refuses to start
+      # there ("GLIBC_2.35 not found"), so the build happens inside Amazon Linux 2023 itself: same libc as the server.
+      - name: Build (inside Amazon Linux 2023, the server's system)
+        env:
+          BUILD_IMAGE: public.ecr.aws/amazonlinux/amazonlinux:2023
         run: |
-          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
-          rustc +"$RUST_TOOLCHAIN" --version
+          set -euo pipefail
+          docker run --rm -v "$PWD":/src -w /src -e RUST_TOOLCHAIN -e CARGO_HOME=/tmp/cargo -e RUSTUP_HOME=/tmp/rustup "$BUILD_IMAGE" bash -euo pipefail -c '
+            dnf install -y --setopt=install_weak_deps=False gcc gcc-c++ make cmake perl clang git tar gzip findutils which
+            git config --global --add safe.directory /src
+            curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain "$RUST_TOOLCHAIN" --no-modify-path
+            . /tmp/cargo/env
+            rustc --version
+            cargo build --release -p mongo-server --locked
+          '
 
-      - name: Build
-        run: cargo +"$RUST_TOOLCHAIN" build --release -p mongo-server --locked
+      - name: The binary must run on the server (glibc 2.34 at most)
+        run: |
+          set -euo pipefail
+          bin="target/release/$ENGINE_BINARY_NAME"
+          [ -x "$bin" ] || { echo "::error::$bin was not built"; exit 1; }
+          top="$(objdump -T "$bin" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)"
+          echo "highest glibc symbol needed: $top"
+          [ "$(printf '%s\n' "$top" GLIBC_2.34 | sort -V | tail -1)" = "GLIBC_2.34" ] || { echo "::error::needs $top, the server has glibc 2.34"; exit 1; }
 
       - name: Version and SHA-256
         id: meta
