@@ -24,7 +24,7 @@ pub type Idx = u64;
 /// Highest epoch: an erased database answers every request with it.
 pub const ERASED: Epoch = u64::MAX;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Entry {
     pub idx: Idx,
     /// Epoch of the writer that created the entry (kept when a later writer copies it).
@@ -33,7 +33,7 @@ pub struct Entry {
     pub data: Bytes,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Msg {
     Fence { db: DbId, epoch: Epoch, applied: Idx },
     Promise { db: DbId, epoch: Epoch, last: Idx, last_epoch: Epoch },
@@ -90,7 +90,7 @@ impl Rec {
 }
 
 /// Deliberate protocol bugs (negative controls). The simulator must catch each one.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Mutations {
     /// Node: accept appends from any epoch (no fence check).
     pub no_fencing: bool,
@@ -158,7 +158,7 @@ impl Mutations {
 // ============================================================================================================ node
 
 /// One database's log on a node: entries contiguous from `trim + 1`.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DbLog {
     pub promised: Epoch,
     pub trim: Idx,
@@ -191,7 +191,7 @@ pub struct NodeOut {
     pub broken: Option<String>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct NodeCore {
     pub id: NodeId,
     pub dbs: BTreeMap<DbId, DbLog>,
@@ -380,7 +380,7 @@ pub fn choose_source<I: IntoIterator<Item = (NodeId, Idx, Epoch)>>(logs: I, appl
 
 // ========================================================================================================== writer
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Phase {
     Fencing,
     Reading { source: NodeId, to: Idx },
@@ -405,7 +405,7 @@ pub struct WOut {
 }
 
 /// Writer state for one database at one epoch.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct WriterDb {
     pub db: DbId,
     pub epoch: Epoch,
@@ -606,7 +606,7 @@ impl WriterDb {
     /// Periodic retransmission (lost messages, restarted nodes, stuck reads).
     pub fn tick(&mut self) -> WOut {
         let mut out = WOut::default();
-        self.ticks += 1;
+        self.ticks = (self.ticks + 1).min(5); // only "5 or more" matters; saturating keeps the state finite
         match self.phase.clone() {
             Phase::Fencing => self.send_fences(&mut out),
             Phase::Reading { source, to } => {

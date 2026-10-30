@@ -1,0 +1,14 @@
+[package]
+name = "journal3z-mc"
+version = "0.1.0"
+edition = "2021"
+description = "Exhaustive (breadth-first) model checker over the real journal3z-core state machines, small bounds"
+
+[workspace]
+
+[dependencies]
+journal3z-core = { path = "../core" }
+bytes = "1"
+
+[profile.release]
+debug = 1

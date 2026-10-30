@@ -112,8 +112,16 @@ database key `(name, incarnation)`; below `d` stands for it.
   writer of epoch `e1` has an index lower than the barrier of every writer `e2 > e1` that committed its barrier: an
   older writer's acknowledgements are all ordered before a newer writer's (at most one writer is "current").
 - **(c) Agreement.** (c1) If two nodes hold an entry with the same index and epoch, the bytes are equal (Raft Log
-  Matching, checked on the bytes). (c2) For every committed index `i` created in epoch `E`, no node holds at `i` an
-  entry of an epoch greater than `E` (a later writer always carried the committed entry; Leader Completeness).
+  Matching, checked on the bytes). (c2) A committed index never changes: every later commit of index `i`, by any
+  writer, commits the same entry (State Machine Safety). (c3) A node acknowledges a range only if it holds exactly the
+  entries the writer sent, and, when the writer's epoch is at least that of the writer that committed an index in the
+  range, the committed entry (Leader Completeness, as seen from the nodes).
+  - *Correction made during this phase.* The first version of (c2) said "no node holds, at a committed index created
+    in epoch `E`, an entry of an epoch greater than `E`". That is false for correct Raft: a lagging node can hold an
+    uncommitted entry of a higher term at an index committed later with an older-term entry (Raft paper, Figure 8 (e)).
+    The simulator's first version of (c3) (without the epoch condition) and of (e) (checked when a writer becomes
+    active, instead of when its barrier commits) were too strict in the same way and reported 5 false violations in
+    200 seeds; each was traced and is explained in `docs/journal3z-sim.md` §5.
 - **(d) Trim safety.** A node deletes entries ≤ k only when the database's S3 marker is ≥ k at that moment; the S3
   state at every index ≤ marker equals the committed entry when the index was committed.
 

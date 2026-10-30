@@ -1,0 +1,2 @@
+{"acknowledged":false,"forget_fence":false,"lost_acknowledged_write":false,"s3_holds_it":false,"s3_marker":9,"stale_writer_told_stale":true,"stale_writer_write_index":6}
+{"acknowledged":true,"forget_fence":true,"lost_acknowledged_write":true,"s3_holds_it":false,"s3_marker":9,"stale_writer_told_stale":false,"stale_writer_write_index":6}
