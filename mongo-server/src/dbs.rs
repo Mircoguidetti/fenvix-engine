@@ -504,10 +504,21 @@ impl Entry {
             None => None,
         };
         tenant_bench::counting::set_phase(5);
-        let took = self.leases.acquire(&self.name).await?;
+        // Wake bundle prototype (`--wake-bundle`): the marker is read in parallel with the lease; what may be decided from
+        // that early read is in `lifecycle::Prefetch` (a bundle is only used after the lease is held and the N+1 probe).
+        let (took, pre) = if tenant_bench::lifecycle::WAKE_BUNDLE.load(Relaxed) {
+            let (took, pre) = tokio::join!(self.leases.acquire(&self.name), self.lc.prefetch_marker(&self.name));
+            (took?, Some(pre))
+        } else {
+            (self.leases.acquire(&self.name).await?, None)
+        };
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
         crate::ctl::durability::refresh(&self.name).await;
-        match self.lc.wake(&self.name).await {
+        let woke = match pre {
+            Some(pre) => self.lc.wake_with(&self.name, pre).await,
+            None => self.lc.wake(&self.name).await,
+        };
+        match woke {
             Ok(t) => {
                 if took.is_some() || t.unclean {
                     lease::log("takeover_wake", &self.name, &self.leases.holder, &format!("unclean={} takeover_from={}", t.unclean, took.as_deref().unwrap_or("-")));

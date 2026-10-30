@@ -102,6 +102,10 @@ struct Args {
     region: Option<String>,
     #[arg(long, default_value = "bench")]
     bucket: String,
+    /// EXPLORATION PROTOTYPE (branch wake-bundle-explore), not for production: a clean close puts a wake bundle in the clean
+    /// marker and a wake uses it after one check (see src/wake_bundle.rs, docs/wake-bundle-exploration.md).
+    #[arg(long)]
+    wake_bundle: bool,
     /// Do not run the background compaction and GC loops (also disables the L0 guard).
     #[arg(long)]
     no_maintenance: bool,
@@ -453,6 +457,7 @@ async fn run() -> Result<()> {
         other => anyhow::bail!("unknown --store {other}"),
     };
     let s3 = faults::wrap(s3);
+    tenant_bench::lifecycle::WAKE_BUNDLE.store(args.wake_bundle, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);

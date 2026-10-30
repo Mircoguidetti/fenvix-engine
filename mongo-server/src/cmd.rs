@@ -709,6 +709,7 @@ impl Server {
                 "gcDeletes": tenant_bench::lifecycle::MAINT.gc_deletes.load(Relaxed) as i64, "gcLists": tenant_bench::lifecycle::MAINT.gc_lists.load(Relaxed) as i64,
                 "gcGets": tenant_bench::lifecycle::MAINT.gc_gets.load(Relaxed) as i64,
             },
+            "wakeBundle": { "used": tenant_bench::lifecycle::BUNDLE_USED.load(Relaxed) as i64, "stale": tenant_bench::lifecycle::BUNDLE_STALE.load(Relaxed) as i64, "written": tenant_bench::lifecycle::BUNDLE_WRITTEN.load(Relaxed) as i64 },
             "wakeQueue": { "queued": crate::dbs::WAKE_QUEUED.load(Relaxed), "maxQueued": crate::dbs::WAKE_MAX_QUEUED.load(Relaxed), "waits": crate::dbs::WAKE_WAITS.load(Relaxed) as i64, "waitMs": crate::dbs::WAKE_WAIT_MS.load(Relaxed) as i64 },
             "lat": {
                 "put": self.dbs.global.counters.lat_put.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),

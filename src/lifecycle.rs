@@ -35,6 +35,30 @@ pub const L0_GUARD: usize = 6;
 pub const GC_CONCURRENCY: usize = 16;
 const LONG_POLL: Duration = Duration::from_secs(3600);
 
+/// Wake bundle prototype (`--wake-bundle`, exploration only, off by default): see `wake_bundle.rs`.
+pub static WAKE_BUNDLE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Wakes that used a bundle, wakes whose bundle was stale at the probe, closes that wrote one.
+pub static BUNDLE_USED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static BUNDLE_STALE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static BUNDLE_WRITTEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn bundle_on() -> bool {
+    WAKE_BUNDLE.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// The clean marker as read before (or while) the lease is taken (wake bundle prototype).
+pub enum Prefetch {
+    /// No marker: the last writer did not close cleanly (or never existed). Safe to act on without re-reading: a marker
+    /// that appears later only means a replay that was not needed.
+    Absent,
+    /// A marker with the old content: it must be read again after the lease is taken (as without the prototype).
+    Plain,
+    /// A marker with a bundle: trusted only after the lease is taken and the `N+1` probe finds nothing.
+    Bundle(crate::wake_bundle::Bundle),
+    /// The read failed: the normal path.
+    Unknown,
+}
+
 pub fn tenant_path(id: impl std::fmt::Display) -> String {
     format!("tenants/{id}")
 }
@@ -337,10 +361,12 @@ impl Lifecycle {
     /// There is no marker to delete: a tenant without a database has never been written.
     pub async fn create(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
-        let db = writer_builder(&id, &self.store).build().await?;
+        let bstore = self.bundle_store(&id);
+        let store = bstore.as_ref().map(|b| Arc::clone(b) as Arc<dyn ObjectStore>).unwrap_or_else(|| Arc::clone(&self.store));
+        let db = writer_builder(&id, &store).build().await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, bstore })
     }
 
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
@@ -359,12 +385,71 @@ impl Lifecycle {
         })
     }
 
+    fn bundle_store(&self, id: &str) -> Option<Arc<crate::wake_bundle::BundleStore>> {
+        bundle_on().then(|| crate::wake_bundle::BundleStore::new(Arc::clone(&self.store), tenant_path(id)))
+    }
+
+    /// Wake bundle prototype: read the clean marker (a GET, it may carry a bundle). Meant to run in parallel with the
+    /// lease acquire; see [`Prefetch`] for what may be decided from it.
+    pub async fn prefetch_marker(&self, id: &str) -> Prefetch {
+        match self.store.get(&marker_path(id)).await {
+            Err(object_store::Error::NotFound { .. }) => Prefetch::Absent,
+            Err(_) => Prefetch::Unknown,
+            Ok(r) => match r.bytes().await {
+                Ok(b) => crate::wake_bundle::Bundle::decode(&b).map(Prefetch::Bundle).unwrap_or(Prefetch::Plain),
+                Err(_) => Prefetch::Unknown,
+            },
+        }
+    }
+
+    /// Wake with a prefetched marker (wake bundle prototype). Call only once the lease is held.
+    pub async fn wake_with(self: &Arc<Self>, id: impl std::fmt::Display, pre: Prefetch) -> Result<Tenant> {
+        let id = id.to_string();
+        let Some(bstore) = self.bundle_store(&id) else { return self.wake(id).await };
+        let store: Arc<dyn ObjectStore> = Arc::clone(&bstore) as Arc<dyn ObjectStore>;
+        match pre {
+            Prefetch::Bundle(b) => {
+                // The probe: every writer open and every compaction writes manifest N+1.
+                let next = crate::wake_bundle::manifest_name(&tenant_path(&id), b.manifest_id + 1);
+                match self.store.head(&next).await {
+                    Err(object_store::Error::NotFound { .. }) => {
+                        bstore.serve(b);
+                        let reader = open_reader(&store, &id, true).await?;
+                        BUNDLE_USED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        let l0_at_wake = reader.manifest().l0().len();
+                        return Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: false, l0_at_wake, bstore: Some(bstore) });
+                    }
+                    Ok(_) => {
+                        BUNDLE_STALE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                    Err(e) => return Err(e.into()),
+                }
+                // Stale (compaction or a writer since the close): whether the marker still holds must be read again.
+                self.wake_on(id, store, Some(bstore)).await
+            }
+            Prefetch::Absent => {
+                // Unclean: replay at once, without the speculative skip-replay open of the normal path.
+                let reader = open_reader(&store, &id, false).await?;
+                self.stats.lock().unwrap().unclean_wakes += 1;
+                let l0_at_wake = reader.manifest().l0().len();
+                Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: true, l0_at_wake, bstore: Some(bstore) })
+            }
+            Prefetch::Plain | Prefetch::Unknown => self.wake_on(id, store, Some(bstore)).await,
+        }
+    }
+
     /// Wake a tenant read-only. The clean-marker HEAD runs in parallel with a
     /// speculative `skip_wal_replay` reader open; nothing is served before both finish.
     pub async fn wake(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
+        let bstore = self.bundle_store(&id);
+        let store = bstore.as_ref().map(|b| Arc::clone(b) as Arc<dyn ObjectStore>).unwrap_or_else(|| Arc::clone(&self.store));
+        self.wake_on(id, store, bstore).await
+    }
+
+    async fn wake_on(self: &Arc<Self>, id: String, store: Arc<dyn ObjectStore>, bstore: Option<Arc<crate::wake_bundle::BundleStore>>) -> Result<Tenant> {
         let marker = marker_path(&id);
-        let (reader, head) = tokio::join!(open_reader(&self.store, &id, true), self.store.head(&marker));
+        let (reader, head) = tokio::join!(open_reader(&store, &id, true), self.store.head(&marker));
         let mut reader = reader?;
         let clean = match head {
             Ok(_) => true,
@@ -374,11 +459,11 @@ impl Lifecycle {
         if !clean {
             // Possible unflushed WAL: the speculative reader may be missing data. Reopen with replay.
             reader.close().await?;
-            reader = open_reader(&self.store, &id, false).await?;
+            reader = open_reader(&store, &id, false).await?;
             self.stats.lock().unwrap().unclean_wakes += 1;
         }
         let l0_at_wake = reader.manifest().l0().len();
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, bstore })
     }
 }
 
@@ -569,6 +654,8 @@ pub struct Tenant {
     /// The wake took the unclean path (marker missing).
     pub unclean: bool,
     pub l0_at_wake: usize,
+    /// Wake bundle prototype: this tenant's recording/serving store (None when the prototype is off).
+    bstore: Option<Arc<crate::wake_bundle::BundleStore>>,
 }
 
 impl Tenant {
@@ -647,9 +734,14 @@ impl Tenant {
         }
         let store = &self.lc.store;
         let marker = marker_path(&self.id);
+        // A writer must see the real manifests, never the bundle's answers.
+        if let Some(b) = &self.bstore {
+            b.stop_serving();
+        }
+        let wstore = self.bstore.as_ref().map(|b| Arc::clone(b) as Arc<dyn ObjectStore>).unwrap_or_else(|| Arc::clone(store));
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            writer_builder(&self.id, store).build()
+            writer_builder(&self.id, &wstore).build()
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
@@ -814,10 +906,15 @@ impl Tenant {
                     }
                 }
                 let l0 = db.manifest().l0().len();
-                self.lc
-                    .store
-                    .put(&marker_path(&self.id), PutPayload::from_static(b"clean"))
-                    .await?;
+                // Wake bundle prototype: the same marker PUT carries what the next wake needs (no extra request).
+                let body = match self.bstore.as_ref().and_then(|b| b.bundle_for(db.manifest().id())) {
+                    Some(bundle) => {
+                        BUNDLE_WRITTEN.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        PutPayload::from(bundle.encode())
+                    }
+                    None => PutPayload::from_static(b"clean"),
+                };
+                self.lc.store.put(&marker_path(&self.id), body).await?;
                 self.lc.touched.lock().unwrap().insert(self.id.clone(), Instant::now());
                 if l0 >= L0_COMPACT_THRESHOLD {
                     if let Some(q) = &self.lc.queue {

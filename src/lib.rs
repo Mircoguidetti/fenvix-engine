@@ -3,3 +3,4 @@
 
 pub mod counting;
 pub mod lifecycle;
+pub mod wake_bundle;

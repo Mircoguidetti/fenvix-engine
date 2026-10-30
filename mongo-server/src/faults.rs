@@ -5,6 +5,8 @@
 //!   delay_put SUBSTR MS    a PUT to such a path is sent after MS milliseconds (a renewal that arrives late)
 //!   fail_put SUBSTR        a PUT to such a path fails (an S3 error)
 //!   fail_get SUBSTR        a GET (or HEAD) of such a path fails (an S3 error)
+//!   delay_all MS           every request (GET, HEAD, GET range, PUT, LIST, DELETE, COPY) waits MS milliseconds before it is
+//!                          sent: a model of a store whose requests take MS ms longer (wake-bundle exploration; NOT real S3)
 //!
 //! Every triggered rule prints `FAULT <rule> <path>` on stderr, so a test knows the point was reached.
 use async_trait::async_trait;
@@ -23,6 +25,7 @@ enum Rule {
     Delay(String, u64),
     Fail(String),
     FailGet(String),
+    DelayAll(u64),
 }
 
 pub struct FaultStore {
@@ -56,6 +59,7 @@ impl FaultStore {
                     ["delay_put", s, ms] => rules.push(Rule::Delay(s.to_string(), ms.parse().unwrap_or(0))),
                     ["fail_put", s] => rules.push(Rule::Fail(s.to_string())),
                     ["fail_get", s] => rules.push(Rule::FailGet(s.to_string())),
+                    ["delay_all", ms] => rules.push(Rule::DelayAll(ms.parse().unwrap_or(0))),
                     _ => {}
                 }
             }
@@ -64,7 +68,20 @@ impl FaultStore {
         c.1.clone()
     }
 
+    /// `delay_all`: milliseconds every request waits before it is sent (0 = none).
+    fn delay_all(&self) -> u64 {
+        self.rules().iter().find_map(|r| if let Rule::DelayAll(ms) = r { Some(*ms) } else { None }).unwrap_or(0)
+    }
+
+    async fn sleep_all(&self) {
+        let ms = self.delay_all();
+        if ms > 0 {
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+        }
+    }
+
     async fn before_put(&self, location: &Path) -> OsResult<()> {
+        self.sleep_all().await;
         let p = location.as_ref();
         for r in self.rules() {
             match &r {
@@ -114,6 +131,7 @@ impl ObjectStore for FaultStore {
     }
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> OsResult<GetResult> {
+        self.sleep_all().await;
         let p = location.as_ref();
         if self.rules().iter().any(|r| matches!(r, Rule::FailGet(s) if p.contains(s.as_str()))) {
             eprintln!("FAULT fail_get {p}");
@@ -123,14 +141,36 @@ impl ObjectStore for FaultStore {
     }
 
     fn delete_stream(&self, locations: BoxStream<'static, OsResult<Path>>) -> BoxStream<'static, OsResult<Path>> {
-        self.inner.delete_stream(locations)
+        let ms = self.delay_all();
+        if ms == 0 {
+            return self.inner.delete_stream(locations);
+        }
+        use futures::StreamExt;
+        let delayed = locations.then(move |l| async move {
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+            l
+        });
+        self.inner.delete_stream(delayed.boxed())
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, OsResult<ObjectMeta>> {
-        self.inner.list(prefix)
+        let ms = self.delay_all();
+        if ms == 0 {
+            return self.inner.list(prefix);
+        }
+        use futures::StreamExt;
+        let inner = Arc::clone(&self.inner);
+        let prefix = prefix.cloned();
+        futures::stream::once(async move {
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+            inner.list(prefix.as_ref())
+        })
+        .flatten()
+        .boxed()
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> OsResult<ListResult> {
+        self.sleep_all().await;
         self.inner.list_with_delimiter(prefix).await
     }
 
