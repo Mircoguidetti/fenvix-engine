@@ -151,3 +151,67 @@ def test_takeover_under_clock_skew_revokes_the_old_process_lease():
     finally:
         p1.term()
         p2.term()
+
+
+import pytest
+
+
+@pytest.mark.parametrize("offset_ms", [0, 1500, 20000])
+def test_local_log_old_owner_acknowledges_nothing_that_is_lost(offset_ms):
+    """Review round 2, point 4: modes that acknowledge before the WAL write (here the local log) are not covered by
+    slatedb's fencing. P1 (local log) renews its process lease 3 s late (ttl 4 s), so P2 takes the database over; P2's
+    wall clock is `offset_ms` ahead of P1's. P1 writes all along. Every write P1 acknowledged must be in the database at the
+    end (read through P2 after P1 shut down): an acknowledged write that is missing was acknowledged by P1 after it had
+    lost the database (its local record can never reach the database: P1 is fenced, and a restart refuses it).
+    The clocks requirement (README, lease section) is an offset below 1.5 s + ttl/6 (2.17 s here): 0 and 1.5 s must lose
+    nothing; 20 s is outside it and only measured."""
+    import shutil, tempfile
+    bucket = make_bucket(f"plocal{offset_ms}")
+    ff = faults_file()
+    d = tempfile.mkdtemp(prefix="plocal-")
+    ll = ["--local-log-dir", d, "--local-log-upload-secs", "30", "--lease-ttl-secs", str(TTL)]
+    p1 = Server(bucket, f"plocal1-{offset_ms}", idle=600, holder="L1", extra=ll, env={"MONGO_TEST_FAULTS_FILE": ff}).start()
+    p2 = Server(bucket, f"plocal2-{offset_ms}", idle=600, holder="L2", extra=["--lease-ttl-secs", str(TTL)], env={"MONGO_TEST_WALL_CLOCK_OFFSET_MS": str(offset_ms)}).start()
+    c1, c2 = client(p1), client(p2)
+    acked, stop, took = [], threading.Event(), [None]
+    try:
+        c1["d"]["c"].insert_one({"_id": "start"})
+        with open(ff, "w") as f:
+            f.write("delay_put processes/L1/_lease 3000\n")
+
+        def writer():
+            n = 0
+            while not stop.is_set():
+                n += 1
+                try:
+                    c1["d"]["c"].insert_one({"_id": f"p1-{n}"})
+                    acked.append((f"p1-{n}", time.time()))
+                except (OperationFailure, AutoReconnect, NetworkTimeout):
+                    pass
+                time.sleep(0.02)
+        t = threading.Thread(target=writer)
+        t.start()
+        deadline = time.time() + 40
+        while time.time() < deadline and took[0] is None:
+            try:
+                c2["d"]["c"].insert_one({"_id": "p2"})
+                took[0] = time.time()
+            except OperationFailure:
+                time.sleep(0.2)
+        assert took[0], "P2 never took the database over"
+        time.sleep(10)
+        stop.set()
+        t.join()
+        p1.term()
+        got = {x["_id"] for x in c2["d"]["c"].find({}, {"_id": 1})}
+        lost = [(i, round(at - took[0], 2)) for i, at in acked if i not in got]
+        after = [x for x in acked if x[1] > took[0]]
+        print(f"offset {offset_ms} ms: P1 acknowledged {len(acked)} writes, {len(after)} after P2's first write; acknowledged and lost: {len(lost)} {lost[:5]}")
+        if offset_ms < 1500 + TTL * 1000 / 6:
+            assert not lost, f"{len(lost)} writes acknowledged by P1 are lost (P1 acknowledged after losing the database)"
+    finally:
+        stop.set()
+        p1.term()
+        p2.term()
+        os.unlink(ff)
+        shutil.rmtree(d, ignore_errors=True)

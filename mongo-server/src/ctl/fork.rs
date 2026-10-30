@@ -195,14 +195,20 @@ pub async fn rollback(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()>
 }
 
 /// Called by the Mongo `dropDatabase` command before it deletes a database's objects: a database that forks still
-/// read cannot be dropped, and a fork that is dropped releases the pins it holds in its source.
-pub async fn on_drop(db: &str) -> anyhow::Result<()> {
+/// read cannot be dropped, and a fork that is dropped releases the pins it holds in its source. `owner` says whether this
+/// process still owns the database: it is checked right before the first change (the reads before it can take long, and
+/// a process that lost the database meanwhile must not release the pins of a fork another process now serves).
+pub async fn on_drop(db: &str, owner: &(dyn Fn() -> bool + Send + Sync)) -> anyhow::Result<()> {
     let Some(ctl) = super::get() else { return Ok(()) };
     let deps = dependents(ctl, db).await?;
     if !deps.is_empty() {
         anyhow::bail!("database {db} cannot be dropped: databases {deps:?} are forks that still read its data");
     }
-    for (path, _) in purge::ancestors(&ctl.store, db).await? {
+    let ancestors = purge::ancestors(&ctl.store, db).await?;
+    if !owner() {
+        return Err(crate::lease::LeaseHeld { tenant: db.to_string(), holder: "(ownership lost during the drop)".into(), remaining_ms: 0 }.into());
+    }
+    for (path, _) in ancestors {
         if let Some(a) = db_of_path(&path) {
             rec::delete(&ctl.store, &fork_marker(&a, db)).await?;
         }

@@ -1,0 +1,35 @@
+before the drop: {'relaxed_flush_ms': 2000, 'retention': {'interval_secs': 600, 'window_secs': 3600}, 'allowlist': ['127.0.0.1/32']}
+after drop and recreate: {'relaxed_flush_ms': 2000, 'retention': {'interval_secs': 600, 'window_secs': 3600}, 'allowlist': ['127.0.0.1/32']} | relaxed acknowledgements: 20 | stored markers left: ['control/retention/r', 'control/durability/r']
+F
+=================================== FAILURES ===================================
+_________________ test_drop_then_recreate_inherits_no_settings _________________
+
+    def test_drop_then_recreate_inherits_no_settings():
+        bucket = make_bucket("dropset")
+        srv = Server(bucket, "dropset", idle=600, holder="DS").start()
+        try:
+            c = srv.client()
+            c["r"]["c"].insert_one({"_id": 0})
+            assert srv.admin.put("/v1/databases/r/retention", {"window_secs": 3600})[0] == 200
+            assert srv.admin.put("/v1/databases/r/durability", {"relaxed_flush_ms": 2000})[0] == 200
+            st, r = srv.admin.put("/v1/databases/r/ip-allowlist", {"entries": ["127.0.0.1/32"]})
+            assert st == 200, r
+            print("before the drop:", state(srv, "r"))
+            c.drop_database("r")
+            c["r"]["c"].insert_one({"_id": 1})                   # the same name again: a new database
+            after = state(srv, "r")
+            coll = c["r"].get_collection("c", write_concern=WriteConcern(w=1, j=False))
+            before = c.admin.command("tenantStats")["groupCommit"]["relaxedAcks"]
+            for i in range(2, 22):
+                coll.insert_one({"_id": i})
+            relaxed = c.admin.command("tenantStats")["groupCommit"]["relaxedAcks"] - before
+            markers = [k for k, _ in list_prefix(bucket, "control/retention/r")] + [k for k, _ in list_prefix(bucket, "control/durability/r")]
+            print("after drop and recreate:", after, "| relaxed acknowledgements:", relaxed, "| stored markers left:", markers)
+>           assert not after["relaxed_flush_ms"] and relaxed == 0, "the recreated database inherited relaxed durability"
+E           AssertionError: the recreated database inherited relaxed durability
+E           assert (not 2000)
+
+test_26_drop_forgets.py:49: AssertionError
+=========================== short test summary info ============================
+FAILED test_26_drop_forgets.py::test_drop_then_recreate_inherits_no_settings
+1 failed, 1 deselected in 2.38s

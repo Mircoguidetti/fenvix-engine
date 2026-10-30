@@ -1,0 +1,4 @@
+before the drop: {'relaxed_flush_ms': 2000, 'retention': {'interval_secs': 600, 'window_secs': 3600}, 'allowlist': ['127.0.0.1/32']}
+after drop and recreate: {'relaxed_flush_ms': 0, 'retention': {'interval_secs': 600, 'window_secs': 0}, 'allowlist': []} | relaxed acknowledgements: 0 | stored markers left: []
+.
+1 passed, 1 deselected in 2.36s

@@ -5,6 +5,7 @@
 //!   delay_put SUBSTR MS    a PUT to such a path is sent after MS milliseconds (a renewal that arrives late)
 //!   fail_put SUBSTR        a PUT to such a path fails (an S3 error)
 //!   fail_get SUBSTR        a GET (or HEAD) of such a path fails (an S3 error)
+//!   delay_get SUBSTR MS    a GET of such a path is sent after MS milliseconds
 //!
 //! Every triggered rule prints `FAULT <rule> <path>` on stderr, so a test knows the point was reached.
 use async_trait::async_trait;
@@ -23,6 +24,7 @@ enum Rule {
     Delay(String, u64),
     Fail(String),
     FailGet(String),
+    DelayGet(String, u64),
 }
 
 pub struct FaultStore {
@@ -56,6 +58,7 @@ impl FaultStore {
                     ["delay_put", s, ms] => rules.push(Rule::Delay(s.to_string(), ms.parse().unwrap_or(0))),
                     ["fail_put", s] => rules.push(Rule::Fail(s.to_string())),
                     ["fail_get", s] => rules.push(Rule::FailGet(s.to_string())),
+                    ["delay_get", s, ms] => rules.push(Rule::DelayGet(s.to_string(), ms.parse().unwrap_or(0))),
                     _ => {}
                 }
             }
@@ -118,6 +121,14 @@ impl ObjectStore for FaultStore {
         if self.rules().iter().any(|r| matches!(r, Rule::FailGet(s) if p.contains(s.as_str()))) {
             eprintln!("FAULT fail_get {p}");
             return Err(object_store::Error::Generic { store: "faults", source: "injected GET failure".into() });
+        }
+        let delay = self.rules().iter().find_map(|r| match r {
+            Rule::DelayGet(s, ms) if p.contains(s.as_str()) => Some(*ms),
+            _ => None,
+        });
+        if let Some(ms) = delay {
+            eprintln!("FAULT delay_get {p} {ms}");
+            tokio::time::sleep(Duration::from_millis(ms)).await;
         }
         self.inner.get_opts(location, options).await
     }

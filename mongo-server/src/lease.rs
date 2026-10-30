@@ -10,6 +10,12 @@
 //! [`LeaseHeld`], which the server turns into a retryable MongoDB error. When a holder crashes its
 //! lease expires; the next process takes it over by conditional update and, because a writer deletes
 //! the `_clean` marker when it opens, takes the unclean (WAL replay) path.
+//!
+//! Clocks: expiry is a wall-clock time written by the owner and read by another process, so the processes of a bucket
+//! must keep their clocks synchronised (NTP). A takeover waits `skew` (1.5 s) after the expiry and an owner stops `ttl/6`
+//! before it: safe while the offset between two processes is below 1.5 s + ttl/6. Two writers on the WAL are excluded by
+//! slatedb's fencing whatever the clocks; the modes that acknowledge before the WAL write (local log, relaxed durability)
+//! rely on the lease, hence on the clocks (README, "Clock requirement").
 
 use anyhow::{anyhow, Result};
 use bson::{doc, Document};

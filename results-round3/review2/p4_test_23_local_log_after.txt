@@ -1,0 +1,5 @@
+offset 0 ms: P1 acknowledged 147 writes, 0 after P2's first write; acknowledged and lost: 0 []
+.offset 1500 ms: P1 acknowledged 148 writes, 0 after P2's first write; acknowledged and lost: 0 []
+.offset 20000 ms: P1 acknowledged 148 writes, 145 after P2's first write; acknowledged and lost: 148 [('p1-1', -0.05), ('p1-2', -0.03), ('p1-3', -0.0), ('p1-4', 0.02), ('p1-5', 0.04)]
+.
+3 passed, 3 deselected in 52.90s

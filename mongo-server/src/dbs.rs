@@ -663,16 +663,19 @@ impl Entry {
     /// lock so no compaction or GC pass can write into it while (or after) it is being deleted:
     /// a pass that finds no manifest does nothing. Repeats the listing until the prefix is empty.
     pub async fn drop_database(&mut self) -> Result<()> {
-        crate::ctl::fork::on_drop(&self.name).await?;
+        let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
+        let _held = lock.lock().await;
+        // Ownership first: a process that does not own the database (another one serves it) is refused here, before it
+        // touches anything (the pins a fork holds in its source, the local log, the objects).
+        if !self.leases.valid(&self.name) {
+            self.leases.acquire(&self.name).await?;
+        }
+        let (leases, name) = (Arc::clone(&self.leases), self.name.clone());
+        crate::ctl::fork::on_drop(&self.name, &move || leases.valid(&name)).await?;
         if let Some(l) = crate::locallog::get() {
             // A restart must not apply the database's earlier records again.
             l.append_drop(&self.name).await.map_err(|_| anyhow::anyhow!("local log stopped"))?.map_err(|e| anyhow::anyhow!(e))?;
             l.forget_pinned(&self.name);
-        }
-        let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
-        let _held = lock.lock().await;
-        if !self.leases.is_held(&self.name) {
-            self.leases.acquire(&self.name).await?;
         }
         self.nat.clear();
         self.copts.clear();
@@ -681,6 +684,8 @@ impl Entry {
             self.closes += 1;
             self.sync_gauges();
         }
+        // again before the objects go (the steps above can take long)
+        self.leases.check_owner(&self.name)?;
         let prefix = Path::from(format!("tenants/{}", self.name));
         for _ in 0..5 {
             let objs: Vec<Path> = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).try_collect().await?;
@@ -694,8 +699,11 @@ impl Entry {
         }
         self.lc.touched.lock().unwrap().remove(&self.name);
         self.leases.forget(&self.name);
-        tenant_bench::lifecycle::forget_wal_state(&self.name);
-        crate::fair::forget(&self.name);
+        // as erase: retention, relaxed durability, allow list, keep-awake pin and the counters go with the database
+        match crate::ctl::get() {
+            Some(ctl) => crate::ctl::erase::forget_settings(&ctl.store, &self.name).await?,
+            None => crate::ctl::erase::forget_in_memory(&self.name),
+        }
         Ok(())
     }
 

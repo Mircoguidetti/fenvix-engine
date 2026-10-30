@@ -121,6 +121,24 @@ Every process of a bucket should still use the same mode. A takeover revokes the
 renewal was late or whose clock is off drops its databases at its next renewal (`ctl-tests/test_23_process_lease_late.py`);
 lease deadlines use CLOCK_BOOTTIME, which keeps counting while a VM is suspended.
 
+**Clock requirement.** The processes that share a bucket must keep their wall clocks synchronised (NTP or an equivalent
+service). Whether an old owner's lease has expired is decided by comparing the expiry it wrote (its own wall clock) with
+the wall clock of the process that wants to take over; CLOCK_BOOTTIME only protects each process's own view of its
+leases. A process takes a database over only once the owner's lease expired more than 1.5 s ago (skew allowance), and an
+owner stops serving `ttl/6` before its lease expires by its own clock. So the takeover is safe while the clock offset
+between any two processes stays below **1.5 s + ttl/6** (6.5 s with the default `--lease-ttl-secs 30`, 2.2 s with 4 s);
+keep it well below 1.5 s.
+
+What protects what:
+- **Two writers on the WAL:** slatedb's fencing (writer epoch). A writer that another process replaced gets `Fenced` on
+  its next WAL write or manifest update, whatever the clocks say, so a write acknowledged after a durable WAL write
+  (the default, immediate mode) is never lost to a second owner.
+- **Modes that acknowledge before the WAL write** (the local log, relaxed durability): only the lease. The old owner
+  acknowledges a write when its own lease is still valid by its own clock; its later upload is fenced. If the clocks are
+  off by more than the allowance above, the old owner can acknowledge writes after the takeover, and they are lost
+  (`ctl-tests/test_23_process_lease_late.py`, local log: offset 0 and 1.5 s lose nothing; offset 20 s, outside the
+  requirement, lost every write the old owner acknowledged in the window).
+
 Test-only switches: `--unsafe-skip-ownership-checks` starts only with `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`;
 `MONGO_TEST_FAULTS_FILE`, `MONGO_TEST_WALL_CLOCK_OFFSET_MS` and `MONGO_TEST_LOCALLOG_FAIL_AT` inject faults. None is ever set
 in production.
@@ -159,6 +177,12 @@ Local log guarantees and their limits (`ctl-tests/test_24_local_log.py`):
 - a restart refuses the records of a database that another writer opened since (newer slatedb writer epoch);
 - a write is not acknowledged if ownership was lost by the time its record is on disk;
 - the restart applies the log before the admin interface starts, and a database whose replay fails or makes no progress for
-  `--local-log-replay-timeout-secs` keeps its records for the next restart while the others go on;
+  `--local-log-replay-timeout-secs` keeps its records while the others go on. Until they are applied that database is
+  refused to every client (error 134 `DatabaseRecoveryPending`, retryable), so nothing reads it without them or writes
+  over them; a background task retries the replay (after 1 s, doubling up to 30 s) and then opens it again. If the process
+  restarts first, the next restart applies them. A drop or erase of the database discards them;
+- a slow database delays the restart: the restart replays up to 32 databases at once and waits for all of them, so one
+  database whose replay hangs keeps the restart (and the admin interface) waiting up to `--local-log-replay-timeout-secs`
+  (default 120 s). No write is lost; the other databases are replayed meanwhile;
 - when ownership is lost (lease lapsed, another process took the database), the writes of that database that were only in
   the local log are lost: the old owner can no longer upload them (it is fenced), and a drop record makes the restart skip them.

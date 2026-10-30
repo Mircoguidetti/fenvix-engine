@@ -67,6 +67,29 @@ pub async fn erase(ctl: &Arc<Ctl>, db: &str) -> ApiResult<Value> {
     }))
 }
 
+/// What this process remembers of a database besides its open tenant: the WAL cleanup floor, the per-database counters,
+/// the retention window, the relaxed durability setting and the cached IP allow list. Erase and dropDatabase both forget
+/// it, so a database created again with the same name starts with none of it.
+pub fn forget_in_memory(db: &str) {
+    tenant_bench::lifecycle::forget_wal_state(db);
+    crate::fair::forget(db);
+    super::pitr::forget(db);
+    super::durability::forget(db);
+    crate::netguard::get().forget_cached(db);
+}
+
+/// dropDatabase: the settings records erase also deletes (the metadata record, which holds the retention window and the IP
+/// allow list, the retention and durability markers and the keep-awake pin), then the in-memory state. Usage records,
+/// exports and staging are kept (history; erase deletes them, a drop is not an erase). Every step is safe to repeat.
+pub async fn forget_settings(store: &rec::Store, db: &str) -> anyhow::Result<()> {
+    for p in [rec::path(&["control", "durability", db]), rec::path(&["control", "retention", db]), rec::path(&["control", "pins", db])] {
+        rec::delete(store, &p).await?;
+    }
+    purge::delete_prefix(store, &rec::path(&["control", "dbs", db])).await?;
+    forget_in_memory(db);
+    Ok(())
+}
+
 /// The steps of an erase, in order; every one is safe to repeat.
 async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> ApiResult<purge::PurgeReport> {
     // The pin goes first so the keep-awake agent stops reopening the database.
@@ -97,13 +120,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
-    // as a drop: a database created again with this name starts its WAL ids again, and has no counters yet
-    tenant_bench::lifecycle::forget_wal_state(db);
-    crate::fair::forget(db);
-    super::pitr::forget(db);
-    if super::durability::forget(db) {
-        let _ = super::rec::delete(&ctl.store, &super::rec::path(&["control", "durability", db])).await;
-    }
+    // as a drop: a database created again with this name starts with none of the erased one's state
+    forget_in_memory(db);
+    let _ = rec::delete(&ctl.store, &rec::path(&["control", "durability", db])).await;
     super::failpoint("erase.after_tenant").await;
     for a in ancestors {
         rec::delete(&ctl.store, &fork::fork_marker(a, db)).await?;
