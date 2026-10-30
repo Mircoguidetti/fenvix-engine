@@ -1,0 +1,2 @@
+utc,elapsed_s,phase,running,total_usd,pct_of_stop,requests_usd,ec2_ipv4_usd,ebs_usd,inter_az_usd,margin_usd,stop_usd,cap_usd
+2026-10-30T07:01:10Z,59,run,-,0.015,0.4,0.0001,0.0048,0.0001,0.0,0.0,4.0,5.0
