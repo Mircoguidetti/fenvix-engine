@@ -148,12 +148,16 @@ fn next_waiter(g: &mut Gate) -> Option<Waiter> {
 /// A command's place in the gate; dropping it lets the next queued command start.
 pub struct Permit {
     db: String,
+    /// The command took a slot in its database's counters (the database was registered when it was admitted).
+    counted: bool,
 }
 
 impl Drop for Permit {
     fn drop(&mut self) {
-        if let Some(s) = STATS.lock().unwrap().get_mut(&self.db) {
-            s.inflight = s.inflight.saturating_sub(1);
+        if self.counted {
+            if let Some(s) = STATS.lock().unwrap().get_mut(&self.db) {
+                s.inflight = s.inflight.saturating_sub(1);
+            }
         }
         let mut g = GATE.lock().unwrap();
         g.inflight = g.inflight.saturating_sub(1);
@@ -177,7 +181,9 @@ pub fn rejection(db: &str, what: &str, limit: u64) -> Document {
 pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
     // Per-database counters and limits exist only for databases this process opened or wrote (`register`), so a client
     // naming arbitrary databases cannot grow this map; such commands still pass through the gate below.
+    let mut counted = false;
     if let Some(s) = STATS.lock().unwrap().get_mut(db) {
+        counted = true;
         let sec = now_sec();
         if s.sec != sec {
             s.sec = sec;
@@ -207,7 +213,7 @@ pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
         let mut g = GATE.lock().unwrap();
         if !SATURATED.load(Relaxed) || g.inflight < sat_cap() {
             g.inflight += 1;
-            return Ok(Permit { db: db.to_string() });
+            return Ok(Permit { db: db.to_string(), counted });
         }
         let (tx, rx) = oneshot::channel();
         if wakes {
@@ -229,13 +235,18 @@ pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
         s.queue_wait_us += us;
         s.queue_wait_max_us = s.queue_wait_max_us.max(us);
     }
-    Ok(Permit { db: db.to_string() })
+    Ok(Permit { db: db.to_string(), counted })
 }
 
-/// Bytes a database wrote since it was opened (reset at close). Its memtable holds at most `--memtable-max-mb` of them.
 /// The database exists (it was opened or written): from now on it has counters, limits and metrics.
 pub fn register(db: &str) {
-    STATS.lock().unwrap().entry(db.to_string()).or_default();
+    STATS.lock().unwrap().entry(db.to_string()).or_insert_with(first_stat);
+}
+
+/// The counters of a database seen for the first time: the command that opened or created it was admitted before they
+/// existed, so it is counted here.
+fn first_stat() -> DbStat {
+    DbStat { commands: 1, ..Default::default() }
 }
 
 /// The database was dropped or erased: its counters go.
@@ -243,9 +254,10 @@ pub fn forget(db: &str) {
     STATS.lock().unwrap().remove(db);
 }
 
+/// Bytes a database wrote since it was opened (reset at close). Its memtable holds at most `--memtable-max-mb` of them.
 pub fn note_written(db: &str, bytes: u64, reset: bool) {
     let mut st = STATS.lock().unwrap();
-    let s = st.entry(db.to_string()).or_default();
+    let s = st.entry(db.to_string()).or_insert_with(first_stat);
     if reset {
         s.unflushed_bytes = 0;
     }
