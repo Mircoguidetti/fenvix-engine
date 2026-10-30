@@ -873,17 +873,33 @@ Rifà i passi che le correzioni toccano:
 
 | parte | binario | risultato |
 |---|---|---|
-| suite differenziale pymongo contro mongod 7.0 | `4677caf` | 4127 su 4127 passati |
-| suite differenziale driver Node contro mongod 7.0 | `4677caf` | 2200 su 2200 passati |
-| test ctl | `4677caf` | non eseguito |
-| test ctl con autenticazione | `4677caf` | non eseguito |
-| test SIGKILL con controlli negativi (0) | `4677caf` |  |
+| suite differenziale pymongo contro mongod 7.0 | `b6ae7be` | 4127 su 4127 passati |
+| suite differenziale driver Node contro mongod 7.0 | `b6ae7be` | 4127 su 4127 passati |
+| test ctl (36 file) | `b6ae7be` | 459 passati, 0 falliti |
+| test ctl con autenticazione (13 file) | `b6ae7be` | 71 passati, 45 falliti (gli stessi 45 test falliscono identici con il binario di `main` (confrontati per nome, file per file): questi test chiamano `tenantAdmin`, che con l'autenticazione è rifiutato; non sono scritti per quella modalità) |
+| test SIGKILL con controlli negativi (6) | `b6ae7be` | sst_1: ok, sst_2: ok, sstctl_1: ok, wal_1: ok, wal_2: ok, walctl_1: ok |
+| loadtest `test_durable_reads` | `b6ae7be` | 0 PASS, 0 FAIL, exit 0 {'acked': 25950, 'seen_before_ack': 5952, 'lost_acked': 0, 'seen_before_ack_but_lost': 0} |
+| loadtest `test_fallback_recovery` | `b6ae7be` | 0 PASS, 0 FAIL, exit 0 |
+| loadtest `test_lease` | `b6ae7be` | 13 PASS, 0 FAIL, exit 0 |
+| loadtest `test_shared_reads` | `b6ae7be` | 2 PASS, 0 FAIL, exit 0, 0 |
+| loadtest `test_stop` | `b6ae7be` | 0 PASS, 0 FAIL, exit 0 sicuro: letture vecchie 0, scritture confermate dal processo congelato 0; sicuro shared: letture vecchie 0, scritture confermate dal processo congelato 0; controllo negativo: letture vecchie 25, scritture confermate dal processo congelato 52 |
+| test unitari Rust (`cargo test --workspace`) | `b6ae7be` | 60 passati, 0 falliti |
 
-Sul binario precedente (`4677caf`) due test ctl erano falliti:
-- `test_03b` (controllo negativo senza retention): la regressione della pulizia WAL, corretta in `4677caf`;
-- `test_02_fork` (2002 byte contro un limite di 2000), con la memtable da 2 MB.
+Binario finale: commit `b6ae7be`, sha256 `a9a6b2e7e6c00c56…`. Sul binario precedente (`4677caf`) tre test erano falliti:
+- `test_21_fair_limits_metrics` (49 comandi contati su 50): la correzione dei contatori per database (creati solo per
+  database esistenti) non contava il comando che apre o crea il database. Corretto in `b6ae7be`; il test fallisce su
+  `4677caf` e passa su `b6ae7be`.
+- loadtest `test_fallback_recovery` (il server non partiva): il test usava `--writer-poll-secs 3600` con l'età minima di
+  pulizia SST di default, che il nuovo controllo all'avvio rifiuta. Corretto il test (`--sst-gc-min-unref-secs 7200`), non il
+  controllo.
+- `test_07_usage::test_storage_bytes` (il campione di spazio occupato superava di 32 byte la misura successiva): dopo la
+  chiusura la pulizia può sostituire il manifest con uno più piccolo, quindi lo spazio può scendere tra le due letture. Non
+  corretto: è passato 3 volte su 3 da solo e nella regressione finale; il test resta com'è.
 
-Sul binario finale passano entrambi (`test_02_fork` 3 volte su 3).
+Il loadtest `test_fallback_recovery` non stampa PASS/FAIL: 10 prove, 866212 documenti confermati, 0 inserimenti e 0 aggiornamenti persi.
+La tabella dei kill -9 per modalità (sopra) è sul binario `4677caf`: `b6ae7be` cambia solo i contatori per database, che quel test non usa.
+
+Le uscite grezze di questa regressione sono nel repo, compresse, in `results-round3/tests/final12.tar.gz`.
 
 **Test esistenti modificati:**
 - solo `ctl-tests/test_08b_pin_cost.py`: aggiunto `--process-lease false`, perché misura apposta il lease per database (A2).
