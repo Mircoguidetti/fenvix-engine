@@ -1,0 +1,1 @@
+{"bucket":"fenvix-test-r3-41011005224","action":"create","region":"eu-west-1","steps":[{"step":"create-bucket-eu-west-1","ok":true,"error":""},{"step":"tag","ok":true,"error":""},{"step":"lifecycle-1-day","ok":true,"error":""}]}

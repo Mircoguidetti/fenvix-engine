@@ -163,13 +163,10 @@ struct Args {
     max_concurrent_wakes: usize,
     /// Memtable size in MiB (slatedb's own estimate of the data) at which a writer flushes it to an L0 SST (slatedb's default
     /// is 64 MiB per database). Measured: the process memory a memtable holds is about 4 times this estimate for 1 KB
-    /// documents, so a database written fast holds up to ~16 MB with the default of 4. 0 = slatedb's default.
-    #[arg(long, default_value_t = 4)]
+    /// documents (results-round3.md), so 2 holds about 8 MB per database open for writing, fast or slow (slatedb also flushes
+    /// after 4096 WAL flushes, which a slow database reaches later than this size). 0 = slatedb's default.
+    #[arg(long, default_value_t = 2)]
     memtable_max_mb: u64,
-    /// The engine flushes a writer's memtable to an L0 SST after this many write batches (slatedb itself waits for 4096 WAL
-    /// flushes): a database written slowly otherwise kept every write in memory for hours (~4.3 KB per 1 KB write). 0 = off.
-    #[arg(long, default_value_t = 256)]
-    max_writes_before_l0: u64,
     /// One block cache shared by every open database, in MiB (slatedb's default is a 512 MiB cache per open database, with no
     /// limit across databases: the memory then grew with the data read by each database).
     #[arg(long, default_value_t = 256)]
@@ -447,7 +444,6 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
     tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
-    tenant_bench::lifecycle::MAX_WAL_FLUSHES_BEFORE_L0.store(args.max_writes_before_l0, std::sync::atomic::Ordering::Relaxed);
     if args.block_cache_mb > 0 || args.meta_cache_mb > 0 {
         tenant_bench::lifecycle::install_shared_cache(args.block_cache_mb << 20, args.meta_cache_mb << 20);
     }
