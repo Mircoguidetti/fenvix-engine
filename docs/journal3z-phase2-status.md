@@ -12,7 +12,7 @@ copiato né modificato). Strumenti locali: MinIO compilato dai sorgenti con `go 
 | pezzo | stato | stima del piano (giornate di sessione) | tempo usato | prova |
 |---|---|---|---|---|
 | P1 formato su disco | **fatto** | 0,5 – 1 | ≈ 0,1 (14:24–14:30) | `cargo test -p j3z-codec -p j3z-store`: 14/14 verdi (13 + 1 aggiunto in P2); ogni controllo ha il suo gemello rotto che fallisce (sotto) |
-| P2 recupero dopo riavvio | **fatto** | 0,5 | ≈ 0,3 (14:31–15:10) | 2.000 semi a caso + 200 kill -9 di processo vero: 0 fallimenti sul codice corretto; ogni gemello rotto scoperto; **un difetto vero trovato e corretto** (sotto) |
+| P2 recupero dopo riavvio | **fatto** | 0,5 | ≈ 0,1 (14:31–14:43) | 2.000 semi a caso + 200 kill -9 di processo vero: 0 fallimenti sul codice corretto; ogni gemello rotto scoperto; **un difetto vero trovato e corretto** (sotto) |
 | P3 programma del nodo | da fare | 1 – 1,5 | | |
 | P4 rete + proxy di guasti | da fare | 0,5 – 1 | | |
 | P5 client scrittore + MinIO | da fare | 1 – 2 | | |
