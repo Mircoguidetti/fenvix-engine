@@ -1,0 +1,36 @@
+{
+ "spend": {
+  "put": 123593.10000000002,
+  "get": 58417.0,
+  "runner_list": 111,
+  "storage_usd": 0.0009740623056888581,
+  "usd": 0.6999
+ },
+ "final_usd_estimate": 0.6999,
+ "done": [
+  "s3-before-r1",
+  "s3-before-r10",
+  "s3-before-r100",
+  "s3-immediate-r1",
+  "s3-immediate-r10",
+  "s3-immediate-r100",
+  "s3-adaptive-r1",
+  "s3-adaptive-r10",
+  "s3-adaptive-r100",
+  "s3-relaxed-r1",
+  "s3-relaxed-r10",
+  "s3-relaxed-r100",
+  "s3-local-r1",
+  "s3-local-r10",
+  "s3-local-r100",
+  "s3-fleet100-before",
+  "s3-fleet100-immediate",
+  "s3-fleet100-adaptive",
+  "s3-fleet100-relaxed",
+  "s3-fleet100-local"
+ ],
+ "skipped": [],
+ "automatic_stop": null,
+ "cap_usd": 10.0,
+ "stop_usd": 8.0
+}
