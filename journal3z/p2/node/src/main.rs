@@ -12,7 +12,10 @@
 //! - A failed write or fdatasync (disk full, I/O error) makes the node exit with code 75 (the store is poisoned; a
 //!   restart recovers from what is on disk). A record that breaks a log (a protocol bug) exits with code 70.
 //! - `--faults-file` (feature `faults`, test bench only): JSON re-read every 50 ms:
-//!   `{"fail_syncs": <counter: each increment makes one fdatasync fail>, "full": bool, "slow_sync_us": n}`.
+//!   `{"fail_syncs": <counter: each increment makes one fdatasync fail>, "full": bool, "slow_sync_us": n,
+//!   "power_cuts": <counter: an increment drops every byte not yet fsynced and ends the process with code 99>}`.
+//! - Self-check: a reply `Ack` for an epoch below the one the node has promised for that database prints a line
+//!   `VIOLATION ack_below_promise ...` on stdout (the bench counts them; only a broken node can do it).
 //! - `--mutation` (feature `mutations`, negative controls only): a protocol bug from `Mutations::ALL`.
 //! Prints `READY node=<id> listen=<addr>` on stdout once listening.
 
@@ -50,6 +53,7 @@ fn build_fs(faults_file: Option<String>) -> Arc<dyn Fs> {
         let f2 = faults.clone();
         std::thread::spawn(move || {
             let mut seen_fail: Option<u64> = None;
+            let mut seen_cut: Option<u64> = None;
             loop {
                 if let Some(v) = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok()) {
                     f2.full.store(v["full"].as_bool().unwrap_or(false), SeqCst);
@@ -60,6 +64,16 @@ fn build_fs(faults_file: Option<String>) -> Arc<dyn Fs> {
                         Some(s) if n > s => {
                             f2.fail_next_sync.store(true, SeqCst);
                             seen_fail = Some(n);
+                        }
+                        _ => {}
+                    }
+                    let c = v["power_cuts"].as_u64().unwrap_or(0);
+                    match seen_cut {
+                        None => seen_cut = Some(c),
+                        Some(s) if c > s => {
+                            let _held = f2.power_cut(); // never released: the process ends now
+                            eprintln!("j3z-node: exit 99: simulated power cut");
+                            std::process::exit(99);
                         }
                         _ => {}
                     }
@@ -112,6 +126,15 @@ fn core_loop(rx: std::sync::mpsc::Receiver<In>, mut store: Store, mut core: jour
                             die(70, &format!("protocol bug: {b}"));
                         }
                         recs.extend(out.recs);
+                        for (_, r) in &out.replies {
+                            if let Msg::Ack { db, epoch, .. } = r {
+                                let p = core.dbs.get(db).map_or(0, |d| d.promised);
+                                if p > *epoch {
+                                    use std::io::Write;
+                                    let _ = writeln!(std::io::stdout(), "VIOLATION ack_below_promise db={db} epoch={epoch} promised={p}");
+                                }
+                            }
+                        }
                         replies.entry(conn).or_default().extend(out.replies.into_iter().map(|(_, r)| r));
                     }
                 }

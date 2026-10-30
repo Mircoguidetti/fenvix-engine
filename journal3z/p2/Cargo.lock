@@ -738,6 +738,7 @@ name = "j3z-bench"
 version = "0.1.0"
 dependencies = [
  "j3z-net",
+ "j3z-store",
  "j3z-writer",
  "journal3z-core",
  "object_store",

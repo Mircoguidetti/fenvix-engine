@@ -86,6 +86,9 @@ async fn main() {
         .with_bucket_name(req("--bucket"))
         .with_access_key_id(req("--s3-key"))
         .with_secret_access_key(req("--s3-secret"))
+        // a hung request must not hold the lease loop past the lease: short timeouts, few retries
+        .with_client_options(object_store::ClientOptions::new().with_allow_http(true).with_timeout(Duration::from_secs(2)).with_connect_timeout(Duration::from_secs(1)))
+        .with_retry(object_store::RetryConfig { max_retries: 2, retry_timeout: Duration::from_secs(4), ..Default::default() })
         .build()
         .unwrap_or_else(|e| die(2, &format!("object store: {e}")));
     let meta = Meta::new(Arc::new(s3));

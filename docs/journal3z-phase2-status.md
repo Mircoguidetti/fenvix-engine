@@ -16,9 +16,9 @@ copiato né modificato). Strumenti locali: MinIO compilato dai sorgenti con `go 
 | P3 programma del nodo | **fatto** | 1 – 1,5 | ≈ 0,05 (14:44–14:49, insieme a P4) | 5 test su processi veri (1 e 3 nodi), ognuno col gemello rotto scoperto (sotto) |
 | P4 rete + proxy di guasti | **fatto** | 0,5 – 1 | (con P3) | proxy: 7 controlli dei modi tutti verdi; proxy rotto (ignora i modi) fallisce 6 su 7 |
 | P5 client scrittore + MinIO | **fatto** | 1 – 2 | ≈ 0,1 (14:50–15:08) | 2 prove sul solo MinIO + 3 scenari su processi veri (3 nodi, 1–2 scrittori, MinIO, proxy), ognuno col gemello rotto scoperto (sotto) |
-| P7 banco di prova a 3 processi | da fare | 1 – 2 | | |
+| P7 banco di prova a 3 processi | **in corso – fermato da un fallimento (vedi sotto)** | 1 – 2 | ≈ 0,2 finora (15:09–15:58) | programma `j3z-soak` scritto; 3 prove brevi di messa a punto: la 3ª ha trovato una **perdita di scritture confermate** causata dal sostituto del motore (P5), corretta; ripetuta: 0 perse; **domanda aperta** sul criterio di ripresa (sotto) |
 | P8 12 versioni rotte sul codice vero | da fare | 0,5 – 1 | | |
-| P9 (§2f) controllo esaustivo a 2 scrittori | da fare | 1 – 2 | | |
+| P9 (§2f) controllo esaustivo a 2 scrittori | iniziato (in attesa) | 1 – 2 | | primo passo: ricerca parallela + messaggi "morti" eliminati; verificata contro la fase 1 (sotto) |
 | CI corta | da fare | — | | |
 | P6 integrazione col motore, §2c | **rinviato** (decisione 1): solo interfaccia e documento | 2 – 5 | | |
 
@@ -172,3 +172,86 @@ Note per P6 (integrazione col motore, rinviata):
   recuperare si trovano dai lease, non da un disco locale;
 - il sostituto carica solo fino all'indice **confermato** dal giornale; il motore vero dovrà fare lo stesso (o
   dimostrare che caricare record non ancora confermati è sicuro) – da verificare nella revisione §2e.
+
+## P7 – banco di prova a 3 processi (in corso; fermato da un fallimento)
+
+Programma `journal3z/p2/bench/src/bin/j3z-soak.rs` (configurazione del §2a): 3 nodi, 3 scrittori (il sostituto del
+motore di P5 con i valori di produzione: lease 10 s, upload 30 s, 32/128 MB, rilascio dopo 5 s), 30 database, MinIO
+locale, proxy su ogni collegamento scrittore→nodo, 200 scritture/s da 1 KB a ritmo aperto. Zona z = scrittore z +
+nodo z. Un guasto alla volta, poi attesa che il sistema sia di nuovo sano (tutti i processi su, ogni database con un
+proprietario e una conferma negli ultimi 5 s, ogni lease con i nodi attuali), poi una pausa di 10–30 s (dentro i
+10–60 s del piano: scelti più corti perché l'attesa "sano" allunga il ciclo; serve per arrivare ai numeri minimi di
+guasti in circa 12 ore). Guasti estratti da un sacchetto mescolato con le proporzioni dei minimi del §2a (÷10), più
+tre tipi in più, segnati: interruzione di corrente di un nodo (i byte non sincronizzati spariscono: serve perché
+`ack_before_fsync` sia visibile su processi veri, il kill -9 non lo mostra), interruzione di corrente di tutti e tre
+i nodi insieme, store a oggetti fermo 1–4 s. Controlli: ogni 30 minuti (configurabile) e alla fine – ogni scrittura
+confermata sotto il segnalibro dello store deve esserci al suo indice; regole sui dischi su copie delle cartelle dei
+nodi (stessa coppia indice/epoca ⇒ stessi byte; nessun nodo taglia oltre il segnalibro); alla fine, dopo un caricamento
+finale di tutti i database, **ogni** scrittura confermata. Sempre: righe di auto-controllo dei nodi (`VIOLATION` se un
+nodo conferma sotto l'epoca promessa), processi che si fermano da soli (attesi solo dopo errore di fsync, disco pieno,
+interruzione di corrente), conferme tardive. Ripresa: per ogni guasto e ogni database toccato, tempo dal guasto alla
+prima conferma di una scrittura inviata dopo il guasto. Al primo fallimento la prova si ferma (§2d).
+
+Aggiunte al codice dei pezzi precedenti fatte per il banco: interruzione di corrente nello strato disco con guasti
+(test `power_cut_drops_only_unsynced` col gemello) e nel nodo (`power_cuts` nel file dei guasti, uscita 99); riga
+`VIOLATION ack_below_promise` nel nodo; tempi massimi brevi per le richieste allo store nello scrittore (2 s, 2
+tentativi) perché una richiesta appesa non tenga fermo il ciclo del lease.
+
+Prove brevi di messa a punto (non contano per il §2a; risultati grezzi in `journal3z/results/phase2/p7-trials/`):
+
+| prova | esito | causa | cosa è stato fatto |
+|---|---|---|---|
+| t1 (seme 1, 6 min) | **fallita**: nessuno scrittore prende un database in 120 s | errore mio nello scrittore, non ancora pubblicato: impostando i tempi massimi delle richieste allo store avevo sostituito tutte le opzioni del client, e così spento il permesso di usare `http://` verso MinIO; anche un test di P5 falliva | corretto; test P5 di nuovo verdi |
+| t2 (seme 2, 6 min) | 13 guasti, 69.966 conferme, **0 perse, 0 tardive, 0 violazioni sui dischi**; ripresa dopo guasti a un nodo: max 0,95 s; **dopo guasti a uno scrittore: 9 casi su 41 oltre 15 s (max 18,3 s), tutti nello stesso isolamento di zona** | lo scrittore isolato è il "preferito" di un terzo dei database e riprova a prenderli ogni 200 ms: dopo aver rilasciato il lease (5 s senza maggioranza) se lo riprende subito, prova ad aprire il giornale per 5 s, fallisce, rilascia, e così via finché la zona non torna; gli altri scrittori (che provano ogni 1 s) non riescono a entrare | nel sostituto del motore: uno scrittore che non vede 2 nodi su 3 non prova a prendere database. Test P5 rifatti: verdi (`p5-run3.txt`) |
+| t3 (seme 3, 10 min, solo guasti che toccano gli scrittori e lo store) | **FALLITA: 7.832 scritture confermate perse** (al primo controllo, 3,2 min; database 6, 9, 15, 18, 30 e altri), 0 violazioni sui dischi | **difetto nel sostituto del motore (P5), non nel giornale.** Dopo un disco perso, al punto di caricamento lo scrittore cambia i membri: carica, poi durante il cambio carica **una seconda volta**; senza nulla di nuovo, il secondo caricamento ha lo stesso indice (971) e la stessa epoca (35) del primo, e il nome dell'oggetto dipendeva solo da (indice, epoca): il secondo caricamento, **vuoto**, ha **sovrascritto** il primo (record 610–971); il giornale era già stato accorciato fino a 971 su conferma del primo caricamento → quelle scritture non erano più da nessuna parte. Prova: nello store il manifesto del database 15 elenca due volte `chunk-…971-…35`, e quell'oggetto pesa 422 byte contro i ~2.800 degli altri (file `t3-failed/db15-*.txt/json`) | nomi degli oggetti unici (suffisso a caso) e scrittura "solo creazione" (un caricamento non può mai sostituirne un altro); il cambio dei membri non ricarica se non c'è nulla di nuovo. Nuovo test `uploads_never_replace_each_other` (gemello col vecchio nome: il record 610 sparisce). Test P5 tutti rifatti: 6 su 6 verdi (`p5-run4.txt`) |
+| t3b (stesso seme e stessi tipi di guasto, 15 min, dopo la correzione) | 36 guasti (10 kill di scrittore, 7 "due scrittori", 8 salti d'orologio, 3 isolamenti di zona, 4 errori di fsync, 1 disco pieno, 1 disco perso, 2 pause dello store); 164.544 conferme; 5 controlli: **0 perse, 0 tardive, 0 violazioni sui dischi**; ripresa dopo guasti a un nodo: max 0,69 s; **dopo guasti a uno scrittore: 20 casi su 410 oltre 15 s (max 15,9 s), mediana 8,1 s** | i 20 casi sono **un solo** episodio "due scrittori" (lo scrittore fermato aveva tutti i 30 database): vedi "domanda aperta" sotto | nessuna modifica: serve una decisione |
+
+Cosa insegna t3 per il motore vero (P6, revisione §2e): il giornale si accorcia quando il motore dice "caricato fino a
+k"; se il motore poi **sostituisce** ciò che aveva caricato, il giornale non può salvare nulla. SlateDB scrive file
+nuovi e aggiorna il manifesto con scrittura condizionale, quindi questo difetto preciso non si trasferisce, ma il punto
+"`uploaded(k)` solo quando lo stato fino a k è nello store per intero e non può più essere sostituito" va aggiunto ai
+controlli della revisione (§2e punto 6).
+
+## P9 – controllo esaustivo a 2 scrittori (§2f strada 1): iniziato
+
+Nuovo programma `journal3z/mc/src/bin/mc2.rs`: usa **lo stesso modello** della fase 1 (`journal3z/mc/src/main.rs`,
+importato, non copiato: lo stesso cervello vero, le stesse azioni, le stesse regole controllate; nel file della fase 1
+sono cambiate solo le visibilità). Cambia solo il modo di cercare: ricerca su 4 thread con un insieme comune di stati
+visti, e **rimozione dei messaggi "morti"** (messaggi la cui consegna non può più cambiare nulla, né ora né dopo:
+ogni regola è scritta nel file con il motivo per cui vale per sempre). Verifica del programma contro la fase 1, uno
+scrittore, indice 2: senza rimozione **18.698.439 stati, identico alla fase 1** (stesso numero esatto); con la
+rimozione **1.804.416 stati** (10 volte meno), stesso verdetto (nessuna violazione). Prossimi passi (dopo lo sblocco):
+la stessa cosa con 2 scrittori; se non basta, la simmetria dei 3 nodi (richiede una funzione in più nel `core`, solo
+per il controllo, e quindi la ripetizione della campagna del simulatore, regola del §2d).
+
+### Domanda aperta (P7): il criterio di ripresa del §2a punto 4 e i salti d'orologio
+
+Il §2a chiede: dopo un guasto a uno scrittore, ogni suo database riprende **entro lease + 5 s = 15 s nel 99 % dei
+casi**. Il §2a chiede anche, tra i guasti, salti dell'orologio di uno scrittore fino a ±5 s. E il disegno (§5.1, come
+il lease di round3) dice: un altro server può prendere il database quando **il suo** orologio supera `expiresMs +
+1,5 s`, dove `expiresMs` è scritto con l'orologio **di chi tiene** il lease. Quindi il tempo di subentro è:
+
+  tempo dall'ultimo rinnovo (≤ 10 s) + 1,5 s + (anticipo dell'orologio di chi tiene − anticipo di chi subentra) + fino a 1 s di attesa del giro
+
+Con gli scostamenti ammessi dai guasti (ciascuno scrittore fino a ±5 s, quindi fino a 10 s di differenza) il subentro
+può arrivare a circa 22 s **per come è fatto il disegno**, non per un difetto. Lo mostrano i dati di t3b: con
+l'orologio dello scrittore fermato in anticipo di 3,9 s e quello di chi subentra in ritardo di 2,0 s, 15,9 s; con
+differenza 4 s, 13,1 s; quando l'orologio dello scrittore fermato era giusto, 10,6–11,2 s. In una prova di 12 ore,
+con 150 episodi "due scrittori" e 300 kill di scrittore e gli orologi quasi sempre spostati, il 99 % entro 15 s con
+buona probabilità **non** sarebbe rispettato. La sicurezza non c'entra (nessuna regola del giornale usa orologi: 0
+perdite anche qui).
+
+Due strade, da decidere (non cambio né il criterio né il disegno da solo):
+
+1. **(proposta)** Cambiare la regola di subentro, nel sostituto del motore ora e nel motore vero in P6: chi vuole
+   subentrare guarda il lease e lo considera scaduto quando l'ha visto **immutato** (stessa versione) per `lease +
+   1,5 s` misurati col **proprio** orologio monotono, invece di confrontare il proprio orologio con un'ora scritta da
+   un altro. Così gli scostamenti degli orologi tra macchine non contano più; il subentro diventa ≤ 10 + 1,5 + 1 ≈
+   12,5 s (più l'apertura). Chi tiene il lease smette comunque di agire a `ultimo rinnovo + 10 s` sul proprio
+   orologio monotono, come oggi. Il salto d'orologio del §2a resta come guasto, applicato all'orologio usato dal
+   lease (un salto in avanti del monotono è come una macchina virtuale messa in pausa). È un cambiamento al §5.1 del
+   disegno (solo disponibilità, non sicurezza) e al lease del motore (round3 usa l'ora assoluta come oggi).
+2. Lasciare il disegno e riscrivere il criterio come "lease + 1,5 s + massimo scostamento d'orologio iniettato + 1 s"
+   (con ±5 s: circa 22 s). Questo è ammorbidire un criterio dopo averlo misurato: lo può decidere solo il fondatore.
+
+Finché non c'è una decisione, le prove lunghe del §2a non partono (sarebbero da rifare).

@@ -1,0 +1,139 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 34975,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 191,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 66708,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 373,
+      "tag": "ckpt2"
+    },
+    {
+      "checked_acks": 91214,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 580,
+      "tag": "ckpt3"
+    },
+    {
+      "checked_acks": 135228,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 792,
+      "tag": "ckpt4"
+    },
+    {
+      "checked_acks": 164544,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 920,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [],
+  "fault_counts": {
+    "ClockJump": 8,
+    "CutZone": 3,
+    "DiskFull": 1,
+    "DiskLoss": 1,
+    "FsyncError": 4,
+    "S3Pause": 2,
+    "TwoWriters": 7,
+    "WriterKill": 10
+  },
+  "faults": 36,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/trial/w3b"
+  },
+  "kinds": [
+    "CutZone",
+    "TwoWriters",
+    "WriterKill",
+    "ClockJump",
+    "DiskLoss",
+    "PowerCutAll",
+    "S3Pause",
+    "DiskFull",
+    "FsyncError"
+  ],
+  "minutes_planned": 15.0,
+  "minutes_run": 15.34429403535,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 0.688708585,
+    "n": 240,
+    "over_5s": 0,
+    "p50_s": 0.099943094,
+    "p99_s": 0.62130314
+  },
+  "recovery_other_faults_max_s": {
+    "ClockJump": [
+      0.44302827,
+      0.35007833
+    ],
+    "S3Pause": [
+      0.67706603,
+      0.638970184
+    ],
+    "WriterKill": [
+      0.397320794,
+      0.67305255,
+      0.656698849,
+      0.477657601
+    ]
+  },
+  "recovery_writer_faults": {
+    "max_s": 15.930027566,
+    "n": 410,
+    "over_15s": 20,
+    "over_40s": 0,
+    "p50_s": 8.125265995,
+    "p99_s": 15.725073933000001
+  },
+  "seed": 3,
+  "wait_until_healthy_s": {
+    "max": 0.074091095,
+    "p50": 0.059402779
+  },
+  "writer_opens": 365,
+  "writes_acked": 164544,
+  "writes_refused": {
+    "down": 4345,
+    "no_owner": 448,
+    "not_owner": 11846,
+    "timeout": 482,
+    "unavailable": 1941
+  },
+  "writes_sent": 183158
+}

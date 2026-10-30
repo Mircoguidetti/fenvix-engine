@@ -1,0 +1,11 @@
+[clock_jump_old_writer_fenced] correct: sent 15968 acked 15904 refused {"fenced": 17, "not_owner": 32, "unavailable": 15}; store holds 15911 records; lost 0 late 0; moved: true; settled: true; writer 0: ["LOST db=1 epoch=1 why=journal_fenced", "LOST db=3 epoch=1 why=journal_fenced", "LOST db=2 epoch=1 why=journal_fenced", "LOST db=4 epoch=1 why=journal_fenced"]
+[clock_jump_old_writer_fenced] twin no_fencing (nodes): sent 15083 acked 15067 refused {"unavailable": 16}; store holds 15058 records; lost 9 late 9; moved: true; settled: true; writer 0: ["LOST db=2 epoch=1 why=store_fenced", "LOST db=4 epoch=1 why=store_fenced", "LOST db=1 epoch=1 why=store_fenced", "LOST db=3 epoch=1 why=store_fenced"]
+.[lease_is_exclusive] correct: 100 rounds with exactly 1 winner, 0 with 0 or more than 1
+[lease_is_exclusive] twin (unconditional writes): 0 rounds with 1 winner, 100 with 0 or more than 1
+.[lost_disk_reconfig] correct: sent 39526 acked 39477 refused {"unavailable": 49}; store holds 39477 records; lost 0 late 0; node 3 id 3862718918 -> 1915151520; RECONFIG events 3; acks after node 1 died 14876; settled true
+[lost_disk_reconfig] twin no reconfiguration: sent 26021 acked 25989 refused {"no_owner": 2160, "not_owner": 16, "unavailable": 16}; store holds 25989 records; lost 0 late 0; node 3 id 224957110 -> 2294849031; RECONFIG events 0; acks after node 1 died 0; settled false
+.[store_fence] skip_fence=false: old writer's upload -> Err(Conflict); marker 12; index 11 holds Some(111)
+[store_fence] skip_fence=true: old writer's upload -> Ok(()); marker 11; index 11 holds Some(999)
+.[writer_kill_takeover] correct: sent 23750 acked 22616 refused {"down": 1134}; store holds 22619 records; lost 0 late 0; moved to writer 1: true; settled: true; open after the kill (s): [7.0, 7.1, 7.0, 7.1]
+[writer_kill_takeover] twin recovery_single: sent 21502 acked 20532 refused {"down": 938, "no_owner": 676, "unavailable": 32}; store holds 19917 records; lost 635 late 894; moved to writer 1: true; settled: true
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 84.78s

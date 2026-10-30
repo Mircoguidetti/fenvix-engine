@@ -1,0 +1,115 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 34797,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [
+        "db 15 idx 610 epoch 1 id 20579 writer 0",
+        "db 6 idx 597 epoch 1 id 20584 writer 0",
+        "db 15 idx 611 epoch 1 id 20585 writer 0",
+        "db 9 idx 631 epoch 1 id 20586 writer 0",
+        "db 30 idx 630 epoch 1 id 20587 writer 0",
+        "db 6 idx 598 epoch 1 id 20593 writer 0",
+        "db 30 idx 631 epoch 1 id 20600 writer 0",
+        "db 30 idx 632 epoch 1 id 20601 writer 0",
+        "db 15 idx 612 epoch 1 id 20603 writer 0",
+        "db 18 idx 604 epoch 1 id 20610 writer 0"
+      ],
+      "late": 0,
+      "lost": 7832,
+      "t_s": 191,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 36068,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [
+        "db 15 idx 610 epoch 1 id 20579 writer 0",
+        "db 6 idx 597 epoch 1 id 20584 writer 0",
+        "db 15 idx 611 epoch 1 id 20585 writer 0",
+        "db 9 idx 631 epoch 1 id 20586 writer 0",
+        "db 30 idx 630 epoch 1 id 20587 writer 0",
+        "db 6 idx 598 epoch 1 id 20593 writer 0",
+        "db 30 idx 631 epoch 1 id 20600 writer 0",
+        "db 30 idx 632 epoch 1 id 20601 writer 0",
+        "db 15 idx 612 epoch 1 id 20603 writer 0",
+        "db 18 idx 604 epoch 1 id 20610 writer 0"
+      ],
+      "late": 0,
+      "lost": 7832,
+      "t_s": 193,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [
+    "ckpt1: 7832 acknowledged writes lost (first: Some((15, 610, 1, 20579)))",
+    "final: 7832 acknowledged writes lost (first: Some((15, 610, 1, 20579)))"
+  ],
+  "fault_counts": {
+    "ClockJump": 2,
+    "DiskLoss": 1,
+    "S3Pause": 1,
+    "WriterKill": 4
+  },
+  "faults": 8,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/trial/w3"
+  },
+  "kinds": [
+    "CutZone",
+    "TwoWriters",
+    "WriterKill",
+    "ClockJump",
+    "DiskLoss",
+    "PowerCutAll",
+    "S3Pause",
+    "DiskFull",
+    "FsyncError"
+  ],
+  "minutes_planned": 10.0,
+  "minutes_run": 3.226896516933333,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 0.575212329,
+    "n": 30,
+    "over_5s": 0,
+    "p50_s": 0.101881984,
+    "p99_s": 0.575212329
+  },
+  "recovery_other_faults_max_s": {
+    "S3Pause": [
+      0.535278918
+    ]
+  },
+  "recovery_writer_faults": {
+    "max_s": 10.788505995,
+    "n": 80,
+    "over_15s": 0,
+    "over_40s": 0,
+    "p50_s": 5.30521485,
+    "p99_s": 10.649733265
+  },
+  "seed": 3,
+  "wait_until_healthy_s": {
+    "max": 0.079449204,
+    "p50": 0.05996943
+  },
+  "writer_opens": 110,
+  "writes_acked": 36068,
+  "writes_refused": {
+    "down": 2032,
+    "no_owner": 175,
+    "not_owner": 29,
+    "unavailable": 12
+  },
+  "writes_sent": 38141
+}

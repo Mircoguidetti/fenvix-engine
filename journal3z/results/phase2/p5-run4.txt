@@ -1,0 +1,13 @@
+[clock_jump_old_writer_fenced] correct: sent 18468 acked 18369 refused {"fenced": 7, "no_owner": 13, "not_owner": 51, "unavailable": 41}; store holds 18369 records; lost 0 late 0; moved: true; settled: true; writer 0: ["LOST db=3 epoch=1 why=journal_fenced", "LOST db=1 epoch=1 why=journal_fenced", "LOST db=2 epoch=1 why=journal_fenced", "LOST db=4 epoch=1 why=journal_fenced"]
+[clock_jump_old_writer_fenced] twin no_fencing (nodes): sent 16926 acked 16910 refused {"unavailable": 16}; store holds 16898 records; lost 12 late 12; moved: true; settled: true; writer 0: ["LOST db=2 epoch=1 why=store_fenced", "LOST db=4 epoch=1 why=store_fenced", "LOST db=1 epoch=1 why=store_fenced", "LOST db=3 epoch=1 why=store_fenced"]
+.[lease_is_exclusive] correct: 100 rounds with exactly 1 winner, 0 with 0 or more than 1
+[lease_is_exclusive] twin (unconditional writes): 0 rounds with 1 winner, 100 with 0 or more than 1
+.[lost_disk_reconfig] correct: sent 45311 acked 45279 refused {"unavailable": 32}; store holds 45279 records; lost 0 late 0; node 3 id 2241046010 -> 3805173040; RECONFIG events 3; acks after node 1 died 15468; settled true
+[lost_disk_reconfig] twin no reconfiguration: sent 29126 acked 29094 refused {"no_owner": 2176, "not_owner": 16, "unavailable": 16}; store holds 29094 records; lost 0 late 0; node 3 id 3699025596 -> 3999100441; RECONFIG events 0; acks after node 1 died 0; settled false
+.[store_fence] skip_fence=false: old writer's upload -> Err(Conflict); marker 12; index 11 holds Some(111)
+[store_fence] skip_fence=true: old writer's upload -> Ok(()); marker 11; index 11 holds Some(999)
+.[uploads_never_replace_each_other] fixed_names=false: index 610 holds Some(20579)
+[uploads_never_replace_each_other] fixed_names=true: index 610 holds None
+.[writer_kill_takeover] correct: sent 22741 acked 21701 refused {"down": 1040}; store holds 21714 records; lost 0 late 0; moved to writer 1: true; settled: true; open after the kill (s): [6.5, 6.5, 6.5, 6.5]
+[writer_kill_takeover] twin recovery_single: sent 22659 acked 21539 refused {"down": 1120}; store holds 21236 records; lost 306 late 306; moved to writer 1: true; settled: true
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 86.18s

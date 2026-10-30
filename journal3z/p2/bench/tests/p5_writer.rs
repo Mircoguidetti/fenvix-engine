@@ -87,6 +87,29 @@ async fn store_fence_rejects_the_old_writer() {
     assert!(!store_fence(true).await, "twin: without the fence the old upload must go through");
 }
 
+/// Regression (bench trial 3): two uploads at the same index and epoch must both stay readable; the second (empty)
+/// one must not replace the first. Twin: the old object naming (index, epoch), which overwrote.
+async fn uploads_case(fixed_names: bool) -> Option<u64> {
+    let dir = tempfile::tempdir().unwrap();
+    let minio = Minio::start(&dir.path().join("minio"));
+    minio.ready().await;
+    let mut meta = minio.meta();
+    meta.fixed_chunk_names = fixed_names;
+    let ops = StoreOps { meta: &meta, skip_fence: false };
+    ops.open(1, 35).await.unwrap();
+    ops.upload(1, 35, 971, &[(610, 20579), (971, 7)]).await.unwrap();
+    ops.upload(1, 35, 971, &[]).await.unwrap();
+    let (_, content) = meta.content(1).await.unwrap();
+    report("uploads_never_replace_each_other", &format!("fixed_names={fixed_names}: index 610 holds {:?}", content.get(&610)));
+    content.get(&610).copied()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn uploads_never_replace_each_other() {
+    assert_eq!(uploads_case(false).await, Some(20579));
+    assert_eq!(uploads_case(true).await, None, "twin: with the old naming the record must be gone");
+}
+
 // ------------------------------------------------------------------------------------------------ end to end
 
 struct Bench {

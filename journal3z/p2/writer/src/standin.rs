@@ -210,6 +210,11 @@ impl Server {
             if ids.len() < 3 {
                 continue;
             }
+            // a server that cannot reach a journal majority does not take databases: it would only hold the lease
+            // until its journal open times out, again and again, and keep the servers that can reach it away
+            if self.journal.members_up(&ids) < 2 {
+                continue;
+            }
             let Ok(mut held) = self.lease().acquire(db, self.clock.now_ms(), &ids).await else { continue };
             let why = self.own(&r, &mut held).await;
             self.journal.abandon(&r.key, &why);
@@ -360,14 +365,17 @@ impl Server {
             let upto = self.journal.committed(&r.key, a.epoch).ok_or("journal fenced")?.0;
             (a.pending.iter().map(|(i, id)| (*i, *id)).collect::<Vec<_>>(), upto)
         };
-        match self.store().upload(db, epoch.0, upto, &recs).await {
-            Ok(()) => {}
-            Err(MetaError::Conflict) => return Err("store fenced".into()),
-            Err(MetaError::Unavailable(_)) => {
-                if let Some(a) = r.active.lock().unwrap().as_mut() {
-                    a.paused = false;
+        let store_applied = r.active.lock().unwrap().as_ref().map_or(0, |a| a.store_applied);
+        if upto > store_applied {
+            match self.store().upload(db, epoch.0, upto, &recs).await {
+                Ok(()) => {}
+                Err(MetaError::Conflict) => return Err("store fenced".into()),
+                Err(MetaError::Unavailable(_)) => {
+                    if let Some(a) = r.active.lock().unwrap().as_mut() {
+                        a.paused = false;
+                    }
+                    return Ok(());
                 }
-                return Ok(());
             }
         }
         if let Some(a) = r.active.lock().unwrap().as_mut() {

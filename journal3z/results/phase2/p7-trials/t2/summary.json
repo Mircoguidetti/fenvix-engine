@@ -1,0 +1,87 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 22876,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 129,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 44802,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 251,
+      "tag": "ckpt2"
+    },
+    {
+      "checked_acks": 69966,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lost": [],
+      "late": 0,
+      "lost": 0,
+      "t_s": 365,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [],
+  "fault_counts": {
+    "CutNode": 4,
+    "CutZone": 1,
+    "NodeKill": 4,
+    "PowerCut": 1,
+    "WriterKill": 3
+  },
+  "faults": 13,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/trial/w2"
+  },
+  "minutes_planned": 6.0,
+  "minutes_run": 6.090723678883333,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 0.947317186,
+    "n": 283,
+    "over_5s": 0,
+    "p50_s": 0.109914948,
+    "p99_s": 0.708524094
+  },
+  "recovery_other_faults_max_s": {},
+  "recovery_writer_faults": {
+    "max_s": 18.338181333,
+    "n": 41,
+    "over_15s": 9,
+    "over_40s": 0,
+    "p50_s": 7.838996147,
+    "p99_s": 18.338181333
+  },
+  "seed": 2,
+  "wait_until_healthy_s": {
+    "max": 0.089474961,
+    "p50": 0.062310548
+  },
+  "writer_opens": 71,
+  "writes_acked": 69966,
+  "writes_refused": {
+    "down": 964,
+    "no_owner": 814,
+    "not_owner": 10,
+    "unavailable": 888
+  },
+  "writes_sent": 71828
+}

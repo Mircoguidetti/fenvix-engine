@@ -18,53 +18,53 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::{BTreeSet, HashSet};
 use std::hash::{Hash, Hasher};
 
-const DB: DbId = 1;
-const W: Addr = 1000;
+pub(crate) const DB: DbId = 1;
+pub(crate) const W: Addr = 1000;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct Store {
-    epoch: Epoch,
-    applied: Idx,
-    content: Vec<(Epoch, bool)>,
+pub(crate) struct Store {
+    pub(crate) epoch: Epoch,
+    pub(crate) applied: Idx,
+    pub(crate) content: Vec<(Epoch, bool)>,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct State {
-    nodes: Vec<NodeCore>,
-    writers: Vec<Option<WriterDb>>,
-    store: Store,
+pub(crate) struct State {
+    pub(crate) nodes: Vec<NodeCore>,
+    pub(crate) writers: Vec<Option<WriterDb>>,
+    pub(crate) store: Store,
     /// (to: node id or 0 = writer of msg epoch, msg)
-    msgs: BTreeSet<(u32, Msg)>,
+    pub(crate) msgs: BTreeSet<(u32, Msg)>,
     /// FIFO mode: one queue per (from, to) link, as one TCP connection per writer-node pair (writer address 100 + epoch)
-    links: std::collections::BTreeMap<(u32, u32), Vec<Msg>>,
-    acked: BTreeSet<(Idx, Epoch)>,
+    pub(crate) links: std::collections::BTreeMap<(u32, u32), Vec<Msg>>,
+    pub(crate) acked: BTreeSet<(Idx, Epoch)>,
 }
 
-fn key(s: &State) -> u64 {
+pub(crate) fn key(s: &State) -> u64 {
     let mut h = DefaultHasher::new();
     s.hash(&mut h);
     h.finish()
 }
 
-fn data(e: Epoch, i: Idx) -> Bytes {
+pub(crate) fn data(e: Epoch, i: Idx) -> Bytes {
     Bytes::from(vec![e as u8, i as u8])
 }
 
-fn msg_epoch(m: &Msg) -> Epoch {
+pub(crate) fn msg_epoch(m: &Msg) -> Epoch {
     match m {
         Msg::Promise { epoch, .. } | Msg::Reject { epoch, .. } | Msg::Entries { epoch, .. } | Msg::Ack { epoch, .. } | Msg::Mismatch { epoch, .. } => *epoch,
         _ => 0,
     }
 }
 
-struct Cfg {
-    fifo: bool,
-    instant: bool,
-    ticks: bool,
-    dup: bool,
-    epochs: u64,
-    max_idx: Idx,
-    m: Mutations,
+pub(crate) struct Cfg {
+    pub(crate) fifo: bool,
+    pub(crate) instant: bool,
+    pub(crate) ticks: bool,
+    pub(crate) dup: bool,
+    pub(crate) epochs: u64,
+    pub(crate) max_idx: Idx,
+    pub(crate) m: Mutations,
 }
 
 /// The commit hint in APPEND is ignored by nodes: normalize it so equal messages are one message.
@@ -96,7 +96,7 @@ fn apply_out(s: &mut State, e: Epoch, out: WOut, cfg: &Cfg) {
     let _ = cfg;
 }
 
-fn successors(s: &State, cfg: &Cfg) -> Vec<State> {
+pub(crate) fn successors(s: &State, cfg: &Cfg) -> Vec<State> {
     let mut out = vec![];
     // a writer opens
     for e in 1..=cfg.epochs {
@@ -234,7 +234,7 @@ fn successors(s: &State, cfg: &Cfg) -> Vec<State> {
 }
 
 /// Replies carry the sending node in a wrapper: encode it in the Mismatch/Ack/... by pairing (from, msg).
-fn tag_from(from: u32, m: Msg) -> Msg {
+pub(crate) fn tag_from(from: u32, m: Msg) -> Msg {
     // store the sender in an Entries-free envelope: reuse Msg::Trim's db field is not possible; use a side encoding
     // via the db id (DB * 10 + from), decoded by `untag`.
     match m {
@@ -247,7 +247,7 @@ fn tag_from(from: u32, m: Msg) -> Msg {
     }
 }
 
-fn untag(m: &Msg) -> (NodeId, Msg) {
+pub(crate) fn untag(m: &Msg) -> (NodeId, Msg) {
     let from = (m.db() % 10) as NodeId;
     let m = match m.clone() {
         Msg::Promise { epoch, last, last_epoch, .. } => Msg::Promise { db: DB, epoch, last, last_epoch },
@@ -260,7 +260,7 @@ fn untag(m: &Msg) -> (NodeId, Msg) {
     (from, m)
 }
 
-fn check(s: &State, cfg: &Cfg) -> Result<(), String> {
+pub(crate) fn check(s: &State, cfg: &Cfg) -> Result<(), String> {
     let applied = s.store.applied;
     let logs: Vec<DbLog> = s.nodes.iter().map(|n| n.dbs.get(&DB).cloned().unwrap_or_default()).collect();
     // (d) trim never passes the marker
@@ -312,7 +312,8 @@ fn check(s: &State, cfg: &Cfg) -> Result<(), String> {
     Ok(())
 }
 
-fn main() {
+#[allow(dead_code)]
+pub(crate) fn main() {
     let args: Vec<String> = std::env::args().collect();
     let get = |k: &str, d: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).cloned().unwrap_or(d.to_string());
     let cfg = Cfg { fifo: args.iter().any(|a| a == "--fifo"), instant: args.iter().any(|a| a == "--instant-replies"), ticks: args.iter().any(|a| a == "--ticks"), dup: args.iter().any(|a| a == "--dup"), epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };

@@ -60,6 +60,9 @@ pub struct Meta {
     /// Negative control (builds with `mutations` only): every conditional write becomes an unconditional overwrite.
     #[cfg(feature = "mutations")]
     pub unconditional: bool,
+    /// Negative control (builds with `mutations` only): upload objects named by (index, epoch) only, overwriting.
+    #[cfg(feature = "mutations")]
+    pub fixed_chunk_names: bool,
 }
 
 fn unavailable(e: object_store::Error) -> MetaError {
@@ -82,6 +85,8 @@ impl Meta {
             store,
             #[cfg(feature = "mutations")]
             unconditional: false,
+            #[cfg(feature = "mutations")]
+            fixed_chunk_names: false,
         }
     }
 
@@ -111,10 +116,21 @@ impl Meta {
         Ok(r.e_tag)
     }
 
+    /// Write one upload's records as a new object. The name is unique (random suffix) and the write is "create
+    /// only": an upload can never replace an earlier one. (Found by the bench, trial 3: two uploads with the same
+    /// index and epoch had the same name; the second, empty one replaced the first after the journal was trimmed.)
     pub async fn put_chunk(&self, db: u64, upto: Idx, epoch: Epoch, recs: &[(Idx, u64)]) -> Result<String, MetaError> {
-        let name = format!("db/{db}/chunk-{upto:016}-{epoch:010}");
+        #[cfg(feature = "mutations")]
+        if self.fixed_chunk_names {
+            // negative control: the old naming, overwriting
+            let name = format!("db/{db}/chunk-{upto:016}-{epoch:010}");
+            self.store.put(&Path::from(name.clone()), PutPayload::from(serde_json::to_vec(recs).unwrap())).await.map_err(unavailable)?;
+            return Ok(name);
+        }
+        let name = format!("db/{db}/chunk-{upto:016}-{epoch:010}-{:016x}", rand::random::<u64>());
         let body = serde_json::to_vec(recs).unwrap();
-        self.store.put(&Path::from(name.clone()), PutPayload::from(body)).await.map_err(unavailable)?;
+        let opts = PutOptions { mode: PutMode::Create, ..Default::default() };
+        self.store.put_opts(&Path::from(name.clone()), PutPayload::from(body), opts).await.map_err(unavailable)?;
         Ok(name)
     }
 

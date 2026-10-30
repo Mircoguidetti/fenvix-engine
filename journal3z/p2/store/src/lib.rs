@@ -113,6 +113,24 @@ pub struct Faults {
     /// Counters (for tests): syncs done, syncs failed.
     pub syncs: AtomicU64,
     pub sync_errors: AtomicU64,
+    /// The file being appended to and its length at the last successful fsync (for [`Faults::power_cut`]).
+    current: std::sync::Mutex<Option<(PathBuf, u64)>>,
+}
+
+impl Faults {
+    /// Simulated power cut: every byte not yet fsynced in the file being appended is dropped. Holds the lock that a
+    /// completed fsync takes before it returns, so nothing the node could already have acknowledged is cut: the
+    /// caller must end the process without releasing it (the returned guard), as a machine losing power would.
+    pub fn power_cut(&self) -> std::sync::MutexGuard<'_, Option<(PathBuf, u64)>> {
+        let g = self.current.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((p, len)) = g.as_ref() {
+            if let Ok(f) = std::fs::OpenOptions::new().write(true).open(p) {
+                let _ = f.set_len(*len);
+                let _ = f.sync_all();
+            }
+        }
+        g
+    }
 }
 
 /// [`RealFs`] with injectable faults.
@@ -163,6 +181,8 @@ impl FileW for FaultFile {
         self.faults.syncs.fetch_add(1, SeqCst);
         self.f.sync_data()?;
         self.synced_len = std::fs::metadata(&self.path).map(|m| m.len()).unwrap_or(self.synced_len);
+        // a power cut in progress holds this lock and never releases it: this fsync then never "returns"
+        *self.faults.current.lock().unwrap_or_else(|e| e.into_inner()) = Some((self.path.clone(), self.synced_len));
         Ok(())
     }
 }
@@ -180,6 +200,7 @@ impl Fs for FaultFs {
     fn append(&self, p: &Path) -> io::Result<Box<dyn FileW>> {
         let f = std::fs::OpenOptions::new().create(true).append(true).open(p)?;
         let synced_len = f.metadata()?.len();
+        *self.faults.current.lock().unwrap_or_else(|e| e.into_inner()) = Some((p.to_path_buf(), synced_len));
         Ok(Box::new(FaultFile { f: RealFile(f), faults: self.faults.clone(), path: p.to_path_buf(), synced_len }))
     }
     fn write_file_sync(&self, p: &Path, data: &[u8]) -> io::Result<()> {

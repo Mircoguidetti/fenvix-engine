@@ -8,6 +8,7 @@ description = "journal3z local test bench: real processes (3 nodes, writers, Min
 journal3z-core = { workspace = true }
 j3z-writer = { path = "../writer", features = ["mutations"] }
 j3z-net = { path = "../net" }
+j3z-store = { path = "../store" }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

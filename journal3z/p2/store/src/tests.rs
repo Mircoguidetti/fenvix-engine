@@ -241,3 +241,26 @@ fn erased_database_not_replayed() {
     bad.bugs.replay_erased = true;
     assert!(matches!(erased_case(bad), Err(StoreError::Corrupt(_))), "twin: replaying the erased database's records breaks recovery");
 }
+
+/// Bench fault "power cut": what was fsynced stays, what was not is gone. Twin: the same steps without the cut keep
+/// the unsynced record (so the check can tell the two apart).
+fn power_cut_case(cut: bool) -> u64 {
+    let d = tempfile::tempdir().unwrap();
+    let (fs, faults) = fault_fs();
+    let (mut st, mut core, _) = Store::open(d.path(), fs.clone(), small()).unwrap();
+    put(&mut st, &mut core, vec![ent(1, 1, 1), ent(2, 1, 1)]);
+    st.sync().unwrap();
+    put(&mut st, &mut core, vec![ent(3, 1, 1)]); // written, not synced
+    if cut {
+        drop(faults.power_cut());
+    }
+    drop(st);
+    let (_, core2, _) = Store::open(d.path(), fs, small()).unwrap();
+    core2.dbs[&1].last()
+}
+
+#[test]
+fn power_cut_drops_only_unsynced() {
+    assert_eq!(power_cut_case(true), 2);
+    assert_eq!(power_cut_case(false), 3, "twin: without the cut the unsynced record is still there");
+}

@@ -1,0 +1,3 @@
+      0.0s start seed 1 minutes 6 mutation None rate 200/s dbs 30
+    120.3s FAILURE not healthy 120 s after start: db 1 has no owner
+    120.3s end: healing
