@@ -1,6 +1,6 @@
 {
  "spend": {
-  "put": 48096.<redacted>,
+  "put": 48096,
   "get": 24195.4,
   "runner_list": 47,
   "storage_usd": 0.0005946244265884162,
