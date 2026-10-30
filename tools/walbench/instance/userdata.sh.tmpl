@@ -1,0 +1,13 @@
+#!/bin/bash
+# walbench instance bootstrap (user-data). No credentials in here: the instance profile provides them.
+# Safety net: the instance powers itself off after __MAX_MINUTES__ minutes; shutdown behaviour is "terminate".
+shutdown -h +__MAX_MINUTES__ "walbench safety stop" || true
+set -u
+mkdir -p /opt/walbench /var/walbench && cd /opt/walbench
+echo '__CFG_B64__' | base64 -d > cfg.json
+echo '__FETCH_B64__' | base64 -d > s3fetch.py
+for f in walbench agent.py node-supervisor.sh plan.json; do
+  python3 s3fetch.py __BUCKET__ __REGION__ runs/__RUN__/files/$f /opt/walbench/$f || exit 1
+done
+chmod +x walbench node-supervisor.sh
+nohup python3 agent.py > /var/walbench/agent.out 2>&1 &

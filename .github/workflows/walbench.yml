@@ -1,0 +1,99 @@
+# walbench: where to put the durable write log (S3, S3 Express One Zone, DynamoDB, EBS gp3, 3-AZ quorum), eu-west-1.
+# PHASE 2 ONLY. One trigger: a push to branch walbench that changes tools/walbench/go.json (the file does not exist in
+# phase 1, so nothing here runs until it is added). Teardown-only: a push that changes tools/walbench/teardown.json.
+# No keys: OIDC role from the repository secret AWS_ROLE_ARN (masked). Permissions needed: docs/walbench-permissions.md.
+# Spend: cap 5 USD; live spend in results-walbench/cost_live.csv every 20 s; automatic stop + teardown at 4 USD; teardown
+# and verification always run, even if the job fails or is cancelled. Instances also power themselves off (terminate)
+# after plan.instance_max_minutes.
+name: walbench
+on:
+  push:
+    branches: [walbench]
+    paths: ['tools/walbench/go.json', 'tools/walbench/teardown.json']
+permissions:
+  id-token: write
+  contents: write
+concurrency:
+  group: fenvix-walbench
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    env:
+      AWS_PAGER: ""
+      WB_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      AWS_DEFAULT_REGION: eu-west-1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Mask identity values derived from the secret; which file triggered the run
+        id: mode
+        run: |
+          [ -n "$WB_ROLE" ] || { echo "repository secret AWS_ROLE_ARN is not set"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$WB_ROLE"); role=${WB_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          echo "R3_ACCT=$acct" >> "$GITHUB_ENV"; echo "R3_ROLE_NAME=$role" >> "$GITHUB_ENV"
+          if git diff --name-only HEAD~1 HEAD | grep -qx tools/walbench/go.json; then echo "mode=run" >> "$GITHUB_OUTPUT"; else echo "mode=teardown" >> "$GITHUB_OUTPUT"; fi
+
+      - name: AWS credentials (OIDC, 1 h; the orchestrator renews them itself)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Build walbench (Ubuntu 24.04 runner = same glibc as the Ubuntu 24.04 AMI)
+        if: steps.mode.outputs.mode == 'run'
+        run: |
+          (cd tools/walbench/bench && cargo build --release --locked && cargo test --release --locked)
+          python3 -m pip install --quiet boto3
+          sha256sum tools/walbench/bench/target/release/walbench | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Run (prices, estimate, resources, instances, live spend, automatic stop at 4 USD, teardown)
+        if: steps.mode.outputs.mode == 'run'
+        continue-on-error: true
+        timeout-minutes: 230
+        run: python3 -u tools/walbench/orchestrate.py
+
+      - name: AWS credentials for the clean-up
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Teardown of every fenvix-walbench resource (all runs) and verification that nothing is left
+        if: always()
+        run: |
+          python3 -m pip install --quiet boto3
+          mkdir -p results-walbench/cleanup
+          WALBENCH_OUT=results-walbench/cleanup python3 -u tools/walbench/infra.py teardown --all
+
+      - name: Report, secret scan, publish results to this branch
+        if: always()
+        run: |
+          [ -f results-walbench/prices.json ] && python3 tools/walbench/report.py results-walbench results-walbench/report.md || true
+          python3 tools/round3/s3/scan.py results-walbench
+          [ -f results-walbench/report.md ] && mv results-walbench/report.md results-walbench.md || true
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add results-walbench results-walbench.md 2>/dev/null || git add results-walbench
+          git commit -qm "walbench run ${{ github.run_id }}: results" || true
+          for i in 1 2 3; do git pull --rebase -q origin walbench && git push origin HEAD:walbench && break; sleep 5; done
+
+      - name: Copy of the results as an artifact (in case the push fails)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: walbench-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            results-walbench
+            results-walbench.md
+          retention-days: 7

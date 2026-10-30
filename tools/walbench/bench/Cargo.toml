@@ -1,0 +1,28 @@
+[package]
+name = "walbench"
+version = "0.1.0"
+edition = "2021"
+description = "Durable write-log (WAL) backend benchmark: S3, S3 Express One Zone, DynamoDB, EBS fdatasync, 3-AZ quorum"
+
+# Its own workspace: not part of the engine workspace (the engine's Cargo.lock is not touched).
+[workspace]
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1"
+aws-sdk-dynamodb = "1"
+aws-smithy-types = "1"
+bytes = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+async-trait = "0.1"
+futures = "0.3"
+rand = "0.8"
+crc32fast = "1"
+libc = "0.2"
+
+[profile.release]
+debug = false
