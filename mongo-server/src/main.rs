@@ -522,14 +522,15 @@ async fn run() -> Result<()> {
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
     }
     server.spawn_txn_janitor();
-    ctl::start(Arc::clone(&dbs), Arc::clone(&server), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
-
+    // The local log is applied before the control layer starts: no erase, restore or fork (resumed or new) may run on a
+    // database whose acknowledged writes are still only in the log, and an erase's drop record is then always seen first.
     if let Some(old) = local_log_old {
         let t = std::time::Instant::now();
         let (n, recs) = locallog::recover(&dbs, old).await?;
         eprintln!("local log: restart applied {recs} records to {n} databases in {:.1} s", t.elapsed().as_secs_f64());
         locallog::get().unwrap().spawn_uploader();
     }
+    ctl::start(Arc::clone(&dbs), Arc::clone(&server), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
     let tls_cfg = Arc::new(tls::load(&tls::Options { mode: &args.tls_mode, certificate_key_file: &args.tls_certificate_key_file, ca_file: &args.tls_ca_file, allow_without_certificates: args.tls_allow_connections_without_certificates })?);
     tls::install(Arc::clone(&tls_cfg));
     let listener = TcpListener::bind(&args.listen).await?;

@@ -133,6 +133,11 @@ pub fn valid_db_name(name: &str) -> bool {
 }
 
 impl Dbs {
+    /// The object store (without per-request counting).
+    pub fn store(&self) -> Arc<dyn ObjectStore> {
+        Arc::clone(&self.raw)
+    }
+
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
         Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default(), inflight: Mutex::new(HashMap::new()) })
     }
@@ -636,7 +641,8 @@ impl Entry {
         self.request_compaction_if_needed();
         let Some(mut commit) = staged? else { return Ok(()) };
         if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
-            commit = commit.with_local(log.append(seq, &self.name, &rec_ops));
+            let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);
+            commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
         }
         let mut slot = Some(commit);
         if GROUP_COMMIT.load(Relaxed) {

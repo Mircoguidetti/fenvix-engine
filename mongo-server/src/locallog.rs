@@ -39,6 +39,8 @@ use tokio::sync::{mpsc, oneshot};
 /// Key of the marker written with every batch (inside the database's own keyspace; data keys start with `doc/`, `idx/`, `meta/`).
 pub const MARKER_KEY: &[u8] = b"sys/local-log";
 const SEGMENT_MAX: u64 = 64 << 20;
+/// Sequence numbers are `boot << SEQ_BOOT_SHIFT | n`: 2^40 records per run.
+const SEQ_BOOT_SHIFT: u32 = 40;
 
 pub static RECORDS: AtomicU64 = AtomicU64::new(0);
 pub static FSYNCS: AtomicU64 = AtomicU64::new(0);
@@ -82,7 +84,7 @@ fn checksum(b: &[u8]) -> [u8; 8] {
     out
 }
 
-fn encode(seq: u64, db: &str, ops: &[Op], drop: bool) -> Vec<u8> {
+fn encode(seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64) -> Vec<u8> {
     let ops_b: Vec<Bson> = ops
         .iter()
         .map(|o| match o {
@@ -90,7 +92,7 @@ fn encode(seq: u64, db: &str, ops: &[Op], drop: bool) -> Vec<u8> {
             Op::Delete(k) => Bson::Array(vec![Bson::Binary(bson::Binary { subtype: bson::spec::BinarySubtype::Generic, bytes: k.clone() })]),
         })
         .collect();
-    let d = doc! { "s": seq as i64, "d": db, "o": ops_b, "x": drop };
+    let d = doc! { "s": seq as i64, "d": db, "o": ops_b, "x": drop, "e": epoch as i64 };
     let payload = d.to_vec().expect("bson");
     let mut out = Vec::with_capacity(payload.len() + 12);
     out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
@@ -104,6 +106,8 @@ struct Record {
     db: String,
     ops: Vec<Op>,
     drop: bool,
+    /// slatedb writer epoch of the writer that staged the batch (0: unknown).
+    epoch: u64,
 }
 
 fn decode(payload: &[u8]) -> Result<Record> {
@@ -119,7 +123,7 @@ fn decode(payload: &[u8]) -> Result<Record> {
         };
         ops.push(if a.len() == 2 { Op::Put(bin(0)?, bin(1)?) } else { Op::Delete(bin(0)?) });
     }
-    Ok(Record { seq: d.get_i64("s")? as u64, db: d.get_str("d")?.to_string(), ops, drop: d.get_bool("x").unwrap_or(false) })
+    Ok(Record { seq: d.get_i64("s")? as u64, db: d.get_str("d")?.to_string(), ops, drop: d.get_bool("x").unwrap_or(false), epoch: d.get_i64("e").unwrap_or(0) as u64 })
 }
 
 /// Records of one segment file, up to the first torn or corrupt one.
@@ -149,6 +153,19 @@ fn read_segment(path: &Path) -> Result<(Vec<Record>, bool)> {
         pos += 12 + len;
     }
     Ok((out, torn))
+}
+
+/// `write_all`, with a test-only fault: `MONGO_TEST_LOCALLOG_FAIL_AT=N` makes the N-th record write only half of its bytes and
+/// fail (a disk that filled up in the middle of a record). Never set in production.
+fn test_write(f: &mut std::fs::File, bytes: &[u8]) -> std::io::Result<()> {
+    static AT: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
+    static N: AtomicU64 = AtomicU64::new(0);
+    let at = *AT.get_or_init(|| std::env::var("MONGO_TEST_LOCALLOG_FAIL_AT").ok().and_then(|v| v.parse().ok()).unwrap_or(0));
+    if at > 0 && N.fetch_add(1, Relaxed) + 1 == at {
+        f.write_all(&bytes[..bytes.len() / 2])?;
+        return Err(std::io::Error::new(std::io::ErrorKind::StorageFull, "injected: no space left on device"));
+    }
+    f.write_all(bytes)
 }
 
 fn segment_path(dir: &Path, n: u64) -> PathBuf {
@@ -194,10 +211,23 @@ impl LocalLog {
                 id
             }
         };
+        // Boot number, persisted before any record of this run: the high bits of every sequence number, so a later run never
+        // reuses numbers below a marker an earlier run stored (run 1 uploads up to seq 5000, run 2 writes nothing, run 3's
+        // records must still be above 5000).
+        let boot_path = dir.join("BOOT");
+        let boot = std::fs::read_to_string(&boot_path).ok().and_then(|s| s.trim().parse::<u64>().ok()).unwrap_or(0) + 1;
+        {
+            let tmp = dir.join("BOOT.tmp");
+            let mut f = std::fs::File::create(&tmp)?;
+            f.write_all(boot.to_string().as_bytes())?;
+            f.sync_all()?;
+            std::fs::rename(&tmp, &boot_path)?;
+            std::fs::File::open(&dir)?.sync_all()?;
+        }
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new(1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), upload_every });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), upload_every });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -223,7 +253,7 @@ impl LocalLog {
             }
             let mut res: Result<(), String> = Ok(());
             for a in &batch {
-                if let Err(e) = f.write_all(&a.bytes) {
+                if let Err(e) = test_write(&mut f, &a.bytes) {
                     res = Err(format!("local log write failed: {e}"));
                     break;
                 }
@@ -236,7 +266,22 @@ impl LocalLog {
                 }
                 FSYNCS.fetch_add(1, Relaxed);
             }
+            if let Err(e) = &res {
+                // Fail-stop. After a failed write or fsync the segment may end with bad bytes and the batch's writes are
+                // already in the memtables: appending more would put acknowledged records after bytes a restart cannot
+                // read, and an upload or a close would make unacknowledged writes durable. Nothing is acknowledged; the
+                // process stops, and the restart applies every record before the failure (it stops at the bad bytes).
+                eprintln!("local log: {e}; stopping the process (fail-stop) so nothing more is acknowledged or uploaded");
+                for a in batch {
+                    let _ = a.done.send(res.clone());
+                }
+                std::process::abort();
+            }
             RECORDS.fetch_add(batch.len() as u64, Relaxed);
+            if let Some(ms) = crate::faults::rule_value("stall_local_ack") {
+                eprintln!("FAULT stall_local_ack {ms}");
+                std::thread::sleep(Duration::from_millis(ms));
+            }
             for a in batch {
                 let _ = a.done.send(res.clone());
             }
@@ -268,14 +313,14 @@ impl LocalLog {
     }
 
     /// Queue a record; the receiver resolves once it is on disk (fsync).
-    pub fn append(&self, seq: u64, db: &str, ops: &[Op]) -> oneshot::Receiver<Result<(), String>> {
-        self.append_rec(seq, db, ops, false)
+    pub fn append(&self, seq: u64, db: &str, ops: &[Op], epoch: u64) -> oneshot::Receiver<Result<(), String>> {
+        self.append_rec(seq, db, ops, false, epoch)
     }
 
     /// The database was dropped: its earlier records must not be applied again by a restart.
     pub fn append_drop(&self, db: &str) -> oneshot::Receiver<Result<(), String>> {
         let seq = self.next_seq();
-        let rx = self.append_rec(seq, db, &[], true);
+        let rx = self.append_rec(seq, db, &[], true, 0);
         let mut t = self.tenants.lock().unwrap();
         let e = t.entry(db.to_string()).or_default();
         e.staged = seq;
@@ -283,14 +328,14 @@ impl LocalLog {
         rx
     }
 
-    fn append_rec(&self, seq: u64, db: &str, ops: &[Op], drop: bool) -> oneshot::Receiver<Result<(), String>> {
+    fn append_rec(&self, seq: u64, db: &str, ops: &[Op], drop: bool, epoch: u64) -> oneshot::Receiver<Result<(), String>> {
         let (done, rx) = oneshot::channel();
         {
             let mut t = self.tenants.lock().unwrap();
             let e = t.entry(db.to_string()).or_default();
             e.staged = e.staged.max(seq);
         }
-        if self.tx.send(Append { bytes: encode(seq, db, ops, drop), seq, done }).is_err() {
+        if self.tx.send(Append { bytes: encode(seq, db, ops, drop, epoch), seq, done }).is_err() {
             let (d2, rx2) = oneshot::channel();
             let _ = d2.send(Err("local log writer stopped".into()));
             return rx2;
@@ -367,6 +412,15 @@ pub fn install(dir: &str, upload_secs: u64) -> Result<Vec<(u64, PathBuf)>> {
     Ok(old)
 }
 
+fn copy_ops(ops: &[Op]) -> Vec<Op> {
+    ops.iter()
+        .map(|o| match o {
+            Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
+            Op::Delete(k) => Op::Delete(k.clone()),
+        })
+        .collect()
+}
+
 /// Apply again, durably, the records a previous run left in the log; then delete those segments. Runs before the server
 /// accepts connections. Returns (databases, records applied).
 pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Result<(usize, u64)> {
@@ -391,7 +445,7 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
             by_db.entry(r.db.clone()).or_default().push(r);
         }
     }
-    log.next_seq.store(max_seq + 1, Relaxed);
+    log.next_seq.fetch_max(max_seq + 1, Relaxed);
     // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
     // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
     enum Outcome {
@@ -400,12 +454,26 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
         Conflict(String),
     }
     let log_id = log.id.clone();
-    let results: Vec<Result<Outcome>> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
+    let results: Vec<(String, Result<Outcome>, Vec<(Vec<Op>, u64)>)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
         .map(|(db, mut recs)| {
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
-            async move {
+            let keep: Vec<(Vec<Op>, u64)> = recs.iter().map(|r| (copy_ops(&r.ops), r.epoch)).collect();
+            let db2 = db.clone();
+            let one = async move {
                 recs.sort_by_key(|r| r.seq);
+                // Another writer opened the database after the one that staged these records (another process took it over,
+                // or this one lost and re-took it): replaying them would overwrite newer writes and leave the secondary
+                // indexes inconsistent. Refused, kept as conflict, like a marker of another log.
+                let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
+                if rec_epoch > 0 {
+                    if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&dbs.store(), &db).await? {
+                        if stored > rec_epoch {
+                            eprintln!("local log: database {db} was opened by another writer (epoch {stored}) after these records (epoch {rec_epoch}); its {} records are NOT applied", recs.len());
+                            return Ok(Outcome::Conflict(db.clone()));
+                        }
+                    }
+                }
                 let mut g = dbs.lock(&db).await;
                 let marker = g.get_live(MARKER_KEY).await?;
                 let done_seq = match marker.as_deref().and_then(parse_marker) {
@@ -435,7 +503,8 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
                 }
                 eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
                 Ok(Outcome::Applied(todo.len() as u64))
-            }
+            };
+            async move { (db2, one.await, keep) }
         })
         .buffer_unordered(32)
         .collect()
@@ -443,8 +512,23 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
     let mut applied = 0u64;
     let mut n_dbs = 0usize;
     let mut conflicts = Vec::new();
-    for r in results {
-        match r? {
+    let mut failed = 0usize;
+    for (db, r, keep) in results {
+        let r = match r {
+            Ok(o) => o,
+            Err(e) => {
+                // One database must not block the whole restart: its records are written again to the new log (same
+                // writer epoch, new sequence numbers) and applied by a later restart; the other databases go on.
+                eprintln!("local log: replay of database {db} failed ({e:#}); its {} records are kept for the next restart", keep.len());
+                failed += 1;
+                for (ops, epoch) in keep {
+                    let seq = log.next_seq();
+                    log.append(seq, &db, &ops, epoch).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
+                }
+                continue;
+            }
+        };
+        match r {
             Outcome::Nothing => {}
             Outcome::Applied(n) => {
                 applied += n;
@@ -454,6 +538,9 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
         }
     }
     REPLAYED.fetch_add(applied, Relaxed);
+    if failed > 0 {
+        eprintln!("local log: {failed} databases kept their records for the next restart");
+    }
     for (_, p) in old {
         if conflicts.is_empty() {
             let _ = std::fs::remove_file(&p);

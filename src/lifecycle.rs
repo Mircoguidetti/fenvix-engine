@@ -482,7 +482,14 @@ impl Commit {
         use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
         if let Some(rx) = self.local.take() {
             GROUP_COMMITS.fetch_add(1, Relaxed);
-            return rx.await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e));
+            rx.await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
+            // The record is on the local disk, but this process may have lost the database meanwhile (frozen between the
+            // ownership check and the fsync, its lease lapsed, another process took over): then the write is not acknowledged.
+            if !owner_valid(&self.tenant) {
+                LOCAL_ACK_REFUSED.fetch_add(1, Relaxed);
+                return Err(anyhow!("ownership of database {} was lost before the write was acknowledged; its outcome is unknown, retry", self.tenant));
+            }
+            return Ok(());
         }
         struct Waiting<'a>(&'a std::sync::atomic::AtomicU64);
         impl Drop for Waiting<'_> {
@@ -565,6 +572,14 @@ pub struct Tenant {
 }
 
 impl Tenant {
+    /// slatedb writer epoch of this writer (None for a reader).
+    pub fn writer_epoch(&self) -> Option<u64> {
+        match &self.mode {
+            Some(Mode::Writer(db)) => Some(db.manifest().writer_epoch()),
+            _ => None,
+        }
+    }
+
     /// L0 SSTs of the writer's local manifest view (None for a reader).
     pub fn writer_l0(&self) -> Option<usize> {
         match &self.mode {
@@ -1045,6 +1060,12 @@ struct WalGcState {
 static WAL_STATE: std::sync::LazyLock<Mutex<HashMap<String, WalGcState>>> = std::sync::LazyLock::new(Default::default);
 
 /// Forget what this process knows about a tenant's WAL (the database was dropped: its WAL ids start again).
+/// Writer epoch of the tenant's latest stored manifest (None: no manifest).
+pub async fn stored_writer_epoch(store: &Arc<dyn ObjectStore>, id: &str) -> Result<Option<u64>> {
+    let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
+    Ok(admin.read_manifest(None).await?.map(|m| m.writer_epoch()))
+}
+
 pub fn forget_wal_state(id: &str) {
     WAL_STATE.lock().unwrap().remove(id);
     STORED_MANIFEST.lock().unwrap().remove(id);
@@ -1171,6 +1192,8 @@ async fn gc_wal_incremental(store: &Arc<dyn ObjectStore>, id: &str, mode: u8) ->
 static STORED_MANIFEST: std::sync::LazyLock<Mutex<HashMap<String, (u64, Arc<slatedb::VersionedManifest>)>>> = std::sync::LazyLock::new(Default::default);
 /// Hot WAL passes skipped because this process no longer held the tenant.
 pub static WAL_GC_NOT_OWNER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Local-log writes not acknowledged because ownership was lost by the time their record was on disk.
+pub static LOCAL_ACK_REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Set by the server: whether this process still owns a tenant (its lease is valid). Unset (tests of this crate): always.
 pub static OWNER_VALID: std::sync::OnceLock<Box<dyn Fn(&str) -> bool + Send + Sync>> = std::sync::OnceLock::new();
 fn owner_valid(id: &str) -> bool {

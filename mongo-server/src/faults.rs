@@ -135,3 +135,14 @@ impl ObjectStore for FaultStore {
         self.inner.rename_opts(from, to, options).await
     }
 }
+
+/// Test only: the number on a line `NAME N` of the faults file (`MONGO_TEST_FAULTS_FILE`), if any. Used by the local log:
+/// `stall_local_ack MS` holds every write for MS milliseconds after its record is on disk, before it is acknowledged.
+pub fn rule_value(name: &str) -> Option<u64> {
+    let f = std::env::var("MONGO_TEST_FAULTS_FILE").ok().filter(|f| !f.is_empty())?;
+    let text = std::fs::read_to_string(f).ok()?;
+    text.lines().find_map(|l| {
+        let w: Vec<&str> = l.split_whitespace().collect();
+        (w.len() == 2 && w[0] == name).then(|| w[1].parse().ok()).flatten()
+    })
+}
