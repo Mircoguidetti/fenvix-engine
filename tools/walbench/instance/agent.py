@@ -42,8 +42,13 @@ def log(msg):
     LOGF.flush()
 
 
+PUT_FAILS = [0]  # consecutive failed uploads: the run bucket is gone (teardown) or unreachable
+
+
 def s3put(key, path):
-    return subprocess.run([BIN, "s3put", "--bucket", BUCKET, "--key", ROOT + key, "--file", path], env=ENV, capture_output=True, timeout=120).returncode == 0
+    ok = subprocess.run([BIN, "s3put", "--bucket", BUCKET, "--key", ROOT + key, "--file", path], env=ENV, capture_output=True, timeout=120).returncode == 0
+    PUT_FAILS[0] = 0 if ok else PUT_FAILS[0] + 1
+    return ok
 
 
 def s3get(key, path):
@@ -82,7 +87,8 @@ def wait_marker(name, timeout, every=5):
 
 
 def stopped():
-    return get_marker("stop") is not None
+    """Stop marker written by the orchestrator, or 3 failed uploads in a row (the bucket was deleted: the run is over)."""
+    return PUT_FAILS[0] >= 3 or get_marker("stop") is not None
 
 
 def imds(path):
@@ -109,7 +115,8 @@ def progress_loop():
                     tot[k] = [a + b for a, b in zip(cur, v)]
                 else:
                     tot[k] = tot.get(k, 0) + v
-        put_json(f"progress/{TAG}.json", {"unix": time.time(), "counters": tot, "processes": len(glob.glob(f"{LIVE}/*.json"))})
+        put_json(f"progress/{TAG}.json", {"unix": time.time(), "counters": tot, "processes": len(glob.glob(f"{LIVE}/*.json")),
+                                          "steps": sorted(CURRENT)})
         try:
             s3put(f"logs/{TAG}-agent.log", f"{WORK}/agent.log")
         except Exception:
@@ -119,6 +126,7 @@ def progress_loop():
 
 # -------------------------------------------------------------------------------------------------------- client
 SKIP = set()  # backends that failed their smoke test
+CURRENT = set()  # steps running now (reported in the progress file for the live spend line)
 RESULTS = []
 
 
@@ -133,11 +141,34 @@ def step(name, args, timeout, backend=None):
     out = f"{WORK}/{name}.json"
     t = time.time()
     log(f"step {name}: start")
-    try:
-        r = subprocess.run([BIN] + args + ["--out", out], env=ENV, capture_output=True, text=True, timeout=timeout)
-        rc, err, so = r.returncode, r.stderr[-3000:], r.stdout[-1000:]
-    except subprocess.TimeoutExpired as e:
-        rc, err, so = "timeout", str(e.stderr or "")[-3000:], ""
+    # own process group, so a timeout or a stop kills the step and every child it started (crash-test writers)
+    errf, outf = open(f"{WORK}/{name}.stderr", "w"), open(f"{WORK}/{name}.stdout", "w")
+    proc = subprocess.Popen([BIN] + args + ["--out", out], env=ENV, stdout=outf, stderr=errf, start_new_session=True)
+    rc = None
+    CURRENT.add(name)
+    last_check = time.time()
+    while rc is None:
+        try:
+            rc = proc.wait(timeout=2)
+            break
+        except subprocess.TimeoutExpired:
+            pass
+        if time.time() - t > timeout:
+            rc = "timeout"
+        elif time.time() - last_check > 10:
+            last_check = time.time()
+            if stopped():
+                rc = "stopped (stop marker)"
+        if rc is not None:
+            try:
+                os.killpg(proc.pid, 9)
+            except ProcessLookupError:
+                pass
+            proc.wait()
+    CURRENT.discard(name)
+    errf.close()
+    outf.close()
+    err, so = open(f"{WORK}/{name}.stderr").read()[-3000:], open(f"{WORK}/{name}.stdout").read()[-1000:]
     res = None
     if os.path.exists(out):
         try:
@@ -211,11 +242,38 @@ def prepare_volume():
     log("log volume formatted and mounted")
 
 
+class _Group:
+    def __init__(self, p):
+        self.p = p
+
+    def kill_group(self):
+        try:
+            os.killpg(self.p.pid, 9)
+        except ProcessLookupError:
+            pass
+
+
+LOCAL_NODE = None
+
+
+def start_local_node():
+    """Quota allows only 3 instances: quorum node 0 runs on the client (same AZ as node 0 would be), log on its root disk."""
+    global LOCAL_NODE
+    port = CFG.get("node_port", 7700)
+    p = subprocess.Popen(["bash", f"{HOME}/node-supervisor.sh", BIN, f"0.0.0.0:{port}", f"{VAR}/node0"], stdout=open(f"{WORK}/node0.log", "a"),
+                         stderr=subprocess.STDOUT, start_new_session=True)
+    LOCAL_NODE = _Group(p)
+    time.sleep(2)
+    marker("node-0", {"ip": imds("local-ipv4"), "port": port, "az_id": imds("placement/availability-zone-id"), "on_client": True})
+
+
 def client():
     env = {"instance_type": imds("instance-type"), "az": imds("placement/availability-zone"), "az_id": imds("placement/availability-zone-id"),
            "kernel": os.uname().release, "nproc": os.cpu_count()}
     put_json("results/env-client.json", env)
     prepare_volume()
+    if CFG.get("node0_on_client"):
+        start_local_node()
     nodes = []
     for i in range(3):
         m = wait_marker(f"node-{i}", 900)
@@ -230,15 +288,29 @@ def client():
             smoke(b, v)
     marker("smoke-done", {"skipped": sorted(SKIP)})
     cr = PLAN["crash"]
-    # ---- quorum first (its three nodes are terminated as soon as it is done)
+
+    def crash_args(b, seed):
+        extra = ["--prealloc-mb", "8"] if b in ("file", "quorum") else []
+        return ["crashtest"] + bflags(b) + extra + ["--variants", cr["variants"][b], "--cycles", str(cr["cycles"]), "--kill-min-ms", str(cr["kill_min_ms"]),
+                                                   "--kill-max-ms", str(cr["kill_max_ms"]), "--max-writes", str(cr["max_writes"]),
+                                                   "--max-secs", str(cr["max_secs"]), "--log", f"cr{b}", "--seed", str(seed)]
+    # loss evidence first, so an automatic stop later cannot cut it
+    # ---- quorum (its separate nodes are terminated as soon as it is done)
     if "quorum" not in SKIP:
-        cells("quorum", PLAN["serial_variants"])
         step("quorumtest", ["quorumtest", "--nodes", ",".join(nodes), "--log", "qt", "--scale", str(PLAN["quorumtest"]["scale"])], timeout=600, backend="quorum")
-        step("crash-quorum", ["crashtest"] + bflags("quorum") + ["--prealloc-mb", "8", "--variants", cr["variants"]["quorum"], "--cycles", str(cr["cycles"]),
-                                                              "--kill-min-ms", str(cr["kill_min_ms"]), "--kill-max-ms", str(cr["kill_max_ms"]),
-                                                              "--max-secs", str(cr["max_secs"]), "--log", "crq", "--seed", "5"],
-             timeout=cr["max_secs"] + 600, backend="quorum")
+        step("crash-quorum", crash_args("quorum", 5), timeout=cr["max_secs"] + 600, backend="quorum")
+        cells("quorum", PLAN["serial_variants"])
+    if LOCAL_NODE:
+        LOCAL_NODE.kill_group()
     marker("quorum-done")
+    # ---- crash tests of s3, express, ddb, file in parallel (latency is not measured here)
+    ths = []
+    for i, b in enumerate(PLAN["cloud_backends"] + ["file"]):
+        th = threading.Thread(target=step, args=(f"crash-{b}", crash_args(b, 11 + i), cr["max_secs"] + 600, b))
+        th.start()
+        ths.append(th)
+    for th in ths:
+        th.join()
     # ---- EBS (local log on the gp3 volume)
     cells("file", PLAN["serial_variants"])
     marker("standby-needed")
@@ -252,17 +324,6 @@ def client():
             step(name, ["fleet"] + bflags(b) + ["--layout", layout, "--variant", v, "--dbs", str(f["dbs"]), "--rate", str(f["rate"]), "--secs", str(f["secs"]),
                                                 "--warm-secs", str(f["warm_secs"]), "--size", str(f["size"]), "--log", name, "--name", name],
                  timeout=f["secs"] + 600, backend=b)
-    # ---- crash tests of s3, express, ddb, file in parallel (latency is not measured here)
-    ths = []
-    for i, b in enumerate(PLAN["cloud_backends"] + ["file"]):
-        extra = ["--prealloc-mb", "8"] if b == "file" else []
-        args = ["crashtest"] + bflags(b) + extra + ["--variants", cr["variants"][b], "--cycles", str(cr["cycles"]), "--kill-min-ms", str(cr["kill_min_ms"]),
-                                                    "--kill-max-ms", str(cr["kill_max_ms"]), "--max-secs", str(cr["max_secs"]), "--log", f"cr{b}", "--seed", str(11 + i)]
-        th = threading.Thread(target=step, args=(f"crash-{b}", args, cr["max_secs"] + 600, b))
-        th.start()
-        ths.append(th)
-    for th in ths:
-        th.join()
     # ---- EBS reattach: this instance is holder A, the standby is holder B; the orchestrator moves the volume
     if "file" not in SKIP and not stopped() and not LOCAL:
         subprocess.run(["umount", "/mnt/wal"])

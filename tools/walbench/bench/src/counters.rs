@@ -26,6 +26,7 @@ pub struct Counters {
     /// bytes sent to / received from each quorum node (index = node number), for inter-AZ transfer cost
     pub q_sent: [AtomicU64; 3],
     pub q_recv: [AtomicU64; 3],
+    pub ddb_throttled: AtomicU64,
     pub errors: AtomicU64,
     pub retries: AtomicU64,
 }
@@ -52,6 +53,7 @@ pub struct Snap {
     pub file_bytes: u64,
     pub q_sent: [u64; 3],
     pub q_recv: [u64; 3],
+    pub ddb_throttled: u64,
     pub errors: u64,
     pub retries: u64,
 }
@@ -77,6 +79,7 @@ pub fn snap() -> Snap {
         file_bytes: c.file_bytes.load(Relaxed),
         q_sent: std::array::from_fn(|i| c.q_sent[i].load(Relaxed)),
         q_recv: std::array::from_fn(|i| c.q_recv[i].load(Relaxed)),
+        ddb_throttled: c.ddb_throttled.load(Relaxed),
         errors: c.errors.load(Relaxed),
         retries: c.retries.load(Relaxed),
     }

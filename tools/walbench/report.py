@@ -91,10 +91,83 @@ w(f"Run `{state.get('run', '?')}`, eu-west-1. Client and EBS volume in AZ id `{s
   f"quorum nodes in AZ ids {', '.join(sorted({z.get('az_id', '?') for k, z in state.get('zones', {}).items() if k.startswith('node')}))}. "
   f"Instances {', '.join(sorted(set(['c6i.large'])))}, AMI `{state.get('ami_name', '?')}`. Raw JSON: `results-walbench/raw/`. "
   "Method, variants and the pass criteria (fixed before the run): `docs/walbench.md`.\n")
+q = state.get("quota") or {}
+w(f"vCPU quota check: {json.dumps({k: q.get(k) for k in ('quota_vcpus', 'used_vcpus', 'free_vcpus', 'max_instances', 'quota_error') if k in q})}. "
+  + ("**Quorum node 0 ran as a process on the client instance** (only 3 instances allowed); nodes 1 and 2 on their own instances.\n"
+     if state.get("node0_on_client") else "Quorum nodes on three separate instances.\n"))
 if state.get("automatic_stop"):
     w(f"**The run was stopped automatically at the spend threshold**: {state['automatic_stop']}. Steps not run are listed as not measured.\n")
 if state.get("error"):
     w(f"**The orchestrator stopped on an error** ({state['error']}); what was measured before it is below.\n")
+
+# ---------------------------------------------------------------- loss evidence (complete or it is not a pass)
+PLAN_USED = (load(f"{D}/estimate.json", {}) or {}).get("plan", {})
+REATTACH_PLANNED = PLAN_USED.get("reattach", {}).get("cycles", 6)
+
+
+def cell_complete(r):
+    return bool(r.get("latency", {}).get("n")) and not r.get("write_errors") and (r.get("writes_acked") or 0) >= (r.get("writes_target") or 1)
+
+
+def corrupt_batches(cy):
+    return sum(len([x for x in (c.get("bad_batches") or []) if not str(x).startswith("end of log")]) for c in cy)
+
+
+def loss_evidence(b):
+    """(ok, text). ok is True only with complete evidence and zero loss; anything missing or partial is a fail."""
+    probs = []
+    cr = crash.get(b)
+    if not cr:
+        err = (res.get(f"crash-{b}") or {}).get("error")
+        return False, "**NOT RUN** (crash test" + (f": {err}" if err else "") + ")"
+    cy = [c for c in cr.get("cycles", []) if "acked" in c]
+    lost = cr.get("lost_total", 0)
+    if lost:
+        probs.append(f"**{lost} LOST**")
+    if cr.get("cycles_run") != cr.get("cycles_planned"):
+        probs.append(f"{cr.get('cycles_run')}/{cr.get('cycles_planned')} cycles")
+    if cr.get("harness_failures"):
+        probs.append(f"{cr['harness_failures']} harness failures")
+    if not cr.get("acked_total"):
+        probs.append("0 acked writes")
+    if corrupt_batches(cy):
+        probs.append(f"{corrupt_batches(cy)} corrupt batches")
+    if sum(c.get("bad_payload") or 0 for c in cy):
+        probs.append("bad payloads")
+    if b == "quorum":
+        if not qt:
+            probs.append("quorum scenario NOT RUN")
+        elif "events" not in qt:
+            probs.append(f"quorum scenario failed: {qt.get('error', '?')}")
+        else:
+            if qt.get("lost"):
+                probs.append(f"**quorum scenario: {qt['lost']} LOST**")
+            if not qt.get("acked"):
+                probs.append("quorum scenario: 0 acked")
+            stale = next((e for e in qt["events"] if e.get("event", "").startswith("stale check")), {})
+            neg = (stale.get("negative_control") or {}).get("acked_missing_on_node1_alone")
+            pos = (stale.get("positive") or {}).get("acked_missing_on_nodes_0_2")
+            if not neg:
+                probs.append("negative control failed (stale node 1 alone did not miss acked writes)")
+            if pos != 0:
+                probs.append(f"nodes 0+2 missed {pos} acked writes while node 1 was stale")
+    if b == "file":
+        cyc = (reattach or {}).get("cycles") or []
+        if not cyc:
+            probs.append("EBS reattach NOT RUN" + (f" ({reattach['error']})" if reattach and reattach.get("error") else ""))
+        else:
+            bad = [c for c in cyc if c.get("error") or c.get("lost") is None or not c.get("previous_session_acked_file") or not c.get("acked_before_total")]
+            lostr = sum(c.get("lost") or 0 for c in cyc)
+            if lostr:
+                probs.append(f"**reattach: {lostr} LOST**")
+            if bad:
+                probs.append(f"{len(bad)} reattach cycle(s) without complete evidence")
+            if len(cyc) < REATTACH_PLANNED:
+                probs.append(f"{len(cyc)}/{REATTACH_PLANNED} reattach cycles")
+    return (not probs), ("0 lost (complete)" if not probs else "; ".join(probs))
+
+
+LOSS = {b: loss_evidence(b) for b in ORDER}
 
 # ---------------------------------------------------------------- pass table
 w("## Against the pass criteria\n")
@@ -104,24 +177,14 @@ w("| backend | variant | loss | worst p99 (ms) | p99 | worst USD / M at conc 8, 
 w("|---|---|---|---|---|---|---|---|---|")
 backend_pass = {}
 for b in ORDER:
-    cr = crash.get(b)
-    lost = None
-    if cr:
-        lost = cr.get("lost_total", 0)
-        if cr.get("harness_failures"):
-            lost = lost if lost else 0
-    if b == "quorum" and qt:
-        lost = (lost or 0) + (qt.get("lost") or 0)
-    if b == "file" and reattach and reattach.get("cycles"):
-        lost = (lost or 0) + sum(c.get("lost", 0) for c in reattach["cycles"])
-    loss_ok = None if lost is None else lost == 0
+    loss_ok, loss_txt = LOSS[b]
     variants = sorted({v for (bb, v) in by_cfg if bb == b})
     if not variants:
-        w(f"| {NAMES[b]} | – | {'not measured' if lost is None else lost} | not measured | – | not measured | – | – | **not measured** |")
+        w(f"| {NAMES[b]} | – | {loss_txt} | not measured | – | not measured | – | – | **fail (not measured)** |")
         continue
     for v in variants:
         rs = by_cfg[(b, v)]
-        complete = len(rs) == 6 and all(r.get("latency", {}).get("n") for r in rs)
+        complete = len(rs) == 6 and all(cell_complete(r) for r in rs)
         p99 = max((r["latency"].get("p99") or 1e9) for r in rs)
         judged = [r for r in rs if r["conc"] in (8, 64)]  # cost rule: conc 8 and 64 only
         usd = max((r.get("_usd_m") or 0) for r in judged) if F and judged else None
@@ -131,23 +194,21 @@ for b in ORDER:
         cost_ok = usd is not None and usd < COST_MAX
         ok = bool(loss_ok and lat_ok and cost_ok)
         backend_pass[b] = backend_pass.get(b, False) or ok
-        w(f"| {NAMES[b]} | {v} | {'0 lost' if loss_ok else ('not measured' if lost is None else f'**{lost} LOST**')} | {fmt(p99)} | {'pass' if lat_ok else ('incomplete' if not complete else 'FAIL')} "
+        w(f"| {NAMES[b]} | {v} | {loss_txt} | {fmt(p99)} | {'pass' if lat_ok else ('incomplete' if not complete else 'FAIL')} "
           f"| {fmt(usd, 3)} | {'pass' if cost_ok else 'FAIL'} | {fmt(usd1, 3)} | {'**PASS**' if ok else 'fail'} |")
 for r in sorted(fleet, key=lambda r: (ORDER.index(bkey(r["backend"])), r["layout"], r["variant"])):
     b = bkey(r["backend"])
-    cr = crash.get(b)
-    lost = cr.get("lost_total") if cr else None
-    loss_ok = None if lost is None else lost == 0
+    loss_ok, loss_txt = LOSS[b]
     n = r.get("writes_measured") or 0
     p99 = r["latency"].get("p99")
     usd = variable_usd(r["counters"]) / n * 1e6 if F and n else None
-    lat_ok = p99 is not None and p99 < P99_MAX and not r.get("write_errors")
+    lat_ok = p99 is not None and p99 < P99_MAX and not r.get("write_errors") and n > 0
     cost_ok = usd is not None and usd < COST_MAX
     ok = bool(loss_ok and lat_ok and cost_ok)
     judged = r["layout"] == "shared"  # the shared-batch case is judged; one log per database is the reference
     if judged:
         backend_pass[b] = backend_pass.get(b, False) or ok
-    w(f"| {NAMES[b]} | fleet {r['layout']} {r['variant']} ({r['dbs']} dbs × {r['rate_per_db']}/s) | {'0 lost' if loss_ok else ('not measured' if lost is None else f'**{lost} LOST**')} "
+    w(f"| {NAMES[b]} | fleet {r['layout']} {r['variant']} ({r['dbs']} dbs × {r['rate_per_db']}/s) | {loss_txt} "
       f"| {fmt(p99)} | {'pass' if lat_ok else 'FAIL'} | {fmt(usd, 3)} | {'pass' if cost_ok else 'FAIL'} | – | {('**PASS**' if ok else 'fail') if judged else 'reference (not judged)'} |")
 w("")
 w("Closed-loop configurations: latency judged on all 6 cells (200 B / 1 KB × conc 1, 8, 64), cost on the 4 cells at conc 8 and 64. "
@@ -171,7 +232,8 @@ for b in ORDER:
             nreq = sum(cn.get(k, 0) for k in ("s3_put", "xz_put", "ddb_put", "file_syncs"))
             w(f"| {NAMES[b]} | {v} | {r['size']} B | {r['conc']} | {fmt(l.get('p50'))} | {fmt(l.get('p95'))} | {fmt(l.get('p99'))} | {fmt(l.get('max'))} "
               f"| {fmt(r.get('writes_per_s'), 0)} | {fmt(r.get('avg_batch'), 1)} | {fmt(nreq / r['writes_acked'] if r.get('writes_acked') else None, 3)} | {fmt(r.get('_usd_m'), 3)} |"
-              + (f" errors: {r['write_errors']}" if r.get("write_errors") else ""))
+              + (f" errors: {r['write_errors']}" if r.get("write_errors") else "")
+              + (f" DynamoDB throttled attempts: {cn.get('ddb_throttled')}" if cn.get("ddb_throttled") else ""))
 w("")
 
 # ---------------------------------------------------------------- fleet
@@ -216,7 +278,9 @@ w("A torn last frame of a local log after kill -9 is expected (never acknowledge
 
 # ---------------------------------------------------------------- quorum
 w("## Quorum: a node killed, a stale node returning\n")
-if qt:
+if qt and "events" not in qt:
+    w(f"**The quorum scenario failed to produce a result**: `{json.dumps({k: qt.get(k) for k in ('error', 'step_exit', 'stderr_tail')})[:1500]}`")
+elif qt:
     w(f"8 writers, 1 KB, group commit. Acknowledged {qt['acked']}, recovered from nodes 1+2 only: {qt['recovered_from_nodes_1_2']}, **lost {qt['lost']}**.\n")
     for e in qt["events"]:
         extra = {k: v for k, v in e.items() if k not in ("t_s", "event")}
@@ -235,7 +299,7 @@ if reattach and reattach.get("cycles"):
     w("|---|---|---|---|---|---|---|---|---|---|---|")
     for c in reattach["cycles"]:
         if "error" in c:
-            w(f"| {c['cycle']} | | error: {c['error']} | | | | | | | | |")
+            w(f"| {c['cycle']} | {c.get('from', '')}→{c.get('to', '')} | **FAILED: {c['error']}** | | | | | | | | not verifiable |")
             continue
         w(f"| {c['cycle']} | {c['from']}→{c['to']} | {fmt(c['detach_api_to_available_s'], 1)} | {fmt(c['attach_api_to_attached_s'], 1)} | {fmt(c['attach_call_to_device_visible_s'], 1)} "
           f"| {fmt(c['mount_ms'], 0)} | {fmt(c['recover_ms'], 0)} | {fmt(c['first_ack_after_recovery_ms'], 0)} | {fmt(c['total_detach_call_to_first_ack_s'], 1)} | {c['acked_before_total']} | {c['lost']} |")
@@ -290,6 +354,8 @@ w("- Loss of an AZ, of the Express directory bucket's AZ, or service-side incide
 w("- Writes larger than 1 KB, read latency, compaction or truncation of the log, cost of retaining the log beyond 24 h.")
 w("- The quorum protocol is benchmark grade (no epochs/fencing, catch-up from the writer's buffer); a production protocol adds work not measured here.")
 w("- Group-commit windows are timer based (tokio, 1 ms resolution): a 1 ms window waits 1–2 ms.")
+thr = sum((r.get("counters") or {}).get("ddb_throttled", 0) for r in res.values() if r and isinstance(r.get("counters"), dict))
+w(f"- DynamoDB throttled attempts over all cells: {thr} (an on-demand table starts at about 4000 WRU/s; throttled attempts are retried, shown per cell, and not billed in the cost figures).")
 w("- S3 Express `CreateSession` calls are made by the SDK and are not counted (one per bucket per ~5 minutes).")
 skipped = load(f"{D}/raw/markers/client-done.json", {}).get("skipped")
 if skipped:

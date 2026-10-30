@@ -52,6 +52,13 @@ enum Cmd {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    // every short-lived walbench process dies with its parent (no orphan writer burning requests); the node and the
+    // EBS holder are long-lived and supervised, they keep the default
+    if !matches!(cli.cmd, Cmd::Node { .. } | Cmd::EbsHolder(_)) {
+        unsafe {
+            libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL);
+        }
+    }
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().worker_threads(4).max_blocking_threads(64).build()?;
     rt.block_on(async move {
         match cli.cmd {

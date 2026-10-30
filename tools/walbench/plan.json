@@ -1,20 +1,99 @@
 {
-  "rev": 1,
-  "sizes": [200, 1024],
-  "concs": [1, 8, 64],
-  "cell": {"writes": 1500, "warmup": 100, "max_secs": 90},
-  "cloud_backends": ["s3", "express", "ddb"],
-  "cloud_variants": ["perwrite", "w1", "w5", "w20"],
-  "serial_variants": ["w0"],
-  "fleet": {"dbs": 200, "rate": 1.0, "secs": 60, "warm_secs": 5, "size": 1024,
-            "cells": [["perdb", "perwrite"], ["shared", "w1"], ["shared", "w5"], ["shared", "w20"]]},
-  "crash": {"cycles": 200, "kill_min_ms": 150, "kill_max_ms": 1500, "max_secs": 1800, "est_requests_per_cycle": 400,
-            "variants": {"s3": "perwrite,w1,w5,w20", "express": "perwrite,w1,w5,w20", "ddb": "perwrite,w1,w5,w20",
-                         "file": "w0,w1,w5", "quorum": "w0,w1,w5"}},
-  "quorumtest": {"scale": 1.0},
-  "reattach": {"cycles": 6, "write_secs": 5, "max_minutes": 30},
-  "spend": {"cap_usd": 5.0, "stop_usd": 4.0, "max_estimate_usd": 3.5},
+  "rev": 2,
+  "sizes": [
+    200,
+    1024
+  ],
+  "concs": [
+    1,
+    8,
+    64
+  ],
+  "cell": {
+    "writes": 1500,
+    "warmup": 100,
+    "max_secs": 90
+  },
+  "cloud_backends": [
+    "s3",
+    "express",
+    "ddb"
+  ],
+  "cloud_variants": [
+    "perwrite",
+    "w1",
+    "w5",
+    "w20"
+  ],
+  "serial_variants": [
+    "w0"
+  ],
+  "fleet": {
+    "dbs": 200,
+    "rate": 1.0,
+    "secs": 60,
+    "warm_secs": 5,
+    "size": 1024,
+    "cells": [
+      [
+        "perdb",
+        "perwrite"
+      ],
+      [
+        "shared",
+        "w1"
+      ],
+      [
+        "shared",
+        "w5"
+      ],
+      [
+        "shared",
+        "w20"
+      ]
+    ]
+  },
+  "crash": {
+    "cycles": 200,
+    "kill_min_ms": 150,
+    "kill_max_ms": 1500,
+    "max_secs": 1800,
+    "est_requests_per_cycle": {
+      "s3": 400,
+      "express": 400,
+      "ddb": 500,
+      "file": 0,
+      "quorum": 0,
+      "_note": "commits per crash cycle, a realistic upper value: each writer issues at most max_writes (1000) writes and is killed at a random time (150-1500 ms) or a random ack count, whichever comes first; perwrite cycles are near the cap on fast backends, batched cycles far below"
+    },
+    "variants": {
+      "s3": "perwrite,w1,w5,w20",
+      "express": "perwrite,w1,w5,w20",
+      "ddb": "perwrite,w1,w5,w20",
+      "file": "w0,w1,w5",
+      "quorum": "w0,w1,w5"
+    },
+    "max_writes": 1000
+  },
+  "quorumtest": {
+    "scale": 1.0
+  },
+  "reattach": {
+    "cycles": 6,
+    "write_secs": 5,
+    "max_minutes": 30
+  },
+  "spend": {
+    "cap_usd": 5.0,
+    "stop_usd": 4.0,
+    "max_estimate_usd": 3.5
+  },
   "estimate_instance_hours": 8,
   "instance_max_minutes": 200,
-  "max_run_minutes": 180
+  "max_run_minutes": 180,
+  "client_boot_minutes": 10,
+  "visibility": {
+    "line_every_s": 60,
+    "push_every_s": 300
+  }
 }

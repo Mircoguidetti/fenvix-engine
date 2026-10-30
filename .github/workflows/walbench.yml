@@ -37,7 +37,8 @@ jobs:
           acct=$(cut -d: -f5 <<<"$WB_ROLE"); role=${WB_ROLE##*/}
           echo "::add-mask::$acct"; echo "::add-mask::$role"
           echo "R3_ACCT=$acct" >> "$GITHUB_ENV"; echo "R3_ROLE_NAME=$role" >> "$GITHUB_ENV"
-          if git diff --name-only HEAD~1 HEAD | grep -qx tools/walbench/go.json; then echo "mode=run" >> "$GITHUB_OUTPUT"; else echo "mode=teardown" >> "$GITHUB_OUTPUT"; fi
+          # only an added or modified go.json starts a paid run (deleting it, or a teardown.json push, only cleans up)
+          if git diff --name-only --diff-filter=AM HEAD~1 HEAD | grep -qx tools/walbench/go.json; then echo "mode=run" >> "$GITHUB_OUTPUT"; else echo "mode=teardown" >> "$GITHUB_OUTPUT"; fi
 
       - name: AWS credentials (OIDC, 1 h; the orchestrator renews them itself)
         uses: aws-actions/configure-aws-credentials@v4
@@ -58,7 +59,14 @@ jobs:
         if: steps.mode.outputs.mode == 'run'
         continue-on-error: true
         timeout-minutes: 230
-        run: python3 -u tools/walbench/orchestrate.py
+        env:
+          # one "SPEND |" line in this log every 60 s; results-walbench/cost_live.csv pushed to walbench every 5 min
+          # (that path never matches this workflow's trigger paths; pushes made with GITHUB_TOKEN trigger no workflow)
+          WALBENCH_GIT_PUSH: "1"
+        run: |
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          python3 -u tools/walbench/orchestrate.py
 
       - name: AWS credentials for the clean-up
         if: always()
@@ -71,25 +79,34 @@ jobs:
 
       - name: Teardown of every fenvix-walbench resource (all runs) and verification that nothing is left
         if: always()
+        timeout-minutes: 40
         run: |
-          python3 -m pip install --quiet boto3
+          for i in 1 2 3 4 5; do python3 -m pip install --quiet boto3 && break; echo "pip install failed, retry $i"; sleep $((i * 10)); done
+          python3 -c "import boto3" || { echo "boto3 unavailable: teardown cannot run"; exit 1; }
           mkdir -p results-walbench/cleanup
           WALBENCH_OUT=results-walbench/cleanup python3 -u tools/walbench/infra.py teardown --all
 
-      - name: Report, secret scan, publish results to this branch
+      - name: Report and secret scan (redacts in place; fails if anything remains)
+        id: scan
         if: always()
         run: |
+          mkdir -p results-walbench
           [ -f results-walbench/prices.json ] && python3 tools/walbench/report.py results-walbench results-walbench/report.md || true
           python3 tools/round3/s3/scan.py results-walbench
           [ -f results-walbench/report.md ] && mv results-walbench/report.md results-walbench.md || true
+          python3 -c "import json; c=json.load(open('results-walbench/cost_final.json')); print(f'FINAL SPEND (estimate from counted usage at list prices): {c[\"total_usd\"]:.3f} USD')" 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Publish results to this branch (only after a clean scan)
+        if: always() && steps.scan.outcome == 'success'
+        run: |
           git config user.name github-actions
           git config user.email actions@users.noreply.github.com
           git add results-walbench results-walbench.md 2>/dev/null || git add results-walbench
           git commit -qm "walbench run ${{ github.run_id }}: results" || true
           for i in 1 2 3; do git pull --rebase -q origin walbench && git push origin HEAD:walbench && break; sleep 5; done
 
-      - name: Copy of the results as an artifact (in case the push fails)
-        if: always()
+      - name: Copy of the results as an artifact (in case the push fails; only after a clean scan)
+        if: always() && steps.scan.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: walbench-${{ github.run_id }}-${{ github.run_attempt }}

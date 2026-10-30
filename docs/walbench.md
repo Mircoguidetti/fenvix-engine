@@ -34,9 +34,14 @@ SDK retries are off; the benchmark retries itself (up to 6 attempts) and counts 
   writes (max 90 s); p50/p95/p99/max from every ack.
 - Cost per million writes: requests / WCU / bytes counted in each cell × prices fetched at run time from the AWS
   public offer files and Price List API for eu-west-1 (saved in `results-walbench/prices.json`), + 24 h of storage.
-- Crash test: 200 cycles per backend; each cycle a writer process (random variant, concurrency, size) is killed with
-  SIGKILL after 150–1500 ms, a new process reads the log, every acknowledged id must be there with correct bytes.
+- Crash test: 200 cycles per backend, run BEFORE the latency sweeps (so an automatic stop cannot cut the loss
+  evidence). Each cycle a writer process (random variant, concurrency, size) issues at most 1000 writes and is killed
+  with SIGKILL after a random 150–1500 ms or a random number of acks (whichever comes first, so the kill lands
+  mid-run even on fast backends); a new process reads the log, every acknowledged id must be there with correct
+  bytes. Writers die with their harness (PR_SET_PDEATHSIG) and exit by themselves after 30 s.
   A negative control (an "ack before write" mode) was run locally and the check reported the loss.
+- Quorum nodes: one per AZ. If the vCPU quota allows only 3 instances, node 0 (client's AZ) runs as a process on the
+  client instance; this is recorded in the results.
 - Quorum: node 1 killed, returns stale (negative control: node 1 alone misses acked writes), caught up, then node 0
   killed; recovery from nodes 1+2 only must have every acked write. Latency per phase.
 - EBS: force-detach the volume while 8 writers write (machine-loss case), attach to the second instance, mount,
@@ -55,12 +60,21 @@ SDK retries are off; the benchmark retries itself (up to 6 attempts) and counts 
    no per-request charge: their variable cost is ~0 (quorum: inter-AZ transfer); their fixed cost per hour and the
    write rate at which it equals 1.5 USD/M are reported next to it.
 
+A pass needs complete evidence: all planned crash cycles run, no harness failure, acked writes > 0, no corrupt batch
+or bad payload; closed-loop cells with no write error and all target writes acked; the quorum scenario run with its
+negative control confirmed; all EBS reattach cycles run with the previous session's ack list present. Anything
+missing is NOT RUN / fail, never a pass.
+
 A configuration passes when it meets all three; a backend passes when one of its configurations passes. The report
 lists every configuration; it does not rank beyond this.
 
-## Spend control
+## Spend control and visibility
 
 Estimate of the whole plan before anything is created (stop if > 3.5 USD); live spend every 20 s in
-`results-walbench/cost_live.csv`; at 4 USD the run stops and everything is deleted; cap 5 USD. Teardown and a
+`results-walbench/cost_live.csv`, one `SPEND |` line in the Actions log every 60 s (elapsed time, running step,
+USD, % of the 4 USD stop), and `cost_live.csv` pushed to branch `walbench` every 5 minutes (only that file; never a
+trigger path); the final spend is printed at the end and in the job summary. At 4 USD the run stops: instances are
+terminated first, then results are collected and everything is deleted; cap 5 USD. A stop marker also ends the
+step running on the client within ~10 s. Teardown and a
 two-way verification (per-service listings + tag API) always run; instances also terminate themselves after
 200 minutes.

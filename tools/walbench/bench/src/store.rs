@@ -315,9 +315,16 @@ impl Store for DdbStore {
                     return Ok(());
                 }
                 Err(e) => {
-                    // a failed attempt may still have been written and billed; the WCU of failed attempts are not
-                    // returned, so they are counted as the size-based estimate (1 WRU per started KB)
-                    add(&C.ddb_wcu_milli, 1000 * ((body.len() as u64 + 64).div_ceil(1024)));
+                    let throttled = e.as_service_error().map(|x| x.is_provisioned_throughput_exceeded_exception() || x.is_request_limit_exceeded()).unwrap_or(false)
+                        || e.as_service_error().and_then(|x| aws_sdk_dynamodb::error::ProvideErrorMetadata::code(x)).map(|c| c.contains("Throttl")).unwrap_or(false);
+                    if throttled {
+                        // throttled writes are rejected and not billed: counted apart, no WCU
+                        add(&C.ddb_throttled, 1);
+                    } else {
+                        // any other failure may still have been written and billed; its WCU are not returned, so
+                        // they are counted as the size-based estimate (1 WRU per started KB)
+                        add(&C.ddb_wcu_milli, 1000 * ((body.len() as u64 + 64).div_ceil(1024)));
+                    }
                     add(&C.errors, 1);
                     last = Some(format!("{}", aws_sdk_dynamodb::error::DisplayErrorContext(&e)));
                     backoff(attempt).await;

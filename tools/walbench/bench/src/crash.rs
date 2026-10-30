@@ -33,6 +33,12 @@ pub struct WriterArgs {
     pub log: String,
     #[arg(long, default_value_t = 1)]
     pub first_id: u64,
+    /// issue at most this many writes, then wait for their acks and exit (bounds the requests of one crash cycle)
+    #[arg(long, default_value_t = 1000)]
+    pub max_writes: u64,
+    /// exit by itself after this many seconds (no orphan writer if the harness is gone)
+    #[arg(long, default_value_t = 30)]
+    pub max_secs: u64,
 }
 
 pub async fn writer(a: WriterArgs) -> Result<()> {
@@ -54,12 +60,18 @@ pub async fn writer(a: WriterArgs) -> Result<()> {
             let _ = o.flush();
         }
     });
+    let max_secs = a.max_secs;
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(max_secs)).await;
+        std::process::exit(3);
+    });
+    let issued = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
     tx.send("READY".into())?;
     let mut hs = Vec::new();
     for w in 0..a.conc {
-        let (com, tx, size) = (com.clone(), tx.clone(), a.size);
+        let (com, tx, size, issued, max_writes) = (com.clone(), tx.clone(), a.size, issued.clone(), a.max_writes);
         hs.push(tokio::spawn(async move {
-            loop {
+            while issued.fetch_add(1, Relaxed) < max_writes {
                 let id = NEXT_ID.fetch_add(1, Relaxed);
                 match com.write(w as u32, id, codec::payload(id, size)).await {
                     Ok(()) => {
@@ -155,6 +167,12 @@ pub struct CrashArgs {
     pub kill_min_ms: u64,
     #[arg(long, default_value_t = 2500)]
     pub kill_max_ms: u64,
+    /// each writer issues at most this many writes; the kill also fires when a random number of acks in
+    /// [kill_min_acks, max_writes - 1] has been read, so it lands mid-run even for fast backends
+    #[arg(long, default_value_t = 1000)]
+    pub max_writes: u64,
+    #[arg(long, default_value_t = 20)]
+    pub kill_min_acks: u64,
     /// log ids are <log>-c<cycle>
     #[arg(long)]
     pub log: String,
@@ -203,13 +221,14 @@ pub async fn crashtest(a: CrashArgs) -> Result<()> {
         let conc = *concs.choose(&mut rng).unwrap();
         let size = *sizes.choose(&mut rng).unwrap();
         let kill_ms = rng.gen_range(a.kill_min_ms..=a.kill_max_ms);
+        let kill_acks = rng.gen_range(a.kill_min_acks..a.max_writes.max(a.kill_min_acks + 1));
         let read_nodes = if a.b.backend == Kind::Quorum {
             let pairs = ["0,1", "0,2", "1,2"];
             pairs.choose(&mut rng).unwrap().to_string()
         } else {
             String::new()
         };
-        let r = cycle(&exe, &a.b, &log, &variant, conc, size, kill_ms, &read_nodes, next_id).await;
+        let r = cycle(&exe, &a.b, &log, &variant, conc, size, kill_ms, kill_acks, a.max_writes, &read_nodes, next_id).await;
         let v = match r {
             Ok(v) => v,
             Err(e) => {
@@ -260,10 +279,12 @@ fn add_json(a: &Value, b: &Value) -> Value {
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn cycle(exe: &std::path::Path, b: &BackendArgs, log: &str, variant: &str, conc: usize, size: usize, kill_ms: u64, read_nodes: &str, first_id: u64) -> Result<Value> {
+async fn cycle(exe: &std::path::Path, b: &BackendArgs, log: &str, variant: &str, conc: usize, size: usize, kill_ms: u64, kill_acks: u64, max_writes: u64,
+               read_nodes: &str, first_id: u64) -> Result<Value> {
     let mut args = vec!["writer".to_string()];
     args.extend(backend_flags(b));
-    args.extend(["--log", log, "--variant", variant, "--size", &size.to_string(), "--conc", &conc.to_string(), "--first-id", &first_id.to_string()].map(String::from));
+    args.extend(["--log", log, "--variant", variant, "--size", &size.to_string(), "--conc", &conc.to_string(), "--first-id", &first_id.to_string(),
+                 "--max-writes", &max_writes.to_string()].map(String::from));
     let mut child = tokio::process::Command::new(exe).args(&args).stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true).spawn()?;
     let mut lines = BufReader::new(child.stdout.take().unwrap()).lines();
     // wait for READY (store opened)
@@ -283,15 +304,26 @@ async fn cycle(exe: &std::path::Path, b: &BackendArgs, log: &str, variant: &str,
     let mut acked = BTreeSet::new();
     let mut errors = Vec::new();
     let kill_at = tokio::time::Instant::now() + Duration::from_millis(kill_ms);
+    let mut trigger = "time";
     loop {
         tokio::select! {
             l = lines.next_line() => match l? {
-                Some(l) => parse_line(&l, &mut acked, &mut errors),
-                None => break, // writer exited by itself (should not happen)
+                Some(l) => {
+                    parse_line(&l, &mut acked, &mut errors);
+                    if acked.len() as u64 >= kill_acks {
+                        trigger = "acks";
+                        break;
+                    }
+                }
+                None => {
+                    trigger = "writer exited before the kill";
+                    break;
+                }
             },
             _ = tokio::time::sleep_until(kill_at) => break,
         }
     }
+    let acked_at_kill = acked.len();
     let t_kill = Instant::now();
     let pid = child.id();
     child.start_kill().context("SIGKILL")?; // kill -9
@@ -326,7 +358,8 @@ async fn cycle(exe: &std::path::Path, b: &BackendArgs, log: &str, variant: &str,
         v.map(|v| v["counters"].clone())
     });
     Ok(json!({
-        "log": log, "variant": variant, "conc": conc, "size": size, "kill_ms": kill_ms, "read_nodes": read_nodes,
+        "log": log, "variant": variant, "conc": conc, "size": size, "kill_ms": kill_ms, "kill_acks": kill_acks, "kill_trigger": trigger,
+        "acked_at_kill_decision": acked_at_kill, "read_nodes": read_nodes,
         "exit": format!("{status}"), "acked": acked.len(), "recovered": recovered.len(), "lost": lost.len(),
         "lost_sample": lost.iter().take(20).collect::<Vec<_>>(), "recovered_not_acked": extra,
         "bad_batches": r["bad"], "bad_payload": r["bad_payload"], "duplicates": r["duplicates"],

@@ -108,7 +108,7 @@ What the orchestrator (`tools/walbench/orchestrate.py`) and the teardown (`tools
       "Condition": { "StringNotEquals": { "ec2:InstanceType": "c6i.large" } } },
     { "Sid": "RunInstancesUsing", "Effect": "Allow", "Action": "ec2:RunInstances",
       "Resource": ["arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:subnet/*", "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:security-group/*",
-                   "arn:aws:ec2:eu-west-1::image/*"] },
+                   "arn:aws:ec2:eu-west-1::image/*", "arn:aws:ec2:eu-west-1::snapshot/*"] },
 
     { "Sid": "CreateTaggedVolumeAndGroup", "Effect": "Allow",
       "Action": ["ec2:CreateVolume", "ec2:CreateSecurityGroup"],
@@ -130,11 +130,21 @@ What the orchestrator (`tools/walbench/orchestrate.py`) and the teardown (`tools
       "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/fenvix-walbench-ec2",
       "Condition": { "StringEquals": { "iam:PassedToService": "ec2.amazonaws.com" } } },
 
-    { "Sid": "VerifyNothingLeft", "Effect": "Allow", "Action": "tag:GetResources", "Resource": "*" }
+    { "Sid": "VerifyNothingLeft", "Effect": "Allow", "Action": "tag:GetResources", "Resource": "*" },
+
+    { "Sid": "ReadVcpuQuota", "Effect": "Allow", "Action": "servicequotas:GetServiceQuota",
+      "Resource": "arn:aws:servicequotas:eu-west-1:<ACCOUNT_ID>:ec2/L-1216C47A" }
   ] }
 ```
 
 Notes on the policy:
+- `snapshot/*` (no account id: AWS-owned) is the root-volume snapshot of the Canonical Ubuntu AMI; RunInstances
+  authorizes it together with the image.
+- `servicequotas:GetServiceQuota` on quota `L-1216C47A` (EC2 "Running On-Demand Standard instances", in vCPUs) is
+  read before anything is launched. Rule: at most 3 c6i.large at once; 4 only if the free quota (quota minus the
+  vCPUs of every pending/running instance in eu-west-1, from DescribeInstances) is at least 8. If the quota cannot be
+  read (e.g. AccessDenied) the run uses 3. With 3, quorum node 0 runs as a process on the client instance (same AZ
+  as node 0 would be; the report says so); with fewer than 6 free vCPUs nothing is launched. The free quota is logged.
 - `ec2:AuthorizeSecurityGroupIngress` is allowed only on the tagged walbench security group (the rule itself is not
   tagged; it is deleted with its group).
 - The `Deny` limits the role to `c6i.large` for anything it launches; the `RequestTag` condition makes every instance,
@@ -148,7 +158,8 @@ Notes on the policy:
 ## Account prerequisites (please check, no change expected)
 
 - A **default VPC in eu-west-1** with default subnets in at least 3 AZs (the benchmark uses it; it creates no VPC).
-- On-demand **vCPU quota** for standard instances in eu-west-1 of at least 10 (at most 4 × c6i.large = 8 vCPUs at once).
+- On-demand **vCPU quota** for standard instances in eu-west-1: at least 6 vCPUs free (3 × c6i.large); 8 free lets
+  quorum node 0 run on its own instance (see the quota rule above).
 - S3 Express One Zone available in one of the AZ ids `euw1-az1`, `euw1-az3`, `euw1-az2` (tried in this order).
 
 ## How phase 2 starts (after you confirm)

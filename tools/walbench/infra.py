@@ -83,10 +83,14 @@ def _offer_prices(svc, wanted):
                 for pd in t["priceDimensions"].values():
                     hits.append({"usd": float(pd["pricePerUnit"]["USD"]), "unit": pd["unit"], "description": pd["description"],
                                  "usagetype": ut, "sku": sku, "beginRange": pd.get("beginRange"), "effectiveDate": t.get("effectiveDate")})
+        if not hits:
+            # defensive: the same usage type with or without the region prefix, then any case-insensitive match
+            alts = [u for u in {p.get("attributes", {}).get("usagetype", "") for p in d["products"].values()}
+                    if u.lower().endswith(ut.lower().split("-", 1)[1]) or u.lower() == ut.lower()]
+            out.setdefault("_missing", {})[name] = {"wanted": ut, "candidates": sorted(alts)[:10]}
+            raise SystemExit(f"price not found: {svc} usagetype {ut}; candidates {sorted(alts)[:10]} (nothing created)")
         # tiered prices (storage): keep the first paid tier, i.e. the highest price
         hits.sort(key=lambda h: -h["usd"])
-        if not hits:
-            raise SystemExit(f"price not found: {svc} {ut}")
         out[name] = hits[0]
         out[name]["all_tiers"] = len(hits)
     return out
@@ -94,9 +98,11 @@ def _offer_prices(svc, wanted):
 
 def _api_price(filters, service):
     pr = c("pricing", "us-east-1")
-    r = pr.get_products(ServiceCode=service, Filters=[{"Type": "TERM_MATCH", "Field": k, "Value": v} for k, v in filters.items()], MaxResults=20)
+    pl = []
+    for page in pr.get_paginator("get_products").paginate(ServiceCode=service, Filters=[{"Type": "TERM_MATCH", "Field": k, "Value": v} for k, v in filters.items()]):
+        pl += page["PriceList"]
     hits = []
-    for s in r["PriceList"]:
+    for s in pl:
         p = json.loads(s)
         for t in p["terms"].get("OnDemand", {}).values():
             for pd in t["priceDimensions"].values():
@@ -105,8 +111,13 @@ def _api_price(filters, service):
                     hits.append({"usd": usd, "unit": pd["unit"], "description": pd["description"], "sku": p["product"]["sku"],
                                  "usagetype": p["product"]["attributes"].get("usagetype"), "effectiveDate": t.get("effectiveDate"),
                                  "publicationDate": p.get("publicationDate")})
-    if len(hits) != 1:
-        raise SystemExit(f"expected exactly one price for {service} {filters}, got {len(hits)}: {[h['description'] for h in hits]}")
+    if not hits:
+        raise SystemExit(f"no price for {service} {filters} (nothing created)")
+    if len({h["usd"] for h in hits}) > 1:
+        # defensive: several matching products (e.g. an extra SKU variant): use the highest price, record the others
+        log(f"{len(hits)} prices for {service} {filters}: using the highest")
+    hits.sort(key=lambda h: -h["usd"])
+    hits[0]["alternatives"] = [{"usd": h["usd"], "description": h["description"]} for h in hits[1:]]
     hits[0]["source"] = f"AWS Price List Query API pricing:GetProducts ServiceCode={service} filters={filters}"
     return hits[0]
 
@@ -253,24 +264,38 @@ def launch(run, st, role, user_data):
 
 
 # -------------------------------------------------------------------------------------------------------- teardown
-def _empty_bucket(s3, b, directory):
+def _empty_bucket(s3, b, directory, max_passes=200):
+    """Deletes every object. Checks the Errors of each DeleteObjects; gives up (raises) after max_passes listings or
+    after 5 passes in a row that deleted nothing, so it can never loop forever."""
     n = 0
     tok = None
-    while True:
+    idle = 0
+    for _ in range(max_passes):
         kw = {"Bucket": b}
         if tok:
             kw["ContinuationToken"] = tok
         r = s3.list_objects_v2(**kw)
         keys = [{"Key": o["Key"]} for o in r.get("Contents", [])]
+        deleted_now = 0
+        errors = []
         for i in range(0, len(keys), 1000):
-            s3.delete_objects(Bucket=b, Delete={"Objects": keys[i:i + 1000], "Quiet": True})
-            n += len(keys[i:i + 1000])
-        tok = r.get("NextContinuationToken")
-        if not r.get("IsTruncated") or not tok:
-            # a directory bucket may need another pass after deletes; loop until a listing is empty
-            if not keys:
-                break
-            tok = None
+            d = s3.delete_objects(Bucket=b, Delete={"Objects": keys[i:i + 1000], "Quiet": True})
+            errs = d.get("Errors", [])
+            errors += [e.get("Code", "?") for e in errs]
+            deleted_now += len(keys[i:i + 1000]) - len(errs)
+        n += deleted_now
+        if errors:
+            log(f"empty {b}: {len(errors)} delete errors ({sorted(set(errors))[:3]})")
+        tok = r.get("NextContinuationToken") if r.get("IsTruncated") else None
+        if not keys and not tok:
+            break
+        idle = idle + 1 if deleted_now == 0 else 0
+        if idle >= 5:
+            raise RuntimeError(f"bucket not emptying: {len(errors)} errors, codes {sorted(set(errors))[:3]}")
+        if not tok:
+            continue  # list again from the start until a listing is empty (directory buckets need it)
+    else:
+        raise RuntimeError(f"bucket {b} still not empty after {max_passes} listings")
     if not directory:
         for u in s3.list_multipart_uploads(Bucket=b).get("Uploads", []):
             s3.abort_multipart_upload(Bucket=b, Key=u["Key"], UploadId=u["UploadId"])
