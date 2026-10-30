@@ -1,0 +1,222 @@
+2026-10-30T07:01:21Z agent start: role client
+2026-10-30T07:01:22Z log volume formatted and mounted
+2026-10-30T07:01:26Z marker node-0
+2026-10-30T07:01:31Z step smoke-s3: start
+2026-10-30T07:01:32Z step smoke-s3: exit 0 in 0 s; {"acked":20,"errors":0,"name":"smoke-s3","p50":24.219,"p99":26.264}
+2026-10-30T07:01:32Z step smoke-express: start
+2026-10-30T07:01:32Z step smoke-express: exit 0 in 0 s; {"acked":20,"errors":0,"name":"smoke-express","p50":7.812,"p99":12.744}
+2026-10-30T07:01:32Z step smoke-ddb: start
+2026-10-30T07:01:32Z step smoke-ddb: exit 0 in 0 s; {"acked":20,"errors":0,"name":"smoke-ddb","p50":3.885,"p99":7.181}
+2026-10-30T07:01:32Z step smoke-file: start
+2026-10-30T07:01:33Z step smoke-file: exit 0 in 1 s; {"acked":20,"errors":0,"name":"smoke-file","p50":3.522,"p99":8.415}
+2026-10-30T07:01:33Z step smoke-quorum: start
+2026-10-30T07:01:33Z step smoke-quorum: exit 0 in 0 s; {"acked":20,"errors":0,"name":"smoke-quorum","p50":3.649,"p99":4.15}
+2026-10-30T07:01:34Z marker smoke-done
+2026-10-30T07:01:34Z step quorumtest: start
+2026-10-30T07:02:33Z step quorumtest: exit 0 in 59 s; {"acked":107162,"catch_up_ms":379.038569,"lost":0}
+2026-10-30T07:02:33Z step crash-quorum: start
+2026-10-30T07:03:35Z step crash-quorum: exit 0 in 62 s; {"acked":83911,"backend":"Quorum","cycles":200,"harness_failures":1,"lost":0}
+2026-10-30T07:03:35Z step cell-quorum-w0-200b-c1: start
+2026-10-30T07:03:37Z step cell-quorum-w0-200b-c1: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-quorum-w0-200b-c1","p50":0.962,"p99":1.188}
+2026-10-30T07:03:37Z step cell-quorum-w0-200b-c8: start
+2026-10-30T07:03:37Z step cell-quorum-w0-200b-c8: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-quorum-w0-200b-c8","p50":1.942,"p99":2.267}
+2026-10-30T07:03:37Z step cell-quorum-w0-200b-c64: start
+2026-10-30T07:03:38Z step cell-quorum-w0-200b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-quorum-w0-200b-c64","p50":1.809,"p99":2.002}
+2026-10-30T07:03:38Z step cell-quorum-w0-1024b-c1: start
+2026-10-30T07:03:40Z step cell-quorum-w0-1024b-c1: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-quorum-w0-1024b-c1","p50":1.062,"p99":1.3}
+2026-10-30T07:03:40Z step cell-quorum-w0-1024b-c8: start
+2026-10-30T07:03:40Z step cell-quorum-w0-1024b-c8: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-quorum-w0-1024b-c8","p50":1.692,"p99":1.979}
+2026-10-30T07:03:40Z step cell-quorum-w0-1024b-c64: start
+2026-10-30T07:03:40Z step cell-quorum-w0-1024b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-quorum-w0-1024b-c64","p50":2.398,"p99":3.396}
+2026-10-30T07:03:41Z marker quorum-done
+2026-10-30T07:03:41Z step crash-s3: start
+2026-10-30T07:03:41Z step crash-express: start
+2026-10-30T07:03:41Z step crash-ddb: start
+2026-10-30T07:03:41Z step crash-file: start
+2026-10-30T07:04:42Z step crash-file: exit 0 in 61 s; {"acked":86743,"backend":"File","cycles":200,"harness_failures":0,"lost":0}
+2026-10-30T07:05:33Z step crash-ddb: exit 0 in 112 s; {"acked":73176,"backend":"Ddb","cycles":200,"harness_failures":0,"lost":0}
+2026-10-30T07:06:16Z step crash-express: exit 0 in 155 s; {"acked":45248,"backend":"Express","cycles":200,"harness_failures":0,"lost":0}
+2026-10-30T07:06:37Z step crash-s3: exit 0 in 176 s; {"acked":46252,"backend":"S3","cycles":200,"harness_failures":0,"lost":0}
+2026-10-30T07:06:37Z step cell-file-w0-200b-c1: start
+2026-10-30T07:06:38Z step cell-file-w0-200b-c1: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-file-w0-200b-c1","p50":0.465,"p99":0.631}
+2026-10-30T07:06:38Z step cell-file-w0-200b-c8: start
+2026-10-30T07:06:38Z step cell-file-w0-200b-c8: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-file-w0-200b-c8","p50":0.911,"p99":1.152}
+2026-10-30T07:06:38Z step cell-file-w0-200b-c64: start
+2026-10-30T07:06:39Z step cell-file-w0-200b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-file-w0-200b-c64","p50":0.989,"p99":1.146}
+2026-10-30T07:06:39Z step cell-file-w0-1024b-c1: start
+2026-10-30T07:06:40Z step cell-file-w0-1024b-c1: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-file-w0-1024b-c1","p50":0.457,"p99":0.662}
+2026-10-30T07:06:40Z step cell-file-w0-1024b-c8: start
+2026-10-30T07:06:40Z step cell-file-w0-1024b-c8: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-file-w0-1024b-c8","p50":0.929,"p99":1.101}
+2026-10-30T07:06:40Z step cell-file-w0-1024b-c64: start
+2026-10-30T07:06:40Z step cell-file-w0-1024b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-file-w0-1024b-c64","p50":1.169,"p99":1.473}
+2026-10-30T07:06:40Z marker standby-needed
+2026-10-30T07:06:41Z step cell-s3-perwrite-200b-c1: start
+2026-10-30T07:07:19Z step cell-s3-perwrite-200b-c1: exit 0 in 38 s; {"acked":1500,"errors":0,"name":"cell-s3-perwrite-200b-c1","p50":22.995,"p99":46.576}
+2026-10-30T07:07:19Z step cell-s3-perwrite-200b-c8: start
+2026-10-30T07:07:25Z step cell-s3-perwrite-200b-c8: exit 0 in 6 s; {"acked":1500,"errors":0,"name":"cell-s3-perwrite-200b-c8","p50":25.066,"p99":59.604}
+2026-10-30T07:07:25Z step cell-s3-perwrite-200b-c64: start
+2026-10-30T07:07:26Z step cell-s3-perwrite-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-perwrite-200b-c64","p50":36.711,"p99":157.991}
+2026-10-30T07:07:26Z step cell-s3-perwrite-1024b-c1: start
+2026-10-30T07:08:05Z step cell-s3-perwrite-1024b-c1: exit 0 in 39 s; {"acked":1500,"errors":0,"name":"cell-s3-perwrite-1024b-c1","p50":23.49,"p99":45.965}
+2026-10-30T07:08:05Z step cell-s3-perwrite-1024b-c8: start
+2026-10-30T07:08:11Z step cell-s3-perwrite-1024b-c8: exit 0 in 6 s; {"acked":1500,"errors":0,"name":"cell-s3-perwrite-1024b-c8","p50":26.092,"p99":57.099}
+2026-10-30T07:08:11Z step cell-s3-perwrite-1024b-c64: start
+2026-10-30T07:08:13Z step cell-s3-perwrite-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-perwrite-1024b-c64","p50":36.662,"p99":83.127}
+2026-10-30T07:08:13Z step cell-s3-w1-200b-c1: start
+2026-10-30T07:08:55Z step cell-s3-w1-200b-c1: exit 0 in 42 s; {"acked":1500,"errors":0,"name":"cell-s3-w1-200b-c1","p50":25.567,"p99":47.743}
+2026-10-30T07:08:55Z step cell-s3-w1-200b-c8: start
+2026-10-30T07:09:00Z step cell-s3-w1-200b-c8: exit 0 in 5 s; {"acked":1500,"errors":0,"name":"cell-s3-w1-200b-c8","p50":24.6,"p99":49.85}
+2026-10-30T07:09:00Z step cell-s3-w1-200b-c64: start
+2026-10-30T07:09:01Z step cell-s3-w1-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-w1-200b-c64","p50":29.698,"p99":33.502}
+2026-10-30T07:09:01Z step cell-s3-w1-1024b-c1: start
+2026-10-30T07:09:44Z step cell-s3-w1-1024b-c1: exit 0 in 43 s; {"acked":1500,"errors":0,"name":"cell-s3-w1-1024b-c1","p50":25.733,"p99":46.967}
+2026-10-30T07:09:44Z step cell-s3-w1-1024b-c8: start
+2026-10-30T07:09:50Z step cell-s3-w1-1024b-c8: exit 0 in 6 s; {"acked":1500,"errors":0,"name":"cell-s3-w1-1024b-c8","p50":25.675,"p99":46.394}
+2026-10-30T07:09:50Z step cell-s3-w1-1024b-c64: start
+2026-10-30T07:09:51Z step cell-s3-w1-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-w1-1024b-c64","p50":28.054,"p99":35.968}
+2026-10-30T07:09:51Z step cell-s3-w5-200b-c1: start
+2026-10-30T07:10:42Z step cell-s3-w5-200b-c1: exit 0 in 51 s; {"acked":1500,"errors":0,"name":"cell-s3-w5-200b-c1","p50":30.523,"p99":56.786}
+2026-10-30T07:10:42Z step cell-s3-w5-200b-c8: start
+2026-10-30T07:10:48Z step cell-s3-w5-200b-c8: exit 0 in 6 s; {"acked":1500,"errors":0,"name":"cell-s3-w5-200b-c8","p50":29.916,"p99":54.4}
+2026-10-30T07:10:48Z step cell-s3-w5-200b-c64: start
+2026-10-30T07:10:49Z step cell-s3-w5-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-w5-200b-c64","p50":28.657,"p99":33.869}
+2026-10-30T07:10:49Z step cell-s3-w5-1024b-c1: start
+2026-10-30T07:11:38Z step cell-s3-w5-1024b-c1: exit 0 in 49 s; {"acked":1500,"errors":0,"name":"cell-s3-w5-1024b-c1","p50":29.6,"p99":52.217}
+2026-10-30T07:11:38Z step cell-s3-w5-1024b-c8: start
+2026-10-30T07:11:45Z step cell-s3-w5-1024b-c8: exit 0 in 7 s; {"acked":1500,"errors":0,"name":"cell-s3-w5-1024b-c8","p50":31.282,"p99":72.466}
+2026-10-30T07:11:45Z step cell-s3-w5-1024b-c64: start
+2026-10-30T07:11:46Z step cell-s3-w5-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-w5-1024b-c64","p50":35.949,"p99":48.157}
+2026-10-30T07:11:46Z step cell-s3-w20-200b-c1: start
+2026-10-30T07:12:59Z step cell-s3-w20-200b-c1: exit 0 in 73 s; {"acked":1500,"errors":0,"name":"cell-s3-w20-200b-c1","p50":44.553,"p99":69.334}
+2026-10-30T07:12:59Z step cell-s3-w20-200b-c8: start
+2026-10-30T07:13:09Z step cell-s3-w20-200b-c8: exit 0 in 10 s; {"acked":1500,"errors":0,"name":"cell-s3-w20-200b-c8","p50":48.237,"p99":63.015}
+2026-10-30T07:13:09Z step cell-s3-w20-200b-c64: start
+2026-10-30T07:13:11Z step cell-s3-w20-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-w20-200b-c64","p50":44.797,"p99":77.065}
+2026-10-30T07:13:11Z step cell-s3-w20-1024b-c1: start
+2026-10-30T07:14:24Z step cell-s3-w20-1024b-c1: exit 0 in 73 s; {"acked":1500,"errors":0,"name":"cell-s3-w20-1024b-c1","p50":44.543,"p99":74.048}
+2026-10-30T07:14:24Z step cell-s3-w20-1024b-c8: start
+2026-10-30T07:14:34Z step cell-s3-w20-1024b-c8: exit 0 in 9 s; {"acked":1500,"errors":0,"name":"cell-s3-w20-1024b-c8","p50":44.444,"p99":76.143}
+2026-10-30T07:14:34Z step cell-s3-w20-1024b-c64: start
+2026-10-30T07:14:35Z step cell-s3-w20-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-s3-w20-1024b-c64","p50":46.985,"p99":51.372}
+2026-10-30T07:14:35Z step cell-express-perwrite-200b-c1: start
+2026-10-30T07:14:48Z step cell-express-perwrite-200b-c1: exit 0 in 13 s; {"acked":1500,"errors":0,"name":"cell-express-perwrite-200b-c1","p50":7.319,"p99":11.201}
+2026-10-30T07:14:48Z step cell-express-perwrite-200b-c8: start
+2026-10-30T07:14:51Z step cell-express-perwrite-200b-c8: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-express-perwrite-200b-c8","p50":9.366,"p99":41.091}
+2026-10-30T07:14:51Z step cell-express-perwrite-200b-c64: start
+2026-10-30T07:14:54Z step cell-express-perwrite-200b-c64: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-express-perwrite-200b-c64","p50":62.547,"p99":386.552}
+2026-10-30T07:14:54Z step cell-express-perwrite-1024b-c1: start
+2026-10-30T07:15:07Z step cell-express-perwrite-1024b-c1: exit 0 in 13 s; {"acked":1500,"errors":0,"name":"cell-express-perwrite-1024b-c1","p50":7.418,"p99":11.514}
+2026-10-30T07:15:07Z step cell-express-perwrite-1024b-c8: start
+2026-10-30T07:15:10Z step cell-express-perwrite-1024b-c8: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-express-perwrite-1024b-c8","p50":9.441,"p99":38.077}
+2026-10-30T07:15:10Z step cell-express-perwrite-1024b-c64: start
+2026-10-30T07:15:13Z step cell-express-perwrite-1024b-c64: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-express-perwrite-1024b-c64","p50":61.516,"p99":385.006}
+2026-10-30T07:15:13Z step cell-express-w1-200b-c1: start
+2026-10-30T07:15:29Z step cell-express-w1-200b-c1: exit 0 in 16 s; {"acked":1500,"errors":0,"name":"cell-express-w1-200b-c1","p50":9.522,"p99":13.766}
+2026-10-30T07:15:29Z step cell-express-w1-200b-c8: start
+2026-10-30T07:15:32Z step cell-express-w1-200b-c8: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-express-w1-200b-c8","p50":10.735,"p99":13.75}
+2026-10-30T07:15:32Z step cell-express-w1-200b-c64: start
+2026-10-30T07:15:32Z step cell-express-w1-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-express-w1-200b-c64","p50":11.235,"p99":19.967}
+2026-10-30T07:15:32Z step cell-express-w1-1024b-c1: start
+2026-10-30T07:15:49Z step cell-express-w1-1024b-c1: exit 0 in 16 s; {"acked":1500,"errors":0,"name":"cell-express-w1-1024b-c1","p50":9.466,"p99":13.83}
+2026-10-30T07:15:49Z step cell-express-w1-1024b-c8: start
+2026-10-30T07:15:51Z step cell-express-w1-1024b-c8: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-express-w1-1024b-c8","p50":11.09,"p99":13.338}
+2026-10-30T07:15:51Z step cell-express-w1-1024b-c64: start
+2026-10-30T07:15:52Z step cell-express-w1-1024b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-express-w1-1024b-c64","p50":11.071,"p99":17.653}
+2026-10-30T07:15:52Z step cell-express-w5-200b-c1: start
+2026-10-30T07:16:14Z step cell-express-w5-200b-c1: exit 0 in 23 s; {"acked":1500,"errors":0,"name":"cell-express-w5-200b-c1","p50":13.555,"p99":17.482}
+2026-10-30T07:16:14Z step cell-express-w5-200b-c8: start
+2026-10-30T07:16:17Z step cell-express-w5-200b-c8: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-express-w5-200b-c8","p50":15.093,"p99":18.309}
+2026-10-30T07:16:17Z step cell-express-w5-200b-c64: start
+2026-10-30T07:16:18Z step cell-express-w5-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-express-w5-200b-c64","p50":14.399,"p99":17.715}
+2026-10-30T07:16:18Z step cell-express-w5-1024b-c1: start
+2026-10-30T07:16:41Z step cell-express-w5-1024b-c1: exit 0 in 23 s; {"acked":1500,"errors":0,"name":"cell-express-w5-1024b-c1","p50":13.543,"p99":17.566}
+2026-10-30T07:16:41Z step cell-express-w5-1024b-c8: start
+2026-10-30T07:16:44Z step cell-express-w5-1024b-c8: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-express-w5-1024b-c8","p50":14.575,"p99":18.447}
+2026-10-30T07:16:44Z step cell-express-w5-1024b-c64: start
+2026-10-30T07:16:45Z step cell-express-w5-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-express-w5-1024b-c64","p50":15.64,"p99":31.825}
+2026-10-30T07:16:45Z step cell-express-w20-200b-c1: start
+2026-10-30T07:17:31Z step cell-express-w20-200b-c1: exit 0 in 47 s; {"acked":1500,"errors":0,"name":"cell-express-w20-200b-c1","p50":28.522,"p99":32.57}
+2026-10-30T07:17:31Z step cell-express-w20-200b-c8: start
+2026-10-30T07:17:38Z step cell-express-w20-200b-c8: exit 0 in 6 s; {"acked":1500,"errors":0,"name":"cell-express-w20-200b-c8","p50":30.288,"p99":33.55}
+2026-10-30T07:17:38Z step cell-express-w20-200b-c64: start
+2026-10-30T07:17:39Z step cell-express-w20-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-express-w20-200b-c64","p50":29.921,"p99":35.077}
+2026-10-30T07:17:39Z step cell-express-w20-1024b-c1: start
+2026-10-30T07:18:25Z step cell-express-w20-1024b-c1: exit 0 in 47 s; {"acked":1500,"errors":0,"name":"cell-express-w20-1024b-c1","p50":28.503,"p99":32.606}
+2026-10-30T07:18:25Z step cell-express-w20-1024b-c8: start
+2026-10-30T07:18:31Z step cell-express-w20-1024b-c8: exit 0 in 6 s; {"acked":1500,"errors":0,"name":"cell-express-w20-1024b-c8","p50":29.925,"p99":33.367}
+2026-10-30T07:18:32Z step cell-express-w20-1024b-c64: start
+2026-10-30T07:18:32Z step cell-express-w20-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-express-w20-1024b-c64","p50":31.053,"p99":33.544}
+2026-10-30T07:18:33Z step cell-ddb-perwrite-200b-c1: start
+2026-10-30T07:18:38Z step cell-ddb-perwrite-200b-c1: exit 0 in 5 s; {"acked":1500,"errors":0,"name":"cell-ddb-perwrite-200b-c1","p50":3.17,"p99":3.854}
+2026-10-30T07:18:38Z step cell-ddb-perwrite-200b-c8: start
+2026-10-30T07:18:39Z step cell-ddb-perwrite-200b-c8: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-perwrite-200b-c8","p50":3.666,"p99":7.722}
+2026-10-30T07:18:39Z step cell-ddb-perwrite-200b-c64: start
+2026-10-30T07:18:40Z step cell-ddb-perwrite-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-perwrite-200b-c64","p50":10.183,"p99":168.245}
+2026-10-30T07:18:40Z step cell-ddb-perwrite-1024b-c1: start
+2026-10-30T07:18:44Z step cell-ddb-perwrite-1024b-c1: exit 0 in 4 s; {"acked":1500,"errors":0,"name":"cell-ddb-perwrite-1024b-c1","p50":2.474,"p99":3.318}
+2026-10-30T07:18:44Z step cell-ddb-perwrite-1024b-c8: start
+2026-10-30T07:18:46Z step cell-ddb-perwrite-1024b-c8: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-ddb-perwrite-1024b-c8","p50":3.358,"p99":31.47}
+2026-10-30T07:18:47Z step cell-ddb-perwrite-1024b-c64: start
+2026-10-30T07:18:50Z step cell-ddb-perwrite-1024b-c64: exit 0 in 3 s; {"acked":1500,"errors":0,"name":"cell-ddb-perwrite-1024b-c64","p50":168.3,"p99":338.326}
+2026-10-30T07:18:50Z step cell-ddb-w1-200b-c1: start
+2026-10-30T07:18:58Z step cell-ddb-w1-200b-c1: exit 0 in 9 s; {"acked":1500,"errors":0,"name":"cell-ddb-w1-200b-c1","p50":5.284,"p99":6.183}
+2026-10-30T07:18:59Z step cell-ddb-w1-200b-c8: start
+2026-10-30T07:19:00Z step cell-ddb-w1-200b-c8: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-w1-200b-c8","p50":5.676,"p99":6.954}
+2026-10-30T07:19:00Z step cell-ddb-w1-200b-c64: start
+2026-10-30T07:19:00Z step cell-ddb-w1-200b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-ddb-w1-200b-c64","p50":5.687,"p99":6.213}
+2026-10-30T07:19:00Z step cell-ddb-w1-1024b-c1: start
+2026-10-30T07:19:08Z step cell-ddb-w1-1024b-c1: exit 0 in 8 s; {"acked":1500,"errors":0,"name":"cell-ddb-w1-1024b-c1","p50":4.941,"p99":6.306}
+2026-10-30T07:19:09Z step cell-ddb-w1-1024b-c8: start
+2026-10-30T07:19:10Z step cell-ddb-w1-1024b-c8: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-w1-1024b-c8","p50":5.169,"p99":6.033}
+2026-10-30T07:19:10Z step cell-ddb-w1-1024b-c64: start
+2026-10-30T07:19:11Z step cell-ddb-w1-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-w1-1024b-c64","p50":7.369,"p99":82.289}
+2026-10-30T07:19:11Z step cell-ddb-w5-200b-c1: start
+2026-10-30T07:19:26Z step cell-ddb-w5-200b-c1: exit 0 in 15 s; {"acked":1500,"errors":0,"name":"cell-ddb-w5-200b-c1","p50":9.378,"p99":10.483}
+2026-10-30T07:19:26Z step cell-ddb-w5-200b-c8: start
+2026-10-30T07:19:28Z step cell-ddb-w5-200b-c8: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-ddb-w5-200b-c8","p50":8.794,"p99":9.757}
+2026-10-30T07:19:28Z step cell-ddb-w5-200b-c64: start
+2026-10-30T07:19:28Z step cell-ddb-w5-200b-c64: exit 0 in 0 s; {"acked":1500,"errors":0,"name":"cell-ddb-w5-200b-c64","p50":9.6,"p99":10.796}
+2026-10-30T07:19:29Z step cell-ddb-w5-1024b-c1: start
+2026-10-30T07:19:43Z step cell-ddb-w5-1024b-c1: exit 0 in 15 s; {"acked":1500,"errors":0,"name":"cell-ddb-w5-1024b-c1","p50":9.113,"p99":10.346}
+2026-10-30T07:19:43Z step cell-ddb-w5-1024b-c8: start
+2026-10-30T07:19:45Z step cell-ddb-w5-1024b-c8: exit 0 in 2 s; {"acked":1500,"errors":0,"name":"cell-ddb-w5-1024b-c8","p50":9.287,"p99":10.496}
+2026-10-30T07:19:46Z step cell-ddb-w5-1024b-c64: start
+2026-10-30T07:19:46Z step cell-ddb-w5-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-w5-1024b-c64","p50":10.901,"p99":85.118}
+2026-10-30T07:19:46Z step cell-ddb-w20-200b-c1: start
+2026-10-30T07:20:25Z step cell-ddb-w20-200b-c1: exit 0 in 39 s; {"acked":1500,"errors":0,"name":"cell-ddb-w20-200b-c1","p50":23.951,"p99":24.995}
+2026-10-30T07:20:25Z step cell-ddb-w20-200b-c8: start
+2026-10-30T07:20:30Z step cell-ddb-w20-200b-c8: exit 0 in 5 s; {"acked":1500,"errors":0,"name":"cell-ddb-w20-200b-c8","p50":24.64,"p99":25.813}
+2026-10-30T07:20:30Z step cell-ddb-w20-200b-c64: start
+2026-10-30T07:20:31Z step cell-ddb-w20-200b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-w20-200b-c64","p50":24.474,"p99":25.105}
+2026-10-30T07:20:31Z step cell-ddb-w20-1024b-c1: start
+2026-10-30T07:21:10Z step cell-ddb-w20-1024b-c1: exit 0 in 39 s; {"acked":1500,"errors":0,"name":"cell-ddb-w20-1024b-c1","p50":24.118,"p99":25.311}
+2026-10-30T07:21:10Z step cell-ddb-w20-1024b-c8: start
+2026-10-30T07:21:15Z step cell-ddb-w20-1024b-c8: exit 0 in 5 s; {"acked":1500,"errors":0,"name":"cell-ddb-w20-1024b-c8","p50":24.441,"p99":25.732}
+2026-10-30T07:21:15Z step cell-ddb-w20-1024b-c64: start
+2026-10-30T07:21:16Z step cell-ddb-w20-1024b-c64: exit 0 in 1 s; {"acked":1500,"errors":0,"name":"cell-ddb-w20-1024b-c64","p50":26.618,"p99":28.927}
+2026-10-30T07:21:16Z step fleet-s3-perdb-perwrite: start
+2026-10-30T07:22:22Z step fleet-s3-perdb-perwrite: exit 0 in 65 s; {"n":12154,"name":"fleet-s3-perdb-perwrite","p50":24.94,"p99":93.662}
+2026-10-30T07:22:22Z step fleet-s3-shared-w1: start
+2026-10-30T07:23:27Z step fleet-s3-shared-w1: exit 0 in 65 s; {"n":12033,"name":"fleet-s3-shared-w1","p50":26.502,"p99":70.744}
+2026-10-30T07:23:27Z step fleet-s3-shared-w5: start
+2026-10-30T07:24:32Z step fleet-s3-shared-w5: exit 0 in 65 s; {"n":12016,"name":"fleet-s3-shared-w5","p50":29.345,"p99":65.96}
+2026-10-30T07:24:33Z step fleet-s3-shared-w20: start
+2026-10-30T07:25:38Z step fleet-s3-shared-w20: exit 0 in 65 s; {"n":12100,"name":"fleet-s3-shared-w20","p50":37.96,"p99":63.312}
+2026-10-30T07:25:38Z step fleet-express-perdb-perwrite: start
+2026-10-30T07:26:43Z step fleet-express-perdb-perwrite: exit 0 in 65 s; {"n":12024,"name":"fleet-express-perdb-perwrite","p50":10.422,"p99":14.164}
+2026-10-30T07:26:43Z step fleet-express-shared-w1: start
+2026-10-30T07:27:49Z step fleet-express-shared-w1: exit 0 in 65 s; {"n":11850,"name":"fleet-express-shared-w1","p50":10.069,"p99":12.183}
+2026-10-30T07:27:49Z step fleet-express-shared-w5: start
+2026-10-30T07:28:54Z step fleet-express-shared-w5: exit 0 in 65 s; {"n":11924,"name":"fleet-express-shared-w5","p50":13.543,"p99":17.19}
+2026-10-30T07:28:54Z step fleet-express-shared-w20: start
+2026-10-30T07:29:59Z step fleet-express-shared-w20: exit 0 in 65 s; {"n":12054,"name":"fleet-express-shared-w20","p50":22.017,"p99":32.453}
+2026-10-30T07:30:00Z step fleet-ddb-perdb-perwrite: start
+2026-10-30T07:31:05Z step fleet-ddb-perdb-perwrite: exit 0 in 65 s; {"n":12144,"name":"fleet-ddb-perdb-perwrite","p50":4.031,"p99":5.909}
+2026-10-30T07:31:05Z step fleet-ddb-shared-w1: start
+2026-10-30T07:32:10Z step fleet-ddb-shared-w1: exit 0 in 65 s; {"n":12039,"name":"fleet-ddb-shared-w1","p50":5.769,"p99":7.713}
+2026-10-30T07:32:10Z step fleet-ddb-shared-w5: start
+2026-10-30T07:33:16Z step fleet-ddb-shared-w5: exit 0 in 65 s; {"n":12021,"name":"fleet-ddb-shared-w5","p50":9.271,"p99":11.538}
+2026-10-30T07:33:16Z step fleet-ddb-shared-w20: start
+2026-10-30T07:34:21Z step fleet-ddb-shared-w20: exit 0 in 65 s; {"n":12171,"name":"fleet-ddb-shared-w20","p50":18.55,"p99":27.779}
+2026-10-30T07:34:21Z marker reattach-ready
+2026-10-30T07:35:52Z marker client-done

@@ -1,0 +1,112 @@
+{
+ "avg_batch": 1.0,
+ "backend": "File",
+ "batch_bytes": 1590000,
+ "batches": 1500,
+ "conc": 1,
+ "counters": {
+  "ddb_put": 0,
+  "ddb_put_bytes": 0,
+  "ddb_query": 0,
+  "ddb_rcu": 0.0,
+  "ddb_throttled": 0,
+  "ddb_wcu": 0.0,
+  "errors": 0,
+  "file_bytes": 1596000,
+  "file_syncs": 1500,
+  "q_recv": [
+   0,
+   0,
+   0
+  ],
+  "q_sent": [
+   0,
+   0,
+   0
+  ],
+  "retries": 0,
+  "s3_get": 0,
+  "s3_list": 0,
+  "s3_put": 0,
+  "s3_put_bytes": 0,
+  "xz_get": 0,
+  "xz_get_bytes": 0,
+  "xz_list": 0,
+  "xz_put": 0,
+  "xz_put_bytes": 0
+ },
+ "first_error": null,
+ "kind": "cell",
+ "latency": {
+  "hist_log2_us": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1232,
+   268
+  ],
+  "max": 0.788,
+  "mean": 0.47143599999999997,
+  "min": 0.385,
+  "n": 1500,
+  "p50": 0.457,
+  "p90": 0.542,
+  "p95": 0.586,
+  "p99": 0.662,
+  "p999": 0.783,
+  "unit": "ms"
+ },
+ "mode": {
+  "max_bytes": 4000000,
+  "max_count": 100000,
+  "max_inflight": 1,
+  "window_us": 0
+ },
+ "name": "cell-file-w0-1024b-c1",
+ "secs": 0.709935727,
+ "size": 1024,
+ "started_unix_ms": 1793343999298,
+ "variant": "w0",
+ "warmup_counters": {
+  "ddb_put": 0,
+  "ddb_put_bytes": 0,
+  "ddb_query": 0,
+  "ddb_rcu": 0.0,
+  "ddb_throttled": 0,
+  "ddb_wcu": 0.0,
+  "errors": 0,
+  "file_bytes": 106400,
+  "file_syncs": 100,
+  "q_recv": [
+   0,
+   0,
+   0
+  ],
+  "q_sent": [
+   0,
+   0,
+   0
+  ],
+  "retries": 0,
+  "s3_get": 0,
+  "s3_list": 0,
+  "s3_put": 0,
+  "s3_put_bytes": 0,
+  "xz_get": 0,
+  "xz_get_bytes": 0,
+  "xz_list": 0,
+  "xz_put": 0,
+  "xz_put_bytes": 0
+ },
+ "write_errors": 0,
+ "writes_acked": 1500,
+ "writes_per_s": 2112.<redacted>,
+ "writes_target": 1500,
+ "step_wall_s": 0.8676815032958984,
+ "step_exit": 0
+}

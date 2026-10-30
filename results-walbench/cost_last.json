@@ -1,0 +1,41 @@
+{
+ "requests_usd": 0.5436604277658844,
+ "inter_az_usd": 0.007861996870487928,
+ "ec2_ipv4_usd": 0.11267858833841483,
+ "ebs_usd": 0.002827314159278637,
+ "margin_usd": 0.3551160427765885,
+ "total_usd": 1.0321443699106543,
+ "instance_seconds": 4216.<redacted>,
+ "progress_stale_s": 30.0,
+ "counters": {
+  "ddb_put": 74589,
+  "ddb_put_bytes": 119939092,
+  "ddb_query": 0,
+  "ddb_rcu": 0.0,
+  "ddb_throttled": 3233,
+  "ddb_wcu": 174646.0,
+  "errors": 3233,
+  "file_bytes": 315113672,
+  "file_syncs": 89359,
+  "q_recv": [
+   83508095,
+   48270896,
+   83767172
+  ],
+  "q_sent": [
+   131841107,
+   144974918,
+   145074757
+  ],
+  "retries": 3233,
+  "s3_get": 0,
+  "s3_list": 0,
+  "s3_put": 69211,
+  "s3_put_bytes": 106932718,
+  "xz_get": 0,
+  "xz_get_bytes": 0,
+  "xz_list": 0,
+  "xz_put": 64912,
+  "xz_put_bytes": 102219472
+ }
+}

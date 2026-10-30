@@ -1,0 +1,55 @@
+{
+ "run": "41017093239",
+ "quota": {
+  "quota_code": "L-1216C47A",
+  "quota_vcpus": 8.0,
+  "used_vcpus": 2,
+  "free_vcpus": 6.0,
+  "max_instances": 3
+ },
+ "vpc": "vpc-0cc64b4ece80ddc08",
+ "bucket": "fenvix-walbench-41017093239",
+ "express_errors": {},
+ "express_bucket": "fenvix-walbench-41017093239--euw1-az1--x-s3",
+ "express_az_id": "euw1-az1",
+ "express_tagged": "not tagged (InvalidURI); found by name prefix",
+ "zones": {
+  "client": {
+   "subnet": "subnet-043782c3213167ce4",
+   "az": "eu-west-1c",
+   "az_id": "euw1-az1"
+  },
+  "node0": {
+   "subnet": "subnet-043782c3213167ce4",
+   "az": "eu-west-1c",
+   "az_id": "euw1-az1"
+  },
+  "node1": {
+   "subnet": "subnet-025d8ab9d467cf1af",
+   "az": "eu-west-1a",
+   "az_id": "euw1-az2"
+  },
+  "node2": {
+   "subnet": "subnet-088c4b11198f24713",
+   "az": "eu-west-1b",
+   "az_id": "euw1-az3"
+  },
+  "standby": {
+   "subnet": "subnet-043782c3213167ce4",
+   "az": "eu-west-1c",
+   "az_id": "euw1-az1"
+  }
+ },
+ "table": "fenvix-walbench-41017093239",
+ "sg": "sg-08890ccfdb59dbaa6",
+ "volume": "vol-02b03a6a37920584c",
+ "ami": "ami-0445442ed20a2c6f8",
+ "ami_name": "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-20261023",
+ "node0_on_client": true,
+ "instances": {
+  "client": "i-0f482d872c223e379",
+  "node1": "i-0a9ff84bec1747b8b",
+  "node2": "i-019b349aa1828ab7a",
+  "standby": "i-04e319f9ff9d01672"
+ }
+}

@@ -1,0 +1,83 @@
+{
+ "avg_batch_total": 1.3004596322941646,
+ "backend": "Express",
+ "batches_total": 10008,
+ "counters": {
+  "ddb_put": 0,
+  "ddb_put_bytes": 0,
+  "ddb_query": 0,
+  "ddb_rcu": 0.0,
+  "ddb_throttled": 0,
+  "ddb_wcu": 0.0,
+  "errors": 0,
+  "file_bytes": 0,
+  "file_syncs": 0,
+  "q_recv": [
+   0,
+   0,
+   0
+  ],
+  "q_sent": [
+   0,
+   0,
+   0
+  ],
+  "retries": 0,
+  "s3_get": 0,
+  "s3_list": 0,
+  "s3_put": 0,
+  "s3_put_bytes": 0,
+  "xz_get": 0,
+  "xz_get_bytes": 0,
+  "xz_list": 0,
+  "xz_put": 9137,
+  "xz_put_bytes": 12506740
+ },
+ "dbs": 200,
+ "first_error": null,
+ "kind": "fleet",
+ "latency": {
+  "hist_log2_us": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   637,
+   11213
+  ],
+  "max": 15.731,
+  "mean": 9.965237721518989,
+  "min": 6.808,
+  "n": 11850,
+  "p50": 10.069,
+  "p90": 11.054,
+  "p95": 11.32,
+  "p99": 12.183,
+  "p999": 14.509,
+  "unit": "ms"
+ },
+ "layout": "shared",
+ "mode": {
+  "max_bytes": 4000000,
+  "max_count": 100000,
+  "max_inflight": 64,
+  "window_us": 1000
+ },
+ "name": "fleet-express-shared-w1",
+ "rate_per_db": 1.0,
+ "secs_measured": 60.007327806,
+ "size": 1024,
+ "variant": "w1",
+ "write_errors": 0,
+ "writes_measured": 11850,
+ "step_wall_s": 65.22773551940918,
+ "step_exit": 0
+}

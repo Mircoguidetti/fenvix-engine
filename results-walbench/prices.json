@@ -1,0 +1,195 @@
+{
+ "fetched_utc": "2026-10-30T07:00:09Z",
+ "region": "eu-west-1",
+ "pages": {
+  "s3": "https://aws.amazon.com/s3/pricing/",
+  "express": "https://aws.amazon.com/s3/storage-classes/express-one-zone/ (prices on https://aws.amazon.com/s3/pricing/)",
+  "dynamodb": "https://aws.amazon.com/dynamodb/pricing/on-demand/",
+  "ec2": "https://aws.amazon.com/ec2/pricing/on-demand/",
+  "ebs": "https://aws.amazon.com/ebs/pricing/",
+  "vpc_ipv4": "https://aws.amazon.com/vpc/pricing/",
+  "data_transfer": "https://aws.amazon.com/ec2/pricing/on-demand/#Data_Transfer_within_the_same_AWS_Region"
+ },
+ "s3": {
+  "_source": {
+   "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/eu-west-1/index.json",
+   "publicationDate": "2026-10-15T17:35:40Z",
+   "version": "20261015173540"
+  },
+  "std_put": {
+   "usd": 5e-06,
+   "unit": "Requests",
+   "description": "$0.005 per 1,000 PUT, COPY, POST, or LIST requests",
+   "usagetype": "EU-Requests-Tier1",
+   "sku": "578M9UJHH6X5PZVC",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "std_get": {
+   "usd": 4e-07,
+   "unit": "Requests",
+   "description": "$0.004 per 10,000 GET and all other requests",
+   "usagetype": "EU-Requests-Tier2",
+   "sku": "ZCQD4CM637S7D8U5",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "std_storage": {
+   "usd": 0.023,
+   "unit": "GB-Mo",
+   "description": "$0.023 per GB - first 50 TB / month of storage used",
+   "usagetype": "EU-TimedStorage-ByteHrs",
+   "sku": "4AJHPB29ZPVFADXP",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 3
+  },
+  "xz_put": {
+   "usd": 1.13e-06,
+   "unit": "Requests",
+   "description": "$0.00113 per 1,000 PUT Requests/COPY/POST or LIST Requests to Express One Zone",
+   "usagetype": "EU-Requests-XZ-Tier1",
+   "sku": "ZHAGBGHB8QHF8VTU",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "xz_get": {
+   "usd": 3e-08,
+   "unit": "Requests",
+   "description": "$0.00003 per 1,000 GET and All Other Requests to Express One Zone",
+   "usagetype": "EU-Requests-XZ-Tier2",
+   "sku": "RKRUUJZ572C5VQMX",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "xz_upload_gb": {
+   "usd": 0.0032,
+   "unit": "GB",
+   "description": "$0.0032 per GB for Object Upload in Express One Zone",
+   "usagetype": "EU-Upload-XZ",
+   "sku": "E7FQMJQ92TTJRK3Q",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "xz_retrieval_gb": {
+   "usd": 0.0006,
+   "unit": "GB",
+   "description": "$0.0006 per GB for Object Retrieval in Express One Zone",
+   "usagetype": "EU-Retrieval-XZ",
+   "sku": "YZ7Y8MVK2GU9FHKN",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "xz_storage": {
+   "usd": 0.11,
+   "unit": "GB-Mo",
+   "description": "$0.11 per GB-Mo of Storage in Express One Zone ",
+   "usagetype": "EU-TimedStorage-XZ-ByteHrs",
+   "sku": "5D6K2E4972YJ6EKT",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  }
+ },
+ "dynamodb": {
+  "_source": {
+   "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonDynamoDB/current/eu-west-1/index.json",
+   "publicationDate": "2026-09-11T12:44:22Z",
+   "version": "20260911124422"
+  },
+  "wru": {
+   "usd": 7.05e-07,
+   "unit": "WriteRequestUnits",
+   "description": "$0.705 per million write request units (EU (Ireland))",
+   "usagetype": "EU-WriteRequestUnits",
+   "sku": "F4EZE5SAMS3D49NJ",
+   "beginRange": "0",
+   "effectiveDate": "2026-08-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "rru": {
+   "usd": 1.415e-07,
+   "unit": "ReadRequestUnits",
+   "description": "$0.1415 per million read request units (EU (Ireland))",
+   "usagetype": "EU-ReadRequestUnits",
+   "sku": "3ERQSZWPAMX2JWHN",
+   "beginRange": "0",
+   "effectiveDate": "2026-08-01T00:00:00Z",
+   "all_tiers": 1
+  },
+  "storage": {
+   "usd": 0.283,
+   "unit": "GB-Mo",
+   "description": "$0.283 per GB-Month of storage used beyond first 25 free GB-Months",
+   "usagetype": "EU-TimedStorage-ByteHrs",
+   "sku": "E6MS5SS3AMMHBJC6",
+   "beginRange": "25",
+   "effectiveDate": "2026-08-01T00:00:00Z",
+   "all_tiers": 2
+  }
+ },
+ "vpc": {
+  "_source": {
+   "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonVPC/current/eu-west-1/index.json",
+   "publicationDate": "2026-10-16T22:43:21Z",
+   "version": "20261016224321"
+  },
+  "ipv4_in_use_hour": {
+   "usd": 0.005,
+   "unit": "Hrs",
+   "description": "$0.005 per In-use public IPv4 address per hour",
+   "usagetype": "EU-PublicIPv4:InUseAddress",
+   "sku": "CNZ4XSXPRJXGA4ZF",
+   "beginRange": "0",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "all_tiers": 1
+  }
+ },
+ "transfer": {
+  "_source": {
+   "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDataTransfer/current/eu-west-1/index.json",
+   "publicationDate": "2026-09-16T13:22:08Z",
+   "version": "20260916132208"
+  },
+  "inter_az_gb": {
+   "usd": 0.01,
+   "unit": "GB",
+   "description": "$0.010 per GB - regional data transfer - in/out/between EC2 AZs or using elastic IPs or ELB",
+   "usagetype": "EU-DataTransfer-Regional-Bytes",
+   "sku": "F8E5RBBTWDY6X6HP",
+   "beginRange": "0",
+   "effectiveDate": "2026-06-01T00:00:00Z",
+   "all_tiers": 1
+  }
+ },
+ "ec2": {
+  "c6i_large_hour": {
+   "usd": 0.0912,
+   "unit": "Hrs",
+   "description": "$0.0912 per On Demand Linux c6i.large Instance Hour",
+   "sku": "MY34M56N9KVPBWDG",
+   "usagetype": "EU-BoxUsage:c6i.large",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "publicationDate": "2026-10-29T17:56:34Z",
+   "alternatives": [],
+   "source": "AWS Price List Query API pricing:GetProducts ServiceCode=AmazonEC2 filters={'regionCode': 'eu-west-1', 'instanceType': 'c6i.large', 'operatingSystem': 'Linux', 'tenancy': 'Shared', 'preInstalledSw': 'NA', 'capacitystatus': 'Used', 'licenseModel': 'No License required'}"
+  },
+  "gp3_gb_month": {
+   "usd": 0.088,
+   "unit": "GB-Mo",
+   "description": "$0.088 per GB-month of General Purpose (gp3) provisioned storage - EU (Ireland)",
+   "sku": "TXACT7E3PV6ZX2NM",
+   "usagetype": "EU-EBS:VolumeUsage.gp3",
+   "effectiveDate": "2026-10-01T00:00:00Z",
+   "publicationDate": "2026-10-29T17:56:34Z",
+   "alternatives": [],
+   "source": "AWS Price List Query API pricing:GetProducts ServiceCode=AmazonEC2 filters={'regionCode': 'eu-west-1', 'volumeApiName': 'gp3', 'productFamily': 'Storage'}"
+  }
+ }
+}

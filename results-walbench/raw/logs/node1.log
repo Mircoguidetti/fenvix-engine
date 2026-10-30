@@ -1,0 +1,5 @@
+node listening on 0.0.0.0:7700
+CRASH requested: SIGKILL self, restart after 15000 ms
+/opt/walbench/node-supervisor.sh: line 13:  1098 Killed                  "$BIN" node --listen "$LISTEN" --dir "$DIR"
+07:01:49 node exited; restarting in 15000 ms
+node listening on 0.0.0.0:7700

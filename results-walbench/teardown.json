@@ -1,0 +1,99 @@
+{
+ "steps": [
+  {
+   "step": "terminate-instances",
+   "ok": true,
+   "result": {
+    "terminated": []
+   }
+  },
+  {
+   "step": "delete-volumes",
+   "ok": true,
+   "result": {
+    "deleted": [
+     "vol-02b03a6a37920584c"
+    ]
+   }
+  },
+  {
+   "step": "delete-security-groups",
+   "ok": true,
+   "result": {
+    "deleted": [
+     "sg-08890ccfdb59dbaa6"
+    ]
+   }
+  },
+  {
+   "step": "delete-s3-buckets",
+   "ok": true,
+   "result": [
+    {
+     "bucket": "fenvix-walbench-41017093239",
+     "objects_deleted": 71224
+    }
+   ]
+  },
+  {
+   "step": "delete-directory-buckets",
+   "ok": true,
+   "result": [
+    {
+     "bucket": "fenvix-walbench-41017093239--euw1-az1--x-s3",
+     "objects_deleted": 65911
+    }
+   ]
+  },
+  {
+   "step": "delete-tables",
+   "ok": true,
+   "result": [
+    "fenvix-walbench-41017093239"
+   ]
+  }
+ ],
+ "verify": {
+  "left": [],
+  "tag_api_extra": [
+   {
+    "kind": "ec2:network-interface",
+    "id": "eni-071692f5f37da0073"
+   },
+   {
+    "kind": "ec2:volume",
+    "id": "vol-07c6963b684966cd0"
+   },
+   {
+    "kind": "ec2:volume",
+    "id": "vol-022a9dfb8242493a5"
+   },
+   {
+    "kind": "ec2:network-interface",
+    "id": "eni-0ad4f47a2948599d7"
+   },
+   {
+    "kind": "ec2:volume",
+    "id": "vol-02b03a6a37920584c"
+   },
+   {
+    "kind": "ec2:network-interface",
+    "id": "eni-084447171ff3c000b"
+   },
+   {
+    "kind": "ec2:volume",
+    "id": "vol-09b207da3adf9693a"
+   },
+   {
+    "kind": "ec2:volume",
+    "id": "vol-08b78b6b449cf6d7c"
+   },
+   {
+    "kind": "ec2:network-interface",
+    "id": "eni-0aaf915998c1ce546"
+   }
+  ],
+  "clean": false,
+  "checked_utc": "2026-10-30T07:48:44Z"
+ }
+}
