@@ -77,6 +77,12 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
             let w = b["window_secs"].as_u64().ok_or_else(|| ApiError::bad("body needs an integer window_secs (0 switches retention off)"))?;
             Ok(Response::json(200, &super::pitr::set_retention(ctl, db, w, b["interval_secs"].as_u64()).await?))
         }
+        ("GET", ["v1", "databases", db, "durability"]) => Ok(Response::json(200, &super::durability::get(ctl, db).await?)),
+        ("PUT", ["v1", "databases", db, "durability"]) => {
+            let b = body_json(req)?;
+            let ms = b["relaxed_flush_ms"].as_u64().ok_or_else(|| ApiError::bad("body needs an integer relaxed_flush_ms (0 switches it off)"))?;
+            Ok(Response::json(200, &super::durability::set(ctl, db, ms).await?))
+        }
         ("POST", ["v1", "databases", db, "restore"]) => {
             let b = body_json(req)?;
             let to = match &b["to"] {
@@ -90,6 +96,10 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("PUT", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::set(ctl, db, &body_json(req)?).await?)),
         ("GET", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::get(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::clear(ctl, db).await?)),
+        ("GET", ["v1", "metrics", "databases"]) => {
+            let dbs = Arc::clone(&ctl.dbs);
+            Ok(Response::json(200, &crate::fair::metrics(move |d| dbs.state_hint(d))))
+        }
         ("GET", ["v1", "network"]) => Ok(Response::json(200, &super::allowlist::state())),
         ("DELETE", ["v1", "network", "blocks", ip]) => Ok(Response::json(200, &super::allowlist::unblock(ip, req.query.get("database").map(|s| s.as_str()))?)),
         ("GET", ["v1", "databases", db, "manifest"]) => {

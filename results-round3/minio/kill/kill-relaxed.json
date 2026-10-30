@@ -1,0 +1,52 @@
+{
+ "acked_total": 4968,
+ "dbs": 4,
+ "lost_total": 530,
+ "mode": "relaxed",
+ "rate_per_db": 20,
+ "secs_before_kill": 20,
+ "trials": [
+  {
+   "acked": 1656,
+   "lost": 177,
+   "lost_sample": [
+    "k00-0-377",
+    "k00-0-378",
+    "k00-0-379",
+    "k00-0-380",
+    "k00-0-381"
+   ],
+   "replayed": 0,
+   "restart_to_port_open_s": 0.1,
+   "trial": 0
+  },
+  {
+   "acked": 1656,
+   "lost": 176,
+   "lost_sample": [
+    "k00-0-377",
+    "k00-0-378",
+    "k00-0-379",
+    "k00-0-380",
+    "k00-0-381"
+   ],
+   "replayed": 0,
+   "restart_to_port_open_s": 0.1,
+   "trial": 1
+  },
+  {
+   "acked": 1656,
+   "lost": 177,
+   "lost_sample": [
+    "k00-0-377",
+    "k00-0-378",
+    "k00-0-379",
+    "k00-0-380",
+    "k00-0-381"
+   ],
+   "replayed": 0,
+   "restart_to_port_open_s": 0.1,
+   "trial": 2
+  }
+ ]
+}

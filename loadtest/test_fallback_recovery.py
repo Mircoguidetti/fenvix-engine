@@ -43,7 +43,7 @@ def start(flags, tag):
 
 
 def trial(n, secs, threads):
-    p, log = start(["--no-maintenance", "--writer-poll-secs", "3600"] + os.environ.get("STALL_FLAGS", "--l0-max-ssts 1").split(), f"t{n}-stall")
+    p, log = start(["--no-maintenance", "--writer-poll-secs", "3600", "--sst-gc-min-unref-secs", "7200"] + os.environ.get("STALL_FLAGS", "--l0-max-ssts 1").split(), f"t{n}-stall")
     uri = f"mongodb://127.0.0.1:{PORT}"
     db = f"fb{n}_{int(time.time())}"
     c = MongoClient(uri, retryWrites=False, serverSelectionTimeoutMS=3000, maxPoolSize=threads + 2)

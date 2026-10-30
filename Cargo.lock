@@ -2151,6 +2151,7 @@ dependencies = [
  "hmac",
  "icu_collator",
  "icu_locale",
+ "libc",
  "md-5",
  "object_store",
  "pbkdf2",

@@ -1,0 +1,20 @@
+== binary: b2-bin (with the B2 fix)
+violations: 0 []
+.refused reads: 0 databases dropped: 0
+.old value served by P1 26 times after P2's write, the last 1.29 s after; later than ttl: 0
+3 passed in 56.85s
+== binary: b2-ctl-bin (control: renewals serialized, no late-renewal check, no revocation)
+violations: 0 []
+.refused reads: 0 databases dropped: 0
+.old value served by P1 233 times after P2's write, the last 11.98 s after; later than ttl: 155
+E   AssertionError: P1 still served the old value 11.98 s after P2 took the database over
+/home/user/fenvix-engine/ctl-tests/test_23_process_lease_late.py:150: AssertionError: P1 still served the old value 11.98 s after P2 took the database over
+1 failed, 2 passed in 58.81s
+== binary: b1-bin (code as reviewed (+B1 only))
+violations: 0 []
+.refused reads: 0 databases dropped: 4
+E   AssertionError: slow renewals made P1 drop its database (4 times, 0 refused reads)
+/home/user/fenvix-engine/ctl-tests/test_23_process_lease_late.py:111: AssertionError: slow renewals made P1 drop its database (4 times, 0 refused reads)
+E   AssertionError: P2 never took the database over
+2 failed, 1 passed in 66.76s (0:01:06)
+(b1-bin has no MONGO_TEST_WALL_CLOCK_OFFSET_MS hook, so its skew test cannot run: 'P2 never took the database over' is that, not a result)

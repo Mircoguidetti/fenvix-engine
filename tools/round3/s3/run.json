@@ -1,0 +1,69 @@
+{
+ "comment": "round3 real S3, rev 6: the engine after the review fixes (WAL cleanup from the stored manifest, process lease revocation, local log fixes) on the steps those fixes touch",
+ "rev": 6,
+ "steps": [
+  {
+   "name": "s3i-immediate-r1",
+   "mode": "immediate",
+   "dbs": 1,
+   "rate": 1,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3i-immediate-r10",
+   "mode": "immediate",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3i-immediate-r100",
+   "mode": "immediate",
+   "dbs": 1,
+   "rate": 100,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3i-local-r10",
+   "mode": "local",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3i-relaxed-r10",
+   "mode": "relaxed",
+   "dbs": 1,
+   "rate": 10,
+   "mix": "half",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3i-fleet100-immediate",
+   "mode": "immediate",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  },
+  {
+   "name": "s3i-fleet100-local",
+   "mode": "local",
+   "dbs": 100,
+   "rate": 1,
+   "mix": "write",
+   "secs": 240,
+   "warm": 60
+  }
+ ]
+}

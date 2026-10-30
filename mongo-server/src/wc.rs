@@ -147,6 +147,22 @@ impl WriteConcern {
         }
     }
 
+    /// The client accepts an acknowledgement before the write is durable: `j: false` with `w` 1 (or no `w`), or `w: 0`
+    /// without `j: true`. Only databases with relaxed durability switched on use it (`ctl/durability.rs`).
+    /// Only a write concern the client sent itself counts: a cluster-wide default (`setDefaultRWConcern`) of `{w: 1, j: false}`
+    /// does not make the writes that name no write concern relaxed (they stay durable before the acknowledgement, as documented).
+    pub(crate) fn relaxed(&self) -> bool {
+        if self.echo.get_str("provenance").map_or(false, |p| p != "clientSupplied") {
+            return false;
+        }
+        let j = self.echo.get_bool("j").ok();
+        match self.w {
+            W::Num(0) => j != Some(true),
+            W::Num(1) | W::None => j == Some(false),
+            _ => false,
+        }
+    }
+
     fn unacknowledged(&self) -> bool {
         matches!(self.w, W::Num(0)) && self.echo.get_bool("j").ok() != Some(true)
     }

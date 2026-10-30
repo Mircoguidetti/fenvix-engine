@@ -1,0 +1,726 @@
+{
+ "binary": "/tmp/r3bin/after",
+ "client": {
+  "all": {
+   "dbs": 1,
+   "error_samples": [],
+   "errors": 0,
+   "first_max_ms": 2683.6,
+   "first_p50_ms": 2683.6,
+   "first_p99_ms": 2683.6,
+   "minute1_read_p99_ms": 4911.72,
+   "minute1_write_p99_ms": 4795.86,
+   "mix": "half",
+   "n_read": 11933,
+   "n_write": 12109,
+   "rate": 100.0,
+   "read_max_ms": 5336.1,
+   "read_p50_ms": 0.53,
+   "read_p95_ms": 639.71,
+   "read_p99_ms": 4369.72,
+   "read_steady_p50_ms": 0.54,
+   "read_steady_p95_ms": 0.97,
+   "read_steady_p99_ms": 2179.49,
+   "t_end": 1793341812.5254602,
+   "t_start": 1793341572.5254602,
+   "wc": "default",
+   "write_max_ms": 6241.8,
+   "write_p50_ms": 0.89,
+   "write_p95_ms": 627.19,
+   "write_p99_ms": 4210.16,
+   "write_steady_p50_ms": 0.9,
+   "write_steady_p95_ms": 2.5,
+   "write_steady_p99_ms": 1981.47
+  }
+ },
+ "client_requests_window": 18155,
+ "cpu_s_window": 7.19,
+ "dbs": 1,
+ "engine_stats_end": {
+  "entries": 1,
+  "getByCategory": {
+   "clean_marker": 1,
+   "compacted_sst": 156,
+   "lease": 2,
+   "manifest": 54,
+   "other": 145,
+   "wal": 12
+  },
+  "groupCommit": {
+   "adaptiveWaitUs": 0,
+   "adaptiveWaits": 0,
+   "commits": 12109,
+   "flushes": 0,
+   "relaxedAcks": 0,
+   "windowUs": 0
+  },
+  "holder": "round3",
+  "lat": {
+   "get": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    326,
+    40,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "put": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    21,
+    17,
+    14,
+    14,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "leases": {
+   "acquired": 2,
+   "lost": 0,
+   "refused": 0,
+   "renewFailures": 0,
+   "renewals": 24,
+   "takeovers": 0
+  },
+  "leasesHeld": 1,
+  "localLog": {
+   "fsyncs": 11638,
+   "records": 12123,
+   "replayed": 0,
+   "uploads": 8
+  },
+  "maintenance": {
+   "compactGets": 147,
+   "compactPuts": 15,
+   "compactRuns": 1,
+   "gcDeletes": 0,
+   "gcGets": 1,
+   "gcLists": 1,
+   "gcRuns": 11
+  },
+  "ok": 1.0,
+  "openReaders": 0,
+  "openWriters": 1,
+  "pid": 10435,
+  "putByCategory": {
+   "clean_marker": 0,
+   "compacted_sst": 6,
+   "lease": 26,
+   "manifest": 9,
+   "other": 8,
+   "wal": 20
+  },
+  "requests": {
+   "billedGetTier": 370,
+   "billedPutTier": 114,
+   "copy": 0,
+   "delete": 1,
+   "get": 359,
+   "getBytes": 12306921,
+   "head": 11,
+   "list": 45,
+   "put": 69,
+   "putBytes": 35229019
+  },
+  "sstGc": {
+   "closeLight": 0,
+   "deletedManifests": 0,
+   "deletedSsts": 0,
+   "memtableFlushes": 3,
+   "noop": 3,
+   "passes": 0
+  },
+  "ttl": {
+   "docsExpired": 0,
+   "due": 0,
+   "hintsListed": 0,
+   "passes": 0,
+   "sessionSweeps": 0,
+   "skippedGap": 0,
+   "skippedOpen": 0,
+   "wakes": 0
+  },
+  "wakeQueue": {
+   "maxQueued": 1,
+   "queued": 0,
+   "waitMs": 0,
+   "waits": 1
+  },
+  "walGc": {
+   "deleteUs": 0,
+   "deleted": 0,
+   "listUs": 121082,
+   "noop": 10,
+   "passes": 11,
+   "totalUs": 471578
+  }
+ },
+ "engine_stats_warm": {
+  "entries": 1,
+  "getByCategory": {
+   "clean_marker": 1,
+   "compacted_sst": 58,
+   "lease": 2,
+   "manifest": 8,
+   "other": 10,
+   "wal": 12
+  },
+  "groupCommit": {
+   "adaptiveWaitUs": 0,
+   "adaptiveWaits": 0,
+   "commits": 3042,
+   "flushes": 0,
+   "relaxedAcks": 0,
+   "windowUs": 0
+  },
+  "holder": "round3",
+  "lat": {
+   "get": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    81,
+    8,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "put": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    6,
+    3,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "leases": {
+   "acquired": 2,
+   "lost": 0,
+   "refused": 0,
+   "renewFailures": 0,
+   "renewals": 6,
+   "takeovers": 0
+  },
+  "leasesHeld": 1,
+  "localLog": {
+   "fsyncs": 2735,
+   "records": 3047,
+   "replayed": 0,
+   "uploads": 2
+  },
+  "maintenance": {
+   "compactGets": 0,
+   "compactPuts": 0,
+   "compactRuns": 0,
+   "gcDeletes": 0,
+   "gcGets": 0,
+   "gcLists": 1,
+   "gcRuns": 2
+  },
+  "ok": 1.0,
+  "openReaders": 0,
+  "openWriters": 1,
+  "pid": 10435,
+  "putByCategory": {
+   "clean_marker": 0,
+   "compacted_sst": 0,
+   "lease": 8,
+   "manifest": 2,
+   "other": 0,
+   "wal": 4
+  },
+  "requests": {
+   "billedGetTier": 91,
+   "billedPutTier": 27,
+   "copy": 0,
+   "delete": 1,
+   "get": 80,
+   "getBytes": 969044,
+   "head": 11,
+   "list": 13,
+   "put": 14,
+   "putBytes": 3487635
+  },
+  "sstGc": {
+   "closeLight": 0,
+   "deletedManifests": 0,
+   "deletedSsts": 0,
+   "memtableFlushes": 0,
+   "noop": 0,
+   "passes": 0
+  },
+  "ttl": {
+   "docsExpired": 0,
+   "due": 0,
+   "hintsListed": 0,
+   "passes": 0,
+   "sessionSweeps": 0,
+   "skippedGap": 0,
+   "skippedOpen": 0,
+   "wakes": 0
+  },
+  "wakeQueue": {
+   "maxQueued": 1,
+   "queued": 0,
+   "waitMs": 0,
+   "waits": 1
+  },
+  "walGc": {
+   "deleteUs": 0,
+   "deleted": 0,
+   "listUs": 121082,
+   "noop": 1,
+   "passes": 2,
+   "totalUs": 121097
+  }
+ },
+ "fds_max": 105,
+ "flags": [
+  "--idle-secs",
+  "60",
+  "--retention-window-secs",
+  "604800",
+  "--adaptive-group-commit",
+  "false",
+  "--local-log-dir",
+  "/tmp/r3work/llog-s3f-local-r100",
+  "--local-log-upload-secs",
+  "30"
+ ],
+ "fleet": null,
+ "free_class": 0,
+ "get_class": 279,
+ "get_per_db_min": 90.48,
+ "latency_steady": {
+  "all": {
+   "read_steady_p50_ms": 0.54,
+   "read_steady_p99_ms": 2179.49,
+   "write_steady_p50_ms": 0.9,
+   "write_steady_p99_ms": 1981.47
+  }
+ },
+ "mix": "half",
+ "mode": "local",
+ "name": "s3f-local-r100",
+ "other": 0,
+ "put_class": 87,
+ "put_per_db_min": 28.21,
+ "rate_per_db": 100.0,
+ "real_s3": true,
+ "rss_mb_end": 98.0,
+ "rss_mb_max": 98.0,
+ "s3_by_api_window": {
+  "GetObject": 279,
+  "ListObjectsV2": 32,
+  "PutObject": 55
+ },
+ "s3_per_client_request": 0.02,
+ "samples": [
+  {
+   "cpu_s": 0.08,
+   "fds": 22,
+   "rss_mb": 30.6484375,
+   "t": 0.0
+  },
+  {
+   "cpu_s": 0.17,
+   "fds": 88,
+   "rss_mb": 48.49609375,
+   "t": 5.0
+  },
+  {
+   "cpu_s": 0.43,
+   "fds": 86,
+   "rss_mb": 56.33984375,
+   "t": 10.0
+  },
+  {
+   "cpu_s": 0.6,
+   "fds": 83,
+   "rss_mb": 56.33203125,
+   "t": 15.0
+  },
+  {
+   "cpu_s": 0.78,
+   "fds": 83,
+   "rss_mb": 56.421875,
+   "t": 20.0
+  },
+  {
+   "cpu_s": 0.96,
+   "fds": 80,
+   "rss_mb": 56.57421875,
+   "t": 25.0
+  },
+  {
+   "cpu_s": 1.13,
+   "fds": 80,
+   "rss_mb": 56.2265625,
+   "t": 30.0
+  },
+  {
+   "cpu_s": 1.31,
+   "fds": 80,
+   "rss_mb": 56.2265625,
+   "t": 35.0
+  },
+  {
+   "cpu_s": 1.46,
+   "fds": 80,
+   "rss_mb": 56.2265625,
+   "t": 40.0
+  },
+  {
+   "cpu_s": 1.62,
+   "fds": 79,
+   "rss_mb": 56.31640625,
+   "t": 45.0
+  },
+  {
+   "cpu_s": 1.78,
+   "fds": 80,
+   "rss_mb": 57.78515625,
+   "t": 50.0
+  },
+  {
+   "cpu_s": 1.95,
+   "fds": 79,
+   "rss_mb": 61.6640625,
+   "t": 55.0
+  },
+  {
+   "cpu_s": 2.13,
+   "fds": 85,
+   "rss_mb": 65.046875,
+   "t": 60.0
+  },
+  {
+   "cpu_s": 2.33,
+   "fds": 83,
+   "rss_mb": 70.7109375,
+   "t": 65.0
+  },
+  {
+   "cpu_s": 2.53,
+   "fds": 81,
+   "rss_mb": 70.671875,
+   "t": 70.0
+  },
+  {
+   "cpu_s": 2.72,
+   "fds": 79,
+   "rss_mb": 70.74609375,
+   "t": 75.0
+  },
+  {
+   "cpu_s": 2.91,
+   "fds": 80,
+   "rss_mb": 70.85546875,
+   "t": 80.0
+  },
+  {
+   "cpu_s": 3.11,
+   "fds": 80,
+   "rss_mb": 70.9375,
+   "t": 85.0
+  },
+  {
+   "cpu_s": 3.3,
+   "fds": 80,
+   "rss_mb": 73.0078125,
+   "t": 90.0
+  },
+  {
+   "cpu_s": 3.5,
+   "fds": 80,
+   "rss_mb": 73.41796875,
+   "t": 95.0
+  },
+  {
+   "cpu_s": 3.69,
+   "fds": 80,
+   "rss_mb": 73.43359375,
+   "t": 100.0
+  },
+  {
+   "cpu_s": 3.89,
+   "fds": 79,
+   "rss_mb": 73.59765625,
+   "t": 105.0
+  },
+  {
+   "cpu_s": 4.07,
+   "fds": 80,
+   "rss_mb": 73.69140625,
+   "t": 110.0
+  },
+  {
+   "cpu_s": 4.26,
+   "fds": 79,
+   "rss_mb": 73.84765625,
+   "t": 115.0
+  },
+  {
+   "cpu_s": 4.45,
+   "fds": 81,
+   "rss_mb": 73.90234375,
+   "t": 120.0
+  },
+  {
+   "cpu_s": 4.68,
+   "fds": 81,
+   "rss_mb": 79.98828125,
+   "t": 125.0
+  },
+  {
+   "cpu_s": 4.9,
+   "fds": 80,
+   "rss_mb": 80.03125,
+   "t": 130.0
+  },
+  {
+   "cpu_s": 5.11,
+   "fds": 79,
+   "rss_mb": 80.03125,
+   "t": 135.0
+  },
+  {
+   "cpu_s": 5.32,
+   "fds": 80,
+   "rss_mb": 80.12109375,
+   "t": 140.0
+  },
+  {
+   "cpu_s": 5.54,
+   "fds": 79,
+   "rss_mb": 80.19140625,
+   "t": 145.0
+  },
+  {
+   "cpu_s": 5.76,
+   "fds": 82,
+   "rss_mb": 81.23046875,
+   "t": 150.0
+  },
+  {
+   "cpu_s": 5.96,
+   "fds": 81,
+   "rss_mb": 82.6640625,
+   "t": 155.0
+  },
+  {
+   "cpu_s": 6.16,
+   "fds": 81,
+   "rss_mb": 82.79296875,
+   "t": 160.0
+  },
+  {
+   "cpu_s": 6.35,
+   "fds": 80,
+   "rss_mb": 82.90234375,
+   "t": 165.0
+  },
+  {
+   "cpu_s": 6.54,
+   "fds": 80,
+   "rss_mb": 83.6640625,
+   "t": 170.0
+  },
+  {
+   "cpu_s": 6.73,
+   "fds": 79,
+   "rss_mb": 83.73046875,
+   "t": 175.0
+  },
+  {
+   "cpu_s": 6.92,
+   "fds": 81,
+   "rss_mb": 86.22265625,
+   "t": 180.0
+  },
+  {
+   "cpu_s": 7.16,
+   "fds": 83,
+   "rss_mb": 87.6796875,
+   "t": 185.0
+  },
+  {
+   "cpu_s": 7.53,
+   "fds": 105,
+   "rss_mb": 95.2890625,
+   "t": 190.0
+  },
+  {
+   "cpu_s": 7.71,
+   "fds": 94,
+   "rss_mb": 95.78515625,
+   "t": 195.0
+  },
+  {
+   "cpu_s": 7.93,
+   "fds": 94,
+   "rss_mb": 97.90625,
+   "t": 200.0
+  },
+  {
+   "cpu_s": 8.1,
+   "fds": 91,
+   "rss_mb": 97.90625,
+   "t": 205.0
+  },
+  {
+   "cpu_s": 8.29,
+   "fds": 91,
+   "rss_mb": 97.90625,
+   "t": 210.0
+  },
+  {
+   "cpu_s": 8.47,
+   "fds": 80,
+   "rss_mb": 97.90625,
+   "t": 215.0
+  },
+  {
+   "cpu_s": 8.64,
+   "fds": 80,
+   "rss_mb": 97.9296875,
+   "t": 220.0
+  },
+  {
+   "cpu_s": 8.79,
+   "fds": 80,
+   "rss_mb": 97.9296875,
+   "t": 225.0
+  },
+  {
+   "cpu_s": 8.97,
+   "fds": 81,
+   "rss_mb": 97.953125,
+   "t": 230.0
+  },
+  {
+   "cpu_s": 9.13,
+   "fds": 80,
+   "rss_mb": 97.953125,
+   "t": 235.0
+  },
+  {
+   "cpu_s": 9.32,
+   "fds": 17,
+   "rss_mb": 97.953125,
+   "t": 240.0
+  }
+ ],
+ "secs": 240.0,
+ "setup_s": 5.3,
+ "step_requests_get_tier": 391,
+ "step_requests_put_tier": 133,
+ "storage_bytes": 28715009,
+ "storage_objects": 35,
+ "usd_requests_per_db_month": 7.6577,
+ "usd_storage_per_db_month": 0.000615,
+ "warm": 60.0,
+ "window_s": 185.0
+}

@@ -54,12 +54,19 @@ tokio::task_local! {
     pub static TOKENS: std::cell::RefCell<Vec<InflightToken>>;
     /// Commits staged by the command being handled on this task, awaited before its reply is sent.
     pub static PENDING: std::cell::RefCell<Vec<Commit>>;
+    /// The command's write concern accepts an acknowledgement before durability (`{w: 1, j: false}`, see `wc.rs`).
+    pub static RELAX: std::cell::Cell<bool>;
 }
 
 /// Reads (find, count, distinct, aggregate) see only durable data: a write that is staged and waiting for its group
 /// flush is invisible to them until its flush is done. Commands that write still see their own staged data, which
 /// they need to decide (duplicate keys, unique indexes). False (`--durable-reads false`) lets reads see staged data.
 pub static DURABLE_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Reads of a database with relaxed durability see the writes acknowledged before they were durable (read-your-writes).
+fn durable_reads(db: &str) -> bool {
+    DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0
+}
 
 pub fn set_wake_limit(n: usize) {
     let _ = WAKE_SEM.set(if n == 0 { None } else { Some(Arc::new(Semaphore::new(n))) });
@@ -126,6 +133,11 @@ pub fn valid_db_name(name: &str) -> bool {
 }
 
 impl Dbs {
+    /// The object store (without per-request counting).
+    pub fn store(&self) -> Arc<dyn ObjectStore> {
+        Arc::clone(&self.raw)
+    }
+
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
         Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default(), inflight: Mutex::new(HashMap::new()) })
     }
@@ -173,6 +185,27 @@ impl Dbs {
                 }))
             })
             .clone()
+    }
+
+    /// Without waiting: is the database open in this process (a busy entry counts as open)?
+    pub fn is_open_hint(&self, name: &str) -> bool {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => false,
+            Some(e) => e.try_read().map(|g| g.tenant.is_some()).unwrap_or(true),
+        }
+    }
+
+    /// "writer", "reader" or "closed", without waiting (a busy entry reads as "busy").
+    pub fn state_hint(&self, name: &str) -> String {
+        let e = self.entries.lock().unwrap().get(name).cloned();
+        match e {
+            None => "closed".into(),
+            Some(e) => match e.try_read() {
+                Ok(g) => match &g.tenant { None => "closed".into(), Some(t) if t.is_writer() => "writer".into(), Some(_) => "reader".into() },
+                Err(_) => "busy".into(),
+            },
+        }
     }
 
     pub fn entry_count(&self) -> usize {
@@ -266,6 +299,7 @@ impl Dbs {
             {
                 let g = Arc::clone(&e).read_owned().await;
                 if g.tenant.is_some() && g.leases.valid(&g.name) {
+                    crate::locallog::check_open(&g.name)?;
                     g.touch();
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
                 }
@@ -426,6 +460,14 @@ impl Entry {
     pub async fn abandon(&mut self) {
         self.nat.clear();
         self.copts.clear();
+        if let Some(l) = crate::locallog::get() {
+            // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
+            // not apply those records over the new owner's writes.
+            if l.has_pending(&self.name) && !l.is_pinned(&self.name) {
+                eprintln!("local log: ownership of {} lost with writes not yet in object storage; they are lost", self.name);
+                let _ = l.append_drop(&self.name).await;
+            }
+        }
         if let Some(t) = self.tenant.take() {
             t.abandon().await;
             self.closes += 1;
@@ -438,6 +480,8 @@ impl Entry {
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
         self.touch();
+        // local log: a database whose kept records are not applied yet is refused (its last acknowledged writes are missing)
+        crate::locallog::check_open(&self.name)?;
         if self.tenant.is_none() && self.absent {
             return Ok(false);
         }
@@ -465,6 +509,7 @@ impl Entry {
         tenant_bench::counting::set_phase(5);
         let took = self.leases.acquire(&self.name).await?;
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
+        crate::ctl::durability::refresh(&self.name).await;
         match self.lc.wake(&self.name).await {
             Ok(t) => {
                 if took.is_some() || t.unclean {
@@ -475,6 +520,7 @@ impl Entry {
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
+                crate::fair::register(&self.name);
                 tenant_bench::counting::set_phase(0);
                 Ok(true)
             }
@@ -497,7 +543,13 @@ impl Entry {
         self.nat.clear();
         self.copts.clear();
         if let Some(t) = self.tenant.take() {
+            crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
+            if r.is_ok() {
+                if let Some(l) = crate::locallog::get() {
+                    l.closed(&self.name);
+                }
+            }
             self.closes += 1;
             self.sync_gauges();
             self.leases.release(&self.name).await;
@@ -538,9 +590,30 @@ impl Entry {
 
     /// Apply writes atomically and durably, creating the database on its first write.
     pub async fn apply(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, true).await
+    }
+
+    /// Like [`Entry::apply`] but always durable in object storage before it returns, also with the local log on (the
+    /// restart of the local log applies its records this way).
+    pub async fn apply_durable(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.apply_mode(ops, false).await
+    }
+
+    async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool) -> Result<()> {
         if ops.is_empty() {
             return Ok(());
         }
+        // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
+        let local = if use_local_log { crate::locallog::get() } else { None };
+        let local_seq = local.map(|l| {
+            let seq = l.next_seq();
+            ops.push(l.marker_op(seq));
+            seq
+        });
+        let record = local.map(|l| (l, ops.iter().map(|o| match o {
+            Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
+            Op::Delete(k) => Op::Delete(k.clone()),
+        }).collect::<Vec<Op>>()));
         if !self.ensure_open().await? {
             self.leases.acquire(&self.name).await?;
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
@@ -563,6 +636,7 @@ impl Entry {
                 }
             }
         }
+        crate::fair::note_written(&self.name, ops.iter().map(|o| match o { Op::Put(k, v) => k.len() + v.len(), Op::Delete(k) => k.len() } as u64).sum(), false);
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
         tenant_bench::lifecycle::note_write(&self.name);
@@ -570,7 +644,11 @@ impl Entry {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
         self.request_compaction_if_needed();
-        let Some(commit) = staged? else { return Ok(()) };
+        let Some(mut commit) = staged? else { return Ok(()) };
+        if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
+            let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);
+            commit = commit.with_local(log.append(seq, &self.name, &rec_ops, epoch));
+        }
         let mut slot = Some(commit);
         if GROUP_COMMIT.load(Relaxed) {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
@@ -585,11 +663,19 @@ impl Entry {
     /// lock so no compaction or GC pass can write into it while (or after) it is being deleted:
     /// a pass that finds no manifest does nothing. Repeats the listing until the prefix is empty.
     pub async fn drop_database(&mut self) -> Result<()> {
-        crate::ctl::fork::on_drop(&self.name).await?;
         let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
         let _held = lock.lock().await;
-        if !self.leases.is_held(&self.name) {
+        // Ownership first: a process that does not own the database (another one serves it) is refused here, before it
+        // touches anything (the pins a fork holds in its source, the local log, the objects).
+        if !self.leases.valid(&self.name) {
             self.leases.acquire(&self.name).await?;
+        }
+        let (leases, name) = (Arc::clone(&self.leases), self.name.clone());
+        crate::ctl::fork::on_drop(&self.name, &move || leases.valid(&name)).await?;
+        if let Some(l) = crate::locallog::get() {
+            // A restart must not apply the database's earlier records again.
+            l.append_drop(&self.name).await.map_err(|_| anyhow::anyhow!("local log stopped"))?.map_err(|e| anyhow::anyhow!(e))?;
+            l.forget_pinned(&self.name);
         }
         self.nat.clear();
         self.copts.clear();
@@ -598,6 +684,8 @@ impl Entry {
             self.closes += 1;
             self.sync_gauges();
         }
+        // again before the objects go (the steps above can take long)
+        self.leases.check_owner(&self.name)?;
         let prefix = Path::from(format!("tenants/{}", self.name));
         for _ in 0..5 {
             let objs: Vec<Path> = self.raw.list(Some(&prefix)).map(|m| m.map(|m| m.location)).try_collect().await?;
@@ -611,6 +699,11 @@ impl Entry {
         }
         self.lc.touched.lock().unwrap().remove(&self.name);
         self.leases.forget(&self.name);
+        // as erase: retention, relaxed durability, allow list, keep-awake pin and the counters go with the database
+        match crate::ctl::get() {
+            Some(ctl) => crate::ctl::erase::forget_settings(&ctl.store, &self.name).await?,
+            None => crate::ctl::erase::forget_in_memory(&self.name),
+        }
         Ok(())
     }
 
@@ -946,14 +1039,14 @@ impl ReadView {
     pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
-        let r = if DURABLE_READS.load(Relaxed) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
+        let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
         self.done(r)
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
         let t = g.tenant.as_ref().unwrap();
-        let r = if DURABLE_READS.load(Relaxed) { t.get_durable(key).await? } else { t.get(key).await? };
+        let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
         self.done(r)
     }
 

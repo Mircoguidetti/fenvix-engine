@@ -1,0 +1,34 @@
+{
+ "acked_total": 4966,
+ "dbs": 4,
+ "lost_total": 0,
+ "mode": "local",
+ "rate_per_db": 20,
+ "secs_before_kill": 20,
+ "trials": [
+  {
+   "acked": 1655,
+   "lost": 0,
+   "lost_sample": [],
+   "replayed": 1670,
+   "restart_to_port_open_s": 0.3,
+   "trial": 0
+  },
+  {
+   "acked": 1656,
+   "lost": 0,
+   "lost_sample": [],
+   "replayed": 1670,
+   "restart_to_port_open_s": 0.3,
+   "trial": 1
+  },
+  {
+   "acked": 1655,
+   "lost": 0,
+   "lost_sample": [],
+   "replayed": 1674,
+   "restart_to_port_open_s": 0.3,
+   "trial": 2
+  }
+ ]
+}

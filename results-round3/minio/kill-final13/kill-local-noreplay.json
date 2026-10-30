@@ -1,0 +1,55 @@
+{
+ "acked_total": 4966,
+ "binary": "/tmp/claude-0/final13-bin",
+ "binary_sha256": "1e281e2bdef7e8fefb3e2d60a170bfef3e31a1c6b5977a67b59d8e496f097f5f",
+ "dbs": 4,
+ "lost_total": 4966,
+ "mode": "local-noreplay",
+ "note": "SIGKILL kills the process only: the page cache survives, so this does not test that fdatasync reached the disk (power or VM loss is not tested)",
+ "rate_per_db": 20,
+ "secs_before_kill": 20,
+ "trials": [
+  {
+   "acked": 1655,
+   "lost": 1655,
+   "lost_sample": [
+    "k00-1793388547-0-1",
+    "k00-1793388547-0-10",
+    "k00-1793388547-0-100",
+    "k00-1793388547-0-101",
+    "k00-1793388547-0-102"
+   ],
+   "replayed": 0,
+   "restart_to_port_open_s": 0.1,
+   "trial": 0
+  },
+  {
+   "acked": 1656,
+   "lost": 1656,
+   "lost_sample": [
+    "k00-1793388702-0-1",
+    "k00-1793388702-0-10",
+    "k00-1793388702-0-100",
+    "k00-1793388702-0-101",
+    "k00-1793388702-0-102"
+   ],
+   "replayed": 0,
+   "restart_to_port_open_s": 0.1,
+   "trial": 1
+  },
+  {
+   "acked": 1655,
+   "lost": 1655,
+   "lost_sample": [
+    "k00-1793388857-0-1",
+    "k00-1793388857-0-10",
+    "k00-1793388857-0-100",
+    "k00-1793388857-0-101",
+    "k00-1793388857-0-102"
+   ],
+   "replayed": 0,
+   "restart_to_port_open_s": 0.1,
+   "trial": 2
+  }
+ ]
+}

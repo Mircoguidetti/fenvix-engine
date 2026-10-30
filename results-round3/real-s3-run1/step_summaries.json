@@ -1,0 +1,342 @@
+[
+ {
+  "name": "s3-before-r1",
+  "usd_db_month": 11.5563,
+  "put_db_min": 49.0,
+  "get_db_min": 56.33,
+  "s3_per_req": 1.848,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.19,
+    "read_steady_p99_ms": 110.7,
+    "write_steady_p50_ms": 99.91,
+    "write_steady_p99_ms": 226.75,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-before-r10",
+  "usd_db_month": 63.2818,
+  "put_db_min": 288.97,
+  "get_db_min": 50.0,
+  "s3_per_req": 0.565,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.05,
+    "read_steady_p99_ms": 24.33,
+    "write_steady_p50_ms": 106.31,
+    "write_steady_p99_ms": 351.82,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-before-r100",
+  "usd_db_month": 133.9721,
+  "put_db_min": 616.28,
+  "get_db_min": 49.57,
+  "s3_per_req": 0.299,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 163906.68,
+    "read_steady_p99_ms": 221940.18,
+    "write_steady_p50_ms": 162529.83,
+    "write_steady_p99_ms": 222077.71,
+    "errors": 10296
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-immediate-r1",
+  "usd_db_month": 8.691,
+  "put_db_min": 39.33,
+  "get_db_min": 11.33,
+  "s3_per_req": 0.765,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.14,
+    "read_steady_p99_ms": 125.28,
+    "write_steady_p50_ms": 99.98,
+    "write_steady_p99_ms": 195.45,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-immediate-r10",
+  "usd_db_month": 58.7148,
+  "put_db_min": 271.64,
+  "get_db_min": 2.33,
+  "s3_per_req": 0.467,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 0.97,
+    "read_steady_p99_ms": 75.9,
+    "write_steady_p50_ms": 104.06,
+    "write_steady_p99_ms": 300.44,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-immediate-r100",
+  "usd_db_month": 128.3555,
+  "put_db_min": 594.05,
+  "get_db_min": 2.36,
+  "s3_per_req": 0.267,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 157550.38,
+    "read_steady_p99_ms": 221255.7,
+    "write_steady_p50_ms": 158115.07,
+    "write_steady_p99_ms": 221327.73,
+    "errors": 10355
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-adaptive-r1",
+  "usd_db_month": 8.5528,
+  "put_db_min": 38.66,
+  "get_db_min": 11.67,
+  "s3_per_req": 0.822,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.12,
+    "read_steady_p99_ms": 140.72,
+    "write_steady_p50_ms": 99.56,
+    "write_steady_p99_ms": 185.95,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-adaptive-r10",
+  "usd_db_month": 59.7892,
+  "put_db_min": 276.64,
+  "get_db_min": 2.0,
+  "s3_per_req": 0.472,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 0.85,
+    "read_steady_p99_ms": 31.48,
+    "write_steady_p50_ms": 102.74,
+    "write_steady_p99_ms": 330.85,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-adaptive-r100",
+  "usd_db_month": 129.5455,
+  "put_db_min": 599.56,
+  "get_db_min": 2.36,
+  "s3_per_req": 0.265,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 157363.42,
+    "read_steady_p99_ms": 222454.65,
+    "write_steady_p50_ms": 158380.11,
+    "write_steady_p99_ms": 222268.82,
+    "errors": 10110
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-relaxed-r1",
+  "usd_db_month": 4.2649,
+  "put_db_min": 19.0,
+  "get_db_min": 9.33,
+  "s3_per_req": 0.438,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.13,
+    "read_steady_p99_ms": 106.09,
+    "write_steady_p50_ms": 0.97,
+    "write_steady_p99_ms": 30.73,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-relaxed-r10",
+  "usd_db_month": 4.3541,
+  "put_db_min": 20.0,
+  "get_db_min": 2.0,
+  "s3_per_req": 0.036,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.06,
+    "read_steady_p99_ms": 1.32,
+    "write_steady_p50_ms": 0.92,
+    "write_steady_p99_ms": 1.14,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-relaxed-r100",
+  "usd_db_month": 4.5335,
+  "put_db_min": 20.75,
+  "get_db_min": 2.92,
+  "s3_per_req": 0.004,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 0.85,
+    "read_steady_p99_ms": 1.46,
+    "write_steady_p50_ms": 0.73,
+    "write_steady_p99_ms": 1.24,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-local-r1",
+  "usd_db_month": 2.7818,
+  "put_db_min": 12.0,
+  "get_db_min": 11.0,
+  "s3_per_req": 0.391,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.13,
+    "read_steady_p99_ms": 279.09,
+    "write_steady_p50_ms": 1.46,
+    "write_steady_p99_ms": 3.35,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-local-r10",
+  "usd_db_month": 2.6321,
+  "put_db_min": 12.0,
+  "get_db_min": 2.33,
+  "s3_per_req": 0.024,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 1.12,
+    "read_steady_p99_ms": 1.39,
+    "write_steady_p50_ms": 1.47,
+    "write_steady_p99_ms": 3.83,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-local-r100",
+  "usd_db_month": 2.7935,
+  "put_db_min": 12.65,
+  "get_db_min": 3.57,
+  "s3_per_req": 0.003,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": 0.78,
+    "read_steady_p99_ms": 1.34,
+    "write_steady_p50_ms": 1.1,
+    "write_steady_p99_ms": 2.99,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-fleet100-before",
+  "usd_db_month": 17.3542,
+  "put_db_min": 76.49,
+  "get_db_min": 48.13,
+  "s3_per_req": 2.116,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": null,
+    "read_steady_p99_ms": null,
+    "write_steady_p50_ms": 100.36,
+    "write_steady_p99_ms": 214.84,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-fleet100-immediate",
+  "usd_db_month": 12.6192,
+  "put_db_min": 58.21,
+  "get_db_min": 2.63,
+  "s3_per_req": 1.037,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": null,
+    "read_steady_p99_ms": null,
+    "write_steady_p50_ms": 99.38,
+    "write_steady_p99_ms": 203.07,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-fleet100-adaptive",
+  "usd_db_month": 12.5265,
+  "put_db_min": 57.78,
+  "get_db_min": 2.61,
+  "s3_per_req": 1.03,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": null,
+    "read_steady_p99_ms": null,
+    "write_steady_p50_ms": 98.6,
+    "write_steady_p99_ms": 205.3,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-fleet100-relaxed",
+  "usd_db_month": 2.6284,
+  "put_db_min": 11.96,
+  "get_db_min": 2.62,
+  "s3_per_req": 0.247,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": null,
+    "read_steady_p99_ms": null,
+    "write_steady_p50_ms": 0.7,
+    "write_steady_p99_ms": 1.29,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ },
+ {
+  "name": "s3-fleet100-local",
+  "usd_db_month": 1.1386,
+  "put_db_min": 5.04,
+  "get_db_min": 2.94,
+  "s3_per_req": 0.136,
+  "lat": {
+   "all": {
+    "read_steady_p50_ms": null,
+    "read_steady_p99_ms": null,
+    "write_steady_p50_ms": 0.99,
+    "write_steady_p99_ms": 2.79,
+    "errors": 0
+   }
+  },
+  "exit": "0"
+ }
+]

@@ -7,3 +7,4 @@ loadtest/out/*
 !loadtest/out/.gitkeep
 ctl-tests/out/
 .pytest_cache/
+.tools/

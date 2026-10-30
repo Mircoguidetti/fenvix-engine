@@ -1,0 +1,137 @@
+01:47:20 step s3-before-r1: estimate 329 PUT-tier + 574 GET-tier = 0.0020 USD; spent so far 0.0000 USD
+01:51:38 step s3-before-r1: exit 0 in 258 s; {"name": "s3-before-r1", "usd_db_month": 11.6484, "put_db_min": 49.66, "get_db_min": 53.33, "s3_per_req": 1.807, "lat": {"all": {"read_steady_p50_ms": 1.15, "read_steady_p99_ms": 136.57, "write_steady_p50_ms": 96.69, "write_steady_p99_ms": 185.78, "errors": 0}}}
+01:51:38 step s3-before-r10: estimate 1605 PUT-tier + 1060 GET-tier = 0.0091 USD; spent so far 0.0046 USD
+01:55:57 step s3-before-r10: exit 0 in 259 s; {"name": "s3-before-r10", "usd_db_month": 63.3937, "put_db_min": 289.97, "get_db_min": 44.0, "s3_per_req": 0.557, "lat": {"all": {"read_steady_p50_ms": 1.1, "read_steady_p99_ms": 1.24, "write_steady_p50_ms": 99.38, "write_steady_p99_ms": 304.03, "errors": 0}}}
+01:55:57 step s3-before-r100: estimate 14362 PUT-tier + 5920 GET-tier = 0.0801 USD; spent so far 0.0131 USD
+02:00:22 step s3-before-r100: exit 0 in 266 s; {"name": "s3-before-r100", "usd_db_month": 139.8642, "put_db_min": 644.04, "get_db_min": 43.46, "s3_per_req": 0.118, "lat": {"all": {"read_steady_p50_ms": 0.77, "read_steady_p99_ms": 1.29, "write_steady_p50_ms": 218.15, "write_steady_p99_ms": 361.12, "errors": 0}}}
+02:00:22 step s3-immediate-r1: estimate 365 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0305 USD
+02:04:40 step s3-immediate-r1: exit 0 in 258 s; {"name": "s3-immediate-r1", "usd_db_month": 8.691, "put_db_min": 39.33, "get_db_min": 11.33, "s3_per_req": 0.765, "lat": {"all": {"read_steady_p50_ms": 1.15, "read_steady_p99_ms": 108.88, "write_steady_p50_ms": 96.77, "write_steady_p99_ms": 182.31, "errors": 0}}}
+02:04:40 step s3-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0331 USD
+02:04:41 credentials renewed
+02:09:03 step s3-immediate-r10: exit 0 in 262 s; {"name": "s3-immediate-r10", "usd_db_month": 56.8527, "put_db_min": 263.0, "get_db_min": 2.59, "s3_per_req": 0.462, "lat": {"all": {"read_steady_p50_ms": 1.09, "read_steady_p99_ms": 1.29, "write_steady_p50_ms": 101.09, "write_steady_p99_ms": 329.38, "errors": 0}}}
+02:09:03 step s3-immediate-r100: estimate 14398 PUT-tier + 5920 GET-tier = 0.0803 USD; spent so far 0.0414 USD
+02:13:29 step s3-immediate-r100: exit 0 in 266 s; {"name": "s3-immediate-r100", "usd_db_month": 134.1198, "put_db_min": 620.69, "get_db_min": 2.92, "s3_per_req": 0.107, "lat": {"all": {"read_steady_p50_ms": 0.88, "read_steady_p99_ms": 1.48, "write_steady_p50_ms": 224.95, "write_steady_p99_ms": 393.16, "errors": 0}}}
+02:13:29 step s3-adaptive-r1: estimate 365 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0581 USD
+02:17:47 step s3-adaptive-r1: exit 0 in 258 s; {"name": "s3-adaptive-r1", "usd_db_month": 8.5528, "put_db_min": 38.66, "get_db_min": 11.67, "s3_per_req": 0.822, "lat": {"all": {"read_steady_p50_ms": 1.09, "read_steady_p99_ms": 103.0, "write_steady_p50_ms": 92.39, "write_steady_p99_ms": 293.36, "errors": 0}}}
+02:17:47 step s3-adaptive-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0607 USD
+02:22:08 step s3-adaptive-r10: exit 0 in 261 s; {"name": "s3-adaptive-r10", "usd_db_month": 60.0049, "put_db_min": 277.64, "get_db_min": 2.0, "s3_per_req": 0.474, "lat": {"all": {"read_steady_p50_ms": 1.02, "read_steady_p99_ms": 1.18, "write_steady_p50_ms": 98.56, "write_steady_p99_ms": 288.38, "errors": 0}}}
+02:22:08 step s3-adaptive-r100: estimate 14398 PUT-tier + 5920 GET-tier = 0.0803 USD; spent so far 0.0690 USD
+02:22:09 credentials renewed
+02:26:35 step s3-adaptive-r100: exit 0 in 266 s; {"name": "s3-adaptive-r100", "usd_db_month": 133.7003, "put_db_min": 618.75, "get_db_min": 2.92, "s3_per_req": 0.106, "lat": {"all": {"read_steady_p50_ms": 0.79, "read_steady_p99_ms": 1.32, "write_steady_p50_ms": 223.9, "write_steady_p99_ms": 383.85, "errors": 0}}}
+02:26:35 step s3-relaxed-r1: estimate 358 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0873 USD
+02:30:53 step s3-relaxed-r1: exit 0 in 258 s; {"name": "s3-relaxed-r1", "usd_db_month": 4.2649, "put_db_min": 19.0, "get_db_min": 9.33, "s3_per_req": 0.438, "lat": {"all": {"read_steady_p50_ms": 1.09, "read_steady_p99_ms": 101.48, "write_steady_p50_ms": 0.95, "write_steady_p99_ms": 33.6, "errors": 0}}}
+02:30:53 step s3-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.0894 USD
+02:35:13 step s3-relaxed-r10: exit 0 in 260 s; {"name": "s3-relaxed-r10", "usd_db_month": 4.3541, "put_db_min": 20.0, "get_db_min": 2.0, "s3_per_req": 0.036, "lat": {"all": {"read_steady_p50_ms": 1.04, "read_steady_p99_ms": 1.31, "write_steady_p50_ms": 0.91, "write_steady_p99_ms": 1.07, "errors": 0}}}
+02:35:13 step s3-relaxed-r100: estimate 494 PUT-tier + 5920 GET-tier = 0.0052 USD; spent so far 0.0916 USD
+02:39:38 step s3-relaxed-r100: exit 0 in 265 s; {"name": "s3-relaxed-r100", "usd_db_month": 4.5334, "put_db_min": 20.75, "get_db_min": 2.92, "s3_per_req": 0.004, "lat": {"all": {"read_steady_p50_ms": 0.78, "read_steady_p99_ms": 1.31, "write_steady_p50_ms": 0.69, "write_steady_p99_ms": 1.15, "errors": 0}}}
+02:39:38 step s3-local-r1: estimate 250 PUT-tier + 574 GET-tier = 0.0016 USD; spent so far 0.0956 USD
+02:39:39 credentials renewed
+02:43:56 step s3-local-r1: exit 0 in 257 s; {"name": "s3-local-r1", "usd_db_month": 2.7818, "put_db_min": 12.0, "get_db_min": 11.0, "s3_per_req": 0.391, "lat": {"all": {"read_steady_p50_ms": 1.1, "read_steady_p99_ms": 301.67, "write_steady_p50_ms": 1.43, "write_steady_p99_ms": 3.0, "errors": 0}}}
+02:43:56 step s3-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.0976 USD
+02:48:15 step s3-local-r10: exit 0 in 259 s; {"name": "s3-local-r10", "usd_db_month": 2.6321, "put_db_min": 12.0, "get_db_min": 2.33, "s3_per_req": 0.024, "lat": {"all": {"read_steady_p50_ms": 1.03, "read_steady_p99_ms": 1.24, "write_steady_p50_ms": 1.37, "write_steady_p99_ms": 2.62, "errors": 0}}}
+02:48:15 step s3-local-r100: estimate 250 PUT-tier + 5920 GET-tier = 0.0039 USD; spent so far 0.1013 USD
+02:52:39 step s3-local-r100: exit 0 in 264 s; {"name": "s3-local-r100", "usd_db_month": 2.7935, "put_db_min": 12.65, "get_db_min": 3.57, "s3_per_req": 0.003, "lat": {"all": {"read_steady_p50_ms": 0.78, "read_steady_p99_ms": 1.29, "write_steady_p50_ms": 1.11, "write_steady_p99_ms": 2.62, "errors": 0}}}
+02:52:39 step s3-fleet100-before: estimate 47100 PUT-tier + 57400 GET-tier = 0.2790 USD; spent so far 0.1034 USD
+02:57:51 step s3-fleet100-before: exit 0 in 312 s; {"name": "s3-fleet100-before", "usd_db_month": 17.3488, "put_db_min": 76.71, "get_db_min": 45.09, "s3_per_req": 2.068, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 94.43, "write_steady_p99_ms": 190.9, "errors": 0}}}
+02:57:51 step s3-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.3086 USD
+02:57:52 credentials renewed
+03:03:51 step s3-fleet100-immediate: exit 0 in 359 s; {"name": "s3-fleet100-immediate", "usd_db_month": 12.6244, "put_db_min": 58.24, "get_db_min": 2.6, "s3_per_req": 1.037, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 95.23, "write_steady_p99_ms": 190.34, "errors": 0}}}
+03:03:51 step s3-fleet100-adaptive: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.4660 USD
+03:09:48 step s3-fleet100-adaptive: exit 0 in 357 s; {"name": "s3-fleet100-adaptive", "usd_db_month": 12.5306, "put_db_min": 57.8, "get_db_min": 2.61, "s3_per_req": 1.03, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 94.4, "write_steady_p99_ms": 190.11, "errors": 0}}}
+03:09:48 step s3-fleet100-relaxed: estimate 40440 PUT-tier + 57400 GET-tier = 0.2431 USD; spent so far 0.6220 USD
+03:15:43 step s3-fleet100-relaxed: exit 0 in 355 s; {"name": "s3-fleet100-relaxed", "usd_db_month": 2.6269, "put_db_min": 11.95, "get_db_min": 2.61, "s3_per_req": 0.246, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.7, "write_steady_p99_ms": 1.04, "errors": 0}}}
+03:15:43 step s3-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.6689 USD
+03:15:44 credentials renewed
+03:22:12 step s3-fleet100-local: exit 0 in 388 s; {"name": "s3-fleet100-local", "usd_db_month": 1.1279, "put_db_min": 4.99, "get_db_min": 2.89, "s3_per_req": 0.134, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 1.08, "write_steady_p99_ms": 2.71, "errors": 0}}}
+03:22:12 all steps: done 20, skipped 0; automatic stop: None; final estimated spend 0.6999 USD (cap 10.0)
+05:59:26 step s3f-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0000 USD
+06:03:52 step s3f-immediate-r10: exit 0 in 266 s; {"name": "s3f-immediate-r10", "usd_db_month": 61.5055, "put_db_min": 277.98, "get_db_min": 84.66, "s3_per_req": 0.607, "lat": {"all": {"read_steady_p50_ms": 0.89, "read_steady_p99_ms": 145.45, "write_steady_p50_ms": 161.99, "write_steady_p99_ms": 502.33, "errors": 0}}}
+06:03:52 step s3f-relaxed-r1: estimate 358 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0099 USD
+06:08:15 step s3f-relaxed-r1: exit 0 in 263 s; {"name": "s3f-relaxed-r1", "usd_db_month": 4.3254, "put_db_min": 19.33, "get_db_min": 8.67, "s3_per_req": 0.461, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 142.0, "write_steady_p50_ms": 0.81, "write_steady_p99_ms": 0.89, "errors": 0}}}
+06:08:15 step s3f-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.0121 USD
+06:12:40 step s3f-relaxed-r10: exit 0 in 265 s; {"name": "s3f-relaxed-r10", "usd_db_month": 9.1691, "put_db_min": 36.0, "get_db_min": 80.66, "s3_per_req": 0.193, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 133.9, "write_steady_p50_ms": 0.88, "write_steady_p99_ms": 96.92, "errors": 0}}}
+06:12:40 step s3f-relaxed-r100: estimate 494 PUT-tier + 5920 GET-tier = 0.0052 USD; spent so far 0.0147 USD
+06:17:11 step s3f-relaxed-r100: exit 0 in 271 s; {"name": "s3f-relaxed-r100", "usd_db_month": 9.1847, "put_db_min": 35.67, "get_db_min": 85.61, "s3_per_req": 0.02, "lat": {"all": {"read_steady_p50_ms": 0.57, "read_steady_p99_ms": 6689.88, "write_steady_p50_ms": 0.54, "write_steady_p99_ms": 6381.29, "errors": 0}}}
+06:17:11 step s3f-local-r1: estimate 250 PUT-tier + 574 GET-tier = 0.0016 USD; spent so far 0.0173 USD
+06:17:12 credentials renewed
+06:21:35 step s3f-local-r1: exit 0 in 263 s; {"name": "s3f-local-r1", "usd_db_month": 2.7991, "put_db_min": 12.0, "get_db_min": 12.0, "s3_per_req": 0.402, "lat": {"all": {"read_steady_p50_ms": 0.9, "read_steady_p99_ms": 186.79, "write_steady_p50_ms": 1.28, "write_steady_p99_ms": 1.61, "errors": 0}}}
+06:21:35 step s3f-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.0210 USD
+06:26:01 step s3f-local-r10: exit 0 in 265 s; {"name": "s3f-local-r10", "usd_db_month": 7.6054, "put_db_min": 28.33, "get_db_min": 85.99, "s3_per_req": 0.179, "lat": {"all": {"read_steady_p50_ms": 0.9, "read_steady_p99_ms": 137.4, "write_steady_p50_ms": 1.31, "write_steady_p99_ms": 118.24, "errors": 0}}}
+06:26:01 step s3f-local-r100: estimate 250 PUT-tier + 5920 GET-tier = 0.0039 USD; spent so far 0.0235 USD
+06:30:27 step s3f-local-r100: exit 0 in 267 s; {"name": "s3f-local-r100", "usd_db_month": 7.6577, "put_db_min": 28.21, "get_db_min": 90.48, "s3_per_req": 0.02, "lat": {"all": {"read_steady_p50_ms": 0.54, "read_steady_p99_ms": 2179.49, "write_steady_p50_ms": 0.9, "write_steady_p99_ms": 1981.47, "errors": 0}}}
+06:30:27 step s3f-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.0260 USD
+06:36:42 step s3f-fleet100-immediate: exit 0 in 374 s; {"name": "s3f-fleet100-immediate", "usd_db_month": 12.527, "put_db_min": 57.78, "get_db_min": 2.69, "s3_per_req": 1.032, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 124.95, "write_steady_p99_ms": 288.73, "errors": 0}}}
+06:36:42 step s3f-fleet100-relaxed: estimate 40440 PUT-tier + 57400 GET-tier = 0.2431 USD; spent so far 0.1863 USD
+06:36:43 credentials renewed
+06:42:57 step s3f-fleet100-relaxed: exit 0 in 374 s; {"name": "s3f-fleet100-relaxed", "usd_db_month": 2.6509, "put_db_min": 12.06, "get_db_min": 2.7, "s3_per_req": 0.252, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.51, "write_steady_p99_ms": 0.79, "errors": 0}}}
+06:42:57 step s3f-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.2342 USD
+06:50:09 step s3f-fleet100-local: exit 0 in 432 s; {"name": "s3f-fleet100-local", "usd_db_month": 1.2375, "put_db_min": 5.46, "get_db_min": 3.35, "s3_per_req": 0.149, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.85, "write_steady_p99_ms": 21.71, "errors": 0}}}
+06:50:09 all steps: done 10, skipped 0; automatic stop: None; final estimated spend 0.2647 USD (cap 10.0)
+07:18:29 step s3g-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0000 USD
+07:23:00 step s3g-immediate-r10: exit 0 in 271 s; {"name": "s3g-immediate-r10", "usd_db_month": 54.6173, "put_db_min": 252.62, "get_db_min": 2.92, "s3_per_req": 0.429, "lat": {"all": {"read_steady_p50_ms": 0.93, "read_steady_p99_ms": 1.08, "write_steady_p50_ms": 184.76, "write_steady_p99_ms": 469.39, "errors": 0}}}
+07:23:00 step s3g-relaxed-r1: estimate 358 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0095 USD
+07:27:24 step s3g-relaxed-r1: exit 0 in 264 s; {"name": "s3g-relaxed-r1", "usd_db_month": 4.3858, "put_db_min": 19.66, "get_db_min": 8.0, "s3_per_req": 0.461, "lat": {"all": {"read_steady_p50_ms": 0.95, "read_steady_p99_ms": 150.64, "write_steady_p50_ms": 0.87, "write_steady_p99_ms": 43.82, "errors": 0}}}
+07:27:24 step s3g-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.0133 USD
+07:31:47 step s3g-relaxed-r10: exit 0 in 264 s; {"name": "s3g-relaxed-r10", "usd_db_month": 4.3542, "put_db_min": 20.0, "get_db_min": 2.0, "s3_per_req": 0.037, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 1.08, "write_steady_p50_ms": 0.85, "write_steady_p99_ms": 1.08, "errors": 0}}}
+07:31:47 step s3g-relaxed-r100: estimate 494 PUT-tier + 5920 GET-tier = 0.0052 USD; spent so far 0.0155 USD
+07:36:30 step s3g-relaxed-r100: exit 0 in 283 s; {"name": "s3g-relaxed-r100", "usd_db_month": 9.8065, "put_db_min": 37.62, "get_db_min": 97.29, "s3_per_req": 0.023, "lat": {"all": {"read_steady_p50_ms": 0.64, "read_steady_p99_ms": 2412.22, "write_steady_p50_ms": 0.63, "write_steady_p99_ms": 2116.84, "errors": 0}}}
+07:36:30 step s3g-local-r1: estimate 250 PUT-tier + 574 GET-tier = 0.0016 USD; spent so far 0.0182 USD
+07:36:32 credentials renewed
+07:40:55 step s3g-local-r1: exit 0 in 264 s; {"name": "s3g-local-r1", "usd_db_month": 2.7588, "put_db_min": 12.0, "get_db_min": 9.67, "s3_per_req": 0.361, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 225.46, "write_steady_p50_ms": 1.24, "write_steady_p99_ms": 86.9, "errors": 0}}}
+07:40:55 step s3g-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.0219 USD
+07:45:19 step s3g-local-r10: exit 0 in 263 s; {"name": "s3g-local-r10", "usd_db_month": 2.6321, "put_db_min": 12.0, "get_db_min": 2.33, "s3_per_req": 0.024, "lat": {"all": {"read_steady_p50_ms": 0.87, "read_steady_p99_ms": 1.03, "write_steady_p50_ms": 1.23, "write_steady_p99_ms": 159.8, "errors": 0}}}
+07:45:19 step s3g-local-r100: estimate 250 PUT-tier + 5920 GET-tier = 0.0039 USD; spent so far 0.0240 USD
+07:50:01 step s3g-local-r100: exit 0 in 282 s; {"name": "s3g-local-r100", "usd_db_month": 8.1087, "put_db_min": 29.84, "get_db_min": 96.32, "s3_per_req": 0.021, "lat": {"all": {"read_steady_p50_ms": 0.57, "read_steady_p99_ms": 2937.27, "write_steady_p50_ms": 0.97, "write_steady_p99_ms": 2678.5, "errors": 0}}}
+07:50:01 step s3g-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.0265 USD
+07:55:42 step s3g-fleet100-immediate: exit 0 in 341 s; {"name": "s3g-fleet100-immediate", "usd_db_month": 12.7852, "put_db_min": 58.92, "get_db_min": 3.33, "s3_per_req": 1.052, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 141.2, "write_steady_p99_ms": 339.59, "errors": 0}}}
+07:55:42 step s3g-fleet100-relaxed: estimate 40440 PUT-tier + 57400 GET-tier = 0.2431 USD; spent so far 0.1877 USD
+07:55:43 credentials renewed
+08:01:14 step s3g-fleet100-relaxed: exit 0 in 331 s; {"name": "s3g-fleet100-relaxed", "usd_db_month": 2.7293, "put_db_min": 12.37, "get_db_min": 3.36, "s3_per_req": 0.267, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.6, "write_steady_p99_ms": 1.06, "errors": 0}}}
+08:01:14 step s3g-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.2337 USD
+08:04:19 step s3g-fleet100-local: exit 1 in 184 s; 
+08:04:19 stderr tail: Traceback (most recent call last): |   File "/home/runner/work/fenvix-engine/fenvix-engine/tools/round3/run.py", line 160, in <module> |     main() |   File "/home/runner/work/fenvix-engine/fenvix-engine/tools/round3/run.py", line 88, in main |     eng.start() |   File "/home/runner/work/fenvix-engine/fenvix-engine/tools/round3/engine.py", line 91, in start |     raise RuntimeError("engine did not start") | RuntimeError: engine did not start | 
+08:04:19 all steps: done 9, skipped 0; automatic stop: None; final estimated spend 0.3386 USD (cap 10.0)
+08:33:10 step s3h-immediate-r1: estimate 365 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0000 USD
+08:37:30 step s3h-immediate-r1: exit 0 in 261 s; {"name": "s3h-immediate-r1", "usd_db_month": 8.4895, "put_db_min": 38.66, "get_db_min": 8.0, "s3_per_req": 0.671, "lat": {"all": {"read_steady_p50_ms": 0.9, "read_steady_p99_ms": 142.47, "write_steady_p50_ms": 117.49, "write_steady_p99_ms": 212.46, "errors": 0}}}
+08:37:30 step s3h-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0043 USD
+08:41:54 step s3h-immediate-r10: exit 0 in 264 s; {"name": "s3h-immediate-r10", "usd_db_month": 59.5907, "put_db_min": 275.65, "get_db_min": 2.92, "s3_per_req": 0.467, "lat": {"all": {"read_steady_p50_ms": 0.83, "read_steady_p99_ms": 1.03, "write_steady_p50_ms": 135.91, "write_steady_p99_ms": 341.75, "errors": 0}}}
+08:41:54 step s3h-immediate-r100: estimate 14398 PUT-tier + 5920 GET-tier = 0.0803 USD; spent so far 0.0144 USD
+08:46:20 step s3h-immediate-r100: exit 0 in 266 s; {"name": "s3h-immediate-r100", "usd_db_month": 111.6472, "put_db_min": 516.6, "get_db_min": 3.57, "s3_per_req": 0.089, "lat": {"all": {"read_steady_p50_ms": 0.75, "read_steady_p99_ms": 1.15, "write_steady_p50_ms": 267.75, "write_steady_p99_ms": 584.41, "errors": 0}}}
+08:46:20 step s3h-relaxed-r1: estimate 358 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0286 USD
+08:50:39 step s3h-relaxed-r1: exit 0 in 259 s; {"name": "s3h-relaxed-r1", "usd_db_month": 4.1727, "put_db_min": 18.33, "get_db_min": 12.33, "s3_per_req": 0.548, "lat": {"all": {"read_steady_p50_ms": 0.95, "read_steady_p99_ms": 123.82, "write_steady_p50_ms": 0.78, "write_steady_p99_ms": 114.09, "errors": 0}}}
+08:50:39 step s3h-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.0308 USD
+08:50:40 credentials renewed
+08:54:59 step s3h-relaxed-r10: exit 0 in 259 s; {"name": "s3h-relaxed-r10", "usd_db_month": 4.3599, "put_db_min": 20.0, "get_db_min": 2.33, "s3_per_req": 0.036, "lat": {"all": {"read_steady_p50_ms": 0.85, "read_steady_p99_ms": 1.06, "write_steady_p50_ms": 0.71, "write_steady_p99_ms": 0.87, "errors": 0}}}
+08:54:59 step s3h-relaxed-r100: estimate 494 PUT-tier + 5920 GET-tier = 0.0052 USD; spent so far 0.0330 USD
+08:59:22 step s3h-relaxed-r100: exit 0 in 263 s; {"name": "s3h-relaxed-r100", "usd_db_month": 4.5447, "put_db_min": 20.75, "get_db_min": 3.57, "s3_per_req": 0.004, "lat": {"all": {"read_steady_p50_ms": 0.76, "read_steady_p99_ms": 1.17, "write_steady_p50_ms": 0.65, "write_steady_p99_ms": 0.99, "errors": 0}}}
+08:59:22 step s3h-local-r1: estimate 250 PUT-tier + 574 GET-tier = 0.0016 USD; spent so far 0.0369 USD
+09:03:43 step s3h-local-r1: exit 0 in 261 s; {"name": "s3h-local-r1", "usd_db_month": 2.6695, "put_db_min": 11.67, "get_db_min": 8.67, "s3_per_req": 0.333, "lat": {"all": {"read_steady_p50_ms": 0.98, "read_steady_p99_ms": 349.04, "write_steady_p50_ms": 1.29, "write_steady_p99_ms": 1.65, "errors": 0}}}
+09:03:43 step s3h-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.0390 USD
+09:08:08 step s3h-local-r10: exit 0 in 265 s; {"name": "s3h-local-r10", "usd_db_month": 2.6422, "put_db_min": 12.0, "get_db_min": 2.92, "s3_per_req": 0.025, "lat": {"all": {"read_steady_p50_ms": 0.82, "read_steady_p99_ms": 1.04, "write_steady_p50_ms": 1.16, "write_steady_p99_ms": 1.5, "errors": 0}}}
+09:08:08 step s3h-local-r100: estimate 250 PUT-tier + 5920 GET-tier = 0.0039 USD; spent so far 0.0410 USD
+09:08:09 credentials renewed
+09:12:34 step s3h-local-r100: exit 0 in 265 s; {"name": "s3h-local-r100", "usd_db_month": 2.7935, "put_db_min": 12.65, "get_db_min": 3.57, "s3_per_req": 0.003, "lat": {"all": {"read_steady_p50_ms": 0.73, "read_steady_p99_ms": 1.12, "write_steady_p50_ms": 1.03, "write_steady_p99_ms": 1.5, "errors": 0}}}
+09:12:34 step s3h-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.0431 USD
+09:17:57 step s3h-fleet100-immediate: exit 0 in 324 s; {"name": "s3h-fleet100-immediate", "usd_db_month": 12.785, "put_db_min": 58.94, "get_db_min": 3.15, "s3_per_req": 1.045, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 116.1, "write_steady_p99_ms": 258.27, "errors": 0}}}
+09:17:57 step s3h-fleet100-relaxed: estimate 40440 PUT-tier + 57400 GET-tier = 0.2431 USD; spent so far 0.2032 USD
+09:23:16 step s3h-fleet100-relaxed: exit 0 in 319 s; {"name": "s3h-fleet100-relaxed", "usd_db_month": 2.6856, "put_db_min": 12.23, "get_db_min": 2.53, "s3_per_req": 0.246, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.61, "write_steady_p99_ms": 0.94, "errors": 0}}}
+09:23:16 step s3h-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.2514 USD
+09:23:17 credentials renewed
+09:28:43 step s3h-fleet100-local: exit 0 in 326 s; {"name": "s3h-fleet100-local", "usd_db_month": 1.0338, "put_db_min": 4.53, "get_db_min": 3.16, "s3_per_req": 0.13, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.95, "write_steady_p99_ms": 1.55, "errors": 0}}}
+09:28:43 all steps: done 12, skipped 0; automatic stop: None; final estimated spend 0.2758 USD (cap 10.0)
+12:42:26 step s3i-immediate-r1: estimate 365 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0000 USD
+12:46:50 step s3i-immediate-r1: exit 0 in 264 s; {"name": "s3i-immediate-r1", "usd_db_month": 8.5963, "put_db_min": 38.92, "get_db_min": 11.03, "s3_per_req": 0.853, "lat": {"all": {"read_steady_p50_ms": 1.04, "read_steady_p99_ms": 103.02, "write_steady_p50_ms": 92.86, "write_steady_p99_ms": 220.74, "errors": 0}}}
+12:46:50 step s3i-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0043 USD
+12:51:13 step s3i-immediate-r10: exit 0 in 264 s; {"name": "s3i-immediate-r10", "usd_db_month": 60.846, "put_db_min": 281.49, "get_db_min": 2.59, "s3_per_req": 0.472, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 1.22, "write_steady_p50_ms": 107.09, "write_steady_p99_ms": 334.71, "errors": 0}}}
+12:51:13 step s3i-immediate-r100: estimate 14398 PUT-tier + 5920 GET-tier = 0.0803 USD; spent so far 0.0128 USD
+12:55:40 step s3i-immediate-r100: exit 0 in 266 s; {"name": "s3i-immediate-r100", "usd_db_month": 130.3436, "put_db_min": 603.18, "get_db_min": 3.24, "s3_per_req": 0.102, "lat": {"all": {"read_steady_p50_ms": 0.74, "read_steady_p99_ms": 1.26, "write_steady_p50_ms": 229.13, "write_steady_p99_ms": 403.41, "errors": 0}}}
+12:55:40 step s3i-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.0291 USD
+12:59:59 step s3i-local-r10: exit 0 in 259 s; {"name": "s3i-local-r10", "usd_db_month": 2.7156, "put_db_min": 12.33, "get_db_min": 3.0, "s3_per_req": 0.026, "lat": {"all": {"read_steady_p50_ms": 0.9, "read_steady_p99_ms": 1.22, "write_steady_p50_ms": 1.24, "write_steady_p99_ms": 1.82, "errors": 0}}}
+12:59:59 step s3i-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.0311 USD
+13:00:00 credentials renewed
+13:04:18 step s3i-relaxed-r10: exit 0 in 258 s; {"name": "s3i-relaxed-r10", "usd_db_month": 4.4434, "put_db_min": 20.33, "get_db_min": 3.0, "s3_per_req": 0.041, "lat": {"all": {"read_steady_p50_ms": 0.93, "read_steady_p99_ms": 1.28, "write_steady_p50_ms": 0.79, "write_steady_p99_ms": 1.15, "errors": 0}}}
+13:04:18 step s3i-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.0333 USD
+13:10:17 step s3i-fleet100-immediate: exit 0 in 359 s; {"name": "s3i-fleet100-immediate", "usd_db_month": 12.6313, "put_db_min": 58.26, "get_db_min": 2.68, "s3_per_req": 1.036, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 96.28, "write_steady_p99_ms": 200.57, "errors": 0}}}
+13:10:17 step s3i-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.1914 USD
+13:15:23 step s3i-fleet100-local: exit 0 in 307 s; {"name": "s3i-fleet100-local", "usd_db_month": 1.0667, "put_db_min": 4.66, "get_db_min": 3.52, "s3_per_req": 0.139, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 1.02, "write_steady_p99_ms": 1.74, "errors": 0}}}
+13:15:23 all steps: done 7, skipped 0; automatic stop: None; final estimated spend 0.2191 USD (cap 10.0)

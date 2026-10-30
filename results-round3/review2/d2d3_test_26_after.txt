@@ -1,0 +1,7 @@
+before the drop: {'relaxed_flush_ms': 2000, 'retention': {'interval_secs': 600, 'window_secs': 3600}, 'allowlist': ['127.0.0.1/32']}
+after drop and recreate: {'relaxed_flush_ms': 0, 'retention': {'interval_secs': 600, 'window_secs': 0}, 'allowlist': []} | relaxed acknowledgements: 0 | stored markers left: []
+.dropDatabase('f') on P2: refused (134); pins on the source after it: 1 (before: 1)
+.P1 took f over 5.5 s after the drop started; dropDatabase('f') on P2: refused (134); pins on the source after it: 1 (before: 1)
+after the source's compaction and cleanup the fork reads 1500 of 1500 documents, ids intact: True
+.
+3 passed in 347.04s (0:05:47)

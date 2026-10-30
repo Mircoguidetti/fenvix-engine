@@ -1,0 +1,225 @@
+{
+ "assumptions": {
+  "put_usd": 5e-06,
+  "month_s": 2592000,
+  "materialization": "1 PUT per database per minute in which it was written"
+ },
+ "traces": {
+  "fleet100": {
+   "databases": 100,
+   "writes_per_s": 100.16,
+   "rows": [
+    {
+     "mode": "immediate (1 PUT per write, measured ~0.95-1.0)",
+     "put_per_s": 100.16,
+     "usd_server_month": 1298.01,
+     "usd_db_month": 12.98
+    },
+    {
+     "mode": "relaxed 5 s (per database)",
+     "put_per_s": 19.87,
+     "usd_server_month": 257.51,
+     "usd_db_month": 2.575
+    },
+    {
+     "mode": "local log 30 s (per database)",
+     "put_per_s": 3.33,
+     "usd_server_month": 43.2,
+     "usd_db_month": 0.432
+    },
+    {
+     "mode": "shared log 50 ms (log only)",
+     "put_per_s": 19.86,
+     "usd_server_month": 257.43,
+     "usd_db_month": 2.574
+    },
+    {
+     "mode": "shared log 50 ms + materialization",
+     "put_per_s": 21.53,
+     "usd_server_month": 279.03,
+     "usd_db_month": 2.79
+    },
+    {
+     "mode": "shared log 100 ms (log only)",
+     "put_per_s": 10.0,
+     "usd_server_month": 129.59,
+     "usd_db_month": 1.296
+    },
+    {
+     "mode": "shared log 100 ms + materialization",
+     "put_per_s": 11.67,
+     "usd_server_month": 151.19,
+     "usd_db_month": 1.512
+    },
+    {
+     "mode": "shared log 250 ms (log only)",
+     "put_per_s": 4.0,
+     "usd_server_month": 51.84,
+     "usd_db_month": 0.518
+    },
+    {
+     "mode": "shared log 250 ms + materialization",
+     "put_per_s": 5.67,
+     "usd_server_month": 73.44,
+     "usd_db_month": 0.734
+    },
+    {
+     "mode": "shared log 1000 ms (log only)",
+     "put_per_s": 1.0,
+     "usd_server_month": 12.96,
+     "usd_db_month": 0.13
+    },
+    {
+     "mode": "shared log 1000 ms + materialization",
+     "put_per_s": 2.67,
+     "usd_server_month": 34.56,
+     "usd_db_month": 0.346
+    }
+   ]
+  },
+  "mixed": {
+   "databases": 100,
+   "writes_per_s": 4.99,
+   "rows": [
+    {
+     "mode": "immediate (1 PUT per write, measured ~0.95-1.0)",
+     "put_per_s": 4.99,
+     "usd_server_month": 64.69,
+     "usd_db_month": 0.647
+    },
+    {
+     "mode": "relaxed 5 s (per database)",
+     "put_per_s": 1.09,
+     "usd_server_month": 14.12,
+     "usd_db_month": 0.141
+    },
+    {
+     "mode": "local log 30 s (per database)",
+     "put_per_s": 0.32,
+     "usd_server_month": 4.18,
+     "usd_db_month": 0.042
+    },
+    {
+     "mode": "shared log 50 ms (log only)",
+     "put_per_s": 4.29,
+     "usd_server_month": 55.64,
+     "usd_db_month": 0.556
+    },
+    {
+     "mode": "shared log 50 ms + materialization",
+     "put_per_s": 4.55,
+     "usd_server_month": 58.99,
+     "usd_db_month": 0.59
+    },
+    {
+     "mode": "shared log 100 ms (log only)",
+     "put_per_s": 3.73,
+     "usd_server_month": 48.35,
+     "usd_db_month": 0.484
+    },
+    {
+     "mode": "shared log 100 ms + materialization",
+     "put_per_s": 3.99,
+     "usd_server_month": 51.71,
+     "usd_db_month": 0.517
+    },
+    {
+     "mode": "shared log 250 ms (log only)",
+     "put_per_s": 2.58,
+     "usd_server_month": 33.48,
+     "usd_db_month": 0.335
+    },
+    {
+     "mode": "shared log 250 ms + materialization",
+     "put_per_s": 2.84,
+     "usd_server_month": 36.84,
+     "usd_db_month": 0.368
+    },
+    {
+     "mode": "shared log 1000 ms (log only)",
+     "put_per_s": 0.92,
+     "usd_server_month": 11.87,
+     "usd_db_month": 0.119
+    },
+    {
+     "mode": "shared log 1000 ms + materialization",
+     "put_per_s": 1.17,
+     "usd_server_month": 15.22,
+     "usd_db_month": 0.152
+    }
+   ]
+  },
+  "20x4-5": {
+   "databases": 20,
+   "writes_per_s": 45.04,
+   "rows": [
+    {
+     "mode": "immediate (1 PUT per write, measured ~0.95-1.0)",
+     "put_per_s": 45.04,
+     "usd_server_month": 583.73,
+     "usd_db_month": 29.186
+    },
+    {
+     "mode": "relaxed 5 s (per database)",
+     "put_per_s": 0.9,
+     "usd_server_month": 11.71,
+     "usd_db_month": 0.585
+    },
+    {
+     "mode": "local log 30 s (per database)",
+     "put_per_s": 0.15,
+     "usd_server_month": 1.95,
+     "usd_db_month": 0.098
+    },
+    {
+     "mode": "shared log 50 ms (log only)",
+     "put_per_s": 17.86,
+     "usd_server_month": 231.44,
+     "usd_db_month": 11.572
+    },
+    {
+     "mode": "shared log 50 ms + materialization",
+     "put_per_s": 17.93,
+     "usd_server_month": 232.42,
+     "usd_db_month": 11.621
+    },
+    {
+     "mode": "shared log 100 ms (log only)",
+     "put_per_s": 9.87,
+     "usd_server_month": 127.93,
+     "usd_db_month": 6.396
+    },
+    {
+     "mode": "shared log 100 ms + materialization",
+     "put_per_s": 9.95,
+     "usd_server_month": 128.9,
+     "usd_db_month": 6.445
+    },
+    {
+     "mode": "shared log 250 ms (log only)",
+     "put_per_s": 4.0,
+     "usd_server_month": 51.84,
+     "usd_db_month": 2.592
+    },
+    {
+     "mode": "shared log 250 ms + materialization",
+     "put_per_s": 4.08,
+     "usd_server_month": 52.81,
+     "usd_db_month": 2.641
+    },
+    {
+     "mode": "shared log 1000 ms (log only)",
+     "put_per_s": 1.0,
+     "usd_server_month": 12.96,
+     "usd_db_month": 0.648
+    },
+    {
+     "mode": "shared log 1000 ms + materialization",
+     "put_per_s": 1.08,
+     "usd_server_month": 13.94,
+     "usd_db_month": 0.697
+    }
+   ]
+  }
+ }
+}

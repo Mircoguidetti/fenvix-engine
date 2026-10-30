@@ -1,0 +1,18 @@
+{
+ "t_start": 1793303628.298738,
+ "t_end": 1793303928.298738,
+ "dbs": 20,
+ "rate": 10.0,
+ "mix": "write",
+ "wc": "default",
+ "n_read": 0,
+ "n_write": 60195,
+ "errors": 0,
+ "error_samples": [],
+ "read_p50_ms": null,
+ "read_p95_ms": null,
+ "read_p99_ms": null,
+ "write_p50_ms": 4.73,
+ "write_p95_ms": 15.12,
+ "write_p99_ms": 55.29
+}

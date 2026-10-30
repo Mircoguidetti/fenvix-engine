@@ -32,6 +32,7 @@ mod fields;
 mod find_ext;
 mod dsum;
 mod error;
+mod fair;
 mod expr;
 mod index;
 mod js;
@@ -39,6 +40,8 @@ mod keyenc;
 mod layout;
 mod lease;
 mod localcas;
+mod faults;
+mod locallog;
 mod natural;
 mod netguard;
 mod params;
@@ -154,9 +157,68 @@ struct Args {
     store: String,
     #[arg(long, default_value = "/tmp/mongo-server-store")]
     local_dir: String,
-    /// Cold wakes allowed at once; more queue (0 = unlimited).
-    #[arg(long, default_value_t = 0)]
+    /// Cold wakes allowed at once; more queue (0 = unlimited). Measured with 500 databases waking together after a restart
+    /// (MinIO, 2 CPUs, results-round3.md): first request p50/p99 2.7/16.4 s with 8, 3.9/12.1 s with 32, 6.1/8.6 s with 128,
+    /// 6.3/9.5 s without a limit. 128 gives the shortest tail, which is what a customer waits for.
+    #[arg(long, default_value_t = 128)]
     max_concurrent_wakes: usize,
+    /// Memtable size in MiB (slatedb's own estimate of the data) at which a writer flushes it to an L0 SST (slatedb's default
+    /// is 64 MiB per database). The process memory a memtable holds is about 4 times this estimate for 1 KB documents
+    /// (results-round3.md). 2 bounded the memory better but, on real S3, a database at 100 writes/s then flushed L0 so
+    /// often that its writes stalled on compaction (p99 2-3 s, request cost doubled); 8 had no such stall (results-round3.md,
+    /// part E). 0 = slatedb's default.
+    #[arg(long, default_value_t = 8)]
+    memtable_max_mb: u64,
+    /// One block cache shared by every open database, in MiB (slatedb's default is a 512 MiB cache per open database, with no
+    /// limit across databases: the memory then grew with the data read by each database).
+    #[arg(long, default_value_t = 256)]
+    block_cache_mb: u64,
+    /// One metadata cache (SST indexes and filters) shared by every open database, in MiB (slatedb's default: 128 MiB per database).
+    #[arg(long, default_value_t = 64)]
+    meta_cache_mb: u64,
+    /// Memory the change-stream event log may hold, in MiB (estimated). Older events are dropped first; a resume token older than
+    /// the oldest event kept fails with ChangeStreamHistoryLost. The log keeps whole documents, so without this limit every
+    /// write grew the process by ~4 KB until 100 000 events were held.
+    #[arg(long, default_value_t = 32)]
+    change_log_max_mb: usize,
+    /// Relaxed durability for databases without their own setting (`PUT /v1/databases/{db}/durability`), in milliseconds:
+    /// 0 (default) = off, otherwise 1000 to 10000. A write with write concern `{w: 1, j: false}` to such a database is
+    /// acknowledged before it is durable and becomes durable within this interval (lost if the process dies first);
+    /// `j: true`, `w: "majority"` and writes without a write concern stay durable before the acknowledgement.
+    #[arg(long, default_value_t = 0)]
+    relaxed_flush_ms: u64,
+    /// Adaptive group commit: the first write of a group waits a short window (half the database's average flush time, at
+    /// most --adaptive-group-commit-max-us) when more writes of the same database are expected within it, so they share
+    /// one WAL object. A database written rarely never waits.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    adaptive_group_commit: bool,
+    #[arg(long, default_value_t = 5000)]
+    adaptive_group_commit_max_us: u64,
+    /// PROTOTYPE, off by default: a durable log in this local directory. Writes are acknowledged after the log's fsync and
+    /// reach object storage in blocks every --local-log-upload-secs; a restart applies the records not yet uploaded. Losing
+    /// the disk loses up to that interval of acknowledged writes of every database. See locallog.rs.
+    #[arg(long, default_value = "")]
+    local_log_dir: String,
+    #[arg(long, default_value_t = 30)]
+    local_log_upload_secs: u64,
+    /// Local log: the restart gives up on replaying one database after this long (its records are kept for the next
+    /// restart) so that one stuck database (its S3 requests hanging or retried) does not keep the whole server down.
+    #[arg(long, default_value_t = 120)]
+    local_log_replay_timeout_secs: u64,
+    /// Fair queue between databases, only while the server is saturated: when the runtime runs a 10 ms timer late by more
+    /// than this (moving average, ms), new commands wait in their database's queue and start in turn (wakes first) as
+    /// others finish; below it every command starts at once. 0 = off. See fair.rs.
+    #[arg(long, default_value_t = 10.0)]
+    fair_lag_ms: f64,
+    /// While saturated (see --fair-lag-ms), at most this many commands run at once; the others wait in turn (0 = 4 per CPU).
+    #[arg(long, default_value_t = 0)]
+    fair_max_inflight: u64,
+    /// Safety limit per database, only against runaway clients: commands running or queued at once (0 = none).
+    #[arg(long, default_value_t = 10_000)]
+    db_max_inflight: u64,
+    /// Safety limit per database, only against runaway clients: commands in one second (0 = none).
+    #[arg(long, default_value_t = 100_000)]
+    db_max_rate: u64,
     /// Test control only: never treat a lease as expired or lost. Demonstrates what the ownership checks prevent.
     #[arg(long)]
     unsafe_skip_ownership_checks: bool,
@@ -172,13 +234,16 @@ struct Args {
     #[arg(long)]
     no_group_commit: bool,
     /// Seconds between manifest reads of an open writer (it learns of compactions, and retries a memtable flush that
-    /// stalled on a full L0, at this pace). One GET per open writer per interval.
-    #[arg(long, default_value_t = 30)]
+    /// stalled on a full L0, at this pace). One LIST and one GET per open writer per interval: 60 s is ~86 000 requests
+    /// a month per database open for writing (30 s, the old default, twice that). Must stay below --sst-gc-min-unref-secs.
+    #[arg(long, default_value_t = 60)]
     writer_poll_secs: u64,
     /// One lease per process (`processes/{holder}/_lease`, renewed every third of the ttl) plus a per-database owner
-    /// record written when the database is opened, instead of one lease object renewed per open database: an idle open
-    /// database then costs no request. Every process sharing the bucket must use the same setting.
-    #[arg(long)]
+    /// record written when the database is opened, instead of one lease object renewed per open database (6 PUT per minute
+    /// for every open database with the default ttl): an open database then costs no lease request. On by default;
+    /// `--process-lease false` goes back to one lease per database. Every process sharing the bucket should use the same
+    /// setting (a mix is safe, see lease.rs: each mode refuses the other's live records).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set, num_args = 0..=1, default_missing_value = "true")]
     process_lease: bool,
     /// Seconds between WAL garbage-collection passes over an open writer that is being written (0 = off, WAL objects
     /// then stay until the tenant has been idle and is collected as a whole).
@@ -348,6 +413,13 @@ fn main() -> Result<()> {
 
 async fn run() -> Result<()> {
     let args = Args::parse();
+    // The SST cleanup deletes an SST this long after it left the manifest; a reader that polls the manifest less often
+    // would read SSTs that are already gone.
+    anyhow::ensure!(args.writer_poll_secs < args.sst_gc_min_unref_secs, "--writer-poll-secs ({}) must be below --sst-gc-min-unref-secs ({})", args.writer_poll_secs, args.sst_gc_min_unref_secs);
+    anyhow::ensure!(
+        !args.unsafe_skip_ownership_checks || std::env::var("MONGO_ALLOW_UNSAFE_TEST_FLAGS").map_or(false, |v| v == "1"),
+        "--unsafe-skip-ownership-checks is a test control that lets two processes serve one database; it needs MONGO_ALLOW_UNSAFE_TEST_FLAGS=1"
+    );
     netguard::install(&args.net)?;
     let grantable = authz::parse_grantable(&args.grantable_roles).map_err(|e| anyhow::anyhow!(e))?;
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
@@ -368,6 +440,8 @@ async fn run() -> Result<()> {
                     b = b.with_allow_http(true);
                 }
             }
+            // S3 lists keys in order: the WAL cleanup finds the oldest WAL object with one LIST.
+            tenant_bench::lifecycle::LIST_SORTED.store(true, std::sync::atomic::Ordering::Relaxed);
             Arc::new(b.build()?)
         }
         "local" => {
@@ -378,10 +452,21 @@ async fn run() -> Result<()> {
         "memory" => Arc::new(object_store::memory::InMemory::new()),
         other => anyhow::bail!("unknown --store {other}"),
     };
+    let s3 = faults::wrap(s3);
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
     dbs::set_wake_limit(args.max_concurrent_wakes);
+    tenant_bench::lifecycle::MEMTABLE_MAX_BYTES.store(args.memtable_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    if args.block_cache_mb > 0 || args.meta_cache_mb > 0 {
+        tenant_bench::lifecycle::install_shared_cache(args.block_cache_mb << 20, args.meta_cache_mb << 20);
+    }
+    changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    ctl::durability::install(args.relaxed_flush_ms)?;
+    fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight);
+    let local_log_old = if args.local_log_dir.is_empty() { None } else { Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?) };
+    tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WRITER_POLL_SECS.store(args.writer_poll_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
@@ -419,6 +504,11 @@ async fn run() -> Result<()> {
     leases.process_mode.store(args.process_lease, std::sync::atomic::Ordering::Relaxed);
     leases.disabled.store(args.no_leases, std::sync::atomic::Ordering::Relaxed);
     leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
+    {
+        // The hot WAL cleanup of an open writer runs only while this process owns the tenant.
+        let l = Arc::clone(&leases);
+        let _ = tenant_bench::lifecycle::OWNER_VALID.set(Box::new(move |id: &str| l.disabled.load(std::sync::atomic::Ordering::Relaxed) || l.valid(id)));
+    }
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();
@@ -443,8 +533,15 @@ async fn run() -> Result<()> {
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
     }
     server.spawn_txn_janitor();
+    // The local log is applied before the control layer starts: no erase, restore or fork (resumed or new) may run on a
+    // database whose acknowledged writes are still only in the log, and an erase's drop record is then always seen first.
+    if let Some(old) = local_log_old {
+        let t = std::time::Instant::now();
+        let (n, recs) = locallog::recover(&dbs, old, Duration::from_secs(args.local_log_replay_timeout_secs)).await?;
+        eprintln!("local log: restart applied {recs} records to {n} databases in {:.1} s", t.elapsed().as_secs_f64());
+        locallog::get().unwrap().spawn_uploader();
+    }
     ctl::start(Arc::clone(&dbs), Arc::clone(&server), lc_for_ctl, holder.clone(), args.ctl.clone(), usage).await?;
-
     let tls_cfg = Arc::new(tls::load(&tls::Options { mode: &args.tls_mode, certificate_key_file: &args.tls_certificate_key_file, ca_file: &args.tls_ca_file, allow_without_certificates: args.tls_allow_connections_without_certificates })?);
     tls::install(Arc::clone(&tls_cfg));
     let listener = TcpListener::bind(&args.listen).await?;

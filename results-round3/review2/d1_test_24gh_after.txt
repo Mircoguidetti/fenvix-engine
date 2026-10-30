@@ -1,0 +1,8 @@
+write between the restarts: refused 2 times, acknowledged after 1.0 s; documents then visible: 6
+refusal: database g1 is in recovery: writes acknowledged before the restart are still being applied from the local log; retry, full error: {'ok': 0.0, 'errmsg': 'database g1 is in recovery: writes acknowledged
+acknowledged writes of g1 missing after the next restart: []
+.write while h1's records are kept: refused (134: database h1 is in recovery: writes acknowledged before the restart are still being applied from the local log; retry, full error: {'ok': 0.0, 'errmsg': 'databas)
+read while h1's records are kept: refused (134)
+kept writes of h1 missing after the next restart: [] | refused as another writer: False
+.
+2 passed, 6 deselected in 22.98s

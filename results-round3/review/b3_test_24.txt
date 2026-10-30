@@ -1,0 +1,23 @@
+== binary: b4-bin (with the B3 fixes)
+run 3 writes after restart: 10 of 10
+.first failure at write 297; acknowledged after it: 0
+acknowledged 297, missing after restart 0
+.doc: {'_id': 1, 'v': 2} index v=1: [] index v=2: [{'_id': 1, 'v': 2}]
+.write through P1: error: ownership of database d was lost before the write was acknowledged; its outcome is unknown, retry, full error: {'ok': 0.0, 'errmsg': 'ownership of databa | present in the database: False
+4 passed in 39.06s
+== binary: b3-ctl-bin (control: the four B3 fixes switched off (test hooks kept))
+run 3 writes after restart: 0 of 10
+Ffirst failure at write 297; acknowledged after it: 302
+acknowledged 599, missing after restart 302
+Fdoc: {'_id': 1, 'v': 1} index v=1: [{'_id': 1, 'v': 1}] index v=2: []
+Fwrite through P1: acknowledged | present in the database: False
+E   AssertionError: run 3's acknowledged writes lost: 10 of 10
+/home/user/fenvix-engine/ctl-tests/test_24_local_log.py:65: AssertionError: run 3's acknowledged writes lost: 10 of 10
+E   AssertionError: 302 acknowledged writes lost (first [298, 299, 300, 301, 302])
+/home/user/fenvix-engine/ctl-tests/test_24_local_log.py:97: AssertionError: 302 acknowledged writes lost (first [298, 299, 300, 301, 302])
+E   AssertionError: P1's replay overwrote the newer write: {'_id': 1, 'v': 1}
+E   AssertionError: P1 acknowledged a write after losing the database, and the write is not there
+    assert ('acknowledged' != 'acknowledged' or False)
+/home/user/fenvix-engine/ctl-tests/test_24_local_log.py:181: AssertionError: P1 acknowledged a write after losing the database, and the write is not there
+FAILED test_24_local_log.py::test_b_a_failed_write_stops_the_process_and_loses_no_acknowledged_write
+4 failed in 24.35s
