@@ -1,0 +1,37 @@
+{
+ "acked_total": 4967,
+ "binary": "/tmp/claude-0/final10-bin",
+ "binary_sha256": "d811978b03a84b074c27de0b8d0c83e745dc2b6c57b2e3c5485a55cb1135bbe5",
+ "dbs": 4,
+ "lost_total": 0,
+ "mode": "local",
+ "note": "SIGKILL kills the process only: the page cache survives, so this does not test that fdatasync reached the disk (power or VM loss is not tested)",
+ "rate_per_db": 20,
+ "secs_before_kill": 20,
+ "trials": [
+  {
+   "acked": 1656,
+   "lost": 0,
+   "lost_sample": [],
+   "replayed": 1670,
+   "restart_to_port_open_s": 0.2,
+   "trial": 0
+  },
+  {
+   "acked": 1656,
+   "lost": 0,
+   "lost_sample": [],
+   "replayed": 1675,
+   "restart_to_port_open_s": 0.2,
+   "trial": 1
+  },
+  {
+   "acked": 1655,
+   "lost": 0,
+   "lost_sample": [],
+   "replayed": 1675,
+   "restart_to_port_open_s": 0.2,
+   "trial": 2
+  }
+ ]
+}
