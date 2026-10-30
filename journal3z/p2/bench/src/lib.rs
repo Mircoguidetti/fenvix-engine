@@ -445,10 +445,16 @@ impl WriterProc {
     pub fn cont(&self) {
         signal(&self.child, "CONT");
     }
-    pub fn set_clock_offset(&self, ms: i64) {
-        write_atomic(&self.faults, &json!({"clock_offset_ms": ms}).to_string());
+    /// The writer's clocks: wall clock offset (jumps; the lease does not use it) and monotonic clock rate (drift).
+    pub fn set_clock(&self, offset_ms: i64, rate_ppm: i64) {
+        self.set_clocks(offset_ms, rate_ppm, 0);
+    }
+    /// Also `mono_jump_ms`: total forward jump of the monotonic clock (only grows).
+    pub fn set_clocks(&self, offset_ms: i64, rate_ppm: i64, mono_jump_ms: u64) {
+        write_atomic(&self.faults, &json!({"clock_offset_ms": offset_ms, "clock_rate_ppm": rate_ppm, "mono_jump_ms": mono_jump_ms}).to_string());
         std::thread::sleep(Duration::from_millis(120));
     }
+
     /// `OPEN` events: (time, db, epoch, barrier).
     pub fn opens(&self) -> Vec<(Instant, u64, u64, u64)> {
         self.events
@@ -734,9 +740,78 @@ pub async fn check(meta: &Meta, acks: &[Ack], opens: &[(u64, u64, u64)], dbs: u6
 /// A short config for tests (seconds instead of tens of seconds; the production defaults are in `ServerCfg`).
 pub fn fast_config() -> Value {
     json!({
-        "lease_ttl_ms": 2000, "lease_skew_ms": 300, "upload_every_ms": 500, "release_after_ms": 1000,
+        "lease_ttl_ms": 2000, "lease_margin_ms": 300, "upload_every_ms": 500, "release_after_ms": 1000,
         "preferred_poll_ms": 100, "other_poll_ms": 200, "open_timeout_ms": 2000, "tick_ms": 50
     })
+}
+
+// ========================================================================================================== leases
+
+/// Lease overlaps (design §5.1): a writer took a database's lease (`TAKEN`, real time it sent the write) while
+/// another epoch of that database still believed it held it (its last `HOLD` before that moment says until a later
+/// real time, and it had not printed `LOST` yet). Each line of every writer process, all incarnations.
+pub fn lease_overlaps(writers: &[&WriterProc]) -> Vec<String> {
+    lease_overlaps_split(writers, &[], 0).0
+}
+
+/// As [`lease_overlaps`], split in two: overlaps where the taking writer's monotonic clock jumped forward (`jumps`:
+/// writer index, real ms) within `window_ms` before the takeover (the rule's assumption broken on purpose: expected,
+/// the fences must protect), and the others (a failure).
+pub fn lease_overlaps_split(writers: &[&WriterProc], jumps: &[(usize, i64)], window_ms: i64) -> (Vec<String>, Vec<String>) {
+    #[derive(Clone, Copy)]
+    enum E {
+        Taken(i64),
+        Hold(i64, i64),
+        Lost(i64),
+    }
+    let mut ev: Vec<(u64, u64, usize, E)> = vec![]; // (db, epoch, writer, event)
+    for w in writers {
+        for (_, l) in w.events.lines() {
+            let n = |k: &str| field(&l, k).and_then(|x| x.parse::<i64>().ok());
+            let (Some(db), Some(ep)) = (n("db"), n("epoch")) else { continue };
+            let e = if l.starts_with("TAKEN ") {
+                E::Taken(n("at_real_ms").unwrap_or(0))
+            } else if l.starts_with("HOLD ") {
+                E::Hold(n("now_real_ms").unwrap_or(0), n("until_real_ms").unwrap_or(0))
+            } else if l.starts_with("LOST ") {
+                match n("at_real_ms") {
+                    Some(t) => E::Lost(t),
+                    None => continue,
+                }
+            } else {
+                continue;
+            };
+            ev.push((db as u64, ep as u64, w.index, e));
+        }
+    }
+    let (mut out, mut expected) = (vec![], vec![]);
+    for &(db, ep, w, e) in &ev {
+        let E::Taken(at) = e else { continue };
+        // every other epoch of this db: its belief at time `at`
+        let mut others: Vec<(u64, usize)> = ev.iter().filter(|x| x.0 == db && x.1 != ep).map(|x| (x.1, x.2)).collect();
+        others.sort();
+        others.dedup();
+        for (oe, ow) in others {
+            let mut until = i64::MIN;
+            let mut lost_before = false;
+            for x in ev.iter().filter(|x| x.0 == db && x.1 == oe && x.2 == ow) {
+                match x.3 {
+                    E::Hold(now, u) if now <= at => until = until.max(u),
+                    E::Lost(t) if t <= at => lost_before = true,
+                    _ => {}
+                }
+            }
+            if !lost_before && until > at {
+                let line = format!("db {db}: writer {w} took epoch {ep} at {at} while writer {ow} epoch {oe} held it until {until} ({} ms overlap)", until - at);
+                if jumps.iter().any(|&(jw, t)| jw == w && t <= at && at < t + window_ms) {
+                    expected.push(line);
+                } else {
+                    out.push(line);
+                }
+            }
+        }
+    }
+    (out, expected)
 }
 
 // ======================================================================================================= disk checks

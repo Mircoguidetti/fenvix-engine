@@ -1,0 +1,1 @@
+{"checker": "mc2", "epochs": 1, "max_idx": 2, "mutation": "none", "prune": true, "symmetry": false, "threads": 2, "distinct_states": 1804416, "explored": 1804416, "max_depth": 29, "max_acked": 1, "verdict": "complete: no violation", "secs": 29.4}

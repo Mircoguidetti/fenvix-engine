@@ -1,0 +1,382 @@
+[
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "b1",
+      "seed": 14,
+      "step": 7092,
+      "what": "node 3 accepted epoch 1 for db 0 after promising 3"
+    },
+    "mutation": "no_fencing",
+    "seeds_tried": 14,
+    "steps": 2607092,
+    "wall_s": 2.592971627
+  },
+  {
+    "caught": false,
+    "checker": "(a) durability only",
+    "first": null,
+    "mutation": "no_fencing",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 22.829043399
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "c",
+      "seed": 1,
+      "step": 154,
+      "what": "node 1 acknowledged db 1 index 2 holding None, writer sent Some((1, 1))"
+    },
+    "mutation": "ack_gap",
+    "seeds_tried": 1,
+    "steps": 154,
+    "wall_s": 0.000053518
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 164,
+      "what": "db 1: acknowledged write 1 at 2 (epoch 1) not recoverable from nodes 1+2: chosen source Some((1, 1)) gives None; S3 marker 0"
+    },
+    "mutation": "ack_gap",
+    "seeds_tried": 1,
+    "steps": 164,
+    "wall_s": 0.000050289
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "c",
+      "seed": 16,
+      "step": 112269,
+      "what": "node 5 acknowledged db 2 index 431 holding Some((63, 18446744073709551615)), writer sent Some((68, 18446744073709551615))"
+    },
+    "mutation": "keep_diverged",
+    "seeds_tried": 16,
+    "steps": 3112269,
+    "wall_s": 3.273372415
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 20,
+      "step": 107859,
+      "what": "db 1: acknowledged write 683 at 268 (epoch 62) not recoverable from nodes 1+2: chosen source Some((2, 298)) gives Some(657); S3 marker 266"
+    },
+    "mutation": "keep_diverged",
+    "seeds_tried": 20,
+    "steps": 3907859,
+    "wall_s": 4.000074172
+  },
+  {
+    "caught": false,
+    "checker": "all invariants",
+    "first": null,
+    "mutation": "forget_fence",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 21.650948833
+  },
+  {
+    "caught": false,
+    "checker": "(a) durability only",
+    "first": null,
+    "mutation": "forget_fence",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 22.684920488
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 268,
+      "what": "db 0: acknowledged write 4 at 2 (epoch 1) not recoverable from nodes 2+3: chosen source Some((2, 1)) gives None; S3 marker 0"
+    },
+    "mutation": "ack_on_one",
+    "seeds_tried": 1,
+    "steps": 268,
+    "wall_s": 0.00015012
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 268,
+      "what": "db 0: acknowledged write 4 at 2 (epoch 1) not recoverable from nodes 2+3: chosen source Some((2, 1)) gives None; S3 marker 0"
+    },
+    "mutation": "ack_on_one",
+    "seeds_tried": 1,
+    "steps": 268,
+    "wall_s": 0.000154102
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "a",
+      "seed": 10,
+      "step": 28786,
+      "what": "db 1: acknowledged write 592 at 225 (epoch 13) not recoverable from nodes 4+2: chosen source Some((4, 290)) gives Some(526); S3 marker 223"
+    },
+    "mutation": "recovery_longest",
+    "seeds_tried": 10,
+    "steps": 1828786,
+    "wall_s": 1.746194519
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 10,
+      "step": 28786,
+      "what": "db 1: acknowledged write 592 at 225 (epoch 13) not recoverable from nodes 4+2: chosen source Some((4, 290)) gives Some(526); S3 marker 223"
+    },
+    "mutation": "recovery_longest",
+    "seeds_tried": 10,
+    "steps": 1828786,
+    "wall_s": 1.871748466
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "c",
+      "seed": 1,
+      "step": 13905,
+      "what": "node 4 acknowledged db 0 index 261 holding Some((9, 18446744073709551615)) but committed is (7, 742)"
+    },
+    "mutation": "recovery_single",
+    "seeds_tried": 1,
+    "steps": 13905,
+    "wall_s": 0.022485309
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 13906,
+      "what": "db 0: acknowledged write 742 at 261 (epoch 7) not recoverable from nodes 4+2: chosen source Some((4, 261)) gives Some(18446744073709551615); S3 marker 260"
+    },
+    "mutation": "recovery_single",
+    "seeds_tried": 1,
+    "steps": 13906,
+    "wall_s": 0.022188078
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "d",
+      "seed": 1,
+      "step": 2110,
+      "what": "node 1 trims db 2 to 49 while S3 holds only up to 0"
+    },
+    "mutation": "trim_before_upload",
+    "seeds_tried": 1,
+    "steps": 2110,
+    "wall_s": 0.003671526
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 2114,
+      "what": "db 2: acknowledged write 120 at 40 (epoch 1) not recoverable from nodes 1+2: chosen source Some((2, 39)) gives None; S3 marker 0"
+    },
+    "mutation": "trim_before_upload",
+    "seeds_tried": 1,
+    "steps": 2114,
+    "wall_s": 0.003850594
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 582,
+      "what": "db 2: acknowledged write 29 at 11 (epoch 1) not recoverable from nodes 1+2: chosen source Some((1, 10)) gives None; S3 marker 0"
+    },
+    "mutation": "ack_before_fsync",
+    "seeds_tried": 1,
+    "steps": 582,
+    "wall_s": 0.000536171
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 582,
+      "what": "db 2: acknowledged write 29 at 11 (epoch 1) not recoverable from nodes 1+2: chosen source Some((1, 10)) gives None; S3 marker 0"
+    },
+    "mutation": "ack_before_fsync",
+    "seeds_tried": 1,
+    "steps": 582,
+    "wall_s": 0.000514559
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 1780,
+      "what": "db 2: acknowledged write 122 at 41 (epoch 1) not recoverable from nodes 2+3: chosen source Some((3, 40)) gives None; S3 marker 0"
+    },
+    "mutation": "ignore_fsync_error",
+    "seeds_tried": 1,
+    "steps": 1780,
+    "wall_s": 0.002753599
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 1780,
+      "what": "db 2: acknowledged write 122 at 41 (epoch 1) not recoverable from nodes 2+3: chosen source Some((3, 40)) gives None; S3 marker 0"
+    },
+    "mutation": "ignore_fsync_error",
+    "seeds_tried": 1,
+    "steps": 1780,
+    "wall_s": 0.002748542
+  },
+  {
+    "caught": false,
+    "checker": "all invariants",
+    "first": null,
+    "mutation": "skip_store_fence",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 21.997342302
+  },
+  {
+    "caught": false,
+    "checker": "(a) durability only",
+    "first": null,
+    "mutation": "skip_store_fence",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 21.523961992
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 13915,
+      "what": "db 0: acknowledged write 386 at 128 (epoch 3) not recoverable from nodes 1+2: chosen source None gives None; S3 marker 127"
+    },
+    "mutation": "wipe_same_id",
+    "seeds_tried": 1,
+    "steps": 13915,
+    "wall_s": 0.018004931
+  },
+  {
+    "caught": true,
+    "checker": "(a) durability only",
+    "first": {
+      "inv": "a",
+      "seed": 1,
+      "step": 13915,
+      "what": "db 0: acknowledged write 386 at 128 (epoch 3) not recoverable from nodes 1+2: chosen source None gives None; S3 marker 127"
+    },
+    "mutation": "wipe_same_id",
+    "seeds_tried": 1,
+    "steps": 13915,
+    "wall_s": 0.0256696
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "L",
+      "seed": 48,
+      "step": 89905,
+      "what": "db 2: writers [(1, 52), (2, 57)] (writer, epoch) all believe they hold the lease"
+    },
+    "mutation": "lease_no_margin",
+    "seeds_tried": 48,
+    "steps": 9489905,
+    "wall_s": 10.450342207
+  },
+  {
+    "caught": false,
+    "checker": "(a) durability only",
+    "first": null,
+    "mutation": "lease_no_margin",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 22.202151992
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "L",
+      "seed": 4,
+      "step": 156513,
+      "what": "db 1: writers [(1, 127), (2, 124)] (writer, epoch) all believe they hold the lease"
+    },
+    "mutation": "lease_wall_clock",
+    "seeds_tried": 4,
+    "steps": 756513,
+    "wall_s": 0.835718776
+  },
+  {
+    "caught": false,
+    "checker": "(a) durability only",
+    "first": null,
+    "mutation": "lease_wall_clock",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 22.421466667
+  },
+  {
+    "caught": true,
+    "checker": "all invariants",
+    "first": {
+      "inv": "L",
+      "seed": 1,
+      "step": 14163,
+      "what": "db 2: writers [(0, 5), (2, 9)] (writer, epoch) all believe they hold the lease"
+    },
+    "mutation": "lease_holder_only",
+    "seeds_tried": 1,
+    "steps": 14163,
+    "wall_s": 0.017448301
+  },
+  {
+    "caught": false,
+    "checker": "(a) durability only",
+    "first": null,
+    "mutation": "lease_holder_only",
+    "seeds_tried": 100,
+    "steps": 20000000,
+    "wall_s": 21.269342427
+  }
+]

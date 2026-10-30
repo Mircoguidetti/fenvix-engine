@@ -44,8 +44,9 @@ flushed to S3 first, and then occupies no journal space (only a 32-byte fence re
 
 ## 2. Roles and state
 
-**Writer** — the engine server process that holds the database's lease. Exactly one *believes* it is the writer most of
-the time; because lease expiry is decided by clocks, two may believe it for a while (frozen process, clock skew). The
+**Writer** — the engine server process that holds the database's lease. Exactly one *believes* it is the writer; with
+the takeover rule of §5.1 two can believe it at once only if a monotonic clock breaks its assumption (runs faster or
+slower than the margin covers, or jumps forward), which the protocol still tolerates. The
 protocol makes the older one harmless: it can no longer have a write acknowledged (§5.3).
 
 **Journal node** (3 per database, one per AZ) — a passive acceptor and store. It does not run the database, does not
@@ -134,7 +135,42 @@ an expired lease, or re-acquire its own), the conditional PUT writes `seq + 1`; 
 `e` for `d` until it loses or releases the lease. Renewals also bump `seq` but do **not** change the epoch the server
 uses (they could: a higher epoch from the same server only fences itself). Two servers never obtain the same `seq`
 (conditional PUT on one object is linearizable in S3), and a later acquisition always gets a larger one. **Safety
-never depends on clocks**: clocks only decide when a server *may try* to take over (`expiresMs + skew`).
+never depends on clocks**: clocks only decide when a server *may try* to take over.
+
+**Takeover rule (changed on 30-10-2026, founder's decision; replaces `expiresMs + skew`).** No time is written in
+the lease and no server compares a time written by another machine with its own clock:
+
+- *Holder.* It may act (accept and acknowledge writes) only until `sent + T` on **its own monotonic clock**, where
+  `sent` is when it sent the conditional PUT that created or last renewed its lease (before the request, not when the
+  answer came back). It renews every `T/3`.
+- *Observer* (a server that wants the database). It reads the lease and remembers the whole content it saw (holder,
+  `seq`, members, version tag) and the time of its **first** read of that content, on **its own monotonic clock**. It
+  may try to take over only after it has seen the **same content, unchanged**, for `T + M` (`T` = 10 s, margin `M` =
+  1.5 s), and its takeover PUT is conditional on exactly that version. Any change (a renewal) restarts its count. A
+  free lease (released) may be taken at once; a server may re-take its own (same process).
+- *Why they cannot overlap.* The observer's count starts at its first read of a version, which is after that version
+  was written, which is after the holder sent the write: the observer counts `T + M` from a later point than the holder
+  counts `T`. The margin covers clocks running at different **speeds**: with `T` = 10 s and `M` = 1.5 s each monotonic
+  clock may run up to ≈ 6.9 % fast or slow (`(T + M)(1 − ρ) ≥ T(1 + ρ)`); real clocks drift by parts per million.
+- *What it assumes:* monotonic clocks whose rate error is bounded (covered by the margin); a holder that checks its
+  deadline before each acknowledgement. *What it no longer assumes:* that the clocks of different machines show the
+  same time. A wall clock that is set back or forward (NTP step, manual change) changes nothing, because only
+  monotonic clocks are used. A monotonic clock that jumps **forward** by more than the margin (for example a virtual
+  machine paused and resumed with its clock catching up) can make an observer take over early: then two servers may
+  believe they hold the database for a while, which costs availability (the older one's writes are refused by the
+  fence), never safety.
+- *Cost.* A takeover after the holder dies takes at most `T + M` + one poll interval + the open (≈ 12.5 s + open
+  with a 1 s poll), whatever the clocks show; before, clock offsets between machines added directly to it.
+- Checked by: `journal3z_core::lease` (the rule, shared by the simulator and the writer; unit tests with drift and
+  wall-clock jumps), the simulator's invariant **L** ("never two writers that both believe they hold a database"),
+  the exhaustive check `journal3z/mc/src/bin/lease_mc.rs`, and three negative controls (`lease_no_margin`,
+  `lease_wall_clock`, `lease_holder_only`) that the simulator, the exhaustive check and the bench tests must catch.
+
+**To do in the engine integration (P6):** round3's `lease.rs` decides expiry by comparing `expiresMs` (written by
+the holder, from its wall clock) with the reader's wall clock plus a skew allowance: the design flaw this rule
+replaces (clock offsets between machines lengthen or shorten takeovers; a wall clock that jumps can cause an early
+takeover). The engine's lease must move to the observer rule above. Not done here: the engine code is not touched in
+phase 2 (founder's decision 1).
 
 ### 5.2 Opening a database (becoming the writer) — Paxos phase 1 + Raft log choice
 
@@ -335,9 +371,11 @@ round3 `LocalLog::trim`. A segment older than 15 minutes that is still pinned is
   databases on those nodes are unavailable; nothing acknowledged is lost.
 - **fsync error:** the node exits (§5.3). Equivalent to a node crash; it is caught up after restart.
 - **Slow disk** on one node: commit uses the 2 fastest; a slow node only lags (latency impact only if two are slow).
-- **Clock skew:** cannot break (a)–(d) (no rule uses a clock). Skew larger than the lease allowance (1.5 s in round3)
-  makes a takeover happen while the old owner still believes it holds the lease: the old owner's later writes are
-  rejected by the fence (availability blip for its in-flight writes; the simulator injects skews up to 10 s).
+- **Clock skew:** cannot break (a)–(d) (no rule uses a clock), and since the §5.1 takeover rule of 30-10-2026 it does
+  not change takeovers either: only each server's own monotonic clock is used. Clock rate drift within the margin
+  (≈ 6.9 % per clock) cannot make two servers believe they hold a database; beyond it (or a monotonic clock jumping
+  forward) an early takeover is possible, and the old owner's later writes are rejected by the fence (availability
+  blip for its in-flight writes).
 - **S3 unavailable:** acknowledgements continue (they do not touch S3) until the per-database hard cap; trims stop;
   **takeovers stop** (they need the lease CAS and the SlateDB open). Wakes of sleeping databases stop.
 - **Frozen writer resumes** after another took over: its next `APPEND` gets `REJECT`; it abandons the database. Any
@@ -347,7 +385,7 @@ round3 `LocalLog::trim`. A segment older than 15 minutes that is still pinned is
 ## 9. Failure matrix
 
 Assumptions: 3 nodes in 3 AZs; each engine server also runs one journal node; lease TTL `T` (round3 default 30 s,
-proposed 10 s in journal mode, because a too-early takeover is now harmless) + skew allowance 1.5 s; upload interval
+proposed 10 s in journal mode, because a too-early takeover is now harmless) + takeover margin 1.5 s on the observer's monotonic clock (§5.1); upload interval
 `U` (30–60 s). "Unavailable" = writes to the affected databases fail or wait. Times are **estimated** from the
 protocol (lease TTL + 1–3 round trips + a SlateDB open of ≈0.1–1 s), except where marked measured.
 

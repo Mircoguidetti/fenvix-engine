@@ -10,6 +10,7 @@
 
 use crate::rng::Rng;
 use bytes::Bytes;
+use journal3z_core::lease::{holder_valid_until, LeaseBug, LeaseView, Observer, TakeoverRule};
 use journal3z_core::*;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
 
@@ -23,8 +24,18 @@ const BARRIER_VAL: u64 = u64::MAX;
 pub struct Params {
     pub dbs: u64,
     pub lease_ttl: Time,
-    pub skew_allow: Time,
+    /// Takeover margin (design §5.1): an observer waits `lease_ttl + lease_margin` of unchanged lease on its own
+    /// monotonic clock.
+    pub lease_margin: Time,
+    /// Wall-clock jumps (not used by the lease rule; used by the `lease_wall_clock` negative control).
     pub max_clock_offset: Time,
+    /// Monotonic clock rate drift, parts per million (the margin must cover it: here 150 ms over 2 s allows ±3.6 %).
+    pub max_rate_ppm: u64,
+    /// Negative control of the takeover rule.
+    pub lease_bug: LeaseBug,
+    /// Targeted lease runs: every fault freezes a writer that holds databases, with the frozen writer's monotonic
+    /// clock at the slowest allowed rate and the others at the fastest (the worst case the margin must cover).
+    pub lease_focus: bool,
     pub write_gap: (Time, Time),
     pub upload_every: (Time, Time),
     pub fault_every: (Time, Time),
@@ -49,8 +60,11 @@ impl Default for Params {
         Params {
             dbs: 3,
             lease_ttl: 2 * SEC,
-            skew_allow: 150 * MS,
+            lease_margin: 150 * MS,
             max_clock_offset: 1500 * MS,
+            max_rate_ppm: 30_000,
+            lease_bug: LeaseBug::None,
+            lease_focus: false,
             write_gap: (2 * MS, 20 * MS),
             upload_every: (100 * MS, 800 * MS),
             fault_every: (50 * MS, 400 * MS),
@@ -75,7 +89,8 @@ pub enum Ent {
 
 #[derive(Clone, Debug)]
 pub enum S3Op {
-    Acquire { db: DbId },
+    /// Read the lease; take it if free, ours, or (when `expect` is set) still at version `expect`.
+    Acquire { db: DbId, expect: Option<u64> },
     Renew { db: DbId },
     Release { db: DbId },
     OpenStore { db: DbId, epoch: Epoch },
@@ -85,7 +100,8 @@ pub enum S3Op {
 
 #[derive(Clone, Debug)]
 pub enum S3Res {
-    Lease { ok: bool, seq: u64, members: Vec<NodeId>, sent_local: Time },
+    /// `sent_local` = the sender's monotonic clock when it sent the request; `view` = what it read.
+    Lease { ok: bool, seq: u64, members: Vec<NodeId>, sent_local: Time, view: LeaseView },
     Store { ok: bool, applied: Idx, epoch: Epoch },
     Upload { ok: bool, upto: Idx, epoch: Epoch },
     Unreachable,
@@ -180,8 +196,10 @@ pub struct WDb {
     pub core: Option<WriterDb>,
     pub epoch: Epoch,
     pub members: Vec<NodeId>,
+    /// on this writer's monotonic clock
     pub valid_until: Time,
     last_renew_sent: Time,
+    observer: Observer,
     renewing: bool,
     pub pending: BTreeMap<Idx, u64>,
     uploading: bool,
@@ -194,7 +212,7 @@ pub struct WDb {
 
 impl WDb {
     fn new() -> Self {
-        WDb { st: St::Idle, core: None, epoch: 0, members: vec![], valid_until: 0, last_renew_sent: 0, renewing: false, pending: BTreeMap::new(), uploading: false, next_upload: 0, goal: Goal::None, drain_upload_sent: false, last_try: 0, commit_seen: 0 }
+        WDb { st: St::Idle, core: None, epoch: 0, members: vec![], valid_until: 0, last_renew_sent: 0, observer: Observer::default(), renewing: false, pending: BTreeMap::new(), uploading: false, next_upload: 0, goal: Goal::None, drain_upload_sent: false, last_try: 0, commit_seen: 0 }
     }
 }
 
@@ -204,14 +222,20 @@ pub struct Writer {
     freeze_token: u64,
     deferred: Vec<Ev>,
     pub gen: u64,
+    /// wall clock = real time + offset (jumps)
     pub offset: i64,
+    /// monotonic clock: mono_base + (now - mono_base_real) * (1 + rate_ppm / 1e6)
+    pub rate_ppm: i64,
+    mono_base: Time,
+    mono_base_real: Time,
+    /// last time this writer's monotonic clock jumped forward (the takeover rule's assumption broken on purpose)
+    mono_jumped_at: Option<Time>,
     pub dbs: BTreeMap<DbId, WDb>,
     ticks: u64,
 }
 
 pub struct Lease {
     holder: Option<(usize, u64)>,
-    expires: Time,
     pub seq: u64,
     pub members: Vec<NodeId>,
 }
@@ -236,6 +260,9 @@ pub struct Stats {
     pub sleeps: u64,
     pub moves: u64,
     pub late_acks: u64,
+    /// two writers believed they held a database within the window after a monotonic clock jump (expected: the
+    /// rule's assumption was broken on purpose; the fences must keep every acknowledged write)
+    pub lease_overlaps_after_jump: u64,
     pub mismatches_sent: u64,
     pub fenced_replies: u64,
     pub faults: BTreeMap<&'static str, u64>,
@@ -300,6 +327,16 @@ pub struct World {
     pub trace: Vec<String>,
 }
 
+fn lease_view(l: &Lease) -> LeaseView {
+    use std::hash::{Hash, Hasher};
+    let h = |x: &dyn Fn(&mut std::collections::hash_map::DefaultHasher)| {
+        let mut s = std::collections::hash_map::DefaultHasher::new();
+        x(&mut s);
+        s.finish()
+    };
+    LeaseView { free: l.holder.is_none(), content: h(&|s| (l.holder, l.seq, &l.members).hash(s)), holder: h(&|s| l.holder.hash(s)) }
+}
+
 fn val(e: &Entry) -> u64 {
     if e.barrier {
         BARRIER_VAL
@@ -357,10 +394,10 @@ impl World {
                 fail_next: false,
                 dead: false,
             });
-            w.writers.push(Writer { up: true, frozen: false, freeze_token: 0, deferred: vec![], gen: 0, offset: 0, dbs: (0..p.dbs).map(|d| (d, WDb::new())).collect(), ticks: 0 });
+            w.writers.push(Writer { up: true, frozen: false, freeze_token: 0, deferred: vec![], gen: 0, offset: 0, rate_ppm: 0, mono_base: 0, mono_base_real: 0, mono_jumped_at: None, dbs: (0..p.dbs).map(|d| (d, WDb::new())).collect(), ticks: 0 });
         }
         for d in 0..p.dbs {
-            w.leases.insert(d, Lease { holder: None, expires: 0, seq: 0, members: vec![1, 2, 3] });
+            w.leases.insert(d, Lease { holder: None, seq: 0, members: vec![1, 2, 3] });
             w.stores.insert(d, Store { slate_epoch: 0, applied: 0, content: BTreeMap::new() });
             let pw = w.rng.range(0, 2) as usize;
             w.preferred.insert(d, pw);
@@ -394,8 +431,52 @@ impl World {
         self.at(t, ev);
     }
 
+    /// Wall clock of writer `w` (jumps with `offset`).
     fn local(&self, w: usize) -> Time {
         (self.now as i64 + self.writers[w].offset).max(0) as Time
+    }
+
+    /// Monotonic clock of writer `w` (never jumps; runs at 1 + rate).
+    pub fn mono(&self, w: usize) -> Time {
+        let wr = &self.writers[w];
+        let dt = (self.now - wr.mono_base_real) as i128;
+        (wr.mono_base as i128 + dt + dt * wr.rate_ppm as i128 / 1_000_000) as Time
+    }
+
+    fn set_rate(&mut self, w: usize, ppm: i64) {
+        let m = self.mono(w);
+        let wr = &mut self.writers[w];
+        wr.mono_base = m;
+        wr.mono_base_real = self.now;
+        wr.rate_ppm = ppm;
+    }
+
+    fn rule(&self) -> TakeoverRule {
+        TakeoverRule { ttl: self.p.lease_ttl, margin: self.p.lease_margin, bug: self.p.lease_bug }
+    }
+
+    /// (L) Never two writers that both believe they hold a database's lease (own monotonic clock below the time
+    /// their last successful acquire / renew allows).
+    fn check_lease_overlap(&mut self) {
+        for db in 0..self.p.dbs {
+            let holders: Vec<(usize, Epoch)> = (0..self.writers.len())
+                .filter(|&w| {
+                    let wr = &self.writers[w];
+                    let d = &wr.dbs[&db];
+                    wr.up && matches!(d.st, St::OpeningStore | St::Opening | St::Active | St::Draining | St::Reconfiguring) && self.mono(w) < d.valid_until
+                })
+                .map(|w| (w, self.writers[w].dbs[&db].epoch))
+                .collect();
+            if holders.len() > 1 {
+                let window = 3 * (self.p.lease_ttl + self.p.lease_margin);
+                if self.writers.iter().any(|w| w.mono_jumped_at.map_or(false, |t| self.now < t + window)) {
+                    self.stats.lease_overlaps_after_jump += 1;
+                    continue;
+                }
+                self.violate("L", format!("db {db}: writers {holders:?} (writer, epoch) all believe they hold the lease"));
+                return;
+            }
+        }
     }
 
     fn fault(&mut self, name: &'static str) {
@@ -455,7 +536,7 @@ impl World {
     }
 
     fn s3(&mut self, w: usize, op: S3Op) {
-        let sent_local = self.local(w);
+        let sent_local = self.mono(w);
         let gen = self.writers[w].gen;
         let d = self.rng.range(3 * MS, 30 * MS);
         self.after(d, Ev::S3Exec { w, gen, op, sent_local });
@@ -477,6 +558,9 @@ impl World {
             self.step(it.ev);
             if self.violation.is_none() {
                 self.check_durability();
+            }
+            if self.violation.is_none() {
+                self.check_lease_overlap();
             }
             if self.violation.is_some() {
                 return false;
@@ -942,7 +1026,7 @@ impl World {
         let cands: Vec<usize> = (0..self.writers.len())
             .filter(|&w| {
                 let wr = &self.writers[w];
-                wr.up && !wr.frozen && wr.dbs[&db].st == St::Active && self.local(w) < wr.dbs[&db].valid_until
+                wr.up && !wr.frozen && wr.dbs[&db].st == St::Active && self.mono(w) < wr.dbs[&db].valid_until
             })
             .collect();
         self.stats.write_attempts += 1;
@@ -967,7 +1051,7 @@ impl World {
         self.writers[w].ticks += 1;
         let retransmit = self.writers[w].ticks % 4 == 0;
         for db in 0..self.p.dbs {
-            let local = self.local(w);
+            let local = self.mono(w);
             let st = self.writers[w].dbs[&db].st.clone();
             // lease: expired by this writer's own clock -> stop being the writer (the fence does the rest)
             if !matches!(st, St::Idle | St::Acquiring) && local >= self.writers[w].dbs[&db].valid_until {
@@ -989,7 +1073,7 @@ impl World {
                     if self.now >= d.last_try + interval && (pref || self.rng.chance(0.3)) {
                         self.writers[w].dbs.get_mut(&db).unwrap().last_try = self.now;
                         self.writers[w].dbs.get_mut(&db).unwrap().st = St::Acquiring;
-                        self.s3(w, S3Op::Acquire { db });
+                        self.s3(w, S3Op::Acquire { db, expect: None });
                     }
                 }
                 St::Opening => {
@@ -1061,7 +1145,7 @@ impl World {
         let reachable = !self.s3_down && !self.is_blocked(Ent::Writer(w), Ent::S3);
         let (db, name, res) = if !reachable {
             let (db, name) = match &op {
-                S3Op::Acquire { db } => (*db, "acquire"),
+                S3Op::Acquire { db, .. } => (*db, "acquire"),
                 S3Op::Renew { db } => (*db, "renew"),
                 S3Op::Release { db } => (*db, "release"),
                 S3Op::OpenStore { db, .. } => (*db, "open"),
@@ -1071,29 +1155,28 @@ impl World {
             (db, name, S3Res::Unreachable)
         } else {
             let holder = Some((w, self.writers[w].gen));
-            let local_now = self.local(w);
             match op {
-                S3Op::Acquire { db } => {
+                S3Op::Acquire { db, expect } => {
                     let l = self.leases.get_mut(&db).unwrap();
-                    let free = l.holder.is_none() || l.holder == holder || l.expires + self.p.skew_allow < local_now;
-                    if free {
+                    let view = lease_view(l);
+                    let take = l.holder.is_none() || l.holder == holder || expect == Some(l.seq);
+                    if take {
                         if l.holder.is_some() && l.holder != holder {
                             self.stats.takeovers += 1;
                         }
                         l.seq += 1;
                         l.holder = holder;
-                        l.expires = local_now + self.p.lease_ttl;
                     }
-                    (db, "acquire", S3Res::Lease { ok: free, seq: l.seq, members: l.members.clone(), sent_local })
+                    (db, "acquire", S3Res::Lease { ok: take, seq: l.seq, members: l.members.clone(), sent_local, view })
                 }
                 S3Op::Renew { db } => {
                     let l = self.leases.get_mut(&db).unwrap();
                     let ok = l.holder == holder;
                     if ok {
                         l.seq += 1;
-                        l.expires = local_now + self.p.lease_ttl;
                     }
-                    (db, "renew", S3Res::Lease { ok, seq: l.seq, members: l.members.clone(), sent_local })
+                    let view = lease_view(l);
+                    (db, "renew", S3Res::Lease { ok, seq: l.seq, members: l.members.clone(), sent_local, view })
                 }
                 S3Op::Release { db } => {
                     let l = self.leases.get_mut(&db).unwrap();
@@ -1102,7 +1185,8 @@ impl World {
                         l.holder = None;
                         l.seq += 1;
                     }
-                    (db, "release", S3Res::Lease { ok, seq: l.seq, members: l.members.clone(), sent_local })
+                    let view = lease_view(l);
+                    (db, "release", S3Res::Lease { ok, seq: l.seq, members: l.members.clone(), sent_local, view })
                 }
                 S3Op::Reconfig { db, members } => {
                     let l = self.leases.get_mut(&db).unwrap();
@@ -1110,9 +1194,9 @@ impl World {
                     if ok {
                         l.seq += 1;
                         l.members = members;
-                        l.expires = local_now + self.p.lease_ttl;
                     }
-                    (db, "reconfig", S3Res::Lease { ok, seq: l.seq, members: l.members.clone(), sent_local })
+                    let view = lease_view(l);
+                    (db, "reconfig", S3Res::Lease { ok, seq: l.seq, members: l.members.clone(), sent_local, view })
                 }
                 S3Op::OpenStore { db, epoch } => {
                     let s = self.stores.get_mut(&db).unwrap();
@@ -1155,18 +1239,25 @@ impl World {
 
     fn s3_reply(&mut self, w: usize, db: DbId, op: &'static str, res: S3Res) {
         match (op, res) {
-            ("acquire", S3Res::Lease { ok, seq, members, sent_local }) => {
+            ("acquire", S3Res::Lease { ok, seq, members, sent_local, view }) => {
+                let (rule, mono, wall) = (self.rule(), self.mono(w), self.local(w));
                 let d = self.writers[w].dbs.get_mut(&db).unwrap();
                 if d.st != St::Acquiring {
                     return;
                 }
                 if !ok {
-                    d.st = St::Idle;
+                    // design §5.1: take over only after seeing the same lease for ttl + margin on our own clock
+                    if d.observer.observe(&rule, &view, mono, wall) {
+                        self.s3(w, S3Op::Acquire { db, expect: Some(seq) });
+                    } else {
+                        d.st = St::Idle;
+                    }
                     return;
                 }
+                d.observer.reset();
                 d.epoch = seq;
                 d.members = members;
-                d.valid_until = sent_local + self.p.lease_ttl;
+                d.valid_until = holder_valid_until(&rule, sent_local);
                 d.last_renew_sent = sent_local;
                 d.st = St::OpeningStore;
                 self.s3(w, S3Op::OpenStore { db, epoch: seq });
@@ -1262,7 +1353,7 @@ impl World {
                 d.drain_upload_sent = false;
                 d.next_upload = self.now + 50 * MS;
             }
-            ("reconfig", S3Res::Lease { ok, seq, members, sent_local }) => {
+            ("reconfig", S3Res::Lease { ok, seq, members, sent_local, .. }) => {
                 let d = self.writers[w].dbs.get_mut(&db).unwrap();
                 if d.st != St::Reconfiguring {
                     return;
@@ -1323,6 +1414,7 @@ impl World {
         }
         for w in 0..self.writers.len() {
             self.writers[w].offset = 0;
+            self.set_rate(w, 0);
             if self.writers[w].frozen {
                 self.writers[w].freeze_token += 1;
                 self.writers[w].frozen = false;
@@ -1338,6 +1430,24 @@ impl World {
     }
 
     fn inject_fault(&mut self) {
+        if self.p.lease_focus {
+            let holders: Vec<usize> = (0..3).filter(|&x| self.writers[x].up && !self.writers[x].frozen && self.writers[x].dbs.values().any(|d| d.st == St::Active)).collect();
+            if holders.is_empty() {
+                return;
+            }
+            let w = self.rng.pick(&holders);
+            let m = self.p.max_rate_ppm as i64;
+            for x in 0..3 {
+                self.set_rate(x, if x == w { -m } else { m });
+            }
+            self.fault("writer_freeze");
+            self.writers[w].frozen = true;
+            self.writers[w].freeze_token += 1;
+            let token = self.writers[w].freeze_token;
+            let d = self.p.lease_ttl + self.rng.range(0, 2 * SEC);
+            self.after(d, Ev::Unfreeze { w, token });
+            return;
+        }
         let k = self.rng.range(0, 99);
         match k {
             0..=14 => {
@@ -1481,11 +1591,33 @@ impl World {
                 let d = self.rng.range(100 * MS, 3 * SEC);
                 self.after(d, Ev::FullEnd { slot: s });
             }
-            74..=81 => {
+            75..=77 => {
+                // a monotonic clock jumps forward (a paused virtual machine catching up): beyond the margin, the rule's
+                // assumption is broken; an early takeover can follow, two writers act at once, and the journal and
+                // store fences must keep every acknowledged write
+                let w = self.rng.range(0, 2) as usize;
+                self.fault("mono_jump");
+                let j = self.rng.range(self.p.lease_ttl / 2, 2 * self.p.lease_ttl);
+                let m = self.mono(w);
+                let wr = &mut self.writers[w];
+                wr.mono_base = m + j;
+                wr.mono_base_real = self.now;
+                wr.mono_jumped_at = Some(self.now);
+            }
+            74 => {
+                // the wall clock jumps (the lease rule does not use it)
                 let w = self.rng.range(0, 2) as usize;
                 self.fault("clock_skew");
                 let m = self.p.max_clock_offset as i64;
                 self.writers[w].offset = self.rng.range(0, 2 * m as u64) as i64 - m;
+            }
+            78..=81 => {
+                // the monotonic clock runs fast or slow (within the bound the margin covers)
+                let w = self.rng.range(0, 2) as usize;
+                self.fault("clock_rate");
+                let m = self.p.max_rate_ppm as i64;
+                let ppm = self.rng.range(0, 2 * m as u64) as i64 - m;
+                self.set_rate(w, ppm);
             }
             82..=89 => {
                 let db = self.rng.range(0, self.p.dbs - 1);

@@ -8,13 +8,17 @@
 //! - Client protocol on `--client-listen`: one JSON object per line, answers in any order, matched by `id`:
 //!   `{"op":"write","db":1,"id":7,"size":100}` → `{"id":7,"ok":true,"idx":12,"epoch":3}` or `{"id":7,"ok":false,"err":"not_owner"}`
 //!   `{"op":"owned","id":0}` → `{"id":0,"owned":[[db,epoch],...]}`; `{"op":"flush","id":0,"db":1}` → `{"id":0,"applied":k}`.
-//! - `--faults-file` (feature `faults`): JSON re-read every 50 ms, `{"clock_offset_ms": n}` moves this process's clock.
-//! - `--mutation` (feature `mutations`): a protocol bug from `Mutations::ALL` (negative controls).
+//! - `--faults-file` (feature `faults`): JSON re-read every 50 ms, `{"clock_offset_ms": n, "clock_rate_ppm": r,
+//!   "mono_jump_ms": j}`: the wall clock jumps by n (the lease does not use it), the monotonic clock runs at 1 + r/1e6
+//!   and has jumped forward by j in total (only grows).
+//! - `--mutation` (feature `mutations`): a protocol bug from `Mutations::ALL` or a takeover-rule bug from
+//!   `LeaseBug::ALL` (negative controls).
 //! Prints `READY` on stdout once the client port listens; then the event lines of `standin`.
 
 use j3z_writer::journal::{JournalCfg, ThreeZone};
 use j3z_writer::meta::Meta;
 use j3z_writer::standin::{Clock, Server, ServerCfg};
+use journal3z_core::lease::LeaseBug;
 use journal3z_core::Mutations;
 use object_store::aws::AmazonS3Builder;
 use std::sync::Arc;
@@ -27,11 +31,15 @@ fn die(code: i32, why: &str) -> ! {
     std::process::exit(code);
 }
 
-fn mutations(name: Option<String>) -> Mutations {
+/// A protocol mutation, or one of the 3 negative controls of the takeover rule (`lease_*`).
+fn mutations(name: Option<String>) -> (Mutations, LeaseBug) {
     match name {
-        None => Mutations::default(),
+        None => (Mutations::default(), LeaseBug::None),
         #[cfg(feature = "mutations")]
-        Some(n) => Mutations::parse(&n).unwrap_or_else(|| die(2, &format!("unknown mutation {n}"))),
+        Some(n) => match LeaseBug::parse(&n) {
+            Some(b) if n != "none" => (Mutations::default(), b),
+            _ => (Mutations::parse(&n).unwrap_or_else(|| die(2, &format!("unknown mutation {n}"))), LeaseBug::None),
+        },
         #[cfg(not(feature = "mutations"))]
         Some(_) => die(2, "--mutation needs a build with the `mutations` feature"),
     }
@@ -42,10 +50,12 @@ fn clock(faults_file: Option<String>) -> Clock {
     let c = Clock::default();
     #[cfg(feature = "faults")]
     if let Some(path) = faults_file {
-        let off = c.0.clone();
+        let c2 = c.clone();
         std::thread::spawn(move || loop {
             if let Some(v) = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok()) {
-                off.store(v["clock_offset_ms"].as_i64().unwrap_or(0), std::sync::atomic::Ordering::SeqCst);
+                c2.set_wall_offset_ms(v["clock_offset_ms"].as_i64().unwrap_or(0));
+                c2.set_rate_ppm(v["clock_rate_ppm"].as_i64().unwrap_or(0));
+                c2.set_mono_jump_ms(v["mono_jump_ms"].as_u64().unwrap_or(0));
             }
             std::thread::sleep(Duration::from_millis(50));
         });
@@ -69,7 +79,7 @@ async fn main() {
     let opt = |k: &str| a.iter().position(|x| x == k).and_then(|i| a.get(i + 1)).cloned();
     let req = |k: &str| opt(k).unwrap_or_else(|| die(2, &format!("{k} is required")));
     let num = |k: &str| req(k).parse::<u64>().unwrap_or_else(|_| die(2, &format!("bad {k}")));
-    let m = mutations(opt("--mutation"));
+    let (m, lease_bug) = mutations(opt("--mutation"));
     let clock = clock(opt("--faults-file"));
     let cfg: ServerCfg = match opt("--config") {
         Some(p) => serde_json::from_str(&std::fs::read_to_string(&p).unwrap_or_else(|e| die(2, &format!("{p}: {e}")))).unwrap_or_else(|e| die(2, &format!("{p}: {e}"))),
@@ -96,7 +106,7 @@ async fn main() {
     let holder = req("--holder");
     let jcfg = JournalCfg { tick: Duration::from_millis(cfg.tick_ms), open_timeout: Duration::from_millis(cfg.open_timeout_ms), hard_cap_bytes: cfg.hard_cap_bytes };
     let journal = ThreeZone::new(&holder, num("--me") as u32, &nodes, jcfg, m);
-    let server = Server::new(&holder, num("--index") as usize, num("--nwriters") as usize, journal, meta, cfg, m, clock, num("--dbs"));
+    let server = Server::new(&holder, num("--index") as usize, num("--nwriters") as usize, journal, meta, cfg, m, lease_bug, clock, num("--dbs"));
     server.start();
     let listen = req("--client-listen");
     let l = TcpListener::bind(&listen).await.unwrap_or_else(|e| die(2, &format!("bind {listen}: {e}")));

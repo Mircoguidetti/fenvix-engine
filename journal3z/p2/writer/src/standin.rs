@@ -7,16 +7,21 @@
 //!
 //! Lines on stdout (the bench's checker reads them; one event per line, `key=value`):
 //! - `OPEN db=<d> epoch=<e> applied=<a> barrier=<b> replay=<n>`: this process became the writer at epoch e.
-//! - `UPLOAD db=<d> epoch=<e> upto=<k>`; `LOST db=<d> epoch=<e> why=<..>`; `RECONFIG db=<d> epoch=<e> members=<..>`.
+//! - `UPLOAD db=<d> epoch=<e> upto=<k>`; `LOST db=<d> epoch=<e> why=<..> at_real_ms=<t>`;
+//!   `RECONFIG db=<d> epoch=<e> members=<..>`.
+//! - Lease (for the bench's overlap check, real time = the machine's clock, not the faked ones):
+//!   `TAKEN db=<d> epoch=<e> at_real_ms=<t>` when this process sent the write that took the lease;
+//!   `HOLD db=<d> epoch=<e> now_real_ms=<t> until_real_ms=<u>` each time its deadline changes (acquire, renew, change
+//!   of its clock's rate): until `u` this process believes it holds the lease.
 
 use crate::journal::ThreeZone;
 use crate::meta::{Held, LeaseOps, Meta, MetaError, StoreOps};
 use bytes::Bytes;
 use journal3z_api::{DbKey, Epoch as JEpoch, Index, Journal, JournalError};
+use journal3z_core::lease::{LeaseBug, Observer, TakeoverRule};
 use journal3z_core::{Idx, Mutations, NodeId};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use std::sync::atomic::{AtomicI64, Ordering::SeqCst};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -27,8 +32,9 @@ use std::time::{Duration, Instant};
 pub struct ServerCfg {
     /// Lease duration in journal mode.
     pub lease_ttl_ms: i64,
-    /// Clock-skew allowance before taking over an expired lease.
-    pub lease_skew_ms: i64,
+    /// Takeover margin (design §5.1): another server takes over after seeing the lease unchanged for lease + margin
+    /// on its own monotonic clock. Covers clock rate drift (each clock up to ≈ 6.9 % with 10 s + 1.5 s).
+    pub lease_margin_ms: i64,
     /// Upload period.
     pub upload_every_ms: u64,
     /// Early upload when a database's bytes not yet uploaded reach this.
@@ -50,7 +56,7 @@ impl Default for ServerCfg {
     fn default() -> Self {
         ServerCfg {
             lease_ttl_ms: 10_000,
-            lease_skew_ms: 1_500,
+            lease_margin_ms: 1_500,
             upload_every_ms: 30_000,
             soft_cap_bytes: 32 << 20,
             hard_cap_bytes: 128 << 20,
@@ -63,14 +69,74 @@ impl Default for ServerCfg {
     }
 }
 
-/// The process clock: wall clock plus an offset (the bench moves it to test lease expiry with skewed clocks).
-#[derive(Clone, Default)]
-pub struct Clock(pub Arc<AtomicI64>);
+/// The process clocks. `mono_ms`: monotonic (from `Instant`), running at 1 + rate (the bench sets a rate to test
+/// drift; 0 in production). `wall_ms`: the system clock plus an offset (the bench makes it jump; the lease does not
+/// use it, only the `lease_wall_clock` negative control does).
+#[derive(Clone)]
+pub struct Clock(Arc<Mutex<ClockState>>);
+
+struct ClockState {
+    base: Instant,
+    base_mono: f64,
+    rate_ppm: i64,
+    wall_offset_ms: i64,
+    /// forward jumps of the monotonic clock (bench fault: a paused machine catching up), ms
+    mono_jump_ms: u64,
+    generation: u64,
+}
+
+impl Default for Clock {
+    fn default() -> Self {
+        Clock(Arc::new(Mutex::new(ClockState { base: Instant::now(), base_mono: 1_000_000.0, rate_ppm: 0, wall_offset_ms: 0, mono_jump_ms: 0, generation: 0 })))
+    }
+}
+
+pub fn real_ms() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as i64
+}
 
 impl Clock {
-    pub fn now_ms(&self) -> i64 {
-        let wall = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as i64;
-        wall + self.0.load(SeqCst)
+    fn mono_of(c: &ClockState, at: Instant) -> f64 {
+        c.base_mono + c.mono_jump_ms as f64 + (at - c.base).as_secs_f64() * 1000.0 * (1.0 + c.rate_ppm as f64 / 1e6)
+    }
+    pub fn mono_ms(&self) -> u64 {
+        let c = self.0.lock().unwrap();
+        Self::mono_of(&c, Instant::now()) as u64
+    }
+    pub fn wall_ms(&self) -> u64 {
+        (real_ms() + self.0.lock().unwrap().wall_offset_ms).max(0) as u64
+    }
+    pub fn set_rate_ppm(&self, ppm: i64) {
+        let mut c = self.0.lock().unwrap();
+        if c.rate_ppm != ppm {
+            let now = Instant::now();
+            c.base_mono = Self::mono_of(&c, now);
+            c.base = now;
+            c.rate_ppm = ppm;
+            c.generation += 1;
+        }
+    }
+    /// Total forward jump of the monotonic clock so far (only grows: a monotonic clock never goes back).
+    pub fn set_mono_jump_ms(&self, ms: u64) {
+        let mut c = self.0.lock().unwrap();
+        if ms > c.mono_jump_ms {
+            c.mono_jump_ms = ms;
+            c.generation += 1;
+        }
+    }
+    pub fn set_wall_offset_ms(&self, ms: i64) {
+        self.0.lock().unwrap().wall_offset_ms = ms;
+    }
+    /// Changes whenever the rate changes (deadlines in real time move).
+    pub fn generation(&self) -> u64 {
+        self.0.lock().unwrap().generation
+    }
+    /// The real time (machine clock, ms) at which this monotonic clock reaches `mono` at the current rate.
+    pub fn real_at(&self, mono: u64) -> i64 {
+        let c = self.0.lock().unwrap();
+        let now = Instant::now();
+        let m = Self::mono_of(&c, now);
+        real_ms() + ((mono as f64 - m) / (1.0 + c.rate_ppm as f64 / 1e6)) as i64
     }
 }
 
@@ -92,6 +158,8 @@ struct Active {
     store_applied: Idx,
     /// writes refused while the membership changes
     paused: bool,
+    /// lease deadline on this process's monotonic clock: no write is accepted at or after it
+    valid_until: u64,
 }
 
 struct DbRun {
@@ -109,6 +177,8 @@ pub struct Server {
     pub cfg: ServerCfg,
     pub m: Mutations,
     pub clock: Clock,
+    /// negative control of the takeover rule (`LeaseBug::None` in production)
+    pub lease_bug: LeaseBug,
     dbs: HashMap<u64, Arc<DbRun>>,
 }
 
@@ -132,9 +202,11 @@ fn id_of(p: &[u8]) -> u64 {
 impl Server {
     /// `ndbs` databases, ids `1..=ndbs` (incarnation = id; name `db<id>`).
     #[allow(clippy::too_many_arguments)]
-    pub fn new(holder: &str, index: usize, nwriters: usize, journal: Arc<ThreeZone>, meta: Meta, cfg: ServerCfg, m: Mutations, clock: Clock, ndbs: u64) -> Arc<Self> {
+    pub fn new(holder: &str, index: usize, nwriters: usize, journal: Arc<ThreeZone>, meta: Meta, cfg: ServerCfg, m: Mutations, lease_bug: LeaseBug, clock: Clock, ndbs: u64) -> Arc<Self> {
         let dbs = (1..=ndbs).map(|d| (d, Arc::new(DbRun { key: DbKey::new(format!("db{d}"), d), active: Mutex::new(None), upload_now: tokio::sync::Notify::new() }))).collect();
-        Arc::new(Server { holder: holder.to_string(), index, nwriters, journal, meta, cfg, m, clock, dbs })
+        // the holder name is unique per process: a restarted server is another server and waits like the others
+        let holder = format!("{holder}-{:08x}", rand::random::<u32>());
+        Arc::new(Server { holder, index, nwriters, journal, meta, cfg, m, clock, lease_bug, dbs })
     }
 
     pub fn start(self: &Arc<Self>) {
@@ -158,6 +230,9 @@ impl Server {
         let (app, epoch) = {
             let mut g = r.active.lock().unwrap();
             let Some(a) = g.as_mut() else { return Err(WriteErr::NotOwner) };
+            if self.clock.mono_ms() >= a.valid_until {
+                return Err(WriteErr::NotOwner);
+            }
             if a.paused {
                 return Err(WriteErr::Unavailable);
             }
@@ -192,8 +267,17 @@ impl Server {
         None
     }
 
+    fn rule(&self) -> TakeoverRule {
+        TakeoverRule { ttl: self.cfg.lease_ttl_ms as u64, margin: self.cfg.lease_margin_ms as u64, bug: self.lease_bug }
+    }
+
     fn lease(&self) -> LeaseOps<'_> {
-        LeaseOps { meta: &self.meta, holder: &self.holder, ttl_ms: self.cfg.lease_ttl_ms, skew_ms: self.cfg.lease_skew_ms }
+        LeaseOps { meta: &self.meta, holder: &self.holder, rule: self.rule() }
+    }
+
+    /// Print the lease deadline in real time (for the bench's overlap check).
+    fn hold_line(&self, db: u64, epoch: u64, valid_until: u64) {
+        log(format!("HOLD db={db} epoch={epoch} now_real_ms={} until_real_ms={}", real_ms(), self.clock.real_at(valid_until)));
     }
 
     fn store(&self) -> StoreOps<'_> {
@@ -204,6 +288,7 @@ impl Server {
         let r = self.dbs[&db].clone();
         let preferred = (db as usize) % self.nwriters == self.index;
         let poll = Duration::from_millis(if preferred { self.cfg.preferred_poll_ms } else { self.cfg.other_poll_ms });
+        let mut observer = Observer::default();
         loop {
             tokio::time::sleep(poll).await;
             let ids: Vec<NodeId> = self.journal.node_ids().into_iter().flatten().collect();
@@ -215,11 +300,22 @@ impl Server {
             if self.journal.members_up(&ids) < 2 {
                 continue;
             }
-            let Ok(mut held) = self.lease().acquire(db, self.clock.now_ms(), &ids).await else { continue };
+            // design §5.1: take the lease only if it is free, ours, or unchanged for lease + margin on our own
+            // monotonic clock; the write is conditional on the exact version read
+            let Ok(cur) = self.lease().read(db).await else { continue };
+            if !self.lease().may_take(&cur, &mut observer, self.clock.mono_ms(), self.clock.wall_ms()) {
+                continue;
+            }
+            let at = real_ms();
+            let sent = self.clock.mono_ms();
+            let Ok(mut held) = self.lease().take(db, &cur, &ids, sent).await else { continue };
+            observer.reset();
+            log(format!("TAKEN db={db} epoch={} at_real_ms={at}", held.epoch));
+            self.hold_line(db, held.epoch, held.valid_until_mono);
             let why = self.own(&r, &mut held).await;
             self.journal.abandon(&r.key, &why);
             let epoch = r.active.lock().unwrap().take().map(|a| a.epoch.0).unwrap_or(held.epoch);
-            log(format!("LOST db={db} epoch={epoch} why={}", why.replace(' ', "_")));
+            log(format!("LOST db={db} epoch={epoch} why={} at_real_ms={}", why.replace(' ', "_"), real_ms()));
         }
     }
 
@@ -235,7 +331,7 @@ impl Server {
             }
         }
         log(format!("OPEN db={db} epoch={} applied={applied} barrier={} replay={}", held.epoch, opened.next.0 - 1, opened.replay.len()));
-        *r.active.lock().unwrap() = Some(Active { epoch: JEpoch(held.epoch), pending, store_applied: applied, paused: false });
+        *r.active.lock().unwrap() = Some(Active { epoch: JEpoch(held.epoch), pending, store_applied: applied, paused: false, valid_until: held.valid_until_mono });
         Ok(())
     }
 
@@ -246,8 +342,9 @@ impl Server {
             let _ = self.lease().release(db, held).await;
             return e;
         }
-        let ttl = self.cfg.lease_ttl_ms;
-        let mut last_renew = self.clock.now_ms();
+        let ttl = self.cfg.lease_ttl_ms as u64;
+        let mut last_renew = self.clock.mono_ms();
+        let mut gen = self.clock.generation();
         let mut last_upload = Instant::now();
         let mut no_journal_since: Option<Instant> = None;
         loop {
@@ -255,16 +352,26 @@ impl Server {
                 _ = tokio::time::sleep(Duration::from_millis(self.cfg.tick_ms)) => {}
                 _ = r.upload_now.notified() => { last_upload = Instant::now() - Duration::from_millis(self.cfg.upload_every_ms); }
             }
-            let now = self.clock.now_ms();
-            if now >= held.valid_until_ms {
+            let now = self.clock.mono_ms();
+            if now >= held.valid_until_mono {
                 return "lease expired".into();
             }
             if now - last_renew >= ttl / 3 {
                 match self.lease().renew(db, held, now).await {
-                    Ok(()) => last_renew = now,
+                    Ok(()) => {
+                        last_renew = now;
+                        if let Some(a) = r.active.lock().unwrap().as_mut() {
+                            a.valid_until = held.valid_until_mono;
+                        }
+                        self.hold_line(db, held.epoch, held.valid_until_mono);
+                    }
                     Err(MetaError::Conflict) => return "lease taken".into(),
                     Err(MetaError::Unavailable(_)) => {}
                 }
+            }
+            if self.clock.generation() != gen {
+                gen = self.clock.generation();
+                self.hold_line(db, held.epoch, held.valid_until_mono); // the deadline moved in real time
             }
             let epoch = match r.active.lock().unwrap().as_ref() {
                 Some(a) => a.epoch,
@@ -383,7 +490,9 @@ impl Server {
             a.store_applied = upto;
         }
         self.journal.uploaded(&r.key, epoch, Index(upto)).await.map_err(|e| format!("journal: {e}"))?;
-        self.lease().reconfigure(db, held, want.clone(), self.clock.now_ms()).await.map_err(|e| format!("reconfigure: {e}"))?;
+        let sent = self.clock.mono_ms();
+        self.lease().reconfigure(db, held, want.clone(), sent).await.map_err(|e| format!("reconfigure: {e}"))?;
+        self.hold_line(db, held.epoch, held.valid_until_mono);
         let ms: Vec<String> = want.iter().map(|n| n.to_string()).collect();
         log(format!("RECONFIG db={db} epoch={} members={}", held.epoch, ms.join(",")));
         self.journal.abandon(&r.key, "membership change");

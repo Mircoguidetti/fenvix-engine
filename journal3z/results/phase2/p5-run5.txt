@@ -1,0 +1,21 @@
+[frozen_writer_fenced] correct: sent 30666 acked 30573 refused {"not_owner": 75, "unavailable": 18}; store holds 30591 records; lost 0 late 0; moved: true; settled: true; lease overlaps 0
+[frozen_writer_fenced] twin no_fencing (nodes): sent 27678 acked 27570 refused {"not_owner": 80, "unavailable": 28}; store holds 27597 records; lost 0 late 0; moved: true; settled: true; lease overlaps 0
+thread 'frozen_writer_fenced' (4308) panicked at bench/tests/p5_writer.rs:274:5:
+[lease_is_exclusive] correct: 97 rounds with exactly 1 winner, 3 with 0 or more than 1
+thread 'lease_is_exclusive' (4729) panicked at bench/tests/p5_writer.rs:66:5:
+[lost_disk_reconfig] correct: sent 35495 acked 35439 refused {"unavailable": 56}; store holds 35439 records; lost 0 late 0; node 3 id 2290603791 -> 1494249908; RECONFIG events 3; acks after node 1 died 14010; settled true
+[lost_disk_reconfig] twin no reconfiguration: sent 23853 acked 23805 refused {"no_owner": 1936, "not_owner": 32, "unavailable": 16}; store holds 23805 records; lost 0 late 0; node 3 id 3642761720 -> 3359305188; RECONFIG events 0; acks after node 1 died 0; settled false
+.[margin_covers_clock_drift] correct: 4 episodes, 4 ended with the other writer owning; TAKEN lines 5; lease overlaps 0
+[margin_covers_clock_drift] twin lease_no_margin: 4 episodes, 4 ended with the other writer owning; TAKEN lines 5; lease overlaps 2 (first: db 1: writer 1 took epoch 4 at 1793379242447 while writer 0 epoch 1 held it until 1793379242550 (103 ms overlap))
+.[renewing_holder_is_never_taken] correct: 2 episodes, 0 ended with the other writer owning; TAKEN lines 1; lease overlaps 0
+[renewing_holder_is_never_taken] twin lease_holder_only: 2 episodes, 1 ended with the other writer owning; TAKEN lines 2; lease overlaps 1 (first: db 1: writer 1 took epoch 5 at 1793379286623 while writer 0 epoch 1 held it until 1793379288109 (1486 ms overlap))
+.[store_fence] skip_fence=false: old writer's upload -> Err(Conflict); marker 12; index 11 holds Some(111)
+[store_fence] skip_fence=true: old writer's upload -> Ok(()); marker 11; index 11 holds Some(999)
+.[uploads_never_replace_each_other] fixed_names=false: index 610 holds Some(20579)
+[uploads_never_replace_each_other] fixed_names=true: index 610 holds None
+.[wall_clock_jump_changes_nothing] correct: 3 episodes, 3 ended with the other writer owning; TAKEN lines 4; lease overlaps 0
+[wall_clock_jump_changes_nothing] twin lease_wall_clock: 3 episodes, 3 ended with the other writer owning; TAKEN lines 4; lease overlaps 2 (first: db 1: writer 1 took epoch 4 at 1793379326272 while writer 0 epoch 1 held it until 1793379327433 (1161 ms overlap))
+.[writer_kill_takeover] correct: sent 21859 acked 20803 refused {"down": 1056}; store holds 20819 records; lost 0 late 0; moved to writer 1: true; settled: true; open after the kill (s): [6.7, 6.7, 6.7, 6.7]
+[writer_kill_takeover] twin recovery_single: sent 20049 acked 19145 refused {"down": 888, "no_owner": 656, "unavailable": 16}; store holds 18490 records; lost 678 late 971; moved to writer 1: true; settled: true
+test result: FAILED. 7 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 235.87s
+error: test failed, to rerun pass `-p j3z-bench --test p5_writer`

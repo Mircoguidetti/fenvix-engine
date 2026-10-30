@@ -1,0 +1,19 @@
+[lease_is_exclusive] correct: 100 rounds with exactly 1 winner, 0 with 0 or more than 1
+[lease_is_exclusive] twin (unconditional writes): 1 rounds with 1 winner, 99 with 0 or more than 1
+.[lost_disk_reconfig] correct: sent 41839 acked 41799 refused {"unavailable": 40}; store holds 41799 records; lost 0 late 0; node 3 id 3462088105 -> 3471087222; RECONFIG events 3; acks after node 1 died 15952; settled true
+[lost_disk_reconfig] twin no reconfiguration: sent 23335 acked 23277 refused {"no_owner": 2165, "not_owner": 42, "unavailable": 16}; store holds 23277 records; lost 0 late 0; node 3 id 1012082060 -> 3313370365; RECONFIG events 0; acks after node 1 died 0; settled false
+.[margin_covers_clock_drift] correct: 4 episodes, 4 ended with the other writer owning; TAKEN lines 5; lease overlaps 0
+[margin_covers_clock_drift] twin lease_no_margin: 4 episodes, 4 ended with the other writer owning; TAKEN lines 5; lease overlaps 2 (first: db 1: writer 1 took epoch 4 at 1793379769202 while writer 0 epoch 1 held it until 1793379769332 (130 ms overlap))
+.[renewing_holder_is_never_taken] correct: 2 episodes, 0 ended with the other writer owning; TAKEN lines 1; lease overlaps 0
+[renewing_holder_is_never_taken] twin lease_holder_only: 2 episodes, 1 ended with the other writer owning; TAKEN lines 2; lease overlaps 1 (first: db 1: writer 1 took epoch 5 at 1793379813217 while writer 0 epoch 1 held it until 1793379814709 (1492 ms overlap))
+.[store_fence] skip_fence=false: old writer's upload -> Err(Conflict); marker 12; index 11 holds Some(111)
+[store_fence] skip_fence=true: old writer's upload -> Ok(()); marker 11; index 11 holds Some(999)
+.[two_writers_fenced] correct nodes: sent 18972 acked 18900 refused {"fenced": 11, "no_owner": 2469, "not_owner": 33, "unavailable": 28}; store holds 18903 records; lost 0 late 0; moved: true; settled: true; lease overlaps (forced) 4; writer 0: ["LOST db=3 epoch=1 why=journal_fenced at_real_ms=1793379836226", "LOST db=1 epoch=1 why=journal_fenced at_real_ms=1793379836319", "LOST db=2 epoch=1 why=journal_fenced at_real_ms=1793379836445", "LOST db=4 epoch=1 why=journal_fenced at_real_ms=1793379836451"]
+[two_writers_fenced] twin no_fencing (nodes): sent 19271 acked 19222 refused {"no_owner": 2392, "not_owner": 33, "unavailable": 16}; store holds 18981 records; lost 241 late 241; moved: true; settled: true; lease overlaps (forced) 4; writer 0: ["LOST db=1 epoch=1 why=store_fenced at_real_ms=1793379845808", "LOST db=3 epoch=1 why=store_fenced at_real_ms=1793379845811", "LOST db=2 epoch=1 why=store_fenced at_real_ms=1793379846249", "LOST db=4 epoch=1 why=store_fenced at_real_ms=1793379846249"]
+.[uploads_never_replace_each_other] fixed_names=false: index 610 holds Some(20579)
+[uploads_never_replace_each_other] fixed_names=true: index 610 holds None
+.[wall_clock_jump_changes_nothing] correct: 3 episodes, 3 ended with the other writer owning; TAKEN lines 4; lease overlaps 0
+[wall_clock_jump_changes_nothing] twin lease_wall_clock: 3 episodes, 3 ended with the other writer owning; TAKEN lines 4; lease overlaps 2 (first: db 1: writer 1 took epoch 4 at 1793379871528 while writer 0 epoch 1 held it until 1793379872679 (1151 ms overlap))
+.[writer_kill_takeover] correct: sent 21425 acked 20353 refused {"down": 1072}; store holds 20367 records; lost 0 late 0; moved to writer 1: true; settled: true; open after the kill (s): [6.9, 7.0, 6.9, 6.9]
+[writer_kill_takeover] twin recovery_single: sent 19624 acked 18703 refused {"down": 905, "no_owner": 176, "unavailable": 16}; store holds 17888 records; lost 834 late 834; moved to writer 1: true; settled: true
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 213.83s

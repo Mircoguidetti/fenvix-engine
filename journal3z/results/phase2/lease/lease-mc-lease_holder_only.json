@@ -1,0 +1,1 @@
+{"checker": "lease_mc", "bug": "lease_holder_only", "ttl_ticks": 100, "margin_ticks": 15, "rates_pct": [-6, 0, 6], "horizon_ticks": 250, "states": 362842, "takeovers_checked": 72, "verdict": "OVERLAP: rates H -6% O -6%: O took over at tick 124 while H believes until its clock reaches 131 (now 116); H running false, wall jump Some(-50)", "secs": 0.5}

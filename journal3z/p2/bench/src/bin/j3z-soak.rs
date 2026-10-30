@@ -12,7 +12,11 @@
 //! bag whose proportions are the §2a minimum counts (plus three extra kinds, marked "extra"):
 //! node kill -9 (restart after 1–10 s); writer kill -9 (restart after 1–10 s); disk loss (directory deleted, node back
 //! with a new identity); network: one node isolated from every writer, one direction only, or a whole zone isolated
-//! (2–20 s); clock jump of a writer (±0.5–5 s, absolute offset within ±5 s); two writers (the owner of databases
+//! (2–20 s); clock jump of a writer's wall clock (±0.5–5 s, absolute offset within ±5 s; since the decision of
+//! 30-10-2026 the lease uses only the monotonic clock, so this must change nothing); drift of a writer's monotonic
+//! clock (rate within ±5 %, which the 1.5 s margin covers); forward jump of a writer's monotonic clock (+0.5–5 s:
+//! breaks the takeover rule's assumption on purpose, so that two writers really act at once and the fences are
+//! exercised; lease overlaps right after such a jump are counted apart, not as failures); two writers (the owner of databases
 //! stopped with SIGSTOP for lease + 2–8 s with writes in flight, then SIGCONT); fsync error; disk full;
 //! extra: power cut of one node (unsynced bytes dropped), power cut of all three nodes at once, object store paused
 //! 1–4 s.
@@ -46,6 +50,8 @@ enum Kind {
     CutOneWay,
     CutZone,
     ClockJump,
+    ClockDrift,
+    MonoJump,
     TwoWriters,
     FsyncError,
     DiskFull,
@@ -55,7 +61,7 @@ enum Kind {
 }
 
 /// One bag = §2a minimum counts / 10 (+ the extra kinds).
-const BAG: [(Kind, usize); 13] = [
+const BAG: [(Kind, usize); 15] = [
     (Kind::NodeKill, 30),
     (Kind::WriterKill, 30),
     (Kind::DiskLoss, 5),
@@ -63,6 +69,8 @@ const BAG: [(Kind, usize); 13] = [
     (Kind::CutOneWay, 8),
     (Kind::CutZone, 5),
     (Kind::ClockJump, 15),
+    (Kind::ClockDrift, 8),
+    (Kind::MonoJump, 8),
     (Kind::TwoWriters, 15),
     (Kind::FsyncError, 5),
     (Kind::DiskFull, 5),
@@ -89,7 +97,10 @@ struct World {
     /// node index -> (exit codes allowed, until)
     expect_exit: HashMap<usize, (Vec<i32>, Instant)>,
     stopped_writer: Option<usize>,
-    clock: Vec<i64>,
+    /// per writer: (wall clock offset ms, monotonic clock rate ppm, total monotonic forward jump ms)
+    clock: Vec<(i64, i64, u64)>,
+    /// monotonic jumps: (writer, real ms)
+    mono_jumps: Vec<(usize, i64)>,
     failures: Vec<String>,
     notes: Vec<String>,
 }
@@ -305,15 +316,44 @@ impl Run {
                 let mag = rng.gen_range(500..=5000) as i64;
                 let off = {
                     let mut w = self.world.lock().unwrap();
-                    let cur = w.clock[i];
+                    let (cur, rate, mj) = w.clock[i];
                     let up = if cur + mag > 5000 { false } else if cur - mag < -5000 { true } else { rng.gen_bool(0.5) };
                     let off = if up { cur + mag } else { cur - mag };
-                    w.clock[i] = off;
-                    w.writers[i].set_clock_offset(off);
+                    w.clock[i] = (off, rate, mj);
+                    w.writers[i].set_clocks(off, rate, mj);
                     off
                 };
                 f.writer_dbs = self.owned_by(i);
-                f.detail = format!("writer {i} clock offset now {off} ms");
+                f.detail = format!("writer {i} wall clock offset now {off} ms");
+            }
+            Kind::MonoJump => {
+                // the monotonic clock jumps forward 0.5–5 s (a paused machine catching up): beyond the 1.5 s margin
+                // the rule's assumption is broken, an early takeover can follow and two writers act at once; the
+                // journal and store fences must keep every acknowledged write
+                let i = rng.gen_range(0..3);
+                let j = rng.gen_range(500..=5000u64);
+                {
+                    let mut w = self.world.lock().unwrap();
+                    let (off, rate, mj) = w.clock[i];
+                    w.clock[i] = (off, rate, mj + j);
+                    w.writers[i].set_clocks(off, rate, mj + j);
+                    w.mono_jumps.push((i, j3z_writer::standin::real_ms()));
+                }
+                f.writer_dbs = self.owned_by(i);
+                f.detail = format!("writer {i} monotonic clock jumped forward {j} ms");
+            }
+            Kind::ClockDrift => {
+                // the monotonic clock the lease uses runs fast or slow (the margin covers up to ≈ 6.9 %)
+                let i = rng.gen_range(0..3);
+                let ppm = rng.gen_range(-50_000..=50_000i64);
+                {
+                    let mut w = self.world.lock().unwrap();
+                    let (off, _, mj) = w.clock[i];
+                    w.clock[i] = (off, ppm, mj);
+                    w.writers[i].set_clocks(off, ppm, mj);
+                }
+                f.writer_dbs = self.owned_by(i);
+                f.detail = format!("writer {i} monotonic clock rate now {:+.1} %", ppm as f64 / 10_000.0);
             }
             Kind::TwoWriters => {
                 // the writer owning the most databases
@@ -407,6 +447,17 @@ impl Run {
         let lc = self.loss_check(full).await;
         let dc = self.disk_check(tag).await;
         let mut out = json!({"tag": tag, "t_s": self.t0.elapsed().as_secs()});
+        let (ov, expected) = {
+            let w = self.world.lock().unwrap();
+            // window after a monotonic jump: 3 × (lease + margin) of the production values
+            lease_overlaps_split(&w.writers.iter().collect::<Vec<_>>(), &w.mono_jumps, 3 * 11_500)
+        };
+        out["lease_overlaps_after_mono_jump"] = json!(expected.len());
+        out["lease_overlaps"] = json!(ov.len());
+        out["first_lease_overlaps"] = json!(ov.iter().take(10).collect::<Vec<_>>());
+        if !ov.is_empty() {
+            self.fail(format!("{tag}: {} lease overlaps (first: {})", ov.len(), ov[0]));
+        }
         match lc {
             Ok((r, n)) => {
                 out["checked_acks"] = json!(n);
@@ -503,7 +554,8 @@ async fn main() {
         writers,
         expect_exit: HashMap::new(),
         stopped_writer: None,
-        clock: vec![0; 3],
+        clock: vec![(0, 0, 0); 3],
+        mono_jumps: vec![],
         failures: vec![],
         notes: vec![],
     }));

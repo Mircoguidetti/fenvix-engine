@@ -12,6 +12,8 @@
 //!
 //! Types are small integers so the simulator can run millions of steps; payloads are `Bytes`.
 
+pub mod lease;
+
 use bytes::Bytes;
 use std::collections::{BTreeMap, VecDeque};
 

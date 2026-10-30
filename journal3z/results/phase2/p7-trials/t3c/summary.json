@@ -1,0 +1,162 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 32999,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 194,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 64404,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 384,
+      "tag": "ckpt2"
+    },
+    {
+      "checked_acks": 96794,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 577,
+      "tag": "ckpt3"
+    },
+    {
+      "checked_acks": 137268,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 765,
+      "tag": "ckpt4"
+    },
+    {
+      "checked_acks": 165523,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 913,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [],
+  "fault_counts": {
+    "ClockDrift": 2,
+    "ClockJump": 7,
+    "CutZone": 3,
+    "DiskLoss": 1,
+    "FsyncError": 1,
+    "MonoJump": 4,
+    "PowerCutAll": 1,
+    "S3Pause": 2,
+    "TwoWriters": 6,
+    "WriterKill": 9
+  },
+  "faults": 36,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/trial/w3c"
+  },
+  "kinds": [
+    "CutZone",
+    "TwoWriters",
+    "WriterKill",
+    "ClockJump",
+    "ClockDrift",
+    "MonoJump",
+    "DiskLoss",
+    "PowerCutAll",
+    "S3Pause",
+    "DiskFull",
+    "FsyncError"
+  ],
+  "minutes_planned": 15.0,
+  "minutes_run": 15.232199059633333,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 0.744897608,
+    "n": 107,
+    "over_5s": 0,
+    "p50_s": 0.110810276,
+    "p99_s": 0.734692707
+  },
+  "recovery_other_faults_max_s": {
+    "ClockJump": [
+      1.062290579,
+      0.555285418,
+      0.678816439
+    ],
+    "PowerCutAll": [
+      0.6690077
+    ],
+    "S3Pause": [
+      0.521731529,
+      0.930578921
+    ],
+    "WriterKill": [
+      0.385885834,
+      0.628796594,
+      0.796306115,
+      0.427261357
+    ]
+  },
+  "recovery_writer_faults": {
+    "max_s": 13.276616694,
+    "n": 390,
+    "over_15s": 0,
+    "over_40s": 0,
+    "p50_s": 9.071305589,
+    "p99_s": 12.908575434
+  },
+  "seed": 3,
+  "wait_until_healthy_s": {
+    "max": 1.713901086,
+    "p50": 0.051608819
+  },
+  "writer_opens": 311,
+  "writes_acked": 165523,
+  "writes_refused": {
+    "down": 3005,
+    "no_owner": 2752,
+    "not_owner": 7948,
+    "timeout": 899,
+    "unavailable": 2089
+  },
+  "writes_sent": 179464
+}

@@ -14,6 +14,7 @@
 //!   another node dies for good and writes still get acknowledged. Twin: reconfiguration switched off → no more acks.
 use j3z_bench::*;
 use j3z_writer::meta::{LeaseOps, MetaError, StoreOps};
+use journal3z_core::lease::{LeaseBug, Observer, TakeoverRule};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -37,8 +38,19 @@ async fn lease_rounds(unconditional: bool) -> (usize, usize) {
                 let meta = meta.clone();
                 tokio::spawn(async move {
                     let holder = format!("s{i}");
-                    let ops = LeaseOps { meta: &meta, holder: &holder, ttl_ms: 10_000, skew_ms: 1_500 };
-                    ops.acquire(db, 0, &[1, 2, 3]).await.is_ok()
+                    let rule = TakeoverRule { ttl: 10_000, margin: 1_500, bug: LeaseBug::None };
+                    let ops = LeaseOps { meta: &meta, holder: &holder, rule };
+                    // each reads the lease and tries to take it when the rule allows (free, or ours); whoever reads
+                    // after another server took it must not take it
+                    let cur = ops.read(db).await.unwrap();
+                    if !ops.may_take(&cur, &mut Observer::default(), 0, 0) {
+                        return false;
+                    }
+                    match ops.take(db, &cur, &[1, 2, 3], 0).await {
+                        Ok(_) => true,
+                        Err(MetaError::Conflict) => false,
+                        Err(e) => panic!("round {db}: server {i}: store error (not a lost race): {e}"),
+                    }
                 })
             })
             .collect();
@@ -49,6 +61,7 @@ async fn lease_rounds(unconditional: bool) -> (usize, usize) {
         if winners == 1 {
             rounds_ok += 1;
         } else {
+            eprintln!("round {db}: {winners} winners");
             rounds_bad += 1;
         }
     }
@@ -132,6 +145,10 @@ impl Bench {
     }
 
     fn add_writer(&mut self, nwriters: usize, mutation: Option<&str>, env: Vec<(&str, &str)>) {
+        self.add_writer_cfg(nwriters, mutation, env, fast_config());
+    }
+
+    fn add_writer_cfg(&mut self, nwriters: usize, mutation: Option<&str>, env: Vec<(&str, &str)>, config: serde_json::Value) {
         let i = self.writers.len();
         let w = WriterProc::start(WriterSpec {
             index: i,
@@ -139,7 +156,7 @@ impl Bench {
             nodes: self.proxy.node_addrs(i, 3),
             dbs: self.dbs,
             minio: &self.minio,
-            config: fast_config(),
+            config,
             dir: &self._dir.path().join("writers"),
             mutation,
             env,
@@ -225,36 +242,130 @@ async fn writer_kill_takeover() {
     assert!(!r2.lost.is_empty(), "the twin lost nothing: the check does not see the bug");
 }
 
-async fn clock_jump_case(node_mutation: Option<&str>) -> (Report, String) {
+/// Two writers at the same time, on purpose: writer 1 runs with the lease bug `lease_holder_only`, so it takes the
+/// databases while writer 0 is alive, renewing and writing (the lease is not needed for safety: the fences are). With
+/// the protocol's nodes: 0 losses, 0 acknowledgements from the old epoch at or above the new barrier.
+/// Twin: the same with nodes running `no_fencing` → late acknowledgements / losses.
+async fn two_writers_case(node_mutation: Option<&str>) -> (Report, String) {
     let mut b = Bench::new(2, 4, node_mutation);
     b.minio.ready().await;
     b.add_writer(2, None, vec![]);
     let c = b.client();
     assert!(b.wait_owner(&c, 0, Duration::from_secs(20)).await);
-    b.add_writer(2, None, vec![]);
-    let c = b.client();
-    assert!(b.wait_owner(&c, 0, Duration::from_secs(5)).await);
     let load = c.run(b.dbs, 16, 64);
     tokio::time::sleep(Duration::from_secs(2)).await;
-    b.writers[1].set_clock_offset(60_000); // writer 1 thinks writer 0's lease expired long ago
-    let moved = b.wait_owner(&c, 1, Duration::from_secs(15)).await;
-    tokio::time::sleep(Duration::from_secs(2)).await;
+    b.add_writer(2, Some("lease_holder_only"), vec![]);
+    let c2 = b.client();
+    let moved = b.wait_owner(&c2, 1, Duration::from_secs(15)).await;
+    tokio::time::sleep(Duration::from_secs(3)).await;
     c.stop(load).await;
-    let settled = c.settle(b.dbs, Duration::from_secs(20)).await;
-    let r = b.check(&c).await;
-    let lost_lines: Vec<String> = b.writers[0].events.lines().into_iter().filter(|(_, l)| l.starts_with("LOST")).map(|(_, l)| l).collect();
-    (r.clone(), format!("{}; moved: {moved}; settled: {settled}; writer 0: {lost_lines:?}", summary(&r, &c)))
+    let settled = c2.settle(b.dbs, Duration::from_secs(20)).await;
+    let acks = c.acks.lock().unwrap().clone();
+    let r = check(&b.minio.meta(), &acks, &b.opens(), b.dbs).await.unwrap();
+    let ov = lease_overlaps(&b.writers.iter().collect::<Vec<_>>());
+    let lost: Vec<String> = b.writers[0].events.lines().into_iter().filter(|(_, l)| l.starts_with("LOST")).map(|(_, l)| l).collect();
+    (r.clone(), format!("{}; moved: {moved}; settled: {settled}; lease overlaps (forced) {}; writer 0: {lost:?}", summary(&r, &c), ov.len()))
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn clock_jump_old_writer_fenced() {
-    let (r, s) = clock_jump_case(None).await;
-    report("clock_jump_old_writer_fenced", &format!("correct: {s}"));
+async fn two_writers_fenced() {
+    let (r, s) = two_writers_case(None).await;
+    report("two_writers_fenced", &format!("correct nodes: {s}"));
     assert!(r.acked > 1000);
     assert_eq!((r.lost.len(), r.late.len()), (0, 0), "first lost {:?}, first late {:?}", r.lost.first(), r.late.first());
-    let (r2, s2) = clock_jump_case(Some("no_fencing")).await;
-    report("clock_jump_old_writer_fenced", &format!("twin no_fencing (nodes): {s2}"));
+    let (r2, s2) = two_writers_case(Some("no_fencing")).await;
+    report("two_writers_fenced", &format!("twin no_fencing (nodes): {s2}"));
     assert!(!r2.late.is_empty() || !r2.lost.is_empty(), "the twin shows nothing: the check does not see the bug");
+}
+
+// ------------------------------------------------------------------------------------- the takeover rule (§5.1)
+
+/// Lease tests: 2 writers, 1 database, no load needed; fast polls so the observer reads the lease right after a change.
+fn lease_cfg() -> serde_json::Value {
+    let mut c = fast_config();
+    c["preferred_poll_ms"] = 50.into();
+    c["other_poll_ms"] = 50.into();
+    c
+}
+
+/// Episodes: `rates` = (writer 0 ppm, writer 1 ppm) for the owner/observer; each episode freezes the current owner
+/// of database 1 for `freeze_ms` (`None` = no freeze: the owner keeps renewing) and, if `jump_ms` is set, makes the
+/// observer's wall clock jump by that much 200 ms after the freeze. Returns (lease overlaps, takeovers, summary).
+async fn lease_case(observer_bug: Option<&str>, episodes: usize, freeze_ms: Option<u64>, jump_ms: i64, drift_ppm: i64) -> (Vec<String>, usize, String) {
+    let mut b = Bench::new(2, 1, None);
+    b.minio.ready().await;
+    b.add_writer_cfg(2, None, vec![], lease_cfg());
+    let c = b.client();
+    assert!(b.wait_owner(&c, 0, Duration::from_secs(20)).await);
+    b.add_writer_cfg(2, observer_bug, vec![], lease_cfg());
+    let c = b.client();
+    let mut takeovers = 0;
+    for _ in 0..episodes {
+        tokio::time::sleep(Duration::from_millis(1500)).await;
+        let Some(owner) = c.owners().get(&1).copied() else { continue };
+        let other = 1 - owner;
+        // the owner's monotonic clock slow, the observer's fast (the worst case for the margin)
+        b.writers[owner].set_clock(0, -drift_ppm);
+        b.writers[other].set_clock(0, drift_ppm);
+        match freeze_ms {
+            Some(f) => {
+                b.writers[owner].stop();
+                if jump_ms != 0 {
+                    tokio::time::sleep(Duration::from_millis(200)).await;
+                    b.writers[other].set_clock(jump_ms, drift_ppm);
+                }
+                tokio::time::sleep(Duration::from_millis(f)).await;
+                b.writers[owner].cont();
+            }
+            None => tokio::time::sleep(Duration::from_secs(6)).await,
+        }
+        b.writers[other].set_clock(0, drift_ppm);
+        if b.wait_owner(&c, other, Duration::from_secs(3)).await {
+            takeovers += 1;
+        }
+    }
+    let ov = lease_overlaps(&b.writers.iter().collect::<Vec<_>>());
+    let taken = b.writers.iter().map(|w| w.events.lines().iter().filter(|(_, l)| l.starts_with("TAKEN")).count()).sum::<usize>();
+    let s = format!("{episodes} episodes, {takeovers} ended with the other writer owning; TAKEN lines {taken}; lease overlaps {}{}", ov.len(), ov.first().map(|x| format!(" (first: {x})")).unwrap_or_default());
+    (ov, takeovers, s)
+}
+
+/// The owner keeps running and renewing: nobody takes the lease. Twin `lease_holder_only` (renewals not seen as
+/// changes): the other writer takes it while the owner still holds it.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn renewing_holder_is_never_taken() {
+    let (ov, t, s) = lease_case(None, 2, None, 0, 0).await;
+    report("renewing_holder_is_never_taken", &format!("correct: {s}"));
+    assert_eq!((ov.len(), t), (0, 0));
+    let (ov2, _, s2) = lease_case(Some("lease_holder_only"), 2, None, 0, 0).await;
+    report("renewing_holder_is_never_taken", &format!("twin lease_holder_only: {s2}"));
+    assert!(!ov2.is_empty(), "the twin shows no overlap: the check does not see the bug");
+}
+
+/// The owner is frozen; the observer's wall clock jumps +5 s while it waits: the takeover still waits lease + margin
+/// on the monotonic clock (no overlap). Twin `lease_wall_clock`: it takes over early, while the owner still holds.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn wall_clock_jump_changes_nothing() {
+    let (ov, t, s) = lease_case(None, 3, Some(3500), 5000, 0).await;
+    report("wall_clock_jump_changes_nothing", &format!("correct: {s}"));
+    assert_eq!(ov.len(), 0);
+    assert!(t >= 2, "the frozen owner's databases were not taken over");
+    let (ov2, _, s2) = lease_case(Some("lease_wall_clock"), 3, Some(3500), 5000, 0).await;
+    report("wall_clock_jump_changes_nothing", &format!("twin lease_wall_clock: {s2}"));
+    assert!(!ov2.is_empty(), "the twin shows no overlap: the check does not see the bug");
+}
+
+/// Clock rates ±5 % (owner slow, observer fast), owner frozen: the margin covers the drift (no overlap). Twin
+/// `lease_no_margin`: overlap.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn margin_covers_clock_drift() {
+    let (ov, t, s) = lease_case(None, 4, Some(3500), 0, 50_000).await;
+    report("margin_covers_clock_drift", &format!("correct: {s}"));
+    assert_eq!(ov.len(), 0);
+    assert!(t >= 3, "the frozen owner's databases were not taken over");
+    let (ov2, _, s2) = lease_case(Some("lease_no_margin"), 4, Some(3500), 0, 50_000).await;
+    report("margin_covers_clock_drift", &format!("twin lease_no_margin: {s2}"));
+    assert!(!ov2.is_empty(), "the twin shows no overlap: the check does not see the bug");
 }
 
 /// Returns (report, acknowledgements after the second node died, summary).

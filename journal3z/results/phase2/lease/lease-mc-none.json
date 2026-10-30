@@ -1,0 +1,1 @@
+{"checker": "lease_mc", "bug": "none", "ttl_ticks": 100, "margin_ticks": 15, "rates_pct": [-6, 0, 6], "horizon_ticks": 250, "states": 401195214, "takeovers_checked": 3395214, "verdict": "complete: no overlap", "secs": 634.4}

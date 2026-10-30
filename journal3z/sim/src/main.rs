@@ -1,6 +1,6 @@
 //! journal3z deterministic simulator.
 //!
-//!   journal3z-sim run --seeds 1-100 [--steps 200000] [--mutation none|<name>] [--only-a] [--double] [--dbs 3]
+//!   journal3z-sim run --seeds 1-100 [--steps 200000] [--mutation none|<name>] [--lease-bug <name>] [--only-a] [--double] [--dbs 3]
 //!   journal3z-sim controls --seeds 1-200 [--steps 200000]       (every negative control; each must be caught)
 //!   journal3z-sim replay --seed 17 [--mutation x] [--trace]
 //!   journal3z-sim scenario walbench_cycle1
@@ -55,6 +55,14 @@ fn opts(args: &[String]) -> Opts {
                 o.out = next();
                 i += 1
             }
+            "--lease-bug" => {
+                o.p.lease_bug = journal3z_core::lease::LeaseBug::parse(&next()).expect("unknown lease bug");
+                i += 1
+            }
+            "--lease-focus" => {
+                o.p.lease_focus = true;
+                o.p.fault_every = (3 * 1_000_000, 6 * 1_000_000);
+            }
             "--only-a" => o.p.only_a = true,
             "--double" => o.p.double = true,
             "--trace" => o.p.trace = true,
@@ -88,7 +96,7 @@ fn seed_json(r: &SeedResult) -> serde_json::Value {
     let v = r.w.violation.as_ref().map(|v| serde_json::json!({"inv": v.inv, "step": v.step, "time_us": v.time, "what": v.what}));
     serde_json::json!({"seed": r.seed, "ok": r.ok, "steps": s.steps, "sim_s": r.w.now as f64 / 1e6, "write_attempts": s.write_attempts, "client_writes": s.client_writes, "acks": s.acks,
         "opens": s.opens, "takeovers": s.takeovers, "stale_aborts": s.stale_aborts, "uploads": s.uploads, "reconfigs": s.reconfigs, "sleeps": s.sleeps,
-        "moves": s.moves, "late_acks": s.late_acks, "mismatches": s.mismatches_sent, "fenced_replies": s.fenced_replies, "messages": s.messages, "faults": s.faults,
+        "moves": s.moves, "late_acks": s.late_acks, "lease_overlaps_after_jump": s.lease_overlaps_after_jump, "mismatches": s.mismatches_sent, "fenced_replies": s.fenced_replies, "messages": s.messages, "faults": s.faults,
         "healed_at_s": s.healed_at.map(|h| h as f64 / 1e6), "recovered_after_heal_ms": s.recovered_after_heal.iter().map(|(d, t)| (d.to_string(), *t as f64 / 1e3)).collect::<std::collections::BTreeMap<_, _>>(),
         "unprotected_steps": s.unprotected_steps, "lost_in_unprotected": s.lost_in_unprotected, "violation": v})
 }
@@ -134,7 +142,7 @@ fn main() {
                 }
                 let st = &r.w.stats;
                 for (k, v) in [("write_attempts", st.write_attempts), ("client_writes", st.client_writes), ("opens", st.opens), ("takeovers", st.takeovers), ("stale_aborts", st.stale_aborts),
-                    ("late_acks", st.late_acks), ("fenced_replies", st.fenced_replies), ("mismatches", st.mismatches_sent), ("uploads", st.uploads),
+                    ("late_acks", st.late_acks), ("lease_overlaps_after_jump", st.lease_overlaps_after_jump), ("fenced_replies", st.fenced_replies), ("mismatches", st.mismatches_sent), ("uploads", st.uploads),
                     ("reconfigs", st.reconfigs), ("sleeps", st.sleeps), ("moves", st.moves), ("messages", st.messages),
                     ("unprotected_steps", st.unprotected_steps), ("lost_in_unprotected", st.lost_in_unprotected)] {
                     *tot.entry(k).or_default() += v;
@@ -147,7 +155,7 @@ fn main() {
             rec_list.sort_by(|a, b| a.partial_cmp(b).unwrap());
             let p50 = rec_list.get(rec_list.len() / 2).copied().unwrap_or(f64::NAN);
             let p99 = rec_list.get(rec_list.len() * 99 / 100).copied().unwrap_or(f64::NAN);
-            let summary = serde_json::json!({"summary": true, "mutation": o.mutation, "only_a": o.p.only_a, "double": o.p.double, "seeds": seeds, "seeds_failed": fails,
+            let summary = serde_json::json!({"summary": true, "mutation": o.mutation, "lease_bug": format!("{:?}", o.p.lease_bug), "only_a": o.p.only_a, "double": o.p.double, "seeds": seeds, "seeds_failed": fails,
                 "steps": steps, "acks": acks, "totals": tot,
                 "liveness": {"dbs_not_writing_after_heal": not_recovered, "max_ms_to_first_ack_after_heal": max_recovery_ms,
                     "p50_ms": p50, "p99_ms": p99}, "faults": faults, "wall_s": t.elapsed().as_secs_f64()});
@@ -160,11 +168,17 @@ fn main() {
             // every negative control: run seeds until the first violation (or the seed range ends)
             let o = opts(rest);
             let mut out = vec![];
-            for name in Mutations::ALL {
-                let m = Mutations::parse(name).unwrap();
+            // the 12 protocol mutations, then the 3 negative controls of the takeover rule (design §5.1)
+            let names: Vec<&str> = Mutations::ALL.iter().chain(journal3z_core::lease::LeaseBug::ALL.iter()).copied().collect();
+            for name in names {
+                let lb = journal3z_core::lease::LeaseBug::parse(name);
+                let m = if lb.is_some() { Mutations::default() } else { Mutations::parse(name).unwrap() };
                 for only_a in [false, true] {
                     let mut p = o.p.clone();
                     p.only_a = only_a;
+                    if let Some(b) = lb {
+                        p.lease_bug = b;
+                    }
                     let t = Instant::now();
                     let (mut caught, mut steps, mut tried) = (None, 0u64, 0u64);
                     for seed in o.seeds.0..=o.seeds.1 {

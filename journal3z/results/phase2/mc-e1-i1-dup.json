@@ -1,0 +1,1 @@
+{"epochs": 1, "max_idx": 1, "dup": true, "fifo": false, "instant_replies": false, "ticks": false, "shuffle_seed": 0, "mutation": "none", "distinct_states": 21021, "explored": 21021, "max_depth": 22, "max_acked": 0, "verdict": "complete: no violation", "secs": 0.7}

@@ -1,0 +1,65 @@
+# journal3z short CI (phase-2 plan, founder's decision 3: short version only; the long runs stay manual).
+# Runs on a push to branch journal3z that touches journal3z/ (or by hand). No secrets, no cloud: everything is local
+# to the runner (no object store needed: the tests that use MinIO are not part of the short CI).
+#   - unit tests: protocol core (incl. the lease takeover rule), disk format, network proxy, node program
+#   - short simulator run on the correct code (must find nothing)
+#   - negative controls: the 12 protocol mutations + the 3 takeover-rule bugs must all be caught
+#   - exhaustive checks, short bounds: one writer (protocol), the takeover rule (correct + 3 bugs)
+#   - the production build refuses the test-only options
+name: journal3z-ci
+on:
+  push:
+    branches: [journal3z]
+    paths: ['journal3z/**', '.github/workflows/journal3z-ci.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: journal3z-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  short:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            journal3z/core/target
+            journal3z/sim/target
+            journal3z/mc/target
+            journal3z/p2/target
+          key: j3z-${{ runner.os }}-${{ hashFiles('journal3z/**/Cargo.lock') }}
+      - name: Unit tests (core, disk format, proxy, node)
+        run: |
+          (cd journal3z/core && cargo test --release)
+          cd journal3z/p2
+          cargo test --release -p j3z-codec -p j3z-store --lib
+          cargo test --release -p j3z-net --features testbugs --test proxy
+          cargo test --release -p j3z-node --features faults,mutations --test node
+      - name: Simulator, short run on the correct code
+        run: |
+          cd journal3z/sim && cargo build --release -q
+          ./target/release/journal3z-sim run --seeds 1-20 --steps 100000 --out /tmp/sim-short.json > /dev/null
+          python3 -c "import json,sys; s=json.load(open('/tmp/sim-short.json'))['summary']; print(s['seeds'],'seeds',s['steps'],'steps',s['acks'],'acks', s['seeds_failed'],'failed'); sys.exit(1 if s['seeds_failed'] else 0)"
+      - name: Negative controls (simulator) and exhaustive check of the takeover rule
+        run: |
+          cd journal3z/sim
+          ./target/release/journal3z-sim controls --seeds 1-100 --steps 200000 --out /tmp/controls.json > /dev/null
+          ./target/release/journal3z-sim run --seeds 5001-5100 --steps 200000 --lease-focus --lease-bug lease_no_margin --out /tmp/focus-bug.json > /dev/null
+          ./target/release/journal3z-sim run --seeds 5001-5030 --steps 200000 --lease-focus --out /tmp/focus-ok.json > /dev/null
+          cd ../mc && cargo build --release -q
+          ./target/release/lease_mc --bug none --horizon 150 > /tmp/lease-mc.jsonl
+          for b in lease_no_margin lease_wall_clock lease_holder_only; do ./target/release/lease_mc --bug $b --horizon 250 >> /tmp/lease-mc.jsonl; done
+          cat /tmp/lease-mc.jsonl
+          python3 ../ci/check_controls.py /tmp/controls.json /tmp/focus-bug.json /tmp/focus-ok.json /tmp/lease-mc.jsonl
+      - name: Exhaustive check, one writer (short bound)
+        run: |
+          cd journal3z/mc
+          ./target/release/journal3z-mc --epochs 1 --idx 1 --dup | tee /tmp/mc.json
+          grep -q '"verdict": "complete: no violation"' /tmp/mc.json
+      - name: Production build refuses the test-only options
+        run: bash journal3z/ci/check_production_build.sh

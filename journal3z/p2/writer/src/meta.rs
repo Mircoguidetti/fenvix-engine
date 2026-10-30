@@ -2,9 +2,9 @@
 //! the database itself, both on any `object_store` with conditional writes (MinIO locally; the same code would talk to
 //! S3). Layout in the bucket:
 //!
-//! - `lease/<db>`: `{"holder", "expires_ms", "seq", "members", "cfg"}`. Written only with conditional PUT (create if
-//!   absent, update if the ETag still matches), like round3's `lease.rs`. `expires_ms` is in the holder's clock;
-//!   another server may take over when its own clock is past `expires_ms + skew`. `seq` grows on every write; the
+//! - `lease/<db>`: `{"holder", "seq", "members", "cfg"}`. Written only with conditional PUT (create if absent, update
+//!   if the ETag still matches), like round3's `lease.rs`. No time is written: another server takes over only after
+//!   seeing the same content for lease + margin on its own monotonic clock (design §5.1). `seq` grows on every write; the
 //!   writer's **epoch** is the `seq` of the PUT that made it the holder (design §5.1).
 //! - `db/<db>/manifest`: `{"writer_epoch", "applied", "chunks"}`: the stand-in for SlateDB's manifest. Opening as the
 //!   writer CASes `writer_epoch` up to the new epoch (the object-store writer fence: SlateDB fences an older writer the
@@ -12,16 +12,16 @@
 //!   `applied` is the journal marker (`sys/journal` in the real engine): the index of the last record contained.
 //! - `db/<db>/chunk-<upto>-<epoch>`: the records of one upload, `[[index, write id], ...]` (barriers are not data).
 
+use journal3z_core::lease::{holder_valid_until, LeaseView, Observer, TakeoverRule};
 use journal3z_core::{Epoch, Idx, NodeId};
 use object_store::path::Path;
 use object_store::{ObjectStore, ObjectStoreExt, PutMode, PutOptions, PutPayload, UpdateVersion};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Lease {
     pub holder: String,
-    pub expires_ms: i64,
     pub seq: u64,
     pub members: Vec<NodeId>,
     pub cfg: u64,
@@ -154,12 +154,13 @@ impl Meta {
     }
 }
 
-/// Lease operations (design §5.1). `now_ms` is the caller's clock (possibly skewed: that is the point).
+/// Lease operations (design §5.1). Times are this server's **monotonic** clock (ms): the holder may act until
+/// `sent + ttl` where `sent` is when it sent its last successful acquire / renew write; another server takes over only
+/// after seeing the same lease content for `ttl + margin` on its own monotonic clock (`journal3z_core::lease`).
 pub struct LeaseOps<'a> {
     pub meta: &'a Meta,
     pub holder: &'a str,
-    pub ttl_ms: i64,
-    pub skew_ms: i64,
+    pub rule: TakeoverRule,
 }
 
 #[derive(Debug, Clone)]
@@ -169,50 +170,75 @@ pub struct Held {
     pub etag: Option<String>,
     pub members: Vec<NodeId>,
     pub cfg: u64,
-    /// Local time (caller's clock) until which this server may act as the holder.
-    pub valid_until_ms: i64,
+    /// Monotonic time (this server's clock) until which this server may act as the holder.
+    pub valid_until_mono: u64,
+}
+
+fn key<T: std::hash::Hash>(x: &T) -> u64 {
+    use std::hash::Hasher;
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    x.hash(&mut h);
+    h.finish()
 }
 
 impl LeaseOps<'_> {
-    /// Take the lease if it is free, expired (by our clock, plus the skew allowance) or ours. `default_members` is
-    /// used when the lease object does not exist yet.
-    pub async fn acquire(&self, db: u64, now_ms: i64, default_members: &[NodeId]) -> Result<Held, MetaError> {
-        let p = lease_path(db);
-        let cur = self.meta.get::<Lease>(&p).await?;
-        let l = cur.value.clone().unwrap_or(Lease { members: default_members.to_vec(), ..Default::default() });
-        let free = l.holder.is_empty() || l.holder == self.holder || l.expires_ms + self.skew_ms < now_ms;
-        if !free {
-            return Err(MetaError::Conflict);
+    pub async fn read(&self, db: u64) -> Result<Versioned<Lease>, MetaError> {
+        self.meta.get::<Lease>(&lease_path(db)).await
+    }
+
+    /// What the observer compares: the whole content (and its version tag), the holder alone, free or not.
+    pub fn view(cur: &Versioned<Lease>) -> LeaseView {
+        match &cur.value {
+            None => LeaseView { free: true, content: 0, holder: 0 },
+            Some(l) => LeaseView { free: l.holder.is_empty(), content: key(&(l, &cur.etag)), holder: key(&l.holder) },
         }
-        let n = Lease { holder: self.holder.to_string(), expires_ms: now_ms + self.ttl_ms, seq: l.seq + 1, members: l.members.clone(), cfg: l.cfg };
-        let etag = self.meta.cas(&p, cur.etag, &n).await?;
-        Ok(Held { epoch: n.seq, seq: n.seq, etag, members: n.members, cfg: n.cfg, valid_until_ms: now_ms + self.ttl_ms })
+    }
+
+    /// Is this lease ours (this process)?
+    pub fn mine(&self, cur: &Versioned<Lease>) -> bool {
+        cur.value.as_ref().map_or(false, |l| l.holder == self.holder)
+    }
+
+    /// Design §5.1: may this server try to take the lease it just read (`cur`)? Yes if it is free, ours, or the
+    /// observer has seen it unchanged for lease + margin on our monotonic clock (`mono`; `wall` only for the
+    /// `lease_wall_clock` negative control).
+    pub fn may_take(&self, cur: &Versioned<Lease>, observer: &mut Observer, mono: u64, wall: u64) -> bool {
+        self.mine(cur) || observer.observe(&self.rule, &Self::view(cur), mono, wall)
+    }
+
+    /// Take the lease, conditionally on the exact version `cur` that was read (the caller decided it may: free, ours,
+    /// or unchanged for ttl + margin). `sent_mono`: our monotonic clock just before this call.
+    pub async fn take(&self, db: u64, cur: &Versioned<Lease>, default_members: &[NodeId], sent_mono: u64) -> Result<Held, MetaError> {
+        let l = cur.value.clone().unwrap_or(Lease { members: default_members.to_vec(), ..Default::default() });
+        let n = Lease { holder: self.holder.to_string(), seq: l.seq + 1, members: l.members.clone(), cfg: l.cfg };
+        let etag = self.meta.cas(&lease_path(db), cur.etag.clone(), &n).await?;
+        Ok(Held { epoch: n.seq, seq: n.seq, etag, members: n.members, cfg: n.cfg, valid_until_mono: holder_valid_until(&self.rule, sent_mono) })
     }
 
     /// Renew: only if we still hold it (our ETag). The epoch does not change.
-    pub async fn renew(&self, db: u64, h: &mut Held, now_ms: i64) -> Result<(), MetaError> {
-        let n = Lease { holder: self.holder.to_string(), expires_ms: now_ms + self.ttl_ms, seq: h.seq + 1, members: h.members.clone(), cfg: h.cfg };
+    pub async fn renew(&self, db: u64, h: &mut Held, sent_mono: u64) -> Result<(), MetaError> {
+        let n = Lease { holder: self.holder.to_string(), seq: h.seq + 1, members: h.members.clone(), cfg: h.cfg };
         let etag = self.meta.cas(&lease_path(db), h.etag.clone(), &n).await?;
         h.etag = etag;
         h.seq = n.seq;
-        h.valid_until_ms = now_ms + self.ttl_ms;
+        h.valid_until_mono = h.valid_until_mono.max(holder_valid_until(&self.rule, sent_mono));
         Ok(())
     }
 
     pub async fn release(&self, db: u64, h: &Held) -> Result<(), MetaError> {
-        let n = Lease { holder: String::new(), expires_ms: 0, seq: h.seq + 1, members: h.members.clone(), cfg: h.cfg };
+        let n = Lease { holder: String::new(), seq: h.seq + 1, members: h.members.clone(), cfg: h.cfg };
         self.meta.cas(&lease_path(db), h.etag.clone(), &n).await.map(|_| ())
     }
 
     /// Membership change (design §5.8): new members, new epoch (= the new seq), still the holder.
-    pub async fn reconfigure(&self, db: u64, h: &mut Held, members: Vec<NodeId>, now_ms: i64) -> Result<(), MetaError> {
-        let n = Lease { holder: self.holder.to_string(), expires_ms: now_ms + self.ttl_ms, seq: h.seq + 1, members: members.clone(), cfg: h.cfg + 1 };
+    pub async fn reconfigure(&self, db: u64, h: &mut Held, members: Vec<NodeId>, sent_mono: u64) -> Result<(), MetaError> {
+        let n = Lease { holder: self.holder.to_string(), seq: h.seq + 1, members: members.clone(), cfg: h.cfg + 1 };
         h.etag = self.meta.cas(&lease_path(db), h.etag.clone(), &n).await?;
         h.seq = n.seq;
         h.epoch = n.seq;
         h.members = members;
         h.cfg = n.cfg;
-        h.valid_until_ms = now_ms + self.ttl_ms;
+        h.valid_until_mono = h.valid_until_mono.max(holder_valid_until(&self.rule, sent_mono));
         Ok(())
     }
 }

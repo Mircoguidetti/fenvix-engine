@@ -1,0 +1,17 @@
+warning: field `avail` is never read
+  --> src/world.rs:52:9
+   |
+24 | pub struct Params {
+   |            ------ field in this struct
+...
+52 |     pub avail: bool,
+   |         ^^^^^
+   |
+   = note: `Params` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+done
+
+real	17m48.353s
+user	17m33.101s
+sys	0m0.210s

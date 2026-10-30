@@ -19,7 +19,7 @@ copiato né modificato). Strumenti locali: MinIO compilato dai sorgenti con `go 
 | P7 banco di prova a 3 processi | **in corso – fermato da un fallimento (vedi sotto)** | 1 – 2 | ≈ 0,2 finora (15:09–15:58) | programma `j3z-soak` scritto; 3 prove brevi di messa a punto: la 3ª ha trovato una **perdita di scritture confermate** causata dal sostituto del motore (P5), corretta; ripetuta: 0 perse; **domanda aperta** sul criterio di ripresa (sotto) |
 | P8 12 versioni rotte sul codice vero | da fare | 0,5 – 1 | | |
 | P9 (§2f) controllo esaustivo a 2 scrittori | iniziato (in attesa) | 1 – 2 | | primo passo: ricerca parallela + messaggi "morti" eliminati; verificata contro la fase 1 (sotto) |
-| CI corta | da fare | — | | |
+| CI corta | **scritta** (primo giro su GitHub dopo questo push) | — | | vedi sezione "CI corta" |
 | P6 integrazione col motore, §2c | **rinviato** (decisione 1): solo interfaccia e documento | 2 – 5 | | |
 
 ## Criteri del §2 (la sessione pubblica i dati; il "passato" lo dichiara il coordinatore)
@@ -255,3 +255,135 @@ Due strade, da decidere (non cambio né il criterio né il disegno da solo):
    (con ±5 s: circa 22 s). Questo è ammorbidire un criterio dopo averlo misurato: lo può decidere solo il fondatore.
 
 Finché non c'è una decisione, le prove lunghe del §2a non partono (sarebbero da rifare).
+
+## Decisione del 30-10-2026: nuova regola di subentro (opzione 1)
+
+Regola (disegno §5.1, aggiornato): chi vuole subentrare legge il lease e lo prende solo dopo averlo visto **immutato
+nel contenuto** per lease + 1,5 s sul **proprio orologio monotono**, con una scrittura condizionata proprio su quella
+versione; chi tiene il lease agisce solo fino a "invio dell'ultimo rinnovo riuscito + lease" sul proprio orologio
+monotono. Nessuna ora scritta da un'altra macchina viene confrontata. Il criterio del §2a (15 s nel 99 %, 40 s nel
+100 %) è **invariato**. Il lease del motore vero (round3 `lease.rs`) ha il vecchio difetto: segnato nel disegno (§5.1)
+come lavoro di P6, il motore non è toccato.
+
+Codice: la regola sta in un solo posto, `journal3z/core/src/lease.rs` (usato dal simulatore e dal sostituto del
+motore), con le 3 versioni rotte chieste: `lease_no_margin` (subentro dopo il solo lease, senza 1,5 s),
+`lease_wall_clock` (conta con l'orologio a muro, che salta), `lease_holder_only` (guarda solo il nome di chi tiene il
+lease, non il contenuto: i rinnovi sembrano "immutato"). Il `core` è cambiato solo per l'aggiunta di questo modulo (il
+protocollo del giornale non è toccato); per la regola del §2d tutto il simulatore e i controlli esaustivi sono stati
+rifatti.
+
+### Risultati grezzi
+
+**Test del modulo** (`cargo test` in `journal3z/core`): `rule_never_overlaps` (derive ±6 % su entrambi gli orologi,
+5 momenti di lettura, salti dell'orologio a muro di ±5 s, chi tiene il lease fermo o che rinnova): sovrapposizione
+massima **0 ms**; `each_bug_overlaps`: ognuna delle 3 versioni rotte si sovrappone, il gemello giusto no; 5/5 verdi.
+
+**Controllo esaustivo della regola** (`journal3z/mc/src/bin/lease_mc.rs`, nuovo; `results/phase2/lease/`): tempo
+discreto (1 tick = 0,1 s, lease 100 tick, margine 15), ogni combinazione di: deriva di chi tiene e di chi osserva
+(−6, 0, +6 %), momento in cui chi tiene si ferma, ogni rinnovo perso o arrivato dopo 0–3 tick, ogni tick di lettura,
+un salto di ±5 s dell'orologio a muro, scrittura di subentro arrivata dopo 0–3 tick. Limite: orizzonte 250 tick (25 s:
+copre l'arresto di chi tiene fino a ≈ 13 s, quasi 4 periodi di rinnovo; con 400 tick lo spazio cresceva oltre la
+memoria e il tempo ragionevoli).
+
+| versione | stati | subentri controllati | esito | tempo |
+|---|---|---|---|---|
+| regola giusta | 401.195.214 | 3.395.214 | **completo: nessuna sovrapposizione** | 634 s |
+| `lease_no_margin` | 52.118.972 | 429.822 | sovrapposizione trovata (deriva −6 % / 0 %) | 82 s |
+| `lease_wall_clock` | 75.844 | 6 | sovrapposizione trovata (salto +5 s) | 0,1 s |
+| `lease_holder_only` | 362.842 | 72 | sovrapposizione trovata | 0,5 s |
+
+**Simulatore** (`results/phase2/sim/`; campagna completa rifatta, 15 min 54 s): nuova regola controllata **L** ("mai
+due scrittori che credono insieme di avere il lease di un database"), orologio monotono con deriva (±3 %, il margine
+del simulatore 150 ms su 2 s copre ±3,6 %), salti dell'orologio a muro, e — aggiunto dopo il primo giro, vedi sotto —
+**salti in avanti dell'orologio monotono** (lease/2 – 2×lease: l'ipotesi della regola rotta apposta).
+
+| prova | semi | passi | conferme | violazioni |
+|---|---|---|---|---|
+| principale (guasto ogni 50–400 ms) | 1.000 | 200.000.000 | 4.122.679 | **0** (73.332 subentri; 25.651 salti del monotono; 1.514.390 passi con due scrittori insieme dopo un salto, previsti e coperti dai recinti) |
+| moderata (guasto ogni 1–3 s) | 500 | 100.000.000 | 7.493.157 | **0** |
+| 10 database | 200 | 40.000.000 | 1.209.782 | **0** |
+| calma (senza guasti) | 100 | 20.000.000 | 1.488.374 | **0** |
+| doppi guasti (perdita attesa, solo conteggio) | 200 | 40.000.000 | 103.508 | **0** |
+| mirata sul lease, regola giusta (scrittore congelato con l'orologio più lento, gli altri più veloci) | 100 | 20.000.000 | 1.386.646 | **0** (1.283 congelamenti) |
+| mirata, `lease_no_margin` | 100 | | | **scoperta in 15 semi su 100** (regola L) |
+| mirata, `lease_wall_clock` | 100 | | | scoperta in 1 seme su 100 |
+| mirata, `lease_holder_only` | 100 | | | scoperta in 100 su 100 |
+
+Ripresa dopo la fine dei guasti (prova principale): massimo 4,8 s, mediana 0,25 s; 0 database fermi.
+
+Controlli negativi (`sim-controls.json`, 100 semi × 200.000 passi, si ferma al primo scoperto): le **12 versioni rotte
+del protocollo: tutte scoperte** con tutte le regole (come nella fase 1); con la sola regola di durabilità tutte tranne
+`forget_fence` (come nella fase 1). Le 3 della regola di subentro: `lease_holder_only` al seme 1, `lease_wall_clock`
+al seme 52, `lease_no_margin` **non** nella prova generale (scoperta nella prova mirata qui sopra, nel controllo
+esaustivo e nei test del banco). Con la sola regola di durabilità le 3 del lease non si vedono: è giusto, il lease non
+serve alla sicurezza.
+
+**Primo giro della campagna (tentativo 1, `results/phase2/sim-attempt1/`)**: con la nuova regola e senza salti del
+monotono, tutte le prove giuste a 0 violazioni, ma **3 versioni rotte non erano più scoperte** (nella fase 1 sì):
+`skip_store_fence` (fase 1: seme 19), `forget_fence` con tutte le regole (fase 1: seme 6), `no_fencing` con la sola
+durabilità (fase 1: seme 2). Causa: quei difetti si vedono solo quando due scrittori agiscono davvero insieme; prima
+succedeva spesso perché gli orologi sfasati facevano subentrare troppo presto, con la regola giusta non succede più.
+Il simulatore quindi non metteva più alla prova i recinti. Correzione (nel simulatore, non nel protocollo): il guasto
+"salto in avanti dell'orologio monotono", che il disegno già prevede come caso tollerato; dopo un salto la regola L non
+si controlla per 3 × (lease + margine) e le sovrapposizioni si contano a parte. Secondo giro: tabella sopra.
+
+**Controlli esaustivi della fase 1 rifatti sul `core` aggiornato** (`results/phase2/mc-*.json`), uno scrittore:
+indice 1 con duplicati **21.021 stati**, indice 2 **18.698.439**, indice 2 FIFO **2.765.555**, tutti completi senza
+violazioni, **numeri identici alla fase 1**; `mc2` con rimozione dei messaggi morti 1.804.416. Questo modello non
+contiene il lease (uno scrittore può aprire in qualunque momento), quindi vale per qualunque regola di subentro; la
+regola stessa è controllata da `lease_mc` qui sopra. Due scrittori: P9.
+
+**Sostituto del motore e banco**: il lease usa la regola del `core` (lettura → osservazione → presa condizionata
+sulla versione letta; il nome di chi tiene è unico per processo, quindi uno scrittore riavviato aspetta come gli
+altri; le scritture sono rifiutate da chi tiene appena il suo orologio monotono supera la scadenza). Righe `TAKEN` e
+`HOLD` in tempo reale e controllo "sovrapposizioni di lease" nel banco. Orologi degli scrittori nel banco: salto
+dell'orologio a muro (±0,5–5 s, non usato dal lease), **deriva** dell'orologio monotono (±5 %), **salto in avanti del
+monotono** (+0,5–5 s: rompe apposta l'ipotesi, perché anche sul codice vero ci siano episodi con due scrittori e le
+versioni rotte dei recinti si possano scoprire in P8; le sovrapposizioni subito dopo un salto si contano a parte).
+
+Test P5 (`results/phase2/p5-run6.txt`, 9 su 9 verdi, ognuno col gemello rotto scoperto):
+
+| test | codice giusto | gemello |
+|---|---|---|
+| `renewing_holder_is_never_taken` | 2 episodi, 0 subentri, 0 sovrapposizioni | `lease_holder_only`: sovrapposizione di 1.492 ms |
+| `wall_clock_jump_changes_nothing` (chi tiene congelato, salto +5 s dell'orologio a muro di chi osserva) | 3 subentri, 0 sovrapposizioni | `lease_wall_clock`: 2 sovrapposizioni (prima 1.151 ms) |
+| `margin_covers_clock_drift` (deriva −5 % / +5 %) | 4 subentri, 0 sovrapposizioni | `lease_no_margin`: 2 sovrapposizioni (prima 130 ms) |
+| `two_writers_fenced` (due scrittori insieme forzati con `lease_holder_only`) | 18.900 conferme, **0 perse, 0 tardive** | nodi `no_fencing`: **241 perse e tardive** |
+| `lease_is_exclusive`, `store_fence…`, `uploads_never_replace…`, `writer_kill_takeover`, `lost_disk_reconfig` | come prima, verdi | gemelli scoperti |
+
+Tentativi dei test P5 (riportati tutti, `p5-run5.txt`): primo giro 7 su 9; falliti (a) `lease_is_exclusive`: 3 giri
+su 100 con più vincitori — **errore del test**: con la nuova regola `take` non decide più da solo, la decisione
+(libero / mio / immutato) la prende chi chiama, e il test chiamava `take` sempre; prova a parte che MinIO rispetta le
+scritture condizionali (`bench/tests/minio_cas.rs`: 2.400 giri, 0 errori); la decisione ora è un metodo del lease
+usato sia dal sostituto sia dal test; (b) il vecchio test "scrittore congelato" non poteva più far vedere `no_fencing`
+(con la regola giusta lo scrittore congelato sa di aver perso il lease quando riparte): sostituito da
+`two_writers_fenced`. Secondo giro: 9 su 9.
+
+### Ripetizione di t3b con la nuova regola (t3c)
+
+Stesso seme (3), stessi tipi di guasto di t3b più deriva e salto in avanti dell'orologio monotono, 15 minuti, valori
+di produzione (lease 10 s, margine 1,5 s), risultati in `results/phase2/p7-trials/t3c/`:
+
+| | t3b (regola vecchia) | **t3c (regola nuova)** |
+|---|---|---|
+| guasti | 36 | 36 (9 kill di scrittore, 6 "due scrittori", 7 salti dell'orologio a muro ±0,5–5 s, 4 salti in avanti del monotono, 2 derive ±5 %, 3 isolamenti di zona, 1 disco perso, 1 interruzione di corrente di tutti i nodi, 1 errore di fsync, 2 pause dello store) |
+| scritture confermate | 164.544 | 165.523 |
+| perse / tardive / violazioni sui dischi | 0 / 0 / 0 | **0 / 0 / 0** |
+| sovrapposizioni di lease | (non misurate) | **0** (e 0 anche dopo i salti del monotono) |
+| ripresa dopo guasti a uno scrittore: casi oltre 15 s | 20 su 410 (max 15,9 s) | **0 su 390 (max 13,3 s; 99° percentile 12,9 s; mediana 9,1 s)** |
+| casi oltre 40 s | 0 | 0 |
+| ripresa dopo guasti a un nodo: max | 0,69 s | 0,74 s |
+
+Questa è una prova breve di messa a punto (15 minuti, un seme): **non** è la misura del §2a, che si fa con le prove
+lunghe.
+
+## CI corta (decisione 3)
+
+`.github/workflows/journal3z-ci.yml` (solo su push al branch `journal3z` che tocca `journal3z/`, o a mano; niente
+segreti, niente cloud): test unitari (core con la regola di subentro, formato su disco, proxy, nodo), simulatore corto
+sul codice giusto (20 semi × 100.000 passi), controlli negativi (le 12 versioni rotte del protocollo e le 3 della
+regola di subentro devono essere tutte scoperte: `journal3z/ci/check_controls.py`), controllo esaustivo della regola
+(giusta: orizzonte 150 tick; versioni rotte: 250) e a uno scrittore (indice 1), build di produzione che rifiuta le
+opzioni di prova (`journal3z/ci/check_production_build.sh`: 6 controlli, tutti "codice 2" in locale). Le prove con
+MinIO e le prove lunghe restano manuali. Prova locale dello script dei controlli sui risultati della campagna:
+"every negative control caught; correct versions clean".
