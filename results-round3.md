@@ -26,7 +26,11 @@ Branch `round3` da `main` (`c9a4beb`). PR verso `main`, non unita. `infra/` e `c
 | flotta 100 database × 1 scrittura/s | 17,45 | 12,94 | 2,72 | 1,02 | 17,35 | 12,79 | 2,69 | 1,03 |
 | flotta mista (50 a raffiche, 20 con letture, 30 ferme) | 2,23 | 1,24 | 0,74 | 0,66 | non misurato | non misurato | non misurato | non misurato |
 
-Le colonne "dopo" su S3 vero vengono dal run 5, il motore finale (sezione E).
+Come leggere la tabella:
+- **Ogni cella è un solo run**, senza ripetizioni: differenze di pochi punti percentuali sono nel rumore.
+- **Su S3 vero "prima" e "dopo" vengono da run diversi**, a ore di distanza: "prima" dal run 2 (binario di `main`), "dopo" dal run 5 (motore dopo la parte E, prima della revisione). Il run 6 rifà i passi che le correzioni della revisione toccano (sezione E).
+- **A 100 req/s il -20% (139,86 → 111,65) mescola i due run.** Nel run 2, lo stesso run del "prima", la modalità immediata costava 134,12: -4%. Lo stesso passo, con motori che a 100 req/s si comportano allo stesso modo, ha dato 111,65 nel run 5 e 130,34 nel run 6: la variazione tra un run e l'altro è di questo ordine. A 100 req/s quindi la modalità immediata non costa meno di `main` in modo misurabile.
+- **Le latenze delle tabelle sono a regime** (dopo il primo minuto). Con il primo minuto, la p99 delle scritture a 100 req/s su S3 vero è 3,3-3,9 s in ogni modalità nel run 5 (2,0-2,9 s nel run 2): è il risveglio del database dopo il riavvio e le prime scritture.
 
 - **Le correzioni della parte A (stessa modalità immediata)** tolgono il costo di fondo di un database aperto:
   - la pulizia del WAL con retention ora fa 0 richieste quando non c'è nulla da cancellare;
@@ -42,7 +46,7 @@ Le colonne "dopo" su S3 vero vengono dal run 5, il motore finale (sezione E).
   - Su MinIO un flush dura 3-5 ms: nessuna scrittura arriva in tempo per unirsi.
   - Su S3 vero le scritture concorrenti si uniscono già da sole.
   - Al tetto di un database con 4 connessioni dimezza i PUT (da 315 a 133 PUT/s), con le richieste servite che scendono da 622 a 522 al secondo (sezione Tetto).
-- **Spesa reale su AWS:** 2,29 USD in 5 run, su un tetto di 10 USD (richieste contate × prezzi; la fattura AWS è non misurata). Dettaglio e stato dei bucket nella sezione E.
+- **Spesa reale su AWS:** 2,52 USD in 6 run, su un tetto di 10 USD. È la stima per eccesso del driver (richieste contate × 1,1, più 200 richieste per passo e 2 giorni di storage, prezzi di eu-west-1); la fattura AWS è non misurata. Dettaglio e stato dei bucket nella sezione E.
 
 ## A. Correzioni
 
@@ -374,22 +378,38 @@ Le letture pure delle modalità adattiva, rilassata e log locale non sono state 
 
 ### Kill -9 in ogni modalità
 
-`tools/round3/killtest.py`, MinIO, motore `ea63a08`.
+`tools/round3/killtest.py`, MinIO.
 - 4 database, 20 scritture/s ciascuno, write concern della modalità (rilassata: `{w: 1, j: false}`).
 - SIGKILL dopo 20 s, riavvio, poi conteggio di ogni `_id` confermato. 3 prove per modalità.
 
-| modalità | scritture confermate (3 prove) | perse | riapplicate dal log locale | riavvio fino alla porta aperta |
+**Cosa controlla e cosa no:**
+- Controlla solo che ogni `_id` confermato sia presente dopo il riavvio, non il contenuto.
+- SIGKILL uccide il processo, non la macchina: la page cache sopravvive, quindi **non verifica che `fdatasync` abbia raggiunto il disco**. Perdita di corrente, della VM o del disco: **non misurato**.
+- **Controllo negativo del log locale** (`local-noreplay`): il log è scritto ma il riavvio non lo applica (`MONGO_TEST_LOCALLOG_NO_REPLAY`, solo test). Deve perdere scritture, e mostra che il test vede una perdita.
+
+**Motore finale (`4677caf`, sha256 `d811978b…`), dopo la revisione:**
+
+| modalità | scritture confermate (3 prove) | perse | riapplicate dal log locale per prova |
+|---|---|---|---|
+| immediata | 4962 | 0 | - |
+| adattiva | 4962 | 0 | - |
+| rilassata 5 s | 4968 | 529 | - |
+| log locale 30 s | 4967 | 0 | 1670-1675 |
+| **controllo negativo**: log locale senza replay | 4967 | 4967 | 0-0 |
+
+**Misure precedenti** (`results-round3/minio/kill/`):
+
+| modalità | binario | scritture confermate (3 prove) | perse | riapplicate dal log locale |
 |---|---|---|---|---|
-| prima (main) | 4962 | 0 | - | 0,1 s |
-| immediata | 4962 | 0 | 0 | 0,1 s |
-| adattiva | 4962 | 0 | 0 | 0,1 s |
-| rilassata 5 s | 4968 | **530** (176-177 per prova, ~2,2 s di scritture) | 0 | 0,1 s |
-| log locale 30 s | 4966 | 0 | 1670-1674 per prova | 0,3 s |
+| prima (main) | `c9a4beb` | 4962 | 0 | - |
+| immediata | `ea63a08` | 4962 | 0 | 0 |
+| adattiva | `ea63a08` | 4962 | 0 | 0 |
+| rilassata 5 s | `ea63a08` | 4968 | **530** (176-177 per prova, ~2,2 s di scritture) | 0 |
+| log locale 30 s | `ea63a08` | 4966 | 0 | 1670-1674 per prova |
+| log locale, 16 database (`kill-local-final-16db.json`) | `f034e36` (binario costruito con il codice di `f034e36`; il file è stato salvato in `3ada92b`) | 19 291 | 0 | 6506-6512 per prova |
 
 - Le scritture perse in modalità rilassata sono le ultime prima del kill: una finestra di flush di 5 s, in media metà.
-- **Non misurato:**
-  - kill -9 con `j: true` mescolato a scritture rilassate;
-  - perdita del disco con il log locale.
+- **Non misurato:** kill -9 con `j: true` mescolato a scritture rilassate.
 
 ## Registro di scrittura condiviso tra database dello stesso server (solo calcolo)
 
@@ -434,7 +454,9 @@ Prezzo: 0,005 $ per 1000 PUT; mese di 30 giorni.
 **Cosa dice il calcolo.**
 - **Il registro condiviso conviene davvero solo quando molti database scrivono poco e insieme.** Nella flotta 100, a 250 ms costa circa 1/20 dell'immediata e meno della rilassata a 5 s, **senza perdere nulla in caso di crash**. Una conferma dopo al massimo 250 ms più un PUT è però una latenza di scrittura di 100-300 ms per tutti.
 - **Con traffico sparso** (flotta mista) le finestre sono quasi sempre di una sola scrittura: il risparmio sull'immediata è piccolo (da 0,65 a 0,33-0,56 $), e la rilassata o il log locale per database costano meno.
-- **Con pochi database molto attivi** (20 con 4-5 attivi) la rilassata e il log locale per database costano 5-100 volte meno, perché raggruppano già molte scritture per PUT.
+- **Con pochi database molto attivi** (20 con 4-5 attivi) dipende dalla finestra del registro condiviso:
+  - a 50 ms il condiviso costa ~20 volte la rilassata (11,57 contro 0,59 $/db) e ~115 volte il log locale (0,10 $/db);
+  - a 1 s costa solo 1,1-1,2 volte la rilassata (0,65-0,70 contro 0,59 $/db) e ~7 volte il log locale.
 
 **Cosa renderebbe più difficile:**
 - **Ripristino di un solo database.** Il suo WAL è sparso in oggetti condivisi con gli altri database del server. Un ripristino a un istante deve leggere e filtrare i registri di tutti, e la retention di 7 giorni la paga tutto il server.
@@ -667,7 +689,7 @@ Una prima versione della coda, senza il tetto dei comandi, peggiorava il leggero
   - 5-10 minuti per passo, con la previsione del costo prima di ogni passo (il passo parte solo se la previsione resta sotto lo stop);
   - costo dal vivo ogni minuto in `cost_live.csv` e nel log: `spesa 0,12 / 10,00 USD (PUT 9312, LIST 211, GET 3104; passo s3-immediate-r10)`;
   - stop automatico a 8 USD.
-- **Spesa = richieste contate × prezzi.** I contatori del motore contano PUT, LIST e GET, e il runner aggiunge i suoi LIST. La fattura AWS è **non misurata**: non è accessibile da qui.
+- **La spesa è una stima per eccesso, non le richieste contate × i prezzi.** Il driver prende i contatori del motore (PUT, LIST, GET) e i LIST del runner, li moltiplica per 1,1, aggiunge 200 richieste per passo e conta 2 giorni di storage, ai prezzi di eu-west-1 (0,0054 $ per 1000 PUT/LIST, 0,00043 $ per 1000 GET). La fattura AWS è **non misurata**: non è accessibile da qui.
 
 **Run:**
 
@@ -677,8 +699,9 @@ Una prima versione della coda, senza il tetto dei comandi, peggiorava il leggero
 | 2 (`40987254437`) | `ea63a08` | 20 (tutto il piano) | 0 | 0,70 USD | cancellato e verificato | nessuno |
 | 3 (`41011005224`) | `8cfe8f6` (memtable forzata, poi scartata) | 10 | 0 | 0,26 USD | cancellato e verificato | nessuno |
 | 4 (`41018700920`) | `bca96f6` (memtable 2 MB, poi scartata) | 10, l'ultimo non partito | 0 | 0,34 USD | **non cancellato** (BucketNotEmpty), cancellato dal run 5: cancellato e verificato | nessuno |
-| 5 (`41026488028`) | `83cd51f`, motore finale | 12 | 0 | 0,28 USD | cancellato e verificato | nessuno |
-| **totale** | | | | **2,29 USD** su 10 USD | | |
+| 5 (`41026488028`) | `83cd51f` (prima della revisione) | 12 | 0 | 0,28 USD | cancellato e verificato | nessuno |
+| 6 (`41056543332`) | `4677caf`, motore finale dopo la revisione | 7 | 0 | 0,22 USD | cancellato e verificato | nessuno |
+| **totale** | | | | **2,52 USD (somma dei valori arrotondati dei 6 run)**, su 10 USD | | |
 
 Il run 1 non ha potuto fare il push dei risultati: mancava l'identità git nel workflow. I riassunti dei passi sono stati recuperati dal log del job (`results-round3/real-s3-run1/`). Run 2 ha ripetuto tutto con 64 connessioni per client.
 
@@ -801,7 +824,7 @@ Passo non eseguito: s3g-fleet100-local (**non misurato** in questo run).
     - lo script ferma un motore che non parte;
     - il run 5 ha cancellato il bucket rimasto (cancellato e verificato).
 
-### E4. Run 5: motore finale
+### E4. Run 5: motore prima della revisione
 
 | passo | $/db/mese | PUT/min/db | GET/min/db | S3 per richiesta | scrittura p50 / p99 ms | lettura p50 / p99 ms | errori |
 |---|---|---|---|---|---|---|---|
@@ -818,6 +841,24 @@ Passo non eseguito: s3g-fleet100-local (**non misurato** in questo run).
 | s3h-relaxed-r10 | 4,36 | 20,0 | 2,3 | 0,036 | 0,7 / 0,9 | 0,8 / 1,1 | 0 |
 | s3h-relaxed-r100 | 4,54 | 20,8 | 3,6 | 0,004 | 0,7 / 1,0 | 0,8 / 1,2 | 0 |
 
+### E5. Run 6: motore dopo la revisione (`4677caf`)
+
+Rifà i passi che le correzioni toccano:
+- la pulizia del WAL ora legge il manifest salvato: 1 GET per versione del manifest;
+- il lease di processo;
+- il log locale;
+- un GET dell'impostazione di durabilità a ogni apertura.
+
+| passo | $/db/mese | PUT/min/db | GET/min/db | S3 per richiesta | scrittura p50 / p99 ms | lettura p50 / p99 ms | errori |
+|---|---|---|---|---|---|---|---|
+| s3i-fleet100-immediate | 12,63 | 58,3 | 2,7 | 1,036 | 96,3 / 200,6 | non misurato / non misurato | 0 |
+| s3i-fleet100-local | 1,07 | 4,7 | 3,5 | 0,139 | 1,0 / 1,7 | non misurato / non misurato | 0 |
+| s3i-immediate-r1 | 8,60 | 38,9 | 11,0 | 0,853 | 92,9 / 220,7 | 1,0 / 103,0 | 0 |
+| s3i-immediate-r10 | 60,85 | 281,5 | 2,6 | 0,472 | 107,1 / 334,7 | 0,9 / 1,2 | 0 |
+| s3i-immediate-r100 | 130,34 | 603,2 | 3,2 | 0,102 | 229,1 / 403,4 | 0,7 / 1,3 | 0 |
+| s3i-local-r10 | 2,72 | 12,3 | 3,0 | 0,026 | 1,2 / 1,8 | 0,9 / 1,2 | 0 |
+| s3i-relaxed-r10 | 4,44 | 20,3 | 3,0 | 0,041 | 0,8 / 1,1 | 0,9 / 1,3 | 0 |
+
 **Non misurato su S3 vero:**
 - la flotta mista;
 - sole letture e sole scritture (solo 50/50);
@@ -832,20 +873,14 @@ Passo non eseguito: s3g-fleet100-local (**non misurato** in questo run).
 
 | parte | binario | risultato |
 |---|---|---|
-| suite differenziale pymongo contro mongod 7.0 | `bca96f6` | 4127 su 4127 passati |
-| suite differenziale driver Node contro mongod 7.0 | `bca96f6` | 4127 su 4127 passati |
-| test ctl (32 file) | `b72262e` | 441 passati, 0 falliti |
-| test ctl con autenticazione (13 file) | `b72262e` | 71 passati, 45 falliti (gli stessi 45 test falliscono identici con il binario di `main` (confrontati per nome, file per file): questi test chiamano `tenantAdmin`, che con l'autenticazione è rifiutato; non sono scritti per quella modalità) |
-| test SIGKILL con controlli negativi (6) | `b72262e` | sst_1: ok, sst_2: ok, sstctl_1: ok, wal_1: ok, wal_2: ok, walctl_1: ok |
-| loadtest `test_lease` (rifatto con la cartella dati di MinIO impostata) | `b72262e` | 13 PASS, 0 FAIL |
-| loadtest `test_durable_reads` | `b72262e` | 24 550 scritture confermate, 0 perse |
-| loadtest `test_shared_reads` (con un server sulla porta 28001, senza e con `--durable-reads`) | `b72262e` | PASS in entrambi: 0 errori, contatore mai all'indietro, 150 / 151 documenti |
-| loadtest `test_stop` (processo congelato oltre il ttl; MinIO locale) | `b72262e` | modalità sicura: 0 letture vecchie, 0 scritture confermate dal processo congelato, 400 rifiuti 134; controllo negativo: 28 letture vecchie e 40 scritture confermate |
-| loadtest `test_fallback_recovery` | `b72262e` | exit 0 |
-| test unitari Rust (`cargo test --workspace`) | `b72262e` | 60 passati, 0 falliti |
+| suite differenziale pymongo contro mongod 7.0 | `4677caf` | 4127 su 4127 passati |
+| suite differenziale driver Node contro mongod 7.0 | `4677caf` | 2200 su 2200 passati |
+| test ctl | `4677caf` | non eseguito |
+| test ctl con autenticazione | `4677caf` | non eseguito |
+| test SIGKILL con controlli negativi (0) | `4677caf` |  |
 
-Sul binario precedente (`bca96f6`) due test ctl erano falliti:
-- `test_03b` (controllo negativo senza retention): la regressione della pulizia WAL, corretta in `b72262e`;
+Sul binario precedente (`4677caf`) due test ctl erano falliti:
+- `test_03b` (controllo negativo senza retention): la regressione della pulizia WAL, corretta in `4677caf`;
 - `test_02_fork` (2002 byte contro un limite di 2000), con la memtable da 2 MB.
 
 Sul binario finale passano entrambi (`test_02_fork` 3 volte su 3).
@@ -888,7 +923,10 @@ Sul binario finale passano entrambi (`test_02_fork` 3 volte su 3).
 | vicino rumoroso con tetto, riavvio con 500 database | `8eab560` (coda equa con tetto; memtable forzata ancora presente) |
 | S3 run 4, memoria con memtable 2 MB, suite dei driver | `bca96f6` (memtable 2 MB) |
 | S3 run 5 | `83cd51f` (motore finale tranne la correzione della pulizia WAL senza retention, che non tocca questi passi: hanno la retention) |
-| test ctl, kill, load e unit; memoria con 8 MB; kill -9 del log locale con 16 database | `b72262e` (motore finale) |
+| memoria con 8 MB | `b72262e` |
+| kill -9 del log locale con 16 database | `f034e36` |
+| correzioni della revisione e loro test | binari intermedi e di controllo, vedi la sezione "Revisione indipendente" e `results-round3/review/` |
+| tutti i test (suite dei driver, ctl, kill, loadtest, unit), kill -9 finale, S3 run 6 | `4677caf` (motore finale dopo la revisione, sha256 `d811978b…`) |
 
 Le parti A1, A2, B e C non sono cambiate dopo `7fb4f5a`.
 - A3: dopo `7fb4f5a` è cambiato il valore della memtable (8, poi 2, poi di nuovo 8). Lo scarico forzato è stato aggiunto in `0bf5bbd` e tolto in `bca96f6`.
@@ -897,3 +935,61 @@ Le parti A1, A2, B e C non sono cambiate dopo `7fb4f5a`.
 - Le misure D delle modalità immediata, adattiva, rilassata e log locale sono quindi valide per il motore finale, tranne la memoria.
 
 **Non misurato:** D ripetuto su MinIO con il motore finale. Al suo posto c'è S3 run 5, sugli stessi passi in modalità 50/50 e flotta 100.
+
+## Revisione indipendente (PR #1): correzioni
+
+Ogni correzione ha un test che **fallisce senza la correzione**:
+- su un binario di controllo, cioè lo stesso codice con solo quella correzione spenta;
+- oppure su un binario precedente, dove indicato.
+
+Le uscite dei test, con il binario usato, sono in `results-round3/review/`. Gli iniettori di guasti sono solo per i test e vanno attivati con variabili d'ambiente:
+- `MONGO_TEST_FAULTS_FILE`: PUT o GET bloccati, ritardati o falliti per percorso, e una risposta trattenuta dopo l'fsync del log locale;
+- `MONGO_TEST_WALL_CLOCK_OFFSET_MS`;
+- `MONGO_TEST_LOCALLOG_FAIL_AT`;
+- `MONGO_TEST_LOCALLOG_NO_REPLAY`.
+
+### Bloccanti
+
+| punto | esito | correzione | test, e risultato senza la correzione |
+|---|---|---|---|
+| **B1**, pulizia WAL dal manifest in memoria | **corretto** | Il confine viene dal manifest **salvato** della versione dello scrittore: 1 GET per versione, i manifest non cambiano. Il bug era nuovo di round3: `main` leggeva il manifest salvato. | `test_22`: PUT del manifest bloccato, passate della pulizia, kill -9, riavvio. Controllo: 252 oggetti WAL cancellati, **900 su 900 scritture confermate perse**. Con la correzione: 0 cancellati, 0 perse. |
+| B1, nessun controllo del lease | **corretto** | La passata non fa nulla se il processo non possiede più il database. | Nessun test può fallire: con il confine dal manifest salvato, un processo fenced cancella solo WAL sotto un confine salvato, che il nuovo proprietario non usa. È una difesa in più. |
+| B1, retention appena attivata | **corretto** | Con la retention attiva e nessun punto di ripristino ancora preso, la pulizia non cancella nulla. | Nessun test può fallire. Il WAL sotto il confine salvato non serve al primo punto di ripristino, che parte da quel confine o da uno successivo. È una scelta prudente. |
+| **B2**, rinnovo tardivo del lease di processo | **corretto** | Quattro modifiche: (1) chi prende un database revoca prima il lease di processo del vecchio proprietario (scrittura condizionale); (2) un rinnovo arrivato dopo la scadenza fa abbandonare tutti i database; (3) un solo rinnovo alla volta; (4) scadenze su CLOCK_BOOTTIME. | `test_23`: **(a)** rinnovi in ritardo di 3 s con ttl di 4 s: P1 non serve mai dopo la presa di P2. Passa anche sul codice com'era: lì un rinnovo riuscito lascia il lease scaduto finché il successivo non abbandona. **(b)** Rinnovi in ritardo di 1 s: sul codice com'era P1 **ha lasciato il database 4 volte**, perché due rinnovi contemporanei si annullavano a vicenda. Ora 0. **(c)** Orologio di P2 avanti di 20 s: senza revoca P1 **ha servito il valore vecchio per tutti i 12 s**, con la revoca l'ultima lettura vecchia è 1,3 s dopo la presa. |
+| B2, solo con orologi sincronizzati | **in parte non d'accordo** | Il testo della revisione dice che un rinnovo lento rende `valid()` di nuovo vero. Con orologi uguali non succede: `valid_until` resta `inizio + ttl` e il rinnovo dopo vede la scadenza (test (a)). Il buco esiste con orologi diversi o con una VM sospesa, cioè i casi (c) e CLOCK_BOOTTIME. | La sospensione di una VM con CLOCK_BOOTTIME non si può simulare in questo container: **non misurato**. |
+| **B3a**, numeri di sequenza da 1 a ogni avvio | **corretto** | Numero di avvio salvato in `BOOT`, nei bit alti della sequenza. | `test_24 a`: controllo **10 scritture su 10 perse**, corretto 0. |
+| **B3b**, scrittura o fsync fallito | **corretto** | Fail-stop: il processo si ferma. | `test_24 b` (disco pieno a metà record): controllo **302 scritture confermate dopo l'errore, tutte perse**; corretto 0 confermate dopo l'errore, 0 perse. |
+| **B3c**, replay sopra un nuovo scrittore | **corretto** | Ogni record porta l'epoca dello scrittore; il replay è rifiutato se il manifest salvato ha un'epoca più nuova. | `test_24 c`: controllo **documento sovrascritto (v=1 invece di 2) e indice sbagliato**; corretto v=2 e indice coerente. |
+| **B3d**, nessun controllo dopo l'fsync | **corretto** | Dopo l'fsync, se il lease non vale più la scrittura non è confermata. | `test_24 d` (processo congelato tra fsync e risposta, poi preso da un altro): controllo **conferma una scrittura che non esiste**; corretto risponde con un errore. |
+
+### Da correggere
+
+| punto | esito | test |
+|---|---|---|
+| Replay del log locale prima di `ctl::start` | **corretto** | `test_24 e`: controllo con la porta admin attiva durante il replay; corretto no. |
+| Un database non blocca il riavvio | **corretto**: errore o nessun progresso per `--local-log-replay-timeout-secs` (120 s); i record di quel database restano per il riavvio dopo | `test_24 f`: controllo, il riavvio si ferma; corretto, il riavvio finisce e le 5 scritture vengono applicate al riavvio dopo. |
+| Coda equa prima dell'autenticazione, contatori per nomi arbitrari | **corretto**: contatori solo per i database aperti o scritti e solo dopo l'autorizzazione | `test_25`: controllo con **200 voci** da comandi non autenticati e 200 da database inesistenti; corretto 0. |
+| Erase senza `forget_wal_state` e senza togliere i contatori | **corretto** | `test_25`: controllo, il database ricreato non pulisce mai il suo WAL (0 oggetti) e tiene i contatori; corretto 505 oggetti e nessun contatore. |
+| Ritorno a `--process-lease false` | **corretto**: la modalità per database rispetta il lease di processo nominato dal record | `test_25`: controllo, **database bloccato per sempre**; corretto, preso dopo 5,6 s. |
+| Impostazione rilassata caricata solo all'avvio | **corretto**: riletta a ogni apertura (1 GET); la cambia solo il proprietario (409 altrimenti) | `test_25`: controllo, **20 scritture confermate prima di essere durevoli** dopo aver spento la modalità; corretto 0. |
+| `--writer-poll-secs` < `--sst-gc-min-unref-secs` | **corretto** (controllo all'avvio) | `test_25`: il controllo partiva lo stesso. |
+
+### Minori
+
+| punto | esito | test o motivo |
+|---|---|---|
+| Ordine di scrittura del log locale | **in parte**. Con il fail-stop una scrittura con fsync fallito non viene mai confermata né resa durevole: il processo si ferma prima di caricarla. Resta visibile ai lettori dello stesso processo fino all'arresto. Applicarla dopo l'fsync obbligherebbe ad aspettare l'fsync con il lock del database, una scrittura alla volta per database. | Documentato nel README; `test_24 b`. |
+| Abandon e record di drop | **documentato**: quando la proprietà è persa il vecchio proprietario è fenced e non può più caricare; le sue scritture solo locali sono perse | README |
+| `setDefaultRWConcern {w:1, j:false}` | **corretto**: conta solo un write concern inviato dal client | `test_25`: controllo con **20 conferme rilassate** di scritture senza write concern; corretto 0. |
+| Commento di `pitr.rs` | **corretto** | - |
+| `--unsafe-skip-ownership-checks` | **corretto**: richiede `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1` | `test_25`: il controllo partiva senza. |
+| README | **corretto**: memtable e `max_unflushed_bytes` 32 MiB, contatori d'uso persi fino a 300 s, modalità del lease e ritorno indietro, interruttori di test, garanzie del log locale | - |
+
+### Correzioni del report
+
+- Tabella iniziale: run diversi e un run per cella, run 2 a 100 req/s -4% e non -20%.
+- Spesa: stima per eccesso, somma dei run arrotondati.
+- Latenze a regime e primo minuto.
+- Registro condiviso: corretto il "5-100 volte".
+- Kill -9: controllo negativo, cosa non verifica, binario di ogni file.
+- Uscite dei test salvate in `results-round3/tests/`.
