@@ -1,6 +1,6 @@
 {
- "comment": "round3 real S3 plan: a push to branch round3 that changes this file starts .github/workflows/round3-s3.yml",
- "rev": 1,
+ "comment": "round3 real S3 plan: a push to branch round3 that changes this file starts .github/workflows/round3-s3.yml | rev 2: 64 client connections per database (rev 1: 4 were too few at 100 req/s with ~100 ms per write from the runner)",
+ "rev": 2,
  "steps": [
   {
    "name": "s3-before-r1",
