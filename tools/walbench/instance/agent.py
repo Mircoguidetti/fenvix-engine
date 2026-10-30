@@ -45,20 +45,32 @@ def log(msg):
 PUT_FAILS = [0]  # consecutive failed uploads: the run bucket is gone (teardown) or unreachable
 
 
+def _run_ok(args, timeout):
+    """True if the command succeeded; a timeout or any other error is just False (never raises)."""
+    try:
+        return subprocess.run(args, env=ENV, capture_output=True, timeout=timeout).returncode == 0
+    except Exception:
+        return False
+
+
 def s3put(key, path):
-    ok = subprocess.run([BIN, "s3put", "--bucket", BUCKET, "--key", ROOT + key, "--file", path], env=ENV, capture_output=True, timeout=120).returncode == 0
+    ok = _run_ok([BIN, "s3put", "--bucket", BUCKET, "--key", ROOT + key, "--file", path], 120)
     PUT_FAILS[0] = 0 if ok else PUT_FAILS[0] + 1
     return ok
 
 
 def s3get(key, path):
-    return subprocess.run([BIN, "s3get", "--bucket", BUCKET, "--key", ROOT + key, "--file", path], env=ENV, capture_output=True, timeout=120).returncode == 0
+    return _run_ok([BIN, "s3get", "--bucket", BUCKET, "--key", ROOT + key, "--file", path], 120)
 
 
 def put_json(key, obj):
-    p = f"{WORK}/.put-{threading.get_ident()}.json"
-    json.dump(obj, open(p, "w"))
-    return s3put(key, p)
+    try:
+        p = f"{WORK}/.put-{threading.get_ident()}.json"
+        json.dump(obj, open(p, "w"))
+        return s3put(key, p)
+    except Exception as e:
+        log(f"put_json {key}: {type(e).__name__}")
+        return False
 
 
 def marker(name, obj=None):
@@ -103,25 +115,29 @@ def imds(path):
 def progress_loop():
     """Sum of the counters of every walbench process on this instance (live files: running and finished ones)."""
     while True:
-        tot = {}
-        for f in glob.glob(f"{LIVE}/*.json"):
-            try:
-                c = json.load(open(f))["counters"]
-            except Exception:
-                continue
-            for k, v in c.items():
-                if isinstance(v, list):
-                    cur = tot.get(k, [0] * len(v))
-                    tot[k] = [a + b for a, b in zip(cur, v)]
-                else:
-                    tot[k] = tot.get(k, 0) + v
-        put_json(f"progress/{TAG}.json", {"unix": time.time(), "counters": tot, "processes": len(glob.glob(f"{LIVE}/*.json")),
-                                          "steps": sorted(CURRENT)})
         try:
-            s3put(f"logs/{TAG}-agent.log", f"{WORK}/agent.log")
-        except Exception:
-            pass
+            _progress_once()
+        except Exception as e:  # the progress thread must never die
+            log(f"progress: {type(e).__name__}")
         time.sleep(30)
+
+
+def _progress_once():
+    tot = {}
+    for f in glob.glob(f"{LIVE}/*.json"):
+        try:
+            c = json.load(open(f))["counters"]
+        except Exception:
+            continue
+        for k, v in c.items():
+            if isinstance(v, list):
+                cur = tot.get(k, [0] * len(v))
+                tot[k] = [a + b for a, b in zip(cur, v)]
+            else:
+                tot[k] = tot.get(k, 0) + v
+    put_json(f"progress/{TAG}.json", {"unix": time.time(), "counters": tot, "processes": len(glob.glob(f"{LIVE}/*.json")),
+                                      "steps": sorted(CURRENT)})
+    s3put(f"logs/{TAG}-agent.log", f"{WORK}/agent.log")
 
 
 # -------------------------------------------------------------------------------------------------------- client

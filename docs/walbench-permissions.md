@@ -143,8 +143,12 @@ Notes on the policy:
 - `servicequotas:GetServiceQuota` on quota `L-1216C47A` (EC2 "Running On-Demand Standard instances", in vCPUs) is
   read before anything is launched. Rule: at most 3 c6i.large at once; 4 only if the free quota (quota minus the
   vCPUs of every pending/running instance in eu-west-1, from DescribeInstances) is at least 8. If the quota cannot be
-  read (e.g. AccessDenied) the run uses 3. With 3, quorum node 0 runs as a process on the client instance (same AZ
-  as node 0 would be; the report says so); with fewer than 6 free vCPUs nothing is launched. The free quota is logged.
+  read (e.g. AccessDenied) the run assumes the default quota of 5 vCPUs (`plan.json`:
+  `assumed_vcpu_quota_if_unreadable`) and still applies the floor with the used vCPUs from DescribeInstances; only
+  if those cannot be read either does it fall back to 3 instances. **So without this permission the run refuses to
+  launch** (5 assumed − used < 6): the permission is effectively required. With 3 instances, quorum node 0 runs as a
+  process on the client instance (same AZ as node 0 would be; the report says so); with fewer than 6 free vCPUs
+  nothing is launched. The check runs before anything is created, and the free quota is logged.
 - `ec2:AuthorizeSecurityGroupIngress` is allowed only on the tagged walbench security group (the rule itself is not
   tagged; it is deleted with its group).
 - The `Deny` limits the role to `c6i.large` for anything it launches; the `RequestTag` condition makes every instance,

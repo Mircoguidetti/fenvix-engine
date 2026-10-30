@@ -93,16 +93,18 @@ def test_quota_rule():
     def denied(**kw):
         from botocore.exceptions import ClientError
         raise ClientError({"Error": {"Code": "AccessDeniedException"}}, "GetServiceQuota")
-    with_clients({"service-quotas": Stub(get_service_quota=denied), "ec2": ec2(0)})
+    with_clients({"service-quotas": Stub(get_service_quota=denied), "ec2": ec2(10)})
+    o.PLAN["assumed_vcpu_quota_if_unreadable"] = 16  # unreadable quota: assumed value, floor applied (free 6 -> 3)
     r = o.instance_budget()
     assert r["max_instances"] == 3 and r["quota_error"] == "AccessDeniedException", r
+    o.PLAN["assumed_vcpu_quota_if_unreadable"] = 5
     with_clients({"service-quotas": sq(10.0), "ec2": ec2(6)})  # free 4: not even 3 fit
     try:
         o.instance_budget()
         raise AssertionError("expected SystemExit")
     except SystemExit:
         pass
-    print("ok: quota rule (4 only if free >= 8; 3 otherwise or on AccessDenied; refuse below 6 free)")
+    print("ok: quota rule (4 only if free >= 8; 3 otherwise; refuse below 6 free)")
 
 
 def test_terminate_never_raises():
@@ -162,5 +164,118 @@ def test_empty_bucket_bounded():
     print("ok: bucket emptying checks Errors and stops after 5 passes without progress")
 
 
+
+def test_git_push_never_raises_and_is_bounded():
+    import time as _t
+    import subprocess as sp
+    real_sleep = _t.sleep
+    d = tempfile.mkdtemp()
+    os.makedirs(f"{d}/bin")
+    open(f"{d}/bin/git", "w").write("#!/bin/sh\nsleep 30\n")  # a git that hangs
+    os.chmod(f"{d}/bin/git", 0o755)
+    os.makedirs(f"{d}/results-walbench")
+    open(f"{d}/results-walbench/cost_live.csv", "w").write("utc,total_usd\n")
+    old = os.environ["PATH"]
+    os.environ["PATH"] = f"{d}/bin:" + old
+    o.time.sleep = real_sleep
+    try:
+        t = _t.monotonic()
+        r = o.git_push_file(f"{d}/results-walbench/cost_live.csv", "x", cwd=d, budget_s=4)
+        el = _t.monotonic() - t
+    finally:
+        os.environ["PATH"] = old
+    assert r is False and el < 8, (r, el)
+    # a git that raises outright (missing binary) is also just False
+    os.environ["PATH"] = f"{d}/nothing"
+    try:
+        assert o.git_push_file(f"{d}/results-walbench/cost_live.csv", "x", cwd=d, budget_s=4) is False
+    finally:
+        os.environ["PATH"] = old
+    print(f"ok: a hanging git push returns False after {el:.1f} s (budget 4 s); a missing git returns False")
+
+
+def test_reattach_thread_always_writes_marker():
+    puts = []
+    o.s3put = lambda key, body: puts.append(key)
+    o.ST.clear()
+    o.ST["instances"] = {"client": "i-c", "standby": "i-s"}
+    o.wait_running = lambda iid, timeout=600: True
+
+    def boom():
+        raise RuntimeError("describe failed")
+    o.reattach_cycles = boom
+    r = {"result": None}
+    o.run_reattach(r)
+    assert puts == ["markers/reattach-done.json"] and "reattach failed" in r["result"]["error"], (puts, r)
+    puts.clear()
+    o.ST["instances"] = {"client": "i-c"}
+    o.ST["standby_skipped"] = "launch failed: InsufficientInstanceCapacity"
+    o.run_reattach(r)
+    assert puts == ["markers/reattach-done.json"] and "standby not launched" in r["result"]["error"], r
+    print("ok: the reattach thread writes reattach-done even when it raises or when the standby was not launched")
+
+
+def test_creds_backoff():
+    o.Creds.at, o.Creds.next_try, o.Creds.backoff = 0.0, 0.0, 60.0
+    os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] = "http://127.0.0.1:9/?x=1"
+    os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"] = "t"
+    o.time.sleep = lambda s: None
+    calls = [0]
+    real = o.urllib.request.urlopen
+
+    def fail(*a, **k):
+        calls[0] += 1
+        raise OSError("no token service")
+    o.urllib.request.urlopen = fail
+    try:
+        o.Creds.renew()
+        assert calls[0] == 3 and o.Creds.next_try > o.time.time() + 50
+        o.Creds.renew()  # within the back-off: no attempt
+        assert calls[0] == 3
+        assert o.Creds.backoff == 120.0
+        o.Creds.renew(max_age=0)  # forced (teardown): tries anyway
+        assert calls[0] == 6
+    finally:
+        o.urllib.request.urlopen = real
+        del os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"], os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
+    print("ok: failed renewal backs off (60 s, doubling), forced renewal still tries")
+
+
+def test_quota_unreadable_fallback():
+    from botocore.exceptions import ClientError
+
+    def denied(**kw):
+        raise ClientError({"Error": {"Code": "AccessDeniedException"}}, "GetServiceQuota")
+
+    def ec2(used):
+        class P:
+            def paginate(self, **kw):
+                yield {"Reservations": [{"Instances": [{"CpuOptions": {"CoreCount": used, "ThreadsPerCore": 1}}]}]}
+        return Stub(get_paginator=lambda name: P())
+    o.PLAN["assumed_vcpu_quota_if_unreadable"] = 5
+    with_clients({"service-quotas": Stub(get_service_quota=denied), "ec2": ec2(0)})
+    try:
+        o.instance_budget()
+        raise AssertionError("assumed quota 5 < 6 free: must refuse")
+    except SystemExit:
+        pass
+    o.PLAN["assumed_vcpu_quota_if_unreadable"] = 32
+    r = o.instance_budget()
+    assert r["max_instances"] == 4 and r["quota_vcpus_assumed"] == 32, r
+
+    class Bad:
+        def paginate(self, **kw):
+            raise ClientError({"Error": {"Code": "UnauthorizedOperation"}}, "DescribeInstances")
+    with_clients({"service-quotas": Stub(get_service_quota=denied), "ec2": Stub(get_paginator=lambda n: Bad())})
+    r = o.instance_budget()
+    assert r["max_instances"] == 3 and r["used_error"] == "UnauthorizedOperation", r
+    o.PLAN["assumed_vcpu_quota_if_unreadable"] = 5
+    print("ok: unreadable quota -> assumed default with the free-vCPU floor; unreadable usage -> 3 instances")
+
+
 if __name__ == "__main__":
     test_empty_bucket_bounded()
+    test_git_push_never_raises_and_is_bounded()
+    test_reattach_thread_always_writes_marker()
+    test_creds_backoff()
+    test_quota_unreadable_fallback()

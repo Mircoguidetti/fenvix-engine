@@ -94,6 +94,8 @@
   "client_boot_minutes": 10,
   "visibility": {
     "line_every_s": 60,
-    "push_every_s": 300
-  }
+    "push_every_s": 300,
+    "push_budget_s": 90
+  },
+  "assumed_vcpu_quota_if_unreadable": 5
 }

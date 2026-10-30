@@ -51,11 +51,15 @@ def save_state():
 # ------------------------------------------------------------------------------------------------- credentials
 class Creds:
     at = 0.0  # unknown age at start (the workflow's session was made before the build): renewed on the first call
+    next_try = 0.0  # back-off after a failed renewal (60 s, doubling to 10 min); max_age=0 (forced) ignores it
+    backoff = 60.0
 
     @classmethod
     def renew(cls, max_age=25 * 60):
         """OIDC token -> new 1 h role session (only on the GitHub runner; values are masked, never written)."""
         if time.time() - cls.at < max_age or "ACTIONS_ID_TOKEN_REQUEST_URL" not in os.environ:
+            return
+        if max_age > 0 and time.time() < cls.next_try:
             return
         for attempt in (1, 2, 3):
             try:
@@ -73,11 +77,16 @@ class Creds:
                     print(f"::add-mask::{v}", flush=True)
                 os.environ.update(AWS_ACCESS_KEY_ID=cr["AccessKeyId"], AWS_SECRET_ACCESS_KEY=cr["SecretAccessKey"], AWS_SESSION_TOKEN=cr["SessionToken"])
                 cls.at = time.time()
+                cls.backoff = 60.0
+                cls.next_try = 0.0
                 log("credentials renewed")
                 return
             except Exception as e:
                 log(f"credential renewal attempt {attempt} failed: {code(e)}")
                 time.sleep(5)
+        cls.next_try = time.time() + cls.backoff
+        log(f"credential renewal failed; next try in {cls.backoff:.0f} s (current session stays valid up to 1 h)")
+        cls.backoff = min(cls.backoff * 2, 600.0)
 
 
 # ----------------------------------------------------------------------------------------------------- S3 helpers
@@ -236,39 +245,77 @@ class Visible:
         if not force and t - cls.last_push < PLAN.get("visibility", {}).get("push_every_s", 300):
             return None
         cls.last_push = t
-        return git_push_file(f"{OUT}/cost_live.csv", f"walbench run {RUN}: live spend")
+        try:
+            return git_push_file(f"{OUT}/cost_live.csv", f"walbench run {RUN}: live spend")
+        except Exception as e:  # git_push_file never raises; belt and braces for the paid run
+            log(f"spend push failed: {type(e).__name__}")
+            return False
 
 
 TRIGGERS = ("tools/walbench/go.json", "tools/walbench/teardown.json")
 
 
-def git_push_file(path, msg, cwd=None):
-    """Commit ONLY `path` and push it to walbench, with pull --rebase retries. Never raises; never pushes a trigger
-    path; refuses content that looks like an account id, ARN or key."""
+def run_group(args, cwd, timeout):
+    """subprocess.run in its own process group: on timeout the WHOLE group is killed (git's helpers too), so the
+    pipes close and the timeout is really honoured. Raises TimeoutExpired after killing."""
+    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        out, err = p.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(p.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        p.communicate()
+        raise
+    return subprocess.CompletedProcess(args, p.returncode, out, err)
+
+
+def git_push_file(path, msg, cwd=None, budget_s=None):
+    """Commit ONLY `path` and push it to walbench, with pull --rebase retries. Never raises (any error -> False);
+    never pushes a trigger path; refuses content that looks like an account id, ARN or key. The whole call is bounded
+    by budget_s (default 90 s, monotonic clock) so it cannot hold up the spend check."""
     import re
-    rel = os.path.relpath(path, cwd or os.getcwd())
-    if rel in TRIGGERS or rel.startswith("tools/"):
-        log(f"refusing to push {rel}: not a results path")
+    budget_s = budget_s if budget_s is not None else PLAN.get("visibility", {}).get("push_budget_s", 90)
+    deadline = time.monotonic() + budget_s
+    try:
+        rel = os.path.relpath(path, cwd or os.getcwd())
+        if rel in TRIGGERS or rel.startswith("tools/"):
+            log(f"refusing to push {rel}: not a results path")
+            return False
+        data = open(path, "rb").read()
+        if re.search(rb"arn:aws:|\b(AKIA|ASIA)[A-Z0-9]{16}\b|\b\d{12}\b", data):
+            log(f"refusing to push {rel}: it contains something that looks like an identifier")
+            return False
+
+        def g(*a):
+            left = deadline - time.monotonic()
+            if left <= 1:
+                raise TimeoutError("push time budget used up")
+            return run_group(["git", *a], cwd, min(left, 60))
+        g("add", "-f", "--", rel)
+        r = g("commit", "-q", "-m", msg, "--", rel)
+        if r.returncode and "nothing" not in (r.stdout + r.stderr):
+            log(f"spend push: commit failed ({r.returncode})")
+            return False
+        for attempt in range(3):
+            if g("pull", "--rebase", "--autostash", "-q", "origin", "walbench").returncode == 0 and g("push", "-q", "origin", "HEAD:walbench").returncode == 0:
+                log(f"spend log pushed to walbench ({rel})")
+                Visible.pushes.append(now())
+                return True
+            g("rebase", "--abort")
+            time.sleep(min(2 * (attempt + 1), max(0.0, deadline - time.monotonic() - 2)))
+        log("spend push: failed after 3 attempts (the run continues; the next push retries)")
         return False
-    data = open(path, "rb").read()
-    if re.search(rb"arn:aws:|\b(AKIA|ASIA)[A-Z0-9]{16}\b|\b\d{12}\b", data):
-        log(f"refusing to push {rel}: it contains something that looks like an identifier")
+    except Exception as e:
+        log(f"spend push: gave up ({type(e).__name__}); the run continues")
+        left = deadline + 5 - time.monotonic()  # at most 5 s past the budget, only to undo a half-done rebase
+        if left > 1 and os.path.isdir(os.path.join(cwd or ".", ".git", "rebase-merge")):
+            try:
+                run_group(["git", "rebase", "--abort"], cwd, left)
+            except Exception:
+                pass
         return False
-    g = lambda *a: subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, timeout=120)  # noqa: E731
-    g("add", "-f", "--", rel)
-    r = g("commit", "-q", "-m", msg, "--", rel)
-    if r.returncode and "nothing" not in (r.stdout + r.stderr):
-        log(f"spend push: commit failed ({r.returncode})")
-        return False
-    for attempt in range(4):
-        if g("pull", "--rebase", "--autostash", "-q", "origin", "walbench").returncode == 0 and g("push", "-q", "origin", "HEAD:walbench").returncode == 0:
-            log(f"spend log pushed to walbench ({rel})")
-            Visible.pushes.append(now())
-            return True
-        g("rebase", "--abort")
-        time.sleep(2 * (attempt + 1))
-    log("spend push: failed after 4 attempts (the run continues)")
-    return False
 
 
 # --------------------------------------------------------------------------------------------------------- launch
@@ -343,16 +390,24 @@ def instance_budget():
         q = c("service-quotas").get_service_quota(ServiceCode="ec2", QuotaCode=QUOTA_CODE)["Quota"]["Value"]
         info["quota_vcpus"] = q
     except Exception as e:
+        # quota unreadable: assume the default quota (plan.assumed_vcpu_quota_if_unreadable, 5) and still apply the
+        # free-vCPU floor with the used vCPUs from DescribeInstances; if even those cannot be read, 3 instances as before
         info["quota_error"] = code(e)
+        q = float(PLAN.get("assumed_vcpu_quota_if_unreadable", 5))
+        info["quota_vcpus_assumed"] = q
+        log(f"vCPU quota not readable ({code(e)}): assuming the default quota of {q:.0f} vCPUs")
+    try:
+        used = 0
+        for page in c("ec2").get_paginator("describe_instances").paginate(Filters=[{"Name": "instance-state-name", "Values": ["pending", "running"]}]):
+            for res in page["Reservations"]:
+                for i in res["Instances"]:
+                    co = i.get("CpuOptions", {})
+                    used += co.get("CoreCount", 1) * co.get("ThreadsPerCore", 1)
+    except Exception as e:
+        info["used_error"] = code(e)
         info["max_instances"] = 3
-        log(f"vCPU quota not readable ({code(e)}): at most 3 instances at once")
+        log(f"used vCPUs not readable ({code(e)}): at most 3 instances at once")
         return info
-    used = 0
-    for page in c("ec2").get_paginator("describe_instances").paginate(Filters=[{"Name": "instance-state-name", "Values": ["pending", "running"]}]):
-        for res in page["Reservations"]:
-            for i in res["Instances"]:
-                co = i.get("CpuOptions", {})
-                used += co.get("CoreCount", 1) * co.get("ThreadsPerCore", 1)
     info["used_vcpus"] = used
     info["free_vcpus"] = q - used
     info["max_instances"] = 4 if q - used >= 8 else 3
@@ -479,6 +534,29 @@ def s3wait_json(key, timeout):
     return None
 
 
+def run_reattach(reattach):
+    """Thread body of the EBS reattach phase. Always writes markers/reattach-done (try/finally)."""
+    try:
+        if "standby" not in ST["instances"]:
+            reattach["result"] = {"error": f"standby not launched ({ST.get('standby_skipped', 'unknown')})"}
+        elif wait_running(ST["instances"]["standby"]):
+            reattach["result"] = reattach_cycles()
+        else:
+            reattach["result"] = {"error": "standby did not start"}
+    except Exception as e:
+        reattach["result"] = {"error": f"reattach failed: {code(e)}", "partial": reattach.get("result")}
+        log(f"reattach thread error: {code(e)}")
+    finally:
+        # always release the client (otherwise it waits up to 30 min, billing two instances)
+        for _ in range(5):
+            try:
+                s3put("markers/reattach-done.json", b"{}")
+                break
+            except Exception as e:
+                log(f"reattach-done marker: {code(e)}; retrying")
+                time.sleep(3)
+
+
 # ------------------------------------------------------------------------------------------------------------ main
 def collect():
     n = 0
@@ -516,6 +594,8 @@ def main():
         cost_f.flush()
     phase = ["create"]
     deadline = time.time() + PLAN["max_run_minutes"] * 60
+    ST["quota"] = instance_budget()  # before anything is created: a refusal costs nothing
+    save_state()
     try:
         infra.create(RUN, ST)
         VOL_T0[0] = now()
@@ -524,7 +604,6 @@ def main():
                        ("plan.json", f"{HERE}/plan.json")]:
             ORCH_REQ["s3_put"] += 3
             c("s3").upload_file(src, ST["bucket"], f"{ROOT}files/{f}")
-        ST["quota"] = instance_budget()
         node0_on_client = ST["quota"]["max_instances"] < 4
         ST["node0_on_client"] = node0_on_client
         cl = launch("client", "client", {"node0_on_client": node0_on_client})
@@ -574,17 +653,17 @@ def main():
                         log(f"standby not launched: {live} instances still running, limit {ST['quota']['max_instances']}")
                         ST["standby_skipped"] = "instance limit"
                     else:
-                        launch("standby", "standby", {})
+                        try:
+                            launch("standby", "standby", {})
+                        except Exception as e:
+                            # e.g. VcpuLimitExceeded / InsufficientInstanceCapacity: the run goes on, EBS reattach is NOT RUN
+                            ST["standby_skipped"] = f"launch failed: {code(e)}"
+                            log(f"standby launch failed ({code(e)}): EBS reattach will be reported as NOT RUN; other steps continue")
+                            save_state()
                 elif m == "reattach-ready":
                     phase[0] = "reattach"
 
-                    def ra():
-                        if "standby" in ST["instances"] and wait_running(ST["instances"]["standby"]):
-                            reattach["result"] = reattach_cycles()
-                        else:
-                            reattach["result"] = {"error": "standby did not start"}
-                        s3put("markers/reattach-done.json", b"{}")
-                    reattach["thread"] = threading.Thread(target=ra, daemon=True)
+                    reattach["thread"] = threading.Thread(target=run_reattach, args=(reattach,), daemon=True)
                     reattach["thread"].start()
             if "client-done" in done_markers or "error-client" in done_markers:
                 break
