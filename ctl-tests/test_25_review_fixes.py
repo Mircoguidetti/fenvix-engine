@@ -112,3 +112,30 @@ def test_unsafe_flag_needs_the_environment_variable():
     failed, err = _start_fails(["--unsafe-skip-ownership-checks"], env={"MONGO_ALLOW_UNSAFE_TEST_FLAGS": ""})
     print("refused without the variable:", failed)
     assert failed and "MONGO_ALLOW_UNSAFE_TEST_FLAGS" in err, "--unsafe-skip-ownership-checks accepted without the environment variable"
+
+
+def test_rollback_to_per_database_leases_after_a_process_mode_crash():
+    """A process in per-process mode (the default) owns a database and is killed; a process started with
+    `--process-lease false` (a rollback) must take the database over once the dead process's lease expired. Before the fix
+    the owner record (written with an expiry far in the future, the process lease decides) locked the database for ever
+    for a per-database-mode process."""
+    from lib import Server as S
+    bucket = make_bucket("rollback")
+    p1 = S(bucket, "rb1", idle=600, holder="R1", extra=["--lease-ttl-secs", "4"]).start()
+    p1.client()["d"]["c"].insert_one({"_id": 1})
+    p1.kill9()
+    p2 = S(bucket, "rb2", idle=600, holder="R2", extra=["--lease-ttl-secs", "4", "--process-lease", "false"]).start()
+    c2 = MongoClient(p2.uri, serverSelectionTimeoutMS=5000, retryReads=False)
+    took, t0 = None, time.time()
+    try:
+        while time.time() - t0 < 25 and took is None:
+            try:
+                assert c2["d"]["c"].find_one({"_id": 1}) == {"_id": 1}
+                took = time.time() - t0
+            except OperationFailure as e:
+                assert e.code == 134, e
+                time.sleep(0.5)
+        print("per-database-mode process took the database over after", None if took is None else round(took, 1), "s")
+        assert took is not None, "after a rollback to --process-lease false the database stayed locked"
+    finally:
+        p2.term()

@@ -257,11 +257,24 @@ impl Leases {
                 Ok(got) => {
                     let (etag, version) = (got.meta.e_tag.clone(), got.meta.version.clone());
                     let bytes = got.bytes().await?;
-                    let (holder, exp, seq) = parse(&bytes)?;
+                    let (holder, exp, seq, rec_inc) = parse_inc(&bytes)?;
                     let now = now_ms();
                     let mine = holder == self.holder;
                     let free = holder.is_empty() || exp == 0;
-                    let expired = (exp + self.skew.as_millis() as u64) < now;
+                    let mut expired = (exp + self.skew.as_millis() as u64) < now;
+                    if !rec_inc.is_empty() && !mine && !free && !expired {
+                        // An owner record of a process in per-process mode (it never expires by itself): owned while that
+                        // process's lease is live and of the record's generation. Without this, going back to
+                        // `--process-lease false` after such a process crashed would refuse the database for ever.
+                        expired = match self.store.get(&process_path(&holder)).await {
+                            Err(object_store::Error::NotFound { .. }) => true,
+                            Err(e) => return Err(e.into()),
+                            Ok(pg) => {
+                                let (_, pexp, _, pinc) = parse_inc(&pg.bytes().await?)?;
+                                pinc != rec_inc || pexp + (self.skew.as_millis() as u64) < now
+                            }
+                        };
+                    }
                     if !(mine || free || expired) {
                         self.stats.lock().unwrap().refused += 1;
                         let remaining = exp.saturating_sub(now);
