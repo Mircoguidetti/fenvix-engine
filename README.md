@@ -83,10 +83,10 @@ Details and measurements: `results-round3.md`.
 | flag | before | now | why |
 |---|---|---|---|
 | `--process-lease` | off (one lease per open database, renewed every ttl/3: 6 PUT/min each) | **on** (one lease per process; `--process-lease false` goes back) | an open database costs no lease request; safety with two processes: `ctl-tests/test_20_process_lease.py` |
-| `--max-concurrent-wakes` | 0 (unlimited) | **32** | a restart wakes every database at once |
+| `--max-concurrent-wakes` | 0 (unlimited) | **128** | a restart wakes every database at once; with 500 databases on 2 CPUs, 128 gave the shortest tail (first request p99 8.6 s against 9.5 s unlimited and 16.4 s with 8) |
 | `--writer-poll-secs` | 30 | **60** | one LIST + one GET per open writer per poll |
 | `--usage-flush-secs` | 60 | **300** | one PUT per active database per flush |
-| `--memtable-max-mb` (new) | slatedb's 64 MiB per database | **8** | memory held by unflushed writes |
+| `--memtable-max-mb` (new) | slatedb's 64 MiB per database | **2** | memory held by unflushed writes (measured: ~4.3 KB of process memory per 1 KB unflushed write, so ~8 MB per database open for writing) |
 | `--block-cache-mb`, `--meta-cache-mb` (new) | slatedb's 512 MiB + 128 MiB **per open database** | **256 + 64 MiB shared by all databases** | memory grew with the data read and written |
 | `--change-log-max-mb` (new) | 100 000 events with whole documents | **32 MiB** (and still at most 100 000 events) | ~2.5 KB of memory per write |
 
@@ -97,9 +97,20 @@ writer's replay boundary, using the writer's own view of the manifest. A pass wi
 ### Open files: `LimitNOFILE`
 
 Each client connection is one file descriptor; the engine itself holds a few dozen (listeners, the S3 connection pool, the
-local log if on). Measured in `results-round3.md`: about 2 descriptors per database with 2 client connections per database.
-Rule: `LimitNOFILE` >= 2 x (connections per database) x (databases open at once) + 1024. For a server with up to 2000
-databases and drivers that keep 2 to 4 connections each: `LimitNOFILE=65536` (the systemd unit's `[Service]` section).
+local log if on). Measured in `results-round3.md` (restart with 500 databases, client pools of up to 64 connections per
+database): 6000 to 7900 descriptors open at the peak, about one per client connection. Rule: `LimitNOFILE` >= (client
+connections the server may hold) + 1024. `LimitNOFILE=65536` (the systemd unit's `[Service]` section) covers that test with a
+wide margin; the number of connections real drivers keep is not measured.
+
+### Fair queue and safety limits (noisy neighbour)
+
+No quota slows or rejects a database's normal traffic. When the server is saturated (the scheduler lag, sampled by a 10 ms
+timer, is above `--fair-lag-ms`, default 10), at most `--fair-max-inflight` commands run at once (default 0 = 4 per CPU) and
+the others wait in a queue that serves wakes of closed databases first and then one command per database in turn. Very high
+safety limits per database, `--db-max-inflight 10000` running commands and `--db-max-rate 100000` requests/s, answer with the
+MongoDB error 462 `IngressRequestRateLimitExceeded` (label `SystemOverloadedError`) and count a rejection.
+`GET /v1/metrics/databases` on the admin port gives per database: requests and req/s, command CPU, estimated memory, queue
+waits (count, total, max) and rejections.
 
 ### Write modes
 
