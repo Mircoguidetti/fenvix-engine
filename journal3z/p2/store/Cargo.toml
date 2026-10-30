@@ -9,6 +9,19 @@ journal3z-core = { workspace = true }
 j3z-codec = { path = "../codec" }
 rand = { workspace = true }
 
+[features]
+# Test-only store bugs (TestBugs) and the record generator; never enabled in the node's production build.
+testbugs = []
+
+[[test]]
+name = "recovery"
+required-features = ["testbugs"]
+
+[[bin]]
+name = "j3z-killchild"
+path = "src/bin/j3z-killchild.rs"
+required-features = ["testbugs"]
+
 [dev-dependencies]
 bytes = { workspace = true }
 tempfile = "3"

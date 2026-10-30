@@ -199,17 +199,18 @@ pub struct StoreCfg {
     /// only lets them be set when built with the `mutations` feature.
     pub m: Mutations,
     /// Store-level bugs used only by this crate's tests, to show each test fails on broken code.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testbugs"))]
     pub bugs: TestBugs,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testbugs"))]
 #[derive(Clone, Debug, Default)]
 pub struct TestBugs {
     pub no_fence_table: bool,
     pub no_tail_truncate: bool,
     pub gc_not_prefix: bool,
     pub accept_mid_corruption: bool,
+    pub replay_erased: bool,
 }
 
 impl Default for StoreCfg {
@@ -217,7 +218,7 @@ impl Default for StoreCfg {
         StoreCfg {
             segment_max: 64 << 20,
             m: Mutations::default(),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testbugs"))]
             bugs: TestBugs::default(),
         }
     }
@@ -367,6 +368,9 @@ impl Store {
             id
         };
         let mut core = NodeCore::new(node_id, cfg.m);
+        // databases the fence table records as erased: their records still in segments all precede the erase (an
+        // erased database accepts nothing) and must not be replayed: their earlier segments may already be deleted
+        let mut erased_base = std::collections::BTreeSet::new();
         // fence table first (the base), then every segment in order
         if names.iter().any(|n| n == "fences.j3z") {
             let buf = fs.read(&dir.join("fences.j3z"))?;
@@ -380,6 +384,9 @@ impl Store {
                 d.promised = promised;
                 d.trim = trim;
                 d.erased = erased;
+                if erased {
+                    erased_base.insert(db);
+                }
                 rep.fences += 1;
                 p += used;
             }
@@ -390,14 +397,14 @@ impl Store {
             let buf = fs.read(&path)?;
             let (recs, good, bad) = scan(&buf);
             let last = k + 1 == segnums.len();
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testbugs"))]
             let bad = if cfg.bugs.accept_mid_corruption { None } else { bad };
             if let Some(why) = bad {
                 return Err(StoreError::Corrupt(format!("{}: {why}", seg_name(n))));
             }
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testbugs"))]
             let skip_trunc = cfg.bugs.no_tail_truncate;
-            #[cfg(not(test))]
+            #[cfg(not(any(test, feature = "testbugs")))]
             let skip_trunc = false;
             if good < buf.len() {
                 if !last {
@@ -413,6 +420,13 @@ impl Store {
                 if let Rec::Append { db, e } = r {
                     let m = info.max_idx.entry(*db).or_insert(0);
                     *m = (*m).max(e.idx);
+                }
+                #[cfg(any(test, feature = "testbugs"))]
+                let skip_erased = !cfg.bugs.replay_erased;
+                #[cfg(not(any(test, feature = "testbugs")))]
+                let skip_erased = true;
+                if skip_erased && erased_base.contains(&r.db()) {
+                    continue;
                 }
                 core.apply(r).map_err(|e| StoreError::Corrupt(format!("{}: {e}", seg_name(n))))?;
             }
@@ -517,7 +531,7 @@ impl Store {
                 break;
             }
             let all_dead = info.max_idx.iter().all(|(db, max)| core.dbs.get(db).map_or(false, |d| d.erased || *max <= d.trim));
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testbugs"))]
             if !all_dead && self.cfg.bugs.gc_not_prefix {
                 continue;
             }
@@ -529,9 +543,9 @@ impl Store {
         if dead.is_empty() {
             return Ok(0);
         }
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testbugs"))]
         let skip = self.cfg.bugs.no_fence_table;
-        #[cfg(not(test))]
+        #[cfg(not(any(test, feature = "testbugs")))]
         let skip = false;
         if !skip {
             self.write_fences(core)?;
@@ -565,6 +579,101 @@ impl Store {
     /// Segment files currently on disk (tests, metrics).
     pub fn segment_count(&self) -> usize {
         self.segs.len()
+    }
+
+    /// Path of the segment being written (tests).
+    pub fn current_segment(&self) -> PathBuf {
+        self.dir.join(seg_name(self.cur))
+    }
+}
+
+/// Deterministic generator of realistic record sequences, for the recovery tests (P2) and the kill -9 child: it drives
+/// a real `NodeCore` with messages (fences with growing epochs, appends that extend a log, appends from a newer epoch
+/// that cut a diverged tail, trims, erases) and returns the records the node produced, batch by batch. The same seed
+/// always gives the same sequence.
+#[cfg(any(test, feature = "testbugs"))]
+pub mod testgen {
+    use bytes_free::*;
+    use journal3z_core::{Entry, Msg, Mutations, NodeCore, Rec};
+    use rand::{Rng, SeedableRng};
+
+    mod bytes_free {
+        pub fn data(i: u64, e: u64) -> Vec<u8> {
+            let mut v = i.to_le_bytes().to_vec();
+            v.extend_from_slice(&e.to_le_bytes());
+            v.extend(std::iter::repeat((i ^ e) as u8).take(40));
+            v
+        }
+    }
+
+    pub struct Gen {
+        rng: rand::rngs::StdRng,
+        pub core: NodeCore,
+        dbs: u64,
+        epoch: u64,
+    }
+
+    impl Gen {
+        pub fn new(seed: u64) -> Self {
+            Gen { rng: rand::rngs::StdRng::seed_from_u64(seed), core: NodeCore::new(1, Mutations::default()), dbs: 3, epoch: 1 }
+        }
+
+        fn msg(&mut self) -> Msg {
+            let db = self.rng.gen_range(1..=self.dbs);
+            let d = self.core.dbs.get(&db).cloned().unwrap_or_default();
+            let entry = |i: u64, e: u64| Entry { idx: i, epoch: e, barrier: false, data: data(i, e).into() };
+            match self.rng.gen_range(0..100) {
+                0..=9 => {
+                    self.epoch += 1;
+                    let applied = if self.rng.gen_bool(0.3) { self.rng.gen_range(d.trim..=d.last() + 2) } else { d.trim };
+                    Msg::Fence { db, epoch: self.epoch, applied }
+                }
+                10..=69 => {
+                    // extend the log at the current promise
+                    let e = d.promised.max(1);
+                    let n = self.rng.gen_range(1..6);
+                    let prev = d.last();
+                    let pe = d.get(prev).map_or(0, |x| x.epoch);
+                    Msg::Append { db, epoch: e, applied: d.trim, prev_idx: prev, prev_epoch: pe, entries: (1..=n).map(|k| entry(prev + k, e)).collect(), commit: 0 }
+                }
+                70..=84 => {
+                    // a newer writer overwrites part of the tail (Truncate + Append)
+                    if d.last() <= d.trim + 1 {
+                        return Msg::Trim { db, epoch: 0, upto: d.trim };
+                    }
+                    self.epoch += 1;
+                    let prev = self.rng.gen_range(d.trim..d.last());
+                    let pe = d.get(prev).map_or(0, |x| x.epoch);
+                    let n = self.rng.gen_range(1..4);
+                    Msg::Append { db, epoch: self.epoch, applied: d.trim, prev_idx: prev, prev_epoch: pe, entries: (1..=n).map(|k| entry(prev + k, self.epoch)).collect(), commit: 0 }
+                }
+                85..=97 => {
+                    let upto = self.rng.gen_range(d.trim..=d.last() + 1);
+                    Msg::Trim { db, epoch: 0, upto }
+                }
+                _ => {
+                    // erase is rare and permanent: use a fresh database id afterwards
+                    self.dbs += 1;
+                    Msg::Erase { db }
+                }
+            }
+        }
+
+        /// Handle 1..6 messages; the records produced, in order.
+        pub fn next_batch(&mut self) -> Vec<Rec> {
+            let mut out = vec![];
+            for _ in 0..self.rng.gen_range(1..=6) {
+                let m = self.msg();
+                let o = self.core.handle(1000, m);
+                assert!(o.broken.is_none(), "{:?}", o.broken);
+                out.extend(o.recs);
+            }
+            out
+        }
+
+        pub fn rng(&mut self) -> &mut rand::rngs::StdRng {
+            &mut self.rng
+        }
     }
 }
 

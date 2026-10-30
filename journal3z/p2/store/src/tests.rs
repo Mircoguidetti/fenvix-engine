@@ -208,3 +208,36 @@ fn disk_full_poisons() {
     assert!(rep.torn_tail_bytes > 0);
     assert_eq!(core2.dbs[&1].last(), 1);
 }
+
+/// Found by the P2 random test: an erased database's early segments are deleted (erased = dead) while its later
+/// records stay in a newer segment; recovery must not replay them on top of the erased fence entry.
+fn erased_case(cfg: StoreCfg) -> Result<(), StoreError> {
+    let d = tempfile::tempdir().unwrap();
+    let mut cfg = cfg;
+    cfg.segment_max = 1;
+    let (mut st, mut core, _) = open(d.path(), cfg.clone()).unwrap();
+    put(&mut st, &mut core, (1..=5).map(|i| ent(i, 1, 1)).collect());
+    st.sync().unwrap();
+    st.gc(&core).unwrap(); // segment 1: db 1 entries 1..5
+    let other = Rec::Append { db: 2, e: Entry { idx: 1, epoch: 1, barrier: false, data: Bytes::from_static(b"x") } };
+    put(&mut st, &mut core, vec![ent(6, 1, 1), ent(7, 1, 1), other]);
+    st.sync().unwrap();
+    st.gc(&core).unwrap(); // segment 2: db 1 entries 6..7 + db 2 entry 1 (keeps segment 2 alive)
+    put(&mut st, &mut core, vec![Rec::Erase { db: 1 }]);
+    st.sync().unwrap();
+    let deleted = st.gc(&core).unwrap(); // segment 1 dead (db 1 erased) -> deleted; segment 2 alive (db 2)
+    assert_eq!(deleted, 1);
+    drop(st);
+    let (_, c, _) = open(d.path(), cfg)?;
+    assert!(c.dbs[&1].erased);
+    assert_eq!(c.dbs[&2].last(), 1);
+    Ok(())
+}
+
+#[test]
+fn erased_database_not_replayed() {
+    assert!(erased_case(small()).is_ok());
+    let mut bad = small();
+    bad.bugs.replay_erased = true;
+    assert!(matches!(erased_case(bad), Err(StoreError::Corrupt(_))), "twin: replaying the erased database's records breaks recovery");
+}
