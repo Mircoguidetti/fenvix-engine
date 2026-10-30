@@ -1,0 +1,12 @@
+test clock_jump_old_writer_fenced ... [clock_jump_old_writer_fenced] correct: sent 15767 acked 15719 refused {"fenced": 10, "unavailable": 38}; store holds 15721 records; lost 0 late 0; moved: true; settled: true; writer 0: ["LOST db=1 epoch=1 why=journal_fenced", "LOST db=3 epoch=1 why=journal_fenced", "LOST db=4 epoch=1 why=journal_fenced", "LOST db=2 epoch=1 why=journal_fenced"]
+[clock_jump_old_writer_fenced] twin no_fencing (nodes): sent 17747 acked 17731 refused {"unavailable": 16}; store holds 17710 records; lost 21 late 21; moved: true; settled: true; writer 0: ["LOST db=2 epoch=1 why=store_fenced", "LOST db=4 epoch=1 why=store_fenced", "LOST db=3 epoch=1 why=store_fenced", "LOST db=1 epoch=1 why=store_fenced"]
+test lease_is_exclusive ... [lease_is_exclusive] correct: 100 rounds with exactly 1 winner, 0 with 0 or more than 1
+[lease_is_exclusive] twin (unconditional writes): 0 rounds with 1 winner, 100 with 0 or more than 1
+test lost_disk_reconfig ... [lost_disk_reconfig] correct: sent 45686 acked 45654 refused {"unavailable": 32}; store holds 45654 records; lost 0 late 0; node 3 id 4228212904 -> 563263853; RECONFIG events 3; acks after node 1 died 17863; settled true
+[lost_disk_reconfig] twin no reconfiguration: sent 28946 acked 28914 refused {"not_owner": 16, "unavailable": 16}; store holds 28914 records; lost 0 late 0; node 3 id 2108774095 -> 2105967882; RECONFIG events 0; acks after node 1 died 0; settled false
+test store_fence_rejects_the_old_writer ... [store_fence] skip_fence=false: old writer's upload -> Err(Conflict); marker 12; index 11 holds Some(111)
+[store_fence] skip_fence=true: old writer's upload -> Ok(()); marker 11; index 11 holds Some(999)
+test writer_kill_takeover ... [writer_kill_takeover] correct: sent 25413 acked 24325 refused {"down": 1088}; store holds 24338 records; lost 0 late 0; moved to writer 1: true; settled: true; open after the kill (s): [6.8, 6.8, 6.8, 6.8]
+[writer_kill_takeover] twin recovery_single: sent 18364 acked 17801 refused {"down": 403, "not_owner": 80, "unavailable": 80}; store holds 16256 records; lost 1625 late 1625; moved to writer 1: true; settled: true
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 81.12s
+exit 0

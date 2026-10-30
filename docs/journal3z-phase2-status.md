@@ -15,7 +15,7 @@ copiato né modificato). Strumenti locali: MinIO compilato dai sorgenti con `go 
 | P2 recupero dopo riavvio | **fatto** | 0,5 | ≈ 0,1 (14:31–14:43) | 2.000 semi a caso + 200 kill -9 di processo vero: 0 fallimenti sul codice corretto; ogni gemello rotto scoperto; **un difetto vero trovato e corretto** (sotto) |
 | P3 programma del nodo | **fatto** | 1 – 1,5 | ≈ 0,05 (14:44–14:49, insieme a P4) | 5 test su processi veri (1 e 3 nodi), ognuno col gemello rotto scoperto (sotto) |
 | P4 rete + proxy di guasti | **fatto** | 0,5 – 1 | (con P3) | proxy: 7 controlli dei modi tutti verdi; proxy rotto (ignora i modi) fallisce 6 su 7 |
-| P5 client scrittore + MinIO | da fare | 1 – 2 | | |
+| P5 client scrittore + MinIO | **fatto** | 1 – 2 | ≈ 0,1 (14:50–15:08) | 2 prove sul solo MinIO + 3 scenari su processi veri (3 nodi, 1–2 scrittori, MinIO, proxy), ognuno col gemello rotto scoperto (sotto) |
 | P7 banco di prova a 3 processi | da fare | 1 – 2 | | |
 | P8 12 versioni rotte sul codice vero | da fare | 0,5 – 1 | | |
 | P9 (§2f) controllo esaustivo a 2 scrittori | da fare | 1 – 2 | | |
@@ -114,3 +114,61 @@ su 7 falliscono** (solo "passa" resta vero, come deve).
 
 Tentativi: i 3 test a nodo singolo sono falliti al primo giro per un errore del test (lo scrittore di prova con un solo
 nodo deve usare un quorum di 1 anche in apertura); corretto il test, non il nodo; secondo giro tutto verde.
+
+## P5 – client scrittore, lease e MinIO (fatto)
+
+Codice: `journal3z/p2/writer` (crate `j3z-writer`):
+
+- `journal.rs` – `ThreeZone`, il backend a 3 zone dell'interfaccia `Journal` (`journal3z/api`): un collegamento per
+  nodo, un compito che riceve i messaggi e ritrasmette (ogni 100 ms, configurabile), per ogni database il cervello
+  `WriterDb` di `journal3z/core` (usato, non modificato). `append` assegna l'indice subito, sotto un solo lucchetto;
+  la conferma arriva quando 2 nodi su 3 hanno il record su disco. Un nodo che risponde con un'epoca più alta fa
+  fallire le conferme in sospeso con "recintato". Limite 128 MB di dati non caricati per database (`Quota`).
+- `meta.rs` – lease e "database finto" sullo store a oggetti, **solo con scritture condizionali** (crea se assente,
+  aggiorna solo se l'ETag è ancora quello letto), come il `lease.rs` di round3. L'epoca dello scrittore è il `seq`
+  della scrittura che gli ha dato il lease. Aprire come scrittore alza `writer_epoch` nel manifesto (il recinto dello
+  store); un caricamento di un'epoca vecchia viene rifiutato.
+- `standin.rs` – il **sostituto del motore** per il banco (il motore vero arriva con P6 dopo l'unione di round3): per
+  ogni database prende il lease, recinta lo store e legge il segnalibro, apre il giornale (rilegge i record sopra il
+  segnalibro), accetta scritture, carica ogni 30 s (o prima a 32 MB), poi accorcia il giornale; rinnova il lease ogni
+  terzo della durata; smette quando il lease scade sul proprio orologio; rilascia il lease dopo 5 s senza maggioranza
+  di nodi; sostituisce un nodo con identità nuova (disco perso) a un punto di caricamento, con un'epoca nuova. Tutti i
+  valori sono in `ServerCfg` (decisione 4: lease 10 s, upload 30 s, 32/128 MB, rilascio dopo 5 s; più tolleranza
+  d'orologio 1,5 s) e si cambiano con `--config <json>`; nessuno è scritto nel codice dei test, che usano valori
+  corti (`fast_config`: lease 2 s, upload 0,5 s, rilascio 1 s) per stare in pochi secondi.
+- binario `j3z-writer`: protocollo cliente a righe JSON (`write`, `owned`, `flush`), righe di eventi su stdout
+  (`OPEN … epoch … barrier`, `UPLOAD`, `LOST`, `RECONFIG`) per il controllore. **Rifiuta uno store che non sia su
+  questa macchina** (solo `http://127.0.0.1:…`/`localhost`), e usa solo le credenziali passate sulla riga di comando
+  (quelle di MinIO locale): non legge credenziali AWS dall'ambiente.
+
+Banco: `journal3z/p2/bench` (crate `j3z-bench`, sarà esteso in P7): avvia MinIO, nodi, scrittori e proxy come processi
+veri, generatore di carico (16 lavoratori, scrittura al proprietario attuale del database), controllore: alla fine
+ogni scrittura confermata deve trovarsi nello store **all'indice confermato con lo stesso identificativo**; e nessuna
+conferma di un'epoca vecchia a un indice ≥ barriera di un'epoca più nuova ("conferma tardiva").
+
+Test `cargo test -p j3z-bench --test p5_writer -- --nocapture --test-threads 1` (81 s; risultati grezzi in
+`journal3z/results/phase2/p5-run2.txt`):
+
+| test | risultato sul codice corretto | gemello rotto |
+|---|---|---|
+| `lease_is_exclusive`: 3 server si contendono lo stesso lease, 100 giri | 100 giri con **esattamente 1** vincitore | scritture non condizionali: 0 giri su 100 con un solo vincitore (scoperto) |
+| `store_fence_rejects_the_old_writer` | il caricamento dello scrittore vecchio è **rifiutato** (indice 11 resta quello nuovo) | `skip_store_fence`: accettato, l'indice 11 viene sovrascritto e il segnalibro torna indietro (scoperto) |
+| `writer_kill_takeover`: 2 scrittori, 4 database; il nodo 3 resta indietro (buco nero verso lo scrittore 0); kill -9 dello scrittore 0 sotto carico; per 5 s lo scrittore 1 vede **solo** il nodo indietro, poi tutti | 24.325 conferme, **0 perse, 0 tardive**; lo scrittore 1 apre tutti i database 6,8 s dopo il kill (i 5 s di buco nero sono voluti dal test) | `recovery_single` sullo scrittore 1: **1.625 conferme perse** (scoperto) |
+| `clock_jump_old_writer_fenced`: l'orologio dello scrittore 1 salta di +60 s, prende i database mentre lo scrittore 0 crede ancora di averli | 15.719 conferme, **0 perse, 0 tardive**; lo scrittore 0 si accorge dal giornale ("journal_fenced") | `no_fencing` sui nodi: **21 perse e 21 tardive** (lo scrittore 0 se ne accorge solo dallo store, troppo tardi) (scoperto) |
+| `lost_disk_reconfig`: 1 scrittore, 3 database; il nodo 3 perde il disco (identità nuova); 4 s dopo il nodo 1 muore per sempre | 3 riconfigurazioni (una per database); **17.863 conferme dopo la morte del nodo 1**; 45.654 conferme, 0 perse | senza riconfigurazione: **0 conferme** dopo la morte del nodo 1 (resta un solo membro vecchio) (scoperto) |
+
+Controllo a mano (binari compilati senza funzioni di prova, cartella separata): `j3z-writer` con uno store non locale →
+codice 2; `j3z-writer` e `j3z-node` con `--mutation` o `--faults-file` → codice 2. Andrà nella CI corta.
+
+Tentativi: ogni scenario è stato eseguito due volte (prima uno per uno, poi tutti insieme per il file dei risultati):
+entrambe le volte tutto verde sul codice corretto e ogni gemello scoperto; numeri del primo giro: kill 21.766
+conferme / gemello 1.217 perse; orologio 19.068 / gemello 11 perse e 11 tardive; disco 44.528 conferme, 16.468 dopo
+la morte del nodo 1 / gemello 0. Nessuna correzione al codice è stata necessaria.
+
+Note per P6 (integrazione col motore, rinviata):
+- l'interfaccia `Journal::open` non porta i membri: `ThreeZone` aggiunge `open_members` (i membri stanno nel record
+  del lease del database); il motore dovrà usare quello;
+- `pending()` del backend a 3 zone conosce solo i database aperti dal processo: dopo un riavvio i database da
+  recuperare si trovano dai lease, non da un disco locale;
+- il sostituto carica solo fino all'indice **confermato** dal giornale; il motore vero dovrà fare lo stesso (o
+  dimostrare che caricare record non ancora confermati è sicuro) – da verificare nella revisione §2e.

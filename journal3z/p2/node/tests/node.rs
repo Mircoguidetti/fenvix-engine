@@ -5,7 +5,7 @@ use j3z_net::{spawn_link, LinkEvent};
 use journal3z_core::*;
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 

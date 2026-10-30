@@ -1,0 +1,27 @@
+[package]
+name = "j3z-writer"
+version = "0.1.0"
+edition = "2021"
+description = "journal3z writer client: the 3-zone Journal backend (WriterDb + links) and an engine stand-in (lease, store fence, uploads) for the local test bench"
+
+[features]
+# --faults-file (clock offset), test bench only
+faults = []
+# --mutation (negative controls), never in a production build
+mutations = []
+
+[dependencies]
+journal3z-core = { workspace = true }
+journal3z-api = { path = "../../api" }
+j3z-net = { path = "../net" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true }
+bytes = { workspace = true }
+async-trait = "0.1"
+object_store = { version = "=0.14.2", features = ["aws"] }
+futures = "0.3"
+
+[dev-dependencies]
+tempfile = "3"
