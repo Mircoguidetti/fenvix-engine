@@ -156,11 +156,10 @@ struct Args {
     store: String,
     #[arg(long, default_value = "/tmp/mongo-server-store")]
     local_dir: String,
-    /// Cold wakes allowed at once; more queue (0 = unlimited). A wake makes ~10-15 requests one after the other (S3 latency
-    /// each): after a restart every database that receives a request wakes at once, and with no limit hundreds of
-    /// wakes share the CPU and the connections to S3, so every one of them is slow (p99 of the writes 1.8 s with 500
-    /// databases on MinIO). 32 keeps the store busy without letting the queue of a wake storm reach every client.
-    #[arg(long, default_value_t = 32)]
+    /// Cold wakes allowed at once; more queue (0 = unlimited). Measured with 500 databases waking together after a restart
+    /// (MinIO, 2 CPUs, results-round3.md): first request p50/p99 2.7/16.4 s with 8, 3.9/12.1 s with 32, 6.1/8.6 s with 128,
+    /// 6.3/9.5 s without a limit. 128 gives the shortest tail, which is what a customer waits for.
+    #[arg(long, default_value_t = 128)]
     max_concurrent_wakes: usize,
     /// Memtable size in MiB (slatedb's own estimate of the data) at which a writer flushes it to an L0 SST (slatedb's default
     /// is 64 MiB per database). Measured: the process memory a memtable holds is about 4 times this estimate for 1 KB
@@ -208,6 +207,9 @@ struct Args {
     /// others finish; below it every command starts at once. 0 = off. See fair.rs.
     #[arg(long, default_value_t = 10.0)]
     fair_lag_ms: f64,
+    /// While saturated (see --fair-lag-ms), at most this many commands run at once; the others wait in turn (0 = 4 per CPU).
+    #[arg(long, default_value_t = 0)]
+    fair_max_inflight: u64,
     /// Safety limit per database, only against runaway clients: commands running or queued at once (0 = none).
     #[arg(long, default_value_t = 10_000)]
     db_max_inflight: u64,
@@ -451,7 +453,7 @@ async fn run() -> Result<()> {
     }
     changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
     ctl::durability::install(args.relaxed_flush_ms)?;
-    fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate);
+    fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight);
     let local_log_old = if args.local_log_dir.is_empty() { None } else { Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?) };
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);

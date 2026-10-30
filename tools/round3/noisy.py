@@ -82,7 +82,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--heavy", default="5,10,25,50")
     ap.add_argument("--secs", type=float, default=40)
-    ap.add_argument("--out", default=os.path.join(ROOT, "results-round3", "minio", "noisy.json"))
+    ap.add_argument("--out", default=os.path.join(ROOT, "results-round3", "minio", os.environ.get("NOISY_OUT", "noisy.json")))
     a = ap.parse_args()
     os.environ.setdefault("ROUND3_ENGINE_CPUS", "0")
     E.ENGINE_CPUS = os.environ["ROUND3_ENGINE_CPUS"]
@@ -97,9 +97,9 @@ def main():
     eng = E.Engine("noisy-setup", bucket, flags).start()
     E.prefill(eng, [f"h{i:02d}" for i in range(nmax)] + ["light"], parallel=16)
     eng.stop()
-    for fair in ("off", "on"):
+    for fair in os.environ.get("NOISY_MODES", "off,on").split(","):
         for n in [int(x) for x in a.heavy.split(",")]:
-            eng = E.Engine(f"noisy-{fair}-{n}", bucket, flags + (["--fair-lag-ms", "0"] if fair == "off" else [])).start()
+            eng = E.Engine(f"noisy-{fair}-{n}", bucket, flags + (["--fair-lag-ms", "0"] if fair == "off" else ["--fair-lag-ms", fair[2:]] if fair.startswith("on") and fair != "on" else [])).start()
             c = eng.client()
             for d in [f"h{i:02d}" for i in range(n)] + ["light"]:
                 c[d].items.find_one({"_id": 0})   # open them all first (no cold wake inside the window)

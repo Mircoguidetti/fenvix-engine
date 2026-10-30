@@ -3,9 +3,9 @@
 //!
 //! **Fair queue, only under saturation.** A ticker measures how late the runtime runs a 10 ms timer (scheduling lag, a
 //! direct measure of CPU saturation of the worker threads). While the lag is below `--fair-lag-ms` every command starts at
-//! once: no database is slowed while there is capacity. Above it, a new command does not start while others are in flight:
-//! it waits in its database's queue, and each command that finishes lets the next one start, taking first a command that
-//! wakes a sleeping database, then the databases in turn (round robin). A database sending 64 commands at once then gets the
+//! once: no database is slowed while there is capacity. Above it, at most `--fair-max-inflight` commands run at once (4 per
+//! CPU by default); a new command beyond that waits in its database's queue, and each command that finishes lets the next
+//! one start, taking first a command that wakes a sleeping database, then the databases in turn (round robin). A database sending 64 commands at once then gets the
 //! same turns as one sending a single command; nobody is refused. When the lag falls back, every queued command starts.
 //!
 //! **Safety limits.** Per database, at most `--db-max-inflight` commands running or queued and at most `--db-max-rate`
@@ -29,6 +29,17 @@ use std::time::{Duration, Instant};
 use tokio::sync::oneshot;
 
 pub static LAG_THRESHOLD_US: AtomicU64 = AtomicU64::new(10_000);
+/// Commands that may run at once while the server is saturated (`--fair-max-inflight`; 0 = 4 per CPU the process may use).
+/// Without this cap the gate only chose which command starts, while hundreds already running shared the CPU, so each of
+/// them, the light database's too, became slow (measured: results-round3.md, noisy neighbours).
+pub static SAT_MAX_INFLIGHT: AtomicU64 = AtomicU64::new(0);
+
+fn sat_cap() -> u64 {
+    match SAT_MAX_INFLIGHT.load(Relaxed) {
+        0 => 4 * std::thread::available_parallelism().map(|n| n.get() as u64).unwrap_or(2),
+        n => n,
+    }
+}
 pub static MAX_INFLIGHT: AtomicU64 = AtomicU64::new(10_000);
 pub static MAX_RATE: AtomicU64 = AtomicU64::new(100_000);
 /// Exponential average of the scheduling lag (microseconds) and whether the gate is engaged.
@@ -80,8 +91,9 @@ fn now_sec() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
 }
 
-pub fn install(lag_ms: f64, max_inflight: u64, max_rate: u64) {
+pub fn install(lag_ms: f64, max_inflight: u64, max_rate: u64, sat_max_inflight: u64) {
     LAG_THRESHOLD_US.store((lag_ms * 1000.0) as u64, Relaxed);
+    SAT_MAX_INFLIGHT.store(sat_max_inflight, Relaxed);
     MAX_INFLIGHT.store(max_inflight, Relaxed);
     MAX_RATE.store(max_rate, Relaxed);
     tokio::spawn(async {
@@ -145,8 +157,9 @@ impl Drop for Permit {
         }
         let mut g = GATE.lock().unwrap();
         g.inflight = g.inflight.saturating_sub(1);
-        // under saturation one finishing command starts one queued command; otherwise the queue is empty anyway
-        if let Some(w) = next_waiter(&mut g) {
+        // under saturation a finishing command lets queued ones start up to the cap, wakes first, then the databases in turn
+        while !SATURATED.load(Relaxed) || g.inflight < sat_cap() {
+            let Some(w) = next_waiter(&mut g) else { break };
             g.inflight += 1;
             let _ = w.tx.send(());
         }
@@ -192,7 +205,7 @@ pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
     }
     let rx = {
         let mut g = GATE.lock().unwrap();
-        if !SATURATED.load(Relaxed) || g.inflight == 0 {
+        if !SATURATED.load(Relaxed) || g.inflight < sat_cap() {
             g.inflight += 1;
             return Ok(Permit { db: db.to_string() });
         }
@@ -271,7 +284,7 @@ pub fn metrics(open: impl Fn(&str) -> String) -> serde_json::Value {
     serde_json::json!({
         "server": { "schedulingLagMs": LAG_US.load(Relaxed) as f64 / 1000.0, "schedulingLagMaxMs": LAG_MAX_US.load(Relaxed) as f64 / 1000.0,
                     "saturated": SATURATED.load(Relaxed), "saturatedMs": SATURATED_MS.load(Relaxed), "queuedCommands": QUEUED_TOTAL.load(Relaxed),
-                    "inflight": GATE.lock().unwrap().inflight, "fairLagThresholdMs": LAG_THRESHOLD_US.load(Relaxed) as f64 / 1000.0,
+                    "inflight": GATE.lock().unwrap().inflight, "fairLagThresholdMs": LAG_THRESHOLD_US.load(Relaxed) as f64 / 1000.0, "fairMaxInflightWhenSaturated": sat_cap(),
                     "dbMaxInflight": MAX_INFLIGHT.load(Relaxed), "dbMaxRate": MAX_RATE.load(Relaxed) },
         "databases": dbs,
     })
