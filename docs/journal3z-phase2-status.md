@@ -18,7 +18,7 @@ copiato né modificato). Strumenti locali: MinIO compilato dai sorgenti con `go 
 | P5 client scrittore + MinIO | **fatto** | 1 – 2 | ≈ 0,1 (14:50–15:08) | 2 prove sul solo MinIO + 3 scenari su processi veri (3 nodi, 1–2 scrittori, MinIO, proxy), ognuno col gemello rotto scoperto (sotto) |
 | P7 banco di prova a 3 processi | **in corso – fermato da un fallimento (vedi sotto)** | 1 – 2 | ≈ 0,2 finora (15:09–15:58) | programma `j3z-soak` scritto; 3 prove brevi di messa a punto: la 3ª ha trovato una **perdita di scritture confermate** causata dal sostituto del motore (P5), corretta; ripetuta: 0 perse; **domanda aperta** sul criterio di ripresa (sotto) |
 | P8 12 versioni rotte sul codice vero | da fare | 0,5 – 1 | | |
-| P9 (§2f) controllo esaustivo a 2 scrittori | iniziato (in attesa) | 1 – 2 | | primo passo: ricerca parallela + messaggi "morti" eliminati; verificata contro la fase 1 (sotto) |
+| P9 (§2f) controllo esaustivo a 2 scrittori | **non riuscito finora – fermo, serve una decisione** | 1 – 2 | ≈ 0,15 | con le riduzioni corrette che ho, il controllo a 2 scrittori non finisce (oltre 45 milioni di stati senza segni di convergenza); dettagli e strade sotto |
 | CI corta | **scritta** (primo giro su GitHub dopo questo push) | — | | vedi sezione "CI corta" |
 | P6 integrazione col motore, §2c | **rinviato** (decisione 1): solo interfaccia e documento | 2 – 5 | | |
 
@@ -387,3 +387,62 @@ regola di subentro devono essere tutte scoperte: `journal3z/ci/check_controls.py
 opzioni di prova (`journal3z/ci/check_production_build.sh`: 6 controlli, tutti "codice 2" in locale). Le prove con
 MinIO e le prove lunghe restano manuali. Prova locale dello script dei controlli sui risultati della campagna:
 "every negative control caught; correct versions clean".
+
+## Prove lunghe del §2a: pezzo 1 FALLITO (fermo)
+
+`results/phase2/2a/chunk-1/` (seme 1001, previsto 115 minuti, fermato da solo al controllo dei 60 minuti, §2d):
+139 guasti (26 kill di nodo, 27 kill di scrittore, 3 dischi persi, 16 nodi isolati, 7 tagli in una direzione, 5
+zone isolate, 15 salti dell'orologio a muro, 6 derive, 8 salti del monotono, 12 "due scrittori", 3 errori di fsync, 3
+dischi pieni, 5 interruzioni di corrente di un nodo, 1 di tutti, 2 pause dello store); 716.363 scritture inviate,
+**690.040 confermate, 0 perse, 0 tardive, 0 violazioni sui dischi**; ripresa dopo guasti a uno scrittore: 796 casi,
+**0 oltre 15 s**, massimo 13,3 s, 99° percentile 13,0 s; dopo guasti a un nodo: 2.005 casi, massimo 1,1 s.
+**Fallito per 14 sovrapposizioni di lease non precedute da un salto del monotono** (al controllo dei 60 minuti): lo
+scrittore 0 ha preso 14 database in 0,8 s mentre gli scrittori 1 e 2 li tenevano e rinnovavano regolarmente
+(sovrapposizioni di 7,1–7,9 s).
+
+Causa (trovata nei registri): **errore mio nell'orologio simulato degli scrittori** (`writer/src/standin.rs`, solo
+codice del banco). Al secondo 2.070,1 il banco ha cambiato la velocità dell'orologio dello scrittore 0 (deriva
++2,6 %); il cambio di velocità ricalcolava la base dell'orologio monotono **contando due volte i salti in avanti
+già fatti prima** (lo scrittore 0 ne aveva avuti), quindi l'orologio è saltato in avanti di nascosto: per l'osservatore
+era passato più tempo del vero, e ha preso i database (lo stesso effetto di un salto del monotono, ma non registrato
+come tale). La regola e il giornale si sono comportati come previsto: i recinti hanno respinto lo scrittore vecchio
+("journal_fenced"), 0 perse. Correzione: il cambio di velocità non sposta più l'orologio; test
+`rate_change_does_not_move_the_clock` (gemello col vecchio codice: salto di 3.000 ms). Test P5 del lease rifatti dopo
+la correzione: 4 su 4 verdi con i gemelli scoperti (`p5-run7-lease-after-clock-fix.txt`). Il simulatore non ha lo
+stesso errore (lì i salti stanno già nella base).
+
+Per il §2d il gruppo delle prove lunghe ripartirà da capo (pezzo 1 compreso) dopo il tuo via.
+
+## P9 – controllo esaustivo a 2 scrittori: non riuscito (fermo, serve una decisione)
+
+Obiettivo (§2f strada 1): il controllo con 2 scrittori, 2 epoche, indice 2, messaggi in qualsiasi ordine deve
+**finire** senza violazioni e trovare i 4 difetti mancati nella fase 1 più i 3 già trovati.
+
+Fatto (`journal3z/mc/src/bin/mc2.rs`, stesso modello della fase 1):
+1. rimozione dei messaggi morti (con uno scrittore: da 18.698.439 a 1.804.416 stati, stesso verdetto);
+2. **sottomissione per messaggi in volo** (`--subsume`): uno stato con le stesse parti di uno già visto e un
+   sottoinsieme dei suoi messaggi si salta (giustificazione nel file; con uno scrittore 1.297.262 stati, stesso verdetto,
+   `ack_on_one` trovato);
+3. ricerca parallela.
+
+Risultati con 2 scrittori (`results/phase2/p9/`): solo rimozione → fermato a **45.652.654 stati dopo 31 minuti**
+senza violazioni e senza segni di fine (crescita costante, nessuno stato ancora con 2 scritture confermate); con anche
+la sottomissione → fermato a ≈ 13 milioni dopo 8 minuti, stessa crescita. Difetti cercati con le riduzioni (trovare
+non richiede di finire): `no_fencing` **trovato** (7.033.817 stati; nella fase 1 no), `ack_on_one`,
+`trim_before_upload`, `ack_gap` trovati; `recovery_longest` **non trovato** in 17 minuti; `recovery_single` e
+`keep_diverged` non eseguiti (serie interrotta da me per fermarmi).
+
+Perché la **simmetria dei 3 nodi** (proposta nel piano) **non si può usare in modo corretto** qui: quando due nodi
+hanno il log ugualmente aggiornato, il cervello vero (`core`) sceglie sempre quello col numero più basso; rinominando i
+nodi la scelta cambia, e in certi casi (un nodo modificato da uno scrittore vecchio mentre l'altro legge) il
+comportamento è davvero diverso. Usarla darebbe un "finito, nessuna violazione" che non si può difendere.
+
+Strade possibili (da decidere; non cambio il criterio da solo):
+1. **più tempo macchina** con una ricerca su disco (gli stati visti non stanno più in memoria): stima non nota, la
+   crescita non mostra fine; potrebbe servire da molte ore a giorni, senza garanzia;
+2. **cambiare il limite "messaggi in qualsiasi ordine"** in "ordine conservato su ogni collegamento
+   scrittore–nodo, con perdite" (è come funziona davvero: una connessione TCP per coppia; tra coppie diverse ordine
+   qualsiasi). È un ammorbidimento del criterio del §2f: lo può decidere solo il fondatore; non è detto che basti (nella
+   fase 1 anche quella versione con 2 scrittori non era finita in 31 minuti, senza le riduzioni di oggi);
+3. **rinunciare al "finisce"** e tenere come prova per i 2 scrittori: simulatore (1.000 semi, invariante L, 12 su 12
+   difetti), controllo limitato a decine di milioni di stati, e i difetti trovati qui.

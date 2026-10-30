@@ -109,12 +109,20 @@ impl Clock {
     pub fn set_rate_ppm(&self, ppm: i64) {
         let mut c = self.0.lock().unwrap();
         if c.rate_ppm != ppm {
-            let now = Instant::now();
-            c.base_mono = Self::mono_of(&c, now);
-            c.base = now;
-            c.rate_ppm = ppm;
-            c.generation += 1;
+            Self::rebase(&mut c, Instant::now(), ppm, false);
         }
+    }
+
+    /// Change the rate without moving the clock. `base_mono` excludes the forward jumps (added by `mono_of`).
+    /// (Found by the §2a run, chunk 1: the old version stored `mono_of(now)`, jumps included, as the new base, so the
+    /// jumps were counted twice and every rate change made the clock leap forward by all earlier jumps.)
+    /// `double_count_jumps` = that bug, kept for the regression test's twin.
+    fn rebase(c: &mut ClockState, now: Instant, ppm: i64, double_count_jumps: bool) {
+        let jumps = if double_count_jumps { 0.0 } else { c.mono_jump_ms as f64 };
+        c.base_mono = Self::mono_of(c, now) - jumps;
+        c.base = now;
+        c.rate_ppm = ppm;
+        c.generation += 1;
     }
     /// Total forward jump of the monotonic clock so far (only grows: a monotonic clock never goes back).
     pub fn set_mono_jump_ms(&self, ms: u64) {
@@ -506,5 +514,28 @@ fn map_err(e: JournalError) -> WriteErr {
         JournalError::Quota => WriteErr::Quota,
         JournalError::Erased => WriteErr::Erased,
         JournalError::Unavailable(_) | JournalError::Io(_) | JournalError::Invalid(_) => WriteErr::Unavailable,
+    }
+}
+
+#[cfg(test)]
+mod clock_tests {
+    use super::*;
+
+    /// After forward jumps, a change of rate must not move the monotonic clock. Twin: the bug found by the §2a run
+    /// (jumps counted twice at every rate change) makes it leap forward by the earlier jumps.
+    fn leap(double_count: bool) -> f64 {
+        let c = Clock::default();
+        c.set_mono_jump_ms(3_000);
+        let now = Instant::now();
+        let mut g = c.0.lock().unwrap();
+        let before = Clock::mono_of(&g, now);
+        Clock::rebase(&mut g, now, 26_000, double_count);
+        Clock::mono_of(&g, now) - before
+    }
+
+    #[test]
+    fn rate_change_does_not_move_the_clock() {
+        assert!(leap(false).abs() < 1e-6, "leap {}", leap(false));
+        assert!((leap(true) - 3_000.0).abs() < 1e-6, "twin: the old code leaps by the earlier jumps ({})", leap(true));
     }
 }

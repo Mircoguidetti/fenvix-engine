@@ -1,0 +1,169 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 341701,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 1810,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 684996,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [
+        "db 18: writer 0 took epoch 596 at 1793385448617 while writer 2 epoch 523 held it until 1793385455819 (7202 ms overlap)",
+        "db 12: writer 0 took epoch 595 at 1793385448622 while writer 2 epoch 522 held it until 1793385455716 (7094 ms overlap)",
+        "db 21: writer 0 took epoch 597 at 1793385448822 while writer 2 epoch 524 held it until 1793385455961 (7139 ms overlap)",
+        "db 27: writer 0 took epoch 590 at 1793385449218 while writer 1 epoch 523 held it until 1793385457109 (7891 ms overlap)",
+        "db 24: writer 0 took epoch 589 at 1793385449217 while writer 1 epoch 522 held it until 1793385457129 (7912 ms overlap)",
+        "db 6: writer 0 took epoch 591 at 1793385449413 while writer 1 epoch 524 held it until 1793385457210 (7797 ms overlap)",
+        "db 15: writer 0 took epoch 589 at 1793385449420 while writer 1 epoch 522 held it until 1793385457212 (7792 ms overlap)",
+        "db 30: writer 0 took epoch 589 at 1793385449426 while writer 1 epoch 522 held it until 1793385457212 (7786 ms overlap)",
+        "db 3: writer 0 took epoch 590 at 1793385449423 while writer 1 epoch 523 held it until 1793385457224 (7801 ms overlap)",
+        "db 9: writer 0 took epoch 589 at 1793385449426 while writer 1 epoch 522 held it until 1793385457212 (7786 ms overlap)"
+      ],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 14,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 3618,
+      "tag": "ckpt2"
+    },
+    {
+      "checked_acks": 690040,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [
+        "db 18: writer 0 took epoch 596 at 1793385448617 while writer 2 epoch 523 held it until 1793385455819 (7202 ms overlap)",
+        "db 12: writer 0 took epoch 595 at 1793385448622 while writer 2 epoch 522 held it until 1793385455716 (7094 ms overlap)",
+        "db 21: writer 0 took epoch 597 at 1793385448822 while writer 2 epoch 524 held it until 1793385455961 (7139 ms overlap)",
+        "db 27: writer 0 took epoch 590 at 1793385449218 while writer 1 epoch 523 held it until 1793385457109 (7891 ms overlap)",
+        "db 24: writer 0 took epoch 589 at 1793385449217 while writer 1 epoch 522 held it until 1793385457129 (7912 ms overlap)",
+        "db 6: writer 0 took epoch 591 at 1793385449413 while writer 1 epoch 524 held it until 1793385457210 (7797 ms overlap)",
+        "db 15: writer 0 took epoch 589 at 1793385449420 while writer 1 epoch 522 held it until 1793385457212 (7792 ms overlap)",
+        "db 30: writer 0 took epoch 589 at 1793385449426 while writer 1 epoch 522 held it until 1793385457212 (7786 ms overlap)",
+        "db 3: writer 0 took epoch 590 at 1793385449423 while writer 1 epoch 523 held it until 1793385457224 (7801 ms overlap)",
+        "db 9: writer 0 took epoch 589 at 1793385449426 while writer 1 epoch 522 held it until 1793385457212 (7786 ms overlap)"
+      ],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 14,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 3623,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [
+    "ckpt2: 14 lease overlaps (first: db 18: writer 0 took epoch 596 at 1793385448617 while writer 2 epoch 523 held it until 1793385455819 (7202 ms overlap))",
+    "final: 14 lease overlaps (first: db 18: writer 0 took epoch 596 at 1793385448617 while writer 2 epoch 523 held it until 1793385455819 (7202 ms overlap))"
+  ],
+  "fault_counts": {
+    "ClockDrift": 6,
+    "ClockJump": 15,
+    "CutNode": 16,
+    "CutOneWay": 7,
+    "CutZone": 5,
+    "DiskFull": 3,
+    "DiskLoss": 3,
+    "FsyncError": 3,
+    "MonoJump": 8,
+    "NodeKill": 26,
+    "PowerCut": 5,
+    "PowerCutAll": 1,
+    "S3Pause": 2,
+    "TwoWriters": 12,
+    "WriterKill": 27
+  },
+  "faults": 139,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/soak/chunk-1"
+  },
+  "kinds": null,
+  "minutes_planned": 115.0,
+  "minutes_run": 60.40361161743333,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 1.104186721,
+    "n": 2005,
+    "over_5s": 0,
+    "p50_s": 0.103788409,
+    "p99_s": 0.725072273
+  },
+  "recovery_other_faults_max_s": {
+    "ClockDrift": [
+      0.943642983
+    ],
+    "ClockJump": [
+      0.582895136,
+      0.484745555,
+      0.571484243
+    ],
+    "MonoJump": [
+      0.883272122,
+      0.35178686,
+      0.530419426
+    ],
+    "PowerCutAll": [
+      0.461833282
+    ],
+    "S3Pause": [
+      1.024587949,
+      0.736788979
+    ],
+    "WriterKill": [
+      0.634200492,
+      1.06502253,
+      0.511403112,
+      0.708340974,
+      0.413402645,
+      0.439995635,
+      0.839311462,
+      0.566901343,
+      0.867300916,
+      0.391453177,
+      0.535414572,
+      0.658682041
+    ]
+  },
+  "recovery_writer_faults": {
+    "max_s": 13.318176471,
+    "n": 796,
+    "over_15s": 0,
+    "over_40s": 0,
+    "p50_s": 9.21003822,
+    "p99_s": 12.978497398
+  },
+  "seed": 1001,
+  "wait_until_healthy_s": {
+    "max": 0.569382393,
+    "p50": 0.057554156
+  },
+  "writer_opens": 620,
+  "writes_acked": 690040,
+  "writes_refused": {
+    "down": 7149,
+    "fenced": 13,
+    "no_owner": 7333,
+    "not_owner": 16334,
+    "timeout": 1046,
+    "unavailable": 1781
+  },
+  "writes_sent": 716363
+}

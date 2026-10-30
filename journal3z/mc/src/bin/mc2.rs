@@ -21,6 +21,14 @@
 //! 2. **Node symmetry** (`--symmetry`): the three nodes are interchangeable; a state is stored under the smallest key
 //!    of its 6 renamings. Needs `WriterDb::rename_nodes` (core feature `mc`).
 //! 3. **Parallel search**: N threads, one shared set of visited keys (64-bit hashes, as in phase 1).
+//! 4. **Subsumption by pending messages** (`--subsume`): a state is skipped when an already visited state has the same
+//!    nodes, writers, store and acknowledgements and a **superset** of its pending messages. Why it is sound: the
+//!    invariants (`p1::check`) never look at pending messages; every transition's condition depends only on the
+//!    non-message part (plus "message m is pending" for a delivery, which holds in the superset too); and every
+//!    transition's effect on the messages is "remove the delivered one, add new ones" (then the same dead-message
+//!    rule). So from the visited state the same transitions reach states with the same non-message part and a
+//!    superset of messages: anything reachable from the skipped state is matched, with the same invariant values. A
+//!    message never delivered is the same as a lost one, which the model allows anyway.
 //!
 //!   mc2 [--epochs 2] [--idx 2] [--mutation none|...] [--threads 4] [--symmetry] [--no-prune] [--max-states N]
 #[path = "../main.rs"]
@@ -50,8 +58,43 @@ impl Hasher for Pass {
     }
 }
 type Set = HashSet<u64, BuildHasherDefault<Pass>>;
+type Antichains = std::collections::HashMap<u64, Vec<Vec<u64>>, BuildHasherDefault<Pass>>;
+
+/// Key of everything but the pending messages, and the sorted keys of the pending messages.
+fn split_key(s: &State) -> (u64, Vec<u64>) {
+    use std::hash::Hash;
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    (&s.nodes, &s.writers, &s.store, &s.acked, &s.links).hash(&mut h);
+    let mut m: Vec<u64> = s
+        .msgs
+        .iter()
+        .map(|x| {
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            x.hash(&mut h);
+            h.finish()
+        })
+        .collect();
+    m.sort_unstable();
+    (h.finish(), m)
+}
+
+fn superset(a: &[u64], b: &[u64]) -> bool {
+    // a ⊇ b, both sorted
+    let mut i = 0;
+    for x in b {
+        while i < a.len() && a[i] < *x {
+            i += 1;
+        }
+        if i == a.len() || a[i] != *x {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
 
 const SHARDS: usize = 256;
+static NO_REJECT: AtomicBool = AtomicBool::new(false);
 
 fn writer<'a>(s: &'a State, e: Epoch) -> Option<&'a WriterDb> {
     s.writers.get((e.max(1) - 1) as usize).and_then(|w| w.as_ref())
@@ -68,6 +111,12 @@ fn prune(s: &mut State, cfg: &Cfg) {
     for (to, msg) in &s.msgs {
         let is_dead = if *to == 0 {
             let (from, inner) = untag(msg);
+            if NO_REJECT.load(SeqCst) && matches!(inner, Msg::Reject { .. }) {
+                // W0 (--no-reject): delivering a Reject only makes a writer stale, i.e. only takes behaviours away;
+                // the invariants never look at the phase. Every behaviour after it is a behaviour without it.
+                dead.push((*to, msg.clone()));
+                continue;
+            }
             let e = msg_epoch(&inner);
             match writer(s, e) {
                 None => false,
@@ -153,6 +202,8 @@ fn canon_key(s: &State, symmetry: bool) -> u64 {
 
 struct Shared {
     seen: Vec<Mutex<Set>>,
+    sub: Vec<Mutex<Antichains>>,
+    subsume: bool,
     count: AtomicUsize,
     queue: Mutex<Vec<(State, u32)>>,
     cv: Condvar,
@@ -165,6 +216,23 @@ struct Shared {
 }
 
 impl Shared {
+    /// Subsumption: false if a visited state with the same non-message part has a superset of the messages.
+    fn insert_state(&self, s: &State, symmetry: bool) -> bool {
+        if !self.subsume {
+            return self.insert(canon_key(s, symmetry));
+        }
+        let (core, msgs) = split_key(s);
+        let mut g = self.sub[(core as usize) % SHARDS].lock().unwrap();
+        let list = g.entry(core).or_default();
+        if list.iter().any(|m| superset(m, &msgs)) {
+            return false;
+        }
+        list.retain(|m| !superset(&msgs, m));
+        list.push(msgs);
+        self.count.fetch_add(1, SeqCst);
+        true
+    }
+
     fn insert(&self, k: u64) -> bool {
         let new = self.seen[(k as usize) % SHARDS].lock().unwrap().insert(k);
         if new {
@@ -201,7 +269,20 @@ fn worker(sh: &Shared, cfg: &Cfg, threads: usize, prune_on: bool, symmetry: bool
         }) else {
             return;
         };
-        sh.explored.fetch_add(1, SeqCst);
+        let n = sh.explored.fetch_add(1, SeqCst);
+        if std::env::var("MC2_SAMPLE").is_ok() && n % 1_000_000 == 0 {
+            let mut c: std::collections::BTreeMap<String, usize> = Default::default();
+            for (to, m) in &s.msgs {
+                let k = format!("{}{:?}", if *to == 0 { "->W " } else { "->N " }, std::mem::discriminant(m));
+                let name = format!("{m:?}");
+                let name = name.split(|ch: char| ch == ' ' || ch == '{').next().unwrap_or("").to_string();
+                let _ = k;
+                *c.entry(format!("{}{}", if *to == 0 { "toW:" } else { "toN:" }, name)).or_default() += 1;
+            }
+            let ph: Vec<String> = s.writers.iter().map(|w| w.as_ref().map_or("-".into(), |w| format!("{:?}/last{}/commit{}", w.phase, w.last, w.commit))).collect();
+            let logs: Vec<String> = s.nodes.iter().map(|x| x.dbs.get(&DB).map_or("empty".into(), |d| format!("p{} t{} {:?}", d.promised, d.trim, d.entries.iter().map(|e| (e.idx, e.epoch)).collect::<Vec<_>>()))).collect();
+            eprintln!("SAMPLE depth {d} msgs {} {c:?} writers {ph:?} nodes {logs:?} store {:?}", s.msgs.len(), (s.store.epoch, s.store.applied));
+        }
         sh.max_depth.fetch_max(d as usize, SeqCst);
         sh.max_acked.fetch_max(s.acked.len(), SeqCst);
         if let Err(e) = check(&s, cfg) {
@@ -220,7 +301,7 @@ fn worker(sh: &Shared, cfg: &Cfg, threads: usize, prune_on: bool, symmetry: bool
             if prune_on {
                 prune(&mut t, cfg);
             }
-            if sh.insert(canon_key(&t, symmetry)) {
+            if sh.insert_state(&t, symmetry) {
                 local.push((t, d + 1));
             }
         }
@@ -242,6 +323,9 @@ fn main() {
     let max_states: usize = get("--max-states", "2000000000").parse().unwrap();
     let prune_on = !has("--no-prune");
     let symmetry = has("--symmetry");
+    let subsume = has("--subsume");
+    NO_REJECT.store(has("--no-reject"), SeqCst);
+    assert!(!(subsume && symmetry), "--subsume and --symmetry together are not supported");
     let init = State {
         nodes: (1..=3).map(|i| NodeCore::new(i, cfg.m)).collect(),
         writers: vec![None; cfg.epochs as usize],
@@ -252,6 +336,8 @@ fn main() {
     };
     let sh = Shared {
         seen: (0..SHARDS).map(|_| Mutex::new(Set::default())).collect(),
+        sub: (0..SHARDS).map(|_| Mutex::new(Antichains::default())).collect(),
+        subsume,
         count: AtomicUsize::new(0),
         queue: Mutex::new(vec![]),
         cv: Condvar::new(),
@@ -263,7 +349,7 @@ fn main() {
         max_acked: AtomicUsize::new(0),
     };
     let t0 = Instant::now();
-    sh.insert(canon_key(&init, symmetry));
+    sh.insert_state(&init, symmetry);
     sh.queue.lock().unwrap().push((init, 0));
     std::thread::scope(|sc| {
         for _ in 0..threads {
@@ -282,7 +368,7 @@ fn main() {
     });
     let verdict = sh.verdict.lock().unwrap().clone().unwrap_or_else(|| "complete: no violation".into());
     println!(
-        "{{\"checker\": \"mc2\", \"epochs\": {}, \"max_idx\": {}, \"mutation\": \"{}\", \"prune\": {prune_on}, \"symmetry\": {symmetry}, \"threads\": {threads}, \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
+        "{{\"checker\": \"mc2\", \"epochs\": {}, \"max_idx\": {}, \"mutation\": \"{}\", \"prune\": {prune_on}, \"symmetry\": {symmetry}, \"subsume\": {subsume}, \"threads\": {threads}, \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
         cfg.epochs,
         cfg.max_idx,
         get("--mutation", "none"),
