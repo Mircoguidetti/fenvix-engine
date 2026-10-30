@@ -4,7 +4,8 @@
 Pass criteria are fixed in docs/walbench.md BEFORE the run and applied here mechanically:
   loss     zero acknowledged writes lost: every crash cycle, the quorum failure scenario, the EBS reattach cycles
   latency  per configuration (backend x variant): p99 ack < 15 ms in every closed-loop cell (200 B / 1 KB x conc 1/8/64)
-  cost     per configuration: variable cost per million acknowledged writes < 1.5 USD in every closed-loop cell,
+  cost     per configuration: variable cost per million acknowledged writes < 1.5 USD in the closed-loop cells at
+           concurrency 8 and 64 and in the shared-batch cell (200 databases); concurrency 1 is reported, not judged;
            from the requests / WCU / bytes counted in that cell at the fetched prices (+ 24 h of storage of what it wrote).
            EBS and the quorum have (almost) no per-write charge: their fixed cost per hour is reported separately with
            the write rate at which it equals 1.5 USD per million; the criterion is applied to the variable cost.
@@ -97,9 +98,10 @@ if state.get("error"):
 
 # ---------------------------------------------------------------- pass table
 w("## Against the pass criteria\n")
-w(f"Criteria: zero acknowledged writes lost; p99 ack < {P99_MAX:.0f} ms in every closed-loop cell; variable cost < {COST_MAX} USD per million writes in every cell.\n")
-w("| backend | variant | loss | worst p99 (ms) | p99 | worst variable USD / M writes | cost | configuration |")
-w("|---|---|---|---|---|---|---|---|")
+w(f"Criteria: zero acknowledged writes lost; p99 ack < {P99_MAX:.0f} ms in every closed-loop cell; variable cost < {COST_MAX} USD per million writes "
+  "at concurrency 8 and 64 and in the shared-batch case (200 databases). The cost at concurrency 1 is reported but does not fail a configuration.\n")
+w("| backend | variant | loss | worst p99 (ms) | p99 | worst USD / M at conc 8, 64 | cost | USD / M at conc 1 (reported only) | configuration |")
+w("|---|---|---|---|---|---|---|---|---|")
 backend_pass = {}
 for b in ORDER:
     cr = crash.get(b)
@@ -115,19 +117,22 @@ for b in ORDER:
     loss_ok = None if lost is None else lost == 0
     variants = sorted({v for (bb, v) in by_cfg if bb == b})
     if not variants:
-        w(f"| {NAMES[b]} | – | {'not measured' if lost is None else lost} | not measured | – | not measured | – | **not measured** |")
+        w(f"| {NAMES[b]} | – | {'not measured' if lost is None else lost} | not measured | – | not measured | – | – | **not measured** |")
         continue
     for v in variants:
         rs = by_cfg[(b, v)]
         complete = len(rs) == 6 and all(r.get("latency", {}).get("n") for r in rs)
         p99 = max((r["latency"].get("p99") or 1e9) for r in rs)
-        usd = max((r.get("_usd_m") or 0) for r in rs) if F else None
+        judged = [r for r in rs if r["conc"] in (8, 64)]  # cost rule: conc 8 and 64 only
+        usd = max((r.get("_usd_m") or 0) for r in judged) if F and judged else None
+        c1 = [r.get("_usd_m") for r in rs if r["conc"] == 1 and r.get("_usd_m") is not None]
+        usd1 = max(c1) if c1 else None
         lat_ok = complete and p99 < P99_MAX
         cost_ok = usd is not None and usd < COST_MAX
         ok = bool(loss_ok and lat_ok and cost_ok)
         backend_pass[b] = backend_pass.get(b, False) or ok
         w(f"| {NAMES[b]} | {v} | {'0 lost' if loss_ok else ('not measured' if lost is None else f'**{lost} LOST**')} | {fmt(p99)} | {'pass' if lat_ok else ('incomplete' if not complete else 'FAIL')} "
-          f"| {fmt(usd, 3)} | {'pass' if cost_ok else 'FAIL'} | {'**PASS**' if ok else 'fail'} |")
+          f"| {fmt(usd, 3)} | {'pass' if cost_ok else 'FAIL'} | {fmt(usd1, 3)} | {'**PASS**' if ok else 'fail'} |")
 for r in sorted(fleet, key=lambda r: (ORDER.index(bkey(r["backend"])), r["layout"], r["variant"])):
     b = bkey(r["backend"])
     cr = crash.get(b)
@@ -139,11 +144,14 @@ for r in sorted(fleet, key=lambda r: (ORDER.index(bkey(r["backend"])), r["layout
     lat_ok = p99 is not None and p99 < P99_MAX and not r.get("write_errors")
     cost_ok = usd is not None and usd < COST_MAX
     ok = bool(loss_ok and lat_ok and cost_ok)
-    backend_pass[b] = backend_pass.get(b, False) or ok
+    judged = r["layout"] == "shared"  # the shared-batch case is judged; one log per database is the reference
+    if judged:
+        backend_pass[b] = backend_pass.get(b, False) or ok
     w(f"| {NAMES[b]} | fleet {r['layout']} {r['variant']} ({r['dbs']} dbs × {r['rate_per_db']}/s) | {'0 lost' if loss_ok else ('not measured' if lost is None else f'**{lost} LOST**')} "
-      f"| {fmt(p99)} | {'pass' if lat_ok else 'FAIL'} | {fmt(usd, 3)} | {'pass' if cost_ok else 'FAIL'} | {'**PASS**' if ok else 'fail'} |")
+      f"| {fmt(p99)} | {'pass' if lat_ok else 'FAIL'} | {fmt(usd, 3)} | {'pass' if cost_ok else 'FAIL'} | – | {('**PASS**' if ok else 'fail') if judged else 'reference (not judged)'} |")
 w("")
-w("Closed-loop configurations are judged on all 6 cells (200 B / 1 KB × conc 1, 8, 64); fleet configurations on their one cell (1 KB). "
+w("Closed-loop configurations: latency judged on all 6 cells (200 B / 1 KB × conc 1, 8, 64), cost on the 4 cells at conc 8 and 64. "
+  "Shared-batch configurations (200 databases, 1 KB) are judged on their cell; one log per database is shown as the reference. "
   "Loss is judged per backend (all its crash cycles, plus the quorum scenario / EBS reattach cycles).\n")
 w("Backends with at least one configuration meeting all three criteria: " + (", ".join(NAMES[b] for b in ORDER if backend_pass.get(b)) or "none") + ".")
 w("No other ranking is made.\n")

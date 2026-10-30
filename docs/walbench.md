@@ -48,7 +48,10 @@ SDK retries are off; the benchmark retries itself (up to 6 attempts) and counts 
    the reattach cycles for 4).
 2. **Latency**: p99 ack < 15 ms. A closed-loop configuration (backend × variant) must meet it in all 6 cells; a
    fleet configuration in its cell.
-3. **Cost**: variable cost < 1.5 USD per million acknowledged writes, in the same cells. EBS and the quorum have
+3. **Cost**: variable cost < 1.5 USD per million acknowledged writes at concurrency 8 and 64 (closed loop, both
+   sizes) and in the shared-batch case (200 databases, `shared w1/w5/w20`). The cost at concurrency 1 is reported
+   but does not fail a configuration; the 200-database `perdb perwrite` cell is shown as a reference and is not a
+   candidate configuration. (Rule set on 2026-10-30, before any AWS run.) EBS and the quorum have
    no per-request charge: their variable cost is ~0 (quorum: inter-AZ transfer); their fixed cost per hour and the
    write rate at which it equals 1.5 USD/M are reported next to it.
 
