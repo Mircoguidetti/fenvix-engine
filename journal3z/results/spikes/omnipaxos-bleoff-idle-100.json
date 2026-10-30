@@ -1,0 +1,35 @@
+{
+  "candidate": "omnipaxos",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "config": {
+      "batch_size": 1,
+      "ble": "off (election_tick_timeout = u64::MAX, leader by try_become_leader on node 0)",
+      "election_tick_timeout": 18446744073709551615,
+      "heartbeat_round_ms": "none",
+      "leader_priority": "node 0 (pid 1) = 1, others 0",
+      "resend_message_tick_timeout": 10,
+      "tick_ms": 100
+    },
+    "files": "one LogFile per node shared by all groups",
+    "fsyncs_per_node_total_run": [
+      15,
+      24,
+      22
+    ],
+    "groups_with_leader": 100,
+    "instances": 300,
+    "omnipaxos": "0.2.4",
+    "settle_after_ready_s": 1
+  },
+  "mode": "idle",
+  "result": {
+    "cpu_pct_excl_net": 1.4864532017965804,
+    "cpu_pct_of_one_core": 1.4864532017965804,
+    "groups": 100,
+    "messages_per_s": 0.0,
+    "rss_mb": 10.25,
+    "secs": 10.001660316,
+    "startup_s": 0.016138226
+  }
+}

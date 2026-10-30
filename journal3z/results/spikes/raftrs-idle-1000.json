@@ -1,0 +1,42 @@
+{
+  "candidate": "raftrs",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "ack": "Commit",
+    "check_quorum": true,
+    "codec": "protobuf-codec (rust-protobuf 2.28; prost-codec needs protoc, not installed)",
+    "election_tick": 10,
+    "fsyncs": [
+      16,
+      26,
+      25
+    ],
+    "groups_with_leader_end": 1000,
+    "groups_with_term_change_during_idle": 0,
+    "heartbeat_tick": 3,
+    "hibernate": "raft-rs has no hibernate/quiesce API; plain raft-rs measured (every group ticks and heartbeats)",
+    "layout": "one Raft group per database; 3N RawNodes; one thread per node drives all its groups; one shared LogFile per node (group commit across groups)",
+    "leaders_per_node": [
+      334,
+      333,
+      333
+    ],
+    "max_inflight_msgs": 256,
+    "max_size_per_msg": 1048576,
+    "pre_vote": true,
+    "raft": "raft 0.7.0 (crates.io, 2023-03-07)",
+    "skip_bcast_commit": false,
+    "storage": "MemStorage (+snapshot override) + LogFile per node (fdatasync), async ready",
+    "tick_ms": 10
+  },
+  "mode": "idle",
+  "result": {
+    "cpu_pct_excl_net": 35.71650974848961,
+    "cpu_pct_of_one_core": 52.214855941068585,
+    "groups": 1000,
+    "messages_per_s": 133306.33726610738,
+    "rss_mb": 16.51953125,
+    "secs": 10.001002408,
+    "startup_s": 0.034209185
+  }
+}

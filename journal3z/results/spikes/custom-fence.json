@@ -1,0 +1,18 @@
+{
+  "candidate": "custom",
+  "delay_ms": "0.5-1.0",
+  "extra": {},
+  "mode": "fence",
+  "result": {
+    "acked_before_takeover": 100,
+    "c5": "pass: the epoch is an input (the lease seq); B's FENCE at a majority makes every later append of A rejected (A is told stale); B recovered all 100 acknowledged writes of A; no election",
+    "failed_before_takeover": 0,
+    "new_writer_acked": 100,
+    "new_writer_epoch_from_lease": 11,
+    "new_writer_failed": 0,
+    "new_writer_replayed_records": 100,
+    "old_writer_epoch": 10,
+    "old_writer_writes_after_takeover_acked": 0,
+    "old_writer_writes_after_takeover_failed": 100
+  }
+}

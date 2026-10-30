@@ -1,0 +1,35 @@
+{
+  "candidate": "omnipaxos",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "config": {
+      "batch_size": 1,
+      "ble": "off (election_tick_timeout = u64::MAX, leader by try_become_leader on node 0)",
+      "election_tick_timeout": 18446744073709551615,
+      "heartbeat_round_ms": "none",
+      "leader_priority": "node 0 (pid 1) = 1, others 0",
+      "resend_message_tick_timeout": 10,
+      "tick_ms": 100
+    },
+    "omnipaxos": "0.2.4"
+  },
+  "mode": "trim",
+  "result": {
+    "compacted_after": [
+      50,
+      50,
+      50
+    ],
+    "compacted_after_down": [
+      100,
+      100,
+      50
+    ],
+    "node2_down_then_decided": 200,
+    "snapshot_api": "snapshot(Some(i), local_only) compacts a node locally up to its decided index without asking the others, but needs Entry::Snapshot with use_snapshots() = true, and then log sync to a lagging node sends a snapshot (state transfer) instead of entries: not run (NoSnapshot panics in create)",
+    "trim_150_with_node2_down (S3 marker = 150)": "Err(NotAllDecided(100))",
+    "trim_50_all_up": "Ok(())",
+    "trim_none (= min accepted by ALL servers)": "Ok(())",
+    "trim_on_follower": "Err(NotCurrentLeader(1))"
+  }
+}

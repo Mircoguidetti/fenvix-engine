@@ -1,0 +1,23 @@
+{
+  "candidate": "proto",
+  "delay_ms": "0.5-1.0",
+  "extra": {},
+  "mode": "latency",
+  "result": {
+    "conc": 8,
+    "cpu_us_per_write": 168.78945,
+    "cpu_us_per_write_excl_net": 113.78945,
+    "errors": 0,
+    "hwm_mb": 4.1015625,
+    "max_ms": 32.956153,
+    "mean_ms": 3.0541177613499997,
+    "messages_per_write": 0.72485,
+    "n": 20000,
+    "p50_ms": 2.927806,
+    "p95_ms": 4.293622,
+    "p99_ms": 5.834147,
+    "rss_mb_end": 4.09765625,
+    "size": 1024,
+    "writes_per_s": 2618.0919860191875
+  }
+}

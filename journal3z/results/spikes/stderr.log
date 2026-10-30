@@ -1,0 +1,12 @@
+
+thread 'main' (6981) panicked at src/main.rs:279:22:
+called `Result::unwrap()` on an `Err` value: RecvError(())
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::result::unwrap_failed
+   3: spike_custom::main::{closure#0}
+   4: <tokio::runtime::park::CachedParkThread>::block_on::<spike_custom::main::{closure#0}>
+   5: <tokio::runtime::runtime::Runtime>::block_on::<spike_custom::main::{closure#0}>
+   6: spike_custom::main
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.

@@ -1,0 +1,89 @@
+{
+  "candidate": "raftrs",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "ack": "Commit",
+    "check_quorum": true,
+    "codec": "protobuf-codec (rust-protobuf 2.28; prost-codec needs protoc, not installed)",
+    "election_tick": 1000000,
+    "heartbeat_tick": 3,
+    "max_inflight_msgs": 256,
+    "max_size_per_msg": 1048576,
+    "pre_vote": true,
+    "raft": "raft 0.7.0 (crates.io, 2023-03-07)",
+    "skip_bcast_commit": false,
+    "storage": "MemStorage (+snapshot override) + LogFile per node (fdatasync), async ready",
+    "tick_ms": 10
+  },
+  "mode": "trim",
+  "result": {
+    "fsyncs": [
+      48,
+      48,
+      27
+    ],
+    "leader_after_compact": {
+      "committed": 41,
+      "first": 36,
+      "last": 41,
+      "role": "Leader",
+      "term": 2
+    },
+    "leader_before_trim": {
+      "committed": 41,
+      "first": 1,
+      "last": 41,
+      "role": "Leader",
+      "term": 2
+    },
+    "node2_after": {
+      "committed": 45,
+      "first": 37,
+      "last": 46,
+      "role": "Follower",
+      "term": 2
+    },
+    "node2_before": {
+      "committed": 20,
+      "first": 1,
+      "last": 21,
+      "role": "Follower",
+      "term": 2
+    },
+    "node2_caught_up": true,
+    "node2_committed_indices_handed_out": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "node2_snapshots_applied": 1,
+    "snapshot_data_bytes": 0,
+    "trim_index_k": 36
+  }
+}

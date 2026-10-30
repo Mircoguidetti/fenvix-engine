@@ -95,11 +95,11 @@ enum Cmd {
 struct WriterState {
     dbs: BTreeMap<DbId, WriterDb>,
     pending: BTreeMap<DbId, BTreeMap<Idx, oneshot::Sender<anyhow::Result<()>>>>,
-    opened: BTreeMap<DbId, oneshot::Sender<()>>,
+    opened: BTreeMap<DbId, oneshot::Sender<usize>>,
     stale: Vec<(DbId, Epoch)>,
 }
 
-fn send_out(dl: &DelayLine, nodes: &BTreeMap<NodeId, ToNode>, msgs: Vec<(NodeId, Msg)>) {
+fn send_out(addr: Addr, dl: &DelayLine, nodes: &BTreeMap<NodeId, ToNode>, msgs: Vec<(NodeId, Msg)>) {
     let mut per: BTreeMap<NodeId, Vec<Msg>> = BTreeMap::new();
     for (n, m) in msgs {
         per.entry(n).or_default().push(m);
@@ -108,7 +108,7 @@ fn send_out(dl: &DelayLine, nodes: &BTreeMap<NodeId, ToNode>, msgs: Vec<(NodeId,
         let size = v.iter().map(|m| m.size()).sum();
         let tx = nodes[&n].clone();
         dl.send(0, n as usize, size, Box::new(move || {
-            let _ = tx.send((WRITER_ADDR, v));
+            let _ = tx.send((addr, v));
         }));
     }
 }
@@ -116,9 +116,9 @@ fn send_out(dl: &DelayLine, nodes: &BTreeMap<NodeId, ToNode>, msgs: Vec<(NodeId,
 fn handle_events(st: &mut WriterState, db: DbId, events: Vec<WEvent>) {
     for ev in events {
         match ev {
-            WEvent::Active { .. } => {
+            WEvent::Active { replay, .. } => {
                 if let Some(t) = st.opened.remove(&db) {
-                    let _ = t.send(());
+                    let _ = t.send(replay.len());
                 }
             }
             WEvent::Committed(c) => {
@@ -156,7 +156,7 @@ fn cluster(a: &Args, writer_rx: Vec<(Addr, ToWriter)>) -> Cluster {
 }
 
 /// The writer task: client commands, node replies, a 20 ms retransmission tick.
-fn spawn_writer(dl: Arc<DelayLine>, nodes: Arc<BTreeMap<NodeId, ToNode>>, mut from_nodes: mpsc::UnboundedReceiver<(NodeId, Vec<Msg>)>, mut cmds: mpsc::UnboundedReceiver<Cmd>, mut opens: mpsc::UnboundedReceiver<(DbId, Epoch, oneshot::Sender<()>)>) -> tokio::task::JoinHandle<WriterState> {
+fn spawn_writer(addr: Addr, dl: Arc<DelayLine>, nodes: Arc<BTreeMap<NodeId, ToNode>>, mut from_nodes: mpsc::UnboundedReceiver<(NodeId, Vec<Msg>)>, mut cmds: mpsc::UnboundedReceiver<Cmd>, mut opens: mpsc::UnboundedReceiver<(DbId, Epoch, oneshot::Sender<usize>)>) -> tokio::task::JoinHandle<WriterState> {
     tokio::spawn(async move {
         let mut st = WriterState { dbs: BTreeMap::new(), pending: BTreeMap::new(), opened: BTreeMap::new(), stale: vec![] };
         let mut tick = tokio::time::interval(std::time::Duration::from_millis(20));
@@ -167,7 +167,7 @@ fn spawn_writer(dl: Arc<DelayLine>, nodes: Arc<BTreeMap<NodeId, ToNode>>, mut fr
                     let (w, out) = WriterDb::open(db, epoch, vec![0, 1, 2], 0, Mutations::default());
                     st.dbs.insert(db, w);
                     st.opened.insert(db, done);
-                    send_out(&dl, &nodes, out.msgs);
+                    send_out(addr, &dl, &nodes, out.msgs);
                 }
                 c = cmds.recv() => {
                     let Some(first) = c else { break };
@@ -188,7 +188,7 @@ fn spawn_writer(dl: Arc<DelayLine>, nodes: Arc<BTreeMap<NodeId, ToNode>>, mut fr
                         st.dbs.get_mut(&db).unwrap().flush(&mut out);
                         msgs.extend(out.msgs);
                     }
-                    send_out(&dl, &nodes, msgs);
+                    send_out(addr, &dl, &nodes, msgs);
                 }
                 r = from_nodes.recv() => {
                     let Some((n, msgs)) = r else { break };
@@ -204,7 +204,7 @@ fn spawn_writer(dl: Arc<DelayLine>, nodes: Arc<BTreeMap<NodeId, ToNode>>, mut fr
                             handle_events(&mut st, db, out.events);
                         }
                     }
-                    send_out(&dl, &nodes, out_msgs);
+                    send_out(addr, &dl, &nodes, out_msgs);
                 }
                 _ = tick.tick() => {
                     let mut msgs = vec![];
@@ -218,7 +218,7 @@ fn spawn_writer(dl: Arc<DelayLine>, nodes: Arc<BTreeMap<NodeId, ToNode>>, mut fr
                         }
                     }
                     for (db, e) in evs { handle_events(&mut st, db, e); }
-                    send_out(&dl, &nodes, msgs);
+                    send_out(addr, &dl, &nodes, msgs);
                 }
             }
         }
@@ -235,7 +235,7 @@ async fn main() {
             let c = cluster(&a, vec![(WRITER_ADDR, wtx)]);
             let (ctx, crx) = mpsc::unbounded_channel();
             let (otx, orx) = mpsc::unbounded_channel();
-            spawn_writer(c.dl.clone(), c.nodes.clone(), wrx, crx, orx);
+            spawn_writer(WRITER_ADDR, c.dl.clone(), c.nodes.clone(), wrx, crx, orx);
             let n = if a.mode == "idle" { a.groups } else { 1 };
             let t0 = std::time::Instant::now();
             let mut waits = vec![];
@@ -267,69 +267,49 @@ async fn main() {
             }
         }
         "fence" => {
-            // two writers for the same database; the second gets a higher epoch from "the lease"
-            let (w2tx, w2rx) = mpsc::unbounded_channel();
-            let c = cluster(&a, vec![(WRITER_ADDR, wtx), (WRITER_ADDR, w2tx.clone())]);
-            let _ = w2rx;
-            let (ctx, crx) = mpsc::unbounded_channel();
-            let (otx, orx) = mpsc::unbounded_channel();
-            let h1 = spawn_writer(c.dl.clone(), c.nodes.clone(), wrx, crx, orx);
-            let (tx, rx) = oneshot::channel();
-            otx.send((0, 10, tx)).unwrap();
-            rx.await.unwrap();
-            let mut ok_before = 0;
-            for i in 0..100u64 {
-                let (tx, rx) = oneshot::channel();
-                ctx.send(Cmd::Write(0, Bytes::copy_from_slice(&i.to_le_bytes()), tx)).unwrap();
-                if rx.await.unwrap().is_ok() {
-                    ok_before += 1;
+            // Two writer processes (addresses 1000 and 1001) for the same database, real nodes, real fdatasync, the
+            // delay line. A opens with epoch 10 (from "the lease") and writes; the lease moves: B opens with epoch 11;
+            // A keeps writing (a frozen/stale writer that still believes it owns the database); then B writes.
+            let (b_tx, b_rx) = mpsc::unbounded_channel();
+            let c = cluster(&a, vec![(WRITER_ADDR, wtx), (WRITER_ADDR + 1, b_tx)]);
+            let (a_cmd, a_crx) = mpsc::unbounded_channel();
+            let (a_open, a_orx) = mpsc::unbounded_channel();
+            let (b_cmd, b_crx) = mpsc::unbounded_channel();
+            let (b_open, b_orx) = mpsc::unbounded_channel();
+            spawn_writer(WRITER_ADDR, c.dl.clone(), c.nodes.clone(), wrx, a_crx, a_orx);
+            spawn_writer(WRITER_ADDR + 1, c.dl.clone(), c.nodes.clone(), b_rx, b_crx, b_orx);
+            async fn writes(cmd: &mpsc::UnboundedSender<Cmd>, from: u64, n: u64) -> (u64, u64) {
+                let mut rxs = vec![];
+                for i in from..from + n {
+                    let (tx, rx) = oneshot::channel();
+                    cmd.send(Cmd::Write(0, Bytes::copy_from_slice(&i.to_le_bytes()), tx)).unwrap();
+                    rxs.push(rx);
                 }
-            }
-            // the lease moves: a second writer process opens with epoch 11 (it reuses the node channels; replies to
-            // address 1000 go to whoever owns that address, so it runs as a separate cluster view with its own core)
-            let mut nodes_core: BTreeMap<NodeId, NodeCore> = BTreeMap::new();
-            let _ = &mut nodes_core;
-            drop(c);
-            drop(h1);
-            // Simpler, deterministic demonstration on the same core state machines (no timing involved):
-            let mut nodes: BTreeMap<NodeId, NodeCore> = (0..3).map(|i| (i, NodeCore::new(i, Mutations::default()))).collect();
-            let pump = |nodes: &mut BTreeMap<NodeId, NodeCore>, w: &mut WriterDb, msgs: Vec<(NodeId, Msg)>| {
-                let mut q = msgs;
-                let mut ev = vec![];
-                while !q.is_empty() {
-                    let mut next = vec![];
-                    for (n, m) in q {
-                        for (_, r) in nodes.get_mut(&n).unwrap().handle(WRITER_ADDR, m).replies {
-                            let o = w.on_msg(n, r);
-                            next.extend(o.msgs);
-                            ev.extend(o.events);
-                        }
+                let (mut ok, mut err) = (0, 0);
+                for rx in rxs {
+                    match tokio::time::timeout(std::time::Duration::from_secs(2), rx).await {
+                        Ok(Ok(Ok(()))) => ok += 1,
+                        _ => err += 1,
                     }
-                    q = next;
                 }
-                ev
-            };
-            let (mut old, o) = WriterDb::open(0, 10, vec![0, 1, 2], 0, Mutations::default());
-            pump(&mut nodes, &mut old, o.msgs);
-            old.append(Bytes::from_static(b"before")).unwrap();
-            let mut o = WOut::default();
-            old.flush(&mut o);
-            let committed_before = pump(&mut nodes, &mut old, o.msgs).iter().any(|e| matches!(e, WEvent::Committed(_)));
-            let (mut new, o) = WriterDb::open(0, 11, vec![0, 1, 2], 0, Mutations::default());
-            let ev = pump(&mut nodes, &mut new, o.msgs);
-            let new_active = ev.iter().any(|e| matches!(e, WEvent::Active { .. }));
-            old.append(Bytes::from_static(b"after")).unwrap();
-            let mut o = WOut::default();
-            old.flush(&mut o);
-            let ev = pump(&mut nodes, &mut old, o.msgs);
-            let old_stale = ev.iter().find_map(|e| if let WEvent::Stale(p) = e { Some(*p) } else { None });
-            let old_committed_after = ev.iter().any(|e| matches!(e, WEvent::Committed(_)));
+                (ok, err)
+            }
+            let (tx, rx) = oneshot::channel();
+            a_open.send((0, 10, tx)).unwrap();
+            rx.await.unwrap();
+            let (a_ok_before, a_err_before) = writes(&a_cmd, 1, 100).await;
+            let (tx, rx) = oneshot::channel();
+            b_open.send((0, 11, tx)).unwrap();
+            let b_replayed = rx.await.unwrap();
+            let (a_ok_after, a_err_after) = writes(&a_cmd, 1001, 100).await;
+            let (b_ok, b_err) = writes(&b_cmd, 2001, 100).await;
+            let pass = a_ok_before == 100 && b_replayed == 100 && a_ok_after == 0 && b_ok == 100;
             a.emit("custom", serde_json::json!({}), &serde_json::json!({
-                "realtime_writes_acked_by_epoch_10": ok_before,
-                "old_writer_epoch": 10, "committed_before_takeover": committed_before,
-                "new_writer_epoch_from_lease": 11, "new_writer_active": new_active,
-                "old_writer_append_after_takeover_committed": old_committed_after, "old_writer_told_stale_by_epoch": old_stale,
-                "c5": "pass: the epoch is an input (the lease seq); FENCE at a majority makes every older epoch's append rejected; no election"}));
+                "old_writer_epoch": 10, "acked_before_takeover": a_ok_before, "failed_before_takeover": a_err_before,
+                "new_writer_epoch_from_lease": 11, "new_writer_replayed_records": b_replayed,
+                "old_writer_writes_after_takeover_acked": a_ok_after, "old_writer_writes_after_takeover_failed": a_err_after,
+                "new_writer_acked": b_ok, "new_writer_failed": b_err,
+                "c5": if pass { "pass: the epoch is an input (the lease seq); B's FENCE at a majority makes every later append of A rejected (A is told stale); B recovered all 100 acknowledged writes of A; no election" } else { "FAIL" }}));
         }
         m => panic!("unknown mode {m}"),
     }

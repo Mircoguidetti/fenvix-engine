@@ -1,0 +1,25 @@
+{
+  "candidate": "custom",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "open_s": 0.001880896
+  },
+  "mode": "latency",
+  "result": {
+    "conc": 8,
+    "cpu_us_per_write": 340.9111,
+    "cpu_us_per_write_excl_net": 201.9111,
+    "errors": 0,
+    "hwm_mb": 33.4375,
+    "max_ms": 12.551499,
+    "mean_ms": 2.03857752075,
+    "messages_per_write": 3.12775,
+    "n": 20000,
+    "p50_ms": 1.985316,
+    "p95_ms": 2.513104,
+    "p99_ms": 3.77228,
+    "rss_mb_end": 33.4375,
+    "size": 1024,
+    "writes_per_s": 3920.4131233495877
+  }
+}

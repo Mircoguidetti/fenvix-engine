@@ -1,0 +1,17 @@
+{
+  "candidate": "custom",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "note": "per-database logical logs on 3 shared node files; no heartbeats"
+  },
+  "mode": "idle",
+  "result": {
+    "cpu_pct_excl_net": 0.376458088551333,
+    "cpu_pct_of_one_core": 0.376458088551333,
+    "groups": 100,
+    "messages_per_s": 0.0,
+    "rss_mb": 4.25,
+    "secs": 10.000847676,
+    "startup_s": 0.003085969
+  }
+}

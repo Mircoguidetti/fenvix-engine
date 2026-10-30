@@ -25,7 +25,7 @@ Every number in this document is marked **measured** (with where), **estimated**
 | D5 | **Trim only below the database's S3 marker** (the `applied` index read back from object storage, never "what I sent"). The marker is the journal index of the last record contained in the uploaded state. | Invariant (d). |
 | D6 | **Recovery reads only what is above the S3 marker, from any 2 of the 3 nodes that answer** (never a fixed pair). | The walbench cycle-1 failure (§12, `docs/journal3z-walbench-cycle1.md`). |
 | D7 | **Membership changes only at an upload point** (a database moves to a new set of 3 nodes right after its state up to index `k` is in S3; nothing is copied between nodes). | Node replacement needs no state transfer and no joint consensus; the S3 upload that happens every 30–60 s anyway is the state transfer. |
-| D8 | Library or custom: **decided only after the measurements** of `docs/journal3z-libraries.md` (criteria fixed there before measuring). | §11 is filled in after the spikes. |
+| D8 | **Custom** implementation of D1 (decided after the measurements; criteria fixed before). No library met the decision rule; custom met every criterion except the absolute CPU bound of C3, which no candidate met (not even the reference path) and which is to be re-measured on real hardware. | §11; `docs/journal3z-libraries.md`. |
 
 ---
 
@@ -455,6 +455,13 @@ node cannot fence another machine; that is what the 3-zone backend adds).
 No custom protocol exists today: the walbench "quorum" is a speed benchmark (no epochs, no fencing, catch-up from the
 writer's memory only, recovery = union of a fixed pair). This phase specifies the protocol (this document), checks it
 (simulator + TLA+), and measures 3 libraries and a spike of the custom write path against fixed criteria.
+
+Outcome (measured on the in-process test bed, conc 8, 1 KB, round trip 1–2 ms, real fdatasync): p99 of an
+acknowledged write — custom 3.77 ms, omnipaxos 3.77, raft-rs 3.96, walbench path 5.37, openraft 8.00. Idle cost with
+1,000 databases — custom 0 messages/s; openraft 52,452; raft-rs 133,306; omnipaxos 119,989 (0 with its election off,
+still 14.5 % CPU). Fencing tied to the lease — custom pass, raft-rs partial, openraft and omnipaxos fail. Per-database
+trim to the S3 marker — custom and raft-rs pass, openraft partial, omnipaxos fail. Recommendation: custom (D8), with the
+CPU-per-write bound to be re-measured on AWS hardware in the next phase.
 
 ## 12. The walbench "connection refused" cycle (summary)
 

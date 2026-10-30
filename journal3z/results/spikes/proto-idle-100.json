@@ -1,0 +1,17 @@
+{
+  "candidate": "proto",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "note": "no heartbeats by construction"
+  },
+  "mode": "idle",
+  "result": {
+    "cpu_pct_excl_net": 0.004379210725216731,
+    "cpu_pct_of_one_core": 0.004379210725216731,
+    "groups": 100,
+    "messages_per_s": 0.0,
+    "rss_mb": 6.73828125,
+    "secs": 10.001802322,
+    "startup_s": 0.0
+  }
+}

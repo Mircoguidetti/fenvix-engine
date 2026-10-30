@@ -1,0 +1,115 @@
+{
+  "candidate": "openraft",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "config": {
+      "election_timeout_ms": [
+        150,
+        300
+      ],
+      "enable_elect": true,
+      "enable_heartbeat": true,
+      "heartbeat_interval_ms": 50,
+      "leader_lease_ms (= election_timeout_max)": 300,
+      "max_in_snapshot_log_to_keep": 1000,
+      "max_payload_entries": 300,
+      "snapshot_policy": "Never"
+    },
+    "how": "SnapshotPolicy::Never; per node: state machine snapshot built AT the external marker k (data = 's3-marker:k', no state), then trigger().purge_log(k)",
+    "openraft": "0.9.25"
+  },
+  "mode": "trim",
+  "result": {
+    "all_applied": true,
+    "entries": 201,
+    "lagging": {
+      "k": 291,
+      "last": 301,
+      "n0_after": {
+        "last_log_index": 302,
+        "leader": 0,
+        "state": "Leader",
+        "term": 4,
+        "vote": "T4-N0:committed"
+      },
+      "n0_before_heal": {
+        "last_log_index": 301,
+        "leader": 0,
+        "state": "Leader",
+        "term": 1,
+        "vote": "T1-N0:committed"
+      },
+      "node2_applied": 302,
+      "node2_caught_up": true,
+      "node2_log_first_last": [
+        292,
+        302
+      ],
+      "node2_snapshots_installed": 1,
+      "snapshot_bytes": 154,
+      "snapshot_rpcs_to_node2": 2,
+      "trim_nodes_0_1": [
+        {
+          "log_first_last": [
+            292,
+            301
+          ],
+          "metrics_purged": 291,
+          "node": 0,
+          "purge_wait_ms": 100,
+          "purged_to_k": true,
+          "snapshot_at_k": true
+        },
+        {
+          "log_first_last": [
+            292,
+            301
+          ],
+          "metrics_purged": 291,
+          "node": 1,
+          "purge_wait_ms": 0,
+          "purged_to_k": true,
+          "snapshot_at_k": true
+        }
+      ]
+    },
+    "trim1": {
+      "k": 151,
+      "nodes": [
+        {
+          "log_first_last": [
+            152,
+            201
+          ],
+          "metrics_purged": 151,
+          "node": 0,
+          "purge_wait_ms": 0,
+          "purged_to_k": true,
+          "snapshot_at_k": true
+        },
+        {
+          "log_first_last": [
+            152,
+            201
+          ],
+          "metrics_purged": 151,
+          "node": 1,
+          "purge_wait_ms": 0,
+          "purged_to_k": true,
+          "snapshot_at_k": true
+        },
+        {
+          "log_first_last": [
+            152,
+            201
+          ],
+          "metrics_purged": 151,
+          "node": 2,
+          "purge_wait_ms": 0,
+          "purged_to_k": true,
+          "snapshot_at_k": true
+        }
+      ]
+    }
+  }
+}

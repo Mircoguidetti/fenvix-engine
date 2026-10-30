@@ -1,0 +1,43 @@
+{
+  "candidate": "omnipaxos",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "ack_rule": "decided_idx >= index of the append on node 0; the leader's own vote is only counted after its fdatasync (Accepted gated), followers reply Accepted only after fdatasync",
+    "config": {
+      "batch_size": 1,
+      "ble": "off (election_tick_timeout = u64::MAX, leader by try_become_leader on node 0)",
+      "election_tick_timeout": 18446744073709551615,
+      "heartbeat_round_ms": "none",
+      "leader_priority": "node 0 (pid 1) = 1, others 0",
+      "resend_message_tick_timeout": 10,
+      "tick_ms": 100
+    },
+    "decided_idx": 22000,
+    "fsyncs_per_node_total_run": [
+      1490,
+      1499,
+      1504
+    ],
+    "leader_pid": 1,
+    "omnipaxos": "0.2.4",
+    "startup_s": 0.006533183
+  },
+  "mode": "latency",
+  "result": {
+    "conc": 64,
+    "cpu_us_per_write": 60.3708,
+    "cpu_us_per_write_excl_net": 39.3708,
+    "errors": 0,
+    "hwm_mb": 30.43359375,
+    "max_ms": 6.294992,
+    "mean_ms": 2.5867413945499997,
+    "messages_per_write": 1.1908,
+    "n": 20000,
+    "p50_ms": 2.554257,
+    "p95_ms": 3.131213,
+    "p99_ms": 3.932726,
+    "rss_mb_end": 30.43359375,
+    "size": 1024,
+    "writes_per_s": 24689.388390631586
+  }
+}

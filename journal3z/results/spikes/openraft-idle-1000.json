@@ -1,0 +1,48 @@
+{
+  "candidate": "openraft",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "build_s": 0.097866499,
+    "config": {
+      "election_timeout_ms": [
+        150,
+        300
+      ],
+      "enable_elect": true,
+      "enable_heartbeat": true,
+      "heartbeat_interval_ms": 50,
+      "leader_lease_ms (= election_timeout_max)": 300,
+      "max_in_snapshot_log_to_keep": 1000,
+      "max_payload_entries": 300,
+      "snapshot_policy": "LogsSinceLast(5000)"
+    },
+    "elect_s": 1.021825638,
+    "groups_with_node0_leader_at_end": 1000,
+    "note": "idle traffic = leader heartbeats (AppendEntries without entries) + responses; heartbeats do not touch the disk",
+    "openraft": "0.9.25",
+    "raft_instances": 3000,
+    "storage": {
+      "bytes_written_per_node": [
+        263000,
+        263000,
+        263000
+      ],
+      "fsyncs_per_node": [
+        3353,
+        2434,
+        2446
+      ],
+      "layout": "one harness LogFile per node shared by all groups on that node"
+    }
+  },
+  "mode": "idle",
+  "result": {
+    "cpu_pct_excl_net": 87.61711343555186,
+    "cpu_pct_of_one_core": 122.6116110407264,
+    "groups": 1000,
+    "messages_per_s": 52451.75269621305,
+    "rss_mb": 288.4453125,
+    "secs": 10.00157236,
+    "startup_s": 1.11969381
+  }
+}

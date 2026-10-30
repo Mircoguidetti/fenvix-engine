@@ -1,0 +1,69 @@
+{
+  "candidate": "openraft",
+  "delay_ms": "1-2",
+  "extra": {
+    "batching": {
+      "entries": 4775,
+      "max_bytes": 262144,
+      "max_inflight_client_write": 1,
+      "max_writes": 64,
+      "writes": 22000,
+      "writes_per_entry": 4.607329842931938
+    },
+    "config": {
+      "election_timeout_ms": [
+        150,
+        300
+      ],
+      "enable_elect": true,
+      "enable_heartbeat": true,
+      "heartbeat_interval_ms": 50,
+      "leader_lease_ms (= election_timeout_max)": 300,
+      "max_in_snapshot_log_to_keep": 1000,
+      "max_payload_entries": 300,
+      "snapshot_policy": "LogsSinceLast(5000)"
+    },
+    "last_log_index": 4776,
+    "leader": 0,
+    "openraft": "0.9.25",
+    "purged_upto_node0": null,
+    "snapshots_built_per_node": [
+      0,
+      0,
+      0
+    ],
+    "startup_s": 0.008300847,
+    "storage": {
+      "bytes_written_per_node": [
+        22773838,
+        22773838,
+        22773838
+      ],
+      "fsyncs_per_node": [
+        4779,
+        4776,
+        4778
+      ],
+      "layout": "one harness LogFile per node shared by all groups on that node"
+    },
+    "term": 1
+  },
+  "mode": "latency_batched",
+  "result": {
+    "conc": 8,
+    "cpu_us_per_write": 325.2599,
+    "cpu_us_per_write_excl_net": 250.7599,
+    "errors": 0,
+    "hwm_mb": 33.7109375,
+    "max_ms": 36.770294,
+    "mean_ms": 12.33399904685,
+    "messages_per_write": 1.7224,
+    "n": 20000,
+    "p50_ms": 13.642437,
+    "p95_ms": 15.777284,
+    "p99_ms": 17.916265,
+    "rss_mb_end": 33.7109375,
+    "size": 1024,
+    "writes_per_s": 648.3247381589866
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "candidate": "raftrs",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "ack": "Commit",
+    "check_quorum": true,
+    "codec": "protobuf-codec (rust-protobuf 2.28; prost-codec needs protoc, not installed)",
+    "election_tick": 1000000,
+    "heartbeat_tick": 3,
+    "max_inflight_msgs": 256,
+    "max_size_per_msg": 1048576,
+    "pre_vote": true,
+    "raft": "raft 0.7.0 (crates.io, 2023-03-07)",
+    "skip_bcast_commit": false,
+    "storage": "MemStorage (+snapshot override) + LogFile per node (fdatasync), async ready",
+    "tick_ms": 10
+  },
+  "mode": "fence",
+  "result": {
+    "1_lease5_on_node0": {
+      "leader": true,
+      "state": {
+        "committed": 4,
+        "first": 1,
+        "last": 4,
+        "role": "Leader",
+        "term": 5
+      },
+      "take_lease": "ok",
+      "writes_ok": 3
+    },
+    "2_lease9_on_node1": {
+      "leader": true,
+      "state": {
+        "committed": 6,
+        "first": 1,
+        "last": 6,
+        "role": "Leader",
+        "term": 9
+      },
+      "take_lease": "ok",
+      "term_equals_lease_seq": true,
+      "write_on_node1": "ok"
+    },
+    "3_stale_writer_node0": {
+      "healed": true,
+      "inflight_or_stale_in_new_leader_committed_log": "(None, None)",
+      "inflight_write_result": "err: overwritten by a later term",
+      "stale_write_result": "err: overwritten by a later term",
+      "state_after_heal": {
+        "committed": 6,
+        "first": 1,
+        "last": 6,
+        "role": "Follower",
+        "term": 9
+      },
+      "state_after_local_append": {
+        "committed": 4,
+        "first": 1,
+        "last": 6,
+        "role": "Leader",
+        "term": 5
+      },
+      "state_before_stale_write": {
+        "committed": 4,
+        "first": 1,
+        "last": 5,
+        "role": "Leader",
+        "term": 5
+      }
+    },
+    "4_raw_propose_on_old_writer_after_stepdown": {
+      "at": "Some((7, 9))",
+      "committed_by_new_leader": true,
+      "propose": "ok"
+    },
+    "5_lease_holder_behind": {
+      "node0_became_leader": false,
+      "remedy": {
+        "node0_state": {
+          "committed": 11,
+          "first": 1,
+          "last": 11,
+          "role": "Leader",
+          "term": 14
+        },
+        "node2_campaign_seq13": "ok",
+        "node2_leader": true,
+        "transfer_leader_to_node0": true,
+        "write_on_node0": "ok"
+      },
+      "states_node0_node2": [
+        {
+          "committed": 7,
+          "first": 1,
+          "last": 7,
+          "role": "Follower",
+          "term": 12
+        },
+        {
+          "committed": 7,
+          "first": 1,
+          "last": 8,
+          "role": "Follower",
+          "term": 12
+        }
+      ],
+      "take_lease_node0_seq12": "ok",
+      "write_on_node0": "err: not leader",
+      "write_on_node1_while_node0_away": "ok"
+    },
+    "old_writer_write_committed_after_new_lease": false
+  }
+}

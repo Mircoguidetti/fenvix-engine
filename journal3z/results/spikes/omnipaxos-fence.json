@@ -1,0 +1,312 @@
+{
+  "candidate": "omnipaxos",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "config": {
+      "batch_size": 1,
+      "ble": "off (election_tick_timeout = u64::MAX, leader by try_become_leader on node 0)",
+      "election_tick_timeout": 18446744073709551615,
+      "heartbeat_round_ms": "none",
+      "leader_priority": "node 0 (pid 1) = 1, others 0",
+      "resend_message_tick_timeout": 10,
+      "tick_ms": 100
+    },
+    "omnipaxos": "0.2.4"
+  },
+  "mode": "fence",
+  "result": {
+    "S1_native_takeover": {
+      "inflight_append_on_node0": {
+        "ack": {
+          "acked_at_index": 4
+        },
+        "decided_at_on_new_leader": 4
+      },
+      "late_append_on_node0_after_fence": {
+        "append_returned": "Ok(())",
+        "decided_at_on_new_leader": 5,
+        "how": "node 0 is now a follower: OmniPaxos forwards the proposal (ProposalForward) to the leader, which commits it"
+      },
+      "new_leader_node1": true,
+      "states": [
+        {
+          "accepted": 5,
+          "decided": 5,
+          "leader": [
+            2,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late"
+          ],
+          "node": 0,
+          "promise": {
+            "n": 2,
+            "pid": 2
+          }
+        },
+        {
+          "accepted": 5,
+          "decided": 5,
+          "leader": [
+            2,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late"
+          ],
+          "node": 1,
+          "promise": {
+            "n": 2,
+            "pid": 2
+          }
+        },
+        {
+          "accepted": 5,
+          "decided": 5,
+          "leader": [
+            2,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late"
+          ],
+          "node": 2,
+          "promise": {
+            "n": 2,
+            "pid": 2
+          }
+        }
+      ]
+    },
+    "S2_native_stale_reopen": {
+      "new_writer_append_decided_at": 7,
+      "new_writer_append_returned": "Ok(())",
+      "stale_append_acked": true,
+      "stale_append_decided_at": 6,
+      "stale_node0_leader_again": true,
+      "states": [
+        {
+          "accepted": 7,
+          "decided": 7,
+          "leader": [
+            1,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late",
+            "D:s2-stale-after-reopen",
+            "D:s2-new-writer"
+          ],
+          "node": 0,
+          "promise": {
+            "n": 3,
+            "pid": 1
+          }
+        },
+        {
+          "accepted": 7,
+          "decided": 7,
+          "leader": [
+            1,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late",
+            "D:s2-stale-after-reopen",
+            "D:s2-new-writer"
+          ],
+          "node": 1,
+          "promise": {
+            "n": 3,
+            "pid": 1
+          }
+        },
+        {
+          "accepted": 7,
+          "decided": 7,
+          "leader": [
+            1,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late",
+            "D:s2-stale-after-reopen",
+            "D:s2-new-writer"
+          ],
+          "node": 2,
+          "promise": {
+            "n": 3,
+            "pid": 1
+          }
+        }
+      ]
+    },
+    "S3_epoch_ballot_workaround": {
+      "append_e10": {
+        "Ok": 10
+      },
+      "append_e9": {
+        "Ok": 8
+      },
+      "decided_e9_ok": 8,
+      "e9_after_reconnect_decided_at": null,
+      "e9_append_after_reconnect": {
+        "Err": "refused locally: leader=Some((2, true)) promise.n=10 epoch=9"
+      },
+      "e9_inflight": {
+        "append": {
+          "Ok": 9
+        },
+        "decided_at": 9
+      },
+      "e9_late_while_partitioned_from_node1": {
+        "append": {
+          "Ok": 10
+        },
+        "decided_at": null
+      },
+      "node0_leader": true,
+      "node0_view_while_partitioned": {
+        "accepted": 10,
+        "decided": 9,
+        "leader": [
+          1,
+          true
+        ],
+        "log": [
+          "D:w1-0",
+          "D:w1-1",
+          "D:w1-2",
+          "D:s1-stale-inflight",
+          "D:s1-stale-late",
+          "D:s2-stale-after-reopen",
+          "D:s2-new-writer",
+          "D:s3-e9-ok",
+          "D:s3-e9-inflight",
+          "U:s3-e9-late-partitioned"
+        ],
+        "node": 0,
+        "promise": {
+          "n": 9,
+          "pid": 1
+        }
+      },
+      "node1_leader": true,
+      "open_epoch10_node1": {
+        "Ok": 10
+      },
+      "open_epoch9_node0": {
+        "Ok": 9
+      },
+      "stale_reopen_epoch9_after_reconnect": {
+        "Err": "refused locally: promised ballot n=10 >= my epoch 9"
+      },
+      "states": [
+        {
+          "accepted": 10,
+          "decided": 10,
+          "leader": [
+            2,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late",
+            "D:s2-stale-after-reopen",
+            "D:s2-new-writer",
+            "D:s3-e9-ok",
+            "D:s3-e9-inflight",
+            "D:s3-e10-barrier"
+          ],
+          "node": 0,
+          "promise": {
+            "n": 10,
+            "pid": 2
+          }
+        },
+        {
+          "accepted": 10,
+          "decided": 10,
+          "leader": [
+            2,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late",
+            "D:s2-stale-after-reopen",
+            "D:s2-new-writer",
+            "D:s3-e9-ok",
+            "D:s3-e9-inflight",
+            "D:s3-e10-barrier"
+          ],
+          "node": 1,
+          "promise": {
+            "n": 10,
+            "pid": 2
+          }
+        },
+        {
+          "accepted": 10,
+          "decided": 10,
+          "leader": [
+            2,
+            true
+          ],
+          "log": [
+            "D:w1-0",
+            "D:w1-1",
+            "D:w1-2",
+            "D:s1-stale-inflight",
+            "D:s1-stale-late",
+            "D:s2-stale-after-reopen",
+            "D:s2-new-writer",
+            "D:s3-e9-ok",
+            "D:s3-e9-inflight",
+            "D:s3-e10-barrier"
+          ],
+          "node": 2,
+          "promise": {
+            "n": 10,
+            "pid": 2
+          }
+        }
+      ]
+    },
+    "verdict": {
+      "library_native": "FAIL: no way to give a server a ballot from outside (try_become_leader uses promise.n + 1; BLE elects on its own unless its timeout is disabled); a stale writer's append is forwarded to and committed by the new leader (S1), and a stale writer that re-opens outranks the newer lease holder (S2)",
+      "with_workaround": "fencing by epoch works only through a forged internal Prepare message plus local guards (S3); not a supported API"
+    }
+  }
+}

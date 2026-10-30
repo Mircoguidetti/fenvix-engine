@@ -1,0 +1,48 @@
+{
+  "candidate": "raftrs",
+  "delay_ms": "0.5-1.0",
+  "extra": {
+    "ack": "Commit",
+    "check_quorum": true,
+    "codec": "protobuf-codec (rust-protobuf 2.28; prost-codec needs protoc, not installed)",
+    "election_tick": 10,
+    "fsyncs": [
+      13588,
+      12653,
+      12603
+    ],
+    "heartbeat_tick": 3,
+    "leader_end": {
+      "committed": 22001,
+      "first": 1,
+      "last": 22001,
+      "role": "Leader",
+      "term": 1
+    },
+    "max_inflight_msgs": 256,
+    "max_size_per_msg": 1048576,
+    "pre_vote": true,
+    "raft": "raft 0.7.0 (crates.io, 2023-03-07)",
+    "skip_bcast_commit": false,
+    "storage": "MemStorage (+snapshot override) + LogFile per node (fdatasync), async ready",
+    "tick_ms": 10
+  },
+  "mode": "latency",
+  "result": {
+    "conc": 8,
+    "cpu_us_per_write": 440.4257,
+    "cpu_us_per_write_excl_net": 259.42570000000006,
+    "errors": 0,
+    "hwm_mb": 84.921875,
+    "max_ms": 10.064671,
+    "mean_ms": 2.27194981985,
+    "messages_per_write": 8.07745,
+    "n": 20000,
+    "p50_ms": 2.224541,
+    "p95_ms": 2.72888,
+    "p99_ms": 3.963202,
+    "rss_mb_end": 84.921875,
+    "size": 1024,
+    "writes_per_s": 3515.0481006256123
+  }
+}
