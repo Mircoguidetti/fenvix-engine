@@ -1,0 +1,10 @@
+[package]
+name = "walbench-cycle1"
+version = "0.1.0"
+edition = "2021"
+description = "Replays the random draws of the walbench quorum crash test (seed 5) to show which node pair each cycle read"
+
+[workspace]
+
+[dependencies]
+rand = "=0.8.8"

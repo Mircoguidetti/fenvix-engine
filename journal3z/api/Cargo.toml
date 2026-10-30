@@ -1,0 +1,18 @@
+[package]
+name = "journal3z-api"
+version = "0.1.0"
+edition = "2021"
+description = "Engine-facing journal interface (trait) and a single-node local backend with round3 local-log semantics"
+
+# Own workspace: not part of the engine workspace (the engine's Cargo.lock is not touched).
+[workspace]
+
+[dependencies]
+async-trait = "0.1"
+bytes = "1"
+crc32fast = "1"
+tokio = { version = "1", features = ["sync", "rt", "macros"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+tempfile = "3"
