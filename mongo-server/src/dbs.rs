@@ -516,6 +516,7 @@ impl Entry {
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
+                crate::fair::register(&self.name);
                 tenant_bench::counting::set_phase(0);
                 Ok(true)
             }
@@ -689,6 +690,7 @@ impl Entry {
         self.lc.touched.lock().unwrap().remove(&self.name);
         self.leases.forget(&self.name);
         tenant_bench::lifecycle::forget_wal_state(&self.name);
+        crate::fair::forget(&self.name);
         Ok(())
     }
 

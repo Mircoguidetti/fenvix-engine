@@ -96,6 +96,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
+    // as a drop: a database created again with this name starts its WAL ids again, and has no counters yet
+    tenant_bench::lifecycle::forget_wal_state(db);
+    crate::fair::forget(db);
     super::pitr::forget(db);
     if super::durability::forget(db) {
         let _ = super::rec::delete(&ctl.store, &super::rec::path(&["control", "durability", db])).await;

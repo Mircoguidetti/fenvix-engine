@@ -37,7 +37,8 @@ ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://172.18.0.2:9000")
 
 def start(port, holder, ttl, extra):
     f = open(os.path.join(OUT, f"server-{port}.log"), "ab")
-    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{port}", "--idle-secs", "600", "--holder", holder, "--lease-ttl-secs", str(ttl), "--endpoint", ENDPOINT] + extra + os.environ.get("EXTRA_SERVER_FLAGS", "").split(), stdout=f, stderr=f)
+    env = dict(os.environ, MONGO_ALLOW_UNSAFE_TEST_FLAGS="1")   # the negative control uses --unsafe-skip-ownership-checks
+    p = subprocess.Popen([BIN, "--listen", f"127.0.0.1:{port}", "--idle-secs", "600", "--holder", holder, "--lease-ttl-secs", str(ttl), "--endpoint", ENDPOINT] + extra + os.environ.get("EXTRA_SERVER_FLAGS", "").split(), stdout=f, stderr=f, env=env)
     for _ in range(100):
         try:
             MongoClient(f"mongodb://127.0.0.1:{port}", serverSelectionTimeoutMS=200).admin.command("ping")

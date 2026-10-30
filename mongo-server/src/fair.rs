@@ -175,9 +175,9 @@ pub fn rejection(db: &str, what: &str, limit: u64) -> Document {
 
 /// Take a place for a command of `db` (`wakes`: it will wake a sleeping database). Err: a safety limit, with the reply.
 pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
-    {
-        let mut st = STATS.lock().unwrap();
-        let s = st.entry(db.to_string()).or_default();
+    // Per-database counters and limits exist only for databases this process opened or wrote (`register`), so a client
+    // naming arbitrary databases cannot grow this map; such commands still pass through the gate below.
+    if let Some(s) = STATS.lock().unwrap().get_mut(db) {
         let sec = now_sec();
         if s.sec != sec {
             s.sec = sec;
@@ -233,6 +233,16 @@ pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
 }
 
 /// Bytes a database wrote since it was opened (reset at close). Its memtable holds at most `--memtable-max-mb` of them.
+/// The database exists (it was opened or written): from now on it has counters, limits and metrics.
+pub fn register(db: &str) {
+    STATS.lock().unwrap().entry(db.to_string()).or_default();
+}
+
+/// The database was dropped or erased: its counters go.
+pub fn forget(db: &str) {
+    STATS.lock().unwrap().remove(db);
+}
+
 pub fn note_written(db: &str, bytes: u64, reset: bool) {
     let mut st = STATS.lock().unwrap();
     let s = st.entry(db.to_string()).or_default();

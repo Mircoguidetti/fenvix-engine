@@ -110,7 +110,9 @@ impl Server {
             eprintln!("CMD {name} db={db}");
         }
         // fair queue between databases under saturation, safety limits, per-database metrics (fair.rs)
-        let _permit = if crate::fair::exempt(&name) {
+        // Only commands that pass authentication and authorization take a place (and touch per-database counters); the
+        // others go straight to `run_command`, which answers with the same error.
+        let _permit = if crate::fair::exempt(&name) || self.authorize(conn_id, db, &name, &cmd).await.is_err() {
             None
         } else {
             match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {

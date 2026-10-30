@@ -413,6 +413,13 @@ fn main() -> Result<()> {
 
 async fn run() -> Result<()> {
     let args = Args::parse();
+    // The SST cleanup deletes an SST this long after it left the manifest; a reader that polls the manifest less often
+    // would read SSTs that are already gone.
+    anyhow::ensure!(args.writer_poll_secs < args.sst_gc_min_unref_secs, "--writer-poll-secs ({}) must be below --sst-gc-min-unref-secs ({})", args.writer_poll_secs, args.sst_gc_min_unref_secs);
+    anyhow::ensure!(
+        !args.unsafe_skip_ownership_checks || std::env::var("MONGO_ALLOW_UNSAFE_TEST_FLAGS").map_or(false, |v| v == "1"),
+        "--unsafe-skip-ownership-checks is a test control that lets two processes serve one database; it needs MONGO_ALLOW_UNSAFE_TEST_FLAGS=1"
+    );
     netguard::install(&args.net)?;
     let grantable = authz::parse_grantable(&args.grantable_roles).map_err(|e| anyhow::anyhow!(e))?;
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {

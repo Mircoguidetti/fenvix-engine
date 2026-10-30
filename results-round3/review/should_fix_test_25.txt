@@ -1,0 +1,23 @@
+== binary: b7-bin (with the fixes)
+counters created by unauthenticated commands: 0
+.counters created for databases that do not exist: 0 | the real one is there: True
+.WAL objects deleted: before the erase 1512, after recreating 505 | counters left after the erase: False
+.refused: True
+.refused without the variable: True
+5 passed in 33.91s
+== binary: b3-bin (control: built before these fixes)
+counters created by unauthenticated commands: 200
+Fcounters created for databases that do not exist: 200 | the real one is there: True
+FWAL objects deleted: before the erase 1512, after recreating 0 | counters left after the erase: True
+Frefused: False
+Frefused without the variable: False
+E   AssertionError: 200 per-database entries created by unauthenticated commands
+E   AssertionError: 200 per-database entries created for databases that do not exist
+E   AssertionError: the erased database kept its counters
+/home/user/fenvix-engine/ctl-tests/test_25_review_fixes.py:90: AssertionError: the erased database kept its counters
+E   AssertionError: a writer poll slower than the SST cleanup age was accepted
+E   AssertionError: --unsafe-skip-ownership-checks accepted without the environment variable
+FAILED test_25_review_fixes.py::test_unauthenticated_commands_create_no_counters
+FAILED test_25_review_fixes.py::test_commands_on_databases_that_do_not_exist_create_no_counters
+FAILED test_25_review_fixes.py::test_erase_forgets_counters_and_wal_state - A...
+5 failed in 63.42s (0:01:03)
