@@ -66,6 +66,15 @@ class Engine:
         return (["taskset", "-c", ENGINE_CPUS] if self.pin else []) + c
 
     def start(self):
+        # a process still listening on the port (a run that was stopped half way) would answer instead of this engine
+        for p in (self.port, self.admin_port):
+            busy = True
+            try:
+                socket.create_connection(("127.0.0.1", p), timeout=1).close()
+            except OSError:
+                busy = False
+            if busy:
+                raise RuntimeError(f"port {p} is already in use by another process: stop it first")
         os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
         log = open(self.log_path, "ab")
         env = dict(os.environ, MONGO_ADMIN_TOKEN=ADMIN_TOKEN, RUST_LOG=os.environ.get("RUST_LOG", "warn"), **self.env)

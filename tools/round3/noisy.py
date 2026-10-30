@@ -19,10 +19,18 @@ import engine as E
 import run as R
 
 PAD = "y" * 900
+# The engine gets ROUND3_ENGINE_CPUS (default here: 1 CPU, so that it saturates before the Python clients do); the heavy
+# clients NOISY_HEAVY_CPUS, the light client (this process) NOISY_LIGHT_CPUS.
+HEAVY_CPUS = {int(x) for x in os.environ.get("NOISY_HEAVY_CPUS", "2,3").split(",")}
+LIGHT_CPUS = {int(x) for x in os.environ.get("NOISY_LIGHT_CPUS", "1").split(",")}
 
 
 def heavy_proc(port, dbs, secs, out):
     from pymongo import AsyncMongoClient
+    try:
+        os.sched_setaffinity(0, HEAVY_CPUS)
+    except Exception:
+        pass
 
     async def main():
         lat, n = [], [0]
@@ -38,7 +46,7 @@ def heavy_proc(port, dbs, secs, out):
                     if rng.random() < 0.5:
                         await c[d].items.find_one({"_id": rng.randrange(200)})
                     else:
-                        await c[d].ev.insert_one({"_id": f"{k}-{i}", "pad": PAD})
+                        await c[d].ev.insert_one({"_id": f"{int(end)}-{k}-{i}", "pad": PAD})
                     lat.append((time.time() - t0) * 1000)
                 except Exception:
                     pass
@@ -64,7 +72,7 @@ def light(port, secs, res):
             if i % 2:
                 c.light.items.find_one({"_id": rng.randrange(200)})
             else:
-                c.light.ev.insert_one({"_id": i, "pad": PAD})
+                c.light.ev.insert_one({"_id": f"{int(end)}-{i}", "pad": PAD})
             res.append((time.time() - t0) * 1000)
         except Exception:
             res.append(None)
@@ -76,7 +84,13 @@ def main():
     ap.add_argument("--secs", type=float, default=40)
     ap.add_argument("--out", default=os.path.join(ROOT, "results-round3", "minio", "noisy.json"))
     a = ap.parse_args()
-    out = {"runs": []}
+    os.environ.setdefault("ROUND3_ENGINE_CPUS", "0")
+    E.ENGINE_CPUS = os.environ["ROUND3_ENGINE_CPUS"]
+    try:
+        os.sched_setaffinity(0, LIGHT_CPUS)
+    except Exception:
+        pass
+    out = {"runs": [], "engine_cpus": E.ENGINE_CPUS, "heavy_client_cpus": sorted(HEAVY_CPUS), "light_client_cpus": sorted(LIGHT_CPUS)}
     bucket = E.make_bucket("r3-noisy")
     flags, _ = R.mode_flags("immediate", "noisy")
     nmax = max(int(x) for x in a.heavy.split(","))

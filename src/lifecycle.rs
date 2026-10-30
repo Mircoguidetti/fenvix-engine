@@ -149,7 +149,15 @@ pub static WAL_RETAIN: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::On
 
 /// Memtable size (bytes) at which a writer flushes it to an L0 SST (`--memtable-max-mb`). slatedb's default is 64 MiB per
 /// database, with no limit across databases; a database written slowly kept growing its memtable for hours.
-pub static MEMTABLE_MAX_BYTES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(8 << 20);
+pub static MEMTABLE_MAX_BYTES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(4 << 20);
+/// The engine flushes a writer's memtable to an L0 SST after this many write batches even if it is small
+/// (`--max-writes-before-l0`; slatedb itself waits for 4096 WAL flushes and refuses a lower setting). Measured: an
+/// unflushed 1 KB write holds ~4.3 KB of process memory (the memtable's own size estimate counts ~1.1 KB), so a database
+/// written once a second held ~17 MB until its 4096th write. 256 (and at most one such flush a minute) bounds that to
+/// ~1 MB per slow database, for one L0 SST (and its manifest update) at most every minute.
+pub static MAX_WAL_FLUSHES_BEFORE_L0: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(256);
+/// Memtable flushes started by the engine for that reason.
+pub static MEMTABLE_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// One block and metadata cache for every database of the process (`--block-cache-mb`, `--meta-cache-mb`), instead of
 /// slatedb's default of a 512 MiB block cache and a 128 MiB metadata cache per open database, without any limit across them.
@@ -404,6 +412,9 @@ pub struct GroupFlush {
     inflight: std::sync::OnceLock<Arc<std::sync::atomic::AtomicU64>>,
     /// Writes currently inside `Commit::wait` (staged, waiting for a flush).
     waiting: std::sync::atomic::AtomicU64,
+    /// Write batches staged since the engine last flushed the memtable (see `MAX_WAL_FLUSHES_BEFORE_L0`).
+    since_l0: std::sync::atomic::AtomicU64,
+    last_l0_us: std::sync::atomic::AtomicU64,
     /// Adaptive group commit: when the last write arrived, the average gap between writes and the average flush time
     /// (microseconds, exponential moving averages).
     last_arrival_us: std::sync::atomic::AtomicU64,
@@ -755,6 +766,25 @@ impl Tenant {
         }
         let handle = db.write(batch).await?;
         self.group.staged_seq.fetch_max(handle.seqnum(), std::sync::atomic::Ordering::Release);
+        let every = MAX_WAL_FLUSHES_BEFORE_L0.load(std::sync::atomic::Ordering::Relaxed);
+        // At most one such flush a minute: a database written fast is bounded by the memtable size (`--memtable-max-mb`)
+        // instead, and one written slowly reaches 256 writes in a minute or more anyway.
+        let now = mono_us();
+        if every > 0
+            && self.group.since_l0.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1 >= every
+            && now.saturating_sub(self.group.last_l0_us.load(std::sync::atomic::Ordering::Relaxed)) >= 60_000_000
+        {
+            self.group.since_l0.store(0, std::sync::atomic::Ordering::Relaxed);
+            self.group.last_l0_us.store(now, std::sync::atomic::Ordering::Relaxed);
+            let db = db.clone();
+            let id = self.id.clone();
+            tokio::spawn(async move {
+                MEMTABLE_FLUSHES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                if let Err(e) = db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await {
+                    eprintln!("memtable flush of {id}: {e}");
+                }
+            });
+        }
         Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None }))
     }
 
@@ -895,6 +925,12 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     }
     COMPACTED.lock().unwrap().insert(id.to_string());
     COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
+    // An open writer learns of the compaction now instead of at its next manifest poll (`--writer-poll-secs`): until then it
+    // still counts the compacted L0 SSTs, and a writer written fast can fill its L0 and stall its memtable flushes.
+    let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
+    if let Some(db) = writer {
+        let _ = db.refresh_manifest().await;
+    }
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
     {
         use std::sync::atomic::Ordering::Relaxed;
