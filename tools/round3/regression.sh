@@ -89,11 +89,21 @@ fi
 
 if has load; then
   # functional tests of loadtest/ (the ones without a fixed binary path take BIN; the others read target/release)
+  # MinIO here runs outside docker: its data directory and endpoint for the tests that look at it
+  export MINIO_DATA_DIR=${MINIO_DATA_DIR:-/tmp/minio-data} MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://127.0.0.1:9000}
   for t in test_lease test_durable_reads test_shared_reads test_stop test_fallback_recovery; do
     o=$OUT/load_$t.txt
     done_file $o && continue
     tools/final/env_up.sh > /dev/null || exit 1
-    (cd loadtest && timeout 1800 $MPY $t.py > $o.tmp 2>&1; echo "exit=$?" >> $o.tmp; mv $o.tmp $o; echo DONE >> $o)
+    if [ $t = test_shared_reads ]; then
+      # it needs a running server (port 28001), without and with --durable-reads
+      (source tools/minio-env.sh; for dr in "" "--durable-reads true"; do
+        $BIN --listen 127.0.0.1:28001 --holder sr --store s3 --bucket bench $dr > $OUT/shared_reads_server.log 2>&1 & sp=$!; sleep 3
+        echo "server flags: [$dr]"; (cd loadtest && timeout 900 $MPY $t.py 28001); echo "exit=$?"; kill $sp; wait $sp
+      done) > $o.tmp 2>&1; mv $o.tmp $o; echo DONE >> $o
+    else
+      (cd loadtest && timeout 1800 $MPY $t.py > $o.tmp 2>&1; echo "exit=$?" >> $o.tmp; mv $o.tmp $o; echo DONE >> $o)
+    fi
     echo "load $t: $(grep -c '^PASS' $o) PASS, $(grep -c '^FAIL' $o) FAIL, $(grep exit= $o)"
   done
 fi
