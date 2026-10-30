@@ -67,3 +67,27 @@
 06:42:57 step s3f-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.2342 USD
 06:50:09 step s3f-fleet100-local: exit 0 in 432 s; {"name": "s3f-fleet100-local", "usd_db_month": 1.2375, "put_db_min": 5.46, "get_db_min": 3.35, "s3_per_req": 0.149, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.85, "write_steady_p99_ms": 21.71, "errors": 0}}}
 06:50:09 all steps: done 10, skipped 0; automatic stop: None; final estimated spend 0.2647 USD (cap 10.0)
+07:18:29 step s3g-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0000 USD
+07:23:00 step s3g-immediate-r10: exit 0 in 271 s; {"name": "s3g-immediate-r10", "usd_db_month": 54.6173, "put_db_min": 252.62, "get_db_min": 2.92, "s3_per_req": 0.429, "lat": {"all": {"read_steady_p50_ms": 0.93, "read_steady_p99_ms": 1.08, "write_steady_p50_ms": 184.76, "write_steady_p99_ms": 469.39, "errors": 0}}}
+07:23:00 step s3g-relaxed-r1: estimate 358 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0095 USD
+07:27:24 step s3g-relaxed-r1: exit 0 in 264 s; {"name": "s3g-relaxed-r1", "usd_db_month": 4.3858, "put_db_min": 19.66, "get_db_min": 8.0, "s3_per_req": 0.461, "lat": {"all": {"read_steady_p50_ms": 0.95, "read_steady_p99_ms": 150.64, "write_steady_p50_ms": 0.87, "write_steady_p99_ms": 43.82, "errors": 0}}}
+07:27:24 step s3g-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.0133 USD
+07:31:47 step s3g-relaxed-r10: exit 0 in 264 s; {"name": "s3g-relaxed-r10", "usd_db_month": 4.3542, "put_db_min": 20.0, "get_db_min": 2.0, "s3_per_req": 0.037, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 1.08, "write_steady_p50_ms": 0.85, "write_steady_p99_ms": 1.08, "errors": 0}}}
+07:31:47 step s3g-relaxed-r100: estimate 494 PUT-tier + 5920 GET-tier = 0.0052 USD; spent so far 0.0155 USD
+07:36:30 step s3g-relaxed-r100: exit 0 in 283 s; {"name": "s3g-relaxed-r100", "usd_db_month": 9.8065, "put_db_min": 37.62, "get_db_min": 97.29, "s3_per_req": 0.023, "lat": {"all": {"read_steady_p50_ms": 0.64, "read_steady_p99_ms": 2412.22, "write_steady_p50_ms": 0.63, "write_steady_p99_ms": 2116.84, "errors": 0}}}
+07:36:30 step s3g-local-r1: estimate 250 PUT-tier + 574 GET-tier = 0.0016 USD; spent so far 0.0182 USD
+07:36:32 credentials renewed
+07:40:55 step s3g-local-r1: exit 0 in 264 s; {"name": "s3g-local-r1", "usd_db_month": 2.7588, "put_db_min": 12.0, "get_db_min": 9.67, "s3_per_req": 0.361, "lat": {"all": {"read_steady_p50_ms": 0.91, "read_steady_p99_ms": 225.46, "write_steady_p50_ms": 1.24, "write_steady_p99_ms": 86.9, "errors": 0}}}
+07:40:55 step s3g-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.0219 USD
+07:45:19 step s3g-local-r10: exit 0 in 263 s; {"name": "s3g-local-r10", "usd_db_month": 2.6321, "put_db_min": 12.0, "get_db_min": 2.33, "s3_per_req": 0.024, "lat": {"all": {"read_steady_p50_ms": 0.87, "read_steady_p99_ms": 1.03, "write_steady_p50_ms": 1.23, "write_steady_p99_ms": 159.8, "errors": 0}}}
+07:45:19 step s3g-local-r100: estimate 250 PUT-tier + 5920 GET-tier = 0.0039 USD; spent so far 0.0240 USD
+07:50:01 step s3g-local-r100: exit 0 in 282 s; {"name": "s3g-local-r100", "usd_db_month": 8.1087, "put_db_min": 29.84, "get_db_min": 96.32, "s3_per_req": 0.021, "lat": {"all": {"read_steady_p50_ms": 0.57, "read_steady_p99_ms": 2937.27, "write_steady_p50_ms": 0.97, "write_steady_p99_ms": 2678.5, "errors": 0}}}
+07:50:01 step s3g-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.0265 USD
+07:55:42 step s3g-fleet100-immediate: exit 0 in 341 s; {"name": "s3g-fleet100-immediate", "usd_db_month": 12.7852, "put_db_min": 58.92, "get_db_min": 3.33, "s3_per_req": 1.052, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 141.2, "write_steady_p99_ms": 339.59, "errors": 0}}}
+07:55:42 step s3g-fleet100-relaxed: estimate 40440 PUT-tier + 57400 GET-tier = 0.2431 USD; spent so far 0.1877 USD
+07:55:43 credentials renewed
+08:01:14 step s3g-fleet100-relaxed: exit 0 in 331 s; {"name": "s3g-fleet100-relaxed", "usd_db_month": 2.7293, "put_db_min": 12.37, "get_db_min": 3.36, "s3_per_req": 0.267, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.6, "write_steady_p99_ms": 1.06, "errors": 0}}}
+08:01:14 step s3g-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.2337 USD
+08:04:19 step s3g-fleet100-local: exit 1 in 184 s; 
+08:04:19 stderr tail: Traceback (most recent call last): |   File "/home/runner/work/fenvix-engine/fenvix-engine/tools/round3/run.py", line 160, in <module> |     main() |   File "/home/runner/work/fenvix-engine/fenvix-engine/tools/round3/run.py", line 88, in main |     eng.start() |   File "/home/runner/work/fenvix-engine/fenvix-engine/tools/round3/engine.py", line 91, in start |     raise RuntimeError("engine did not start") | RuntimeError: engine did not start | 
+08:04:19 all steps: done 9, skipped 0; automatic stop: None; final estimated spend 0.3386 USD (cap 10.0)

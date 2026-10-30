@@ -1,23 +1,22 @@
 {
  "spend": {
-  "put": 45150.8,
-  "get": 25403.6,
-  "runner_list": 43,
-  "storage_usd": 0.0005504240410402417,
-  "usd": 0.2647
+  "put": 56655.6,
+  "get": 74561.5,
+  "runner_list": 38,
+  "storage_usd": 0.0004249353275323908,
+  "usd": 0.3386
  },
- "final_usd_estimate": 0.2647,
+ "final_usd_estimate": 0.3386,
  "done": [
-  "s3f-immediate-r10",
-  "s3f-relaxed-r1",
-  "s3f-relaxed-r10",
-  "s3f-relaxed-r100",
-  "s3f-local-r1",
-  "s3f-local-r10",
-  "s3f-local-r100",
-  "s3f-fleet100-immediate",
-  "s3f-fleet100-relaxed",
-  "s3f-fleet100-local"
+  "s3g-immediate-r10",
+  "s3g-relaxed-r1",
+  "s3g-relaxed-r10",
+  "s3g-relaxed-r100",
+  "s3g-local-r1",
+  "s3g-local-r10",
+  "s3g-local-r100",
+  "s3g-fleet100-immediate",
+  "s3g-fleet100-relaxed"
  ],
  "skipped": [],
  "automatic_stop": null,
