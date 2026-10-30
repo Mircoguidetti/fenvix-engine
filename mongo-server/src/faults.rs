@@ -4,6 +4,7 @@
 //!   hang_put SUBSTR        a PUT to a path containing SUBSTR waits while the rule is in the file, then goes on
 //!   delay_put SUBSTR MS    a PUT to such a path is sent after MS milliseconds (a renewal that arrives late)
 //!   fail_put SUBSTR        a PUT to such a path fails (an S3 error)
+//!   fail_get SUBSTR        a GET (or HEAD) of such a path fails (an S3 error)
 //!
 //! Every triggered rule prints `FAULT <rule> <path>` on stderr, so a test knows the point was reached.
 use async_trait::async_trait;
@@ -21,6 +22,7 @@ enum Rule {
     Hang(String),
     Delay(String, u64),
     Fail(String),
+    FailGet(String),
 }
 
 pub struct FaultStore {
@@ -53,6 +55,7 @@ impl FaultStore {
                     ["hang_put", s] => rules.push(Rule::Hang(s.to_string())),
                     ["delay_put", s, ms] => rules.push(Rule::Delay(s.to_string(), ms.parse().unwrap_or(0))),
                     ["fail_put", s] => rules.push(Rule::Fail(s.to_string())),
+                    ["fail_get", s] => rules.push(Rule::FailGet(s.to_string())),
                     _ => {}
                 }
             }
@@ -111,6 +114,11 @@ impl ObjectStore for FaultStore {
     }
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> OsResult<GetResult> {
+        let p = location.as_ref();
+        if self.rules().iter().any(|r| matches!(r, Rule::FailGet(s) if p.contains(s.as_str()))) {
+            eprintln!("FAULT fail_get {p}");
+            return Err(object_store::Error::Generic { store: "faults", source: "injected GET failure".into() });
+        }
         self.inner.get_opts(location, options).await
     }
 

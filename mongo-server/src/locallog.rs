@@ -74,6 +74,10 @@ pub struct LocalLog {
     tenants: Mutex<HashMap<String, TenantLog>>,
     /// Closed segments: number -> highest sequence number in it.
     segments: Mutex<BTreeMap<u64, u64>>,
+    /// Databases whose replay failed at this start: their records were written again to this run's log and wait for the
+    /// next restart; nothing marks them uploaded before that (so their segments stay). If the database is written in
+    /// between, that restart refuses them (newer writer epoch) instead of applying them over the newer writes.
+    pinned: Mutex<std::collections::HashSet<String>>,
     pub upload_every: Duration,
 }
 
@@ -227,7 +231,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), upload_every });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(Default::default()), upload_every });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -350,6 +354,9 @@ impl LocalLog {
 
     /// The database closed cleanly (its close flushed everything to object storage).
     pub fn closed(&self, db: &str) {
+        if self.pinned.lock().unwrap().contains(db) {
+            return;
+        }
         if let Some(e) = self.tenants.lock().unwrap().get_mut(db) {
             e.uploaded = e.staged;
         }
@@ -379,7 +386,8 @@ impl LocalLog {
             tick.tick().await;
             loop {
                 tick.tick().await;
-                let due: Vec<(String, u64)> = me.tenants.lock().unwrap().iter().filter(|(_, e)| e.uploaded < e.staged).map(|(k, e)| (k.clone(), e.staged)).collect();
+                let pinned = me.pinned.lock().unwrap().clone();
+                let due: Vec<(String, u64)> = me.tenants.lock().unwrap().iter().filter(|(k, e)| e.uploaded < e.staged && !pinned.contains(*k)).map(|(k, e)| (k.clone(), e.staged)).collect();
                 futures::future::join_all(due.into_iter().map(|(db, target)| {
                     let me = Arc::clone(&me);
                     async move {
@@ -423,7 +431,7 @@ fn copy_ops(ops: &[Op]) -> Vec<Op> {
 
 /// Apply again, durably, the records a previous run left in the log; then delete those segments. Runs before the server
 /// accepts connections. Returns (databases, records applied).
-pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Result<(usize, u64)> {
+pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeout: Duration) -> Result<(usize, u64)> {
     let Some(log) = get() else { return Ok((0, 0)) };
     if old.is_empty() {
         return Ok((0, 0));
@@ -504,7 +512,13 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
                 eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
                 Ok(Outcome::Applied(todo.len() as u64))
             };
-            async move { (db2, one.await, keep) }
+            async move {
+                let r = match tokio::time::timeout(timeout, one).await {
+                    Ok(r) => r,
+                    Err(_) => Err(anyhow!("no progress after {} s", timeout.as_secs())),
+                };
+                (db2, r, keep)
+            }
         })
         .buffer_unordered(32)
         .collect()
@@ -521,6 +535,7 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
                 // writer epoch, new sequence numbers) and applied by a later restart; the other databases go on.
                 eprintln!("local log: replay of database {db} failed ({e:#}); its {} records are kept for the next restart", keep.len());
                 failed += 1;
+                log.pinned.lock().unwrap().insert(db.clone());
                 for (ops, epoch) in keep {
                     let seq = log.next_seq();
                     log.append(seq, &db, &ops, epoch).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;

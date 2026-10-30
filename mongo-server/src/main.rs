@@ -201,6 +201,10 @@ struct Args {
     local_log_dir: String,
     #[arg(long, default_value_t = 30)]
     local_log_upload_secs: u64,
+    /// Local log: the restart gives up on replaying one database after this long (its records are kept for the next
+    /// restart) so that one stuck database (its S3 requests hanging or retried) does not keep the whole server down.
+    #[arg(long, default_value_t = 120)]
+    local_log_replay_timeout_secs: u64,
     /// Fair queue between databases, only while the server is saturated: when the runtime runs a 10 ms timer late by more
     /// than this (moving average, ms), new commands wait in their database's queue and start in turn (wakes first) as
     /// others finish; below it every command starts at once. 0 = off. See fair.rs.
@@ -526,7 +530,7 @@ async fn run() -> Result<()> {
     // database whose acknowledged writes are still only in the log, and an erase's drop record is then always seen first.
     if let Some(old) = local_log_old {
         let t = std::time::Instant::now();
-        let (n, recs) = locallog::recover(&dbs, old).await?;
+        let (n, recs) = locallog::recover(&dbs, old, Duration::from_secs(args.local_log_replay_timeout_secs)).await?;
         eprintln!("local log: restart applied {recs} records to {n} databases in {:.1} s", t.elapsed().as_secs_f64());
         locallog::get().unwrap().spawn_uploader();
     }

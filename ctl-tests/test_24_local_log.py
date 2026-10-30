@@ -184,3 +184,84 @@ def test_d_no_acknowledgement_after_ownership_was_lost_during_the_fsync():
     finally:
         shutil.rmtree(d, ignore_errors=True)
         os.unlink(ff.name)
+
+
+def _pending(bucket, d, holder, dbs, ff=None):
+    """Writes acknowledged only in the local log of a killed process."""
+    s = ll_server(bucket, f"llp-{holder}", holder, d).start()
+    c = client(s)
+    for db in dbs:
+        for i in range(5):
+            c[db]["c"].insert_one({"_id": i})
+    s.kill9()
+
+
+def test_e_the_replay_runs_before_the_admin_interface():
+    """Should-fix: the local log is applied before the control layer starts, so no admin operation (erase, restore, fork)
+    can run on a database whose writes are still only in the log. The replay is held (its WAL PUT hangs, fault injection);
+    while it is held the admin port must not answer. Before the fix the control layer started first."""
+    import urllib.request
+    bucket = make_bucket("lle")
+    d = tempfile.mkdtemp(prefix="lle-")
+    ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    ff.close()
+    try:
+        _pending(bucket, d, "E1", ["e"])
+        with open(ff.name, "w") as f:
+            f.write("hang_put tenants/e/wal/\n")
+        s = ll_server(bucket, "lle2", "E1", d, env={"MONGO_TEST_FAULTS_FILE": ff.name})
+        s.start(wait=False)
+        deadline = time.time() + 30
+        while "FAULT hang_put tenants/e/wal/" not in s.log_text() and time.time() < deadline:
+            time.sleep(0.2)
+        assert "FAULT hang_put tenants/e/wal/" in s.log_text(), "the replay did not reach its WAL write"
+        import urllib.error
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{s.admin_port}/v1/health", timeout=2)
+            admin_up = True
+        except urllib.error.HTTPError:
+            admin_up = True                 # it answered (401 without the token): the admin interface is up
+        except Exception:
+            admin_up = False
+        print("admin interface answering during the replay:", admin_up)
+        open(ff.name, "w").close()      # let the replay finish
+        s.wait_ready(60)
+        assert client(s)["e"]["c"].count_documents({}) == 5
+        s.term()
+        assert not admin_up, "the admin interface (erase, restore, fork) was up while the local log was still being applied"
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+        os.unlink(ff.name)
+
+
+def test_f_one_failing_database_does_not_block_the_restart():
+    """Should-fix: the replay of one database fails (reading its manifest fails, fault injection); the restart must still finish,
+    the other database must be replayed, and the failing one's records must be kept and applied by the next restart.
+    Before the fix the first error stopped the whole restart (the process exited)."""
+    bucket = make_bucket("llf")
+    d = tempfile.mkdtemp(prefix="llf-")
+    ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    ff.close()
+    try:
+        _pending(bucket, d, "F1", ["f1", "f2"])
+        with open(ff.name, "w") as f:
+            f.write("fail_get tenants/f1/manifest/\n")
+        s = ll_server(bucket, "llf2", "F1", d, env={"MONGO_TEST_FAULTS_FILE": ff.name}, extra=["--local-log-replay-timeout-secs", "5"])
+        try:
+            s.start()
+            started = True
+        except RuntimeError:
+            started = False
+        print("restart with one failing database finished:", started)
+        assert started, "one failing database stopped the whole restart"
+        c = client(s)
+        assert c["f2"]["c"].count_documents({}) == 5, "the healthy database was not replayed"
+        s.kill9()
+        s = ll_server(bucket, "llf3", "F1", d).start()     # no fault now
+        n = client(s)["f1"]["c"].count_documents({})
+        print("failing database's writes after the next restart:", n, "of 5")
+        assert n == 5, "the failing database's records were not kept for the next restart"
+        s.term()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+        os.unlink(ff.name)
