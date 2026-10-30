@@ -1,9 +1,9 @@
 {
- "comment": "round3 real S3, rev 3: the final engine (memtable flush every 256 writes, at most once a minute) on the steps it can change",
- "rev": 3,
+ "comment": "round3 real S3, rev 4: the final engine (memtable 2 MB, no forced memtable flush) on the steps the memtable settings can change",
+ "rev": 4,
  "steps": [
   {
-   "name": "s3f-immediate-r10",
+   "name": "s3g-immediate-r10",
    "mode": "immediate",
    "dbs": 1,
    "rate": 10,
@@ -12,7 +12,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-relaxed-r1",
+   "name": "s3g-relaxed-r1",
    "mode": "relaxed",
    "dbs": 1,
    "rate": 1,
@@ -21,7 +21,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-relaxed-r10",
+   "name": "s3g-relaxed-r10",
    "mode": "relaxed",
    "dbs": 1,
    "rate": 10,
@@ -30,7 +30,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-relaxed-r100",
+   "name": "s3g-relaxed-r100",
    "mode": "relaxed",
    "dbs": 1,
    "rate": 100,
@@ -39,7 +39,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-local-r1",
+   "name": "s3g-local-r1",
    "mode": "local",
    "dbs": 1,
    "rate": 1,
@@ -48,7 +48,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-local-r10",
+   "name": "s3g-local-r10",
    "mode": "local",
    "dbs": 1,
    "rate": 10,
@@ -57,7 +57,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-local-r100",
+   "name": "s3g-local-r100",
    "mode": "local",
    "dbs": 1,
    "rate": 100,
@@ -66,7 +66,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-fleet100-immediate",
+   "name": "s3g-fleet100-immediate",
    "mode": "immediate",
    "dbs": 100,
    "rate": 1,
@@ -75,7 +75,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-fleet100-relaxed",
+   "name": "s3g-fleet100-relaxed",
    "mode": "relaxed",
    "dbs": 100,
    "rate": 1,
@@ -84,7 +84,7 @@
    "warm": 60
   },
   {
-   "name": "s3f-fleet100-local",
+   "name": "s3g-fleet100-local",
    "mode": "local",
    "dbs": 100,
    "rate": 1,
