@@ -88,6 +88,12 @@ jobs:
         if: always()
         run: bash tools/round3/s3/bucket.sh delete
 
+      - name: Delete the test buckets of earlier runs whose clean-up failed (tools/round3/s3/leftover-buckets.txt)
+        if: always()
+        run: |
+          [ -f tools/round3/s3/leftover-buckets.txt ] || exit 0
+          rc=0; while read -r b; do [ -n "$b" ] && { bash tools/round3/s3/bucket.sh delete-leftover "$b" || rc=1; }; done < tools/round3/s3/leftover-buckets.txt; exit $rc
+
       - name: Secret scan, then publish results-round3/real-s3/ to this branch
         if: always()
         run: |

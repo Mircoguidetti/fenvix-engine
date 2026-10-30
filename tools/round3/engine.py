@@ -88,6 +88,9 @@ class Engine:
                 return self
             except OSError:
                 time.sleep(0.1)
+        # never leave an engine behind: one still recovering kept writing to the bucket during the clean-up (S3 run 4)
+        self.p.kill()
+        self.p.wait()
         raise RuntimeError("engine did not start")
 
     @property

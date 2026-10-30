@@ -5,9 +5,15 @@
 # reduced to their error code (never an account id or ARN). Writes results-round3/real-s3/bucket_<action>.json and, on
 # create, the region chosen to $GITHUB_ENV (ROUND3_REGION).
 set -u
-B=fenvix-test-r3-${GITHUB_RUN_ID:?}; OUT=results-round3/real-s3; mkdir -p $OUT; act=${1:?create|delete}
+act=${1:?create|delete}; OUT=results-round3/real-s3; mkdir -p $OUT
+B=fenvix-test-r3-${GITHUB_RUN_ID:?}
+# delete-leftover NAME: delete the bucket of an earlier run whose clean-up failed (only fenvix-test-r3-<run id> names)
+if [ "$act" = delete-leftover ]; then
+  B=${2:?bucket}; [[ $B =~ ^fenvix-test-r3-[0-9]+$ ]] || { echo "refused: $B is not a round3 test bucket"; exit 1; }
+  act=delete; LEFTOVER=1
+fi
 code() { grep -o 'An error occurred ([A-Za-z]*)' <<<"$1" | head -1; }
-res=$OUT/bucket_$act.json; steps=()
+res=$OUT/bucket_$act${LEFTOVER:+_leftover_$B}.json; steps=()
 step() { steps+=("{\"step\":\"$1\",\"ok\":$2,\"error\":\"$3\"}"); }
 if [ "$act" = create ]; then
   R=""
