@@ -1024,6 +1024,19 @@ una GET, nel file `MONGO_TEST_FAULTS_FILE`), necessaria per riprodurre il caso. 
 | **4.** Orologi tra processi | **documentato, misurato** | README ("Clock requirement") e `lease.rs`: i processi di un bucket devono avere gli orologi sincronizzati (NTP). La presa è sicura finché lo scarto tra due processi è sotto **1,5 s + ttl/6** (6,5 s col ttl di default di 30 s), da tenere ben sotto 1,5 s. Due scrittori sul WAL sono esclusi dal fencing di SlateDB (epoca dello scrittore) qualunque siano gli orologi. Nel codice: il log locale conferma dopo l'fsync se il lease vale ancora per l'orologio locale; la durabilità rilassata conferma senza scrivere il WAL, dopo il controllo del lease all'inizio del comando. Entrambe dipendono quindi dagli orologi: se lo scarto supera la tolleranza, il vecchio processo può confermare scritture dopo la presa del nuovo, e quelle scritture si perdono (il suo caricamento è fenced). | `test_23`, log locale, ttl 4 s, rinnovi di P1 in ritardo di 3 s, P1 scrive per tutto il tempo. Scarto 0 s: 0 conferme dopo la presa, 0 perse. Scarto 1,5 s: 0 e 0. Scarto 20 s (fuori dal requisito): **144-145 conferme dopo la presa, 147-148 scritture confermate perse**, uguale prima e dopo (nessuna correzione: il requisito è documentato). Durabilità rilassata: **non misurata** con un test; l'analisi del codice dà lo stesso comportamento. |
 | **5.** Riavvio fermo da un database lento | **documentato, non corretto** | Il riavvio applica il log a 32 database alla volta e aspetta tutti: un database bloccato tiene fermo il riavvio (e l'interfaccia admin) fino a `--local-log-replay-timeout-secs` (120 s). Nessuna scrittura si perde: gli altri database vengono applicati intanto, e quello bloccato resta in recupero (punto 1). Non corretto: la correzione semplice (un tempo breve per il tentativo all'avvio, il resto in background) cambierebbe cosa vedono i client subito dopo un riavvio con un replay lungo ma sano (database rifiutato invece che pronto), quindi non è senza rischi. | Documentato nel README; nessun test nuovo. |
 
+Verifica finale sul binario finale (commit `32edfc0`, sha256 `1e281e2bdef7e8fe…`):
+
+| parte | risultato |
+|---|---|
+| suite ctl completa (37 file, inclusi `test_23`, `test_24` e il nuovo `test_26`) | 467 passati, 0 falliti |
+| test unitari Rust (`cargo test --workspace`) | 60 passati, 0 falliti |
+| kill -9 del log locale, 4 database × 20 scritture/s, 3 prove | 4967 scritture confermate, **0 perse** |
+| controllo negativo (log locale senza replay) | 4966 confermate, 4966 perse: il test vede una perdita |
+
+Uscite grezze: `results-round3/tests/final13.tar.gz` (suite ctl, test unitari, registro del kill test) e
+`results-round3/minio/kill-final13/` (risultati del kill test con binario e sha256). Le suite dei driver e i loadtest non
+sono stati rieseguiti su questo binario (non richiesti in questo giro): l'ultimo risultato è quello su `b6ae7be`, sopra.
+
 Cosa non ho potuto verificare:
 - punto 3: il caso a due processi descritto dalla revisione (P1 serve il fork, P2 riceve il drop) non si riproduce, perché il comando prende il lease prima di arrivare al drop. Il difetto si vede solo se la proprietà si perde durante il drop, e per renderlo deterministico serve un ritardo iniettato;
 - punto 4: la durabilità rilassata con orologi sfasati (solo analisi del codice); scarti tra 1,5 s e 20 s non misurati;
