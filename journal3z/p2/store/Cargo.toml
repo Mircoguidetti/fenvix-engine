@@ -1,0 +1,14 @@
+[package]
+name = "j3z-store"
+version = "0.1.0"
+edition = "2021"
+description = "Disk format of a journal3z node: CRC-framed segments, fence table, node identity, recovery"
+
+[dependencies]
+journal3z-core = { workspace = true }
+j3z-codec = { path = "../codec" }
+rand = { workspace = true }
+
+[dev-dependencies]
+bytes = { workspace = true }
+tempfile = "3"

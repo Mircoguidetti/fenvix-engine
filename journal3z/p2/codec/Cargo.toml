@@ -1,0 +1,13 @@
+[package]
+name = "j3z-codec"
+version = "0.1.0"
+edition = "2021"
+description = "Byte encoding of journal3z disk records and network messages (versioned, CRC-framed)"
+
+[dependencies]
+journal3z-core = { workspace = true }
+bytes = { workspace = true }
+crc32fast = { workspace = true }
+
+[dev-dependencies]
+rand = { workspace = true }

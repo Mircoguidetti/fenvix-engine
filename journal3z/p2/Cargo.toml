@@ -1,0 +1,14 @@
+# Phase 2 workspace (docs/journal3z-phase2-plan.md). The protocol core (`../core`) is used, not copied.
+[workspace]
+resolver = "2"
+members = ["codec", "store"]
+
+[workspace.dependencies]
+journal3z-core = { path = "../core" }
+bytes = "1"
+crc32fast = "1"
+rand = "0.8"
+
+[profile.release]
+debug = 1
+overflow-checks = true
