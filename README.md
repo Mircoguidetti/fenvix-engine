@@ -86,7 +86,7 @@ Details and measurements: `results-round3.md`.
 | `--max-concurrent-wakes` | 0 (unlimited) | **128** | a restart wakes every database at once; with 500 databases on 2 CPUs, 128 gave the shortest tail (first request p99 8.6 s against 9.5 s unlimited and 16.4 s with 8) |
 | `--writer-poll-secs` | 30 | **60** | one LIST + one GET per open writer per poll |
 | `--usage-flush-secs` | 60 | **300** | one PUT per active database per flush |
-| `--memtable-max-mb` (new) | slatedb's 64 MiB per database | **2** | memory held by unflushed writes (measured: ~4.3 KB of process memory per 1 KB unflushed write, so ~8 MB per database open for writing) |
+| `--memtable-max-mb` (new) | slatedb's 64 MiB per database | **8** | memory held by unflushed writes (measured: ~4.3 KB of process memory per 1 KB unflushed write). 2 held less memory but stalled a database at 100 writes/s on real S3 (p99 2-3 s) |
 | `--block-cache-mb`, `--meta-cache-mb` (new) | slatedb's 512 MiB + 128 MiB **per open database** | **256 + 64 MiB shared by all databases** | memory grew with the data read and written |
 | `--change-log-max-mb` (new) | 100 000 events with whole documents | **32 MiB** (and still at most 100 000 events) | ~2.5 KB of memory per write |
 
