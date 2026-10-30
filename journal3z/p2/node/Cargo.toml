@@ -1,0 +1,29 @@
+[package]
+name = "j3z-node"
+version = "0.1.0"
+edition = "2021"
+description = "journal3z journal node: TCP server, NodeCore + disk store, one fdatasync per batch, replies after it"
+
+[features]
+# --faults-file: fault switches read from a file (fsync error, disk full, slow fsync). Test bench only.
+faults = []
+# --mutation <name>: the protocol bugs of the negative controls (plan §2b). Never in a production build.
+mutations = []
+
+[dependencies]
+journal3z-core = { workspace = true }
+j3z-codec = { path = "../codec" }
+j3z-store = { path = "../store" }
+j3z-net = { path = "../net" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+rand = { workspace = true }
+bytes = { workspace = true }
+
+[[test]]
+name = "node"
+required-features = ["faults", "mutations"]

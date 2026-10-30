@@ -123,6 +123,9 @@ pub struct FaultFs {
 struct FaultFile {
     f: RealFile,
     faults: Arc<Faults>,
+    path: PathBuf,
+    /// File length at the last successful fsync.
+    synced_len: u64,
 }
 
 fn enospc() -> io::Error {
@@ -149,10 +152,18 @@ impl FileW for FaultFile {
         }
         if self.faults.fail_next_sync.swap(false, SeqCst) {
             self.faults.sync_errors.fetch_add(1, SeqCst);
+            // like a failed write-back on Linux: the unsynced data is dropped (the page cache marks it clean); a
+            // node that ignored the error would acknowledge data that is no longer anywhere
+            if let Ok(f) = std::fs::OpenOptions::new().write(true).open(&self.path) {
+                let _ = f.set_len(self.synced_len);
+                let _ = f.sync_all();
+            }
             return Err(io::Error::from_raw_os_error(5)); // EIO
         }
         self.faults.syncs.fetch_add(1, SeqCst);
-        self.f.sync_data()
+        self.f.sync_data()?;
+        self.synced_len = std::fs::metadata(&self.path).map(|m| m.len()).unwrap_or(self.synced_len);
+        Ok(())
     }
 }
 
@@ -167,7 +178,9 @@ impl Fs for FaultFs {
         RealFs.read(p)
     }
     fn append(&self, p: &Path) -> io::Result<Box<dyn FileW>> {
-        Ok(Box::new(FaultFile { f: RealFile(std::fs::OpenOptions::new().create(true).append(true).open(p)?), faults: self.faults.clone() }))
+        let f = std::fs::OpenOptions::new().create(true).append(true).open(p)?;
+        let synced_len = f.metadata()?.len();
+        Ok(Box::new(FaultFile { f: RealFile(f), faults: self.faults.clone(), path: p.to_path_buf(), synced_len }))
     }
     fn write_file_sync(&self, p: &Path, data: &[u8]) -> io::Result<()> {
         if self.faults.full.load(SeqCst) {

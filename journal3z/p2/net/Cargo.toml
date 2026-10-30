@@ -1,0 +1,24 @@
+[package]
+name = "j3z-net"
+version = "0.1.0"
+edition = "2021"
+description = "journal3z network: framed TCP links writer<->node with handshake, reconnection, keepalive; fault-injecting proxy"
+
+[features]
+# test-only proxy bug (ignores its control modes), to show the proxy tests fail on a broken proxy
+testbugs = []
+
+[dependencies]
+journal3z-core = { workspace = true }
+j3z-codec = { path = "../codec" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+[[test]]
+name = "proxy"
+required-features = ["testbugs"]

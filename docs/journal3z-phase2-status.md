@@ -13,8 +13,8 @@ copiato né modificato). Strumenti locali: MinIO compilato dai sorgenti con `go 
 |---|---|---|---|---|
 | P1 formato su disco | **fatto** | 0,5 – 1 | ≈ 0,1 (14:24–14:30) | `cargo test -p j3z-codec -p j3z-store`: 14/14 verdi (13 + 1 aggiunto in P2); ogni controllo ha il suo gemello rotto che fallisce (sotto) |
 | P2 recupero dopo riavvio | **fatto** | 0,5 | ≈ 0,1 (14:31–14:43) | 2.000 semi a caso + 200 kill -9 di processo vero: 0 fallimenti sul codice corretto; ogni gemello rotto scoperto; **un difetto vero trovato e corretto** (sotto) |
-| P3 programma del nodo | da fare | 1 – 1,5 | | |
-| P4 rete + proxy di guasti | da fare | 0,5 – 1 | | |
+| P3 programma del nodo | **fatto** | 1 – 1,5 | ≈ 0,1 (14:44–14:58, insieme a P4) | 5 test su processi veri (1 e 3 nodi), ognuno col gemello rotto scoperto (sotto) |
+| P4 rete + proxy di guasti | **fatto** | 0,5 – 1 | (con P3) | proxy: 7 controlli dei modi tutti verdi; proxy rotto (ignora i modi) fallisce 6 su 7 |
 | P5 client scrittore + MinIO | da fare | 1 – 2 | | |
 | P7 banco di prova a 3 processi | da fare | 1 – 2 | | |
 | P8 12 versioni rotte sul codice vero | da fare | 0,5 – 1 | | |
@@ -84,3 +84,33 @@ recinti dà per cancellato si saltano (un database cancellato non accetta più n
 la cancellazione). Test fisso aggiunto: `erased_database_not_replayed` (con il gemello `replay_erased`: il recupero
 fallisce). Dopo la correzione: secondo giro completo, risultati nella tabella sopra. Tentativi: 2 (il primo fallito,
 riportato qui).
+
+## P3 + P4 – programma del nodo, rete, proxy di guasti (fatti)
+
+Codice: `journal3z/p2/net` (connessione scrittore–nodo: stretta di mano con identità, lotti nella cornice CRC con
+versione, riconnessione, ping ogni 500 ms e chiusura se non arriva nulla per 2 s; binario `j3z-proxy`),
+`journal3z/p2/node` (binario `j3z-node`: un solo thread col cervello `NodeCore` e il disco; per ogni giro: gestisce
+tutti i lotti in attesa, scrive tutti i record, **un** fdatasync, **poi** risponde; esce con 75 su errore di scrittura o
+di fsync, con 70 su un record che rompe un log, con 3 su un disco non recuperabile). Guasti del disco iniettabili da un
+file (`--faults-file`) solo con la funzione di compilazione `faults`; difetti di prova (`--mutation`) solo con
+`mutations`: il binario normale rifiuta entrambe le opzioni (codice 2). Lo strato disco con guasti, a un errore di
+fsync iniettato, **butta davvero** i dati non sincronizzati (come Linux quando la scrittura su disco fallisce): così un
+nodo che ignorasse l'errore confermerebbe dati spariti.
+
+Test `cargo test -p j3z-node --features faults,mutations --test node` (processi veri, rete vera in loopback):
+
+| test | risultato sul codice corretto | gemello rotto |
+|---|---|---|
+| `replies_only_after_fsync` (fsync rallentato a 300 ms) | conferma dopo **302,5 ms** | `ack_before_fsync`: conferma dopo **1,1 ms** (scoperto) |
+| `fsync_error_makes_the_node_exit` | 4ª scrittura **non** confermata; il nodo esce con **75**; al riavvio ci sono barriera + 3 scritture | `ignore_fsync_error`: 4ª scrittura **confermata**, nodo vivo, al riavvio la 4ª non c'è (scoperto) |
+| `disk_full_makes_the_node_exit` | nessuna conferma, uscita **75** | — |
+| `restart_keeps_identity_and_log` | stessa cartella → stessa identità; cartella persa → identità nuova | — |
+| `takeover_on_three_real_nodes`: A (epoca 10) scrive 30 confermate; B (epoca 11) apre vedendo solo i nodi 1 e 2; A riprende e scrive | B recupera **30 su 30**; A **non** ha la scrittura confermata ed è dichiarato "recintato" | `no_fencing` sui nodi: la scrittura tardiva di A è **confermata** (scoperto) |
+
+Test `cargo test -p j3z-net --features testbugs --test proxy`: passa, buco nero (e ritorno a passa sulla stessa
+connessione), solo scrittore→nodo perso, solo nodo→scrittore perso, ritardo 200 ms (andata e ritorno ≥ 400 ms), taglio
+(connessione aperta chiusa, nuove rifiutate): **7 controlli verdi**; gemello col proxy che ignora i modi: **6 controlli
+su 7 falliscono** (solo "passa" resta vero, come deve).
+
+Tentativi: i 3 test a nodo singolo sono falliti al primo giro per un errore del test (lo scrittore di prova con un solo
+nodo deve usare un quorum di 1 anche in apertura); corretto il test, non il nodo; secondo giro tutto verde.
