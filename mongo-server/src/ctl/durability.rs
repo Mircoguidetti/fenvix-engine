@@ -20,6 +20,8 @@ use std::time::Duration;
 
 static DEFAULT_MS: AtomicU64 = AtomicU64::new(0);
 static SETTINGS: Mutex<Option<HashMap<String, u64>>> = Mutex::new(None);
+/// The store the settings live in (set at start), so every open of a database reads its setting again.
+static STORE: std::sync::OnceLock<rec::Store> = std::sync::OnceLock::new();
 
 pub const MIN_MS: u64 = 1000;
 pub const MAX_MS: u64 = 10_000;
@@ -57,6 +59,7 @@ fn marker_path(db: &str) -> Path {
 /// At start: the settings of every database that has one (one LIST of `control/durability/`).
 pub async fn load_settings(ctl: &Arc<Ctl>) {
     use futures::StreamExt;
+    let _ = STORE.set(Arc::clone(&ctl.store));
     let marks: Vec<Path> = ctl.store.list(Some(&rec::path(&["control", "durability"]))).filter_map(|m| async { m.ok().map(|m| m.location) }).collect().await;
     for m in marks {
         let db = m.filename().unwrap_or("").to_string();
@@ -65,6 +68,18 @@ pub async fn load_settings(ctl: &Arc<Ctl>) {
                 set_local(&db, Some(ms));
             }
         }
+    }
+}
+
+/// Read the database's setting again from object storage (one GET), when the database opens: a change made through
+/// another process (or before this one owned the database) applies from this open on. Keeps the cached value if the read
+/// fails.
+pub async fn refresh(db: &str) {
+    let Some(store) = STORE.get() else { return };
+    match rec::get(store, &marker_path(db)).await {
+        Ok(Some(v)) => set_local(db, v["relaxed_flush_ms"].as_u64()),
+        Ok(None) => set_local(db, None),
+        Err(_) => {}
     }
 }
 
@@ -90,14 +105,22 @@ pub async fn set(ctl: &Arc<Ctl>, db: &str, ms: u64) -> ApiResult<Value> {
     if !meta::exists(ctl, db).await? {
         return Err(ApiError::not_found(format!("database {db} does not exist")));
     }
+    // Only the process that owns the database (or any, while none does) changes the setting: the owner then closes the
+    // database and its next open reads the new value. A database another process holds open would otherwise keep the
+    // old value (relaxed writes going on after relaxed was turned off).
+    let mut g = ctl.dbs.lock(db).await;
+    if let Err(e) = ctl.dbs.leases.acquire(db).await {
+        return Err(ApiError::new(409, "owned_elsewhere", format!("{e:#}; change the setting through the process that owns the database")));
+    }
     meta::modify(ctl, db, |m| m["durability"] = json!({ "relaxed_flush_ms": ms })).await?;
     rec::put(&ctl.store, &marker_path(db), &json!({ "relaxed_flush_ms": ms })).await?;
     set_local(db, Some(ms));
     // The writer's flush interval is fixed when it opens: close the database (flushing everything) so the next open uses
     // the new value.
-    let mut g = ctl.dbs.lock(db).await;
     if g.is_open() {
         g.close().await?;
+    } else {
+        ctl.dbs.leases.release(db).await;
     }
     drop(g);
     drop(_op);

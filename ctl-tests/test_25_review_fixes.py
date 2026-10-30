@@ -139,3 +139,33 @@ def test_rollback_to_per_database_leases_after_a_process_mode_crash():
         assert took is not None, "after a rollback to --process-lease false the database stayed locked"
     finally:
         p2.term()
+
+
+def test_turning_relaxed_off_applies_on_every_process():
+    """The relaxed-durability setting is per database, but each process cached it at start. P2 starts while database r is
+    relaxed; through P1 the setting is turned off; P2 then opens r and writes with {w: 1, j: false}: those writes must be
+    durable before their acknowledgement (no relaxed acknowledgement on P2). Before the fix P2 kept the value it loaded at
+    start and went on acknowledging such writes before they were durable."""
+    from pymongo import WriteConcern
+    bucket = make_bucket("relax")
+    p1 = Server(bucket, "rx1", idle=600, holder="X1").start()
+    c1 = p1.client()
+    c1["r"]["c"].insert_one({"_id": 0})
+    c1["r"].command("tenantAdmin", close=True)
+    st, r = p1.admin.put("/v1/databases/r/durability", {"relaxed_flush_ms": 2000})
+    assert st == 200, r
+    p2 = Server(bucket, "rx2", idle=600, holder="X2").start()      # loads "r is relaxed" at start
+    st, r = p1.admin.put("/v1/databases/r/durability", {"relaxed_flush_ms": 0})
+    assert st == 200, r
+    p1.term()
+    try:
+        c2 = p2.client()
+        coll = c2["r"].get_collection("c", write_concern=WriteConcern(w=1, j=False))
+        before = c2.admin.command("tenantStats")["groupCommit"]["relaxedAcks"]
+        for i in range(1, 21):
+            coll.insert_one({"_id": i})
+        after = c2.admin.command("tenantStats")["groupCommit"]["relaxedAcks"]
+        print("relaxed acknowledgements on P2 after relaxed was turned off:", after - before)
+        assert after == before, f"P2 acknowledged {after - before} writes before they were durable after relaxed was turned off"
+    finally:
+        p2.term()

@@ -506,6 +506,7 @@ impl Entry {
         tenant_bench::counting::set_phase(5);
         let took = self.leases.acquire(&self.name).await?;
         lease::log("acquired", &self.name, &self.leases.holder, &format!("takeover_from={}", took.as_deref().unwrap_or("-")));
+        crate::ctl::durability::refresh(&self.name).await;
         match self.lc.wake(&self.name).await {
             Ok(t) => {
                 if took.is_some() || t.unclean {
