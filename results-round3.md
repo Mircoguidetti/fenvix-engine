@@ -20,10 +20,10 @@ Branch `round3` da `main` (`c9a4beb`). PR verso `main`, non unita. `infra/` e `c
 
 | scenario | prima, MinIO | dopo immediata, MinIO | dopo rilassata 5 s, MinIO | dopo log locale 30 s, MinIO | prima, S3 vero | dopo immediata, S3 vero | dopo rilassata, S3 vero | dopo log locale, S3 vero |
 |---|---|---|---|---|---|---|---|---|
-| 1 req/s | 11,44 | 7,05 | 2,79 | 1,19 | 11,65 | non misurato | non misurato | non misurato |
-| 10 req/s | 69,42 | 64,07 | 3,50 | 1,77 | 63,39 | non misurato | non misurato | non misurato |
-| 100 req/s | 630,51 | 619,47 | 3,67 | 1,95 | 139,86 | non misurato | non misurato | non misurato |
-| flotta 100 database × 1 scrittura/s | 17,45 | 12,94 | 2,72 | 1,02 | 17,35 | non misurato | non misurato | non misurato |
+| 1 req/s | 11,44 | 7,05 | 2,79 | 1,19 | 11,65 | 8,49 | 4,17 | 2,67 |
+| 10 req/s | 69,42 | 64,07 | 3,50 | 1,77 | 63,39 | 59,59 | 4,36 | 2,64 |
+| 100 req/s | 630,51 | 619,47 | 3,67 | 1,95 | 139,86 | 111,65 | 4,54 | 2,79 |
+| flotta 100 database × 1 scrittura/s | 17,45 | 12,94 | 2,72 | 1,02 | 17,35 | 12,79 | 2,69 | 1,03 |
 | flotta mista (50 a raffiche, 20 con letture, 30 ferme) | 2,23 | 1,24 | 0,74 | 0,66 | non misurato | non misurato | non misurato | non misurato |
 
 Le colonne "dopo" su S3 vero vengono dal run 5, il motore finale (sezione E).
@@ -32,8 +32,8 @@ Le colonne "dopo" su S3 vero vengono dal run 5, il motore finale (sezione E).
   - la pulizia del WAL con retention ora fa 0 richieste quando non c'è nulla da cancellare;
   - un lease per processo invece di uno per database;
   - letture del manifest e contatori d'uso meno frequenti.
-  - A 1 req/s questo vale -38% su MinIO (da 11,44 a 7,05) e -25% su S3 vero (da 11,65 a 8,69). Con molte scritture resta ~1 PUT per scrittura, quindi il costo cambia poco.
-- **Su S3 vero la modalità immediata a 100 req/s costa molto meno che su MinIO** (134 contro 619 $). Ogni flush dal runner GitHub a eu-west-1 dura ~200 ms, e le scritture arrivate nel frattempo entrano nello stesso PUT (0,107 richieste per richiesta del client).
+  - A 1 req/s questo vale -38% su MinIO (da 11,44 a 7,05) e -27% su S3 vero (da 11,65 a 8,49, run 5). Con molte scritture resta ~1 PUT per scrittura, quindi il costo cambia poco.
+- **Su S3 vero la modalità immediata a 100 req/s costa molto meno che su MinIO** (111,65 contro 619,47 $). Ogni flush dal runner GitHub a eu-west-1 dura ~200 ms (scrittura p50 225 ms nel run 2), e le scritture arrivate nel frattempo entrano nello stesso PUT (0,089 richieste per richiesta del client nel run 5).
 - **La modalità rilassata e il log locale cambiano l'ordine di grandezza**:
   - pochi $ per database al mese a qualunque ritmo;
   - latenza di scrittura sotto 2 ms anche su S3 vero.
@@ -42,7 +42,7 @@ Le colonne "dopo" su S3 vero vengono dal run 5, il motore finale (sezione E).
   - Su MinIO un flush dura 3-5 ms: nessuna scrittura arriva in tempo per unirsi.
   - Su S3 vero le scritture concorrenti si uniscono già da sole.
   - Al tetto di un database con 4 connessioni dimezza i PUT (da 315 a 133 PUT/s), con le richieste servite che scendono da 622 a 522 al secondo (sezione Tetto).
-- **Spesa reale su AWS:** 2,02 USD in 5 run, su un tetto di 10 USD (richieste contate × prezzi; la fattura AWS è non misurata). Dettaglio e stato dei bucket nella sezione E.
+- **Spesa reale su AWS:** 2,29 USD in 5 run, su un tetto di 10 USD (richieste contate × prezzi; la fattura AWS è non misurata). Dettaglio e stato dei bucket nella sezione E.
 
 ## A. Correzioni
 
@@ -111,8 +111,8 @@ Misura con `tools/round3/memgrowth.py`: N database su MinIO, insert di ~1 KB, RS
 | + memtable 1 MB + cache 8 + 4 MB | 20 × 10, 600 s | 0,74 | **si ferma a ~131 MB** dopo ~200 s |
 | + memtable 1 MB + cache 8 + 4 MB | 50 × 2, 420 s | 5,49 | cresce: con 2 scritture/s la memtable non si riempie |
 | memtable 2 MB, cache 256 + 64 MB (`bca96f6`) | 50 × 2, 480 s | 5,74 | cresce nei primi 8 minuti |
-| memtable 2 MB, cache 256 + 64 MB (`bca96f6`), run lungo | 50 × 2, 5400 s | non misurato | run non concluso |
-| motore finale, 8 MB, cache 256 + 64 MB (`b72262e`), run lungo | 50 × 2, 3600 s | non misurato | run non concluso |
+| memtable 2 MB, cache 256 + 64 MB (`bca96f6`), run lungo | 50 × 2, 5400 s | 1,10 | RSS 357 MB a 10 min, 503 MB a 30 min, 565 MB a 60 min, 634 MB a 90 min |
+| motore finale, 8 MB, cache 256 + 64 MB (`b72262e`), run lungo | 50 × 2, 3600 s | 2,60 | RSS 374 MB a 10 min, 874 MB a 30 min, 967 MB a 60 min |
 
 **Cause trovate**, in ordine di peso:
 1. **Una scrittura non ancora scaricata in L0 occupa ~4,3 KB di memoria del processo** per 1 KB di documento, mentre slatedb ne conta ~1,1 KB per decidere quando scaricare la memtable.
@@ -676,9 +676,9 @@ Una prima versione della coda, senza il tetto dei comandi, peggiorava il leggero
 | 1 (`40967620447`) | `1abbea0`, client con 4 connessioni | 20 | 10 000 a 100 req/s: limite del client, non del motore | 0,72 USD | cancellato e verificato | nessuno |
 | 2 (`40987254437`) | `ea63a08` | 20 (tutto il piano) | 0 | 0,70 USD | cancellato e verificato | nessuno |
 | 3 (`41011005224`) | `8cfe8f6` (memtable forzata, poi scartata) | 10 | 0 | 0,26 USD | cancellato e verificato | nessuno |
-| 4 (`41018700920`) | `bca96f6` (memtable 2 MB, poi scartata) | 10, l'ultimo non partito | 0 | 0,34 USD | **non cancellato** (BucketNotEmpty), cancellato dal run 5: cancellazione non ancora verificata | nessuno |
-| 5 (`41026488028`) | `83cd51f`, motore finale | 12 | non misurato | non misurato | non misurato | non misurato |
-| **totale** | | | | **2,02 USD** su 10 USD | | |
+| 4 (`41018700920`) | `bca96f6` (memtable 2 MB, poi scartata) | 10, l'ultimo non partito | 0 | 0,34 USD | **non cancellato** (BucketNotEmpty), cancellato dal run 5: cancellato e verificato | nessuno |
+| 5 (`41026488028`) | `83cd51f`, motore finale | 12 | 0 | 0,28 USD | cancellato e verificato | nessuno |
+| **totale** | | | | **2,29 USD** su 10 USD | | |
 
 Il run 1 non ha potuto fare il push dei risultati: mancava l'identità git nel workflow. I riassunti dei passi sono stati recuperati dal log del job (`results-round3/real-s3-run1/`). Run 2 ha ripetuto tutto con 64 connessioni per client.
 
@@ -799,11 +799,24 @@ Passo non eseguito: s3g-fleet100-local (**non misurato** in questo run).
   - **Corretto:**
     - il ripristino del log locale controlla 32 database alla volta (kill -9 con 16 database: 19 291 scritture confermate, 0 perse);
     - lo script ferma un motore che non parte;
-    - il run 5 ha cancellato il bucket rimasto (cancellazione non ancora verificata).
+    - il run 5 ha cancellato il bucket rimasto (cancellato e verificato).
 
 ### E4. Run 5: motore finale
 
-Run 5 non concluso: **non misurato**.
+| passo | $/db/mese | PUT/min/db | GET/min/db | S3 per richiesta | scrittura p50 / p99 ms | lettura p50 / p99 ms | errori |
+|---|---|---|---|---|---|---|---|
+| s3h-fleet100-immediate | 12,79 | 58,9 | 3,1 | 1,045 | 116,1 / 258,3 | non misurato / non misurato | 0 |
+| s3h-fleet100-local | 1,03 | 4,5 | 3,2 | 0,130 | 0,9 / 1,6 | non misurato / non misurato | 0 |
+| s3h-fleet100-relaxed | 2,69 | 12,2 | 2,5 | 0,246 | 0,6 / 0,9 | non misurato / non misurato | 0 |
+| s3h-immediate-r1 | 8,49 | 38,7 | 8,0 | 0,671 | 117,5 / 212,5 | 0,9 / 142,5 | 0 |
+| s3h-immediate-r10 | 59,59 | 275,6 | 2,9 | 0,467 | 135,9 / 341,8 | 0,8 / 1,0 | 0 |
+| s3h-immediate-r100 | 111,65 | 516,6 | 3,6 | 0,089 | 267,8 / 584,4 | 0,8 / 1,1 | 0 |
+| s3h-local-r1 | 2,67 | 11,7 | 8,7 | 0,333 | 1,3 / 1,6 | 1,0 / 349,0 | 0 |
+| s3h-local-r10 | 2,64 | 12,0 | 2,9 | 0,025 | 1,2 / 1,5 | 0,8 / 1,0 | 0 |
+| s3h-local-r100 | 2,79 | 12,7 | 3,6 | 0,003 | 1,0 / 1,5 | 0,7 / 1,1 | 0 |
+| s3h-relaxed-r1 | 4,17 | 18,3 | 12,3 | 0,548 | 0,8 / 114,1 | 0,9 / 123,8 | 0 |
+| s3h-relaxed-r10 | 4,36 | 20,0 | 2,3 | 0,036 | 0,7 / 0,9 | 0,8 / 1,1 | 0 |
+| s3h-relaxed-r100 | 4,54 | 20,8 | 3,6 | 0,004 | 0,7 / 1,0 | 0,8 / 1,2 | 0 |
 
 **Non misurato su S3 vero:**
 - la flotta mista;
@@ -817,7 +830,25 @@ Run 5 non concluso: **non misurato**.
 
 `tools/round3/regression.sh final /tmp/claude-0/final7-bin` sul binario finale (`bca96f6`). Ogni suite è confrontata con `mongod` 7.0 (standalone e replica set).
 
-[TESTS]
+| parte | binario | risultato |
+|---|---|---|
+| suite differenziale pymongo contro mongod 7.0 | `bca96f6` | 4127 su 4127 passati |
+| suite differenziale driver Node contro mongod 7.0 | `bca96f6` | 4127 su 4127 passati |
+| test ctl (32 file) | `b72262e` | 441 passati, 0 falliti |
+| test ctl con autenticazione (13 file) | `b72262e` | 71 passati, 45 falliti (gli stessi 45 test falliscono identici con il binario di `main` (confrontati per nome, file per file): questi test chiamano `tenantAdmin`, che con l'autenticazione è rifiutato; non sono scritti per quella modalità) |
+| test SIGKILL con controlli negativi (6) | `b72262e` | sst_1: ok, sst_2: ok, sstctl_1: ok, wal_1: ok, wal_2: ok, walctl_1: ok |
+| loadtest `test_lease` (rifatto con la cartella dati di MinIO impostata) | `b72262e` | 13 PASS, 0 FAIL |
+| loadtest `test_durable_reads` | `b72262e` | 24 550 scritture confermate, 0 perse |
+| loadtest `test_shared_reads` (con un server sulla porta 28001, senza e con `--durable-reads`) | `b72262e` | PASS in entrambi: 0 errori, contatore mai all'indietro, 150 / 151 documenti |
+| loadtest `test_stop` (processo congelato oltre il ttl; MinIO locale) | `b72262e` | modalità sicura: 0 letture vecchie, 0 scritture confermate dal processo congelato, 400 rifiuti 134; controllo negativo: 28 letture vecchie e 40 scritture confermate |
+| loadtest `test_fallback_recovery` | `b72262e` | exit 0 |
+| test unitari Rust (`cargo test --workspace`) | `b72262e` | 60 passati, 0 falliti |
+
+Sul binario precedente (`bca96f6`) due test ctl erano falliti:
+- `test_03b` (controllo negativo senza retention): la regressione della pulizia WAL, corretta in `b72262e`;
+- `test_02_fork` (2002 byte contro un limite di 2000), con la memtable da 2 MB.
+
+Sul binario finale passano entrambi (`test_02_fork` 3 volte su 3).
 
 **Test esistenti modificati:**
 - solo `ctl-tests/test_08b_pin_cost.py`: aggiunto `--process-lease false`, perché misura apposta il lease per database (A2).
