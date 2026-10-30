@@ -48,7 +48,7 @@ async def db_loop(db, args, t_start, t_end, lat, errs, acked, rng, k):
             if op == "r":
                 await items.find_one({"_id": rng.randrange(args.prefill)})
             else:
-                _id = f"{db}-{k}-{seq}"
+                _id = f"{db}-{int(t_start)}-{k}-{seq}"
                 await coll.insert_one({"_id": _id, "t": t0, "pad": PAD})
                 if acked is not None:
                     acked.write(_id + "\n")
