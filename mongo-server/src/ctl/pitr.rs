@@ -5,8 +5,10 @@
 //! is being written (and once when it goes to sleep with unsaved changes, and when retention is switched on). A
 //! checkpoint pins the manifest version it was taken at, and through it every SST that version reads (compaction and
 //! garbage collection cannot delete them) and the WAL objects of its replay range. The WAL objects written after
-//! the checkpoint are kept for `W` as well, by raising the minimum age of the WAL garbage collection of that database
-//! to `W` (`tenant_bench::lifecycle::WAL_RETAIN`). Cost on the object store, for a database written continuously:
+//! the checkpoint are kept too: with a retention window (`tenant_bench::lifecycle::WAL_RETAIN` non-zero) the WAL cleanup
+//! of the default `--wal-gc-mode bulk` deletes only WAL objects below the oldest restore point's replay boundary (and below
+//! the boundary of the stored manifest), and none until the first restore point exists; only `--wal-gc-mode slatedb` keeps
+//! them by age instead (its minimum age is raised to `W`). Cost on the object store, for a database written continuously:
 //!   * storage: the WAL bytes written during `W`, plus every SST that was replaced by a compaction during `W` (a
 //!     compaction rewrites data: with `k` compactions over `W` roughly `1 + k` times the live data in the worst case),
 //!     plus a few KB of manifests;

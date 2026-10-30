@@ -85,8 +85,8 @@ Details and measurements: `results-round3.md`.
 | `--process-lease` | off (one lease per open database, renewed every ttl/3: 6 PUT/min each) | **on** (one lease per process; `--process-lease false` goes back) | an open database costs no lease request; safety with two processes: `ctl-tests/test_20_process_lease.py` |
 | `--max-concurrent-wakes` | 0 (unlimited) | **128** | a restart wakes every database at once; with 500 databases on 2 CPUs, 128 gave the shortest tail (first request p99 8.6 s against 9.5 s unlimited and 16.4 s with 8) |
 | `--writer-poll-secs` | 30 | **60** | one LIST + one GET per open writer per poll |
-| `--usage-flush-secs` | 60 | **300** | one PUT per active database per flush |
-| `--memtable-max-mb` (new) | slatedb's 64 MiB per database | **8** | memory held by unflushed writes (measured: ~4.3 KB of process memory per 1 KB unflushed write). 2 held less memory but stalled a database at 100 writes/s on real S3 (p99 2-3 s) |
+| `--usage-flush-secs` | 60 | **300** | one PUT per active database per flush. A crash loses the usage counters (billing) of up to the last 300 s of every database |
+| `--memtable-max-mb` (new) | slatedb's 64 MiB per database | **8** | memory held by unflushed writes (measured: ~4.3 KB of process memory per 1 KB unflushed write). 2 held less memory but stalled a database at 100 writes/s on real S3 (p99 2-3 s). It also sets slatedb's `max_unflushed_bytes` to 4 × that, 32 MiB per database: a bulk load hits write backpressure much earlier than with slatedb's defaults |
 | `--block-cache-mb`, `--meta-cache-mb` (new) | slatedb's 512 MiB + 128 MiB **per open database** | **256 + 64 MiB shared by all databases** | memory grew with the data read and written |
 | `--change-log-max-mb` (new) | 100 000 events with whole documents | **32 MiB** (and still at most 100 000 events) | ~2.5 KB of memory per write |
 
@@ -111,6 +111,19 @@ safety limits per database, `--db-max-inflight 10000` running commands and `--db
 MongoDB error 462 `IngressRequestRateLimitExceeded` (label `SystemOverloadedError`) and count a rejection.
 `GET /v1/metrics/databases` on the admin port gives per database: requests and req/s, command CPU, estimated memory, queue
 waits (count, total, max) and rejections.
+
+### Lease modes and rollback
+
+`--process-lease true` (the default) writes per-database owner records that never expire by themselves: the owner's
+process lease decides. A process started with `--process-lease false` (going back to per-database leases) also honours
+those records: it takes such a database over once the owner's process lease expired (`ctl-tests/test_25_review_fixes.py`).
+Every process of a bucket should still use the same mode. A takeover revokes the old process lease, so a process whose
+renewal was late or whose clock is off drops its databases at its next renewal (`ctl-tests/test_23_process_lease_late.py`);
+lease deadlines use CLOCK_BOOTTIME, which keeps counting while a VM is suspended.
+
+Test-only switches: `--unsafe-skip-ownership-checks` starts only with `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`;
+`MONGO_TEST_FAULTS_FILE`, `MONGO_TEST_WALL_CLOCK_OFFSET_MS` and `MONGO_TEST_LOCALLOG_FAIL_AT` inject faults. None is ever set
+in production.
 
 ### Write modes
 
@@ -137,3 +150,15 @@ connections, the engine applies again the records not yet in S3 (exactly once: e
 record's number). The databases of a process in this mode are tied to its disk: until the restart has run on the same
 disk, another process that takes a database over (after the lease expired) does not see the writes that were only in
 the log, and losing the disk loses them. All processes of a bucket should use the same mode. See `mongo-server/src/locallog.rs`.
+
+Local log guarantees and their limits (`ctl-tests/test_24_local_log.py`):
+- sequence numbers carry a boot number kept in the log directory, so records of a later run are never taken for uploaded;
+- a failed write or fsync of the log stops the process (fail-stop): nothing more is acknowledged, nothing more is uploaded,
+  and the restart applies every record before the failure. Until the process stops, readers of that process may have seen
+  the failed batch (it is staged in the memtable before the log write): it is never acknowledged and never made durable;
+- a restart refuses the records of a database that another writer opened since (newer slatedb writer epoch);
+- a write is not acknowledged if ownership was lost by the time its record is on disk;
+- the restart applies the log before the admin interface starts, and a database whose replay fails or makes no progress for
+  `--local-log-replay-timeout-secs` keeps its records for the next restart while the others go on;
+- when ownership is lost (lease lapsed, another process took the database), the writes of that database that were only in
+  the local log are lost: the old owner can no longer upload them (it is fenced), and a drop record makes the restart skip them.
