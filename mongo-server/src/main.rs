@@ -162,10 +162,11 @@ struct Args {
     #[arg(long, default_value_t = 128)]
     max_concurrent_wakes: usize,
     /// Memtable size in MiB (slatedb's own estimate of the data) at which a writer flushes it to an L0 SST (slatedb's default
-    /// is 64 MiB per database). Measured: the process memory a memtable holds is about 4 times this estimate for 1 KB
-    /// documents (results-round3.md), so 2 holds about 8 MB per database open for writing, fast or slow (slatedb also flushes
-    /// after 4096 WAL flushes, which a slow database reaches later than this size). 0 = slatedb's default.
-    #[arg(long, default_value_t = 2)]
+    /// is 64 MiB per database). The process memory a memtable holds is about 4 times this estimate for 1 KB documents
+    /// (results-round3.md). 2 bounded the memory better but, on real S3, a database at 100 writes/s then flushed L0 so
+    /// often that its writes stalled on compaction (p99 2-3 s, request cost doubled); 8 had no such stall (results-round3.md,
+    /// part E). 0 = slatedb's default.
+    #[arg(long, default_value_t = 8)]
     memtable_max_mb: u64,
     /// One block cache shared by every open database, in MiB (slatedb's default is a 512 MiB cache per open database, with no
     /// limit across databases: the memory then grew with the data read by each database).

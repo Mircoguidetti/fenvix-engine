@@ -149,7 +149,7 @@ pub static WAL_RETAIN: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::On
 
 /// Memtable size (bytes) at which a writer flushes it to an L0 SST (`--memtable-max-mb`). slatedb's default is 64 MiB per
 /// database, with no limit across databases; a database written slowly kept growing its memtable for hours.
-pub static MEMTABLE_MAX_BYTES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(2 << 20);
+pub static MEMTABLE_MAX_BYTES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(8 << 20);
 /// (A forced memtable flush every 256 writes was tried and removed: on real S3 it blocked the writes of a fast database for
 /// seconds. The memory is bounded by the memtable size instead, see `MEMTABLE_MAX_BYTES`.)
 
