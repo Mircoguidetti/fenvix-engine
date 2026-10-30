@@ -58,7 +58,8 @@ writer's barrier plus one client write when the indices allow it.
 | 2 | 2 | bag | `recovery_longest` | 20,000,000 (cap) | not caught within the cap | 559 s |
 | 2 | 2 | bag | `recovery_single` | 20,000,000 (cap) | not caught within the cap | 580 s |
 | 2 | 2 | bag | `keep_diverged` | 20,000,000 (cap) | not caught within the cap | 537 s |
-| 2 | 2 | FIFO | none / `no_fencing` | (see below) | | |
+| 2 | 2 | FIFO | none and `no_fencing` | runs to 100 M states stopped by me after 31 min (≈ 25 M states each, still running); no result recorded | not completed | |
+| 2 | 2 | FIFO, randomized order, seeds 1–4 | `no_fencing` | 1,500,000 each (cap) | not caught | ≈ 55 s each |
 
 **What this means.** With one writer the protocol is checked exhaustively at these bounds (every interleaving of
 FENCE/PROMISE/READ/APPEND/ACK/MISMATCH/TRIM deliveries, losses and uploads): no reachable state violates (a), (b2),
@@ -69,7 +70,7 @@ way. That `no_fencing` counterexample does exist within these bounds: it is writ
 never acknowledged; without it, it is acknowledged and then overwritten by the new writer's barrier). So for two
 writers the depth-first search with a state cap is **weak evidence**, and the safety claim for interleaved writers
 rests on the random simulator (where all four are caught within 1–36 seeds) and on the published algorithm, not on
-this checker. Randomized search order (3 seeds × 2 M states per control) did not find them either.
+this checker. Randomized search order (bag: 3 seeds × 2 M states for `no_fencing`, `recovery_longest`, `recovery_single`; FIFO: 4 seeds × 1.5 M states for `no_fencing`) did not find them either.
 
 Next step (not done): model-check `Journal3Z.tla` with TLC (symmetry over nodes, a state-space constraint), or add
 partial-order reduction to `journal3z/mc` (deliveries to different nodes commute).

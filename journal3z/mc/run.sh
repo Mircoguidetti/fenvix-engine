@@ -15,6 +15,8 @@ $B --epochs 2 --idx 2 --max-states 40000000                   > $R/mc-e2-i2.json
 for m in no_fencing ack_on_one recovery_longest recovery_single trim_before_upload keep_diverged ack_gap; do
   $B --epochs 2 --idx 2 --mutation $m --max-states 20000000   > $R/mc-e2-i2-$m.json
 done
-$B --epochs 2 --idx 2 --fifo --max-states 100000000                       > $R/mc-e2-i2-fifo.json
-$B --epochs 2 --idx 2 --fifo --mutation no_fencing --max-states 100000000 > $R/mc-e2-i2-fifo-no_fencing.json
+# Not completed in phase 1 (stopped after 31 min at ~25 M states each, no result recorded):
+#   $B --epochs 2 --idx 2 --fifo --max-states 100000000
+#   $B --epochs 2 --idx 2 --fifo --mutation no_fencing --max-states 100000000
+# Randomized order, FIFO, no_fencing, seeds 1-4 x 1.5 M states: not caught (see docs/journal3z-tla.md).
 echo done

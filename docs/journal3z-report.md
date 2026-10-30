@@ -8,7 +8,8 @@ changed. Everything is under `journal3z/` and `docs/journal3z-*.md`.
 The 3-zone journal now has a precise protocol: Raft's log rules, with each writer's epoch taken from the database lease
 instead of an election. That protocol is implemented once, as sans-IO state machines (`journal3z/core`). The same code
 was run through **360 million simulated events under random faults with 0 violations**; each of **12 deliberately
-broken variants was caught**; it was checked exhaustively in small bounds by a model checker over that code; and it was
+broken variants was caught**; with one writer it was checked exhaustively in small bounds by a model checker over that
+code (with two writers that checker only ran bounded and is weak evidence); and it was
 measured in real time on a common test bed against openraft, raft-rs and omnipaxos. **Recommendation: build the
 custom protocol, not a library.** The walbench "connection refused" cycle was a harness sequencing problem, not a
 protocol problem, and it was proven from the raw data.
@@ -41,6 +42,7 @@ Decisions I took without asking (all reversible):
   prototype" is a like-for-like comparison.
 - I proposed a lease TTL of 10 s in journal mode (round3 default 30 s), because an early takeover is now harmless.
 - The simulator scales time down (lease TTL 2 s, uploads every 0.1–0.8 s) to get many takeovers per run.
+- Library criteria committed (`d100e11`) before the first spike ran; unchanged since (checked with `diff`).
 - The three library spikes were written by sub-agents to one specification. I ran every final measurement myself,
   sequentially, on an idle machine.
 - openraft got a fairness variant that batches many writes into one entry. omnipaxos was measured with its own
@@ -58,7 +60,7 @@ Decisions I took without asking (all reversible):
 | liveness | after every fault is repaired, all 3,000 databases of the main campaign write again: p50 166 ms, max 3.9 s (simulated lease 2 s) |
 | negative controls | **12/12 caught** by the full checker. 11/12 are also caught by the durability check alone; the 12th (`forget_fence`) is caught by the fencing invariant, and its data loss is shown by a deterministic scenario |
 | double disk loss (outside the promise) | loss observed (42.8 M of 45.9 M steps in that state); stays down until an operator acts — as the failure matrix states |
-| exhaustive check of the real core code | see §3.3 of `docs/journal3z-tla.md` (filled in below) |
+| exhaustive check of the real core code (`journal3z/mc`) | **one writer: complete, no violation** (18.7 M states with arbitrary reordering; 2.8 M with FIFO links). **Two writers: bounded only** (40 M states, no violation); it caught 3 of 7 negative controls but **not** the 4 that need a stale and a new writer to interleave, although at least one of those counterexamples exists within the bounds (written out as a deterministic test). For two writers this check is weak evidence; the claim rests on the random simulator. |
 | TLA+ specification | written, **not model-checked**: running the TLA+ tools was not permitted in this session; command for the founder in `docs/journal3z-tla.md` |
 
 ### Performance (`docs/journal3z-libraries.md`)
@@ -107,15 +109,16 @@ fixed by design, and the simulator scenario `walbench_cycle1` shows both readers
 - Engine changes needed later (not made): incarnation id and journal configuration in the lease record; the marker
   `sys/journal` in every batch; open order "lease → SlateDB writer fence → marker → journal open"; release of the
   lease after `T_cut` without a journal majority.
-- TLA+ specification not model-checked (permission); CPU per write not measured on real hardware; erase not exercised
-  in the simulator (only in the local backend's tests).
+- TLA+ specification not model-checked (permission); the two-writer exhaustive check needs a reduction (TLC with
+  symmetry, or partial-order reduction in `journal3z/mc`); CPU per write not measured on real hardware; erase not
+  exercised in the simulator (only in the local backend's tests).
 - The 72-hour AWS soak (plan ready, about 12–15 USD estimated for option B with a 25 USD cap) needs the founder's
   authorization.
 
 ## 7. Biggest risks
 
-1. **We own a consensus protocol.** Every rule is published, and it is backed by a simulator, an exhaustive checker
-   and negative controls. But the implementation is still ours to get right and to maintain. The simulator and its
+1. **We own a consensus protocol.** Every rule is published, and it is backed by a simulator with negative controls
+   and by an exhaustive checker that is complete only for one writer. But the implementation is still ours to get right and to maintain. The simulator and its
    negative controls must stay in CI, and every protocol change must re-run them.
 2. **The engine integration is where the subtle bugs will be.** Examples: the order of the SlateDB fence and the
    marker read (the `skip_store_fence` negative control shows the loss), the marker inside every batch, and replay
