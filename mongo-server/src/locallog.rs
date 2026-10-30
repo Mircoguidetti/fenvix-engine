@@ -33,6 +33,7 @@ use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tenant_bench::lifecycle::Op;
+use futures::StreamExt;
 use tokio::sync::{mpsc, oneshot};
 
 /// Key of the marker written with every batch (inside the database's own keyspace; data keys start with `doc/`, `idx/`, `meta/`).
@@ -391,44 +392,66 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>) -> Re
         }
     }
     log.next_seq.store(max_seq + 1, Relaxed);
+    // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
+    // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
+    enum Outcome {
+        Nothing,
+        Applied(u64),
+        Conflict(String),
+    }
+    let log_id = log.id.clone();
+    let results: Vec<Result<Outcome>> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
+        .map(|(db, mut recs)| {
+            let dbs = Arc::clone(dbs);
+            let log_id = log_id.clone();
+            async move {
+                recs.sort_by_key(|r| r.seq);
+                let mut g = dbs.lock(&db).await;
+                let marker = g.get_live(MARKER_KEY).await?;
+                let done_seq = match marker.as_deref().and_then(parse_marker) {
+                    Some((id, s)) if id == log_id => s,
+                    Some((other, _)) => {
+                        eprintln!("local log: database {db} was written by another local log ({other}) since; its {} records are NOT applied", recs.len());
+                        return Ok(Outcome::Conflict(db.clone()));
+                    }
+                    None => 0,
+                };
+                let todo: Vec<Record> = recs.into_iter().filter(|r| r.seq > done_seq).collect();
+                if todo.is_empty() {
+                    return Ok(Outcome::Nothing);
+                }
+                // A few hundred records per durable batch; every batch ends with the marker of its last record.
+                let log = get().ok_or_else(|| anyhow!("local log not installed"))?;
+                for chunk in todo.chunks(256) {
+                    let mut ops: Vec<Op> = Vec::new();
+                    for r in chunk {
+                        ops.extend(r.ops.iter().map(|o| match o {
+                            Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
+                            Op::Delete(k) => Op::Delete(k.clone()),
+                        }));
+                    }
+                    ops.push(log.marker_op(chunk.last().unwrap().seq));
+                    g.apply_durable(ops).await?;
+                }
+                eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
+                Ok(Outcome::Applied(todo.len() as u64))
+            }
+        })
+        .buffer_unordered(32)
+        .collect()
+        .await;
     let mut applied = 0u64;
     let mut n_dbs = 0usize;
     let mut conflicts = Vec::new();
-    for (db, mut recs) in by_db {
-        if recs.is_empty() {
-            continue;
-        }
-        recs.sort_by_key(|r| r.seq);
-        let mut g = dbs.lock(&db).await;
-        let marker = g.get_live(MARKER_KEY).await?;
-        let done_seq = match marker.as_deref().and_then(parse_marker) {
-            Some((id, s)) if id == log.id => s,
-            Some((other, _)) => {
-                eprintln!("local log: database {db} was written by another local log ({other}) since; its {} records are NOT applied", recs.len());
-                conflicts.push(db.clone());
-                continue;
+    for r in results {
+        match r? {
+            Outcome::Nothing => {}
+            Outcome::Applied(n) => {
+                applied += n;
+                n_dbs += 1;
             }
-            None => 0,
-        };
-        let todo: Vec<Record> = recs.into_iter().filter(|r| r.seq > done_seq).collect();
-        if todo.is_empty() {
-            continue;
+            Outcome::Conflict(db) => conflicts.push(db),
         }
-        n_dbs += 1;
-        // A few hundred records per durable batch; every batch ends with the marker of its last record.
-        for chunk in todo.chunks(256) {
-            let mut ops: Vec<Op> = Vec::new();
-            for r in chunk {
-                ops.extend(r.ops.iter().map(|o| match o {
-                    Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
-                    Op::Delete(k) => Op::Delete(k.clone()),
-                }));
-            }
-            ops.push(log.marker_op(chunk.last().unwrap().seq));
-            g.apply_durable(ops).await?;
-            applied += chunk.len() as u64;
-        }
-        eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
     }
     REPLAYED.fetch_add(applied, Relaxed);
     for (_, p) in old {
