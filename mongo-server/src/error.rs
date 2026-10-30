@@ -122,6 +122,12 @@ impl From<anyhow::Error> for MongoError {
             m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
             return m;
         }
+        if let Some(r) = e.downcast_ref::<crate::locallog::RecoveryPending>() {
+            // same code as a lease held elsewhere: retryable, and not a state change for the drivers
+            let mut m = MongoError::new(134, "DatabaseRecoveryPending", r.to_string());
+            m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+            return m;
+        }
         MongoError::internal(format!("{e:#}"))
     }
 }

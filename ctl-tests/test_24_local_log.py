@@ -265,3 +265,95 @@ def test_f_one_failing_database_does_not_block_the_restart():
     finally:
         shutil.rmtree(d, ignore_errors=True)
         os.unlink(ff.name)
+
+
+def test_g_a_database_kept_for_a_later_replay_loses_no_acknowledged_write():
+    """Review defect 1 (after test f): the replay of database g1 fails at the restart (reading its manifest fails, fault
+    injection), so its 5 records are kept in the log; then the fault goes away (a transient S3 error). Between this restart
+    and the next one a client writes to g1. Either the write is refused while g1 is in recovery, or g1's kept records are
+    applied first: after a clean shutdown and the next restart, every acknowledged write of g1 (the 5 kept ones and the
+    client's) must be there. Before the fix the client's write opened g1 as a new writer at once: the 5 kept records were
+    missing from its reads, and the next restart skipped them (they were older than the newer writer's marker): lost."""
+    bucket = make_bucket("llg")
+    d = tempfile.mkdtemp(prefix="llg-")
+    ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    ff.close()
+    try:
+        _pending(bucket, d, "G1", ["g1"])
+        with open(ff.name, "w") as f:
+            f.write("fail_get tenants/g1/manifest/\n")
+        s = ll_server(bucket, "llg2", "G1", d, env={"MONGO_TEST_FAULTS_FILE": ff.name}, extra=["--local-log-replay-timeout-secs", "5"]).start()
+        assert "replay of database g1 failed" in s.log_text(), "the fault did not make g1's replay fail (the test needs it)"
+        with open(ff.name, "w") as f:
+            f.write("")                                   # the S3 error was transient
+        c = client(s)
+        refused, acked, t0 = 0, None, time.time()
+        while acked is None and time.time() - t0 < 60:
+            try:
+                c["g1"]["c"].insert_one({"_id": "between"})
+                acked = round(time.time() - t0, 1)
+            except OperationFailure as e:
+                refused += 1
+                last = str(e)
+                time.sleep(0.5)
+        seen = c["g1"]["c"].count_documents({}) if acked is not None else None
+        print(f"write between the restarts: refused {refused} times, acknowledged after {acked} s; documents then visible: {seen}")
+        if refused:
+            print("refusal:", last[:200])
+        assert acked is not None, "g1 stayed refused for 60 s after the fault went away (the kept records were never applied)"
+        s.term()
+        s = ll_server(bucket, "llg3", "G1", d).start()
+        got = {x["_id"] for x in client(s)["g1"]["c"].find({}, {"_id": 1})}
+        missing = [i for i in [0, 1, 2, 3, 4, "between"] if i not in got]
+        print("acknowledged writes of g1 missing after the next restart:", missing)
+        assert not missing, f"acknowledged writes lost: {missing}"
+        assert seen == 6, f"while g1 was open for writes its reads showed {seen} of 6 acknowledged documents"
+        s.term()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+        os.unlink(ff.name)
+
+
+def test_h_kept_records_survive_a_clean_shutdown_and_a_replay_that_opened_the_database():
+    """Review defect 1, the other paths: the replay of h1 fails AFTER it opened the database as a writer (its WAL writes
+    fail, fault injection: the stored writer epoch is now one above the records'), and the fault stays for the whole run,
+    so no retry succeeds. The process then shuts down cleanly (the close of the database and the trim of the log must not
+    count the kept records as uploaded). At the next restart, without the fault, the 5 records must be applied, not refused
+    as written by another writer. Before the fix they were refused (the epoch the replay itself opened looked like a newer
+    writer) and lost."""
+    bucket = make_bucket("llh")
+    d = tempfile.mkdtemp(prefix="llh-")
+    ff = tempfile.NamedTemporaryFile("w", delete=False, suffix=".faults")
+    ff.close()
+    try:
+        _pending(bucket, d, "H1", ["h1"])
+        with open(ff.name, "w") as f:
+            f.write("fail_put tenants/h1/wal/\n")
+        s = ll_server(bucket, "llh2", "H1", d, env={"MONGO_TEST_FAULTS_FILE": ff.name}, extra=["--local-log-replay-timeout-secs", "5"]).start()
+        assert "replay of database h1 failed" in s.log_text(), "the fault did not make h1's replay fail (the test needs it)"
+        c = client(s)
+        try:
+            c["h1"]["c"].insert_one({"_id": "between"})
+            between = "acknowledged"
+        except OperationFailure as e:
+            between = f"refused ({e.code}: {str(e)[:160]})"
+        print("write while h1's records are kept:", between)
+        try:
+            seen = c["h1"]["c"].count_documents({})
+        except OperationFailure as e:
+            seen = f"refused ({e.code})"
+        print("read while h1's records are kept:", seen)
+        assert seen == 5 or str(seen).startswith("refused"), f"a read served h1 without its kept writes ({seen} of 5 documents)"
+        time.sleep(3)
+        s.term()                                            # clean: closes, uploads what it can, trims the log
+        s = ll_server(bucket, "llh3", "H1", d).start()     # no fault now
+        got = {x["_id"] for x in client(s)["h1"]["c"].find({}, {"_id": 1})}
+        missing = [i for i in range(5) if i not in got]
+        print("kept writes of h1 missing after the next restart:", missing, "| refused as another writer:", "opened by another writer" in s.log_text())
+        assert not missing, f"acknowledged writes lost: {missing}"
+        if between == "acknowledged":
+            assert "between" in got, "a write acknowledged while the records were kept was lost"
+        s.term()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+        os.unlink(ff.name)

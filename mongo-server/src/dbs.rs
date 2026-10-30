@@ -299,6 +299,7 @@ impl Dbs {
             {
                 let g = Arc::clone(&e).read_owned().await;
                 if g.tenant.is_some() && g.leases.valid(&g.name) {
+                    crate::locallog::check_open(&g.name)?;
                     g.touch();
                     return Ok(ReadView { g: Some(Guard::Read(g)), copts: Default::default() });
                 }
@@ -462,7 +463,7 @@ impl Entry {
         if let Some(l) = crate::locallog::get() {
             // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
             // not apply those records over the new owner's writes.
-            if l.has_pending(&self.name) {
+            if l.has_pending(&self.name) && !l.is_pinned(&self.name) {
                 eprintln!("local log: ownership of {} lost with writes not yet in object storage; they are lost", self.name);
                 let _ = l.append_drop(&self.name).await;
             }
@@ -479,6 +480,8 @@ impl Entry {
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
         self.touch();
+        // local log: a database whose kept records are not applied yet is refused (its last acknowledged writes are missing)
+        crate::locallog::check_open(&self.name)?;
         if self.tenant.is_none() && self.absent {
             return Ok(false);
         }
@@ -664,6 +667,7 @@ impl Entry {
         if let Some(l) = crate::locallog::get() {
             // A restart must not apply the database's earlier records again.
             l.append_drop(&self.name).await.map_err(|_| anyhow::anyhow!("local log stopped"))?.map_err(|e| anyhow::anyhow!(e))?;
+            l.forget_pinned(&self.name);
         }
         let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
         let _held = lock.lock().await;

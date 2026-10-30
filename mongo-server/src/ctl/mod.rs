@@ -99,6 +99,9 @@ impl From<anyhow::Error> for ApiError {
         if let Some(l) = e.downcast_ref::<crate::lease::LeaseHeld>() {
             return ApiError::conflict("owned_elsewhere", l.to_string());
         }
+        if let Some(r) = e.downcast_ref::<crate::locallog::RecoveryPending>() {
+            return ApiError::conflict("recovery_pending", r.to_string());
+        }
         if let Some(a) = e.downcast_ref::<ApiError>() {
             return ApiError { status: a.status, code: a.code, message: a.message.clone() };
         }

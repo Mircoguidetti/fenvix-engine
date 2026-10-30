@@ -46,6 +46,8 @@ pub static RECORDS: AtomicU64 = AtomicU64::new(0);
 pub static FSYNCS: AtomicU64 = AtomicU64::new(0);
 pub static UPLOADS: AtomicU64 = AtomicU64::new(0);
 pub static REPLAYED: AtomicU64 = AtomicU64::new(0);
+/// Databases whose kept records a background retry applied.
+pub static RETRIED: AtomicU64 = AtomicU64::new(0);
 
 static LOG: std::sync::OnceLock<Arc<LocalLog>> = std::sync::OnceLock::new();
 
@@ -74,10 +76,10 @@ pub struct LocalLog {
     tenants: Mutex<HashMap<String, TenantLog>>,
     /// Closed segments: number -> highest sequence number in it.
     segments: Mutex<BTreeMap<u64, u64>>,
-    /// Databases whose replay failed at this start: their records were written again to this run's log and wait for the
-    /// next restart; nothing marks them uploaded before that (so their segments stay). If the database is written in
-    /// between, that restart refuses them (newer writer epoch) instead of applying them over the newer writes.
-    pinned: Mutex<std::collections::HashSet<String>>,
+    /// Databases whose replay failed at this start, with their records (written again to this run's log, new sequence
+    /// numbers). While a database is here it is refused to every client (`RecoveryPending`) and nothing marks it
+    /// uploaded (its segments stay); a background task retries the replay until it succeeds, then the database leaves.
+    pinned: Mutex<HashMap<String, Vec<Record>>>,
     pub upload_every: Duration,
 }
 
@@ -231,7 +233,7 @@ impl LocalLog {
         let old = list_segments(&dir)?;
         let first = old.last().map(|(n, _)| n + 1).unwrap_or(1);
         let (tx, rx) = mpsc::unbounded_channel();
-        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(Default::default()), upload_every });
+        let me = Arc::new(Self { dir: dir.clone(), id, next_seq: AtomicU64::new((boot << SEQ_BOOT_SHIFT) + 1), tx, tenants: Mutex::new(HashMap::new()), segments: Mutex::new(BTreeMap::new()), pinned: Mutex::new(HashMap::new()), upload_every });
         let w = Arc::clone(&me);
         std::thread::Builder::new().name("local-log".into()).spawn(move || w.writer_thread(rx, first))?;
         Ok((me, old))
@@ -347,6 +349,18 @@ impl LocalLog {
         rx
     }
 
+    /// The database's replay failed at this start and is retried: no client may open it until its records are applied.
+    pub fn is_pinned(&self, db: &str) -> bool {
+        self.pinned.lock().unwrap().contains_key(db)
+    }
+
+    /// The database was dropped or erased: its kept records must not be applied (the drop record covers the restart).
+    pub fn forget_pinned(&self, db: &str) {
+        if self.pinned.lock().unwrap().remove(db).is_some() {
+            eprintln!("local log: database {db} was dropped while its records were kept: they are discarded with it");
+        }
+    }
+
     /// Records of the database that are not yet in object storage.
     pub fn has_pending(&self, db: &str) -> bool {
         self.tenants.lock().unwrap().get(db).map_or(false, |e| e.uploaded < e.staged)
@@ -354,7 +368,7 @@ impl LocalLog {
 
     /// The database closed cleanly (its close flushed everything to object storage).
     pub fn closed(&self, db: &str) {
-        if self.pinned.lock().unwrap().contains(db) {
+        if self.is_pinned(db) {
             return;
         }
         if let Some(e) = self.tenants.lock().unwrap().get_mut(db) {
@@ -386,7 +400,7 @@ impl LocalLog {
             tick.tick().await;
             loop {
                 tick.tick().await;
-                let pinned = me.pinned.lock().unwrap().clone();
+                let pinned: std::collections::HashSet<String> = me.pinned.lock().unwrap().keys().cloned().collect();
                 let due: Vec<(String, u64)> = me.tenants.lock().unwrap().iter().filter(|(k, e)| e.uploaded < e.staged && !pinned.contains(*k)).map(|(k, e)| (k.clone(), e.staged)).collect();
                 futures::future::join_all(due.into_iter().map(|(db, target)| {
                     let me = Arc::clone(&me);
@@ -461,68 +475,16 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
     log.next_seq.fetch_max(max_seq + 1, Relaxed);
     // Databases are independent: check (and replay) up to 32 at once. A clean shutdown leaves every database's marker at
     // its last record, so a restart only reads the markers; one at a time that took 123 s for 100 databases on S3.
-    enum Outcome {
-        Nothing,
-        Applied(u64),
-        Conflict(String),
-    }
     let log_id = log.id.clone();
-    let results: Vec<(String, Result<Outcome>, Vec<(Vec<Op>, u64)>)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
-        .map(|(db, mut recs)| {
+    let results: Vec<(String, Result<Outcome>, Option<u64>, Vec<Record>)> = futures::stream::iter(by_db.into_iter().filter(|(_, r)| !r.is_empty()))
+        .map(|(db, recs)| {
             let dbs = Arc::clone(dbs);
             let log_id = log_id.clone();
-            let keep: Vec<(Vec<Op>, u64)> = recs.iter().map(|r| (copy_ops(&r.ops), r.epoch)).collect();
-            let db2 = db.clone();
-            let one = async move {
-                recs.sort_by_key(|r| r.seq);
-                // Another writer opened the database after the one that staged these records (another process took it over,
-                // or this one lost and re-took it): replaying them would overwrite newer writes and leave the secondary
-                // indexes inconsistent. Refused, kept as conflict, like a marker of another log.
-                let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
-                if rec_epoch > 0 {
-                    if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&dbs.store(), &db).await? {
-                        if stored > rec_epoch {
-                            eprintln!("local log: database {db} was opened by another writer (epoch {stored}) after these records (epoch {rec_epoch}); its {} records are NOT applied", recs.len());
-                            return Ok(Outcome::Conflict(db.clone()));
-                        }
-                    }
-                }
-                let mut g = dbs.lock(&db).await;
-                let marker = g.get_live(MARKER_KEY).await?;
-                let done_seq = match marker.as_deref().and_then(parse_marker) {
-                    Some((id, s)) if id == log_id => s,
-                    Some((other, _)) => {
-                        eprintln!("local log: database {db} was written by another local log ({other}) since; its {} records are NOT applied", recs.len());
-                        return Ok(Outcome::Conflict(db.clone()));
-                    }
-                    None => 0,
-                };
-                let todo: Vec<Record> = recs.into_iter().filter(|r| r.seq > done_seq).collect();
-                if todo.is_empty() {
-                    return Ok(Outcome::Nothing);
-                }
-                // A few hundred records per durable batch; every batch ends with the marker of its last record.
-                let log = get().ok_or_else(|| anyhow!("local log not installed"))?;
-                for chunk in todo.chunks(256) {
-                    let mut ops: Vec<Op> = Vec::new();
-                    for r in chunk {
-                        ops.extend(r.ops.iter().map(|o| match o {
-                            Op::Put(k, v) => Op::Put(k.clone(), v.clone()),
-                            Op::Delete(k) => Op::Delete(k.clone()),
-                        }));
-                    }
-                    ops.push(log.marker_op(chunk.last().unwrap().seq));
-                    g.apply_durable(ops).await?;
-                }
-                eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
-                Ok(Outcome::Applied(todo.len() as u64))
-            };
             async move {
-                let r = match tokio::time::timeout(timeout, one).await {
-                    Ok(r) => r,
-                    Err(_) => Err(anyhow!("no progress after {} s", timeout.as_secs())),
-                };
-                (db2, r, keep)
+                let keep: Vec<Record> = recs.iter().map(copy_record).collect();
+                let mut seen = None;
+                let r = replay_with_timeout(&dbs, &log_id, &db, recs, false, &mut seen, timeout).await;
+                (db, r, seen, keep)
             }
         })
         .buffer_unordered(32)
@@ -532,34 +494,37 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
     let mut n_dbs = 0usize;
     let mut conflicts = Vec::new();
     let mut failed = 0usize;
-    for (db, r, keep) in results {
-        let r = match r {
-            Ok(o) => o,
-            Err(e) => {
-                // One database must not block the whole restart: its records are written again to the new log (same
-                // writer epoch, new sequence numbers) and applied by a later restart; the other databases go on.
-                eprintln!("local log: replay of database {db} failed ({e:#}); its {} records are kept for the next restart", keep.len());
-                failed += 1;
-                log.pinned.lock().unwrap().insert(db.clone());
-                for (ops, epoch) in keep {
-                    let seq = log.next_seq();
-                    log.append(seq, &db, &ops, epoch).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
-                }
-                continue;
-            }
-        };
+    for (db, r, seen, keep) in results {
         match r {
-            Outcome::Nothing => {}
-            Outcome::Applied(n) => {
+            Ok(Outcome::Nothing) => {}
+            Ok(Outcome::Applied(n)) => {
                 applied += n;
                 n_dbs += 1;
             }
-            Outcome::Conflict(db) => conflicts.push(db),
+            Ok(Outcome::Conflict) => conflicts.push(db),
+            Err(e) => {
+                // One database must not block the whole restart: its records are written again to the new log (new sequence
+                // numbers) and the database is refused to clients until a background retry applies them (or a later restart
+                // does). Their epoch is raised to the one the replay may have opened the database with (the stored epoch it
+                // read, plus one), so a restart does not take this process's own replay for another writer.
+                eprintln!("local log: replay of database {db} failed ({e:#}); its {} records are kept, the database is refused until they are applied", keep.len());
+                failed += 1;
+                let epoch = keep.iter().map(|r| r.epoch).max().unwrap_or(0).max(seen.map_or(0, |s| s + 1));
+                let mut kept = Vec::with_capacity(keep.len());
+                for r in keep {
+                    let seq = log.next_seq();
+                    let ep = if r.epoch > 0 { epoch } else { 0 };
+                    log.append(seq, &db, &r.ops, ep).await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
+                    kept.push(Record { seq, db: db.clone(), ops: r.ops, drop: false, epoch: ep });
+                }
+                log.pinned.lock().unwrap().insert(db.clone(), kept);
+            }
         }
     }
     REPLAYED.fetch_add(applied, Relaxed);
     if failed > 0 {
-        eprintln!("local log: {failed} databases kept their records for the next restart");
+        eprintln!("local log: {failed} databases kept their records; retried in the background");
+        spawn_retry(Arc::clone(dbs), timeout);
     }
     for (_, p) in old {
         if conflicts.is_empty() {
@@ -572,4 +537,153 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
         eprintln!("local log: segments kept as *.conflict for {conflicts:?}");
     }
     Ok((n_dbs, applied))
+}
+
+enum Outcome {
+    Nothing,
+    Applied(u64),
+    Conflict,
+}
+
+fn copy_record(r: &Record) -> Record {
+    Record { seq: r.seq, db: r.db.clone(), ops: copy_ops(&r.ops), drop: r.drop, epoch: r.epoch }
+}
+
+tokio::task_local! {
+    /// Set while the local log applies kept records: only that code may open a database that is still in recovery.
+    static REPLAYING: ()
+}
+
+/// The error a client gets for a database whose kept records are not applied yet.
+#[derive(Debug)]
+pub struct RecoveryPending(pub String);
+
+impl std::fmt::Display for RecoveryPending {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "database {} is in recovery: writes acknowledged before the restart are still being applied from the local log; retry", self.0)
+    }
+}
+
+impl std::error::Error for RecoveryPending {}
+
+/// Err if a client may not open `db` now (its kept records are not applied yet). The replay itself may.
+pub fn check_open(db: &str) -> Result<()> {
+    if let Some(l) = get() {
+        if l.is_pinned(db) && REPLAYING.try_with(|_| ()).is_err() {
+            return Err(RecoveryPending(db.to_string()).into());
+        }
+    }
+    Ok(())
+}
+
+async fn replay_with_timeout(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, recs: Vec<Record>, retry: bool, seen: &mut Option<u64>, timeout: Duration) -> Result<Outcome> {
+    match tokio::time::timeout(timeout, REPLAYING.scope((), replay_db(dbs, log_id, db, recs, retry, seen))).await {
+        Ok(r) => r,
+        Err(_) => Err(anyhow!("no progress after {} s", timeout.as_secs())),
+    }
+}
+
+/// Apply one database's records durably (those after its marker). `seen`: the stored writer epoch the check read.
+/// `retry`: a background retry of kept records (the database may have been dropped meanwhile).
+async fn replay_db(dbs: &Arc<crate::dbs::Dbs>, log_id: &str, db: &str, mut recs: Vec<Record>, retry: bool, seen: &mut Option<u64>) -> Result<Outcome> {
+    recs.sort_by_key(|r| r.seq);
+    // Another writer opened the database after the one that staged these records (another process took it over, or this
+    // one lost and re-took it): replaying them would overwrite newer writes and leave the secondary indexes inconsistent.
+    // Refused, kept as conflict, like a marker of another log.
+    let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
+    if rec_epoch > 0 {
+        if let Some(stored) = tenant_bench::lifecycle::stored_writer_epoch(&dbs.store(), db).await? {
+            *seen = Some(stored);
+            if stored > rec_epoch {
+                eprintln!("local log: database {db} was opened by another writer (epoch {stored}) after these records (epoch {rec_epoch}); its {} records are NOT applied", recs.len());
+                return Ok(Outcome::Conflict);
+            }
+        }
+    }
+    let mut g = dbs.lock(db).await;
+    let log = get().ok_or_else(|| anyhow!("local log not installed"))?;
+    if retry && !log.is_pinned(db) {
+        return Ok(Outcome::Nothing); // dropped or erased meanwhile
+    }
+    let marker = g.get_live(MARKER_KEY).await?;
+    let done_seq = match marker.as_deref().and_then(parse_marker) {
+        Some((id, s)) if id == log_id => s,
+        Some((other, _)) => {
+            eprintln!("local log: database {db} was written by another local log ({other}) since; its {} records are NOT applied", recs.len());
+            return Ok(Outcome::Conflict);
+        }
+        None => 0,
+    };
+    let todo: Vec<Record> = recs.into_iter().filter(|r| r.seq > done_seq).collect();
+    if todo.is_empty() {
+        return Ok(Outcome::Nothing);
+    }
+    // A few hundred records per durable batch; every batch ends with the marker of its last record.
+    for chunk in todo.chunks(256) {
+        let mut ops: Vec<Op> = Vec::new();
+        for r in chunk {
+            ops.extend(copy_ops(&r.ops));
+        }
+        ops.push(log.marker_op(chunk.last().unwrap().seq));
+        g.apply_durable(ops).await?;
+    }
+    eprintln!("local log: database {db}: {} records applied again (after record {done_seq})", todo.len());
+    Ok(Outcome::Applied(todo.len() as u64))
+}
+
+/// Retry the replay of the kept databases (1 s, then doubling up to 30 s) until none is left.
+fn spawn_retry(dbs: Arc<crate::dbs::Dbs>, timeout: Duration) {
+    tokio::spawn(async move {
+        let Some(log) = get() else { return };
+        let log_id = log.id.clone();
+        let mut wait = Duration::from_secs(1);
+        loop {
+            tokio::time::sleep(wait).await;
+            let todo: Vec<(String, Vec<Record>)> = log.pinned.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.iter().map(copy_record).collect())).collect();
+            if todo.is_empty() {
+                return;
+            }
+            for (db, recs) in todo {
+                let mut seen = None;
+                let rec_epoch = recs.iter().map(|r| r.epoch).max().unwrap_or(0);
+                match replay_with_timeout(&dbs, &log_id, &db, recs, true, &mut seen, timeout).await {
+                    Ok(Outcome::Applied(_)) | Ok(Outcome::Nothing) => {
+                        // Applied durably; nothing else was written meanwhile (the database was refused): all is uploaded.
+                        if let Some(e) = log.tenants.lock().unwrap().get_mut(&db) {
+                            e.uploaded = e.staged;
+                        }
+                        if log.pinned.lock().unwrap().remove(&db).is_some() {
+                            RETRIED.fetch_add(1, Relaxed);
+                            eprintln!("local log: database {db}: kept records applied by the retry; the database is open again");
+                        }
+                    }
+                    Ok(Outcome::Conflict) => {
+                        // Another writer took the database: the records cannot be applied. Kept on disk for an operator, never
+                        // applied by a restart (the drop record), and the database is open again.
+                        let recs = log.pinned.lock().unwrap().remove(&db).unwrap_or_default();
+                        let path = log.dir.join(format!("kept-{db}-{}.conflict", crate::ctl::rec::now_ms()));
+                        let bytes: Vec<u8> = recs.iter().flat_map(|r| encode(r.seq, &db, &r.ops, false, r.epoch)).collect();
+                        let _ = std::fs::write(&path, bytes).and_then(|_| std::fs::File::open(&path)?.sync_all());
+                        let _ = log.append_drop(&db).await;
+                        eprintln!("local log: database {db}: {} kept records conflict with another writer; saved in {}", recs.len(), path.display());
+                    }
+                    Err(e) => {
+                        eprintln!("local log: retry of database {db} failed ({e:#}); retried later");
+                        // The retry may have opened the database (stored epoch + 1): say so in the log, so that a restart before
+                        // the next retry does not take this process's own replay for another writer.
+                        let ep = seen.map_or(0, |s| s + 1);
+                        if rec_epoch > 0 && ep > rec_epoch {
+                            let seq = log.next_seq();
+                            if let Ok(Ok(())) = log.append(seq, &db, &[], ep).await {
+                                if let Some(v) = log.pinned.lock().unwrap().get_mut(&db) {
+                                    v.push(Record { seq, db: db.clone(), ops: Vec::new(), drop: false, epoch: ep });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            wait = (wait * 2).min(Duration::from_secs(30));
+        }
+    });
 }

@@ -92,6 +92,7 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     if let Some(l) = crate::locallog::get() {
         // local log (prototype): a restart must not apply the erased database's records again
         let _ = l.append_drop(db).await;
+        l.forget_pinned(db);
     }
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
