@@ -1,0 +1,8 @@
+== b8-bin (with the fix) / b7-bin (control: before it)
+-- b8-bin
+per-database-mode process took the database over after 5.6 s
+1 passed, 5 deselected in 6.69s
+-- b7-bin
+per-database-mode process took the database over after None s
+E   AssertionError: after a rollback to --process-lease false the database stayed locked
+1 failed, 5 deselected in 26.63s

@@ -109,6 +109,17 @@ impl Server {
         if self.log_commands {
             eprintln!("CMD {name} db={db}");
         }
+        // fair queue between databases under saturation, safety limits, per-database metrics (fair.rs)
+        // Only commands that pass authentication and authorization take a place (and touch per-database counters); the
+        // others go straight to `run_command`, which answers with the same error.
+        let _permit = if crate::fair::exempt(&name) || self.authorize(conn_id, db, &name, &cmd).await.is_err() {
+            None
+        } else {
+            match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {
+                Ok(p) => Some(p),
+                Err(reply) => return reply,
+            }
+        };
         let t0 = std::time::Instant::now();
         let (opid, kill) = self.diag.begin(conn_id, db, &name, &cmd);
         let killable = crate::diag::killable(&name);
@@ -118,7 +129,7 @@ impl Server {
                 self.dbs.changes.advance(*ts);
             }
         }
-        let (r, op_time) = crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) }).await;
+        let (r, op_time) = crate::fair::timed(db, crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
         let r: R<Document> = r;
         let micros = t0.elapsed().as_micros() as i64;
         self.diag.end(opid, db, &name, &cmd, &r, micros);
@@ -166,15 +177,24 @@ impl Server {
     async fn dispatch_durable(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         crate::dbs::TOKENS
             .scope(Default::default(), async {
-                let (mut r, mut commits) = crate::dbs::PENDING
-                    .scope(Default::default(), async {
+                let (mut r, commits, relax) = crate::dbs::RELAX
+                    .scope(std::cell::Cell::new(false), crate::dbs::PENDING.scope(Default::default(), async {
                         let r = crate::js::scoped(db, self.dispatch(db, name, cmd, conn_id)).await;
-                        (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())))
-                    })
+                        (r, crate::dbs::PENDING.with(|p| std::mem::take(&mut *p.borrow_mut())), crate::dbs::RELAX.with(|c| c.get()))
+                    }))
                     .await;
-                if let Some(last) = commits.pop() {
-                    // Later commits flush after earlier ones, so waiting for the last covers all of them.
-                    if let Err(e) = last.wait().await {
+                // Later commits of a database flush after its earlier ones, so waiting for the last one of each database
+                // covers all of them (a command can write to more than one database: $out, renameCollection).
+                let mut last: Vec<tenant_bench::lifecycle::Commit> = Vec::new();
+                for c in commits.into_iter().rev() {
+                    if !last.iter().any(|l| l.tenant() == c.tenant()) {
+                        last.push(c);
+                    }
+                }
+                for c in last {
+                    if relax && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none() {
+                        c.relax();
+                    } else if let Err(e) = c.wait().await {
                         r = Err(e.into());
                     }
                 }
@@ -194,6 +214,9 @@ impl Server {
             return Ok(r);
         }
         let wc = self.command_write_concern(name, cmd)?;
+        if wc.as_ref().map_or(false, |w| w.relaxed()) && !cmd.contains_key("autocommit") {
+            let _ = crate::dbs::RELAX.try_with(|c| c.set(true));
+        }
         self.check_read_concern(name, cmd)?;
         let mut r = Box::pin(self.dispatch_inner(db, name, cmd, conn_id)).await?;
         if let Some(wc) = &wc {
@@ -674,9 +697,10 @@ impl Server {
                 "billedPutTier": s.billed_put_tier() as i64, "billedGetTier": s.billed_get_tier() as i64,
                 "putBytes": self.dbs.global.counters.put_bytes.load(Relaxed) as i64, "getBytes": self.dbs.global.counters.get_bytes.load(Relaxed) as i64,
             },
-            "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64 },
-            "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64 },
-            "sstGc": { "passes": tenant_bench::lifecycle::SST_GC_PASSES.load(Relaxed) as i64, "deletedSsts": tenant_bench::lifecycle::SST_GC_DELETED_SSTS.load(Relaxed) as i64, "deletedManifests": tenant_bench::lifecycle::SST_GC_DELETED_MANIFESTS.load(Relaxed) as i64 },
+            "groupCommit": { "commits": tenant_bench::lifecycle::GROUP_COMMITS.load(Relaxed) as i64, "flushes": tenant_bench::lifecycle::GROUP_FLUSHES.load(Relaxed) as i64, "windowUs": tenant_bench::lifecycle::GROUP_WINDOW_US.load(Relaxed) as i64, "adaptiveWaits": tenant_bench::lifecycle::ADAPTIVE_WAITS.load(Relaxed) as i64, "adaptiveWaitUs": tenant_bench::lifecycle::ADAPTIVE_WAIT_US.load(Relaxed) as i64, "relaxedAcks": tenant_bench::lifecycle::RELAXED_ACKS.load(Relaxed) as i64 },
+            "localLog": { "records": crate::locallog::RECORDS.load(Relaxed) as i64, "fsyncs": crate::locallog::FSYNCS.load(Relaxed) as i64, "uploads": crate::locallog::UPLOADS.load(Relaxed) as i64, "replayed": crate::locallog::REPLAYED.load(Relaxed) as i64 },
+            "walGc": { "passes": tenant_bench::lifecycle::WAL_GC_PASSES.load(Relaxed) as i64, "deleted": tenant_bench::lifecycle::WAL_GC_DELETED.load(Relaxed) as i64, "listUs": tenant_bench::lifecycle::WAL_GC_LIST_US.load(Relaxed) as i64, "deleteUs": tenant_bench::lifecycle::WAL_GC_DELETE_US.load(Relaxed) as i64, "totalUs": tenant_bench::lifecycle::WAL_GC_TOTAL_US.load(Relaxed) as i64, "noop": tenant_bench::lifecycle::WAL_GC_NOOP.load(Relaxed) as i64 },
+            "sstGc": { "passes": tenant_bench::lifecycle::SST_GC_PASSES.load(Relaxed) as i64, "deletedSsts": tenant_bench::lifecycle::SST_GC_DELETED_SSTS.load(Relaxed) as i64, "deletedManifests": tenant_bench::lifecycle::SST_GC_DELETED_MANIFESTS.load(Relaxed) as i64, "noop": tenant_bench::lifecycle::SST_GC_NOOP.load(Relaxed) as i64, "closeLight": tenant_bench::lifecycle::CLOSE_GC_LIGHT.load(Relaxed) as i64 },
             "putByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.put_cat[i].load(Relaxed) as i64))).collect::<Document>(),
             "getByCategory": tenant_bench::counting::CATEGORIES.iter().enumerate().map(|(i, n)| (n.to_string(), Bson::Int64(self.dbs.global.counters.get_cat[i].load(Relaxed) as i64))).collect::<Document>(),
             "maintenance": {
@@ -685,6 +709,7 @@ impl Server {
                 "gcDeletes": tenant_bench::lifecycle::MAINT.gc_deletes.load(Relaxed) as i64, "gcLists": tenant_bench::lifecycle::MAINT.gc_lists.load(Relaxed) as i64,
                 "gcGets": tenant_bench::lifecycle::MAINT.gc_gets.load(Relaxed) as i64,
             },
+            "wakeBundle": { "used": tenant_bench::lifecycle::BUNDLE_USED.load(Relaxed) as i64, "stale": tenant_bench::lifecycle::BUNDLE_STALE.load(Relaxed) as i64, "written": tenant_bench::lifecycle::BUNDLE_WRITTEN.load(Relaxed) as i64 },
             "wakeQueue": { "queued": crate::dbs::WAKE_QUEUED.load(Relaxed), "maxQueued": crate::dbs::WAKE_MAX_QUEUED.load(Relaxed), "waits": crate::dbs::WAKE_WAITS.load(Relaxed) as i64, "waitMs": crate::dbs::WAKE_WAIT_MS.load(Relaxed) as i64 },
             "lat": {
                 "put": self.dbs.global.counters.lat_put.snapshot().into_iter().map(|x| x as i64).collect::<Vec<_>>(),

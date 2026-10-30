@@ -1,0 +1,14 @@
+== binary: b6-bin (with the fixes), tests e and f
+admin interface answering during the replay: False
+.restart with one failing database finished: True
+failing database's writes after the next restart: 5 of 5
+2 passed, 4 deselected in 10.08s
+== binary: b6-ctl-bin (control: control layer started before the replay, first replay error stops the restart), tests e and f
+admin interface answering during the replay: True
+Frestart with one failing database finished: False
+E   AssertionError: the admin interface (erase, restore, fork) was up while the local log was still being applied
+/home/user/fenvix-engine/ctl-tests/test_24_local_log.py:231: AssertionError: the admin interface (erase, restore, fork) was up while the local log was still being applied
+E   AssertionError: one failing database stopped the whole restart
+2 failed, 4 deselected in 8.02s
+== binary: b6-bin, all of test_24
+6 passed in 48.55s

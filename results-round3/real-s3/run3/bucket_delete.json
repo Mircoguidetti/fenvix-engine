@@ -1,0 +1,1 @@
+{"bucket":"fenvix-test-r3-41011005224","action":"delete","region":"eu-west-1","steps":[{"step":"empty","ok":true,"error":""},{"step":"objects-left-after-empty:None","ok":true,"error":""},{"step":"delete-bucket","ok":true,"error":""},{"step":"verify-gone","ok":true,"error":""}]}

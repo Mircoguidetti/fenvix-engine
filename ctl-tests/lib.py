@@ -85,6 +85,8 @@ class Server:
                "--idle-secs", str(self.idle), "--bucket", self.bucket, "--endpoint", self.endpoint, "--holder", self.holder,
                "--no-ttl"] + ([] if "--lease-ttl-secs" in self.extra else ["--lease-ttl-secs", "6"]) + (["--auth"] if self.auth else []) + self.extra
         env = dict(os.environ, MONGO_ADMIN_TOKEN=TOKEN, **self.env)
+        if "--unsafe-skip-ownership-checks" in cmd:
+            env["MONGO_ALLOW_UNSAFE_TEST_FLAGS"] = "1"      # negative controls only
         self.log = open(self.log_path, "ab")
         self.proc = subprocess.Popen(cmd, stdout=self.log, stderr=self.log, env=env)
         if wait:

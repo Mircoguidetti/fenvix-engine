@@ -1,0 +1,7 @@
+== binary: b9-bin (with the fix)
+relaxed acknowledgements on P2 after relaxed was turned off: 0
+1 passed, 6 deselected in 2.77s
+== binary: b8-bin (control: before it)
+relaxed acknowledgements on P2 after relaxed was turned off: 20
+E   AssertionError: P2 acknowledged 20 writes before they were durable after relaxed was turned off
+1 failed, 6 deselected in 2.73s

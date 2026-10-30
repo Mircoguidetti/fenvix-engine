@@ -1,0 +1,7 @@
+== binary: b10-bin (with the fix)
+relaxed acknowledgements of writes without a write concern: 0
+1 passed, 7 deselected in 2.34s
+== binary: b9-bin (control: before it)
+relaxed acknowledgements of writes without a write concern: 20
+E   AssertionError: 20 writes without a write concern were acknowledged before they were durable
+1 failed, 7 deselected in 2.40s

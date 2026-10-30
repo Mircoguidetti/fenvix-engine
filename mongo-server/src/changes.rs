@@ -10,6 +10,19 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 
 const RETAINED: usize = 100_000;
+/// Memory the retained events may take (estimated), `--change-log-max-mb`. The log keeps whole documents (inserts carry the
+/// full document): with only the count limit, 100 000 events of 1 KB documents held ~400 MB, and every write grew the
+/// process by ~4 KB until the count limit was reached. Older events are dropped first; a resume token older than the
+/// oldest event left fails with `ChangeStreamHistoryLost`, as before.
+pub static MAX_BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(32 << 20);
+
+/// Rough in-memory size of an event: the BSON size of its documents times 3 (a parsed `Document` keeps every key and value
+/// in its own allocation) plus a fixed part.
+fn est_size(s: &EvSpec) -> usize {
+    let doc = |d: &Option<Document>| d.as_ref().map_or(0, |d| d.to_vec().map(|v| v.len()).unwrap_or(256));
+    let key = s.doc_key.as_ref().map_or(0, |k| bson::doc! { "k": k.clone() }.to_vec().map(|v| v.len()).unwrap_or(64));
+    384 + 3 * (doc(&s.full) + doc(&s.desc) + doc(&s.pre) + doc(&s.post) + doc(&s.op_desc) + doc(&s.state_before) + key)
+}
 
 /// Set once a stream with `showExpandedEvents` was opened: data events then carry the UUID of their collection from the start.
 pub static WANTS_UUID: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -64,6 +77,9 @@ pub struct Ev {
 
 struct Inner {
     events: VecDeque<Arc<Ev>>,
+    /// Estimated size of each event in `events` (same order), and their sum.
+    sizes: VecDeque<usize>,
+    bytes: usize,
     next_seq: u64,
     last_time: (u32, u32),
 }
@@ -78,7 +94,7 @@ pub struct ChangeLog {
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32 }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32 }
     }
 }
 
@@ -113,9 +129,15 @@ impl ChangeLog {
                 let _ = OP_TIME.try_with(|c| c.set(Some((ts, inc))));
                 let seq = g.next_seq;
                 g.next_seq += 1;
+                let size = est_size(&s);
                 g.events.push_back(Arc::new(Ev { seq, time: Timestamp { time: ts, increment: inc }, wall: now, spec: s }));
-                if g.events.len() > RETAINED {
+                g.sizes.push_back(size);
+                g.bytes += size;
+                let max = MAX_BYTES.load(std::sync::atomic::Ordering::Relaxed);
+                while g.events.len() > 1 && (g.events.len() > RETAINED || g.bytes > max) {
                     g.events.pop_front();
+                    let s = g.sizes.pop_front().unwrap_or(0);
+                    g.bytes -= s;
                 }
             }
         }

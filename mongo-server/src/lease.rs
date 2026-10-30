@@ -18,7 +18,30 @@ use object_store::path::Path;
 use object_store::{ObjectStore, ObjectStoreExt, PutMode, PutOptions, PutPayload, UpdateVersion};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+/// The clock of every lease deadline: CLOCK_BOOTTIME, which (unlike the monotonic clock of `std::time::Instant`) keeps
+/// counting while the machine or VM is suspended. A process resumed after a suspend longer than the ttl then sees its
+/// leases as lapsed at once, instead of serving as owner while another process has already taken its databases over.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Instant(Duration);
+
+impl Instant {
+    pub fn now() -> Self {
+        let mut ts = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+        // SAFETY: clock_gettime only writes the timespec it is given.
+        let r = unsafe { libc::clock_gettime(libc::CLOCK_BOOTTIME, &mut ts) };
+        assert_eq!(r, 0, "clock_gettime(CLOCK_BOOTTIME) failed");
+        Instant(Duration::new(ts.tv_sec as u64, ts.tv_nsec as u32))
+    }
+}
+
+impl std::ops::Add<Duration> for Instant {
+    type Output = Instant;
+    fn add(self, d: Duration) -> Instant {
+        Instant(self.0 + d)
+    }
+}
 
 /// The tenant is owned by another process (or this process lost its lease).
 #[derive(Debug)]
@@ -84,6 +107,9 @@ pub struct Leases {
     proc_gen_floor: std::sync::atomic::AtomicU64,
     /// No leases at all (single process, for object stores without conditional update such as the local-directory store).
     pub disabled: std::sync::atomic::AtomicBool,
+    /// A renewal of the process lease is in flight: no second one is started (two concurrent renewals with the same etag
+    /// made the slower one fail its condition and the process drop every database it owned, whenever S3 was slow).
+    proc_renewing: std::sync::atomic::AtomicBool,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -101,7 +127,15 @@ pub fn lease_path(id: &str) -> Path {
 }
 
 fn now_ms() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
+    let ms = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
+    (ms + wall_offset_ms()) as u64
+}
+
+/// Test only: `MONGO_TEST_WALL_CLOCK_OFFSET_MS` shifts this process's wall clock as seen by the leases, to reproduce clock
+/// skew between machines. Never set in production.
+fn wall_offset_ms() -> i64 {
+    static OFF: std::sync::OnceLock<i64> = std::sync::OnceLock::new();
+    *OFF.get_or_init(|| std::env::var("MONGO_TEST_WALL_CLOCK_OFFSET_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(0))
 }
 
 fn body(holder: &str, expires_ms: u64, seq: u64) -> Bytes {
@@ -150,7 +184,7 @@ pub fn log(event: &str, tenant: &str, holder: &str, extra: &str) {
 
 impl Leases {
     pub fn new(store: Arc<dyn ObjectStore>, holder: String, ttl: Duration) -> Arc<Self> {
-        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false) })
+        Arc::new(Self { store, holder, ttl, skew: Duration::from_millis(1500), held: Mutex::new(HashMap::new()), denied: Mutex::new(HashMap::new()), stats: Mutex::new(LeaseStats::default()), unsafe_skip: std::sync::atomic::AtomicBool::new(false), process_mode: std::sync::atomic::AtomicBool::new(false), proc: Mutex::new(None), proc_init: tokio::sync::Mutex::new(()), proc_gen_floor: std::sync::atomic::AtomicU64::new(0), disabled: std::sync::atomic::AtomicBool::new(false), proc_renewing: std::sync::atomic::AtomicBool::new(false) })
     }
 
     pub fn held_count(&self) -> usize {
@@ -223,11 +257,24 @@ impl Leases {
                 Ok(got) => {
                     let (etag, version) = (got.meta.e_tag.clone(), got.meta.version.clone());
                     let bytes = got.bytes().await?;
-                    let (holder, exp, seq) = parse(&bytes)?;
+                    let (holder, exp, seq, rec_inc) = parse_inc(&bytes)?;
                     let now = now_ms();
                     let mine = holder == self.holder;
                     let free = holder.is_empty() || exp == 0;
-                    let expired = (exp + self.skew.as_millis() as u64) < now;
+                    let mut expired = (exp + self.skew.as_millis() as u64) < now;
+                    if !rec_inc.is_empty() && !mine && !free && !expired {
+                        // An owner record of a process in per-process mode (it never expires by itself): owned while that
+                        // process's lease is live and of the record's generation. Without this, going back to
+                        // `--process-lease false` after such a process crashed would refuse the database for ever.
+                        expired = match self.store.get(&process_path(&holder)).await {
+                            Err(object_store::Error::NotFound { .. }) => true,
+                            Err(e) => return Err(e.into()),
+                            Ok(pg) => {
+                                let (_, pexp, _, pinc) = parse_inc(&pg.bytes().await?)?;
+                                pinc != rec_inc || pexp + (self.skew.as_millis() as u64) < now
+                            }
+                        };
+                    }
                     if !(mine || free || expired) {
                         self.stats.lock().unwrap().refused += 1;
                         let remaining = exp.saturating_sub(now);
@@ -330,8 +377,28 @@ impl Leases {
                                 Err(object_store::Error::NotFound { .. }) => Ok(0),
                                 Err(e) => return Err(e.into()),
                                 Ok(pg) => {
-                                    let (_, pexp, _, pinc) = parse_inc(&pg.bytes().await?)?;
-                                    if pinc != rec_inc || pexp + skew < now { Ok(0) } else { Err(pexp.saturating_sub(now)) }
+                                    let (petag, pversion) = (pg.meta.e_tag.clone(), pg.meta.version.clone());
+                                    let (_, pexp, pseq, pinc) = parse_inc(&pg.bytes().await?)?;
+                                    if pinc != rec_inc {
+                                        Ok(0) // that process restarted since: the record's generation is dead
+                                    } else if pexp + skew < now {
+                                        // Revoke the old process lease first (conditional on the version just read), so a
+                                        // renewal of it still in flight fails its condition and that process drops every
+                                        // database it holds, instead of becoming valid again after this takeover.
+                                        let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: petag, version: pversion }), ..Default::default() };
+                                        let revoked = format!("revoked-by-{}-{}", self.holder, pinc);
+                                        match self.store.put_opts(&process_path(&holder), PutPayload::from(body_inc(&holder, 0, pseq + 1, &revoked)), opts).await {
+                                            Ok(_) => {
+                                                log("process_lease_revoked", id, &self.holder, &format!("of={holder}"));
+                                                Ok(0)
+                                            }
+                                            // it renewed (or was revoked) meanwhile: read everything again
+                                            Err(object_store::Error::Precondition { .. }) | Err(object_store::Error::NotFound { .. }) => continue,
+                                            Err(e) => return Err(e.into()),
+                                        }
+                                    } else {
+                                        Err(pexp.saturating_sub(now))
+                                    }
                                 }
                             }
                         };
@@ -372,10 +439,12 @@ impl Leases {
     async fn renew_process(&self, lost: &tokio::sync::mpsc::UnboundedSender<String>) {
         let unsafe_skip = self.unsafe_skip.load(std::sync::atomic::Ordering::Relaxed);
         let started = Instant::now();
-        let (etag, version, seq, inc) = {
+        let (etag, version, seq, inc, prev_valid, lapsed_at_start) = {
             let mut guard = self.proc.lock().unwrap();
             let Some(p) = guard.as_mut() else { return };
-            if started > p.valid_until && !unsafe_skip {
+            let prev_valid = p.valid_until;
+            let lapsed_at_start = started > p.valid_until && !unsafe_skip;
+            if lapsed_at_start {
                 p.gen = self.proc_gen_floor.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
                 p.inc = fresh_inc();
                 let ids: Vec<String> = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
@@ -386,18 +455,38 @@ impl Leases {
                     let _ = lost.send(id);
                 }
             }
-            (p.etag.clone(), p.version.clone(), p.seq, p.inc.clone())
+            (p.etag.clone(), p.version.clone(), p.seq, p.inc.clone(), prev_valid, lapsed_at_start)
         };
         let expires = now_ms() + self.ttl.as_millis() as u64;
         let opts = PutOptions { mode: PutMode::Update(UpdateVersion { e_tag: etag, version }), ..Default::default() };
         match self.store.put_opts(&process_path(&self.holder), PutPayload::from(body_inc(&self.holder, expires, seq + 1, &inc)), opts).await {
             Ok(r) => {
+                let completed = Instant::now();
+                // The PUT landed after the previous deadline: for a while the stored lease was expired, and another
+                // process may have taken databases over in between (the PUT itself carried no proof it had not). Every
+                // database of this generation is dropped, and the next renewal starts a new generation.
+                let late = !lapsed_at_start && !unsafe_skip && completed > prev_valid;
+                let mut dropped = Vec::new();
                 if let Some(p) = self.proc.lock().unwrap().as_mut() {
                     p.etag = r.e_tag;
                     p.version = r.version;
                     p.seq = seq + 1;
-                    p.valid_until = started + self.ttl;
-                    p.renew_at = started + self.ttl / 3;
+                    if late {
+                        p.valid_until = completed;
+                        p.renew_at = completed;
+                        dropped = self.held.lock().unwrap().drain().map(|(k, _)| k).collect();
+                    } else {
+                        p.valid_until = started + self.ttl;
+                        p.renew_at = started + self.ttl / 3;
+                    }
+                }
+                if late {
+                    log("process_lease_late", "-", &self.holder, &format!("abandoned={}", dropped.len()));
+                    self.stats.lock().unwrap().lost += dropped.len() as u64;
+                    for id in dropped {
+                        log("lost", &id, &self.holder, "process_lease_late");
+                        let _ = lost.send(id);
+                    }
                 }
                 self.stats.lock().unwrap().renewals += 1;
             }
@@ -497,6 +586,9 @@ impl Leases {
                 tick.tick().await;
                 let now = Instant::now();
                 if me.process_mode.load(std::sync::atomic::Ordering::Relaxed) {
+                    if me.proc_renewing.load(std::sync::atomic::Ordering::Acquire) {
+                        continue;
+                    }
                     let due = me.proc.lock().unwrap().as_mut().map_or(false, |p| {
                         let due = p.renew_at <= now;
                         if due {
@@ -506,8 +598,12 @@ impl Leases {
                         due
                     });
                     if due {
+                        me.proc_renewing.store(true, std::sync::atomic::Ordering::Release);
                         let (me, lost) = (Arc::clone(&me), lost.clone());
-                        tokio::spawn(async move { me.renew_process(&lost).await });
+                        tokio::spawn(async move {
+                            me.renew_process(&lost).await;
+                            me.proc_renewing.store(false, std::sync::atomic::Ordering::Release);
+                        });
                     }
                     continue;
                 }

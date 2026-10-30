@@ -1,0 +1,2702 @@
+{
+ "note": "local MinIO + simulated delay per request (delay_all); a model, NOT real S3",
+ "n_per_series": 25,
+ "discarded_per_series": 5,
+ "series": {
+  "baseline/0ms": {
+   "mode": "baseline",
+   "delay_ms": 0,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 12.41,
+    "time_ms_max": 13.55,
+    "requests_p50": 13.0,
+    "requests_min": 13,
+    "requests_max": 13,
+    "steps_p50": 10.0,
+    "by_op_p50": {
+     "GET": 7.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 1.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 18.24,
+    "time_ms_max": 22.58,
+    "requests_p50": 34.0,
+    "requests_min": 34,
+    "requests_max": 34,
+    "steps_p50": 16.0,
+    "by_op_p50": {
+     "GET": 11.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 17.0,
+     "LIST": 2.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 9120.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 0,
+    "stale": 0,
+    "written": 0
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/_lease",
+     "startUs": 53,
+     "durUs": 938,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba00c010/_lease",
+     "startUs": 1009,
+     "durUs": 3219,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba00c010/manifest",
+     "startUs": 4536,
+     "durUs": 1349,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00c010/_clean",
+     "startUs": 4603,
+     "durUs": 734,
+     "bytes": 5
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/manifest/00000000000000000004.manifest",
+     "startUs": 5901,
+     "durUs": 863,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/gc/manifest.boundary",
+     "startUs": 6793,
+     "durUs": 769,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/manifest/00000000000000000005.manifest",
+     "startUs": 7591,
+     "durUs": 826,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/gc/manifest.boundary",
+     "startUs": 8449,
+     "durUs": 689,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba00c010/compacted/01M66TXZ26AA9XWMPWNDCBJ1WY.sst",
+     "startUs": 9298,
+     "durUs": 1008,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/manifest/00000000000000000005.manifest",
+     "startUs": 10319,
+     "durUs": 1073,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba00c010/compacted/01M66TXZ26AA9XWMPWNDCBJ1WY.sst",
+     "startUs": 10374,
+     "durUs": 838,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00c010/gc/manifest.boundary",
+     "startUs": 11420,
+     "durUs": 591,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba00c010/compacted/01M66TXZ26AA9XWMPWNDCBJ1WY.sst",
+     "startUs": 11688,
+     "durUs": 951,
+     "bytes": 3992
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/_lease",
+     "startUs": 36,
+     "durUs": 734,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba00u010/_lease",
+     "startUs": 788,
+     "durUs": 2210,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba00u010/manifest",
+     "startUs": 3286,
+     "durUs": 1177,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/_clean",
+     "startUs": 3348,
+     "durUs": 645,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/manifest/00000000000000000004.manifest",
+     "startUs": 4478,
+     "durUs": 869,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/gc/manifest.boundary",
+     "startUs": 5378,
+     "durUs": 702,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/manifest/00000000000000000005.manifest",
+     "startUs": 6102,
+     "durUs": 533,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/gc/manifest.boundary",
+     "startUs": 6655,
+     "durUs": 577,
+     "bytes": 0
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba00u010/manifest",
+     "startUs": 7555,
+     "durUs": 1050,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/manifest/00000000000000000004.manifest",
+     "startUs": 8620,
+     "durUs": 959,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/gc/manifest.boundary",
+     "startUs": 9605,
+     "durUs": 797,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/manifest/00000000000000000005.manifest",
+     "startUs": 10431,
+     "durUs": 771,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/gc/manifest.boundary",
+     "startUs": 11226,
+     "durUs": 621,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000004.sst",
+     "startUs": 11876,
+     "durUs": 954,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000005.sst",
+     "startUs": 11969,
+     "durUs": 920,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000007.sst",
+     "startUs": 12029,
+     "durUs": 983,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000011.sst",
+     "startUs": 12115,
+     "durUs": 1207,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000019.sst",
+     "startUs": 12167,
+     "durUs": 1253,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000035.sst",
+     "startUs": 12209,
+     "durUs": 1022,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000067.sst",
+     "startUs": 12245,
+     "durUs": 823,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000131.sst",
+     "startUs": 12281,
+     "durUs": 892,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba00u010/compacted/01M66TY0C5H48TRPZ39XSPEGGP.sst",
+     "startUs": 13604,
+     "durUs": 896,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/manifest/00000000000000000005.manifest",
+     "startUs": 14433,
+     "durUs": 701,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba00u010/compacted/01M66TY0C5H48TRPZ39XSPEGGP.sst",
+     "startUs": 14601,
+     "durUs": 1938,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba00u010/gc/manifest.boundary",
+     "startUs": 15164,
+     "durUs": 2427,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba00u010/compacted/01M66TY0C5H48TRPZ39XSPEGGP.sst",
+     "startUs": 16744,
+     "durUs": 2003,
+     "bytes": 3992
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000004.sst",
+     "startUs": 17614,
+     "durUs": 1307,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000005.sst",
+     "startUs": 17678,
+     "durUs": 1016,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000007.sst",
+     "startUs": 17754,
+     "durUs": 1167,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000011.sst",
+     "startUs": 17810,
+     "durUs": 1111,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000019.sst",
+     "startUs": 17855,
+     "durUs": 1066,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000035.sst",
+     "startUs": 17899,
+     "durUs": 1022,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000067.sst",
+     "startUs": 17971,
+     "durUs": 950,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba00u010/wal/00000000000000000131.sst",
+     "startUs": 18030,
+     "durUs": 891,
+     "bytes": 0
+    }
+   ]
+  },
+  "baseline/10ms": {
+   "mode": "baseline",
+   "delay_ms": 10,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 131.56,
+    "time_ms_max": 137.2,
+    "requests_p50": 13.0,
+    "requests_min": 13,
+    "requests_max": 13,
+    "steps_p50": 10.0,
+    "by_op_p50": {
+     "GET": 7.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 1.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 203.23,
+    "time_ms_max": 207.3,
+    "requests_p50": 34.0,
+    "requests_min": 34,
+    "requests_max": 35,
+    "steps_p50": 16.0,
+    "by_op_p50": {
+     "GET": 11.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 17.0,
+     "LIST": 2.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 9120.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 0,
+    "stale": 0,
+    "written": 0
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/_lease",
+     "startUs": 75,
+     "durUs": 15635,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba10c010/_lease",
+     "startUs": 15747,
+     "durUs": 15338,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba10c010/manifest",
+     "startUs": 31671,
+     "durUs": 13268,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10c010/_clean",
+     "startUs": 31683,
+     "durUs": 13100,
+     "bytes": 5
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/manifest/00000000000000000004.manifest",
+     "startUs": 44967,
+     "durUs": 12731,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/gc/manifest.boundary",
+     "startUs": 57756,
+     "durUs": 12308,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/manifest/00000000000000000005.manifest",
+     "startUs": 70101,
+     "durUs": 12260,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/gc/manifest.boundary",
+     "startUs": 82405,
+     "durUs": 11409,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba10c010/compacted/01M66TY518AA7043QGM35WBABM.sst",
+     "startUs": 94035,
+     "durUs": 11833,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/manifest/00000000000000000005.manifest",
+     "startUs": 95278,
+     "durUs": 11561,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba10c010/compacted/01M66TY518AA7043QGM35WBABM.sst",
+     "startUs": 106022,
+     "durUs": 12349,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10c010/gc/manifest.boundary",
+     "startUs": 106885,
+     "durUs": 12151,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba10c010/compacted/01M66TY518AA7043QGM35WBABM.sst",
+     "startUs": 118892,
+     "durUs": 12816,
+     "bytes": 3992
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/_lease",
+     "startUs": 45,
+     "durUs": 12295,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba10u010/_lease",
+     "startUs": 12372,
+     "durUs": 15498,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba10u010/manifest",
+     "startUs": 28261,
+     "durUs": 12863,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/_clean",
+     "startUs": 28267,
+     "durUs": 12314,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/manifest/00000000000000000004.manifest",
+     "startUs": 41152,
+     "durUs": 11464,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/gc/manifest.boundary",
+     "startUs": 52663,
+     "durUs": 12384,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/manifest/00000000000000000005.manifest",
+     "startUs": 65088,
+     "durUs": 11004,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/gc/manifest.boundary",
+     "startUs": 76154,
+     "durUs": 11452,
+     "bytes": 0
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba10u010/manifest",
+     "startUs": 88114,
+     "durUs": 12247,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/manifest/00000000000000000004.manifest",
+     "startUs": 100384,
+     "durUs": 12468,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/gc/manifest.boundary",
+     "startUs": 112900,
+     "durUs": 11467,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/manifest/00000000000000000005.manifest",
+     "startUs": 124414,
+     "durUs": 12108,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/gc/manifest.boundary",
+     "startUs": 136558,
+     "durUs": 12127,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000003.sst",
+     "startUs": 148726,
+     "durUs": 12101,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000004.sst",
+     "startUs": 148739,
+     "durUs": 12149,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000006.sst",
+     "startUs": 148744,
+     "durUs": 12365,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000010.sst",
+     "startUs": 148749,
+     "durUs": 12114,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000018.sst",
+     "startUs": 148758,
+     "durUs": 12455,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000034.sst",
+     "startUs": 148764,
+     "durUs": 12540,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000066.sst",
+     "startUs": 148770,
+     "durUs": 12617,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000130.sst",
+     "startUs": 148776,
+     "durUs": 12561,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba10u010/compacted/01M66TY6BS3GY5TQY685254128.sst",
+     "startUs": 161649,
+     "durUs": 12544,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/manifest/00000000000000000005.manifest",
+     "startUs": 162782,
+     "durUs": 11131,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba10u010/gc/manifest.boundary",
+     "startUs": 173992,
+     "durUs": 11413,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba10u010/compacted/01M66TY6BS3GY5TQY685254128.sst",
+     "startUs": 174309,
+     "durUs": 12098,
+     "bytes": 3807
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000003.sst",
+     "startUs": 185447,
+     "durUs": 13025,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000004.sst",
+     "startUs": 185462,
+     "durUs": 12806,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000006.sst",
+     "startUs": 185469,
+     "durUs": 12604,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000010.sst",
+     "startUs": 185474,
+     "durUs": 12654,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000018.sst",
+     "startUs": 185481,
+     "durUs": 13137,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000034.sst",
+     "startUs": 185487,
+     "durUs": 12668,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000066.sst",
+     "startUs": 185494,
+     "durUs": 13148,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba10u010/wal/00000000000000000130.sst",
+     "startUs": 185504,
+     "durUs": 13091,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba10u010/compacted/01M66TY6BS3GY5TQY685254128.sst",
+     "startUs": 186762,
+     "durUs": 12021,
+     "bytes": 3992
+    }
+   ]
+  },
+  "baseline/20ms": {
+   "mode": "baseline",
+   "delay_ms": 20,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 231.3,
+    "time_ms_max": 235.24,
+    "requests_p50": 13.0,
+    "requests_min": 13,
+    "requests_max": 14,
+    "steps_p50": 10.0,
+    "by_op_p50": {
+     "GET": 7.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 1.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 367.23,
+    "time_ms_max": 373.81,
+    "requests_p50": 34.0,
+    "requests_min": 34,
+    "requests_max": 35,
+    "steps_p50": 16.0,
+    "by_op_p50": {
+     "GET": 11.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 17.0,
+     "LIST": 2.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 9120.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 0,
+    "stale": 0,
+    "written": 0
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/_lease",
+     "startUs": 155,
+     "durUs": 23220,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba20c010/_lease",
+     "startUs": 23414,
+     "durUs": 24673,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba20c010/manifest",
+     "startUs": 48608,
+     "durUs": 23029,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20c010/_clean",
+     "startUs": 48618,
+     "durUs": 22068,
+     "bytes": 5
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/manifest/00000000000000000004.manifest",
+     "startUs": 71665,
+     "durUs": 22393,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/gc/manifest.boundary",
+     "startUs": 94131,
+     "durUs": 23160,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/manifest/00000000000000000005.manifest",
+     "startUs": 117360,
+     "durUs": 22663,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/gc/manifest.boundary",
+     "startUs": 140079,
+     "durUs": 23030,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba20c010/compacted/01M66TYMQ67S2DNHS6P3H7SPYA.sst",
+     "startUs": 163368,
+     "durUs": 22164,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/manifest/00000000000000000005.manifest",
+     "startUs": 164546,
+     "durUs": 21638,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba20c010/compacted/01M66TYMQ67S2DNHS6P3H7SPYA.sst",
+     "startUs": 185684,
+     "durUs": 21962,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20c010/gc/manifest.boundary",
+     "startUs": 186228,
+     "durUs": 22374,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba20c010/compacted/01M66TYMQ67S2DNHS6P3H7SPYA.sst",
+     "startUs": 208175,
+     "durUs": 22735,
+     "bytes": 3992
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/_lease",
+     "startUs": 136,
+     "durUs": 22760,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba20u010/_lease",
+     "startUs": 22940,
+     "durUs": 25754,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba20u010/manifest",
+     "startUs": 49065,
+     "durUs": 23022,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/_clean",
+     "startUs": 49072,
+     "durUs": 22798,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/manifest/00000000000000000004.manifest",
+     "startUs": 72136,
+     "durUs": 22770,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/gc/manifest.boundary",
+     "startUs": 94967,
+     "durUs": 22586,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/manifest/00000000000000000005.manifest",
+     "startUs": 117602,
+     "durUs": 21771,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/gc/manifest.boundary",
+     "startUs": 139422,
+     "durUs": 22060,
+     "bytes": 0
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba20u010/manifest",
+     "startUs": 162168,
+     "durUs": 22454,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/manifest/00000000000000000004.manifest",
+     "startUs": 184651,
+     "durUs": 23032,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/gc/manifest.boundary",
+     "startUs": 207759,
+     "durUs": 22904,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/manifest/00000000000000000005.manifest",
+     "startUs": 230717,
+     "durUs": 22535,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/gc/manifest.boundary",
+     "startUs": 253331,
+     "durUs": 21925,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000004.sst",
+     "startUs": 275311,
+     "durUs": 22047,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000005.sst",
+     "startUs": 275328,
+     "durUs": 21929,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000007.sst",
+     "startUs": 275346,
+     "durUs": 22041,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000011.sst",
+     "startUs": 275355,
+     "durUs": 21968,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000019.sst",
+     "startUs": 275364,
+     "durUs": 22051,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000035.sst",
+     "startUs": 275371,
+     "durUs": 22257,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000067.sst",
+     "startUs": 275376,
+     "durUs": 22066,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000131.sst",
+     "startUs": 275385,
+     "durUs": 22289,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba20u010/compacted/01M66TYP2VWKW16Q1C150SZ8AQ.sst",
+     "startUs": 298028,
+     "durUs": 23251,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/manifest/00000000000000000005.manifest",
+     "startUs": 299235,
+     "durUs": 21670,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba20u010/gc/manifest.boundary",
+     "startUs": 320954,
+     "durUs": 21913,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba20u010/compacted/01M66TYP2VWKW16Q1C150SZ8AQ.sst",
+     "startUs": 321421,
+     "durUs": 21609,
+     "bytes": 3807
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000004.sst",
+     "startUs": 342904,
+     "durUs": 23039,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000005.sst",
+     "startUs": 342919,
+     "durUs": 23046,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000007.sst",
+     "startUs": 342926,
+     "durUs": 23070,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000011.sst",
+     "startUs": 342932,
+     "durUs": 22873,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000019.sst",
+     "startUs": 342939,
+     "durUs": 23082,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000035.sst",
+     "startUs": 342945,
+     "durUs": 22919,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000067.sst",
+     "startUs": 342950,
+     "durUs": 22935,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba20u010/wal/00000000000000000131.sst",
+     "startUs": 342962,
+     "durUs": 22943,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba20u010/compacted/01M66TYP2VWKW16Q1C150SZ8AQ.sst",
+     "startUs": 343439,
+     "durUs": 22465,
+     "bytes": 3992
+    }
+   ]
+  },
+  "baseline/30ms": {
+   "mode": "baseline",
+   "delay_ms": 30,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 332.76,
+    "time_ms_max": 350.24,
+    "requests_p50": 13.0,
+    "requests_min": 13,
+    "requests_max": 14,
+    "steps_p50": 10.0,
+    "by_op_p50": {
+     "GET": 7.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 1.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 530.92,
+    "time_ms_max": 535.33,
+    "requests_p50": 34.0,
+    "requests_min": 34,
+    "requests_max": 35,
+    "steps_p50": 16.0,
+    "by_op_p50": {
+     "GET": 11.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 17.0,
+     "LIST": 2.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 9120.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 0,
+    "stale": 0,
+    "written": 0
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/_lease",
+     "startUs": 94,
+     "durUs": 32645,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba30c010/_lease",
+     "startUs": 32777,
+     "durUs": 35900,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba30c010/manifest",
+     "startUs": 69097,
+     "durUs": 33295,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30c010/_clean",
+     "startUs": 69105,
+     "durUs": 33151,
+     "bytes": 5
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/manifest/00000000000000000004.manifest",
+     "startUs": 102421,
+     "durUs": 32204,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/gc/manifest.boundary",
+     "startUs": 134693,
+     "durUs": 33028,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/manifest/00000000000000000005.manifest",
+     "startUs": 167777,
+     "durUs": 32890,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/gc/manifest.boundary",
+     "startUs": 200727,
+     "durUs": 32763,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/manifest/00000000000000000005.manifest",
+     "startUs": 233738,
+     "durUs": 32900,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba30c010/compacted/01M66TZA8NP2HDM6G3FSM1KCQ6.sst",
+     "startUs": 233748,
+     "durUs": 33112,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30c010/gc/manifest.boundary",
+     "startUs": 266727,
+     "durUs": 33551,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba30c010/compacted/01M66TZA8NP2HDM6G3FSM1KCQ6.sst",
+     "startUs": 267071,
+     "durUs": 32801,
+     "bytes": 3807
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba30c010/compacted/01M66TZA8NP2HDM6G3FSM1KCQ6.sst",
+     "startUs": 300203,
+     "durUs": 33543,
+     "bytes": 3992
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/_lease",
+     "startUs": 75,
+     "durUs": 32828,
+     "bytes": 50
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416ba30u010/_lease",
+     "startUs": 32939,
+     "durUs": 34507,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba30u010/manifest",
+     "startUs": 67820,
+     "durUs": 33641,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/_clean",
+     "startUs": 67826,
+     "durUs": 33013,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/manifest/00000000000000000004.manifest",
+     "startUs": 101491,
+     "durUs": 33279,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/gc/manifest.boundary",
+     "startUs": 134851,
+     "durUs": 33025,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/manifest/00000000000000000005.manifest",
+     "startUs": 167934,
+     "durUs": 32280,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/gc/manifest.boundary",
+     "startUs": 200276,
+     "durUs": 31877,
+     "bytes": 0
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416ba30u010/manifest",
+     "startUs": 232674,
+     "durUs": 33084,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/manifest/00000000000000000004.manifest",
+     "startUs": 265790,
+     "durUs": 33140,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/gc/manifest.boundary",
+     "startUs": 298983,
+     "durUs": 32122,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/manifest/00000000000000000005.manifest",
+     "startUs": 331153,
+     "durUs": 32000,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/gc/manifest.boundary",
+     "startUs": 363204,
+     "durUs": 32223,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000004.sst",
+     "startUs": 395488,
+     "durUs": 33365,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000005.sst",
+     "startUs": 395505,
+     "durUs": 33370,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000007.sst",
+     "startUs": 395511,
+     "durUs": 33081,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000011.sst",
+     "startUs": 395519,
+     "durUs": 33158,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000019.sst",
+     "startUs": 395528,
+     "durUs": 32997,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000035.sst",
+     "startUs": 395535,
+     "durUs": 33243,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000067.sst",
+     "startUs": 395546,
+     "durUs": 33277,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000131.sst",
+     "startUs": 395554,
+     "durUs": 32880,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba30u010/compacted/01M66TZBFCTD3D9EPZ3KDN5CVN.sst",
+     "startUs": 429254,
+     "durUs": 32717,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/manifest/00000000000000000005.manifest",
+     "startUs": 430467,
+     "durUs": 31953,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba30u010/compacted/01M66TZBFCTD3D9EPZ3KDN5CVN.sst",
+     "startUs": 462124,
+     "durUs": 32280,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416ba30u010/gc/manifest.boundary",
+     "startUs": 462455,
+     "durUs": 32027,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000004.sst",
+     "startUs": 494522,
+     "durUs": 33894,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000005.sst",
+     "startUs": 494533,
+     "durUs": 33902,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000007.sst",
+     "startUs": 494539,
+     "durUs": 33911,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000011.sst",
+     "startUs": 494544,
+     "durUs": 33930,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000019.sst",
+     "startUs": 494549,
+     "durUs": 33720,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000035.sst",
+     "startUs": 494555,
+     "durUs": 33748,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000067.sst",
+     "startUs": 494562,
+     "durUs": 33792,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416ba30u010/wal/00000000000000000131.sst",
+     "startUs": 494569,
+     "durUs": 33811,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416ba30u010/compacted/01M66TZBFCTD3D9EPZ3KDN5CVN.sst",
+     "startUs": 494983,
+     "durUs": 33370,
+     "bytes": 3992
+    }
+   ]
+  },
+  "bundle/0ms": {
+   "mode": "bundle",
+   "delay_ms": 0,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 5.8,
+    "time_ms_max": 6.68,
+    "requests_p50": 4.0,
+    "requests_min": 4,
+    "requests_max": 4,
+    "steps_p50": 3.0,
+    "by_op_p50": {
+     "GET": 2.0,
+     "HEAD": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 14.17,
+    "time_ms_max": 17.14,
+    "requests_p50": 29.0,
+    "requests_min": 29,
+    "requests_max": 29,
+    "steps_p50": 11.0,
+    "by_op_p50": {
+     "GET": 8.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 16.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 17798.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 25,
+    "stale": 0,
+    "written": 50
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00c010/_lease",
+     "startUs": 50,
+     "durUs": 975,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00c010/_clean",
+     "startUs": 155,
+     "durUs": 808,
+     "bytes": 8683
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu00c010/_lease",
+     "startUs": 1042,
+     "durUs": 2797,
+     "bytes": 77
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00c010/manifest/00000000000000000005.manifest",
+     "startUs": 3889,
+     "durUs": 579,
+     "bytes": 0
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/_lease",
+     "startUs": 86,
+     "durUs": 1162,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/_clean",
+     "startUs": 194,
+     "durUs": 819,
+     "bytes": 0
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu00u010/_lease",
+     "startUs": 1269,
+     "durUs": 3020,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416bu00u010/manifest",
+     "startUs": 4696,
+     "durUs": 1265,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/manifest/00000000000000000004.manifest",
+     "startUs": 5981,
+     "durUs": 914,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/gc/manifest.boundary",
+     "startUs": 6951,
+     "durUs": 807,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/manifest/00000000000000000005.manifest",
+     "startUs": 7793,
+     "durUs": 794,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/gc/manifest.boundary",
+     "startUs": 8617,
+     "durUs": 822,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000003.sst",
+     "startUs": 9479,
+     "durUs": 1695,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000004.sst",
+     "startUs": 9559,
+     "durUs": 1633,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000006.sst",
+     "startUs": 9614,
+     "durUs": 1605,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000010.sst",
+     "startUs": 9671,
+     "durUs": 1333,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000018.sst",
+     "startUs": 9759,
+     "durUs": 1280,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000034.sst",
+     "startUs": 9829,
+     "durUs": 1258,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000066.sst",
+     "startUs": 9959,
+     "durUs": 1150,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000130.sst",
+     "startUs": 10114,
+     "durUs": 1013,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu00u010/compacted/01M66V08XXF51T0JD74MKQ2HVE.sst",
+     "startUs": 11452,
+     "durUs": 1056,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/manifest/00000000000000000005.manifest",
+     "startUs": 12443,
+     "durUs": 944,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu00u010/compacted/01M66V08XXF51T0JD74MKQ2HVE.sst",
+     "startUs": 12629,
+     "durUs": 1004,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu00u010/gc/manifest.boundary",
+     "startUs": 13418,
+     "durUs": 710,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu00u010/compacted/01M66V08XXF51T0JD74MKQ2HVE.sst",
+     "startUs": 14118,
+     "durUs": 1872,
+     "bytes": 3992
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000003.sst",
+     "startUs": 14157,
+     "durUs": 1328,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000004.sst",
+     "startUs": 14239,
+     "durUs": 1421,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000006.sst",
+     "startUs": 14284,
+     "durUs": 1127,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000010.sst",
+     "startUs": 14325,
+     "durUs": 1359,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000018.sst",
+     "startUs": 14365,
+     "durUs": 1674,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000034.sst",
+     "startUs": 14411,
+     "durUs": 1676,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000066.sst",
+     "startUs": 14450,
+     "durUs": 1666,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu00u010/wal/00000000000000000130.sst",
+     "startUs": 14494,
+     "durUs": 1512,
+     "bytes": 0
+    }
+   ]
+  },
+  "bundle/10ms": {
+   "mode": "bundle",
+   "delay_ms": 10,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 41.68,
+    "time_ms_max": 43.64,
+    "requests_p50": 4.0,
+    "requests_min": 4,
+    "requests_max": 4,
+    "steps_p50": 3.0,
+    "by_op_p50": {
+     "GET": 2.0,
+     "HEAD": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 141.13,
+    "time_ms_max": 145.59,
+    "requests_p50": 29.0,
+    "requests_min": 29,
+    "requests_max": 30,
+    "steps_p50": 11.0,
+    "by_op_p50": {
+     "GET": 8.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 16.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 17798.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 25,
+    "stale": 0,
+    "written": 50
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10c010/_lease",
+     "startUs": 67,
+     "durUs": 12536,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10c010/_clean",
+     "startUs": 87,
+     "durUs": 12648,
+     "bytes": 8683
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu10c010/_lease",
+     "startUs": 12640,
+     "durUs": 15288,
+     "bytes": 77
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10c010/manifest/00000000000000000005.manifest",
+     "startUs": 27985,
+     "durUs": 12224,
+     "bytes": 0
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/_lease",
+     "startUs": 132,
+     "durUs": 12391,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/_clean",
+     "startUs": 148,
+     "durUs": 12315,
+     "bytes": 0
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu10u010/_lease",
+     "startUs": 12552,
+     "durUs": 14832,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416bu10u010/manifest",
+     "startUs": 27796,
+     "durUs": 12460,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/manifest/00000000000000000004.manifest",
+     "startUs": 40282,
+     "durUs": 11818,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/gc/manifest.boundary",
+     "startUs": 52154,
+     "durUs": 12389,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/manifest/00000000000000000005.manifest",
+     "startUs": 64605,
+     "durUs": 12442,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/gc/manifest.boundary",
+     "startUs": 77125,
+     "durUs": 12306,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000003.sst",
+     "startUs": 89483,
+     "durUs": 12871,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000004.sst",
+     "startUs": 89500,
+     "durUs": 12421,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000006.sst",
+     "startUs": 89511,
+     "durUs": 12791,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000010.sst",
+     "startUs": 89517,
+     "durUs": 12473,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000018.sst",
+     "startUs": 89525,
+     "durUs": 13296,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000034.sst",
+     "startUs": 89531,
+     "durUs": 13307,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000066.sst",
+     "startUs": 89536,
+     "durUs": 13318,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000130.sst",
+     "startUs": 89546,
+     "durUs": 13234,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu10u010/compacted/01M66V0ETY1YR6MABD5Z47V5DR.sst",
+     "startUs": 103237,
+     "durUs": 11588,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/manifest/00000000000000000005.manifest",
+     "startUs": 104393,
+     "durUs": 12364,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu10u010/compacted/01M66V0ETY1YR6MABD5Z47V5DR.sst",
+     "startUs": 114958,
+     "durUs": 12771,
+     "bytes": 3807
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu10u010/gc/manifest.boundary",
+     "startUs": 116797,
+     "durUs": 11870,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu10u010/compacted/01M66V0ETY1YR6MABD5Z47V5DR.sst",
+     "startUs": 128126,
+     "durUs": 12653,
+     "bytes": 3992
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000003.sst",
+     "startUs": 128702,
+     "durUs": 12361,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000004.sst",
+     "startUs": 128718,
+     "durUs": 12345,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000006.sst",
+     "startUs": 128726,
+     "durUs": 12337,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000010.sst",
+     "startUs": 128733,
+     "durUs": 12330,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000018.sst",
+     "startUs": 128739,
+     "durUs": 12324,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000034.sst",
+     "startUs": 128747,
+     "durUs": 12316,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000066.sst",
+     "startUs": 128756,
+     "durUs": 12307,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu10u010/wal/00000000000000000130.sst",
+     "startUs": 128765,
+     "durUs": 12298,
+     "bytes": 0
+    }
+   ]
+  },
+  "bundle/20ms": {
+   "mode": "bundle",
+   "delay_ms": 20,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 72.19,
+    "time_ms_max": 75.64,
+    "requests_p50": 4.0,
+    "requests_min": 4,
+    "requests_max": 4,
+    "steps_p50": 3.0,
+    "by_op_p50": {
+     "GET": 2.0,
+     "HEAD": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 255.38,
+    "time_ms_max": 261.53,
+    "requests_p50": 29.0,
+    "requests_min": 29,
+    "requests_max": 30,
+    "steps_p50": 11.0,
+    "by_op_p50": {
+     "GET": 8.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 16.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 17798.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 25,
+    "stale": 0,
+    "written": 50
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20c010/_lease",
+     "startUs": 78,
+     "durUs": 22736,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20c010/_clean",
+     "startUs": 94,
+     "durUs": 23077,
+     "bytes": 8683
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu20c010/_lease",
+     "startUs": 22908,
+     "durUs": 25281,
+     "bytes": 77
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20c010/manifest/00000000000000000005.manifest",
+     "startUs": 48259,
+     "durUs": 22957,
+     "bytes": 0
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/_lease",
+     "startUs": 93,
+     "durUs": 22887,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/_clean",
+     "startUs": 116,
+     "durUs": 22816,
+     "bytes": 0
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu20u010/_lease",
+     "startUs": 23056,
+     "durUs": 25075,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416bu20u010/manifest",
+     "startUs": 48501,
+     "durUs": 23171,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/manifest/00000000000000000004.manifest",
+     "startUs": 71707,
+     "durUs": 22206,
+     "bytes": 458
+    },
+    {
+     "op": "PUT(update)",
+     "path": "processes/W/_lease",
+     "startUs": 87157,
+     "durUs": 25154,
+     "bytes": 77
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/gc/manifest.boundary",
+     "startUs": 93987,
+     "durUs": 22504,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/manifest/00000000000000000005.manifest",
+     "startUs": 116550,
+     "durUs": 22242,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/gc/manifest.boundary",
+     "startUs": 138850,
+     "durUs": 21748,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000003.sst",
+     "startUs": 160652,
+     "durUs": 22323,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000004.sst",
+     "startUs": 160665,
+     "durUs": 22336,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000006.sst",
+     "startUs": 160672,
+     "durUs": 22370,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000010.sst",
+     "startUs": 160677,
+     "durUs": 22389,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000018.sst",
+     "startUs": 160683,
+     "durUs": 22402,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000034.sst",
+     "startUs": 160689,
+     "durUs": 22414,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000066.sst",
+     "startUs": 160696,
+     "durUs": 22425,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000130.sst",
+     "startUs": 160702,
+     "durUs": 22177,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu20u010/compacted/01M66V0TNS0PXQ0MY0SMA6SWTV.sst",
+     "startUs": 183413,
+     "durUs": 23232,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/manifest/00000000000000000005.manifest",
+     "startUs": 184464,
+     "durUs": 21949,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu20u010/gc/manifest.boundary",
+     "startUs": 206488,
+     "durUs": 21697,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu20u010/compacted/01M66V0TNS0PXQ0MY0SMA6SWTV.sst",
+     "startUs": 206849,
+     "durUs": 21675,
+     "bytes": 3807
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000003.sst",
+     "startUs": 228232,
+     "durUs": 22764,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000004.sst",
+     "startUs": 228252,
+     "durUs": 22665,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000006.sst",
+     "startUs": 228261,
+     "durUs": 22950,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000010.sst",
+     "startUs": 228271,
+     "durUs": 23326,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000018.sst",
+     "startUs": 228279,
+     "durUs": 23090,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000034.sst",
+     "startUs": 228288,
+     "durUs": 23453,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000066.sst",
+     "startUs": 228298,
+     "durUs": 23165,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu20u010/wal/00000000000000000130.sst",
+     "startUs": 228310,
+     "durUs": 23179,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu20u010/compacted/01M66V0TNS0PXQ0MY0SMA6SWTV.sst",
+     "startUs": 229180,
+     "durUs": 22686,
+     "bytes": 3992
+    }
+   ]
+  },
+  "bundle/30ms": {
+   "mode": "bundle",
+   "delay_ms": 30,
+   "clean": {
+    "wakes": 20,
+    "time_ms_p50": 103.24,
+    "time_ms_max": 105.44,
+    "requests_p50": 4.0,
+    "requests_min": 4,
+    "requests_max": 4,
+    "steps_p50": 3.0,
+    "by_op_p50": {
+     "GET": 2.0,
+     "HEAD": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "unclean": {
+    "wakes": 20,
+    "time_ms_p50": 368.07,
+    "time_ms_max": 374.81,
+    "requests_p50": 29.0,
+    "requests_min": 29,
+    "requests_max": 29,
+    "steps_p50": 11.0,
+    "by_op_p50": {
+     "GET": 8.0,
+     "GET_RANGE": 3.0,
+     "HEAD": 16.0,
+     "LIST": 1.0,
+     "PUT(update)": 1.0
+    }
+   },
+   "close_cost_p50": {
+    "put": 5.0,
+    "copy": 0.0,
+    "list": 0.0,
+    "get": 4.0,
+    "head": 0.0,
+    "delete": 0.0,
+    "billedPutTier": 5.0,
+    "billedGetTier": 4.0,
+    "putBytes": 17798.0,
+    "getBytes": 0.0
+   },
+   "wake_bundle_counters": {
+    "used": 25,
+    "stale": 0,
+    "written": 50
+   },
+   "example_clean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30c010/_lease",
+     "startUs": 105,
+     "durUs": 32711,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30c010/_clean",
+     "startUs": 125,
+     "durUs": 32823,
+     "bytes": 8683
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu30c010/_lease",
+     "startUs": 32855,
+     "durUs": 35389,
+     "bytes": 77
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30c010/manifest/00000000000000000005.manifest",
+     "startUs": 68331,
+     "durUs": 32146,
+     "bytes": 0
+    }
+   ],
+   "example_unclean": [
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/_lease",
+     "startUs": 61,
+     "durUs": 33207,
+     "bytes": 50
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/_clean",
+     "startUs": 81,
+     "durUs": 32917,
+     "bytes": 0
+    },
+    {
+     "op": "PUT(update)",
+     "path": "tenants/w78416bu30u010/_lease",
+     "startUs": 33303,
+     "durUs": 40802,
+     "bytes": 77
+    },
+    {
+     "op": "LIST",
+     "path": "tenants/w78416bu30u010/manifest",
+     "startUs": 74674,
+     "durUs": 33390,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/manifest/00000000000000000004.manifest",
+     "startUs": 108094,
+     "durUs": 33625,
+     "bytes": 458
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/gc/manifest.boundary",
+     "startUs": 141802,
+     "durUs": 32112,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/manifest/00000000000000000005.manifest",
+     "startUs": 173963,
+     "durUs": 32308,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/gc/manifest.boundary",
+     "startUs": 206325,
+     "durUs": 33096,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000003.sst",
+     "startUs": 239475,
+     "durUs": 33250,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000004.sst",
+     "startUs": 239509,
+     "durUs": 33279,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000006.sst",
+     "startUs": 239517,
+     "durUs": 33294,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000010.sst",
+     "startUs": 239524,
+     "durUs": 33306,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000018.sst",
+     "startUs": 239533,
+     "durUs": 33316,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000034.sst",
+     "startUs": 239540,
+     "durUs": 33325,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000066.sst",
+     "startUs": 239547,
+     "durUs": 33336,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000130.sst",
+     "startUs": 239556,
+     "durUs": 33342,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu30u010/compacted/01M66V1AFQNZYKH4AEAX28QSF6.sst",
+     "startUs": 273175,
+     "durUs": 33347,
+     "bytes": 100
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/manifest/00000000000000000005.manifest",
+     "startUs": 274355,
+     "durUs": 32007,
+     "bytes": 0
+    },
+    {
+     "op": "GET",
+     "path": "tenants/w78416bu30u010/gc/manifest.boundary",
+     "startUs": 306414,
+     "durUs": 39852,
+     "bytes": 0
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu30u010/compacted/01M66V1AFQNZYKH4AEAX28QSF6.sst",
+     "startUs": 306684,
+     "durUs": 34087,
+     "bytes": 3807
+    },
+    {
+     "op": "GET_RANGE",
+     "path": "tenants/w78416bu30u010/compacted/01M66V1AFQNZYKH4AEAX28QSF6.sst",
+     "startUs": 341436,
+     "durUs": 32925,
+     "bytes": 3992
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000003.sst",
+     "startUs": 346314,
+     "durUs": 28500,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000004.sst",
+     "startUs": 346362,
+     "durUs": 28452,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000006.sst",
+     "startUs": 346370,
+     "durUs": 28444,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000010.sst",
+     "startUs": 346377,
+     "durUs": 28437,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000018.sst",
+     "startUs": 346384,
+     "durUs": 28430,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000034.sst",
+     "startUs": 346390,
+     "durUs": 28424,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000066.sst",
+     "startUs": 346401,
+     "durUs": 28413,
+     "bytes": 0
+    },
+    {
+     "op": "HEAD",
+     "path": "tenants/w78416bu30u010/wal/00000000000000000130.sst",
+     "startUs": 346410,
+     "durUs": 28404,
+     "bytes": 0
+    }
+   ]
+  }
+ }
+}

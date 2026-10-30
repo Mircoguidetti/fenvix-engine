@@ -89,10 +89,20 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     // The users and roles defined on the database live in admin.system.users / admin.system.roles, not under tenants/{db}:
     // they go with it (idempotent, so a resumed erase repeats it harmlessly).
     ctl.server.erase_database_auth(db).await.map_err(|e| ApiError::new(500, "erase_users_failed", format!("could not remove the users of {db}: {e}")))?;
+    if let Some(l) = crate::locallog::get() {
+        // local log (prototype): a restart must not apply the erased database's records again
+        let _ = l.append_drop(db).await;
+    }
     let report = purge::purge_tenant(ctl, db).await?;
     ctl.dbs.leases.forget(db);
     ctl.lc.touched.lock().unwrap().remove(db);
+    // as a drop: a database created again with this name starts its WAL ids again, and has no counters yet
+    tenant_bench::lifecycle::forget_wal_state(db);
+    crate::fair::forget(db);
     super::pitr::forget(db);
+    if super::durability::forget(db) {
+        let _ = super::rec::delete(&ctl.store, &super::rec::path(&["control", "durability", db])).await;
+    }
     super::failpoint("erase.after_tenant").await;
     for a in ancestors {
         rec::delete(&ctl.store, &fork::fork_marker(a, db)).await?;
