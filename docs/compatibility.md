@@ -236,9 +236,8 @@ Every Partial feature (15):
 
 Where the audit files disagree with each other, this page reports it instead of choosing silently:
 
-- compat/COVERAGE.md (dated 2026-10-27) reports 809 of 1245 covered = 65.0%, but compat/inventory.csv now computes 1253 of 1268 covered = 98.8% with compat/coverage.py. The CSV was updated after that report (later gap-closing work), so this page uses the CSV and COVERAGE.md is out of date. The report also says 548 proposed exclusions; the founder-approved exclusions in the CSV number 525.
+- compat/COVERAGE.md (dated 2026-10-27) reports 809 of 1245 covered = 65.0%, but compat/inventory.csv now computes 1253 of 1268 covered = 98.8% with compat/coverage.py. The CSV was updated after that report (later gap-closing work), so this page uses the CSV and COVERAGE.md is out of date. The engine commit in that header (ff2ad26, branch compat-indexes) belongs to the older state; the build the current inventory was run on is not recorded in the data. The report also says 548 proposed exclusions; the founder-approved exclusions in the CSV number 525.
 - compat/coverage.py counts 16 rows as covered although no comparison test against MongoDB exists for them (specification tests only). By this page's definition they are Not tested, so Supported is 1237 and not 1253.
 - compat/UNVERIFIED.md says TLS and X.509 are marked missing without a comparison test; in compat/inventory.csv they are now covered by comparison tests on the same certificates. The CSV is used; that bullet is not repeated on this page.
 - The two usage scans were taken at different commits of 8 of the 10 repositories (compat-scan.md and compat/scan_extra.json record different commits).
 - The 'Our status' column of compat-scan.md comes from an older compatibility table and is not used here; status always comes from compat/inventory.csv.
-- The engine commit named in the COVERAGE.md header (ff2ad26, branch compat-indexes) is not in this repository's history, and the header describes the older 65.0% state. The build of the engine the current inventory was run on is not recorded in the data.

@@ -14,8 +14,9 @@ Inputs (all read from the repository, nothing is fetched):
     compat/scan_extra.json      usage of features that table does not measure
 
 The output is a pure function of those files (no clock, no randomness), so building twice gives identical bytes.
-The only date that is not in the files is the date the inventory was last committed; it comes from `git log` when git is
-available and can be given with --inventory-date. Percentages are truncated to one decimal, never rounded up.
+The only date that is not in the files is the date the inventory was last committed; it comes from
+`git log -1 -- compat/inventory.csv` (never from HEAD or the clock), is null in the JSON and "not available" on the page
+when git or the full history is missing (zip, shallow clone), and can be given with --inventory-date. Percentages are truncated to one decimal, never rounded up.
 
 Status mapping (the page's four statuses; "audit_status" keeps the CSV value)
     supported      engine_status == covered and differential_test == yes
@@ -403,6 +404,27 @@ def git(*args):
         return None
 
 
+def inventory_commit_and_date():
+    """(commit, date) of the last commit that touched compat/inventory.csv, or (None, None) when git cannot say.
+
+    Depends only on the history of that file: not on HEAD, the clock, the refs present in the clone or the abbreviation
+    length. A shallow clone is trusted only if the answer is not one of its cut-off commits."""
+    shallow = git("rev-parse", "--is-shallow-repository")
+    if shallow not in ("true", "false"):
+        return None, None
+    line = git("log", "-1", "--format=%H %cs", "--", "compat/inventory.csv")
+    if not line:
+        return None, None
+    h, d = line.split()
+    if shallow == "true":
+        # a commit at the cut-off of a shallow clone shows every file as added there, so it says nothing about the file
+        gd = git("rev-parse", "--git-dir")
+        path = os.path.join(ROOT, gd, "shallow")
+        if not os.path.exists(path) or h in open(path).read().split():
+            return None, None
+    return h[:7], d
+
+
 def build_model(inventory_date=None):
     cov = load_coverage_module()
     all_rows = load_inventory()
@@ -422,10 +444,7 @@ def build_model(inventory_date=None):
     spec_only = sum(r["engine_status"] == "covered" and r["differential_test"] == "no" for r in rows)
     covered = sum(r["engine_status"] == "covered" for r in rows)
 
-    inv_commit = inv_date = None
-    line = git("log", "-1", "--format=%h %cs", "--", "compat/inventory.csv")
-    if line:
-        inv_commit, inv_date = line.split()
+    inv_commit, inv_date = inventory_commit_and_date()
     if inventory_date:
         inv_date = inventory_date
 
@@ -435,7 +454,8 @@ def build_model(inventory_date=None):
         notes.append(("coverage-report-stale",
                       f"compat/COVERAGE.md (dated {hdr['date']}) reports {hdr['covered']} of {hdr['total']} covered = {hdr['percent']}%, "
                       f"but compat/inventory.csv now computes {covered} of {len(rows)} covered = {pct(covered, len(rows))}% with compat/coverage.py. "
-                      "The CSV was updated after that report (later gap-closing work), so this page uses the CSV and COVERAGE.md is out of date."
+                      "The CSV was updated after that report (later gap-closing work), so this page uses the CSV and COVERAGE.md is out of date. "
+                      f"The engine commit in that header ({hdr['commit']}, branch {hdr['branch']}) belongs to the older state; the build the current inventory was run on is not recorded in the data."
                       + (f" The report also says {hdr['proposed_exclusions']} proposed exclusions; the founder-approved exclusions in the CSV number {len(excluded)}." if hdr["proposed_exclusions"] not in (None, len(excluded)) else "")))
     if spec_only:
         notes.append(("specification-only-rows",
@@ -456,12 +476,6 @@ def build_model(inventory_date=None):
     notes.append(("scan-status-column",
                   "The 'Our status' column of compat-scan.md comes from an older compatibility table and is not used here; "
                   "status always comes from compat/inventory.csv."))
-    git_known = git("cat-file", "-e", hdr["commit"] + "^{commit}")
-    if git_known is None and git("rev-parse", "HEAD"):
-        notes.append(("engine-commit-unknown",
-                      f"The engine commit named in the COVERAGE.md header ({hdr['commit']}, branch {hdr['branch']}) is not in this repository's history, "
-                      f"and the header describes the older {hdr['percent']}% state. The build of the engine the current inventory was run on is not recorded in the data."))
-
     # features
     features = []
     for r in sorted(rows, key=lambda r: r["id"]):
@@ -832,6 +846,8 @@ def render_md(m, rows, byid):
     w(f"- Audit report dated **{gen['audit_report_date']}**.")
     if gen["inventory_last_changed"]:
         w(f"- The inventory file the numbers come from was last changed on **{gen['inventory_last_changed']}** (repository commit `{gen['inventory_last_commit']}`).")
+    else:
+        w("- The date and commit of the last change to the inventory file: not available (the build ran without a full git history).")
     w(f"- Engine commit named in the audit report header: `{eng['commit']}` (branch `{eng['branch']}`). {eng['note']}")
     w("- This page and `compatibility.json` are generated by `tools/compat-page/build.py` from `compat/inventory.csv`. Nothing on this page is edited by hand. To regenerate it after a new audit run, see [`compatibility-regenerate.md`](compatibility-regenerate.md).")
     w("")

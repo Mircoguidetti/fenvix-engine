@@ -44,4 +44,6 @@ The page is only as current as the inventory. Before regenerating, re-run the au
 6. Re-run the usage scan only if you want newer usage numbers (`tools/compat-scan/scan.py`, `compat/tools/scan_extra.py`); otherwise the page keeps the dates of the old scan.
 7. Run the three commands above and commit `docs/` together with the audit files.
 
-If any step is skipped, the page must say so. It does so on its own for the two cases it can detect: a `COVERAGE.md` header that no longer matches the CSV, and an engine commit that is not in the repository.
+If any step is skipped, the page must say so. It does so on its own for the two cases it can detect: a `COVERAGE.md` header that no longer matches the CSV (its engine commit is then reported as belonging to the older state).
+
+The only value that comes from git is the date and commit of the last change to `compat/inventory.csv` (`git log -1 -- compat/inventory.csv`). It does not depend on HEAD, on the clock or on which branches a clone has. In a zip or a shallow clone the page says "not available" and the JSON has `null`.

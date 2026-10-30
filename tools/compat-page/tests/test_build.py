@@ -3,8 +3,10 @@ import csv
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -125,6 +127,83 @@ class BuildTest(unittest.TestCase):
         for name, text in (("compatibility.md", self.md), ("compatibility.json", self.js)):
             with open(os.path.join(ROOT, "docs", name), encoding="utf-8") as f:
                 self.assertEqual(f.read(), text, f"docs/{name} is stale: run python3 tools/compat-page/build.py")
+
+
+class StabilityTest(unittest.TestCase):
+    """The output depends on the data only: not on HEAD, the clock, the refs of the clone or a git history at all."""
+    INPUTS = ["compat/inventory.csv", "compat/coverage.py", "compat/COVERAGE.md", "compat/UNVERIFIED.md",
+              "compat/exclusions_decided.md", "compat/scan_extra.json", "compat-scan.md"]
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.old_root = build.ROOT
+        self.addCleanup(setattr, build, "ROOT", self.old_root)
+
+    def make_tree(self, name, git=True):
+        d = os.path.join(self.tmp, name)
+        for rel in self.INPUTS:
+            os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+            shutil.copy(os.path.join(ROOT, rel), os.path.join(d, rel))
+        if git:
+            def g(*a):
+                subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a], cwd=d, check=True, capture_output=True,
+                               env={**os.environ, "GIT_COMMITTER_DATE": "2026-10-28T12:00:00", "GIT_AUTHOR_DATE": "2026-10-28T12:00:00"})
+            g("init", "-q")
+            g("add", "-A")
+            g("commit", "-q", "-m", "data")
+            self.g = g
+        return d
+
+    def run_build(self, d, out):
+        build.ROOT = d
+        model, rows, byid = build.build_model()
+        return build.render_md(model, rows, byid), build.render_json(model), model
+
+    def test_new_commit_not_touching_data_changes_nothing(self):
+        d = self.make_tree("repo")
+        md1, js1, m1 = self.run_build(d, "o1")
+        self.assertEqual(m1["generated"]["inventory_last_changed"], "2026-10-28")
+        os.makedirs(os.path.join(d, "docs"))
+        open(os.path.join(d, "docs", "x.txt"), "w").write("not data")
+        self.g("add", "-A")
+        self.g("commit", "-q", "-m", "docs only")
+        self.g("commit", "-q", "--allow-empty", "-m", "empty")
+        md2, js2, m2 = self.run_build(d, "o2")
+        self.assertEqual((md1, js1), (md2, js2))
+        head = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], cwd=d, capture_output=True, text=True).stdout.strip()
+        self.assertNotIn(head, md2 + js2)  # HEAD is not in the output
+        self.assertEqual(m2["generated"]["inventory_last_commit"], m1["generated"]["inventory_last_commit"])
+
+    def test_changing_the_data_changes_the_commit(self):
+        d = self.make_tree("repo")
+        _, _, m1 = self.run_build(d, "o1")
+        p = os.path.join(d, "compat", "inventory.csv")
+        text = open(p, newline="").read()
+        open(p, "w", newline="").write(text.replace("no differential test and no probe", "no differential test and no probe.", 1))
+        self.g("add", "-A")
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "data"], cwd=d, check=True,
+                       env={**os.environ, "GIT_COMMITTER_DATE": "2026-10-30T12:00:00", "GIT_AUTHOR_DATE": "2026-10-30T12:00:00"})
+        _, _, m2 = self.run_build(d, "o2")
+        self.assertEqual(m2["generated"]["inventory_last_changed"], "2026-10-30")
+        self.assertNotEqual(m1["generated"]["inventory_last_commit"], m2["generated"]["inventory_last_commit"])
+
+    def test_without_git_says_not_available(self):
+        d = self.make_tree("zip", git=False)
+        md, js, m = self.run_build(d, "o")
+        self.assertIsNone(m["generated"]["inventory_last_changed"])
+        self.assertIsNone(m["generated"]["inventory_last_commit"])
+        self.assertIn("not available", md)
+        self.assertEqual(build.validate_json(json.loads(js)), [])
+
+    def test_shallow_clone_is_not_trusted_at_the_cut_off(self):
+        d = self.make_tree("repo")
+        full = self.run_build(d, "o")[2]["generated"]
+        self.g("commit", "-q", "--allow-empty", "-m", "later")
+        c = os.path.join(self.tmp, "shallow")
+        subprocess.run(["git", "clone", "-q", "--depth", "1", "file://" + d, c], check=True, capture_output=True)
+        self.assertIsNone(self.run_build(c, "o")[2]["generated"]["inventory_last_commit"])
+        self.assertIsNotNone(full["inventory_last_commit"])
 
 
 if __name__ == "__main__":
