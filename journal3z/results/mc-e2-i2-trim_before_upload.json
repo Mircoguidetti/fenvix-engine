@@ -1,0 +1,1 @@
+{"epochs": 2, "max_idx": 2, "dup": false, "ticks": false, "mutation": "trim_before_upload", "distinct_states": 533722, "explored": 533692, "max_depth": 28, "max_acked": 1, "verdict": "VIOLATION at depth 9: d: node 3 trimmed to 2 with S3 marker 1", "secs": 16.2}

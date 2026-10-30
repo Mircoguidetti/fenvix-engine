@@ -28,8 +28,11 @@ a message may also never be delivered = loss), a client write, an upload of any 
 followed by TRIM messages, the Reading-phase retransmission. Every reachable state is checked against (a) durability by
 rule R3 from every 2 of 3 nodes or S3, (b2), (b3), (c1), (d).
 
-Abstractions (what this check does not cover; the random simulator does): a delivered message is consumed (no
-duplication; `--dup` keeps messages for tiny bounds), node crashes with loss of unsynced data, disk loss and
+Two message models: **bag** (default: any pending message can be delivered next, i.e. arbitrary reordering; a
+delivered message is consumed) and **FIFO** (`--fifo`: one queue per writer–node link, as the real design's one TCP
+connection per pair; the head of any link is delivered or lost, so reordering across links and loss remain).
+Abstractions (what this check does not cover; the random simulator does): duplication (`--dup` keeps messages for tiny
+bounds), node crashes with loss of unsynced data, disk loss and
 reconfiguration, lease clocks (epochs simply open in increasing order, and an old writer keeps running after a newer
 one opened — the frozen/stale writer case), retransmission ticks in the Active phase (`--ticks`).
 
@@ -37,6 +40,36 @@ Search: depth-first, visited set of 64-bit state hashes (a hash collision could 
 probability is about n²/2⁶⁵, below 10⁻⁴ for n = 40 M). A run that hits the state cap is reported as **bounded, not
 exhaustive**.
 
-## Results
+## Results (`journal3z/results/mc-*.json`, reproduce with `journal3z/mc/run.sh`)
 
-(filled in from `journal3z/results/mc-*.json`)
+Bounds: 3 nodes, one database, `idx` = highest index a writer may create (the barrier takes one), so `idx 2` = each
+writer's barrier plus one client write when the indices allow it.
+
+| writers (epochs) | idx | messages | mutation | distinct states | verdict | time |
+|---|---|---|---|---|---|---|
+| 1 | 1 | bag + duplication | none | 21,021 | **complete, no violation** | 0.9 s |
+| 1 | 2 | bag | none | 18,698,439 | **complete, no violation** | 515 s |
+| 1 | 2 | FIFO | none | 2,765,555 | **complete, no violation** | 50 s |
+| 2 | 2 | bag | none | 40,000,000 (cap) | bounded, no violation in the explored part | 1,214 s |
+| 2 | 2 | bag | `ack_on_one` | 100,700 | **caught** (a), depth 16 | 2.5 s |
+| 2 | 2 | bag | `ack_gap` | 336,061 | **caught** (a), depth 20 | 8.4 s |
+| 2 | 2 | bag | `trim_before_upload` | 533,722 | **caught** (d), depth 9 | 16.2 s |
+| 2 | 2 | bag | `no_fencing` | 20,000,000 (cap) | **not caught within the cap** | 568 s |
+| 2 | 2 | bag | `recovery_longest` | 20,000,000 (cap) | not caught within the cap | 559 s |
+| 2 | 2 | bag | `recovery_single` | 20,000,000 (cap) | not caught within the cap | 580 s |
+| 2 | 2 | bag | `keep_diverged` | 20,000,000 (cap) | not caught within the cap | 537 s |
+| 2 | 2 | FIFO | none / `no_fencing` | (see below) | | |
+
+**What this means.** With one writer the protocol is checked exhaustively at these bounds (every interleaving of
+FENCE/PROMISE/READ/APPEND/ACK/MISMATCH/TRIM deliveries, losses and uploads): no reachable state violates (a), (b2),
+(b3), (c1) or (d). With two writers the space is larger than the caps. The bounded searches caught the three bugs a
+single writer can trigger quickly, but **not** the four that need a stale and a new writer to interleave in a specific
+way. That `no_fencing` counterexample does exist within these bounds: it is written out as a deterministic schedule in
+`journal3z/core` (`schedule_tests::no_fencing_loses_an_acknowledged_write`: with the fence, the stale writer's write is
+never acknowledged; without it, it is acknowledged and then overwritten by the new writer's barrier). So for two
+writers the depth-first search with a state cap is **weak evidence**, and the safety claim for interleaved writers
+rests on the random simulator (where all four are caught within 1–36 seeds) and on the published algorithm, not on
+this checker. Randomized search order (3 seeds × 2 M states per control) did not find them either.
+
+Next step (not done): model-check `Journal3Z.tla` with TLC (symmetry over nodes, a state-space constraint), or add
+partial-order reduction to `journal3z/mc` (deliveries to different nodes commute).

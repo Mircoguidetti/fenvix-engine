@@ -35,6 +35,8 @@ struct State {
     store: Store,
     /// (to: node id or 0 = writer of msg epoch, msg)
     msgs: BTreeSet<(u32, Msg)>,
+    /// FIFO mode: one queue per (from, to) link, as one TCP connection per writer-node pair (writer address 100 + epoch)
+    links: std::collections::BTreeMap<(u32, u32), Vec<Msg>>,
     acked: BTreeSet<(Idx, Epoch)>,
 }
 
@@ -56,6 +58,8 @@ fn msg_epoch(m: &Msg) -> Epoch {
 }
 
 struct Cfg {
+    fifo: bool,
+    instant: bool,
     ticks: bool,
     dup: bool,
     epochs: u64,
@@ -73,7 +77,11 @@ fn norm(m: Msg) -> Msg {
 
 fn apply_out(s: &mut State, e: Epoch, out: WOut, cfg: &Cfg) {
     for (n, m) in out.msgs {
-        s.msgs.insert((n, norm(m)));
+        if cfg.fifo {
+            s.links.entry((100 + e as u32, n)).or_default().push(norm(m));
+        } else {
+            s.msgs.insert((n, norm(m)));
+        }
     }
     for ev in out.events {
         if let WEvent::Committed(c) = ev {
@@ -101,6 +109,36 @@ fn successors(s: &State, cfg: &Cfg) -> Vec<State> {
             out.push(t);
         }
     }
+    // FIFO links: deliver the head of any link, or lose it
+    for (&(from, to), q) in &s.links {
+        if q.is_empty() {
+            continue;
+        }
+        let m = q[0].clone();
+        let mut lost = s.clone();
+        lost.links.get_mut(&(from, to)).unwrap().remove(0);
+        if lost.links[&(from, to)].is_empty() {
+            lost.links.remove(&(from, to));
+        }
+        let mut t = lost.clone();
+        out.push(lost);
+        if to >= 1 && to <= 3 {
+            let o = t.nodes[(to - 1) as usize].handle(W, m);
+            if o.broken.is_some() {
+                continue;
+            }
+            for (_, r) in o.replies {
+                t.links.entry((to, from)).or_default().push(r);
+            }
+        } else {
+            let e = (to - 100) as Epoch;
+            if let Some(w) = t.writers.get_mut((e - 1) as usize).and_then(|w| w.as_mut()) {
+                let o = w.on_msg(from, m);
+                apply_out(&mut t, e, o, cfg);
+            }
+        }
+        out.push(t);
+    }
     // deliver any pending message (consumed, unless --dup: then it stays and can be delivered again)
     for (to, m) in &s.msgs {
         let mut t = s.clone();
@@ -112,8 +150,22 @@ fn successors(s: &State, cfg: &Cfg) -> Vec<State> {
             if o.broken.is_some() {
                 continue;
             }
-            for (_, r) in o.replies {
-                t.msgs.insert((0, tag_from(*to, r)));
+            if cfg.instant {
+                // replies reach the writer in the same step, or are lost (a second successor)
+                if !o.replies.is_empty() {
+                    out.push(t.clone());
+                }
+                for (_, r) in o.replies {
+                    let e = msg_epoch(&r);
+                    if let Some(w) = t.writers.get_mut((e.max(1) - 1) as usize).and_then(|w| w.as_mut()) {
+                        let wo = w.on_msg(*to, r);
+                        apply_out(&mut t, e, wo, cfg);
+                    }
+                }
+            } else {
+                for (_, r) in o.replies {
+                    t.msgs.insert((0, tag_from(*to, r)));
+                }
             }
         } else {
             let (from, inner) = untag(m);
@@ -263,13 +315,16 @@ fn check(s: &State, cfg: &Cfg) -> Result<(), String> {
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let get = |k: &str, d: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).cloned().unwrap_or(d.to_string());
-    let cfg = Cfg { ticks: args.iter().any(|a| a == "--ticks"), dup: args.iter().any(|a| a == "--dup"), epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };
+    let cfg = Cfg { fifo: args.iter().any(|a| a == "--fifo"), instant: args.iter().any(|a| a == "--instant-replies"), ticks: args.iter().any(|a| a == "--ticks"), dup: args.iter().any(|a| a == "--dup"), epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };
+    let shuffle: u64 = get("--shuffle-seed", "0").parse().unwrap();
+    let mut rng: u64 = shuffle.wrapping_mul(0x9E3779B97F4A7C15) | 1;
     let max_states: usize = get("--max-states", "60000000").parse().unwrap();
     let init = State {
         nodes: (1..=3).map(|i| NodeCore::new(i, cfg.m)).collect(),
         writers: vec![None; cfg.epochs as usize],
         store: Store { epoch: 0, applied: 0, content: vec![] },
         msgs: BTreeSet::new(),
+        links: Default::default(),
         acked: BTreeSet::new(),
     };
     let t0 = std::time::Instant::now();
@@ -295,14 +350,24 @@ fn main() {
             verdict = format!("bounded: stopped at {max_states} states (not exhaustive)");
             break;
         }
-        for t in successors(&s, &cfg) {
+        let mut succ = successors(&s, &cfg);
+        if shuffle != 0 {
+            // randomized order (swarm search): a different corner of the space per seed; not exhaustive
+            for i in (1..succ.len()).rev() {
+                rng ^= rng << 13;
+                rng ^= rng >> 7;
+                rng ^= rng << 17;
+                succ.swap(i, (rng % (i as u64 + 1)) as usize);
+            }
+        }
+        for t in succ {
             if seen.insert(key(&t)) {
                 q.push((t, d + 1));
             }
         }
     }
     println!(
-        "{{\"epochs\": {}, \"max_idx\": {}, \"dup\": {}, \"ticks\": {}, \"mutation\": \"{}\", \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
-        cfg.epochs, cfg.max_idx, cfg.dup, cfg.ticks, get("--mutation", "none"), seen.len(), explored, max_depth, max_acked, verdict.replace('"', "'"), t0.elapsed().as_secs_f64()
+        "{{\"epochs\": {}, \"max_idx\": {}, \"dup\": {}, \"fifo\": {}, \"instant_replies\": {}, \"ticks\": {}, \"shuffle_seed\": {}, \"mutation\": \"{}\", \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
+        cfg.epochs, cfg.max_idx, cfg.dup, cfg.fifo, cfg.instant, cfg.ticks, shuffle, get("--mutation", "none"), seen.len(), explored, max_depth, max_acked, verdict.replace('"', "'"), t0.elapsed().as_secs_f64()
     );
 }

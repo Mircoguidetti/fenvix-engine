@@ -1,0 +1,1 @@
+{"epochs": 2, "max_idx": 2, "dup": false, "ticks": false, "mutation": "recovery_longest", "distinct_states": 20000000, "explored": 19999800, "max_depth": 45, "max_acked": 1, "verdict": "bounded: stopped at 20000000 states (not exhaustive)", "secs": 559.0}

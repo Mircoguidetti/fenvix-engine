@@ -728,3 +728,75 @@ mod tests {
         assert!(ev.iter().any(|e| matches!(e, WEvent::Stale(11))), "{ev:?}");
     }
 }
+
+#[cfg(test)]
+mod schedule_tests {
+    use super::*;
+
+    fn b(x: u64) -> Bytes {
+        Bytes::copy_from_slice(&x.to_le_bytes())
+    }
+
+    /// Deliver one message to one node and return the writer's events (replies delivered at once).
+    fn step(nodes: &mut BTreeMap<NodeId, NodeCore>, w: &mut WriterDb, n: NodeId, m: Msg) -> (Vec<(NodeId, Msg)>, Vec<WEvent>) {
+        let (mut msgs, mut ev) = (vec![], vec![]);
+        for (_, r) in nodes.get_mut(&n).unwrap().handle(1000, m).replies {
+            let o = w.on_msg(n, r);
+            msgs.extend(o.msgs);
+            ev.extend(o.events);
+        }
+        (msgs, ev)
+    }
+
+    /// The schedule of the `no_fencing` counterexample (2 writers, 2 indices): A (epoch 1) appends W after B (epoch 2)
+    /// fenced nodes 1+2 from logs without W; B's barrier then overwrites W on node 1. With the fence, A is rejected and
+    /// nothing is acknowledged; without it, W is acknowledged and then lost.
+    fn schedule(m: Mutations) -> (bool, bool) {
+        let mut nodes: BTreeMap<NodeId, NodeCore> = (1..=3).map(|i| (i, NodeCore::new(i, m))).collect();
+        let (mut a, o) = WriterDb::open(1, 1, vec![1, 2, 3], 0, m);
+        let mut q = o.msgs;
+        while let Some((n, msg)) = q.pop() {
+            let (more, _) = step(&mut nodes, &mut a, n, msg);
+            q.extend(more);
+        }
+        assert!(a.is_active());
+        // A appends W at index 2; the APPENDs are in flight
+        a.append(b(77)).unwrap();
+        let mut o = WOut::default();
+        a.flush(&mut o);
+        let w_msgs = o.msgs;
+        // B opens: fences nodes 1 and 2 (whose logs hold only A's barrier), recovers, appends its barrier at 2
+        let (mut bw, o) = WriterDb::open(1, 2, vec![1, 2, 3], 0, m);
+        let mut barrier_msgs = vec![];
+        let mut q: Vec<(NodeId, Msg)> = o.msgs.into_iter().filter(|(n, _)| *n != 3).collect();
+        while let Some((n, msg)) = q.pop() {
+            let (more, _) = step(&mut nodes, &mut bw, n, msg);
+            for (n2, m2) in more {
+                if matches!(m2, Msg::Append { .. }) { barrier_msgs.push((n2, m2)) } else { q.push((n2, m2)) }
+            }
+        }
+        assert!(bw.is_active());
+        // A's W reaches nodes 1 and 2
+        let mut acked = false;
+        for (n, msg) in w_msgs.into_iter().filter(|(n, _)| *n != 3) {
+            let (_, ev) = step(&mut nodes, &mut a, n, msg);
+            acked |= ev.iter().any(|e| matches!(e, WEvent::Committed(c) if *c >= 2));
+        }
+        // B's barrier reaches node 1
+        for (n, msg) in barrier_msgs.into_iter().filter(|(n, _)| *n == 1) {
+            step(&mut nodes, &mut bw, n, msg);
+        }
+        // what would recovery from nodes 1+2 choose?
+        let logs: Vec<(NodeId, Idx, Epoch)> = [1, 2].iter().map(|n| { let d = &nodes[n].dbs[&1]; (*n, d.last(), d.last_epoch()) }).collect();
+        let src = choose_source(logs, 0, &Mutations::default()).unwrap().0;
+        let has_w = nodes[&src].dbs[&1].get(2).map_or(false, |e| e.data == b(77));
+        (acked, acked && !has_w)
+    }
+
+    #[test]
+    fn no_fencing_loses_an_acknowledged_write() {
+        assert_eq!(schedule(Mutations::default()), (false, false), "with the fence: W is never acknowledged");
+        let m = Mutations { no_fencing: true, ..Default::default() };
+        assert_eq!(schedule(m), (true, true), "without the fence: W is acknowledged, then lost");
+    }
+}
