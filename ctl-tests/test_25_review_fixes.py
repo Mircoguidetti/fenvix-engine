@@ -169,3 +169,26 @@ def test_turning_relaxed_off_applies_on_every_process():
         assert after == before, f"P2 acknowledged {after - before} writes before they were durable after relaxed was turned off"
     finally:
         p2.term()
+
+
+def test_a_default_write_concern_does_not_make_writes_relaxed():
+    """Replica-set mode with setDefaultRWConcern {w: 1, j: false}: a write that names no write concern must stay durable
+    before its acknowledgement on a relaxed database (the README's semantics). Before the fix the default made it relaxed."""
+    bucket = make_bucket("defwc")
+    srv = Server(bucket, "defwc", idle=600, holder="W1")
+    srv.extra += ["--replica-set", "rs0", "--advertise", f"127.0.0.1:{srv.port}"]
+    srv.start()
+    try:
+        c = srv.client()
+        c["r"]["c"].insert_one({"_id": 0})
+        st, r = srv.admin.put("/v1/databases/r/durability", {"relaxed_flush_ms": 2000})
+        assert st == 200, r
+        c.admin.command({"setDefaultRWConcern": 1, "defaultWriteConcern": {"w": 1, "j": False}})
+        before = c.admin.command("tenantStats")["groupCommit"]["relaxedAcks"]
+        for i in range(1, 21):
+            c["r"]["c"].insert_one({"_id": i})          # no write concern: the default applies
+        after = c.admin.command("tenantStats")["groupCommit"]["relaxedAcks"]
+        print("relaxed acknowledgements of writes without a write concern:", after - before)
+        assert after == before, f"{after - before} writes without a write concern were acknowledged before they were durable"
+    finally:
+        srv.term()
