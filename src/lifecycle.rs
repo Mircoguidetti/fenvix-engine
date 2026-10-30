@@ -1047,6 +1047,7 @@ static WAL_STATE: std::sync::LazyLock<Mutex<HashMap<String, WalGcState>>> = std:
 /// Forget what this process knows about a tenant's WAL (the database was dropped: its WAL ids start again).
 pub fn forget_wal_state(id: &str) {
     WAL_STATE.lock().unwrap().remove(id);
+    STORED_MANIFEST.lock().unwrap().remove(id);
     FULL_GC.lock().unwrap().remove(id);
 }
 
@@ -1131,12 +1132,49 @@ async fn gc_wal_incremental(store: &Arc<dyn ObjectStore>, id: &str, mode: u8) ->
         }
         return Ok(());
     }
-    // The writer's own view of the manifest. No open writer (it closed meanwhile): the close-time pass collects the tenant.
-    let Some(m) = WRITER_DBS.lock().unwrap().get(id).map(|db| db.manifest()) else {
+    // A process that no longer owns the tenant (its lease lapsed, another process may be replaying the WAL) deletes nothing.
+    if !owner_valid(id) {
+        WAL_GC_NOT_OWNER.fetch_add(1, Relaxed);
+        return Ok(());
+    }
+    // The writer's in-memory manifest is NOT what is stored: slatedb's memtable flusher moves its replay boundary before the
+    // manifest PUT (which may still fail, be retried for minutes, or be fenced). Only the version id is trustworthy: it changes
+    // after a successful write, and a manifest version never changes once stored. So the pass uses the STORED manifest of that
+    // id, read once per version (one GET); a crash before the next PUT then recovers from a manifest whose WAL still exists.
+    // No open writer (it closed meanwhile): the close-time pass collects the tenant.
+    let Some(mid) = WRITER_DBS.lock().unwrap().get(id).map(|db| db.manifest().id()) else {
         WAL_GC_NOOP.fetch_add(1, Relaxed);
         return Ok(());
     };
+    let cached = STORED_MANIFEST.lock().unwrap().get(id).filter(|(v, _)| *v == mid).map(|(_, m)| Arc::clone(m));
+    let m = match cached {
+        Some(m) => m,
+        None => {
+            let admin = Admin::builder(tenant_path(id), Arc::clone(store)).build();
+            let Some(m) = admin.read_manifest(Some(mid)).await? else {
+                WAL_GC_NOOP.fetch_add(1, Relaxed);
+                return Ok(());
+            };
+            let m = Arc::new(m);
+            STORED_MANIFEST.lock().unwrap().insert(id.to_string(), (mid, Arc::clone(&m)));
+            m
+        }
+    };
+    if !owner_valid(id) {
+        WAL_GC_NOT_OWNER.fetch_add(1, Relaxed);
+        return Ok(());
+    }
     gc_wal_with(store, id, mode, &m).await
+}
+
+/// The stored manifest the hot WAL pass last read, per tenant: (version id, manifest).
+static STORED_MANIFEST: std::sync::LazyLock<Mutex<HashMap<String, (u64, Arc<slatedb::VersionedManifest>)>>> = std::sync::LazyLock::new(Default::default);
+/// Hot WAL passes skipped because this process no longer held the tenant.
+pub static WAL_GC_NOT_OWNER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Set by the server: whether this process still owns a tenant (its lease is valid). Unset (tests of this crate): always.
+pub static OWNER_VALID: std::sync::OnceLock<Box<dyn Fn(&str) -> bool + Send + Sync>> = std::sync::OnceLock::new();
+fn owner_valid(id: &str) -> bool {
+    OWNER_VALID.get().map_or(true, |f| f(id))
 }
 
 /// The bounded WAL pass of [`gc_wal_incremental`] with a given view of the manifest.
@@ -1153,6 +1191,11 @@ async fn gc_wal_with(store: &Arc<dyn ObjectStore>, id: &str, mode: u8, m: &slate
     // Without one the WAL below the replay boundary goes, as before: a restore that would need it answers retention_gap.
     // Replay boundaries only grow with the manifest version, so the checkpoint on the oldest manifest has the lowest one.
     let retained = WAL_RETAIN.get().map_or(false, |f| !f(id).is_zero());
+    if retained && m.checkpoints().is_empty() {
+        // Retention just switched on and its first restore point is not taken yet: keep everything until it is.
+        WAL_GC_NOOP.fetch_add(1, Relaxed);
+        return Ok(());
+    }
     if let Some(cp) = m.checkpoints().iter().filter(|_| retained).min_by_key(|c| c.manifest_id) {
         let r = match st.oldest_cp {
             Some((u, r)) if u == cp.id.as_u128() => r,

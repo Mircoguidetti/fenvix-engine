@@ -40,6 +40,7 @@ mod keyenc;
 mod layout;
 mod lease;
 mod localcas;
+mod faults;
 mod locallog;
 mod natural;
 mod netguard;
@@ -440,6 +441,7 @@ async fn run() -> Result<()> {
         "memory" => Arc::new(object_store::memory::InMemory::new()),
         other => anyhow::bail!("unknown --store {other}"),
     };
+    let s3 = faults::wrap(s3);
     tenant_bench::lifecycle::FLUSH_INTERVAL_MS.store(args.wal_flush_ms, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ACK_BEFORE_DURABLE.store(args.ack_before_durable, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::EXPLICIT_FLUSH.store(args.wal_flush_ms == 0, std::sync::atomic::Ordering::Relaxed);
@@ -491,6 +493,11 @@ async fn run() -> Result<()> {
     leases.process_mode.store(args.process_lease, std::sync::atomic::Ordering::Relaxed);
     leases.disabled.store(args.no_leases, std::sync::atomic::Ordering::Relaxed);
     leases.unsafe_skip.store(args.unsafe_skip_ownership_checks, std::sync::atomic::Ordering::Relaxed);
+    {
+        // The hot WAL cleanup of an open writer runs only while this process owns the tenant.
+        let l = Arc::clone(&leases);
+        let _ = tenant_bench::lifecycle::OWNER_VALID.set(Box::new(move |id: &str| l.disabled.load(std::sync::atomic::Ordering::Relaxed) || l.valid(id)));
+    }
     let lc_for_ctl = Arc::clone(&lc);
     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
     dbs.spawn_reaper();

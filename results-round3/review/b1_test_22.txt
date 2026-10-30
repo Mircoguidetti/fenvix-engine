@@ -1,0 +1,11 @@
+== binary: b1-nofix-bin (control: B1 reverted)
+walGc: {'passes': 3, 'deleted': 252, 'listUs': 11874, 'deleteUs': 134416, 'totalUs': 147634, 'noop': 2}
+acknowledged 900, missing after restart 900
+E   AssertionError: 900 acknowledged writes lost, first [0, 1, 2, 3, 4]
+/home/user/fenvix-engine/ctl-tests/test_22_wal_gc_stored_manifest.py:61: AssertionError: 900 acknowledged writes lost, first [0, 1, 2, 3, 4]
+FAILED test_22_wal_gc_stored_manifest.py::test_crash_while_manifest_put_hangs_keeps_every_acknowledged_write
+1 failed in 10.55s
+== binary: b1-bin (with the B1 fix)
+walGc: {'passes': 3, 'deleted': 0, 'listUs': 16177, 'deleteUs': 0, 'totalUs': 17961, 'noop': 2}
+acknowledged 900, missing after restart 0
+1 passed in 10.45s
