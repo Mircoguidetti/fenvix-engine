@@ -1,9 +1,9 @@
 {
- "comment": "round3 real S3, rev 5: the final engine (memtable 8 MiB, local-log recovery in parallel) on every after-mode step; also deletes the bucket run 4 left behind",
- "rev": 5,
+ "comment": "round3 real S3, rev 6: the engine after the review fixes (WAL cleanup from the stored manifest, process lease revocation, local log fixes) on the steps those fixes touch",
+ "rev": 6,
  "steps": [
   {
-   "name": "s3h-immediate-r1",
+   "name": "s3i-immediate-r1",
    "mode": "immediate",
    "dbs": 1,
    "rate": 1,
@@ -12,7 +12,7 @@
    "warm": 60
   },
   {
-   "name": "s3h-immediate-r10",
+   "name": "s3i-immediate-r10",
    "mode": "immediate",
    "dbs": 1,
    "rate": 10,
@@ -21,7 +21,7 @@
    "warm": 60
   },
   {
-   "name": "s3h-immediate-r100",
+   "name": "s3i-immediate-r100",
    "mode": "immediate",
    "dbs": 1,
    "rate": 100,
@@ -30,43 +30,7 @@
    "warm": 60
   },
   {
-   "name": "s3h-relaxed-r1",
-   "mode": "relaxed",
-   "dbs": 1,
-   "rate": 1,
-   "mix": "half",
-   "secs": 240,
-   "warm": 60
-  },
-  {
-   "name": "s3h-relaxed-r10",
-   "mode": "relaxed",
-   "dbs": 1,
-   "rate": 10,
-   "mix": "half",
-   "secs": 240,
-   "warm": 60
-  },
-  {
-   "name": "s3h-relaxed-r100",
-   "mode": "relaxed",
-   "dbs": 1,
-   "rate": 100,
-   "mix": "half",
-   "secs": 240,
-   "warm": 60
-  },
-  {
-   "name": "s3h-local-r1",
-   "mode": "local",
-   "dbs": 1,
-   "rate": 1,
-   "mix": "half",
-   "secs": 240,
-   "warm": 60
-  },
-  {
-   "name": "s3h-local-r10",
+   "name": "s3i-local-r10",
    "mode": "local",
    "dbs": 1,
    "rate": 10,
@@ -75,16 +39,16 @@
    "warm": 60
   },
   {
-   "name": "s3h-local-r100",
-   "mode": "local",
+   "name": "s3i-relaxed-r10",
+   "mode": "relaxed",
    "dbs": 1,
-   "rate": 100,
+   "rate": 10,
    "mix": "half",
    "secs": 240,
    "warm": 60
   },
   {
-   "name": "s3h-fleet100-immediate",
+   "name": "s3i-fleet100-immediate",
    "mode": "immediate",
    "dbs": 100,
    "rate": 1,
@@ -93,16 +57,7 @@
    "warm": 60
   },
   {
-   "name": "s3h-fleet100-relaxed",
-   "mode": "relaxed",
-   "dbs": 100,
-   "rate": 1,
-   "mix": "write",
-   "secs": 240,
-   "warm": 60
-  },
-  {
-   "name": "s3h-fleet100-local",
+   "name": "s3i-fleet100-local",
    "mode": "local",
    "dbs": 100,
    "rate": 1,
