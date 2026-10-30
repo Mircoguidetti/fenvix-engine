@@ -1,0 +1,16 @@
+[package]
+name = "journal3z-sim"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic simulator with fault injection and an invariant checker for the journal3z protocol"
+
+[workspace]
+
+[dependencies]
+journal3z-core = { path = "../core" }
+bytes = "1"
+serde_json = "1"
+
+[profile.release]
+debug = 1
+overflow-checks = true

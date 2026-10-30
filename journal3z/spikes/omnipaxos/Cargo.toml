@@ -1,0 +1,20 @@
+[package]
+name = "spike-omnipaxos"
+version = "0.1.0"
+edition = "2021"
+description = "journal3z library spike: OmniPaxos 0.2.4 on the common test bed (delay line, fdatasync'd group-commit files)"
+
+[workspace]
+
+[dependencies]
+j3z-harness = { path = "../harness" }
+omnipaxos = "=0.2.4"
+omnipaxos_storage = "=0.2.4"
+tokio = { version = "1", features = ["full"] }
+bytes = "1"
+anyhow = "1"
+futures = "0.3"
+serde_json = "1"
+
+[profile.release]
+debug = false

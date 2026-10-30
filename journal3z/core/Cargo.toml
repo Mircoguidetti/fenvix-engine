@@ -1,0 +1,10 @@
+[package]
+name = "journal3z-core"
+version = "0.1.0"
+edition = "2021"
+description = "The journal3z protocol as sans-IO state machines (journal node, writer); used by the simulator and the custom spike"
+
+[workspace]
+
+[dependencies]
+bytes = "1"
