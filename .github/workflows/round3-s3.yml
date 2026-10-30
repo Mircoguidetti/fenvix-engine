@@ -94,9 +94,19 @@ jobs:
           mkdir -p results-round3/real-s3/engine-logs
           for f in /tmp/r3work/logs/*.log; do [ -f "$f" ] && tail -c 2000000 "$f" | gzip > results-round3/real-s3/engine-logs/$(basename $f).gz; done
           python3 tools/round3/s3/scan.py results-round3/real-s3
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
           git add results-round3/real-s3
-          git -c user.name=github-actions -c user.email=actions@users.noreply.github.com commit -qm "round3-s3 run ${{ github.run_id }}: raw results" || true
+          git commit -qm "round3-s3 run ${{ github.run_id }}: raw results" || true
           for i in 1 2 3; do git pull --rebase -q origin round3 && git push origin HEAD:round3 && break; sleep 5; done
+
+      - name: Copy of the scanned results as an artifact (in case the push fails)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: round3-s3-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results-round3/real-s3
+          retention-days: 7
 
       - name: Summary
         if: always()

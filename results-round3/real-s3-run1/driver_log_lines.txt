@@ -1,0 +1,160 @@
+2026-10-29T22:55:34.5609351Z [36;1mmkdir -p /tmp/r3bin && cp target/release/mongo-server /tmp/r3bin/after[0m
+2026-10-29T22:55:34.5612645Z [36;1mcp target/release/mongo-server /tmp/r3bin/before[0m
+2026-10-29T22:55:34.5613516Z [36;1msha256sum /tmp/r3bin/after /tmp/r3bin/before | tee -a "$GITHUB_STEP_SUMMARY"[0m
+2026-10-29T23:02:02.5840954Z d365827b03c212c4653a764abda4ce2d02a2647b9ae9a36cf6664f6900d5029a  /tmp/r3bin/after
+2026-10-29T23:02:02.6188062Z 5fb89bbcfd4c4ae1096e3cbb18394063b6d2f3b8e8b39923d44635509b7436c8  /tmp/r3bin/before
+2026-10-29T23:02:05.6570853Z ##[group]Run bash tools/round3/s3/bucket.sh create
+2026-10-29T23:02:05.6571298Z [36;1mbash tools/round3/s3/bucket.sh create[0m
+2026-10-29T23:02:10.1476961Z {"bucket":"fenvix-test-r3-40967620447","action":"create","region":"eu-west-1","steps":[{"step":"create-bucket-eu-west-1","ok":true,"error":""},{"step":"tag","ok":true,"error":""},{"step":"lifecycle-1-day","ok":true,"error":""}]}
+2026-10-29T23:02:10.1547220Z   ROUND3_ENGINE_BIN: /tmp/r3bin/after
+2026-10-29T23:02:10.1547537Z   ROUND3_BEFORE_BIN: /tmp/r3bin/before
+2026-10-29T23:02:10.2082321Z 23:02:10 step s3-before-r1: estimate 329 PUT-tier + 574 GET-tier = 0.0020 USD; spent so far 0.0000 USD
+2026-10-29T23:03:10.9313799Z spesa 0,00 / 10,00 USD (PUT 27, LIST 15, GET 62; passo s3-before-r1)
+2026-10-29T23:04:10.9497399Z spesa 0,00 / 10,00 USD (PUT 65, LIST 29, GET 124; passo s3-before-r1)
+2026-10-29T23:05:10.9678198Z spesa 0,00 / 10,00 USD (PUT 103, LIST 42, GET 184; passo s3-before-r1)
+2026-10-29T23:06:10.9859595Z spesa 0,00 / 10,00 USD (PUT 142, LIST 55, GET 237; passo s3-before-r1)
+2026-10-29T23:06:29.2897119Z 23:06:29 step s3-before-r1: exit 0 in 259 s; {"name": "s3-before-r1", "usd_db_month": 11.5563, "put_db_min": 49.0, "get_db_min": 56.33, "s3_per_req": 1.848, "lat": {"all": {"read_steady_p50_ms": 1.19, "read_steady_p99_ms": 110.7, "write_steady_p50_ms": 99.91, "write_steady_p99_ms": 226.75, "errors": 0}}}
+2026-10-29T23:06:29.2904634Z 23:06:29 step s3-before-r10: estimate 1605 PUT-tier + 1060 GET-tier = 0.0091 USD; spent so far 0.0046 USD
+2026-10-29T23:07:11.0040842Z spesa 0,01 / 10,00 USD (PUT 256, LIST 72, GET 325; passo s3-before-r10)
+2026-10-29T23:08:11.0217350Z spesa 0,01 / 10,00 USD (PUT 521, LIST 86, GET 377; passo s3-before-r10)
+2026-10-29T23:09:11.0391036Z spesa 0,01 / 10,00 USD (PUT 782, LIST 99, GET 427; passo s3-before-r10)
+2026-10-29T23:10:11.0573800Z spesa 0,01 / 10,00 USD (PUT 1081, LIST 112, GET 477; passo s3-before-r10)
+2026-10-29T23:10:45.9125951Z 23:10:45 step s3-before-r10: exit 0 in 257 s; {"name": "s3-before-r10", "usd_db_month": 63.2818, "put_db_min": 288.97, "get_db_min": 50.0, "s3_per_req": 0.565, "lat": {"all": {"read_steady_p50_ms": 1.05, "read_steady_p99_ms": 24.33, "write_steady_p50_ms": 106.31, "write_steady_p99_ms": 351.82, "errors": 0}}}
+2026-10-29T23:10:45.9133492Z 23:10:45 step s3-before-r100: estimate 14362 PUT-tier + 5920 GET-tier = 0.0801 USD; spent so far 0.0146 USD
+2026-10-29T23:11:13.0780178Z spesa 0,02 / 10,00 USD (PUT 1266, LIST 123, GET 562; passo s3-before-r100)
+2026-10-29T23:12:13.0956914Z spesa 0,02 / 10,00 USD (PUT 1874, LIST 136, GET 619; passo s3-before-r100)
+2026-10-29T23:13:13.1128830Z spesa 0,02 / 10,00 USD (PUT 2482, LIST 149, GET 662; passo s3-before-r100)
+2026-10-29T23:14:13.1304421Z spesa 0,03 / 10,00 USD (PUT 3081, LIST 168, GET 712; passo s3-before-r100)
+2026-10-29T23:15:13.1484290Z spesa 0,03 / 10,00 USD (PUT 3678, LIST 191, GET 762; passo s3-before-r100)
+2026-10-29T23:16:13.1661419Z spesa 0,04 / 10,00 USD (PUT 4284, LIST 217, GET 812; passo s3-before-r100)
+2026-10-29T23:17:12.8387119Z 23:17:12 step s3-before-r100: exit 0 in 387 s; {"name": "s3-before-r100", "usd_db_month": 133.9721, "put_db_min": 616.28, "get_db_min": 49.57, "s3_per_req": 0.299, "lat": {"all": {"read_steady_p50_ms": 163906.68, "read_steady_p99_ms": 221940.18, "write_steady_p50_ms": 162529.83, "write_steady_p99_ms": 222077.71, "errors": 10296}}}
+2026-10-29T23:17:12.8396373Z 23:17:12 step s3-immediate-r1: estimate 365 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0384 USD
+2026-10-29T23:17:13.8561505Z 23:17:13 credentials renewed
+2026-10-29T23:17:15.1827570Z spesa 0,04 / 10,00 USD (PUT 4794, LIST 236, GET 842; passo s3-immediate-r1)
+2026-10-29T23:18:15.2009572Z spesa 0,04 / 10,00 USD (PUT 4824, LIST 253, GET 892; passo s3-immediate-r1)
+2026-10-29T23:19:15.2185775Z spesa 0,04 / 10,00 USD (PUT 4853, LIST 255, GET 911; passo s3-immediate-r1)
+2026-10-29T23:20:15.2371163Z spesa 0,04 / 10,00 USD (PUT 4893, LIST 257, GET 922; passo s3-immediate-r1)
+2026-10-29T23:21:15.2547402Z spesa 0,04 / 10,00 USD (PUT 4931, LIST 259, GET 928; passo s3-immediate-r1)
+2026-10-29T23:21:34.1620339Z 23:21:34 step s3-immediate-r1: exit 0 in 260 s; {"name": "s3-immediate-r1", "usd_db_month": 8.691, "put_db_min": 39.33, "get_db_min": 11.33, "s3_per_req": 0.765, "lat": {"all": {"read_steady_p50_ms": 1.14, "read_steady_p99_ms": 125.28, "write_steady_p50_ms": 99.98, "write_steady_p99_ms": 195.45, "errors": 0}}}
+2026-10-29T23:21:34.1628082Z 23:21:34 step s3-immediate-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0428 USD
+2026-10-29T23:22:15.2725270Z spesa 0,05 / 10,00 USD (PUT 5049, LIST 275, GET 1012; passo s3-immediate-r10)
+2026-10-29T23:23:15.2905038Z spesa 0,05 / 10,00 USD (PUT 5338, LIST 278, GET 1021; passo s3-immediate-r10)
+2026-10-29T23:24:15.3083331Z spesa 0,05 / 10,00 USD (PUT 5629, LIST 280, GET 1023; passo s3-immediate-r10)
+2026-10-29T23:25:15.3260433Z spesa 0,05 / 10,00 USD (PUT 5883, LIST 282, GET 1025; passo s3-immediate-r10)
+2026-10-29T23:25:53.0801115Z 23:25:53 step s3-immediate-r10: exit 0 in 259 s; {"name": "s3-immediate-r10", "usd_db_month": 58.7148, "put_db_min": 271.64, "get_db_min": 2.33, "s3_per_req": 0.467, "lat": {"all": {"read_steady_p50_ms": 0.97, "read_steady_p99_ms": 75.9, "write_steady_p50_ms": 104.06, "write_steady_p99_ms": 300.44, "errors": 0}}}
+2026-10-29T23:25:53.0807560Z 23:25:53 step s3-immediate-r100: estimate 14398 PUT-tier + 5920 GET-tier = 0.0803 USD; spent so far 0.0525 USD
+2026-10-29T23:26:19.3434245Z spesa 0,05 / 10,00 USD (PUT 6033, LIST 291, GET 1079; passo s3-immediate-r100)
+2026-10-29T23:27:19.3617660Z spesa 0,06 / 10,00 USD (PUT 6628, LIST 294, GET 1109; passo s3-immediate-r100)
+2026-10-29T23:28:19.3797494Z spesa 0,06 / 10,00 USD (PUT 7234, LIST 296, GET 1111; passo s3-immediate-r100)
+2026-10-29T23:29:19.3973499Z spesa 0,07 / 10,00 USD (PUT 7836, LIST 298, GET 1113; passo s3-immediate-r100)
+2026-10-29T23:30:19.4156113Z spesa 0,07 / 10,00 USD (PUT 8436, LIST 300, GET 1115; passo s3-immediate-r100)
+2026-10-29T23:31:19.4333810Z spesa 0,07 / 10,00 USD (PUT 9034, LIST 306, GET 1117; passo s3-immediate-r100)
+2026-10-29T23:32:19.2235160Z 23:32:19 step s3-immediate-r100: exit 0 in 386 s; {"name": "s3-immediate-r100", "usd_db_month": 128.3555, "put_db_min": 594.05, "get_db_min": 2.36, "s3_per_req": 0.267, "lat": {"all": {"read_steady_p50_ms": 157550.38, "read_steady_p99_ms": 221255.7, "write_steady_p50_ms": 158115.07, "write_steady_p99_ms": 221327.73, "errors": 10355}}}
+2026-10-29T23:32:19.2242563Z 23:32:19 step s3-adaptive-r1: estimate 365 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.0756 USD
+2026-10-29T23:32:19.4511297Z spesa 0,08 / 10,00 USD (PUT 9587, LIST 308, GET 1119; passo s3-immediate-r100)
+2026-10-29T23:32:20.1917207Z 23:32:20 credentials renewed
+2026-10-29T23:33:20.9717826Z spesa 0,08 / 10,00 USD (PUT 9613, LIST 323, GET 1168; passo s3-adaptive-r1)
+2026-10-29T23:34:20.9891197Z spesa 0,08 / 10,00 USD (PUT 9657, LIST 325, GET 1187; passo s3-adaptive-r1)
+2026-10-29T23:35:21.0068517Z spesa 0,08 / 10,00 USD (PUT 9690, LIST 327, GET 1194; passo s3-adaptive-r1)
+2026-10-29T23:36:21.0243354Z spesa 0,08 / 10,00 USD (PUT 9725, LIST 329, GET 1210; passo s3-adaptive-r1)
+2026-10-29T23:36:40.6403249Z 23:36:40 step s3-adaptive-r1: exit 0 in 260 s; {"name": "s3-adaptive-r1", "usd_db_month": 8.5528, "put_db_min": 38.66, "get_db_min": 11.67, "s3_per_req": 0.822, "lat": {"all": {"read_steady_p50_ms": 1.12, "read_steady_p99_ms": 140.72, "write_steady_p50_ms": 99.56, "write_steady_p99_ms": 185.95, "errors": 0}}}
+2026-10-29T23:36:40.6411354Z 23:36:40 step s3-adaptive-r10: estimate 1641 PUT-tier + 1060 GET-tier = 0.0093 USD; spent so far 0.0800 USD
+2026-10-29T23:37:21.5426859Z spesa 0,08 / 10,00 USD (PUT 9822, LIST 343, GET 1285; passo s3-adaptive-r10)
+2026-10-29T23:38:21.5605505Z spesa 0,09 / 10,00 USD (PUT 10092, LIST 346, GET 1295; passo s3-adaptive-r10)
+2026-10-29T23:39:21.5781410Z spesa 0,09 / 10,00 USD (PUT 10364, LIST 348, GET 1297; passo s3-adaptive-r10)
+2026-10-29T23:40:21.5953717Z spesa 0,09 / 10,00 USD (PUT 10629, LIST 350, GET 1299; passo s3-adaptive-r10)
+2026-10-29T23:41:01.8631141Z 23:41:01 step s3-adaptive-r10: exit 0 in 261 s; {"name": "s3-adaptive-r10", "usd_db_month": 59.7892, "put_db_min": 276.64, "get_db_min": 2.0, "s3_per_req": 0.472, "lat": {"all": {"read_steady_p50_ms": 0.85, "read_steady_p99_ms": 31.48, "write_steady_p50_ms": 102.74, "write_steady_p99_ms": 330.85, "errors": 0}}}
+2026-10-29T23:41:01.8638925Z 23:41:01 step s3-adaptive-r100: estimate 14398 PUT-tier + 5920 GET-tier = 0.0803 USD; spent so far 0.0898 USD
+2026-10-29T23:41:22.6155264Z spesa 0,09 / 10,00 USD (PUT 10827, LIST 361, GET 1299; passo s3-adaptive-r100)
+2026-10-29T23:42:22.6327912Z spesa 0,10 / 10,00 USD (PUT 11400, LIST 367, GET 1387; passo s3-adaptive-r100)
+2026-10-29T23:43:22.6521827Z spesa 0,10 / 10,00 USD (PUT 12014, LIST 369, GET 1389; passo s3-adaptive-r100)
+2026-10-29T23:44:22.6697249Z spesa 0,10 / 10,00 USD (PUT 12629, LIST 370, GET 1391; passo s3-adaptive-r100)
+2026-10-29T23:45:22.6884210Z spesa 0,11 / 10,00 USD (PUT 13232, LIST 372, GET 1393; passo s3-adaptive-r100)
+2026-10-29T23:46:22.7056996Z spesa 0,11 / 10,00 USD (PUT 13834, LIST 378, GET 1395; passo s3-adaptive-r100)
+2026-10-29T23:47:22.7236159Z spesa 0,11 / 10,00 USD (PUT 14434, LIST 380, GET 1397; passo s3-adaptive-r100)
+2026-10-29T23:47:29.9429579Z 23:47:29 step s3-adaptive-r100: exit 0 in 388 s; {"name": "s3-adaptive-r100", "usd_db_month": 129.5455, "put_db_min": 599.56, "get_db_min": 2.36, "s3_per_req": 0.265, "lat": {"all": {"read_steady_p50_ms": 157363.42, "read_steady_p99_ms": 222454.65, "write_steady_p50_ms": 158380.11, "write_steady_p99_ms": 222268.82, "errors": 10110}}}
+2026-10-29T23:47:29.9438532Z 23:47:29 step s3-relaxed-r1: estimate 358 PUT-tier + 574 GET-tier = 0.0022 USD; spent so far 0.1148 USD
+2026-10-29T23:47:30.9196280Z 23:47:30 credentials renewed
+2026-10-29T23:48:26.8282628Z spesa 0,12 / 10,00 USD (PUT 14446, LIST 390, GET 1443; passo s3-relaxed-r1)
+2026-10-29T23:49:26.8453284Z spesa 0,12 / 10,00 USD (PUT 14463, LIST 392, GET 1459; passo s3-relaxed-r1)
+2026-10-29T23:50:26.8630640Z spesa 0,12 / 10,00 USD (PUT 14479, LIST 394, GET 1473; passo s3-relaxed-r1)
+2026-10-29T23:51:26.8809413Z spesa 0,12 / 10,00 USD (PUT 14496, LIST 396, GET 1478; passo s3-relaxed-r1)
+2026-10-29T23:51:51.1553221Z 23:51:51 step s3-relaxed-r1: exit 0 in 260 s; {"name": "s3-relaxed-r1", "usd_db_month": 4.2649, "put_db_min": 19.0, "get_db_min": 9.33, "s3_per_req": 0.438, "lat": {"all": {"read_steady_p50_ms": 1.13, "read_steady_p99_ms": 106.09, "write_steady_p50_ms": 0.97, "write_steady_p99_ms": 30.73, "errors": 0}}}
+2026-10-29T23:51:51.1562100Z 23:51:51 step s3-relaxed-r10: estimate 494 PUT-tier + 1060 GET-tier = 0.0031 USD; spent so far 0.1169 USD
+2026-10-29T23:52:30.2537354Z spesa 0,12 / 10,00 USD (PUT 14510, LIST 404, GET 1554; passo s3-relaxed-r10)
+2026-10-29T23:53:30.2710939Z spesa 0,12 / 10,00 USD (PUT 14528, LIST 407, GET 1563; passo s3-relaxed-r10)
+2026-10-29T23:54:30.2891345Z spesa 0,12 / 10,00 USD (PUT 14546, LIST 409, GET 1565; passo s3-relaxed-r10)
+2026-10-29T23:55:30.3071201Z spesa 0,12 / 10,00 USD (PUT 14564, LIST 411, GET 1567; passo s3-relaxed-r10)
+2026-10-29T23:56:11.2105894Z 23:56:11 step s3-relaxed-r10: exit 0 in 260 s; {"name": "s3-relaxed-r10", "usd_db_month": 4.3541, "put_db_min": 20.0, "get_db_min": 2.0, "s3_per_req": 0.036, "lat": {"all": {"read_steady_p50_ms": 1.06, "read_steady_p99_ms": 1.32, "write_steady_p50_ms": 0.92, "write_steady_p99_ms": 1.14, "errors": 0}}}
+2026-10-29T23:56:11.2114911Z 23:56:11 step s3-relaxed-r100: estimate 494 PUT-tier + 5920 GET-tier = 0.0052 USD; spent so far 0.1191 USD
+2026-10-29T23:56:32.3264731Z spesa 0,12 / 10,00 USD (PUT 14576, LIST 417, GET 1567; passo s3-relaxed-r100)
+2026-10-29T23:57:32.3451329Z spesa 0,12 / 10,00 USD (PUT 14596, LIST 423, GET 1651; passo s3-relaxed-r100)
+2026-10-29T23:58:32.3648981Z spesa 0,12 / 10,00 USD (PUT 14614, LIST 425, GET 1653; passo s3-relaxed-r100)
+2026-10-29T23:59:32.3829825Z spesa 0,12 / 10,00 USD (PUT 14634, LIST 427, GET 1656; passo s3-relaxed-r100)
+2026-10-30T00:00:32.3999109Z spesa 0,12 / 10,00 USD (PUT 14652, LIST 429, GET 1658; passo s3-relaxed-r100)
+2026-10-30T00:00:36.4473926Z 00:00:36 step s3-relaxed-r100: exit 0 in 265 s; {"name": "s3-relaxed-r100", "usd_db_month": 4.5335, "put_db_min": 20.75, "get_db_min": 2.92, "s3_per_req": 0.004, "lat": {"all": {"read_steady_p50_ms": 0.85, "read_steady_p99_ms": 1.46, "write_steady_p50_ms": 0.73, "write_steady_p99_ms": 1.24, "errors": 0}}}
+2026-10-30T00:00:36.4480948Z 00:00:36 step s3-local-r1: estimate 250 PUT-tier + 574 GET-tier = 0.0016 USD; spent so far 0.1214 USD
+2026-10-30T00:01:34.4203817Z spesa 0,12 / 10,00 USD (PUT 14663, LIST 441, GET 1708; passo s3-local-r1)
+2026-10-30T00:02:34.4388647Z spesa 0,12 / 10,00 USD (PUT 14673, LIST 443, GET 1725; passo s3-local-r1)
+2026-10-30T00:03:34.4566084Z spesa 0,12 / 10,00 USD (PUT 14682, LIST 445, GET 1739; passo s3-local-r1)
+2026-10-30T00:04:34.4744071Z spesa 0,12 / 10,00 USD (PUT 14692, LIST 447, GET 1749; passo s3-local-r1)
+2026-10-30T00:04:53.4520643Z 00:04:53 step s3-local-r1: exit 0 in 257 s; {"name": "s3-local-r1", "usd_db_month": 2.7818, "put_db_min": 12.0, "get_db_min": 11.0, "s3_per_req": 0.391, "lat": {"all": {"read_steady_p50_ms": 1.13, "read_steady_p99_ms": 279.09, "write_steady_p50_ms": 1.46, "write_steady_p99_ms": 3.35, "errors": 0}}}
+2026-10-30T00:04:53.4529141Z 00:04:53 step s3-local-r10: estimate 250 PUT-tier + 1060 GET-tier = 0.0018 USD; spent so far 0.1234 USD
+2026-10-30T00:04:54.4642902Z 00:04:54 credentials renewed
+2026-10-30T00:05:35.4944514Z spesa 0,13 / 10,00 USD (PUT 14703, LIST 462, GET 1829; passo s3-local-r10)
+2026-10-30T00:06:35.5116630Z spesa 0,13 / 10,00 USD (PUT 14713, LIST 465, GET 1841; passo s3-local-r10)
+2026-10-30T00:07:35.5293323Z spesa 0,13 / 10,00 USD (PUT 14723, LIST 467, GET 1843; passo s3-local-r10)
+2026-10-30T00:08:35.5488591Z spesa 0,13 / 10,00 USD (PUT 14733, LIST 469, GET 1845; passo s3-local-r10)
+2026-10-30T00:09:14.4263463Z 00:09:14 step s3-local-r10: exit 0 in 260 s; {"name": "s3-local-r10", "usd_db_month": 2.6321, "put_db_min": 12.0, "get_db_min": 2.33, "s3_per_req": 0.024, "lat": {"all": {"read_steady_p50_ms": 1.12, "read_steady_p99_ms": 1.39, "write_steady_p50_ms": 1.47, "write_steady_p99_ms": 3.83, "errors": 0}}}
+2026-10-30T00:09:14.4271258Z 00:09:14 step s3-local-r100: estimate 250 PUT-tier + 5920 GET-tier = 0.0039 USD; spent so far 0.1271 USD
+2026-10-30T00:09:37.5663408Z spesa 0,13 / 10,00 USD (PUT 14748, LIST 489, GET 1901; passo s3-local-r100)
+2026-10-30T00:10:37.5844067Z spesa 0,13 / 10,00 USD (PUT 14759, LIST 495, GET 1952; passo s3-local-r100)
+2026-10-30T00:11:37.6016006Z spesa 0,13 / 10,00 USD (PUT 14769, LIST 497, GET 1954; passo s3-local-r100)
+2026-10-30T00:12:37.6189331Z spesa 0,13 / 10,00 USD (PUT 14781, LIST 499, GET 1958; passo s3-local-r100)
+2026-10-30T00:13:37.6376747Z spesa 0,13 / 10,00 USD (PUT 14791, LIST 501, GET 1960; passo s3-local-r100)
+2026-10-30T00:13:38.5062030Z 00:13:38 step s3-local-r100: exit 0 in 264 s; {"name": "s3-local-r100", "usd_db_month": 2.7935, "put_db_min": 12.65, "get_db_min": 3.57, "s3_per_req": 0.003, "lat": {"all": {"read_steady_p50_ms": 0.78, "read_steady_p99_ms": 1.34, "write_steady_p50_ms": 1.1, "write_steady_p99_ms": 2.99, "errors": 0}}}
+2026-10-30T00:13:38.5070357Z 00:13:38 step s3-fleet100-before: estimate 47100 PUT-tier + 57400 GET-tier = 0.2790 USD; spent so far 0.1310 USD
+2026-10-30T00:14:47.1551570Z spesa 0,14 / 10,00 USD (PUT 15210, LIST 980, GET 3191; passo s3-fleet100-before)
+2026-10-30T00:15:51.1726427Z spesa 0,17 / 10,00 USD (PUT 18891, LIST 1513, GET 7261; passo s3-fleet100-before)
+2026-10-30T00:16:51.1910513Z spesa 0,22 / 10,00 USD (PUT 25523, LIST 2635, GET 11847; passo s3-fleet100-before)
+2026-10-30T00:17:51.2109933Z spesa 0,26 / 10,00 USD (PUT 32214, LIST 3698, GET 16575; passo s3-fleet100-before)
+2026-10-30T00:18:51.2297392Z spesa 0,31 / 10,00 USD (PUT 38912, LIST 4713, GET 21139; passo s3-fleet100-before)
+2026-10-30T00:19:41.6491510Z 00:19:41 step s3-fleet100-before: exit 0 in 363 s; {"name": "s3-fleet100-before", "usd_db_month": 17.3542, "put_db_min": 76.49, "get_db_min": 48.13, "s3_per_req": 2.116, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 100.36, "write_steady_p99_ms": 214.84, "errors": 0}}}
+2026-10-30T00:19:41.6498925Z 00:19:41 step s3-fleet100-immediate: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.3347 USD
+2026-10-30T00:19:55.2474779Z spesa 0,34 / 10,00 USD (PUT 42205, LIST 5301, GET 23772; passo s3-fleet100-immediate)
+2026-10-30T00:21:05.2605734Z spesa 0,34 / 10,00 USD (PUT 42650, LIST 5786, GET 25060; passo s3-fleet100-immediate)
+2026-10-30T00:22:07.2772688Z spesa 0,38 / 10,00 USD (PUT 47272, LIST 6224, GET 28293; passo s3-fleet100-immediate)
+2026-10-30T00:23:07.2946445Z spesa 0,41 / 10,00 USD (PUT 53221, LIST 6226, GET 28509; passo s3-fleet100-immediate)
+2026-10-30T00:24:07.3121445Z spesa 0,45 / 10,00 USD (PUT 59212, LIST 6228, GET 28709; passo s3-fleet100-immediate)
+2026-10-30T00:25:07.3294289Z spesa 0,48 / 10,00 USD (PUT 65180, LIST 6230, GET 28909; passo s3-fleet100-immediate)
+2026-10-30T00:25:43.2777021Z 00:25:43 step s3-fleet100-immediate: exit 0 in 362 s; {"name": "s3-fleet100-immediate", "usd_db_month": 12.6192, "put_db_min": 58.21, "get_db_min": 2.63, "s3_per_req": 1.037, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 99.38, "write_steady_p99_ms": 203.07, "errors": 0}}}
+2026-10-30T00:25:43.2785458Z 00:25:43 step s3-fleet100-adaptive: estimate 41790 PUT-tier + 57400 GET-tier = 0.2503 USD; spent so far 0.4939 USD
+2026-10-30T00:25:44.2740909Z 00:25:44 credentials renewed
+2026-10-30T00:26:11.3466102Z spesa 0,50 / 10,00 USD (PUT 67504, LIST 6970, GET 31052; passo s3-fleet100-adaptive)
+2026-10-30T00:27:23.3595651Z spesa 0,50 / 10,00 USD (PUT 67504, LIST 6970, GET 31052; passo s3-fleet100-adaptive)
+2026-10-30T00:28:23.3787252Z spesa 0,55 / 10,00 USD (PUT 73366, LIST 7396, GET 34273; passo s3-fleet100-adaptive)
+2026-10-30T00:29:23.3961132Z spesa 0,58 / 10,00 USD (PUT 79296, LIST 7398, GET 34483; passo s3-fleet100-adaptive)
+2026-10-30T00:30:23.4132996Z spesa 0,62 / 10,00 USD (PUT 85336, LIST 7400, GET 34683; passo s3-fleet100-adaptive)
+2026-10-30T00:31:23.4299567Z spesa 0,65 / 10,00 USD (PUT 91195, LIST 7402, GET 34883; passo s3-fleet100-adaptive)
+2026-10-30T00:31:46.3478898Z 00:31:46 step s3-fleet100-adaptive: exit 0 in 362 s; {"name": "s3-fleet100-adaptive", "usd_db_month": 12.5265, "put_db_min": 57.78, "get_db_min": 2.61, "s3_per_req": 1.03, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 98.6, "write_steady_p99_ms": 205.3, "errors": 0}}}
+2026-10-30T00:31:46.3486466Z 00:31:46 step s3-fleet100-relaxed: estimate 40440 PUT-tier + 57400 GET-tier = 0.2431 USD; spent so far 0.6520 USD
+2026-10-30T00:32:31.9164855Z spesa 0,66 / 10,00 USD (PUT 91658, LIST 7885, GET 36218; passo s3-fleet100-relaxed)
+2026-10-30T00:33:39.9321972Z spesa 0,67 / 10,00 USD (PUT 92122, LIST 8128, GET 39192; passo s3-fleet100-relaxed)
+2026-10-30T00:34:39.9532688Z spesa 0,68 / 10,00 USD (PUT 93334, LIST 8316, GET 39655; passo s3-fleet100-relaxed)
+2026-10-30T00:35:39.9731693Z spesa 0,68 / 10,00 USD (PUT 94537, LIST 8318, GET 39855; passo s3-fleet100-relaxed)
+2026-10-30T00:36:39.9919282Z spesa 0,69 / 10,00 USD (PUT 95737, LIST 8320, GET 40055; passo s3-fleet100-relaxed)
+2026-10-30T00:37:42.0080479Z spesa 0,70 / 10,00 USD (PUT 96728, LIST 8322, GET 40177; passo s3-fleet100-relaxed)
+2026-10-30T00:37:42.5655502Z 00:37:42 step s3-fleet100-relaxed: exit 0 in 356 s; {"name": "s3-fleet100-relaxed", "usd_db_month": 2.6284, "put_db_min": 11.96, "get_db_min": 2.62, "s3_per_req": 0.247, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.7, "write_steady_p99_ms": 1.29, "errors": 0}}}
+2026-10-30T00:37:42.5663342Z 00:37:42 step s3-fleet100-local: estimate 16140 PUT-tier + 57400 GET-tier = 0.1118 USD; spent so far 0.6962 USD
+2026-10-30T00:38:51.5271009Z spesa 0,70 / 10,00 USD (PUT 97154, LIST 8886, GET 41567; passo s3-fleet100-local)
+2026-10-30T00:40:01.5483816Z spesa 0,71 / 10,00 USD (PUT 97304, LIST 9009, GET 42642; passo s3-fleet100-local)
+2026-10-30T00:41:01.5667217Z spesa 0,72 / 10,00 USD (PUT 97903, LIST 9446, GET 45579; passo s3-fleet100-local)
+2026-10-30T00:42:01.5848972Z spesa 0,72 / 10,00 USD (PUT 98315, LIST 9474, GET 45889; passo s3-fleet100-local)
+2026-10-30T00:43:01.6021001Z spesa 0,72 / 10,00 USD (PUT 98720, LIST 9476, GET 46096; passo s3-fleet100-local)
+2026-10-30T00:44:01.6195759Z spesa 0,72 / 10,00 USD (PUT 99226, LIST 9579, GET 46296; passo s3-fleet100-local)
+2026-10-30T00:44:15.8760736Z 00:44:15 step s3-fleet100-local: exit 0 in 393 s; {"name": "s3-fleet100-local", "usd_db_month": 1.1386, "put_db_min": 5.04, "get_db_min": 2.94, "s3_per_req": 0.136, "lat": {"all": {"read_steady_p50_ms": null, "read_steady_p99_ms": null, "write_steady_p50_ms": 0.99, "write_steady_p99_ms": 2.79, "errors": 0}}}
+2026-10-30T00:44:15.8772140Z 00:44:15 all steps: done 20, skipped 0; automatic stop: None; final estimated spend 0.7248 USD (cap 10.0)
+2026-10-30T00:44:17.0043511Z ##[group]Run bash tools/round3/s3/bucket.sh delete
+2026-10-30T00:44:17.0044045Z [36;1mbash tools/round3/s3/bucket.sh delete[0m
+2026-10-30T00:59:55.6851819Z {"bucket":"fenvix-test-r3-40967620447","action":"delete","region":"eu-west-1","steps":[{"step":"empty","ok":true,"error":""},{"step":"objects-left-after-empty:None","ok":true,"error":""},{"step":"delete-bucket","ok":true,"error":""},{"step":"verify-gone","ok":true,"error":""}]}
+2026-10-30T01:00:11.4626931Z [36;1m  echo; cat results-round3/real-s3/bucket_create.json results-round3/real-s3/bucket_delete.json 2>/dev/null; } >> "$GITHUB_STEP_SUMMARY"[0m

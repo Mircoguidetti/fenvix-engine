@@ -55,7 +55,7 @@ class Counter:
 def load_cmd(eng, dbs, rate, mix, secs, out, wc, t_start, pattern="steady", extra=()):
     return [sys.executable, os.path.join(HERE, "load.py"), "--port", str(eng.port), "--dbs", ",".join(dbs), "--rate", str(rate), "--mix", mix,
             "--secs", str(secs), "--out", out, "--wc", wc, "--t-start", str(t_start), "--pattern", pattern,
-            "--procs", str(max(1, min(4, len(dbs) // 25 + (1 if rate * len(dbs) > 150 else 0)))), "--lat-after", str(LAT_AFTER), *extra]
+            "--procs", str(max(1, min(4, len(dbs) // 25 + (1 if rate * len(dbs) > 150 else 0)))), "--lat-after", str(LAT_AFTER), "--pool", os.environ.get("ROUND3_POOL", "64"), *extra]
 
 
 def main():
