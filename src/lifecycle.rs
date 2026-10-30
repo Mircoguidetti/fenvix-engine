@@ -1149,8 +1149,11 @@ async fn gc_wal_with(store: &Arc<dyn ObjectStore>, id: &str, mode: u8, m: &slate
         return Ok(());
     }
     let mut limit = boundary;
+    // With a retention window (`WAL_RETAIN`) the restore points are checkpoints and keep the WAL from the oldest one on.
+    // Without one the WAL below the replay boundary goes, as before: a restore that would need it answers retention_gap.
     // Replay boundaries only grow with the manifest version, so the checkpoint on the oldest manifest has the lowest one.
-    if let Some(cp) = m.checkpoints().iter().min_by_key(|c| c.manifest_id) {
+    let retained = WAL_RETAIN.get().map_or(false, |f| !f(id).is_zero());
+    if let Some(cp) = m.checkpoints().iter().filter(|_| retained).min_by_key(|c| c.manifest_id) {
         let r = match st.oldest_cp {
             Some((u, r)) if u == cp.id.as_u128() => r,
             _ => {
