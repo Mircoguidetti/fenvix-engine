@@ -436,6 +436,11 @@ pub async fn recover(dbs: &Arc<crate::dbs::Dbs>, old: Vec<(u64, PathBuf)>, timeo
     if old.is_empty() {
         return Ok((0, 0));
     }
+    if std::env::var("MONGO_TEST_LOCALLOG_NO_REPLAY").map_or(false, |v| v == "1") {
+        // Test only (negative control of the kill -9 test): skip the replay, so the writes only in the log are missing.
+        eprintln!("TEST: local log replay disabled (MONGO_TEST_LOCALLOG_NO_REPLAY): never use this in production");
+        return Ok((0, 0));
+    }
     let mut by_db: BTreeMap<String, Vec<Record>> = BTreeMap::new();
     let mut max_seq = 0;
     for (_, p) in &old {

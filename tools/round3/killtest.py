@@ -28,9 +28,12 @@ a = ap.parse_args()
 trials = []
 for t in range(a.trials):
     name = f"kill-{a.mode}-{t}"
-    flags, bin_ = R.mode_flags(a.mode, name)
+    # local-noreplay: the negative control of "local" (the log is written, the restart does not apply it: acknowledged
+    # writes only in the log must then be missing, which shows the test can see a loss)
+    flags, bin_ = R.mode_flags("local" if a.mode == "local-noreplay" else a.mode, name)
     bucket = E.make_bucket(f"r3-{name}")
-    eng = E.Engine(name, bucket, flags, bin=bin_, holder=f"kill-{a.mode}").start()
+    env = {"MONGO_TEST_LOCALLOG_NO_REPLAY": "1"} if a.mode == "local-noreplay" else None
+    eng = E.Engine(name, bucket, flags, bin=bin_, holder=f"kill-{a.mode}", env=env).start()
     dbs = [f"k{i:02d}" for i in range(a.dbs)]
     E.prefill(eng, dbs, n=10)
     acked = os.path.join(WORK, f"{name}.acked")
@@ -66,7 +69,11 @@ for t in range(a.trials):
           "replayed": st.get("localLog", {}).get("replayed") if isinstance(st, dict) else None}
     print(json.dumps(tr), flush=True)
     trials.append(tr)
-res = {"mode": a.mode, "dbs": a.dbs, "rate_per_db": a.rate, "secs_before_kill": a.secs, "trials": trials,
+import hashlib
+_bin = bin_ or E.ENGINE_BIN
+res = {"binary": _bin, "binary_sha256": hashlib.sha256(open(_bin, "rb").read()).hexdigest(),
+       "note": "SIGKILL kills the process only: the page cache survives, so this does not test that fdatasync reached the disk (power or VM loss is not tested)",
+       "mode": a.mode, "dbs": a.dbs, "rate_per_db": a.rate, "secs_before_kill": a.secs, "trials": trials,
        "acked_total": sum(t["acked"] for t in trials), "lost_total": sum(t["lost"] for t in trials)}
 dump(os.path.join(a.out, f"kill-{a.mode}.json"), res)
 print("RESULT", json.dumps({k: res[k] for k in ("mode", "acked_total", "lost_total")}))
