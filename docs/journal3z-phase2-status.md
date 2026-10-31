@@ -503,3 +503,4 @@ minimi del §2a, poi le 50 corse da 15 minuti; si ferma al primo fallimento. Tot
 | corsa | minuti | guasti | conferme | perse / tardive / dischi / sovrapposizioni | ripresa scrittore: oltre 15 s (max) | ripresa nodo: max |
 |---|---|---|---|---|---|---|
 | pezzo 1 (seme 1001) | 115,3 | 267 | 1.309.959 | 0 / 0 / 0 / 0 | 0 su 1.652 (13,6 s) | 1,3 s |
+| chunk-2 (seme 1002) | 115,5 | 276 | 1.310.375 | 0 / 0 / 0 / 0 | 0 su 1.626 (13,2 s) | 1,3 s |

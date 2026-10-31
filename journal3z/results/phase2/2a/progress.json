@@ -5,66 +5,72 @@
    "minutes": 115.3,
    "failures": [],
    "acked": 1309959
+  },
+  {
+   "name": "chunk-2",
+   "minutes": 115.5,
+   "failures": [],
+   "acked": 1310375
   }
  ],
- "fault_minutes": 115.30551223365,
+ "fault_minutes": 230.78550877676668,
  "faults": {
-  "ClockDrift": 13,
-  "ClockJump": 27,
-  "CutNode": 28,
-  "CutOneWay": 13,
-  "CutZone": 9,
-  "DiskFull": 6,
-  "DiskLoss": 10,
-  "FsyncError": 8,
-  "MonoJump": 15,
-  "NodeKill": 47,
-  "PowerCut": 8,
-  "PowerCutAll": 4,
-  "S3Pause": 4,
-  "TwoWriters": 24,
-  "WriterKill": 51
+  "ClockDrift": 25,
+  "ClockJump": 53,
+  "CutNode": 59,
+  "CutOneWay": 24,
+  "CutZone": 18,
+  "DiskFull": 15,
+  "DiskLoss": 17,
+  "FsyncError": 17,
+  "MonoJump": 30,
+  "NodeKill": 101,
+  "PowerCut": 16,
+  "PowerCutAll": 6,
+  "S3Pause": 10,
+  "TwoWriters": 50,
+  "WriterKill": 102
  },
- "acked": 1309959,
+ "acked": 2620334,
  "minimums": {
   "node kill -9 (NodeKill)": {
-   "have": 47,
+   "have": 101,
    "need": 300
   },
   "writer kill -9 (WriterKill)": {
-   "have": 51,
+   "have": 102,
    "need": 300
   },
   "disk lost (DiskLoss)": {
-   "have": 10,
+   "have": 17,
    "need": 50
   },
   "network cuts (CutNode+CutOneWay+CutZone)": {
-   "have": 50,
+   "have": 101,
    "need": 300
   },
   "  of which one direction (CutOneWay)": {
-   "have": 13,
+   "have": 24,
    "need": 75
   },
   "  of which whole zone (CutZone)": {
-   "have": 9,
+   "have": 18,
    "need": 50
   },
   "clock jumps (ClockJump)": {
-   "have": 27,
+   "have": 53,
    "need": 150
   },
   "two writers (TwoWriters)": {
-   "have": 24,
+   "have": 50,
    "need": 150
   },
   "fsync errors (FsyncError)": {
-   "have": 8,
+   "have": 17,
    "need": 50
   },
   "disk full (DiskFull)": {
-   "have": 6,
+   "have": 15,
    "need": 50
   }
  },
