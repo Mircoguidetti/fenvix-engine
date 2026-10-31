@@ -1,0 +1,268 @@
+n,t_s,kind,detail,heal_s,writer_dbs,node_dbs,max_writer_recovery_s,max_node_recovery_s
+1,26.2,ClockDrift,"writer 1 monotonic clock rate now -4.0 %",0.1,10,0,0.29,0.00
+2,46.5,TwoWriters,"writer 2 (owned [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]) stopped for 14582 ms",14.6,10,0,10.10,0.00
+3,76.6,CutOneWay,"node 0 drop_s2c from every writer for 13675 ms",13.9,0,30,0.00,0.54
+4,104.6,CutOneWay,"node 1 drop_c2s from every writer for 11734 ms",12.0,0,30,0.00,0.56
+5,145.6,ClockJump,"writer 0 wall clock offset now -3237 ms",0.1,14,0,0.71,0.00
+6,170.4,TwoWriters,"writer 1 (owned [1, 2, 4, 5, 7, 8, 10, 13, 16, 19, 20, 22, 23, 25, 28, 29]) stopped for 15752 ms",15.8,16,0,11.59,0.00
+7,198.3,NodeKill,"node 2 restarted after 6438 ms",6.5,0,30,0.00,0.50
+8,227.8,CutNode,"node 2 cut from every writer for 8843 ms",9.1,0,30,0.00,0.48
+9,247.8,WriterKill,"writer 2 (owned [1, 2, 4, 5, 7, 8, 10, 13, 16, 19, 20, 22, 23, 25, 28, 29]) restarted after 1906 ms",1.9,16,0,9.95,0.00
+10,268.1,TwoWriters,"writer 1 (owned [1, 2, 4, 5, 7, 8, 10, 13, 16, 19, 20, 22, 23, 25, 28, 29]) stopped for 13452 ms",13.5,16,0,13.50,0.00
+11,305.5,ClockJump,"writer 0 wall clock offset now -716 ms",0.1,24,0,0.43,0.00
+12,330.6,WriterKill,"writer 1 (owned []) restarted after 3054 ms",3.1,0,0,0.00,0.58
+13,356.3,ClockDrift,"writer 0 monotonic clock rate now +1.6 %",0.1,24,0,0.70,0.00
+14,385.6,NodeKill,"node 0 restarted after 4384 ms",4.4,0,30,0.00,0.39
+15,419.4,NodeKill,"node 1 restarted after 5842 ms",5.9,0,30,0.00,0.61
+16,436.4,CutNode,"node 2 cut from every writer for 9816 ms",10.1,0,30,0.00,0.45
+17,458.2,NodeKill,"node 1 restarted after 4318 ms",4.3,0,30,0.00,0.46
+18,488.4,WriterKill,"writer 0 (owned [1, 3, 4, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 24, 25, 26, 27, 28, 30]) restarted after 8116 ms",8.1,24,0,13.34,0.00
+19,508.9,NodeKill,"node 1 restarted after 5561 ms",5.6,0,30,0.00,0.51
+20,538.5,TwoWriters,"writer 2 (owned [1, 2, 5, 8, 10, 11, 14, 16, 17, 19, 20, 23, 24, 26, 29, 30]) stopped for 12285 ms",12.3,16,0,11.80,0.00
+21,560.9,MonoJump,"writer 2 monotonic clock jumped forward 4745 ms",0.1,0,0,0.00,0.70
+22,581.5,WriterKill,"writer 2 (owned []) restarted after 6328 ms",6.3,0,0,0.00,0.83
+23,606.7,MonoJump,"writer 0 monotonic clock jumped forward 4887 ms",0.1,5,0,0.19,0.00
+24,626.0,WriterKill,"writer 2 (owned []) restarted after 5713 ms",5.7,0,0,0.00,0.48
+25,660.6,WriterKill,"writer 0 (owned [2, 20, 24, 29, 30]) restarted after 1642 ms",1.7,5,0,12.23,0.00
+26,673.2,CutZone,"zone 0 isolated for 11931 ms (writer 0 owned [])",12.2,0,30,0.00,0.52
+27,715.1,WriterKill,"writer 1 (owned [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 30]) restarted after 2667 ms",2.7,27,0,11.62,0.00
+28,742.7,WriterKill,"writer 1 (owned []) restarted after 9258 ms",9.3,0,0,0.00,0.54
+29,764.7,ClockJump,"writer 0 wall clock offset now 3736 ms",0.1,15,0,0.49,0.00
+30,793.4,NodeKill,"node 1 restarted after 6989 ms",7.0,0,30,0.00,0.40
+31,821.1,S3Pause,"object store paused 1300 ms",1.3,0,0,0.00,0.75
+32,851.2,NodeKill,"node 1 restarted after 2732 ms",2.7,0,30,0.00,0.54
+33,870.1,DiskLoss,"node 0 disk lost: id 840508667 -> 4106610439",0.0,0,30,0.00,0.43
+34,892.0,WriterKill,"writer 1 (owned []) restarted after 6222 ms",6.2,0,0,0.00,0.54
+35,924.5,WriterKill,"writer 1 (owned []) restarted after 7049 ms",7.1,0,0,0.00,0.56
+36,961.1,DiskFull,"node 0 DiskFull",0.0,0,30,0.00,0.53
+37,982.3,PowerCut,"node 2 PowerCut",0.0,0,30,0.00,0.62
+38,1005.7,FsyncError,"node 2 FsyncError",0.0,0,30,0.00,0.61
+39,1026.5,TwoWriters,"writer 2 (owned [1, 2, 5, 8, 10, 11, 14, 16, 17, 19, 20, 22, 23, 26, 29]) stopped for 17725 ms",17.7,15,0,12.69,0.00
+40,1060.2,CutNode,"node 0 blackhole from every writer for 5916 ms",6.2,0,30,0.00,0.57
+41,1084.0,ClockJump,"writer 2 wall clock offset now -2172 ms",0.1,0,0,0.00,0.44
+42,1106.8,CutOneWay,"node 1 drop_c2s from every writer for 12668 ms",12.9,0,30,0.00,0.40
+43,1144.1,PowerCut,"node 2 PowerCut",0.0,0,30,0.00,0.80
+44,1169.8,NodeKill,"node 0 restarted after 7375 ms",7.4,0,30,0.00,0.84
+45,1191.4,NodeKill,"node 1 restarted after 6106 ms",6.1,0,30,0.00,0.61
+46,1226.7,ClockDrift,"writer 2 monotonic clock rate now -4.3 %",0.1,0,0,0.00,0.68
+47,1247.3,NodeKill,"node 1 restarted after 9266 ms",9.3,0,30,0.00,0.76
+48,1271.4,WriterKill,"writer 0 (owned [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15, 18, 21, 22, 24, 25, 26, 27, 28, 30]) restarted after 1344 ms",1.4,20,0,12.24,0.00
+49,1284.2,ClockJump,"writer 2 wall clock offset now 1384 ms",0.1,8,0,0.29,0.00
+50,1301.3,ClockJump,"writer 2 wall clock offset now -1045 ms",0.1,8,0,0.26,0.00
+51,1319.3,NodeKill,"node 0 restarted after 5338 ms",5.4,0,30,0.00,0.50
+52,1337.8,WriterKill,"writer 2 (owned [3, 8, 11, 14, 18, 22, 26, 27]) restarted after 3151 ms",3.2,8,0,11.95,0.00
+53,1351.6,NodeKill,"node 2 restarted after 5658 ms",5.7,0,30,0.00,0.55
+54,1380.8,ClockJump,"writer 1 wall clock offset now 1872 ms",0.1,27,0,0.54,0.00
+55,1394.4,MonoJump,"writer 0 monotonic clock jumped forward 4286 ms",0.1,3,0,0.22,0.00
+56,1409.4,CutOneWay,"node 0 drop_c2s from every writer for 12978 ms",13.2,0,30,0.00,0.99
+57,1437.5,ClockJump,"writer 1 wall clock offset now 3979 ms",0.1,27,0,0.50,0.00
+58,1459.7,WriterKill,"writer 2 (owned []) restarted after 8353 ms",8.4,0,0,0.00,0.51
+59,1493.1,WriterKill,"writer 0 (owned [3, 18, 27]) restarted after 4347 ms",4.4,3,0,11.21,0.00
+60,1523.2,ClockDrift,"writer 2 monotonic clock rate now +3.0 %",0.1,0,0,0.00,0.36
+61,1539.5,CutNode,"node 1 cut from every writer for 17489 ms",17.7,0,30,0.00,0.35
+62,1581.6,TwoWriters,"writer 1 (owned [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]) stopped for 14336 ms",14.3,30,0,11.75,0.00
+63,1619.9,WriterKill,"writer 2 (owned [2, 4, 5, 7, 8, 11, 14, 17, 20, 22, 23, 25, 26, 29]) restarted after 4866 ms",4.9,14,0,12.36,0.00
+64,1635.7,ClockJump,"writer 2 wall clock offset now -2874 ms",0.1,0,0,0.00,0.44
+65,1665.3,CutNode,"node 0 cut from every writer for 15529 ms",15.8,0,30,0.00,0.50
+66,1707.4,NodeKill,"node 2 restarted after 2016 ms",2.0,0,30,0.00,0.73
+67,1736.6,NodeKill,"node 1 restarted after 2927 ms",2.9,0,30,0.00,1.18
+68,1768.5,CutNode,"node 2 cut from every writer for 11894 ms",12.1,0,30,0.00,0.48
+69,1812.1,MonoJump,"writer 1 monotonic clock jumped forward 2514 ms",0.1,7,0,0.17,0.00
+70,1828.0,CutZone,"zone 0 isolated for 12873 ms (writer 0 owned [1, 3, 5, 6, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 24, 26, 27, 28, 30])",13.1,23,7,8.67,0.59
+71,1851.5,WriterKill,"writer 0 (owned []) restarted after 5822 ms",5.8,0,0,0.00,0.73
+72,1880.3,NodeKill,"node 2 restarted after 3174 ms",3.2,0,30,0.00,0.37
+73,1905.8,NodeKill,"node 1 restarted after 4664 ms",4.7,0,30,0.00,0.75
+74,1933.0,NodeKill,"node 0 restarted after 7057 ms",7.1,0,30,0.00,0.58
+75,1956.4,DiskFull,"node 2 DiskFull",0.0,0,30,0.00,0.42
+76,1969.6,CutNode,"node 1 blackhole from every writer for 14409 ms",14.7,0,30,0.00,0.65
+77,2012.8,CutOneWay,"node 2 drop_c2s from every writer for 9123 ms",9.4,0,30,0.00,0.79
+78,2047.2,NodeKill,"node 2 restarted after 5151 ms",5.2,0,30,0.00,0.63
+79,2071.5,ClockDrift,"writer 0 monotonic clock rate now +2.6 %",0.1,0,0,0.00,0.67
+80,2083.3,WriterKill,"writer 1 (owned [1, 2, 4, 7, 10, 12, 13, 14, 16, 19, 22, 23, 25, 28, 29]) restarted after 9024 ms",9.0,15,0,11.32,0.00
+81,2116.9,TwoWriters,"writer 2 (owned [2, 3, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27, 29, 30]) stopped for 13442 ms",13.5,25,0,12.24,0.00
+82,2141.2,CutNode,"node 1 blackhole from every writer for 4485 ms",4.7,0,30,0.00,0.53
+83,2159.4,CutOneWay,"node 1 drop_s2c from every writer for 4104 ms",4.3,0,30,0.00,0.50
+84,2176.5,CutNode,"node 2 cut from every writer for 4502 ms",4.7,0,30,0.00,0.61
+85,2208.8,DiskFull,"node 0 DiskFull",0.0,0,30,0.00,0.93
+86,2232.5,WriterKill,"writer 1 (owned [2, 5, 8, 17, 26, 29]) restarted after 2393 ms",2.4,6,0,10.61,0.00
+87,2260.0,TwoWriters,"writer 0 (owned [1, 3, 4, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 30]) stopped for 16827 ms",16.8,24,0,12.60,0.00
+88,2287.4,ClockJump,"writer 1 wall clock offset now 2473 ms",0.1,11,0,0.35,0.00
+89,2300.3,S3Pause,"object store paused 2396 ms",2.4,0,0,0.00,0.51
+90,2318.4,CutNode,"node 2 blackhole from every writer for 14512 ms",14.8,0,30,0.00,0.52
+91,2349.9,TwoWriters,"writer 2 (owned [2, 5, 6, 8, 9, 11, 12, 13, 14, 15, 17, 19, 20, 23, 24, 26, 27, 28, 29]) stopped for 17041 ms",17.0,19,0,13.56,0.00
+92,2377.2,NodeKill,"node 0 restarted after 5244 ms",5.3,0,30,0.00,0.79
+93,2411.7,NodeKill,"node 0 restarted after 9449 ms",9.5,0,30,0.00,0.38
+94,2445.6,DiskLoss,"node 2 disk lost: id 1215375885 -> 2272539387",0.0,0,30,0.00,0.42
+95,2472.4,WriterKill,"writer 2 (owned []) restarted after 4584 ms",4.6,0,0,0.00,0.80
+96,2502.2,FsyncError,"node 1 FsyncError",0.0,0,30,0.00,0.57
+97,2513.9,NodeKill,"node 1 restarted after 6094 ms",6.1,0,30,0.00,0.59
+98,2538.4,MonoJump,"writer 0 monotonic clock jumped forward 694 ms",0.1,9,0,0.24,0.00
+99,2562.7,CutNode,"node 1 cut from every writer for 14048 ms",14.3,0,30,0.00,0.64
+100,2595.9,WriterKill,"writer 0 (owned [6, 9, 12, 13, 15, 19, 24, 27, 28]) restarted after 1238 ms",1.2,9,0,12.92,0.00
+101,2609.6,ClockJump,"writer 2 wall clock offset now 233 ms",0.1,7,0,0.53,0.00
+102,2636.0,NodeKill,"node 2 restarted after 1980 ms",2.0,0,30,0.00,0.49
+103,2660.2,WriterKill,"writer 2 (owned [6, 9, 12, 13, 15, 19, 24]) restarted after 3987 ms",4.0,7,0,11.42,0.00
+104,2676.4,CutOneWay,"node 1 drop_c2s from every writer for 13347 ms",13.6,0,30,0.00,0.51
+105,2708.5,PowerCut,"node 0 PowerCut",0.0,0,30,0.00,0.44
+106,2732.0,CutNode,"node 2 blackhole from every writer for 10591 ms",10.8,0,30,0.00,0.56
+107,2768.9,WriterKill,"writer 2 (owned []) restarted after 8193 ms",8.2,0,0,0.00,0.67
+108,2805.5,NodeKill,"node 0 restarted after 2788 ms",2.8,0,30,0.00,1.20
+109,2826.4,MonoJump,"writer 1 monotonic clock jumped forward 2878 ms",0.1,23,0,0.86,0.00
+110,2854.9,CutZone,"zone 2 isolated for 9132 ms (writer 2 owned [])",9.4,0,30,0.00,1.15
+111,2885.2,FsyncError,"node 0 FsyncError",0.0,0,30,0.00,0.50
+112,2900.8,DiskLoss,"node 1 disk lost: id 1738465871 -> 3734739238",0.0,0,30,0.00,0.79
+113,2931.2,CutNode,"node 0 blackhole from every writer for 11577 ms",11.8,0,30,0.00,0.49
+114,2959.8,CutNode,"node 2 cut from every writer for 14772 ms",15.0,0,30,0.00,0.64
+115,3001.3,WriterKill,"writer 0 (owned [6, 9, 12, 13, 15, 19, 24]) restarted after 6648 ms",6.7,7,0,12.15,0.00
+116,3027.7,WriterKill,"writer 1 (owned [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30]) restarted after 8814 ms",8.8,28,0,12.15,0.00
+117,3058.6,CutNode,"node 0 blackhole from every writer for 6328 ms",6.6,0,30,0.00,0.49
+118,3086.3,ClockJump,"writer 1 wall clock offset now -656 ms",0.1,0,0,0.00,0.53
+119,3108.4,WriterKill,"writer 2 (owned [2, 4, 5, 8, 9, 10, 11, 13, 14, 17, 19, 20, 22, 23, 24, 26, 28, 29]) restarted after 9591 ms",9.6,18,0,12.46,0.00
+120,3143.0,NodeKill,"node 0 restarted after 7977 ms",8.0,0,30,0.00,0.51
+121,3169.9,WriterKill,"writer 2 (owned []) restarted after 6888 ms",6.9,0,0,0.00,0.44
+122,3192.1,CutNode,"node 0 blackhole from every writer for 14794 ms",15.0,0,30,0.00,0.64
+123,3218.5,WriterKill,"writer 2 (owned []) restarted after 8703 ms",8.7,0,0,0.00,0.51
+124,3255.5,MonoJump,"writer 2 monotonic clock jumped forward 3295 ms",0.1,0,0,0.00,0.38
+125,3268.1,CutZone,"zone 1 isolated for 13663 ms (writer 1 owned [4, 5, 10, 19, 22, 28])",13.9,6,24,8.02,0.51
+126,3294.2,PowerCut,"node 2 PowerCut",0.0,0,30,0.00,0.39
+127,3320.4,CutZone,"zone 2 isolated for 13707 ms (writer 2 owned [])",13.9,0,30,0.00,0.69
+128,3356.5,TwoWriters,"writer 0 (owned [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]) stopped for 12068 ms",12.1,30,0,12.32,0.00
+129,3378.9,ClockJump,"writer 1 wall clock offset now 1257 ms",0.1,17,0,0.61,0.00
+130,3399.3,PowerCutAll,"power cut of all three nodes",0.0,0,0,0.00,0.89
+131,3424.5,TwoWriters,"writer 1 (owned [1, 4, 6, 7, 10, 12, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 30]) stopped for 14395 ms",14.4,17,0,11.86,0.00
+132,3460.2,NodeKill,"node 0 restarted after 2567 ms",2.6,0,30,0.00,0.52
+133,3474.4,ClockJump,"writer 1 wall clock offset now 483 ms",0.1,0,0,0.00,0.80
+134,3485.4,ClockDrift,"writer 2 monotonic clock rate now +3.7 %",0.1,16,0,0.53,0.00
+135,3499.2,MonoJump,"writer 1 monotonic clock jumped forward 2820 ms",0.1,0,0,0.00,0.52
+136,3519.6,NodeKill,"node 0 restarted after 8736 ms",8.8,0,30,0.00,0.61
+137,3544.7,ClockJump,"writer 2 wall clock offset now 4618 ms",0.1,16,0,0.30,0.00
+138,3563.7,TwoWriters,"writer 2 (owned [1, 2, 3, 5, 8, 9, 10, 11, 13, 14, 17, 19, 20, 23, 26, 29]) stopped for 14432 ms",14.4,16,0,12.55,0.00
+139,3607.6,PowerCut,"node 2 PowerCut",0.0,0,30,0.00,0.43
+140,3633.1,DiskLoss,"node 1 disk lost: id 3734739238 -> 2057372496",0.0,0,30,0.00,0.76
+141,3663.4,WriterKill,"writer 1 (owned [1, 10, 13, 19]) restarted after 6185 ms",6.2,4,0,12.06,0.00
+142,3694.4,NodeKill,"node 2 restarted after 2715 ms",2.7,0,30,0.00,0.44
+143,3716.5,DiskFull,"node 1 DiskFull",0.0,0,30,0.00,0.46
+144,3735.2,ClockDrift,"writer 2 monotonic clock rate now -2.0 %",0.1,3,0,0.25,0.00
+145,3755.6,NodeKill,"node 2 restarted after 7431 ms",7.5,0,30,0.00,0.48
+146,3790.0,PowerCutAll,"power cut of all three nodes",0.0,0,0,0.00,0.66
+147,3802.4,FsyncError,"node 2 FsyncError",0.0,0,30,0.00,0.64
+148,3814.5,DiskLoss,"node 1 disk lost: id 2057372496 -> 2120979530",0.0,0,30,0.00,0.72
+149,3832.1,TwoWriters,"writer 0 (owned [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]) stopped for 17950 ms",18.0,27,0,12.74,0.00
+150,3863.3,CutNode,"node 1 blackhole from every writer for 9407 ms",9.6,0,30,0.00,1.05
+151,3901.5,TwoWriters,"writer 2 (owned [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30]) stopped for 16081 ms",16.1,23,0,13.10,0.00
+152,3945.7,S3Pause,"object store paused 1536 ms",1.5,0,0,0.00,0.61
+153,3969.2,ClockDrift,"writer 0 monotonic clock rate now +4.3 %",0.1,21,0,0.46,0.00
+154,3996.7,TwoWriters,"writer 0 (owned [2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30]) stopped for 12808 ms",12.8,21,0,12.38,0.00
+155,4027.9,WriterKill,"writer 2 (owned [2, 5, 6, 8, 9, 11, 12, 14, 17, 18, 20, 23, 26, 27, 29]) restarted after 3543 ms",3.6,15,0,11.18,0.00
+156,4058.2,NodeKill,"node 0 restarted after 2115 ms",2.1,0,30,0.00,0.44
+157,4082.6,FsyncError,"node 2 FsyncError",0.0,0,30,0.00,0.46
+158,4109.1,CutNode,"node 2 cut from every writer for 9221 ms",9.5,0,30,0.00,0.38
+159,4142.2,DiskFull,"node 1 DiskFull",0.0,0,30,0.00,0.81
+160,4170.4,NodeKill,"node 1 restarted after 3610 ms",3.6,0,30,0.00,0.58
+161,4202.7,WriterKill,"writer 0 (owned [6, 8, 9, 12, 18, 26, 27]) restarted after 3892 ms",3.9,7,0,12.54,0.00
+162,4231.4,CutOneWay,"node 1 drop_s2c from every writer for 16847 ms",17.1,0,30,0.00,0.50
+163,4273.2,WriterKill,"writer 1 (owned [1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30]) restarted after 2300 ms",2.3,26,0,11.74,0.00
+164,4297.2,ClockDrift,"writer 2 monotonic clock rate now +2.2 %",0.1,10,0,0.23,0.00
+165,4319.2,MonoJump,"writer 1 monotonic clock jumped forward 808 ms",0.1,0,0,0.00,0.68
+166,4344.1,CutNode,"node 2 blackhole from every writer for 9475 ms",9.7,0,30,0.00,0.88
+167,4369.9,WriterKill,"writer 2 (owned [2, 5, 7, 8, 9, 14, 18, 20, 23, 26]) restarted after 5392 ms",5.4,10,0,11.23,0.00
+168,4397.9,NodeKill,"node 0 restarted after 5056 ms",5.1,0,30,0.00,0.40
+169,4416.1,WriterKill,"writer 2 (owned []) restarted after 1906 ms",1.9,0,0,0.00,0.54
+170,4438.4,DiskLoss,"node 2 disk lost: id 2272539387 -> 982264672",0.0,0,30,0.00,0.34
+171,4468.5,PowerCut,"node 1 PowerCut",0.0,0,30,0.00,0.47
+172,4482.1,CutZone,"zone 0 isolated for 19734 ms (writer 0 owned [1, 3, 4, 6, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 26, 27, 28, 29, 30])",20.0,24,6,8.42,0.19
+173,4518.1,NodeKill,"node 0 restarted after 5103 ms",5.1,0,30,0.00,0.66
+174,4540.3,NodeKill,"node 1 restarted after 5797 ms",5.8,0,30,0.00,0.37
+175,4574.7,FsyncError,"node 0 FsyncError",0.0,0,30,0.00,0.39
+176,4586.9,WriterKill,"writer 1 (owned [1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 30]) restarted after 4488 ms",4.5,25,0,11.65,0.00
+177,4609.3,CutNode,"node 0 blackhole from every writer for 5508 ms",5.8,0,30,0.00,0.59
+178,4643.2,DiskLoss,"node 0 disk lost: id 4106610439 -> 2759266586",0.0,0,30,0.00,0.52
+179,4670.8,WriterKill,"writer 2 (owned [2, 5, 7, 8, 11, 13, 17, 20, 23, 26, 29]) restarted after 7695 ms",7.7,11,0,12.11,0.00
+180,4705.4,CutOneWay,"node 2 drop_s2c from every writer for 9960 ms",10.2,0,30,0.00,0.42
+181,4730.7,CutOneWay,"node 0 drop_s2c from every writer for 3801 ms",4.0,0,30,0.00,0.60
+182,4747.7,PowerCutAll,"power cut of all three nodes",0.0,0,0,0.00,0.73
+183,4763.0,TwoWriters,"writer 0 (owned [1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13, 14, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 29, 30]) stopped for 15129 ms",15.1,24,0,12.50,0.00
+184,4796.1,CutNode,"node 1 cut from every writer for 10268 ms",10.5,0,30,0.00,0.56
+185,4832.3,ClockJump,"writer 0 wall clock offset now 2783 ms",0.1,0,0,0.00,0.65
+186,4860.7,CutNode,"node 0 blackhole from every writer for 9849 ms",10.1,0,30,0.00,0.45
+187,4883.0,ClockJump,"writer 2 wall clock offset now 606 ms",0.1,15,0,0.59,0.00
+188,4907.7,ClockDrift,"writer 1 monotonic clock rate now +1.5 %",0.1,15,0,0.47,0.00
+189,4924.6,WriterKill,"writer 0 (owned []) restarted after 8656 ms",8.7,0,0,0.00,0.82
+190,4959.5,CutOneWay,"node 2 drop_c2s from every writer for 7243 ms",7.5,0,30,0.00,0.44
+191,4977.5,DiskFull,"node 0 DiskFull",0.0,0,30,0.00,0.86
+192,5006.4,CutNode,"node 2 cut from every writer for 6310 ms",6.6,0,30,0.00,0.62
+193,5031.2,DiskLoss,"node 0 disk lost: id 2759266586 -> 1620925339",0.0,0,30,0.00,0.73
+194,5046.6,WriterKill,"writer 0 (owned []) restarted after 5135 ms",5.1,0,0,0.00,0.66
+195,5067.5,DiskLoss,"node 2 disk lost: id 982264672 -> 1753016580",0.0,0,30,0.00,0.38
+196,5081.3,TwoWriters,"writer 2 (owned [2, 3, 5, 6, 7, 9, 12, 14, 15, 18, 21, 24, 27, 29, 30]) stopped for 15908 ms",15.9,15,0,11.88,0.00
+197,5118.7,CutZone,"zone 0 isolated for 2244 ms (writer 0 owned [3, 6, 9, 12, 15, 18, 21, 24, 27, 30])",2.5,10,20,2.53,0.58
+198,5135.5,NodeKill,"node 1 restarted after 8262 ms",8.3,0,30,0.00,0.59
+199,5168.7,CutZone,"zone 0 isolated for 7897 ms (writer 0 owned [3, 6, 9, 12, 15, 18, 21, 24, 27, 30])",8.1,10,20,8.33,0.34
+200,5192.0,TwoWriters,"writer 1 (owned [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29]) stopped for 12629 ms",12.6,20,0,11.70,0.00
+201,5224.9,CutNode,"node 1 cut from every writer for 6267 ms",6.5,0,30,0.00,0.57
+202,5252.0,PowerCutAll,"power cut of all three nodes",0.0,0,0,0.00,0.55
+203,5279.8,ClockJump,"writer 2 wall clock offset now -1536 ms",0.1,21,0,0.32,0.00
+204,5290.0,CutNode,"node 2 cut from every writer for 18169 ms",18.4,0,30,0.00,0.92
+205,5320.6,WriterKill,"writer 0 (owned [1, 4, 7, 10, 16, 19, 22, 25, 28]) restarted after 1808 ms",1.8,9,0,11.20,0.00
+206,5349.5,PowerCut,"node 1 PowerCut",0.0,0,30,0.00,0.55
+207,5368.7,CutNode,"node 0 blackhole from every writer for 15717 ms",16.0,0,30,0.00,0.49
+208,5414.1,ClockJump,"writer 1 wall clock offset now 3881 ms",0.1,9,0,0.72,0.00
+209,5431.2,FsyncError,"node 2 FsyncError",0.0,0,30,0.00,0.66
+210,5466.5,MonoJump,"writer 1 monotonic clock jumped forward 4437 ms",0.1,9,0,0.12,0.00
+211,5492.3,WriterKill,"writer 0 (owned []) restarted after 8812 ms",8.8,0,0,0.00,0.75
+212,5518.3,WriterKill,"writer 1 (owned [1, 4, 7, 10, 16, 19, 22, 25, 28]) restarted after 4930 ms",4.9,9,0,11.34,0.00
+213,5543.9,MonoJump,"writer 2 monotonic clock jumped forward 2544 ms",0.1,21,0,0.44,0.00
+214,5563.9,WriterKill,"writer 2 (owned [2, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30]) restarted after 7395 ms",7.4,21,0,9.68,0.00
+215,5600.6,ClockDrift,"writer 0 monotonic clock rate now -0.5 %",0.1,28,0,0.72,0.00
+216,5619.0,WriterKill,"writer 0 (owned [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]) restarted after 6841 ms",6.8,28,0,12.00,0.00
+217,5636.3,MonoJump,"writer 2 monotonic clock jumped forward 523 ms",0.1,19,0,0.64,0.00
+218,5665.8,MonoJump,"writer 2 monotonic clock jumped forward 3323 ms",0.1,19,0,0.64,0.00
+219,5677.7,ClockJump,"writer 2 wall clock offset now -3613 ms",0.1,19,0,0.41,0.00
+220,5701.2,WriterKill,"writer 2 (owned [2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 21, 23, 24, 26, 27, 29, 30]) restarted after 1116 ms",1.1,19,0,11.05,0.00
+221,5717.3,ClockJump,"writer 0 wall clock offset now -2209 ms",0.1,10,0,0.36,0.00
+222,5738.2,TwoWriters,"writer 1 (owned [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29]) stopped for 15909 ms",15.9,20,0,10.85,0.00
+223,5774.1,MonoJump,"writer 2 monotonic clock jumped forward 823 ms",0.1,15,0,0.62,0.00
+224,5801.6,NodeKill,"node 1 restarted after 2052 ms",2.1,0,30,0.00,0.54
+225,5825.9,WriterKill,"writer 0 (owned [1, 3, 6, 9, 10, 12, 13, 15, 16, 18, 21, 22, 24, 27, 30]) restarted after 9679 ms",9.7,15,0,11.23,0.00
+226,5850.3,NodeKill,"node 2 restarted after 5687 ms",5.7,0,30,0.00,0.68
+227,5883.1,ClockJump,"writer 0 wall clock offset now 1926 ms",0.1,0,0,0.00,0.76
+228,5904.7,WriterKill,"writer 0 (owned []) restarted after 8327 ms",8.3,0,0,0.00,0.59
+229,5923.2,ClockJump,"writer 1 wall clock offset now -324 ms",0.1,5,0,0.29,0.00
+230,5944.2,ClockJump,"writer 0 wall clock offset now -2011 ms",0.1,0,0,0.00,0.52
+231,5958.9,CutOneWay,"node 2 drop_s2c from every writer for 9891 ms",10.1,0,30,0.00,0.71
+232,5996.3,NodeKill,"node 0 restarted after 7669 ms",7.7,0,30,0.00,0.42
+233,6034.1,WriterKill,"writer 1 (owned [1, 10, 13, 16, 22]) restarted after 7938 ms",7.9,5,0,10.52,0.00
+234,6069.6,WriterKill,"writer 0 (owned [13, 22]) restarted after 7527 ms",7.5,2,0,10.39,0.00
+235,6101.3,ClockJump,"writer 0 wall clock offset now -1283 ms",0.1,0,0,0.00,0.50
+236,6112.8,FsyncError,"node 1 FsyncError",0.0,0,30,0.00,0.51
+237,6125.7,NodeKill,"node 0 restarted after 1525 ms",1.5,0,30,0.00,0.56
+238,6155.8,DiskLoss,"node 2 disk lost: id 1753016580 -> 2939655373",0.0,0,30,0.00,0.64
+239,6181.3,CutZone,"zone 2 isolated for 19147 ms (writer 2 owned [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30])",19.4,28,2,8.35,0.55
+240,6217.3,ClockDrift,"writer 1 monotonic clock rate now +4.8 %",0.1,20,0,0.68,0.00
+241,6233.7,NodeKill,"node 1 restarted after 3288 ms",3.3,0,30,0.00,0.61
+242,6250.9,TwoWriters,"writer 1 (owned [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29]) stopped for 15794 ms",15.8,20,0,10.92,0.00
+243,6279.4,ClockJump,"writer 1 wall clock offset now 1510 ms",0.1,0,0,0.00,0.74
+244,6297.8,TwoWriters,"writer 0 (owned [1, 3, 4, 6, 7, 9, 10, 12, 15, 16, 18, 19, 21, 24, 25, 27, 28, 30]) stopped for 13388 ms",13.4,18,0,9.74,0.00
+245,6333.0,WriterKill,"writer 2 (owned [2, 5, 8, 11, 13, 14, 17, 20, 22, 23, 26, 29]) restarted after 8392 ms",8.4,12,0,10.15,0.00
+246,6353.0,CutNode,"node 2 cut from every writer for 2418 ms",2.7,0,30,0.00,0.72
+247,6368.4,NodeKill,"node 2 restarted after 5055 ms",5.1,0,30,0.00,0.56
+248,6398.3,MonoJump,"writer 1 monotonic clock jumped forward 4674 ms",0.1,30,0,0.42,0.00
+249,6420.7,CutOneWay,"node 0 drop_s2c from every writer for 17037 ms",17.3,0,30,0.00,1.32
+250,6450.5,CutNode,"node 2 blackhole from every writer for 3519 ms",3.8,0,30,0.00,0.84
+251,6474.6,TwoWriters,"writer 1 (owned [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]) stopped for 15126 ms",15.1,30,0,12.05,0.00
+252,6505.3,NodeKill,"node 0 restarted after 9275 ms",9.3,0,30,0.00,0.83
+253,6531.0,WriterKill,"writer 1 (owned []) restarted after 7012 ms",7.0,0,0,0.00,0.47
+254,6566.7,NodeKill,"node 2 restarted after 8816 ms",8.9,0,30,0.00,0.75
+255,6588.7,NodeKill,"node 1 restarted after 1194 ms",1.2,0,30,0.00,0.51
+256,6612.5,TwoWriters,"writer 0 (owned [1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 16, 18, 19, 21, 22, 24, 25, 27, 28, 30]) stopped for 12492 ms",12.5,20,0,11.75,0.00
+257,6652.3,NodeKill,"node 1 restarted after 4965 ms",5.0,0,30,0.00,0.44
+258,6673.0,ClockJump,"writer 1 wall clock offset now -732 ms",0.1,20,0,0.48,0.00
+259,6689.3,NodeKill,"node 1 restarted after 2475 ms",2.5,0,30,0.00,0.33
+260,6720.4,NodeKill,"node 0 restarted after 9816 ms",9.8,0,30,0.00,0.92
+261,6746.2,S3Pause,"object store paused 2251 ms",2.3,0,0,0.00,0.80
+262,6773.8,WriterKill,"writer 2 (owned [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]) restarted after 7307 ms",7.3,10,0,10.33,0.00
+263,6793.0,WriterKill,"writer 1 (owned [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]) restarted after 7250 ms",7.3,30,0,12.28,0.00
+264,6811.6,TwoWriters,"writer 0 (owned [3, 4, 6, 9, 10, 12, 13, 15, 16, 18, 19, 21, 24, 25, 27, 28, 30]) stopped for 13973 ms",14.0,17,0,11.82,0.00
+265,6843.1,PowerCut,"node 2 PowerCut",0.0,0,30,0.00,0.56
+266,6858.4,NodeKill,"node 1 restarted after 9971 ms",10.0,0,30,0.00,0.68
+267,6883.5,ClockDrift,"writer 1 monotonic clock rate now +3.8 %",0.1,17,0,0.65,0.00

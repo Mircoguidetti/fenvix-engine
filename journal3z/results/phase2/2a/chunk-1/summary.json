@@ -1,0 +1,177 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 342782,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 1812,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 689179,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 3632,
+      "tag": "ckpt2"
+    },
+    {
+      "checked_acks": 1038282,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 5464,
+      "tag": "ckpt3"
+    },
+    {
+      "checked_acks": 1309959,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 6913,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [],
+  "fault_counts": {
+    "ClockDrift": 13,
+    "ClockJump": 27,
+    "CutNode": 28,
+    "CutOneWay": 13,
+    "CutZone": 9,
+    "DiskFull": 6,
+    "DiskLoss": 10,
+    "FsyncError": 8,
+    "MonoJump": 15,
+    "NodeKill": 47,
+    "PowerCut": 8,
+    "PowerCutAll": 4,
+    "S3Pause": 4,
+    "TwoWriters": 24,
+    "WriterKill": 51
+  },
+  "faults": 267,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/soak/chunk-1"
+  },
+  "kinds": null,
+  "minutes_planned": 115.0,
+  "minutes_run": 115.30551223365,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 1.319668765,
+    "n": 3769,
+    "over_5s": 0,
+    "p50_s": 0.104651101,
+    "p99_s": 0.662774684
+  },
+  "recovery_other_faults_max_s": {
+    "ClockDrift": [
+      0.682324329,
+      0.363285214,
+      0.666954998
+    ],
+    "ClockJump": [
+      0.438975491,
+      0.438465522,
+      0.525506596,
+      0.803633809,
+      0.64660113,
+      0.757716987,
+      0.52325246,
+      0.500183271,
+      0.741251002
+    ],
+    "MonoJump": [
+      0.703882737,
+      0.382714487,
+      0.522523589,
+      0.677868826
+    ],
+    "PowerCutAll": [
+      0.887233564,
+      0.664484894,
+      0.730208227,
+      0.546946275
+    ],
+    "S3Pause": [
+      0.754261347,
+      0.514579922,
+      0.605864776,
+      0.80018776
+    ],
+    "WriterKill": [
+      0.579178267,
+      0.82820321,
+      0.482662077,
+      0.536055113,
+      0.543342553,
+      0.558781367,
+      0.508171001,
+      0.728008728,
+      0.79818813,
+      0.671261305,
+      0.435164441,
+      0.508737511,
+      0.540742996,
+      0.817759026,
+      0.658860317,
+      0.748992435,
+      0.586775254,
+      0.466273679
+    ]
+  },
+  "recovery_writer_faults": {
+    "max_s": 13.55781112,
+    "n": 1652,
+    "over_15s": 0,
+    "over_40s": 0,
+    "p50_s": 9.016426655,
+    "p99_s": 12.693320285
+  },
+  "seed": 1001,
+  "wait_until_healthy_s": {
+    "max": 16.303638116,
+    "p50": 0.061812602
+  },
+  "writer_opens": 1376,
+  "writes_acked": 1309959,
+  "writes_refused": {
+    "down": 16615,
+    "no_owner": 14958,
+    "not_owner": 32618,
+    "timeout": 2017,
+    "unavailable": 4600
+  },
+  "writes_sent": 1365809
+}

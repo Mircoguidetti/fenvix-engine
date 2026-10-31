@@ -493,3 +493,13 @@ con **limiti più piccoli**, al massimo 15 minuti ciascuno, 2 thread (misurato; 
 Nessuno è finito; nessuna violazione fino al punto di arresto. **Nessun controllo a due scrittori è stato completato.**
 Mi sono fermato qui (niente altro tempo macchina, come deciso). Cosa è provato per intero, cosa no e cosa lo
 sostituisce: piano §2f, nota "Esito del §2f".
+
+### §2a, terzo tentativo (da zero, 31-10-2026 dalle 09:13) – avanzamento
+
+Programma pilota `p2/bench/scripts/drive-2a.py`: pezzi da 115 minuti finché ci sono sia 12 ore di guasti sia tutti i
+minimi del §2a, poi le 50 corse da 15 minuti; si ferma al primo fallimento. Totali aggiornati dopo ogni corsa in
+`results/phase2/2a/progress.json`.
+
+| corsa | minuti | guasti | conferme | perse / tardive / dischi / sovrapposizioni | ripresa scrittore: oltre 15 s (max) | ripresa nodo: max |
+|---|---|---|---|---|---|---|
+| pezzo 1 (seme 1001) | 115,3 | 267 | 1.309.959 | 0 / 0 / 0 / 0 | 0 su 1.652 (13,6 s) | 1,3 s |

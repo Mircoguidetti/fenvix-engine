@@ -1,0 +1,73 @@
+{
+ "runs": [
+  {
+   "name": "chunk-1",
+   "minutes": 115.3,
+   "failures": [],
+   "acked": 1309959
+  }
+ ],
+ "fault_minutes": 115.30551223365,
+ "faults": {
+  "ClockDrift": 13,
+  "ClockJump": 27,
+  "CutNode": 28,
+  "CutOneWay": 13,
+  "CutZone": 9,
+  "DiskFull": 6,
+  "DiskLoss": 10,
+  "FsyncError": 8,
+  "MonoJump": 15,
+  "NodeKill": 47,
+  "PowerCut": 8,
+  "PowerCutAll": 4,
+  "S3Pause": 4,
+  "TwoWriters": 24,
+  "WriterKill": 51
+ },
+ "acked": 1309959,
+ "minimums": {
+  "node kill -9 (NodeKill)": {
+   "have": 47,
+   "need": 300
+  },
+  "writer kill -9 (WriterKill)": {
+   "have": 51,
+   "need": 300
+  },
+  "disk lost (DiskLoss)": {
+   "have": 10,
+   "need": 50
+  },
+  "network cuts (CutNode+CutOneWay+CutZone)": {
+   "have": 50,
+   "need": 300
+  },
+  "  of which one direction (CutOneWay)": {
+   "have": 13,
+   "need": 75
+  },
+  "  of which whole zone (CutZone)": {
+   "have": 9,
+   "need": 50
+  },
+  "clock jumps (ClockJump)": {
+   "have": 27,
+   "need": 150
+  },
+  "two writers (TwoWriters)": {
+   "have": 24,
+   "need": 150
+  },
+  "fsync errors (FsyncError)": {
+   "have": 8,
+   "need": 50
+  },
+  "disk full (DiskFull)": {
+   "have": 6,
+   "need": 50
+  }
+ },
+ "acked_need": 2000000,
+ "long_done": false
+}
