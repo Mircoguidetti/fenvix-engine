@@ -1,0 +1,38 @@
+distinct 731262 explored 731119 depth 43 acked 1 30s
+distinct 1312401 explored 1312209 depth 73 acked 1 60s
+distinct 1908756 explored 1908548 depth 79 acked 1 90s
+distinct 2412364 explored 2412221 depth 79 acked 1 120s
+distinct 3063317 explored 3063183 depth 79 acked 1 150s
+distinct 3623249 explored 3623105 depth 79 acked 1 180s
+distinct 4178198 explored 4178080 depth 79 acked 1 210s
+distinct 4647555 explored 4647392 depth 79 acked 1 240s
+distinct 5108583 explored 5108433 depth 79 acked 1 270s
+distinct 5650815 explored 5650654 depth 79 acked 1 300s
+distinct 6205914 explored 6205760 depth 79 acked 1 330s
+distinct 6760847 explored 6760682 depth 79 acked 1 360s
+distinct 7393646 explored 7393512 depth 79 acked 1 390s
+distinct 7981780 explored 7981651 depth 79 acked 1 420s
+distinct 8538110 explored 8537972 depth 79 acked 1 450s
+distinct 9115446 explored 9115284 depth 79 acked 1 480s
+distinct 9582880 explored 9582720 depth 79 acked 1 510s
+distinct 10058006 explored 10057847 depth 79 acked 1 540s
+distinct 10602690 explored 10602567 depth 79 acked 1 570s
+distinct 11075435 explored 11075311 depth 79 acked 1 600s
+distinct 11558081 explored 11557970 depth 79 acked 1 630s
+distinct 12003783 explored 12003612 depth 79 acked 1 661s
+distinct 12422200 explored 12422052 depth 79 acked 1 691s
+distinct 12831122 explored 12830972 depth 79 acked 1 721s
+distinct 13350010 explored 13349864 depth 79 acked 1 751s
+distinct 13746353 explored 13746219 depth 79 acked 1 781s
+distinct 14190690 explored 14190532 depth 79 acked 1 811s
+distinct 14531069 explored 14530927 depth 79 acked 1 841s
+distinct 14958422 explored 14958304 depth 79 acked 1 871s
+distinct 15344309 explored 15344214 depth 79 acked 1 901s
+distinct 15822409 explored 15822244 depth 79 acked 1 931s
+distinct 16273953 explored 16273820 depth 79 acked 1 961s
+distinct 16742358 explored 16742233 depth 79 acked 1 991s
+distinct 17198973 explored 17198844 depth 79 acked 1 1021s
+memory allocation of 720 bytes failed
+stack backtrace:
+memory allocation of 192 bytes failed
+skipping backtrace printing to avoid potential recursion

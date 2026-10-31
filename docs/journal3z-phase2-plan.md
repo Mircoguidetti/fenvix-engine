@@ -161,6 +161,17 @@ Passa se: il controllo a 2 scrittori con i limiti della fase 1 (2 epoche, indice
 (`no_fencing`, `recovery_longest`, `recovery_single`, `keep_diverged`), più i 3 che già trovava. Un controllo che non
 trova difetti noti non vale come prova.
 
+> **Criterio cambiato dal fondatore il 30-10-2026 (dopo la misura, unica eccezione alla regola "i criteri non
+> cambiano").** Al posto di "messaggi in qualsiasi ordine" il limite è: **ordine conservato su ogni collegamento
+> scrittore–nodo, con perdite** (sullo stesso collegamento i messaggi arrivano nell'ordine di invio oppure si perdono;
+> tra collegamenti diversi l'ordine è qualsiasi; ogni messaggio può non arrivare mai). Ragione: la rete vera consegna
+> in ordine su ogni collegamento (una connessione TCP per coppia scrittore–nodo; quando cade, quello che era in coda va
+> perso e la connessione nuova parte dopo). Con "qualsiasi ordine" il controllo a 2 scrittori non finiva (45,7 milioni
+> di stati in 31 minuti senza segni di fine, `results/phase2/p9/`). Restano invariati: 2 epoche, indice 2, deve
+> **finire** senza violazioni e trovare i 4 + 3 difetti. È un controllo più debole del precedente: un difetto che
+> appare solo se due messaggi sullo stesso collegamento si scambiano di posto non verrebbe visto (il codice vero non
+> riordina sullo stesso collegamento; il simulatore, che riordina, resta la prova per quel caso).
+
 **Strada 2 (TLA+, serve il tuo computer, oppure un permesso).** In questa sessione eseguire lo strumento TLA+ è stato
 bloccato dalle regole di sicurezza. Due modi:
 - *(preferito)* il coordinatore aggiunge alle impostazioni delle sessioni un permesso che consenta solo

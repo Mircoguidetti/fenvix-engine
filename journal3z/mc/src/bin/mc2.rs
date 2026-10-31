@@ -58,13 +58,47 @@ impl Hasher for Pass {
     }
 }
 type Set = HashSet<u64, BuildHasherDefault<Pass>>;
-type Antichains = std::collections::HashMap<u64, Vec<Vec<u64>>, BuildHasherDefault<Pass>>;
+/// Per non-message key: the visited (messages, links) sets, each packed into one boxed slice:
+/// `[n_msgs, msg keys..., then per link: link key, queue length, message keys...]`.
+type Antichains = std::collections::HashMap<u64, Vec<Box<[u64]>>, BuildHasherDefault<Pass>>;
+
+fn pack(msgs: &[u64], links: &[((u32, u32), Vec<u64>)]) -> Box<[u64]> {
+    let mut v = Vec::with_capacity(1 + msgs.len() + links.iter().map(|(_, q)| 2 + q.len()).sum::<usize>());
+    v.push(msgs.len() as u64);
+    v.extend_from_slice(msgs);
+    for ((a, b), q) in links {
+        v.push(((*a as u64) << 32) | *b as u64);
+        v.push(q.len() as u64);
+        v.extend_from_slice(q);
+    }
+    v.into_boxed_slice()
+}
+
+fn unpack(p: &[u64]) -> (&[u64], Vec<((u32, u32), &[u64])>) {
+    let n = p[0] as usize;
+    let msgs = &p[1..1 + n];
+    let mut links = vec![];
+    let mut i = 1 + n;
+    while i < p.len() {
+        let k = ((p[i] >> 32) as u32, p[i] as u32);
+        let l = p[i + 1] as usize;
+        links.push((k, &p[i + 2..i + 2 + l]));
+        i += 2 + l;
+    }
+    (msgs, links)
+}
+
+/// a covers b: a's messages ⊇ b's, and each of b's queues is a subsequence of a's queue on the same link.
+fn covers(a: &[u64], b: &[u64]) -> bool {
+    let ((am, al), (bm, bl)) = (unpack(a), unpack(b));
+    superset(am, bm) && bl.iter().all(|(k, qb)| al.iter().find(|(ka, _)| ka == k).map_or(qb.is_empty(), |(_, qa)| subsequence(qa, qb)))
+}
 
 /// Key of everything but the pending messages, and the sorted keys of the pending messages.
 fn split_key(s: &State) -> (u64, Vec<u64>) {
     use std::hash::Hash;
     let mut h = std::collections::hash_map::DefaultHasher::new();
-    (&s.nodes, &s.writers, &s.store, &s.acked, &s.links).hash(&mut h);
+    (&s.nodes, &s.writers, &s.store, &s.acked).hash(&mut h);
     let mut m: Vec<u64> = s
         .msgs
         .iter()
@@ -77,6 +111,33 @@ fn split_key(s: &State) -> (u64, Vec<u64>) {
     m.sort_unstable();
     (h.finish(), m)
 }
+
+/// FIFO mode: each link's queue as a sequence of message keys, links sorted.
+fn link_seqs(s: &State) -> Vec<((u32, u32), Vec<u64>)> {
+    use std::hash::Hash;
+    s.links
+        .iter()
+        .map(|(k, q)| {
+            let v = q
+                .iter()
+                .map(|x| {
+                    let mut h = std::collections::hash_map::DefaultHasher::new();
+                    x.hash(&mut h);
+                    h.finish()
+                })
+                .collect();
+            (*k, v)
+        })
+        .collect()
+}
+
+fn subsequence(a: &[u64], b: &[u64]) -> bool {
+    // b is a subsequence of a
+    let mut it = a.iter();
+    b.iter().all(|x| it.any(|y| y == x))
+}
+
+
 
 fn superset(a: &[u64], b: &[u64]) -> bool {
     // a ⊇ b, both sorted
@@ -104,47 +165,57 @@ fn is_stale(w: &WriterDb) -> bool {
     matches!(w.phase, Phase::Stale(_))
 }
 
-/// Remove dead messages (rules in the module comment).
+/// A message to a writer (`from` = the node that sent it) that can never change anything (rules W0–W3).
+fn dead_to_writer(s: &State, from: NodeId, inner: &Msg) -> bool {
+    if NO_REJECT.load(SeqCst) && matches!(inner, Msg::Reject { .. }) {
+        // W0 (--no-reject, experiment only): delivering a Reject only makes a writer stale, i.e. only takes
+        // behaviours away; the invariants never look at the phase
+        return true;
+    }
+    let e = msg_epoch(inner);
+    match writer(s, e) {
+        None => false,
+        Some(w) if is_stale(w) => true, // W1
+        Some(w) if w.is_active() => match inner {
+            Msg::Promise { .. } | Msg::Entries { .. } => true, // W2
+            Msg::Ack { matched, .. } if *matched <= w.last => {
+                // W3
+                let mut c = w.clone();
+                let out = c.on_msg(from, inner.clone());
+                c == *w && out.msgs.is_empty() && out.events.is_empty()
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+/// A message to node `n` that can never change anything (rules N1–N3).
+fn dead_to_node(s: &State, n: u32, msg: &Msg, m: &Mutations) -> bool {
+    let node = &s.nodes[(n - 1) as usize];
+    let d = node.dbs.get(&DB).cloned().unwrap_or_default();
+    match msg {
+        Msg::Trim { upto, .. } => *upto <= d.trim || d.erased, // N1
+        Msg::Read { epoch, .. } => writer(s, *epoch).map_or(false, |w| w.is_active() || is_stale(w)), // N2
+        Msg::Fence { epoch, .. } | Msg::Append { epoch, .. } => {
+            // N3
+            !m.no_fencing && !m.forget_fence && writer(s, *epoch).map_or(false, is_stale) && (d.erased || *epoch < d.promised)
+        }
+        _ => false,
+    }
+}
+
+/// Remove dead messages (rules in the module comment), from the message set and, in `--fifo` mode, from the
+/// per-link queues (a dead message in a queue is the same as one lost when it reaches the head, which is allowed).
 fn prune(s: &mut State, cfg: &Cfg) {
     let m = cfg.m;
     let mut dead = vec![];
     for (to, msg) in &s.msgs {
         let is_dead = if *to == 0 {
             let (from, inner) = untag(msg);
-            if NO_REJECT.load(SeqCst) && matches!(inner, Msg::Reject { .. }) {
-                // W0 (--no-reject): delivering a Reject only makes a writer stale, i.e. only takes behaviours away;
-                // the invariants never look at the phase. Every behaviour after it is a behaviour without it.
-                dead.push((*to, msg.clone()));
-                continue;
-            }
-            let e = msg_epoch(&inner);
-            match writer(s, e) {
-                None => false,
-                Some(w) if is_stale(w) => true, // W1
-                Some(w) if w.is_active() => match &inner {
-                    Msg::Promise { .. } | Msg::Entries { .. } => true, // W2
-                    Msg::Ack { matched, .. } if *matched <= w.last => {
-                        // W3
-                        let mut c = w.clone();
-                        let out = c.on_msg(from, inner.clone());
-                        c == *w && out.msgs.is_empty() && out.events.is_empty()
-                    }
-                    _ => false,
-                },
-                _ => false,
-            }
+            dead_to_writer(s, from, &inner)
         } else {
-            let n = &s.nodes[(*to - 1) as usize];
-            let d = n.dbs.get(&DB).cloned().unwrap_or_default();
-            match msg {
-                Msg::Trim { upto, .. } => *upto <= d.trim || d.erased, // N1
-                Msg::Read { epoch, .. } => writer(s, *epoch).map_or(false, |w| w.is_active() || is_stale(w)), // N2
-                Msg::Fence { epoch, .. } | Msg::Append { epoch, .. } => {
-                    // N3
-                    !m.no_fencing && !m.forget_fence && writer(s, *epoch).map_or(false, is_stale) && (d.erased || *epoch < d.promised)
-                }
-                _ => false,
-            }
+            dead_to_node(s, *to, msg, &m)
         };
         if is_dead {
             dead.push((*to, msg.clone()));
@@ -152,6 +223,17 @@ fn prune(s: &mut State, cfg: &Cfg) {
     }
     for x in dead {
         s.msgs.remove(&x);
+    }
+    // FIFO links: (from, to); a writer's address is 100 + epoch, a node's is its id
+    let keys: Vec<(u32, u32)> = s.links.keys().copied().collect();
+    for (from, to) in keys {
+        let q = s.links[&(from, to)].clone();
+        let keep: Vec<Msg> = q.into_iter().filter(|msg| if to >= 100 { !dead_to_writer(s, from, msg) } else { !dead_to_node(s, to, msg, &m) }).collect();
+        if keep.is_empty() {
+            s.links.remove(&(from, to));
+        } else {
+            *s.links.get_mut(&(from, to)).unwrap() = keep;
+        }
     }
 }
 
@@ -222,13 +304,14 @@ impl Shared {
             return self.insert(canon_key(s, symmetry));
         }
         let (core, msgs) = split_key(s);
+        let p = pack(&msgs, &link_seqs(s));
         let mut g = self.sub[(core as usize) % SHARDS].lock().unwrap();
         let list = g.entry(core).or_default();
-        if list.iter().any(|m| superset(m, &msgs)) {
+        if list.iter().any(|q| covers(q, &p)) {
             return false;
         }
-        list.retain(|m| !superset(&msgs, m));
-        list.push(msgs);
+        list.retain(|q| !covers(&p, q));
+        list.push(p);
         self.count.fetch_add(1, SeqCst);
         true
     }
@@ -318,7 +401,7 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let get = |k: &str, d: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).cloned().unwrap_or(d.to_string());
     let has = |k: &str| args.iter().any(|a| a == k);
-    let cfg = Cfg { fifo: false, instant: false, ticks: false, dup: false, epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };
+    let cfg = Cfg { fifo: has("--fifo"), instant: false, ticks: false, dup: false, epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };
     let threads: usize = get("--threads", "4").parse().unwrap();
     let max_states: usize = get("--max-states", "2000000000").parse().unwrap();
     let prune_on = !has("--no-prune");
@@ -368,10 +451,11 @@ fn main() {
     });
     let verdict = sh.verdict.lock().unwrap().clone().unwrap_or_else(|| "complete: no violation".into());
     println!(
-        "{{\"checker\": \"mc2\", \"epochs\": {}, \"max_idx\": {}, \"mutation\": \"{}\", \"prune\": {prune_on}, \"symmetry\": {symmetry}, \"subsume\": {subsume}, \"threads\": {threads}, \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
+        "{{\"checker\": \"mc2\", \"epochs\": {}, \"max_idx\": {}, \"mutation\": \"{}\", \"fifo\": {}, \"prune\": {prune_on}, \"symmetry\": {symmetry}, \"subsume\": {subsume}, \"threads\": {threads}, \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
         cfg.epochs,
         cfg.max_idx,
         get("--mutation", "none"),
+        cfg.fifo,
         sh.count.load(SeqCst),
         sh.explored.load(SeqCst),
         sh.max_depth.load(SeqCst),
