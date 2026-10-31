@@ -1,11 +1,27 @@
 # journal3z – pacchetto per la revisione indipendente (§2e del piano di fase 2)
 
-**Bozza** preparata dalla sessione che ha scritto il codice. Contiene **solo** cosa leggere, come eseguire le prove e
-dove si trova il codice di ogni punto. **Non** contiene spiegazioni sul perché il codice sarebbe giusto: il revisore le
+Pacchetto preparato dalla sessione che ha scritto il codice (31-10-2026). Contiene **solo** cosa leggere, come
+eseguire le prove, dove si trova il codice di ogni punto, dove stanno i risultati grezzi e cosa consegnare. **Non** contiene spiegazioni sul perché il codice sarebbe giusto: il revisore le
 deve ricavare da sé (regola del §2e). Il revisore lo sceglie il coordinatore.
 
 Branch: `journal3z`. Il commit da rivedere è quello indicato dal coordinatore quando consegna il pacchetto; tutti i
 controlli del §2 devono essere sullo stesso commit.
+
+**Regola del fondatore (31-10-2026):** il giornale a 3 zone non diventa la modalità normale in produzione senza
+questa revisione superata. Il superamento lo dichiara il fondatore, non chi ha scritto il codice né il revisore.
+
+## 0. Cosa consegna il revisore
+
+Un file `docs/journal3z-review.md` (sul branch `journal3z`, o consegnato al coordinatore) con:
+1. per ognuno dei punti della sezione 4 (i 12 del piano più i 4 aggiunti): "visto, nessun problema" oppure l'elenco dei
+   problemi;
+2. per ogni problema: gravità (**alta** = può far perdere una scrittura confermata o rompere una regola del protocollo;
+   **media** = errore che costa disponibilità o che le prove non vedrebbero; **bassa** = il resto), file e riga, e un
+   caso concreto (sequenza di eventi) che lo mostra;
+3. per il punto 1, la tabella "regola del disegno §5 → file:riga";
+4. cosa non è riuscito a controllare e perché.
+Passa (piano §2e) se: 0 problemi di gravità alta aperti; i problemi medi corretti o accettati per scritto dal
+fondatore.
 
 ## 1. Da leggere
 
@@ -91,14 +107,49 @@ Per ogni punto il revisore scrive i problemi trovati con gravità (alta / media 
 | 11. l'indice del giornale è assegnato nello stesso ordine in cui le scritture sono applicate | `p2/writer/src/standin.rs` (`write`), `p2/writer/src/journal.rs` (`append`) – nel motore vero: P6 |
 | 12. cancellazione, sonno, spostamento, rilascio del lease quando il giornale è irraggiungibile (un server smette di agire **prima** di cedere il lease) | `p2/writer/src/journal.rs` (`erase`, `close`), `p2/writer/src/standin.rs` (`run_db`, `own`: rilascio dopo 5 s) |
 
-Punto aggiunto il 30-10-2026 (decisione del fondatore): la **regola di subentro** (§5.1 del disegno) – chi tiene il
-lease agisce solo fino a "invio dell'ultimo rinnovo riuscito + lease" sul proprio orologio monotono; chi subentra
-aspetta di aver visto il lease immutato per lease + margine sul proprio orologio monotono, con scrittura condizionata
-su quella versione. Dove: `core/src/lease.rs`, `p2/writer/src/meta.rs` (`LeaseOps`), `p2/writer/src/standin.rs`
-(`run_db`, `own`, `write`).
+Punti aggiunti dopo il piano (decisioni del fondatore e difetti trovati dalle prove):
 
-## 5. Cosa il pacchetto non copre (ancora)
+| punto | dove guardare per primo |
+|---|---|
+| 13. **regola di subentro** (disegno §5.1, 30-10-2026): chi tiene il lease agisce solo fino a "invio dell'ultimo rinnovo riuscito + lease" sul proprio orologio monotono; chi subentra aspetta di aver visto il lease immutato per lease + margine sul proprio orologio monotono, con scrittura condizionata su quella versione; nessun confronto tra orologi di macchine diverse | `core/src/lease.rs`, `p2/writer/src/meta.rs` (`LeaseOps`), `p2/writer/src/standin.rs` (`run_db`, `own`, `write`); il lease del motore vero (round3 `lease.rs`) **non** segue ancora questa regola (lavoro di P6) |
+| 14. **ordine di cessione:** quando si perde la maggioranza dei nodi (o si cede il database per altri motivi), prima si smette di accettare scritture, poi si cede il lease | `p2/writer/src/standin.rs` (`run_db`, `own`); nel motore vero: lista di controllo di P6 nel piano |
+| 15. **un caricamento non sostituisce mai uno precedente**; il giornale si accorcia solo fino a uno stato caricato per intero | `p2/writer/src/meta.rs` (`put_chunk`, `StoreOps::upload`), `p2/writer/src/standin.rs` (`upload`, `maybe_reconfigure`) |
+| 16. **il controllore del banco**: le sovrapposizioni di lease subito dopo un salto in avanti dell'orologio monotono si contano a parte (ipotesi rotta apposta); verificare che la finestra e il conteggio non nascondano un difetto vero | `p2/bench/src/lib.rs` (`lease_overlaps_split`), `p2/bench/src/bin/j3z-soak.rs` (`MonoJump`, `checkpoint`); nel simulatore la stessa cosa: `sim/src/world.rs` (`check_lease_overlap`) |
+
+## 5. Risultati grezzi (dove sono)
+
+Tutti in `journal3z/results/phase2/` salvo dove detto. Ogni cartella ha i dati come escono dai programmi.
+
+| prova | dove | criterio del piano |
+|---|---|---|
+| formato su disco e recupero (P1, P2) | `docs/journal3z-phase2-status.md` sezioni P1, P2 (numeri dei test); i test si rifanno con la sezione 3 | — |
+| nodo, rete, proxy (P3, P4) | idem, sezione P3 + P4 | — |
+| client scrittore su MinIO (P5) | `p5-run*.txt` (l'ultimo giro completo: `p5-run8-after-release-order-fix.txt`) | — |
+| prove brevi di messa a punto del banco | `p7-trials/` (t1, t2, t3 fallita, t3b, t3c) | — |
+| simulatore, campagna completa | `sim/` (e `sim-attempt1/`, primo giro respinto) | §2d (simulatore) |
+| controlli esaustivi a uno scrittore | `mc-e1-*.json`, `mc2-e1-*` | §2f (a) |
+| controllo esaustivo della regola di subentro | `lease/` | punto 13 |
+| controllo esaustivo a due scrittori (limitato, non finito; e quello a limiti piccoli) | `p9/` | §2f: **non raggiunto**, sostituito (piano §2f) |
+| prove lunghe del banco | `2a/` (in corso); tentativi falliti: `2a-attempt1/`, `2a-attempt2/` | §2a, §2d |
+| 12 versioni rotte sul codice vero | `p8/` (da fare dopo il §2a) | §2b |
+| CI corta | GitHub Actions, workflow `journal3z-ci` | — |
+
+## 6. Limiti noti (dichiarati da chi ha scritto il codice)
+
+- **Motore vero non integrato** (P6 rinviato, decisione 1): i punti 4, 5, 11, 13 (motore), 14 (motore) si vedono solo
+  sul sostituto del motore; il test §2c non è eseguibile.
+- **Due scrittori non provati per intero** dal controllo esaustivo (§2f non raggiunto); quello che lo sostituisce è
+  scritto nel piano, §2f.
+- **Il controllo esaustivo usa un hash di 64 bit per stato** (come nella fase 1): due stati diversi con lo stesso hash
+  ne nasconderebbero uno (probabilità molto piccola, non zero).
+- **Disco:** guasti iniettati da uno strato di prova (errore di fsync, disco pieno, interruzione di corrente), non da
+  dischi veri che si guastano; kill -9 non perde la cache del sistema operativo.
+- **Store a oggetti:** MinIO locale, non S3; MinIO rispetta le scritture condizionali sotto concorrenza nelle prove
+  fatte (`p2/bench/tests/minio_cas.rs`: 2.400 giri, 0 errori), il comportamento di S3 non è provato qui.
+- **Una sola macchina:** reti tra zone simulate con il proxy; tempi di rete di AWS non misurati.
+
+## 7. Cosa manca ancora al momento della consegna
 
 - L'integrazione col motore vero (P6) non esiste: i punti 4, 5, 11 si possono rivedere solo sul sostituto del motore.
-- Le prove lunghe del §2a e le 12 versioni rotte sul codice vero (§2b) sono in corso o da fare al momento di questa
-  bozza: i risultati vanno aggiunti al pacchetto quando ci sono.
+- Le prove lunghe del §2a (in corso dal 31-10-2026 09:13) e le 12 versioni rotte sul codice vero (§2b, dopo il §2a):
+  i loro risultati vanno nelle cartelle della sezione 5; il revisore li legge da lì. Il pacchetto non cambia.

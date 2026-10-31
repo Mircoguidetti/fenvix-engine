@@ -477,3 +477,19 @@ dopo aver compattato la memoria, secondo giro **fermato da me a 34.502.955 stati
 **nessuna violazione, non finito**, ancora nessuno stato con 2 scritture confermate; stati nuovi ogni 15 minuti: 7,3 –
 5,9 – 5,6 – 3,8 – 4,2 – 3,8 milioni (rallenta piano, nessun segno di fine). Registri in `results/phase2/p9/`. Stima
 (**non so**): con questo andamento servirebbero molte ore e più memoria di quella della macchina (15 GB).
+
+### P9: strada 3 (decisione del fondatore del 31-10-2026) – §2f NON RAGGIUNTO, sostituito
+
+Il controllo esaustivo a due scrittori non è stato fatto finire. Come chiesto, ho provato un controllo a due scrittori
+con **limiti più piccoli**, al massimo 15 minuti ciascuno, 2 thread (misurato; registri `results/phase2/p9/`):
+
+| limiti (oltre a 2 epoche, indice 2, rimozione dei messaggi morti, sottomissione) | stati a 15 min | finito? |
+|---|---|---|
+| risposte dei nodi immediate (arrivano nello stesso passo o si perdono), messaggi verso i nodi in qualsiasi ordine | 16.150.744 | no |
+| ordine per collegamento + il secondo scrittore non scrive dati suoi (solo la barriera) | 5.386.795 | no |
+| qualsiasi ordine + il secondo scrittore non scrive dati suoi | 16.213.018 | no |
+| ordine per collegamento + secondo scrittore senza dati + **nessun caricamento nello store** | 1.429.879 | no |
+
+Nessuno è finito; nessuna violazione fino al punto di arresto. **Nessun controllo a due scrittori è stato completato.**
+Mi sono fermato qui (niente altro tempo macchina, come deciso). Cosa è provato per intero, cosa no e cosa lo
+sostituisce: piano §2f, nota "Esito del §2f".

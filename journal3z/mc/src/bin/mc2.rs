@@ -156,6 +156,19 @@ fn superset(a: &[u64], b: &[u64]) -> bool {
 
 const SHARDS: usize = 256;
 static NO_REJECT: AtomicBool = AtomicBool::new(false);
+/// `--second-writer-no-data` (smaller bound): the second writer (epoch 2) appends no client write, only its barrier.
+static W2_NO_DATA: AtomicBool = AtomicBool::new(false);
+/// `--no-upload` (smaller bound): no upload to the store (so no trim of the journal).
+static NO_UPLOAD: AtomicBool = AtomicBool::new(false);
+
+fn w2_data(s: &State) -> usize {
+    s.writers.get(1).and_then(|w| w.as_ref()).map_or(0, |w| w.log.values().filter(|e| e.epoch == 2 && !e.barrier).count())
+}
+
+/// The transition s → t is a client write of the second writer.
+fn w2_wrote(s: &State, t: &State) -> bool {
+    w2_data(t) > w2_data(s)
+}
 
 fn writer<'a>(s: &'a State, e: Epoch) -> Option<&'a WriterDb> {
     s.writers.get((e.max(1) - 1) as usize).and_then(|w| w.as_ref())
@@ -380,7 +393,7 @@ fn worker(sh: &Shared, cfg: &Cfg, threads: usize, prune_on: bool, symmetry: bool
             sh.cv.notify_all();
             return;
         }
-        for mut t in successors(&s, cfg) {
+        for mut t in successors(&s, cfg).into_iter().filter(|t| !(W2_NO_DATA.load(SeqCst) && w2_wrote(&s, t)) && !(NO_UPLOAD.load(SeqCst) && t.store.applied != s.store.applied)) {
             if prune_on {
                 prune(&mut t, cfg);
             }
@@ -401,13 +414,15 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let get = |k: &str, d: &str| args.iter().position(|a| a == k).and_then(|i| args.get(i + 1)).cloned().unwrap_or(d.to_string());
     let has = |k: &str| args.iter().any(|a| a == k);
-    let cfg = Cfg { fifo: has("--fifo"), instant: false, ticks: false, dup: false, epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };
+    let cfg = Cfg { fifo: has("--fifo"), instant: has("--instant-replies"), ticks: false, dup: false, epochs: get("--epochs", "2").parse().unwrap(), max_idx: get("--idx", "2").parse().unwrap(), m: Mutations::parse(&get("--mutation", "none")).expect("mutation") };
     let threads: usize = get("--threads", "4").parse().unwrap();
     let max_states: usize = get("--max-states", "2000000000").parse().unwrap();
     let prune_on = !has("--no-prune");
     let symmetry = has("--symmetry");
     let subsume = has("--subsume");
     NO_REJECT.store(has("--no-reject"), SeqCst);
+    W2_NO_DATA.store(has("--second-writer-no-data"), SeqCst);
+    NO_UPLOAD.store(has("--no-upload"), SeqCst);
     assert!(!(subsume && symmetry), "--subsume and --symmetry together are not supported");
     let init = State {
         nodes: (1..=3).map(|i| NodeCore::new(i, cfg.m)).collect(),
@@ -451,11 +466,14 @@ fn main() {
     });
     let verdict = sh.verdict.lock().unwrap().clone().unwrap_or_else(|| "complete: no violation".into());
     println!(
-        "{{\"checker\": \"mc2\", \"epochs\": {}, \"max_idx\": {}, \"mutation\": \"{}\", \"fifo\": {}, \"prune\": {prune_on}, \"symmetry\": {symmetry}, \"subsume\": {subsume}, \"threads\": {threads}, \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
+        "{{\"checker\": \"mc2\", \"epochs\": {}, \"max_idx\": {}, \"mutation\": \"{}\", \"fifo\": {}, \"instant_replies\": {}, \"second_writer_no_data\": {}, \"no_upload\": {}, \"prune\": {prune_on}, \"symmetry\": {symmetry}, \"subsume\": {subsume}, \"threads\": {threads}, \"distinct_states\": {}, \"explored\": {}, \"max_depth\": {}, \"max_acked\": {}, \"verdict\": \"{}\", \"secs\": {:.1}}}",
         cfg.epochs,
         cfg.max_idx,
         get("--mutation", "none"),
         cfg.fifo,
+        cfg.instant,
+        W2_NO_DATA.load(SeqCst),
+        NO_UPLOAD.load(SeqCst),
         sh.count.load(SeqCst),
         sh.explored.load(SeqCst),
         sh.max_depth.load(SeqCst),

@@ -44,6 +44,31 @@ riscrive**: è lo stesso codice già provato dal simulatore; i pezzi nuovi lo us
 Ordine: P1 → P2 → P3 → P4 → P5 → (indagine P6) → P6 → P7 → P8. P9 si può fare in parallelo da P1 in poi (non
 dipende dai pezzi nuovi). P10 alla fine, prima di AWS.
 
+**Regola (fondatore, 31-10-2026):** il giornale a 3 zone **non** diventa la modalità normale in produzione senza la
+revisione indipendente (§2e, P10) superata.
+
+### Lista di controllo per P6 (integrazione col motore), aggiornata con quello che le prove hanno trovato
+
+Ogni punto va fatto nel motore vero e controllato nella revisione (§2e). I punti 1–6 vengono dal disegno; i punti 7–9
+da errori trovati nel sostituto del motore durante la fase 2 (lo stesso errore nel motore vero è possibile).
+
+1. Ordine di apertura: lease → blocco del vecchio scrittore SlateDB → lettura del segnalibro → apertura del giornale.
+2. Segnalibro `sys/journal` nello stesso lotto atomico dei dati; replay al riavvio idempotente.
+3. Indice del giornale assegnato nello stesso ordine in cui le scritture sono applicate (sotto il lucchetto del database).
+4. Abbandono del database quando il giornale o lo store dicono "recintato".
+5. Sonno, spostamento, cancellazione (GDPR); numero di "incarnazione" nel lease.
+6. **Regola di subentro del lease** del disegno §5.1 (30-10-2026): chi subentra aspetta di aver visto il lease immutato
+   per lease + 1,5 s sul **proprio orologio monotono**; chi tiene il lease agisce solo fino a "invio dell'ultimo
+   rinnovo riuscito + lease" sul proprio orologio monotono. Il `lease.rs` di round3 confronta ancora un'ora scritta da
+   un'altra macchina con il proprio orologio: va cambiato.
+7. **Quando si perde la maggioranza dei nodi (o per qualunque motivo si cede il database): prima si smette di accettare
+   scritture, poi si cede il lease.** (Trovato dal §2a, secondo tentativo: il sostituto cedeva il lease prima di
+   smettere; un altro server ha preso il database mentre il primo accettava ancora scritture per pochi millisecondi.)
+8. `uploaded(k)` (accorciamento del giornale) solo quando lo stato fino a k è nello store **per intero** e non può più
+   essere sostituito da un caricamento successivo. (Trovato dalla prova t3: un secondo caricamento vuoto sovrascriveva
+   il primo dopo l'accorciamento: 7.832 scritture confermate perse nel sostituto.)
+9. Un server che non vede la maggioranza dei nodi del giornale non prova a prendere database. (Trovato dalla prova t2.)
+
 ---
 
 ## 2. Controlli locali prima di AWS (criteri fissati ORA)
@@ -171,6 +196,37 @@ trova difetti noti non vale come prova.
 > **finire** senza violazioni e trovare i 4 + 3 difetti. È un controllo più debole del precedente: un difetto che
 > appare solo se due messaggi sullo stesso collegamento si scambiano di posto non verrebbe visto (il codice vero non
 > riordina sullo stesso collegamento; il simulatore, che riordina, resta la prova per quel caso).
+
+> **Esito del §2f (31-10-2026): NON RAGGIUNTO, sostituito dalle prove qui sotto** (decisione del fondatore: strada 3;
+> il superamento o no lo dichiara il fondatore).
+>
+> (a) **Provato per intero (esaustivo, finito): uno scrittore.** Con un solo scrittore il controllo esaustivo sul
+> cervello vero ha esplorato **tutti** gli stati possibili e non ha trovato violazioni: messaggi in qualsiasi ordine,
+> indice 2: 18.698.439 stati; con duplicati, indice 1: 21.021; ordine per collegamento: 2.765.555
+> (`results/phase2/mc-*.json`, uguali alla fase 1). La regola di subentro del lease è provata per intero dal suo
+> controllo esaustivo (401.195.214 stati, `results/phase2/lease/`), con i limiti scritti nel documento di stato.
+>
+> (b) **NON provato per intero: due scrittori** (uno vecchio e uno nuovo che agiscono insieme). Il controllo esaustivo
+> non finisce né con "qualsiasi ordine" (fermato a 45.652.654 stati dopo 31 min) né con "ordine per collegamento, con
+> perdite" (fermato a 34.502.955 stati dopo 1 h 42 min), senza violazioni fino a lì. Quindi non c'è una prova che
+> **nessun** intreccio di due scrittori porti a una perdita, entro quei limiti.
+>
+> (c) **Cosa lo sostituisce** (insieme, non una cosa sola):
+> 1. il **simulatore**: 1.000 semi × 200.000 passi (200 milioni di eventi) con guasti continui, salti dell'orologio
+>    monotono che creano davvero due scrittori insieme (1,5 milioni di passi con due scrittori attivi), 0 violazioni;
+>    più le prove moderata, a 10 database, calma, doppi guasti e mirata sul lease (`results/phase2/sim/`);
+> 2. il **controllo esaustivo limitato** a due scrittori: decine di milioni di stati senza violazioni, con i limiti
+>    scritti (2 epoche, indice 2, stati esplorati in profondità fino al punto di arresto; quello che non è stato
+>    raggiunto non è controllato);
+> 3. le **versioni rotte** trovate: dal simulatore tutte e 12 quelle del protocollo; dal controllo esaustivo limitato a
+>    due scrittori `no_fencing`, `ack_on_one`, `trim_before_upload`, `ack_gap` (non trovato in 17 min:
+>    `recovery_longest`; non provati: `recovery_single`, `keep_diverged`); le 12 sul codice vero arriveranno da §2b;
+> 4. i **recinti** sui nodi (epoca promessa, mai persa) e sullo store (scrittore SlateDB bloccato all'apertura): sono
+>    loro che rendono innocuo uno scrittore vecchio; il loro funzionamento è controllato dalle versioni rotte
+>    `no_fencing`, `forget_fence`, `skip_store_fence` (simulatore, test sui processi veri, §2b).
+>
+> Controlli a due scrittori con **limiti più piccoli** (risposte immediate; secondo scrittore senza dati suoi; senza
+> caricamenti nello store): provati 4, 15 minuti ciascuno, **nessuno finito** (documento di stato, sezione P9, strada 3).
 
 **Strada 2 (TLA+, serve il tuo computer, oppure un permesso).** In questa sessione eseguire lo strumento TLA+ è stato
 bloccato dalle regole di sicurezza. Due modi:
