@@ -1,0 +1,175 @@
+{
+  "checkpoints": [
+    {
+      "checked_acks": 341307,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 1810,
+      "tag": "ckpt1"
+    },
+    {
+      "checked_acks": 685733,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 0,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 3629,
+      "tag": "ckpt2"
+    },
+    {
+      "checked_acks": 1034478,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [
+        "db 17: writer 2 took epoch 1289 at 1793408436750 while writer 0 epoch 1278 held it until 1793408446223 (9473 ms overlap)"
+      ],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 1,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 5457,
+      "tag": "ckpt3"
+    },
+    {
+      "checked_acks": 1038239,
+      "disk_violations": 0,
+      "first_disk_violations": [],
+      "first_late": [],
+      "first_lease_overlaps": [
+        "db 17: writer 2 took epoch 1289 at 1793408436750 while writer 0 epoch 1278 held it until 1793408446223 (9473 ms overlap)"
+      ],
+      "first_lost": [],
+      "late": 0,
+      "lease_overlaps": 1,
+      "lease_overlaps_after_mono_jump": 0,
+      "lost": 0,
+      "t_s": 5465,
+      "tag": "final"
+    }
+  ],
+  "databases_never_recovered_after_a_fault": 0,
+  "dbs": 30,
+  "failures": [
+    "ckpt3: 1 lease overlaps (first: db 17: writer 2 took epoch 1289 at 1793408436750 while writer 0 epoch 1278 held it until 1793408446223 (9473 ms overlap))",
+    "final: 1 lease overlaps (first: db 17: writer 2 took epoch 1289 at 1793408436750 while writer 0 epoch 1278 held it until 1793408446223 (9473 ms overlap))"
+  ],
+  "fault_counts": {
+    "ClockDrift": 10,
+    "ClockJump": 19,
+    "CutNode": 26,
+    "CutOneWay": 11,
+    "CutZone": 8,
+    "DiskFull": 6,
+    "DiskLoss": 9,
+    "FsyncError": 7,
+    "MonoJump": 9,
+    "NodeKill": 34,
+    "PowerCut": 7,
+    "PowerCutAll": 4,
+    "S3Pause": 3,
+    "TwoWriters": 18,
+    "WriterKill": 38
+  },
+  "faults": 209,
+  "harness": {
+    "settled": true,
+    "work_dir": "/tmp/claude-0/-home-user-fenvix-engine/01eefcc5-e4e6-5e0c-b484-361a9813b24f/scratchpad/soak/chunk-1"
+  },
+  "kinds": null,
+  "minutes_planned": 115.0,
+  "minutes_run": 91.12181604893334,
+  "mutation": null,
+  "notes": [],
+  "rate_per_s": 200,
+  "recovery_node_faults": {
+    "max_s": 1.260760676,
+    "n": 3150,
+    "over_5s": 0,
+    "p50_s": 0.104067333,
+    "p99_s": 0.647197699
+  },
+  "recovery_other_faults_max_s": {
+    "ClockDrift": [
+      0.767673075,
+      0.405394209
+    ],
+    "ClockJump": [
+      0.559740481,
+      0.570560794,
+      0.758643728,
+      0.666780347,
+      0.41827794
+    ],
+    "MonoJump": [
+      0.836177922,
+      0.485161806,
+      0.652252413
+    ],
+    "PowerCutAll": [
+      0.43291825,
+      0.473722996,
+      0.575997834,
+      0.691659143
+    ],
+    "S3Pause": [
+      0.919720619,
+      0.60193529,
+      0.618128494
+    ],
+    "WriterKill": [
+      0.610474704,
+      1.004104874,
+      0.705232132,
+      1.074589065,
+      0.477449572,
+      0.863484329,
+      0.75914659,
+      0.464936022,
+      0.74347341,
+      0.38057014,
+      0.30848994,
+      0.495430704,
+      0.776773128,
+      0.429581756,
+      0.404515461,
+      0.719914013
+    ]
+  },
+  "recovery_writer_faults": {
+    "max_s": 13.565479565,
+    "n": 1232,
+    "over_15s": 0,
+    "over_40s": 0,
+    "p50_s": 9.112189405,
+    "p99_s": 12.72491547
+  },
+  "seed": 1001,
+  "wait_until_healthy_s": {
+    "max": 16.146434936,
+    "p50": 0.056601682
+  },
+  "writer_opens": 1087,
+  "writes_acked": 1038239,
+  "writes_refused": {
+    "down": 11507,
+    "no_owner": 12587,
+    "not_owner": 24082,
+    "timeout": 1693,
+    "unavailable": 3712
+  },
+  "writes_sent": 1079233
+}

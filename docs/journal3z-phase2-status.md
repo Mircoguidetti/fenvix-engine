@@ -446,3 +446,34 @@ Strade possibili (da decidere; non cambio il criterio da solo):
    fase 1 anche quella versione con 2 scrittori non era finita in 31 minuti, senza le riduzioni di oggi);
 3. **rinunciare al "finisce"** e tenere come prova per i 2 scrittori: simulatore (1.000 semi, invariante L, 12 su 12
    difetti), controllo limitato a decine di milioni di stati, e i difetti trovati qui.
+
+## Dopo il via del 30-10-2026 (§2f cambiato; §2a da zero)
+
+### §2a, secondo tentativo: pezzo 1 FALLITO (fermo)
+
+`results/phase2/2a-attempt2/chunk-1/` (seme 1001, fermato da solo al controllo dei 90 minuti): 209 guasti, 1.079.233
+scritture inviate, **1.038.239 confermate, 0 perse, 0 tardive, 0 violazioni sui dischi**; ripresa dopo guasti a uno
+scrittore: 1.232 casi, **0 oltre 15 s**, massimo 13,6 s, 99° percentile 12,7 s; dopo guasti a un nodo: 3.150 casi,
+massimo 1,3 s (misurato). **Fallito per 1 sovrapposizione di lease** (database 17): lo scrittore 0, senza maggioranza
+di nodi da 5 s, ha **rilasciato** il lease e solo dopo ha smesso di agire; lo scrittore 2 ha preso il lease libero 2 ms
+prima che lo scrittore 0 smettesse (righe `LOST` e `TAKEN` in `events.txt.gz`). **Difetto del sostituto del motore**
+(ordine sbagliato: un server deve smettere di accettare scritture **prima** di cedere il lease). Danni: nessuno
+(senza maggioranza nessuna scrittura poteva essere confermata; i recinti avrebbero comunque respinto lo scrittore
+vecchio). Correzione in `writer/src/standin.rs`: prima smette di agire e scrive `LOST`, poi rilascia. Test P5 rifatti:
+9 su 9 verdi con i gemelli (`p5-run8-after-release-order-fix.txt`). **Non verificato con un test dedicato**: la finestra
+è di pochi millisecondi e non sono riuscito a farne un test che fallisca in modo affidabile sul codice vecchio; la
+verifica sarà la ripetizione delle prove lunghe. Lo stesso ordine va controllato nel motore vero (P6): aggiunto ai
+punti della revisione (§2e).
+
+### P9 con il criterio cambiato (ordine per collegamento, con perdite): NON finisce (fermo)
+
+`mc2 --fifo --subsume` (2 thread, mentre giravano le prove del §2a). Verifiche del programma con uno scrittore:
+senza riduzioni **2.765.555 stati, identico alla fase 1**; con la rimozione dei messaggi morti 2.070.512; con anche la
+sottomissione per sottosequenze **18.077** (il numero varia di poco tra un giro e l'altro, 18.114 nel giro dopo,
+perché con la sottomissione dipende dall'ordine di visita dei thread); verdetto sempre "nessuna violazione".
+
+Due scrittori (2 epoche, indice 2): primo giro finito per memoria (limite 7 GB) a 17,2 milioni di stati dopo 17 min;
+dopo aver compattato la memoria, secondo giro **fermato da me a 34.502.955 stati dopo 1 h 42 min** (5,6 GB),
+**nessuna violazione, non finito**, ancora nessuno stato con 2 scritture confermate; stati nuovi ogni 15 minuti: 7,3 –
+5,9 – 5,6 – 3,8 – 4,2 – 3,8 milioni (rallenta piano, nessun segno di fine). Registri in `results/phase2/p9/`. Stima
+(**non so**): con questo andamento servirebbero molte ore e più memoria di quella della macchina (15 GB).

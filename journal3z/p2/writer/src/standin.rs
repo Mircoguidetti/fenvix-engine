@@ -320,10 +320,16 @@ impl Server {
             observer.reset();
             log(format!("TAKEN db={db} epoch={} at_real_ms={at}", held.epoch));
             self.hold_line(db, held.epoch, held.valid_until_mono);
-            let why = self.own(&r, &mut held).await;
+            let (why, release) = self.own(&r, &mut held).await;
+            // stop acting first (no more writes accepted), then give the lease up: the order matters (found by the
+            // §2a run, attempt 2: releasing first let another server take the lease while this one still accepted
+            // writes for a few milliseconds)
             self.journal.abandon(&r.key, &why);
             let epoch = r.active.lock().unwrap().take().map(|a| a.epoch.0).unwrap_or(held.epoch);
             log(format!("LOST db={db} epoch={epoch} why={} at_real_ms={}", why.replace(' ', "_"), real_ms()));
+            if release {
+                let _ = self.lease().release(db, &held).await;
+            }
         }
     }
 
@@ -344,11 +350,12 @@ impl Server {
     }
 
     /// Hold the database until the lease is lost; returns why.
-    async fn own(&self, r: &DbRun, held: &mut Held) -> String {
+    /// Hold the database until the lease is lost or must be given up; returns why, and whether the caller must
+    /// release the lease (after it has stopped acting).
+    async fn own(&self, r: &DbRun, held: &mut Held) -> (String, bool) {
         let db = r.key.incarnation;
         if let Err(e) = self.open(r, held).await {
-            let _ = self.lease().release(db, held).await;
-            return e;
+            return (e, true);
         }
         let ttl = self.cfg.lease_ttl_ms as u64;
         let mut last_renew = self.clock.mono_ms();
@@ -362,7 +369,7 @@ impl Server {
             }
             let now = self.clock.mono_ms();
             if now >= held.valid_until_mono {
-                return "lease expired".into();
+                return ("lease expired".into(), false);
             }
             if now - last_renew >= ttl / 3 {
                 match self.lease().renew(db, held, now).await {
@@ -373,7 +380,7 @@ impl Server {
                         }
                         self.hold_line(db, held.epoch, held.valid_until_mono);
                     }
-                    Err(MetaError::Conflict) => return "lease taken".into(),
+                    Err(MetaError::Conflict) => return ("lease taken".into(), false),
                     Err(MetaError::Unavailable(_)) => {}
                 }
             }
@@ -383,17 +390,16 @@ impl Server {
             }
             let epoch = match r.active.lock().unwrap().as_ref() {
                 Some(a) => a.epoch,
-                None => return "abandoned".into(),
+                None => return ("abandoned".into(), false),
             };
             if self.journal.committed(&r.key, epoch).is_none() {
-                return "journal fenced".into();
+                return ("journal fenced".into(), false);
             }
             // decision 4: release the lease after `release_after` without a journal majority
             if self.journal.members_up(&held.members) < 2 {
                 let t = *no_journal_since.get_or_insert_with(Instant::now);
                 if t.elapsed() >= Duration::from_millis(self.cfg.release_after_ms) {
-                    let _ = self.lease().release(db, held).await;
-                    return "no journal majority".into();
+                    return ("no journal majority".into(), true);
                 }
             } else {
                 no_journal_since = None;
@@ -401,7 +407,7 @@ impl Server {
             if last_upload.elapsed() >= Duration::from_millis(self.cfg.upload_every_ms) {
                 last_upload = Instant::now();
                 if let Err(e) = self.upload(r, held).await {
-                    return e;
+                    return (e, false);
                 }
             }
         }

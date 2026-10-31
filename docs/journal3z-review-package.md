@@ -89,7 +89,7 @@ Per ogni punto il revisore scrive i problemi trovati con gravità (alta / media 
 | 9. i difetti di prova non possono finire nei binari di produzione | funzioni di compilazione `faults`, `mutations`, `testbugs` nei `Cargo.toml`; `journal3z/ci/check_production_build.sh` |
 | 10. il controllore del banco controlla davvero quello che dice | `p2/bench/src/lib.rs` (`check`, `disk_violations`, `lease_overlaps_split`), `p2/bench/src/bin/j3z-soak.rs` (`checkpoint`, recupero) |
 | 11. l'indice del giornale è assegnato nello stesso ordine in cui le scritture sono applicate | `p2/writer/src/standin.rs` (`write`), `p2/writer/src/journal.rs` (`append`) – nel motore vero: P6 |
-| 12. cancellazione, sonno, spostamento, rilascio del lease quando il giornale è irraggiungibile | `p2/writer/src/journal.rs` (`erase`, `close`), `p2/writer/src/standin.rs` (`own`: rilascio dopo 5 s) |
+| 12. cancellazione, sonno, spostamento, rilascio del lease quando il giornale è irraggiungibile (un server smette di agire **prima** di cedere il lease) | `p2/writer/src/journal.rs` (`erase`, `close`), `p2/writer/src/standin.rs` (`run_db`, `own`: rilascio dopo 5 s) |
 
 Punto aggiunto il 30-10-2026 (decisione del fondatore): la **regola di subentro** (§5.1 del disegno) – chi tiene il
 lease agisce solo fino a "invio dell'ultimo rinnovo riuscito + lease" sul proprio orologio monotono; chi subentra

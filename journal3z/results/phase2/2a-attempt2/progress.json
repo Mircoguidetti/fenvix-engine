@@ -1,0 +1,76 @@
+{
+ "runs": [
+  {
+   "name": "chunk-1",
+   "minutes": 91.1,
+   "failures": [
+    "ckpt3: 1 lease overlaps (first: db 17: writer 2 took epoch 1289 at 1793408436750 while writer 0 epoch 1278 held it until 1793408446223 (9473 ms overlap))",
+    "final: 1 lease overlaps (first: db 17: writer 2 took epoch 1289 at 1793408436750 while writer 0 epoch 1278 held it until 1793408446223 (9473 ms overlap))"
+   ],
+   "acked": 1038239
+  }
+ ],
+ "fault_minutes": 91.12181604893334,
+ "faults": {
+  "ClockDrift": 10,
+  "ClockJump": 19,
+  "CutNode": 26,
+  "CutOneWay": 11,
+  "CutZone": 8,
+  "DiskFull": 6,
+  "DiskLoss": 9,
+  "FsyncError": 7,
+  "MonoJump": 9,
+  "NodeKill": 34,
+  "PowerCut": 7,
+  "PowerCutAll": 4,
+  "S3Pause": 3,
+  "TwoWriters": 18,
+  "WriterKill": 38
+ },
+ "acked": 1038239,
+ "minimums": {
+  "node kill -9 (NodeKill)": {
+   "have": 34,
+   "need": 300
+  },
+  "writer kill -9 (WriterKill)": {
+   "have": 38,
+   "need": 300
+  },
+  "disk lost (DiskLoss)": {
+   "have": 9,
+   "need": 50
+  },
+  "network cuts (CutNode+CutOneWay+CutZone)": {
+   "have": 45,
+   "need": 300
+  },
+  "  of which one direction (CutOneWay)": {
+   "have": 11,
+   "need": 75
+  },
+  "  of which whole zone (CutZone)": {
+   "have": 8,
+   "need": 50
+  },
+  "clock jumps (ClockJump)": {
+   "have": 19,
+   "need": 150
+  },
+  "two writers (TwoWriters)": {
+   "have": 18,
+   "need": 150
+  },
+  "fsync errors (FsyncError)": {
+   "have": 7,
+   "need": 50
+  },
+  "disk full (DiskFull)": {
+   "have": 6,
+   "need": 50
+  }
+ },
+ "acked_need": 2000000,
+ "long_done": false
+}
