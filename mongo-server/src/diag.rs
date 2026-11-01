@@ -329,8 +329,9 @@ tokio::task_local! {
 static KILLED: Mutex<Vec<i64>> = Mutex::new(Vec::new());
 
 /// Run a command as operation `id`.
-pub async fn as_op<F: std::future::Future>(id: i64, fut: F) -> F::Output {
-    CUR_OP.scope(id, fut).await
+/// (A plain function, not an `async fn`: an async wrapper would copy the whole command future into a state of its own.)
+pub fn as_op<F: std::future::Future>(id: i64, fut: F) -> impl std::future::Future<Output = F::Output> {
+    CUR_OP.scope(id, fut)
 }
 
 /// Has `killOp` stopped the operation running on this task? (JavaScript checks this while it runs.)
@@ -480,11 +481,13 @@ fn md5_hex(data: &[u8]) -> String {
 
 impl Server {
     /// Diagnostic and administration commands; `None` when `name` is not one of them.
+    /// (The commands that await are boxed: this function runs for every command, and inline they made its future, part of
+    /// every command's future, about 14 KB.)
     pub(crate) async fn diag_command(&self, db: &str, name: &str, cmd: &Document) -> Option<R<Document>> {
         Some(match name {
             "serverStatus" => self.server_status(cmd),
             "hostInfo" => Ok(self.host_info()),
-            "currentOp" => self.current_op(db, cmd).await,
+            "currentOp" => Box::pin(self.current_op(db, cmd)).await,
             "killOp" => self.kill_op(db, cmd),
             "top" => self.top(db),
             "getCmdLineOpts" => admin_only(db, name).map(|_| self.cmd_line_opts()),
@@ -498,9 +501,9 @@ impl Server {
             "getClusterParameter" => self.get_cluster_parameter(cmd),
             "setClusterParameter" => self.set_cluster_parameter(cmd),
             "profile" => self.profile(db, cmd),
-            "dbHash" => self.db_hash(db, cmd).await,
-            "dataSize" => self.data_size(cmd).await,
-            "validateDBMetadata" => self.validate_db_metadata(cmd).await,
+            "dbHash" => Box::pin(self.db_hash(db, cmd)).await,
+            "dataSize" => Box::pin(self.data_size(cmd)).await,
+            "validateDBMetadata" => Box::pin(self.validate_db_metadata(cmd)).await,
             "startSession" => {
                 let r = start_session();
                 if let Some(Bson::Binary(b)) = r.get_document("id").ok().and_then(|i| i.get("id").cloned()) {
@@ -510,11 +513,11 @@ impl Server {
                 Ok(r)
             }
             "killAllSessions" | "killAllSessionsByPattern" => kill_all_sessions(name, cmd),
-            "planCacheListFilters" | "planCacheSetFilter" | "planCacheClearFilters" | "planCacheClear" => self.plan_cache(db, name, cmd).await,
-            "reIndex" => self.re_index(db, cmd).await,
-            "compact" => self.compact(db, cmd).await,
-            "filemd5" => self.filemd5(db, cmd).await,
-            "setIndexCommitQuorum" => self.set_index_commit_quorum(db, cmd).await,
+            "planCacheListFilters" | "planCacheSetFilter" | "planCacheClearFilters" | "planCacheClear" => Box::pin(self.plan_cache(db, name, cmd)).await,
+            "reIndex" => Box::pin(self.re_index(db, cmd)).await,
+            "compact" => Box::pin(self.compact(db, cmd)).await,
+            "filemd5" => Box::pin(self.filemd5(db, cmd)).await,
+            "setIndexCommitQuorum" => Box::pin(self.set_index_commit_quorum(db, cmd)).await,
             "logRotate" => crate::admin_cmds::log_rotate(db, cmd),
             "fsync" => self.fsync(db, cmd),
             "fsyncUnlock" => self.fsync_unlock(db),
