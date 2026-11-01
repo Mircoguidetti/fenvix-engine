@@ -78,11 +78,23 @@ struct ConnInfo {
     metadata: Option<Document>,
 }
 
+/// Lower-case hex of `b` (the key of a logical session).
+fn hex_key(b: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut s = String::with_capacity(b.len() * 2);
+    for x in b {
+        s.push(HEX[(x >> 4) as usize] as char);
+        s.push(HEX[(x & 15) as usize] as char);
+    }
+    s
+}
+
 struct OpRec {
     conn: i64,
     db: String,
     name: String,
-    cmd: Document,
+    /// The command as received (not redacted: see `begin`).
+    cmd: Arc<Document>,
     start: Instant,
     kill: Arc<Notify>,
 }
@@ -220,15 +232,23 @@ impl Diag {
     }
 
     /// An operation starts: it is listed by `currentOp` until `end`.
-    pub fn begin(&self, conn: i64, db: &str, name: &str, cmd: &Document) -> (i64, Arc<Notify>) {
+    /// The command is shared with the running operation, not copied: `currentOp` redacts it when it shows it.
+    pub fn begin(&self, conn: i64, db: &str, name: &str, cmd: &Arc<Document>) -> (i64, Arc<Notify>) {
         let id = self.next_op.fetch_add(1, Relaxed);
         if let Some(Bson::Binary(b)) = cmd.get_document("lsid").ok().and_then(|l| l.get("id")) {
-            let key: String = b.bytes.iter().map(|x| format!("{x:02x}")).collect();
-            self.sessions.lock().unwrap().insert(key, (Bson::Binary(b.clone()), bson::DateTime::now()));
+            let key = hex_key(&b.bytes);
+            let now = bson::DateTime::now();
+            let mut sessions = self.sessions.lock().unwrap();
+            match sessions.get_mut(&key) {
+                Some(e) => e.1 = now,
+                None => {
+                    sessions.insert(key, (Bson::Binary(b.clone()), now));
+                }
+            }
         }
         let kill = Arc::new(Notify::new());
         self.requests.fetch_add(1, Relaxed);
-        self.ops.lock().unwrap().insert(id, OpRec { conn, db: db.to_string(), name: name.to_string(), cmd: crate::auth::redact_command(name, cmd), start: Instant::now(), kill: Arc::clone(&kill) });
+        self.ops.lock().unwrap().insert(id, OpRec { conn, db: db.to_string(), name: name.to_string(), cmd: Arc::clone(cmd), start: Instant::now(), kill: Arc::clone(&kill) });
         (id, kill)
     }
 
@@ -507,7 +527,7 @@ impl Server {
             "startSession" => {
                 let r = start_session();
                 if let Some(Bson::Binary(b)) = r.get_document("id").ok().and_then(|i| i.get("id").cloned()) {
-                    let key: String = b.bytes.iter().map(|x| format!("{x:02x}")).collect();
+                    let key = hex_key(&b.bytes);
                     self.diag.sessions.lock().unwrap().insert(key, (Bson::Binary(b), bson::DateTime::now()));
                 }
                 Ok(r)
@@ -765,7 +785,7 @@ impl Server {
             d.insert("currentOpTime", now_string());
             d.insert("threaded", true);
             d.insert("opid", *id as i32);
-            let mut command = o.cmd.clone();
+            let mut command = crate::auth::redact_command(&o.name, &o.cmd);
             command.remove("$clusterTime");
             command.remove("$readPreference");
             command.remove("txnNumber");

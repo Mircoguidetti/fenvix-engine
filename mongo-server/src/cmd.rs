@@ -161,6 +161,8 @@ impl Server {
     }
 
     pub async fn handle(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
+        // shared with the operation record of `currentOp` (diag.rs) instead of copied there
+        let cmd = Arc::new(cmd);
         let Some(name) = cmd.keys().next().cloned() else {
             return MongoError::new(59, "CommandNotFound", "Empty command document".into()).to_reply();
         };
