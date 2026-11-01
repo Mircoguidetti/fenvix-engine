@@ -118,6 +118,8 @@ pub struct Store {
     pub inner: Arc<dyn ObjectStore>,
     pub c: Arc<Contatori>,
     pub bucket: String,
+    /// ritardo artificiale prima di ogni GET (simula la latenza di S3 Standard sopra MinIO locale)
+    pub ritardo_get: Duration,
 }
 
 pub fn endpoint() -> String {
@@ -138,7 +140,7 @@ impl Store {
             .with_retry(RetryConfig { max_retries: 2, retry_timeout: Duration::from_secs(30), ..Default::default() })
             .build()?;
         let c = Contatori { lat_get: Mutex::new(Some(hdrhistogram::Histogram::new_with_bounds(1, 60_000_000, 3).unwrap())), ..Default::default() };
-        Ok(Store { inner: Arc::new(s3), c: Arc::new(c), bucket: bucket.to_string() })
+        Ok(Store { inner: Arc::new(s3), c: Arc::new(c), bucket: bucket.to_string(), ritardo_get: Duration::ZERO })
     }
 
     fn lat(&self, t0: Instant) {
@@ -151,6 +153,9 @@ impl Store {
     pub async fn get(&self, p: &str) -> anyhow::Result<Option<(Bytes, Option<String>)>> {
         self.c.get.fetch_add(1, Relaxed);
         let t0 = Instant::now();
+        if !self.ritardo_get.is_zero() {
+            tokio::time::sleep(self.ritardo_get).await;
+        }
         let r = self.inner.get_opts(&Path::from(p), GetOptions::default()).await;
         match r {
             Ok(r) => {
@@ -171,6 +176,9 @@ impl Store {
     pub async fn get_range(&self, p: &str, a: u64, b: u64) -> anyhow::Result<Option<Bytes>> {
         self.c.get_range.fetch_add(1, Relaxed);
         let t0 = Instant::now();
+        if !self.ritardo_get.is_zero() {
+            tokio::time::sleep(self.ritardo_get).await;
+        }
         let r = self.inner.get_opts(&Path::from(p), GetOptions { range: Some(GetRange::Bounded(a..b)), ..Default::default() }).await;
         match r {
             Ok(r) => {
