@@ -1,0 +1,98 @@
+15:14:03 started mongod on cpus 0, pid 28254 (load attempt 1)
+15:14:05 loaded 1 x 200000 in 1.8 s
+15:14:35 sweep mongod cores=1 layout=  1 insert clients=  1 ops/s=     1364 srv_cores=0.42 gen_cores=0.34 p50=0.65 p99=2.39 err=0
+15:15:05 sweep mongod cores=1 layout=  1 insert clients=  2 ops/s=     1760 srv_cores=0.50 gen_cores=0.40 p50=0.84 p99=5.31 err=0
+15:15:35 sweep mongod cores=1 layout=  1 insert clients=  4 ops/s=     2500 srv_cores=0.65 gen_cores=0.54 p50=1.24 p99=6.20 err=0
+15:16:05 sweep mongod cores=1 layout=  1 insert clients=  8 ops/s=     3638 srv_cores=0.75 gen_cores=0.63 p50=1.88 p99=7.51 err=0
+15:16:35 sweep mongod cores=1 layout=  1 insert clients= 16 ops/s=     4780 srv_cores=0.90 gen_cores=0.73 p50=3.12 p99=8.86 err=0
+15:17:05 sweep mongod cores=1 layout=  1 insert clients= 32 ops/s=     5555 srv_cores=0.91 gen_cores=0.79 p50=5.55 p99=14.01 err=0
+15:17:35 sweep mongod cores=1 layout=  1 insert clients= 64 ops/s=     6809 srv_cores=0.95 gen_cores=0.89 p50=9.05 p99=21.04 err=0
+15:18:05 sweep mongod cores=1 layout=  1 insert clients=128 ops/s=     6833 srv_cores=0.93 gen_cores=0.85 p50=17.58 p99=40.69 err=0
+15:18:36 sweep mongod cores=1 layout=  1 insert clients=256 ops/s=     7441 srv_cores=0.98 gen_cores=0.85 p50=34.83 p99=57.84 err=0
+15:18:36 saturation point: 256 clients
+15:22:36 full  mongod cores=1 layout=  1 insert clients=256 ops/s=     5541 srv_cores=0.98 gen_cores=0.63 p50=44.65 p99=98.73 err=0
+15:26:36 full  mongod cores=1 layout=  1 insert clients=256 ops/s=     6065 srv_cores=0.97 gen_cores=0.63 p50=37.77 p99=101.12 err=0
+15:30:36 full  mongod cores=1 layout=  1 insert clients=256 ops/s=     5842 srv_cores=0.97 gen_cores=0.73 p50=43.25 p99=73.62 err=0
+15:30:46 started mongod on cpus 0, pid 30764 (load attempt 1)
+15:30:50 loaded 100 x 2000 in 4.5 s
+15:31:20 sweep mongod cores=1 layout=100 insert clients=  1 ops/s=      882 srv_cores=0.36 gen_cores=0.28 p50=0.99 p99=3.80 err=0
+15:31:50 sweep mongod cores=1 layout=100 insert clients=  2 ops/s=     1742 srv_cores=0.55 gen_cores=0.41 p50=0.99 p99=4.58 err=0
+15:32:20 sweep mongod cores=1 layout=100 insert clients=  4 ops/s=     3023 srv_cores=0.77 gen_cores=0.62 p50=1.19 p99=3.94 err=0
+15:32:50 sweep mongod cores=1 layout=100 insert clients=  8 ops/s=     3794 srv_cores=0.85 gen_cores=0.66 p50=1.87 p99=7.76 err=0
+15:33:20 sweep mongod cores=1 layout=100 insert clients= 16 ops/s=     5252 srv_cores=0.92 gen_cores=0.80 p50=2.86 p99=7.79 err=0
+15:33:50 sweep mongod cores=1 layout=100 insert clients= 32 ops/s=     4914 srv_cores=0.93 gen_cores=0.72 p50=5.91 p99=14.53 err=0
+15:33:50 saturation point: 16 clients
+15:37:51 full  mongod cores=1 layout=100 insert clients= 16 ops/s=     5061 srv_cores=0.92 gen_cores=0.74 p50=2.84 p99=9.41 err=0
+15:41:51 full  mongod cores=1 layout=100 insert clients= 16 ops/s=     4698 srv_cores=0.92 gen_cores=0.69 p50=3.06 p99=10.98 err=0
+15:45:51 full  mongod cores=1 layout=100 insert clients= 16 ops/s=     5091 srv_cores=0.93 gen_cores=0.71 p50=2.63 p99=12.03 err=0
+15:45:58 started mongod on cpus 0-1, pid 31602 (load attempt 1)
+15:45:59 loaded 1 x 200000 in 1.8 s
+15:46:29 sweep mongod cores=2 layout=  1 insert clients=  1 ops/s=     1031 srv_cores=0.39 gen_cores=0.25 p50=0.89 p99=3.10 err=0
+15:46:59 sweep mongod cores=2 layout=  1 insert clients=  2 ops/s=     2339 srv_cores=0.69 gen_cores=0.47 p50=0.75 p99=2.74 err=0
+15:47:29 sweep mongod cores=2 layout=  1 insert clients=  4 ops/s=     4395 srv_cores=0.94 gen_cores=0.63 p50=0.82 p99=2.92 err=0
+15:48:00 sweep mongod cores=2 layout=  1 insert clients=  8 ops/s=     7039 srv_cores=1.26 gen_cores=0.76 p50=1.02 p99=3.04 err=0
+15:48:30 sweep mongod cores=2 layout=  1 insert clients= 16 ops/s=    10314 srv_cores=1.52 gen_cores=0.95 p50=1.39 p99=4.72 err=0
+15:49:00 sweep mongod cores=2 layout=  1 insert clients= 32 ops/s=    12553 srv_cores=1.63 gen_cores=1.00 p50=2.17 p99=7.24 err=0
+15:49:30 sweep mongod cores=2 layout=  1 insert clients= 64 ops/s=    15367 srv_cores=1.81 gen_cores=1.09 p50=3.81 p99=12.00 err=0
+15:50:00 sweep mongod cores=2 layout=  1 insert clients=128 ops/s=    14805 srv_cores=1.75 gen_cores=1.02 p50=7.81 p99=26.73 err=0
+15:50:00 saturation point: 64 clients
+15:54:00 full  mongod cores=2 layout=  1 insert clients= 64 ops/s=    13586 srv_cores=1.81 gen_cores=0.97 p50=4.04 p99=16.70 err=0
+15:58:01 full  mongod cores=2 layout=  1 insert clients= 64 ops/s=    14783 srv_cores=1.79 gen_cores=1.01 p50=3.77 p99=13.92 err=0
+16:02:01 full  mongod cores=2 layout=  1 insert clients= 64 ops/s=    14001 srv_cores=1.77 gen_cores=1.02 p50=3.87 p99=16.41 err=0
+16:02:14 started mongod on cpus 0-1, pid 372 (load attempt 1)
+16:02:17 loaded 100 x 2000 in 2.8 s
+16:02:47 sweep mongod cores=2 layout=100 insert clients=  1 ops/s=     1144 srv_cores=0.41 gen_cores=0.26 p50=0.83 p99=2.13 err=0
+16:03:17 sweep mongod cores=2 layout=100 insert clients=  2 ops/s=     2622 srv_cores=0.72 gen_cores=0.49 p50=0.67 p99=2.43 err=0
+16:03:47 sweep mongod cores=2 layout=100 insert clients=  4 ops/s=     4729 srv_cores=0.99 gen_cores=0.63 p50=0.76 p99=2.49 err=0
+16:04:17 sweep mongod cores=2 layout=100 insert clients=  8 ops/s=     6714 srv_cores=1.31 gen_cores=0.73 p50=1.06 p99=3.42 err=0
+16:04:47 sweep mongod cores=2 layout=100 insert clients= 16 ops/s=    10659 srv_cores=1.60 gen_cores=0.91 p50=1.31 p99=5.03 err=0
+16:05:17 sweep mongod cores=2 layout=100 insert clients= 32 ops/s=    12517 srv_cores=1.66 gen_cores=0.93 p50=2.12 p99=9.63 err=0
+16:05:47 sweep mongod cores=2 layout=100 insert clients= 64 ops/s=    15081 srv_cores=1.83 gen_cores=1.06 p50=3.77 p99=12.78 err=0
+16:06:18 sweep mongod cores=2 layout=100 insert clients=128 ops/s=    13506 srv_cores=1.82 gen_cores=1.00 p50=8.56 p99=27.80 err=0
+16:06:18 saturation point: 64 clients
+16:10:18 full  mongod cores=2 layout=100 insert clients= 64 ops/s=    10139 srv_cores=1.85 gen_cores=0.82 p50=5.00 p99=26.49 err=0
+16:14:18 full  mongod cores=2 layout=100 insert clients= 64 ops/s=    11569 srv_cores=1.82 gen_cores=0.89 p50=4.61 p99=22.89 err=0
+16:18:19 full  mongod cores=2 layout=100 insert clients= 64 ops/s=    10744 srv_cores=1.84 gen_cores=0.86 p50=4.92 p99=24.68 err=0
+16:18:20 started fenvix on cpus 0, pid 1554 (load attempt 1)
+16:18:34 loaded 1 x 200000 in 14.3 s
+16:19:04 sweep fenvix cores=1 layout=  1 insert clients=  1 ops/s=     1035 srv_cores=0.81 gen_cores=0.27 p50=0.85 p99=4.71 err=0
+16:19:34 sweep fenvix cores=1 layout=  1 insert clients=  2 ops/s=      957 srv_cores=0.99 gen_cores=0.23 p50=1.78 p99=10.38 err=0
+16:19:34 saturation point: 1 clients
+16:23:34 full  fenvix cores=1 layout=  1 insert clients=  1 ops/s=      723 srv_cores=0.83 gen_cores=0.22 p50=1.24 p99=4.69 err=0
+16:27:34 full  fenvix cores=1 layout=  1 insert clients=  1 ops/s=      741 srv_cores=0.85 gen_cores=0.21 p50=1.18 p99=5.03 err=0
+16:31:34 full  fenvix cores=1 layout=  1 insert clients=  1 ops/s=      710 srv_cores=0.85 gen_cores=0.20 p50=1.25 p99=4.64 err=0
+16:31:41 started fenvix on cpus 0, pid 2007 (load attempt 1)
+16:31:47 loaded 100 x 2000 in 6.3 s
+16:32:17 sweep fenvix cores=1 layout=100 insert clients=  1 ops/s=     1303 srv_cores=0.74 gen_cores=0.36 p50=0.72 p99=1.87 err=0
+16:32:47 sweep fenvix cores=1 layout=100 insert clients=  2 ops/s=     2280 srv_cores=0.97 gen_cores=0.47 p50=0.82 p99=1.97 err=0
+16:33:17 sweep fenvix cores=1 layout=100 insert clients=  4 ops/s=     2820 srv_cores=0.99 gen_cores=0.49 p50=1.32 p99=3.17 err=0
+16:33:47 sweep fenvix cores=1 layout=100 insert clients=  8 ops/s=     2908 srv_cores=0.99 gen_cores=0.48 p50=2.63 p99=5.48 err=0
+16:33:47 saturation point: 8 clients
+16:37:47 full  fenvix cores=1 layout=100 insert clients=  8 ops/s=     1000 srv_cores=0.99 gen_cores=0.24 p50=7.31 p99=25.66 err=0
+16:41:47 full  fenvix cores=1 layout=100 insert clients=  8 ops/s=     1132 srv_cores=0.99 gen_cores=0.28 p50=6.36 p99=22.49 err=0
+16:45:47 full  fenvix cores=1 layout=100 insert clients=  8 ops/s=     1107 srv_cores=0.99 gen_cores=0.26 p50=6.88 p99=14.96 err=0
+16:46:34 started fenvix on cpus 0-1, pid 2700 (load attempt 1)
+16:46:44 loaded 1 x 200000 in 9.1 s
+16:47:14 sweep fenvix cores=2 layout=  1 insert clients=  1 ops/s=      896 srv_cores=0.88 gen_cores=0.22 p50=1.06 p99=2.53 err=0
+16:47:44 sweep fenvix cores=2 layout=  1 insert clients=  2 ops/s=     1283 srv_cores=1.35 gen_cores=0.29 p50=1.39 p99=4.88 err=0
+16:48:14 sweep fenvix cores=2 layout=  1 insert clients=  4 ops/s=     1611 srv_cores=1.50 gen_cores=0.29 p50=2.21 p99=7.83 err=0
+16:48:44 sweep fenvix cores=2 layout=  1 insert clients=  8 ops/s=     2067 srv_cores=1.66 gen_cores=0.30 p50=3.48 p99=11.57 err=0
+16:49:14 sweep fenvix cores=2 layout=  1 insert clients= 16 ops/s=     2054 srv_cores=1.71 gen_cores=0.30 p50=7.01 p99=24.15 err=0
+16:49:44 sweep fenvix cores=2 layout=  1 insert clients= 32 ops/s=     2059 srv_cores=1.78 gen_cores=0.32 p50=14.69 p99=34.98 err=0
+16:50:14 sweep fenvix cores=2 layout=  1 insert clients= 64 ops/s=     2752 srv_cores=1.82 gen_cores=0.40 p50=21.64 p99=54.17 err=0
+16:50:44 sweep fenvix cores=2 layout=  1 insert clients=128 ops/s=     1969 srv_cores=1.86 gen_cores=0.33 p50=59.91 p99=162.12 err=0
+16:50:44 saturation point: 64 clients
+16:54:44 full  fenvix cores=2 layout=  1 insert clients= 64 ops/s=     2257 srv_cores=1.80 gen_cores=0.34 p50=26.38 p99=63.45 err=0
+16:58:44 full  fenvix cores=2 layout=  1 insert clients= 64 ops/s=     2380 srv_cores=1.80 gen_cores=0.33 p50=24.55 p99=66.30 err=0
+17:02:44 full  fenvix cores=2 layout=  1 insert clients= 64 ops/s=     1820 srv_cores=1.78 gen_cores=0.30 p50=32.31 p99=79.26 err=0
+17:02:54 started fenvix on cpus 0-1, pid 3256 (load attempt 1)
+17:02:58 loaded 100 x 2000 in 3.7 s
+17:03:28 sweep fenvix cores=2 layout=100 insert clients=  1 ops/s=     1125 srv_cores=0.80 gen_cores=0.27 p50=0.82 p99=2.10 err=0
+17:03:58 sweep fenvix cores=2 layout=100 insert clients=  2 ops/s=     2402 srv_cores=1.31 gen_cores=0.43 p50=0.76 p99=2.01 err=0
+17:04:28 sweep fenvix cores=2 layout=100 insert clients=  4 ops/s=     3442 srv_cores=1.60 gen_cores=0.54 p50=1.08 p99=2.83 err=0
+17:04:58 sweep fenvix cores=2 layout=100 insert clients=  8 ops/s=     3470 srv_cores=1.62 gen_cores=0.54 p50=2.18 p99=4.94 err=0
+17:05:28 sweep fenvix cores=2 layout=100 insert clients= 16 ops/s=     2764 srv_cores=1.60 gen_cores=0.51 p50=5.39 p99=12.42 err=0
+17:05:28 saturation point: 4 clients
+17:09:28 full  fenvix cores=2 layout=100 insert clients=  4 ops/s=     1198 srv_cores=1.41 gen_cores=0.27 p50=3.27 p99=6.60 err=0
+17:13:28 full  fenvix cores=2 layout=100 insert clients=  4 ops/s=     1269 srv_cores=1.48 gen_cores=0.27 p50=2.88 p99=8.48 err=0
+17:17:28 full  fenvix cores=2 layout=100 insert clients=  4 ops/s=     1291 srv_cores=1.47 gen_cores=0.27 p50=2.79 p99=8.32 err=0

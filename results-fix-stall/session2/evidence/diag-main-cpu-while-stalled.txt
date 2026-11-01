@@ -1,0 +1,3 @@
+engine CPU ticks (1/100 s) over 10 s while stalled: 8
+engine CPU ticks (1/100 s) over 10 s while stalled: 8
+engine CPU ticks (1/100 s) over 10 s while stalled: 8

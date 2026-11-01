@@ -1,0 +1,34 @@
+run 1 ok 9.432106109 compactRuns=4 l0WatchRequests=5
+run 2 ok 10.935227743 compactRuns=4 l0WatchRequests=5
+run 3 ok 9.815620267 compactRuns=4 l0WatchRequests=5
+run 4 ok 9.781443812 compactRuns=4 l0WatchRequests=5
+run 5 ok 10.329186636 compactRuns=4 l0WatchRequests=5
+run 6 ok 13.843257535 compactRuns=5 l0WatchRequests=6
+run 7 STALL (loadgen exit 1 after 84.041225387 s: out: connection(127.0.0.1:27017[-3]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:38264->127.0.0.1:27017: i/o timeout )
+engine 6098 did not stop in 30 s after SIGTERM: SIGKILL
+run 8 STALL (loadgen exit 1 after 7.740609128 s: <Resource>/stall-1793534889-8/processes/6228-a5c7b509/_lease</Resource><RequestId>18E3EA7CA7763840</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6228 did not stop in 30 s after SIGTERM: SIGKILL
+run 9 STALL (loadgen exit 1 after 5.722329516 s: <Resource>/stall-1793534939-9/processes/6350-ef0953ea/_lease</Resource><RequestId>18E3EA87D391D959</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6350 did not stop in 30 s after SIGTERM: SIGKILL
+run 10 STALL (loadgen exit 1 after 7.310883305 s: Resource>/stall-1793534987-10/processes/6452-14880a7c/_lease</Resource><RequestId>18E3EA9370232712</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6452 did not stop in 30 s after SIGTERM: SIGKILL
+run 11 STALL (loadgen exit 1 after 4.425254359 s: Resource>/stall-1793535036-11/processes/6557-2db47aef/_lease</Resource><RequestId>18E3EA9E41F6FC1D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6557 did not stop in 30 s after SIGTERM: SIGKILL
+run 12 STALL (loadgen exit 1 after 4.111892339 s: Resource>/stall-1793535083-12/processes/6655-03a758df/_lease</Resource><RequestId>18E3EAA8FD35E41E</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6655 did not stop in 30 s after SIGTERM: SIGKILL
+run 13 STALL (loadgen exit 1 after 4.068916202 s: Resource>/stall-1793535129-13/processes/6756-96174987/_lease</Resource><RequestId>18E3EAB3B83F03D3</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6756 did not stop in 30 s after SIGTERM: SIGKILL
+run 14 STALL (loadgen exit 1 after 10.439503348 s: Resource>/stall-1793535175-14/processes/6855-d2c2baf4/_lease</Resource><RequestId>18E3EABFF2C39627</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6855 did not stop in 30 s after SIGTERM: SIGKILL
+run 15 STALL (loadgen exit 1 after 13.620715976 s: Resource>/stall-1793535228-15/processes/6956-0bdece76/_lease</Resource><RequestId>18E3EACCEFA0C098</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 6956 did not stop in 30 s after SIGTERM: SIGKILL
+run 16 STALL (loadgen exit 1 after 3.679513967 s: Resource>/stall-1793535283-16/processes/7063-b0f51451/_lease</Resource><RequestId>18E3EAD79EF90F9C</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 7063 did not stop in 30 s after SIGTERM: SIGKILL
+run 17 STALL (loadgen exit 1 after 5.742913192 s: Resource>/stall-1793535329-17/processes/7162-4baa2ac3/_lease</Resource><RequestId>18E3EAE2C5FBE3E5</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 7162 did not stop in 30 s after SIGTERM: SIGKILL
+run 18 STALL (loadgen exit 1 after 3.686268132 s: Resource>/stall-1793535377-18/processes/7263-ab787805/_lease</Resource><RequestId>18E3EAED6E375E83</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 7263 did not stop in 30 s after SIGTERM: SIGKILL
+run 19 STALL (loadgen exit 1 after 3.720853600 s: Resource>/stall-1793535423-19/processes/7365-5a67ae45/_lease</Resource><RequestId>18E3EAF81EDEADE9</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 7365 did not stop in 30 s after SIGTERM: SIGKILL
+run 20 STALL (loadgen exit 1 after 7.268607732 s: Resource>/stall-1793535469-20/processes/7463-14d62602/_lease</Resource><RequestId>18E3EB03A372D1F6</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 7463 did not stop in 30 s after SIGTERM: SIGKILL
