@@ -32,7 +32,20 @@ stop_engine() {
 
 cpu_ticks() { awk '{print $14+$15}' "/proc/$1/stat" 2>/dev/null; }
 
+# The data of a run is deleted once the engine has stopped (a MinIO bucket per run, ~0.3 GB each, filled the disk after
+# ~60 runs: MinIO then refuses every PUT with XMinioStorageFull and the loads fail in a way that looks like a stall).
+drop_data() {
+  rm -rf "$DATA"
+  [ "$STORE" = minio ] && "$PY" - "$BUCKET" <<'PYEOF'
+import sys, boto3
+b = boto3.resource("s3", endpoint_url="http://127.0.0.1:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1").Bucket(sys.argv[1])
+b.objects.all().delete(); b.delete()
+PYEOF
+}
+
 for n in $(seq 1 "$RUNS"); do
+  free_kb=$(df -Pk "$OUT" | awk 'NR==2{print $4}')
+  [ "$free_kb" -lt 3000000 ] && { log "run $n not started: less than 3 GB free on the disk"; exit 1; }
   RD="$OUT/run-$n"; rm -rf "$RD" "$DATA"; mkdir -p "$RD" "$DATA"
   case "$STORE" in
     local) STORE_ARGS=(--store local --local-dir "$DATA/store") ;;
@@ -65,11 +78,14 @@ PYEOF
 )
     log "run $n ok $(echo "$t1 - $t0" | bc) $maint"
     stop_engine $SPID
+    drop_data
     grep -q "final flush did not finish" "$RD/server.log" && log "run $n: the close at SIGTERM gave up its final flush (unclean)"
     rm -rf "$RD/server.log.gz"; gzip -f "$RD/server.log"
     continue
   fi
   log "run $n STALL (loadgen exit $rc after $(echo "$t1 - $t0" | bc) s: $(tail -c 200 "$RD/load.err" | tr '\n' ' '))"
+  # A load that failed on errors of the store (e.g. a full disk) is not a stall: the commands come back with ok=false.
+  errs=$(grep -c "ok=false" "$RD/server.log"); [ "$errs" -gt 0 ] && log "run $n: $errs commands failed with an error (ok=false in server.log): not a stall, see server.log"
   # Evidence, engine still running.
   c0=$(cpu_ticks $SPID); sleep 10; c1=$(cpu_ticks $SPID)
   echo "engine CPU ticks (1/100 s) over 10 s while stalled: $((c1 - c0))" >"$RD/cpu.txt"
@@ -84,4 +100,5 @@ PYEOF
   # Only a diagnosis build handles SIGUSR1 (state and tokio task dump); for any other build it would kill the engine.
   [ -n "${DIAG:-}" ] && { kill -USR1 $SPID 2>/dev/null; sleep 15; }
   stop_engine $SPID
+  drop_data
 done
