@@ -1,0 +1,51 @@
+{
+ "put_if_none_match_nuovo": [
+  200,
+  "\"6654c734ccab8f440ff0825eb443dc7f\""
+ ],
+ "put_if_none_match_esistente": [
+  412,
+  "PreconditionFailed"
+ ],
+ "contenuto_dopo_if_none_match_fallito": "v1",
+ "put_if_match_giusto": [
+  200,
+  "\"1b267619c4812cc46ee281747884ca50\""
+ ],
+ "put_if_match_sbagliato_vecchio_etag": [
+  412,
+  "PreconditionFailed"
+ ],
+ "put_if_match_sbagliato_inventato": [
+  412,
+  "PreconditionFailed"
+ ],
+ "contenuto_dopo_if_match_falliti": "v2",
+ "put_if_match_chiave_assente": [
+  404,
+  "NoSuchKey"
+ ],
+ "put_if_none_match_etag_uguale": [
+  412,
+  "PreconditionFailed"
+ ],
+ "contenuto_dopo_put_if_none_match_etag": "v2",
+ "get_if_none_match_stesso_etag": [
+  304,
+  "304"
+ ],
+ "get_if_match_sbagliato": [
+  412,
+  "PreconditionFailed"
+ ],
+ "gara_32_if_match_codici": {
+  "200": 1,
+  "412": 31
+ },
+ "gara_vincitore_contenuto": "gara-0",
+ "gara_32_if_none_match_codici": {
+  "200": 1,
+  "412": 31
+ }
+}
+ESITO: conforme a S3 (412, un solo vincitore)

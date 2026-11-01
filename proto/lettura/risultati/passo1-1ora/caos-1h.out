@@ -1,0 +1,118 @@
+{"crash":8,"reg":{"commit":24065,"db":8,"pend_byte":304026,"pend_rec":192,"posizione":117541454253129728,"ritardo_ms":714,"win_byte":38960294,"win_rec":24029},"t_s":60,"uccisioni":7}
+{"crash":15,"reg":{"commit":48076,"db":8,"pend_byte":216333,"pend_rec":122,"posizione":117541458186993664,"ritardo_ms":633,"win_byte":39079135,"win_rec":24001},"t_s":120,"uccisioni":14}
+{"crash":17,"reg":{"commit":72088,"db":8,"pend_byte":391038,"pend_rec":233,"posizione":117541462121119744,"ritardo_ms":726,"win_byte":39290812,"win_rec":24029},"t_s":180,"uccisioni":21}
+{"crash":21,"reg":{"commit":96104,"db":8,"pend_byte":219515,"pend_rec":140,"posizione":117541466055966720,"ritardo_ms":717,"win_byte":39259200,"win_rec":24017},"t_s":240,"uccisioni":31}
+{"crash":22,"reg":{"commit":120139,"db":8,"pend_byte":152456,"pend_rec":94,"posizione":117541469993893888,"ritardo_ms":615,"win_byte":39026253,"win_rec":23999},"t_s":300,"uccisioni":36}
+{"crash":29,"reg":{"commit":144139,"db":8,"pend_byte":391028,"pend_rec":250,"posizione":117541473925988352,"ritardo_ms":938,"win_byte":39216672,"win_rec":24024},"t_s":360,"uccisioni":45}
+{"crash":37,"reg":{"commit":168344,"db":8,"pend_byte":352928,"pend_rec":210,"posizione":117541477891702784,"ritardo_ms":934,"win_byte":39188397,"win_rec":24007},"t_s":420,"uccisioni":53}
+{"crash":40,"reg":{"commit":192361,"db":8,"pend_byte":216672,"pend_rec":131,"posizione":117541481826680832,"ritardo_ms":404,"win_byte":38862226,"win_rec":24035},"t_s":480,"uccisioni":58}
+{"crash":48,"reg":{"commit":216388,"db":8,"pend_byte":401621,"pend_rec":241,"posizione":117541485763297280,"ritardo_ms":857,"win_byte":39288975,"win_rec":24020},"t_s":540,"uccisioni":66}
+{"crash":50,"reg":{"commit":240397,"db":8,"pend_byte":255753,"pend_rec":163,"posizione":117541489696964608,"ritardo_ms":755,"win_byte":38989674,"win_rec":24016},"t_s":601,"uccisioni":72}
+{"crash":54,"reg":{"commit":264409,"db":8,"pend_byte":683739,"pend_rec":406,"posizione":117541493631090688,"ritardo_ms":1343,"win_byte":39119046,"win_rec":24027},"t_s":661,"uccisioni":78}
+{"crash":59,"reg":{"commit":288730,"db":8,"pend_byte":335410,"pend_rec":205,"posizione":117541497615876096,"ritardo_ms":878,"win_byte":39157664,"win_rec":24006},"t_s":721,"uccisioni":84}
+{"crash":66,"reg":{"commit":312757,"db":8,"pend_byte":346463,"pend_rec":215,"posizione":117541501552492544,"ritardo_ms":824,"win_byte":39300676,"win_rec":24001},"t_s":781,"uccisioni":89}
+{"crash":73,"reg":{"commit":336772,"db":8,"pend_byte":1152507,"pend_rec":693,"posizione":117541505486946304,"ritardo_ms":1822,"win_byte":39246270,"win_rec":24040},"t_s":841,"uccisioni":95}
+{"crash":81,"reg":{"commit":360806,"db":8,"pend_byte":369399,"pend_rec":210,"posizione":117541509424742400,"ritardo_ms":985,"win_byte":39255372,"win_rec":24030},"t_s":902,"uccisioni":101}
+{"crash":85,"reg":{"commit":384833,"db":8,"pend_byte":304154,"pend_rec":195,"posizione":117541513361293312,"ritardo_ms":864,"win_byte":39200084,"win_rec":24003},"t_s":962,"uccisioni":109}
+{"crash":92,"reg":{"commit":408840,"db":8,"pend_byte":300768,"pend_rec":185,"posizione":117541517294698496,"ritardo_ms":880,"win_byte":39238940,"win_rec":24021},"t_s":1022,"uccisioni":115}
+{"crash":94,"reg":{"commit":432864,"db":8,"pend_byte":864827,"pend_rec":534,"posizione":117541521230725120,"ritardo_ms":1662,"win_byte":39337116,"win_rec":24038},"t_s":1082,"uccisioni":121}
+{"crash":98,"reg":{"commit":456880,"db":8,"pend_byte":349560,"pend_rec":212,"posizione":117541525165506560,"ritardo_ms":984,"win_byte":39218968,"win_rec":24037},"t_s":1142,"uccisioni":129}
+{"crash":100,"reg":{"commit":480908,"db":8,"pend_byte":322422,"pend_rec":200,"posizione":117541529102319616,"ritardo_ms":530,"win_byte":38962034,"win_rec":24017},"t_s":1202,"uccisioni":137}
+{"crash":104,"reg":{"commit":504936,"db":8,"pend_byte":445106,"pend_rec":283,"posizione":117541533039001600,"ritardo_ms":1019,"win_byte":39018989,"win_rec":24020},"t_s":1262,"uccisioni":145}
+{"crash":109,"reg":{"commit":528937,"db":8,"pend_byte":311512,"pend_rec":205,"posizione":117541536971292672,"ritardo_ms":794,"win_byte":39188321,"win_rec":24037},"t_s":1322,"uccisioni":153}
+{"crash":112,"reg":{"commit":552951,"db":8,"pend_byte":362100,"pend_rec":219,"posizione":117541540905811968,"ritardo_ms":780,"win_byte":39186132,"win_rec":24005},"t_s":1382,"uccisioni":161}
+{"crash":117,"reg":{"commit":576970,"db":8,"pend_byte":572579,"pend_rec":362,"posizione":117541544841052160,"ritardo_ms":1321,"win_byte":38923754,"win_rec":24001},"t_s":1442,"uccisioni":168}
+{"crash":121,"reg":{"commit":600997,"db":8,"pend_byte":321393,"pend_rec":190,"posizione":117541548777668608,"ritardo_ms":605,"win_byte":39191091,"win_rec":24020},"t_s":1502,"uccisioni":175}
+{"crash":124,"reg":{"commit":625002,"db":8,"pend_byte":225878,"pend_rec":153,"posizione":117541552710615040,"ritardo_ms":786,"win_byte":39257079,"win_rec":24006},"t_s":1562,"uccisioni":180}
+{"crash":134,"reg":{"commit":649017,"db":8,"pend_byte":283327,"pend_rec":170,"posizione":117541556645199872,"ritardo_ms":757,"win_byte":39053282,"win_rec":24014},"t_s":1622,"uccisioni":186}
+{"crash":140,"reg":{"commit":673058,"db":8,"pend_byte":659475,"pend_rec":398,"posizione":117541560584110080,"ritardo_ms":1430,"win_byte":39132440,"win_rec":24031},"t_s":1682,"uccisioni":193}
+{"crash":147,"reg":{"commit":697065,"db":8,"pend_byte":426303,"pend_rec":275,"posizione":117541564517449728,"ritardo_ms":957,"win_byte":39121605,"win_rec":24016},"t_s":1742,"uccisioni":199}
+{"crash":152,"reg":{"commit":721084,"db":8,"pend_byte":403237,"pend_rec":241,"posizione":117541568452624384,"ritardo_ms":857,"win_byte":39244835,"win_rec":24008},"t_s":1802,"uccisioni":206}
+{"crash":158,"reg":{"commit":745098,"db":8,"pend_byte":345424,"pend_rec":219,"posizione":117541572387078144,"ritardo_ms":816,"win_byte":38851256,"win_rec":24017},"t_s":1862,"uccisioni":213}
+{"crash":165,"reg":{"commit":769102,"db":8,"pend_byte":356441,"pend_rec":200,"posizione":117541576319959040,"ritardo_ms":972,"win_byte":39279224,"win_rec":24030},"t_s":1922,"uccisioni":220}
+{"crash":171,"reg":{"commit":793112,"db":8,"pend_byte":605897,"pend_rec":365,"posizione":117541580253822976,"ritardo_ms":1136,"win_byte":39216368,"win_rec":24008},"t_s":1982,"uccisioni":228}
+{"crash":174,"reg":{"commit":817146,"db":8,"pend_byte":409433,"pend_rec":260,"posizione":117541584191422465,"ritardo_ms":1042,"win_byte":39126342,"win_rec":24014},"t_s":2042,"uccisioni":235}
+{"crash":178,"reg":{"commit":841168,"db":8,"pend_byte":331311,"pend_rec":217,"posizione":117541588127318016,"ritardo_ms":721,"win_byte":39181664,"win_rec":24036},"t_s":2102,"uccisioni":242}
+{"crash":183,"reg":{"commit":865194,"db":8,"pend_byte":635152,"pend_rec":390,"posizione":117541592063672320,"ritardo_ms":1764,"win_byte":39196480,"win_rec":24003},"t_s":2163,"uccisioni":248}
+{"crash":186,"reg":{"commit":889218,"db":8,"pend_byte":297723,"pend_rec":194,"posizione":117541595999764480,"ritardo_ms":1013,"win_byte":39013837,"win_rec":24037},"t_s":2223,"uccisioni":255}
+{"crash":190,"reg":{"commit":913237,"db":8,"pend_byte":486639,"pend_rec":292,"posizione":117541599935004672,"ritardo_ms":1011,"win_byte":39060849,"win_rec":24006},"t_s":2283,"uccisioni":259}
+{"crash":191,"reg":{"commit":937245,"db":8,"pend_byte":210429,"pend_rec":126,"posizione":117541603868475392,"ritardo_ms":902,"win_byte":39126295,"win_rec":24000},"t_s":2343,"uccisioni":266}
+{"crash":197,"reg":{"commit":961548,"db":8,"pend_byte":1226909,"pend_rec":754,"posizione":117541607850246144,"ritardo_ms":2459,"win_byte":39124506,"win_rec":24014},"t_s":2403,"uccisioni":274}
+{"crash":204,"reg":{"commit":985586,"db":8,"pend_byte":1060030,"pend_rec":639,"posizione":117541611788763136,"ritardo_ms":4733,"win_byte":39215594,"win_rec":24010},"t_s":2464,"uccisioni":280}
+{"crash":207,"reg":{"commit":1009592,"db":8,"pend_byte":628399,"pend_rec":392,"posizione":117541615721840640,"ritardo_ms":1762,"win_byte":39093304,"win_rec":24026},"t_s":2523,"uccisioni":288}
+{"crash":212,"reg":{"commit":1033606,"db":8,"pend_byte":1369817,"pend_rec":837,"posizione":117541619656359936,"ritardo_ms":2920,"win_byte":39199787,"win_rec":24013},"t_s":2584,"uccisioni":294}
+{"crash":215,"reg":{"commit":1057629,"db":8,"pend_byte":423411,"pend_rec":255,"posizione":117541623592255488,"ritardo_ms":1074,"win_byte":39229796,"win_rec":24014},"t_s":2644,"uccisioni":300}
+{"crash":224,"reg":{"commit":1081642,"db":8,"pend_byte":283600,"pend_rec":167,"posizione":117541627526447104,"ritardo_ms":811,"win_byte":39320835,"win_rec":24032},"t_s":2704,"uccisioni":306}
+{"crash":229,"reg":{"commit":1105668,"db":8,"pend_byte":303483,"pend_rec":201,"posizione":117541631462932480,"ritardo_ms":879,"win_byte":39290315,"win_rec":24039},"t_s":2764,"uccisioni":313}
+{"crash":231,"reg":{"commit":1129683,"db":8,"pend_byte":405155,"pend_rec":250,"posizione":117541635397517312,"ritardo_ms":1005,"win_byte":38855417,"win_rec":24033},"t_s":2824,"uccisioni":320}
+{"crash":232,"reg":{"commit":1153701,"db":8,"pend_byte":580435,"pend_rec":352,"posizione":117541639332691968,"ritardo_ms":1479,"win_byte":38967618,"win_rec":24036},"t_s":2884,"uccisioni":327}
+{"crash":234,"reg":{"commit":1177715,"db":8,"pend_byte":271439,"pend_rec":150,"posizione":117541643267211264,"ritardo_ms":1237,"win_byte":39322260,"win_rec":24012},"t_s":2944,"uccisioni":333}
+{"crash":236,"reg":{"commit":1201741,"db":8,"pend_byte":714725,"pend_rec":439,"posizione":117541647203500032,"ritardo_ms":1835,"win_byte":38996286,"win_rec":24013},"t_s":3004,"uccisioni":339}
+{"crash":240,"reg":{"commit":1225779,"db":8,"pend_byte":748818,"pend_rec":447,"posizione":117541651141951488,"ritardo_ms":1648,"win_byte":39206546,"win_rec":24004},"t_s":3064,"uccisioni":346}
+{"crash":243,"reg":{"commit":1249775,"db":8,"pend_byte":485910,"pend_rec":298,"posizione":117541655073456128,"ritardo_ms":1202,"win_byte":39252417,"win_rec":24017},"t_s":3124,"uccisioni":352}
+{"crash":246,"reg":{"commit":1273783,"db":8,"pend_byte":1079538,"pend_rec":631,"posizione":117541659006861312,"ritardo_ms":2136,"win_byte":39281340,"win_rec":24023},"t_s":3184,"uccisioni":361}
+{"crash":251,"reg":{"commit":1297783,"db":8,"pend_byte":738469,"pend_rec":439,"posizione":117541662939086848,"ritardo_ms":1864,"win_byte":39009258,"win_rec":24028},"t_s":3244,"uccisioni":368}
+{"crash":255,"reg":{"commit":1321785,"db":8,"pend_byte":502107,"pend_rec":302,"posizione":117541666871836672,"ritardo_ms":1925,"win_byte":39131935,"win_rec":24000},"t_s":3304,"uccisioni":373}
+{"crash":258,"reg":{"commit":1346195,"db":8,"pend_byte":1033538,"pend_rec":645,"posizione":117541670870974464,"ritardo_ms":2266,"win_byte":39036747,"win_rec":24022},"t_s":3365,"uccisioni":381}
+{"crash":260,"reg":{"commit":1370132,"db":8,"pend_byte":491718,"pend_rec":300,"posizione":117541674792648704,"ritardo_ms":828,"win_byte":39262409,"win_rec":24006},"t_s":3425,"uccisioni":388}
+{"crash":266,"reg":{"commit":1394142,"db":8,"pend_byte":615100,"pend_rec":363,"posizione":117541678726578176,"ritardo_ms":1573,"win_byte":38903788,"win_rec":24001},"t_s":3485,"uccisioni":395}
+{"crash":266,"reg":{"commit":1418173,"db":8,"pend_byte":759747,"pend_rec":474,"posizione":117541682663718912,"ritardo_ms":1397,"win_byte":39293251,"win_rec":24000},"t_s":3545,"uccisioni":402}
+svuotato in 3.5 s
+{
+  "abort_da_soli": 269,
+  "durata_s": 3600,
+  "minio": {
+    "deletemultipleobjects": 114109,
+    "getobject": 100531,
+    "listobjectsv2": 795,
+    "putbucket": 3,
+    "putobject": 231202
+  },
+  "parametri": "A { dur_s: 3600, db: 8, rate: 400.0, scritture: 3, val_min: 100, val_max: 1500, chiavi: 5000, altri_tipi: 0.05, worker: 3, uccidi_min_s: 2.0, uccidi_max_s: 15.0, crash: 0.002, eta_ms: 800, gruppi: 0, bucket: \"caos\", addr: \"127.0.0.1:7701\", out: \"/tmp/claude-0/run/caos-1h\", senza_cas: false, solo_verifica: false }",
+  "uccisioni_sigkill": 408,
+  "verifica": {
+    "byte_sst": 2214217082,
+    "corrotte": 0,
+    "duplicate": 0,
+    "esito": "OK",
+    "estranee": 0,
+    "manifest_o_registro_non_allineati": [],
+    "oggetti_nel_bucket": 265,
+    "perse": 0,
+    "record_confermati": 1440069,
+    "run": 71,
+    "run_mancanti": 0,
+    "scritture_attese": 2879083,
+    "secondi_verifica": 29.346639534,
+    "sst_in_attesa_di_cancellazione": 180,
+    "sst_orfani_rimasti": 6,
+    "trovate": 2879083
+  },
+  "worker_somma_ultimo_stato": {
+    "s3.cas_304": 0,
+    "s3.cas_412": 35615,
+    "s3.delete": 71180,
+    "s3.errori": 0,
+    "s3.get": 64878,
+    "s3.get_byte": 121960145524,
+    "s3.get_range": 0,
+    "s3.list": 493,
+    "s3.put": 71346,
+    "s3.put_byte": 179717771843,
+    "s3.put_cond": 71998,
+    "stat.byte_sst": 2134811033,
+    "stat.cancellati": 35206,
+    "stat.compatta_in": 141872933888,
+    "stat.compatta_out": 141863330530,
+    "stat.compatta_rifatte": 604,
+    "stat.compattazioni": 8939,
+    "stat.conflitti": 33973,
+    "stat.conflitti_vinti_dopo": 0,
+    "stat.errori": 0,
+    "stat.incerti": 0,
+    "stat.orfani": 954,
+    "stat.record": 1382274,
+    "stat.riparazioni": 1235,
+    "stat.scarichi": 26780
+  }
+}

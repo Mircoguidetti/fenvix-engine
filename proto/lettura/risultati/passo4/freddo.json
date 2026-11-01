@@ -1,0 +1,482 @@
+[
+  {
+    "byte_per_db_circa": 105400,
+    "db_provati": 30,
+    "documenti_per_db": 100,
+    "get_in_serie_caso_peggiore": 2,
+    "ms_con_ritardo_artificiale": {
+      "max": 76.830325,
+      "mediana": 68.788421,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 5.710408,
+      "mediana": 3.945624
+    },
+    "prefetch_meta": false,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 60,
+      "get_byte": 3243000,
+      "get_range": 0,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 2,
+      "media": 2.0,
+      "min": 2
+    },
+    "richieste_s3_seconda_lettura_media": 0.0,
+    "run_nel_manifest": 1,
+    "stima_s3_standard_ms": [
+      40,
+      80
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400,
+    "db_provati": 30,
+    "documenti_per_db": 100,
+    "get_in_serie_caso_peggiore": 2,
+    "ms_con_ritardo_artificiale": {
+      "max": 71.862511,
+      "mediana": 68.799696,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 5.616352,
+      "mediana": 4.014550000000001
+    },
+    "prefetch_meta": true,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 60,
+      "get_byte": 3243000,
+      "get_range": 0,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 2,
+      "media": 2.0,
+      "min": 2
+    },
+    "richieste_s3_seconda_lettura_media": 0.0,
+    "run_nel_manifest": 1,
+    "stima_s3_standard_ms": [
+      40,
+      80
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400,
+    "db_provati": 30,
+    "documenti_per_db": 100,
+    "get_in_serie_caso_peggiore": 4,
+    "ms_con_ritardo_artificiale": {
+      "max": 152.410786,
+      "mediana": 102.756393,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 8.756689,
+      "mediana": 4.959038
+    },
+    "prefetch_meta": false,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 85,
+      "get_byte": 3416091,
+      "get_range": 0,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 4,
+      "media": 2.8333333333333335,
+      "min": 2
+    },
+    "richieste_s3_seconda_lettura_media": 0.6,
+    "run_nel_manifest": 3,
+    "stima_s3_standard_ms": [
+      80,
+      160
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400,
+    "db_provati": 30,
+    "documenti_per_db": 100,
+    "get_in_serie_caso_peggiore": 2,
+    "ms_con_ritardo_artificiale": {
+      "max": 74.000137,
+      "mediana": 68.49780299999999,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 9.932857,
+      "mediana": 4.282890999999999
+    },
+    "prefetch_meta": true,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 120,
+      "get_byte": 6489318,
+      "get_range": 0,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 4,
+      "media": 4.0,
+      "min": 4
+    },
+    "richieste_s3_seconda_lettura_media": 0.0,
+    "run_nel_manifest": 3,
+    "stima_s3_standard_ms": [
+      40,
+      80
+    ]
+  },
+  {
+    "byte_per_db_circa": 10540000,
+    "db_provati": 20,
+    "documenti_per_db": 10000,
+    "get_in_serie_caso_peggiore": 3,
+    "ms_con_ritardo_artificiale": {
+      "max": 104.670761,
+      "mediana": 102.87518299999999,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 7.242841,
+      "mediana": 5.75304
+    },
+    "prefetch_meta": false,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 20,
+      "get_byte": 1574380,
+      "get_range": 40,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 3,
+      "media": 3.0,
+      "min": 3
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 1,
+    "stima_s3_standard_ms": [
+      60,
+      120
+    ]
+  },
+  {
+    "byte_per_db_circa": 10540000,
+    "db_provati": 20,
+    "documenti_per_db": 10000,
+    "get_in_serie_caso_peggiore": 3,
+    "ms_con_ritardo_artificiale": {
+      "max": 107.57599499999999,
+      "mediana": 102.680907,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 10.265478,
+      "mediana": 6.032697
+    },
+    "prefetch_meta": true,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 20,
+      "get_byte": 1574380,
+      "get_range": 40,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 3,
+      "media": 3.0,
+      "min": 3
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 1,
+    "stima_s3_standard_ms": [
+      60,
+      120
+    ]
+  },
+  {
+    "byte_per_db_circa": 10540000,
+    "db_provati": 20,
+    "documenti_per_db": 10000,
+    "get_in_serie_caso_peggiore": 5,
+    "ms_con_ritardo_artificiale": {
+      "max": 177.98561800000002,
+      "mediana": 170.85637300000002,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 13.581698999999999,
+      "mediana": 8.461122
+    },
+    "prefetch_meta": false,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 60,
+      "get_byte": 3739857,
+      "get_range": 40,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 5,
+      "media": 5.0,
+      "min": 5
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 3,
+    "stima_s3_standard_ms": [
+      100,
+      200
+    ]
+  },
+  {
+    "byte_per_db_circa": 10540000,
+    "db_provati": 20,
+    "documenti_per_db": 10000,
+    "get_in_serie_caso_peggiore": 3,
+    "ms_con_ritardo_artificiale": {
+      "max": 109.135425,
+      "mediana": 103.325881,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 9.869962,
+      "mediana": 6.3016060000000005
+    },
+    "prefetch_meta": true,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 60,
+      "get_byte": 3739857,
+      "get_range": 40,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 5,
+      "media": 5.0,
+      "min": 5
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 3,
+    "stima_s3_standard_ms": [
+      60,
+      120
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400000,
+    "db_provati": 5,
+    "documenti_per_db": 100000,
+    "get_in_serie_caso_peggiore": 3,
+    "ms_con_ritardo_artificiale": {
+      "max": 105.875011,
+      "mediana": 104.97918100000001,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 9.584302,
+      "mediana": 7.579893
+    },
+    "prefetch_meta": false,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 5,
+      "get_byte": 3149865,
+      "get_range": 10,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 3,
+      "media": 3.0,
+      "min": 3
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 1,
+    "stima_s3_standard_ms": [
+      60,
+      120
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400000,
+    "db_provati": 5,
+    "documenti_per_db": 100000,
+    "get_in_serie_caso_peggiore": 3,
+    "ms_con_ritardo_artificiale": {
+      "max": 105.044488,
+      "mediana": 104.48737399999999,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 8.106659,
+      "mediana": 7.522076
+    },
+    "prefetch_meta": true,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 5,
+      "get_byte": 3149865,
+      "get_range": 10,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 3,
+      "media": 3.0,
+      "min": 3
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 1,
+    "stima_s3_standard_ms": [
+      60,
+      120
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400000,
+    "db_provati": 5,
+    "documenti_per_db": 100000,
+    "get_in_serie_caso_peggiore": 5,
+    "ms_con_ritardo_artificiale": {
+      "max": 174.382981,
+      "mediana": 173.658307,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 12.561879,
+      "mediana": 11.545029
+    },
+    "prefetch_meta": false,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 15,
+      "get_byte": 3691235,
+      "get_range": 10,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 5,
+      "media": 5.0,
+      "min": 5
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 3,
+    "stima_s3_standard_ms": [
+      100,
+      200
+    ]
+  },
+  {
+    "byte_per_db_circa": 105400000,
+    "db_provati": 5,
+    "documenti_per_db": 100000,
+    "get_in_serie_caso_peggiore": 3,
+    "ms_con_ritardo_artificiale": {
+      "max": 106.59057399999999,
+      "mediana": 105.065731,
+      "ritardo_per_get_ms": 30
+    },
+    "ms_minio_locale": {
+      "max": 7.791091,
+      "mediana": 7.598038
+    },
+    "prefetch_meta": true,
+    "richieste_per_tipo_tutte_le_prime_letture": {
+      "cas_304": 0,
+      "cas_412": 0,
+      "delete": 0,
+      "errori": 0,
+      "get": 15,
+      "get_byte": 3691235,
+      "get_range": 10,
+      "list": 0,
+      "put": 0,
+      "put_byte": 0,
+      "put_cond": 0
+    },
+    "richieste_s3_prima_lettura": {
+      "max": 5,
+      "media": 5.0,
+      "min": 5
+    },
+    "richieste_s3_seconda_lettura_media": 1.0,
+    "run_nel_manifest": 3,
+    "stima_s3_standard_ms": [
+      60,
+      120
+    ]
+  }
+]
