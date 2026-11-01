@@ -9,7 +9,12 @@ MONGO_IMAGE="${MONGO_IMAGE:-mongo:8.0}"; PORT=27017
 cmd=$1; what=$2; cpus=${3:-0}
 port_free() { ! (exec 3<>/dev/tcp/127.0.0.1/$PORT) 2>/dev/null; }
 wait_port_free() {
-  pkill -x mongo-server 2>/dev/null || true; docker rm -f bench-mongod >/dev/null 2>&1 || true
+  # The engine's clean shutdown can hang (see docs/bench-mongod.md): SIGTERM, then SIGKILL after 30 s.
+  if pkill -x mongo-server 2>/dev/null; then
+    for _ in $(seq 1 30); do pgrep -x mongo-server >/dev/null || break; sleep 1; done
+    pgrep -x mongo-server >/dev/null && { echo "engine did not stop in 30 s: SIGKILL" >&2; pkill -9 -x mongo-server; }
+  fi
+  docker rm -f bench-mongod >/dev/null 2>&1 || true
   for _ in $(seq 1 120); do port_free && return 0; sleep 1; done
   echo "port $PORT still busy" >&2; exit 1
 }

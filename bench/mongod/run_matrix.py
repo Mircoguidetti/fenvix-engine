@@ -12,7 +12,7 @@ Each server starts on an empty data directory for every (server, cores, layout);
 read, rw, insert (insert grows the data, so it runs last). Results are appended to results/raw.jsonl; a cell whose
 three full runs are already there is skipped, so the script can be stopped and started again.
 
-Usage: run_matrix.py [--servers mongod,fenvix] [--cores 1,2] [--layouts 1,100] [--workloads read,rw,insert]
+Usage (fenvix cells: a fresh server per workload; a stalled run is recorded and repeated on a fresh server): run_matrix.py [--servers mongod,fenvix] [--cores 1,2] [--layouts 1,100] [--workloads read,rw,insert]
                      [--warmup 60] [--duration 180] [--reps 3]
 """
 import argparse, json, os, subprocess, sys, time
@@ -50,7 +50,10 @@ def gen_cpus(db_cores):
 def loadgen(args, db_cores):
     env = dict(os.environ, GOGC="400")
     cmd = ["taskset", "-c", gen_cpus(db_cores), os.path.join(BIN, "loadgen")] + args
-    out = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=900)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("loadgen did not finish within 900 s")
     if out.returncode != 0:
         raise RuntimeError(f"loadgen failed: {out.stderr[-2000:]}")
     if out.stderr.strip():
@@ -82,7 +85,7 @@ def one_run(base, cell, clients, warmup, duration, phase, rep):
 def sweep(cell):
     best, prev, pts = None, None, []
     for c in SWEEP:
-        r = one_run(None, cell, c, 10, 20, "sweep", 0)
+        r = checked_run(cell, c, 10, 20, "sweep", 0)
         pts.append(r)
         if best is None or r["ops_per_s"] > best["ops_per_s"]:
             best = r
@@ -96,6 +99,40 @@ def sweep(cell):
     return chosen["clients"]
 
 
+class Stalled(Exception):
+    pass
+
+
+def fresh_server(srv, cores, layout, attempts=5):
+    """Starts the server on an empty data directory and loads it; a load that fails (the engine's write stall shows up
+    as client timeouts) is recorded and retried on a new, empty server."""
+    dbs, docs = LAYOUTS[layout]
+    cpus = "0" if cores == 1 else f"0-{cores - 1}"
+    for attempt in range(1, attempts + 1):
+        pid = server("start", srv, cpus)
+        log(f"started {srv} on cpus {cpus}, pid {pid} (load attempt {attempt})")
+        try:
+            ld = loadgen(["-mode", "load", "-dbs", str(dbs), "-docs", str(docs), "-clients", "16"], cores)
+            ld.update(server=srv, cores=cores, layout=layout, phase="load", attempt=attempt, ok=True)
+            append(ld)
+            log(f"loaded {dbs} x {docs} in {ld['seconds']:.1f} s")
+            return pid
+        except RuntimeError as e:
+            append(dict(server=srv, cores=cores, layout=layout, phase="load", attempt=attempt, ok=False,
+                        error=str(e)[-300:], ts=time.strftime("%Y-%m-%dT%H:%M:%S")))
+            log(f"LOAD STALLED {srv} cores={cores} layout={layout} attempt {attempt}: {str(e)[-150:]}")
+            server("stop", srv)
+    raise RuntimeError(f"{srv}: load failed {attempts} times")
+
+
+def checked_run(cell, clients, warmup, duration, phase, rep):
+    r = one_run(None, cell, clients, warmup, duration, phase, rep)
+    if r["errors_total"] > 0 or r["ops"] == 0:
+        log(f"STALL during {phase} run ({r['errors_total']} errors): restarting on a fresh server")
+        raise Stalled()
+    return r
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--servers", default="mongod,fenvix")
@@ -105,33 +142,48 @@ def main():
     ap.add_argument("--warmup", type=int, default=60)
     ap.add_argument("--duration", type=int, default=180)
     ap.add_argument("--reps", type=int, default=3)
+    ap.add_argument("--max-attempts", type=int, default=4, help="runs (with a stall) tried per repetition")
     a = ap.parse_args()
     for srv in a.servers.split(","):
         for cores in map(int, a.cores.split(",")):
             for layout in map(int, a.layouts.split(",")):
-                def done(w):
-                    return sum(1 for r in records() if r["phase"] == "full" and r["server"] == srv and
-                               r["cores"] == cores and r["layout"] == layout and r["workload"] == w) >= a.reps
-                todo = [w for w in a.workloads.split(",") if not done(w)]
-                if not todo:
-                    continue
                 dbs, docs = LAYOUTS[layout]
-                cpus = "0" if cores == 1 else f"0-{cores - 1}"
-                pid = server("start", srv, cpus)
-                log(f"started {srv} on cpus {cpus}, pid {pid}")
-                try:
-                    ld = loadgen(["-mode", "load", "-dbs", str(dbs), "-docs", str(docs), "-clients", "16"], cores)
-                    ld.update(server=srv, cores=cores, layout=layout, phase="load")
-                    append(ld)
-                    log(f"loaded {dbs} x {docs} in {ld['seconds']:.1f} s")
-                    for w in todo:
-                        cell = dict(server=srv, cores=cores, layout=layout, workload=w, dbs=dbs, docs=docs, pid=pid)
-                        clients = sweep(cell)
+                for w in a.workloads.split(","):
+                    # Every workload gets its own fresh, freshly loaded server (mongod's first run shared one server per
+                    # (cores, layout) across read, rw, insert; see docs/bench-mongod.md).
+                    def clean(phase):
+                        return [r for r in records() if r.get("phase") == phase and r["server"] == srv and
+                                r["cores"] == cores and r["layout"] == layout and r["workload"] == w and
+                                r.get("errors_total", 0) == 0 and r.get("ops", 0) > 0]
+                    if len(clean("full")) >= a.reps:
+                        continue
+                    pid = fresh_server(srv, cores, layout)
+                    cell = dict(server=srv, cores=cores, layout=layout, workload=w, dbs=dbs, docs=docs, pid=pid)
+                    try:
+                        clients = None
+                        for attempt in range(a.max_attempts):
+                            try:
+                                clients = sweep(cell)
+                                break
+                            except Stalled:
+                                server("stop", srv)
+                                cell["pid"] = fresh_server(srv, cores, layout)
+                        if clients is None:
+                            log(f"GIVING UP sweep {srv} {cores} {layout} {w}")
+                            continue
                         log(f"saturation point: {clients} clients")
-                        for rep in range(1, a.reps + 1):
-                            one_run(None, cell, clients, a.warmup, a.duration, "full", rep)
-                finally:
-                    server("stop", srv)
+                        for rep in range(len(clean("full")) + 1, a.reps + 1):
+                            for attempt in range(a.max_attempts):
+                                try:
+                                    checked_run(cell, clients, a.warmup, a.duration, "full", rep)
+                                    break
+                                except Stalled:
+                                    server("stop", srv)
+                                    cell["pid"] = fresh_server(srv, cores, layout)
+                            else:
+                                log(f"GIVING UP rep {rep} {srv} {cores} {layout} {w}")
+                    finally:
+                        server("stop", srv)
 
 
 if __name__ == "__main__":

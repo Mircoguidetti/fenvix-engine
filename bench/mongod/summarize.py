@@ -5,7 +5,15 @@ from collections import defaultdict
 RAW = os.path.join(os.environ.get("BENCH_RESULTS", os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")), "raw.jsonl")
 recs = [json.loads(l) for l in open(RAW) if l.strip()]
 full, sweep = defaultdict(list), defaultdict(list)
+stalls, loads = defaultdict(int), defaultdict(lambda: [0, 0])
 for r in recs:
+    if r.get("phase") == "load":
+        k = (r["server"], r["cores"], r["layout"])
+        loads[k][0 if r.get("ok", True) else 1] += 1
+        continue
+    if r.get("phase") in ("full", "sweep") and (r.get("errors_total", 0) > 0 or r.get("ops", 0) == 0):
+        stalls[(r["workload"], r["layout"], r["cores"], r["server"], r["phase"])] += 1
+        continue
     if r.get("phase") in ("full", "sweep"):
         k = (r["workload"], r["layout"], r["cores"], r["server"])
         (full if r["phase"] == "full" else sweep)[k].append(r)
@@ -35,3 +43,8 @@ for (w, layout, cores, srv), m in med.items():
 print()
 for k, rs in sorted(sweep.items()):
     print(" ".join(map(str, k)), "sweep:", ", ".join(f"{r['clients']}c={r['ops_per_s']:.0f}/{r['server_cores_used']:.2f}cpu" for r in rs))
+print()
+for k, (ok, bad) in sorted(loads.items()):
+    print("loads", " ".join(map(str, k)), f"ok={ok} stalled={bad}")
+for k, n in sorted(stalls.items()):
+    print("stalled runs", " ".join(map(str, k)), n)
