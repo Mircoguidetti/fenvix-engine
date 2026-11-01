@@ -3,3 +3,7 @@ pub mod net;
 pub mod node;
 pub mod store;
 pub mod window;
+pub mod bench;
+pub mod client;
+pub mod flusher;
+pub mod proxy;

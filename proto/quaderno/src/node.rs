@@ -738,9 +738,11 @@ impl Node {
                     }
                 }
                 if !matches!(e.body, Body::Rec { .. }) {
+                    let sub = self.submitted;
                     let s = &mut self.log[k];
                     s.done = true;
-                    if s.ent.take().is_some() {
+                    // il corpo resta finché non è stato passato al disco
+                    if i <= sub && s.ent.take().is_some() {
                         self.resident -= s.len as u64;
                     }
                 }
@@ -1019,9 +1021,10 @@ impl Node {
                 self.txns.remove(&txn);
             }
             if i >= self.front {
+                let sub = self.submitted;
                 let s = &mut self.log[(i - self.front) as usize];
                 s.done = true;
-                if s.ent.take().is_some() {
+                if i <= sub && s.ent.take().is_some() {
                     self.resident -= s.len as u64;
                 }
             }
@@ -1151,7 +1154,7 @@ impl Node {
                     let idx: Vec<(u64, Pos)> = d.recs.iter().filter(|r| r.pos > fl && r.pos <= upto).map(|r| (r.index, r.pos)).collect();
                     let mut recs = vec![];
                     for (i, p) in idx {
-                        if bytes > (32 << 20) {
+                        if bytes > (4 << 20) {
                             break;
                         }
                         let e = self.entry(i);
