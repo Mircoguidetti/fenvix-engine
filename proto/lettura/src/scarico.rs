@@ -364,7 +364,22 @@ impl Worker {
                         if !me.occupati.lock().insert(g.clone()) {
                             return;
                         }
-                        match me.compatta(&g, None, true).await {
+                        // il riposo si decide dal manifest: lo scarico può averlo fatto un altro worker
+                        let m = match manifest::carica(&me.st, &g).await {
+                            Ok(Some(x)) => x,
+                            _ => {
+                                me.occupati.lock().remove(&g);
+                                return;
+                            }
+                        };
+                        if now_ms().saturating_sub(m.0.ultimo_scarico_ms) < me.cfg.riposo_ms {
+                            if let Some(n) = me.noti.lock().get_mut(&g) {
+                                n.ultimo_scarico_ms = m.0.ultimo_scarico_ms;
+                            }
+                            me.occupati.lock().remove(&g);
+                            return;
+                        }
+                        match me.compatta(&g, Some(m), true).await {
                             Ok(_) => {
                                 if let Some(n) = me.noti.lock().get_mut(&g) {
                                     n.compattato_a_riposo = true;
