@@ -23,11 +23,15 @@
 (*  NameByStart      l'oggetto SST prende nome dalla sola posizione M       *)
 (*  UnsafeFetch      il worker prende dalla replica anche record non        *)
 (*                   confermati                                             *)
+(*  DeleteOrphanBlind dopo un PUT condizionale fallito il worker cancella   *)
+(*                   il proprio oggetto senza rileggere il manifest (il     *)
+(*                   fallimento puo' essere il 412 del ritentativo di un    *)
+(*                   PUT gia' riuscito con risposta persa)                  *)
 (***************************************************************************)
 EXTENDS ValidatingLog
 
 CONSTANTS Clients, Workers, Owner, MaxReads,
-          UnsafeServe, IgnoreToken, UnconditionalPut, NameByStart, UnsafeFetch
+          UnsafeServe, IgnoreToken, UnconditionalPut, NameByStart, UnsafeFetch, DeleteOrphanBlind
 
 VARIABLES
   token,     \* client -> posizione piu' alta vista
@@ -39,11 +43,12 @@ VARIABLES
   wents,     \* worker -> record presi (M, fino]
   wname,     \* worker -> nome dell'oggetto scritto
   objects,   \* nome -> sequenza di record (contenuto dell'oggetto SST)
+  deleted,   \* insieme dei nomi di oggetto cancellati
   manifest,  \* [pos, list, etag]
   manifests, \* insieme di tutte le viste del manifest mai pubblicate
   trimmed    \* posizione fino alla quale le repliche possono aver scartato dal disco
 
-rvars == <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, manifests, manifest, trimmed>>
+rvars == <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
 allvars == <<vars, rvars>>
 
 NoRead == [c |-> "none", k |-> "none", s |-> 0, tok |-> 0, got |-> << >>, exp |-> << >>]
@@ -74,6 +79,7 @@ InitR ==
   /\ wents = [w \in Workers |-> << >>]
   /\ wname = [w \in Workers |-> NoName]
   /\ objects = [n \in {} |-> << >>]
+  /\ deleted = {}
   /\ manifest = [pos |-> 0, list |-> << >>, etag |-> 0]
   /\ manifests = {[pos |-> 0, list |-> << >>, etag |-> 0]}
   /\ trimmed = 0
@@ -94,14 +100,14 @@ Read(c, r, k, view, s) ==
      IN lastRead' = [c |-> c, k |-> k, s |-> s, tok |-> token[c], got |-> base \o win, exp |-> exp]
   /\ token' = [token EXCEPT ![c] = Max({@, s})]
   /\ reads' = reads + 1
-  /\ UNCHANGED <<wstate, wview, wupto, wents, wname, objects, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
 
 \* il client riceve la conferma di una propria scrittura: gettone = posizione confermata
 \* (ogni transazione e' di un client: Owner, definito nel modulo MC)
 LearnOutcome(c, t) ==
   /\ Owner[t] = c
   /\ \E p \in outcome[t] : p > token[c] /\ token' = [token EXCEPT ![c] = p]
-  /\ UNCHANGED <<reads, lastRead, wstate, wview, wupto, wents, wname, objects, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<reads, lastRead, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
 
 (* ---------------------------------------------------------------- scarico *)
 
@@ -114,7 +120,7 @@ Fetch(w, r) ==
           /\ wupto' = [wupto EXCEPT ![w] = upto]
           /\ wents' = [wents EXCEPT ![w] = SubSeq(log[r], m + 1, upto)]
           /\ wstate' = [wstate EXCEPT ![w] = "fetched"]
-  /\ UNCHANGED <<token, reads, lastRead, wname, objects, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<token, reads, lastRead, wname, objects, deleted, manifests, manifest, trimmed>>
 
 StoreObject(w) ==
   /\ wstate[w] = "fetched"
@@ -122,7 +128,7 @@ StoreObject(w) ==
      IN /\ wname' = [wname EXCEPT ![w] = name]
         /\ objects' = [n \in DOMAIN objects \cup {name} |-> IF n = name THEN wents[w] ELSE objects[n]]
   /\ wstate' = [wstate EXCEPT ![w] = "stored"]
-  /\ UNCHANGED <<token, reads, lastRead, wview, wupto, wents, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<token, reads, lastRead, wview, wupto, wents, deleted, manifests, manifest, trimmed>>
 
 PutManifest(w) ==
   /\ wstate[w] = "stored"
@@ -130,15 +136,22 @@ PutManifest(w) ==
      THEN LET nm == [pos |-> wupto[w], list |-> Append(wview[w].list, wname[w]), etag |-> manifest.etag + 1]
           IN /\ manifest' = nm
              /\ manifests' = manifests \cup {nm}
-     ELSE UNCHANGED <<manifest, manifests>>   \* PUT condizionale fallito: l'oggetto resta orfano
-  /\ wstate' = [wstate EXCEPT ![w] = "idle"]
-  /\ UNCHANGED <<token, reads, lastRead, wview, wupto, wents, wname, objects, trimmed>>
+             \* la risposta arriva (idle) oppure si perde: il worker ritentera' il PUT e ricevera' un 412
+             /\ \E lost \in BOOLEAN : wstate' = [wstate EXCEPT ![w] = IF lost THEN "stored" ELSE "idle"]
+             /\ UNCHANGED <<objects, deleted>>
+     ELSE \* PUT condizionale fallito (412)
+          /\ UNCHANGED <<manifest, manifests, objects>>
+          /\ IF DeleteOrphanBlind \/ ~(\E i \in 1..Len(manifest.list) : manifest.list[i] = wname[w])
+             THEN deleted' = deleted \cup {wname[w]}   \* orfano (o creduto tale): cancellato
+             ELSE UNCHANGED deleted                    \* rilettura del manifest: il proprio oggetto c'e', il PUT era riuscito
+          /\ wstate' = [wstate EXCEPT ![w] = "idle"]
+  /\ UNCHANGED <<token, reads, lastRead, wview, wupto, wents, wname, trimmed>>
 
 \* le repliche scartano dal disco fino alla posizione del manifest
 Trim ==
   /\ trimmed < manifest.pos
   /\ trimmed' = manifest.pos
-  /\ UNCHANGED <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, manifests, manifest>>
+  /\ UNCHANGED <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest>>
 
 \* le azioni del registro, con lo stato delle letture e dello scarico fermo
 RElect(c, Q) == Elect(c, Q) /\ UNCHANGED rvars
@@ -176,6 +189,7 @@ MonotonicReads == lastRead.s >= lastRead.tok
 UploadExact ==
   /\ manifest.pos <= Len(cmtLog)
   /\ S3Content(manifest) = SubSeq(cmtLog, 1, manifest.pos)
+  /\ \A i \in 1..Len(manifest.list) : manifest.list[i] \notin deleted
 
 \* (d) niente scartato dal disco che non sia in S3
 NothingLost == trimmed <= manifest.pos

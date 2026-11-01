@@ -28,8 +28,10 @@ una regola di comportamento o di prestazione.
 
 ## 2. Posizioni e record
 
-Posizioni: interi da 1 in su. Il leader assegna la posizione `Len(log) + 1` a ogni voce che aggiunge
-al proprio log. Una posizione **confermata** è una posizione tale che il leader ha contato la voce su
+Posizioni: interi crescenti. Nel modello formale il leader assegna `Len(log) + 1`; nel prototipo la
+posizione è un orologio logico ibrido (48 bit di millisecondi più 16 bit di contatore,
+`max(ultima + 1, adesso_ms << 16)`), che è ancora un intero strettamente crescente assegnato dal leader:
+tutto ciò che segue vale per entrambi. Nel prototipo la posizione si trasporta come Timestamp BSON. Una posizione **confermata** è una posizione tale che il leader ha contato la voce su
 2 repliche di 3 dopo `fdatasync`, e tutte le voci precedenti sono confermate. Una posizione non
 confermata può essere riassegnata a un'altra voce da un leader successivo (regola di Raft). Una
 posizione confermata non cambia mai più. I client vedono solo posizioni confermate.
@@ -283,15 +285,25 @@ di `inizioValidazione` è impossibile con `S >= inizioValidazione`. Le repliche 
 
 ### 6.2 Composizione
 
-1. Prendi la vista del manifest del database (`M`, SST). Se è più vecchia di qualche secondo
-   (STIMATO: 5 s), rileggila da S3.
+1. Prendi la vista del manifest del database (`M`, SST) dalla cache. Non la si rilegge a intervalli
+   fissi: una rilettura ogni 5 s per 1.000 database sarebbero circa 518.000 GET al mese per database e
+   nodo d'ingresso (STIMATO in `proto/INTERFACCIA.md` di proto-lettura, 4 volte la soglia di costo). La
+   si rilegge solo quando la replica dice che la vista non basta più (punto 4), cioè al più una volta per
+   scarico.
 2. Manda a una replica (la più vicina) `LEGGI(db, chiavi o collezione, M, S)`.
-3. La replica deve rispondere con i record solo se `S <= confermataLocale` e `M >= inizioFinestra`
-   (o `M >= inizioDisco`, servendo dal disco). Altrimenti risponde `NON_HO_S(confermataLocale)` oppure
-   `SCARTATO_SOTTO_M(inizioFinestra, inizioDisco)`. In ogni risposta la replica mette `confermataLocale`.
+3. La replica deve rispondere con i record solo se `S <= confermataLocale` e `M >= potatoFinoA(db)`, dove
+   `potatoFinoA(db)` è la posizione fino alla quale i record del database sono usciti dalla finestra
+   (`inizioFinestra - 1` per quel database; servendo dal disco vale `inizioDisco`). Altrimenti risponde
+   `NON_HO_S(confermataLocale)` oppure `FUORI_FINESTRA(potatoFinoA, etagUltimoManifest)`. In ogni
+   risposta la replica mette `confermataLocale`. La replica non risponde mai `FUORI_FINESTRA` solo
+   perché la base di una chiave non è nella finestra: la finestra copre `(M, S]` per posizione, non per
+   chiave; se per una chiave ha solo delta, restituisce i delta (o la loro somma) e il nodo d'ingresso li
+   applica al valore letto dagli SST (differenza 2 di proto-lettura; il "limite noto" di proto-quaderno
+   che rispondeva `fuori_finestra` perdeva quei delta).
 4. Su `NON_HO_S`: prova le altre repliche; se nessuna ha `S`, aspetta e riprova fino a un tempo massimo
-   (proposta 2 s, STIMATO), poi errore ritentabile. Su `SCARTATO_SOTTO_M`: rileggi il manifest da S3
-   e ricomincia.
+   (proposta 2 s, STIMATO), poi errore ritentabile. Su `FUORI_FINESTRA(potatoFinoA)`: rileggi il manifest
+   da S3 (ne basta uno con `M >= potatoFinoA`) e ricomincia. È l'unico momento in cui il manifest si
+   rilegge.
 5. Leggi i valori a `M` dagli SST (cache o S3) e applica i record ricevuti in ordine di posizione:
    una scrittura `strutturale` sostituisce il valore (o lo cancella), un `delta` si applica al valore
    corrente con la semantica degli operatori di MongoDB. Le voci di indice si applicano allo stesso modo
@@ -314,7 +326,14 @@ della collezione: va misurato.
 
 ### 7.1 Scarico
 
-Un worker, per un database `d`, ogni pochi secondi (proposta 5 s, STIMATO):
+Un worker scarica un database `d` quando i suoi record non ancora su S3 superano una dimensione
+(proposta 1 MB) oppure il più vecchio ha più di un'età massima (proposta 10 minuti), non a intervalli
+fissi: un PUT di SST più un PUT di manifest ogni 5 s per database sarebbero circa 1.036.800 PUT al
+mese, $5,18 al mese per database (STIMATO in `proto/INTERFACCIA.md` di proto-lettura). In alternativa,
+per i database piccoli, più database vanno in un oggetto condiviso e in un manifest di gruppo (lo stato
+di scarico per database resta separato: `scaricato[d]`). Le repliche espongono a questo scopo
+`pendenti(limite)` con, per database, byte e numero di record non su S3 e `scaricato[d]`. Il passo per
+un database `d` (o per un gruppo):
 
 1. legge il manifest di `d`: `M`, lista SST, ETag;
 2. chiede a una replica `LEGGI_INTERVALLO(d, M, fino)`, con `fino` la `confermataLocale` della
@@ -325,8 +344,12 @@ Un worker, per un database `d`, ogni pochi secondi (proposta 5 s, STIMATO):
    per l'unicità del contenuto, ma un nome derivato dalla sola `M` è sbagliato: due worker che partono
    dalla stessa `M` e arrivano a `fino` diversi si sovrascriverebbero l'oggetto;
 4. scrive il manifest con `M := fino` e la lista SST più il nuovo, con PUT condizionale `If-Match: ETag`;
-5. se il PUT condizionale fallisce, un altro worker ha vinto: il proprio SST è un orfano da cancellare
-   (subito, o con una raccolta periodica degli SST non elencati in nessun manifest da più di un'ora);
+5. se il PUT condizionale fallisce (412), prima di toccare il proprio SST **rilegge il manifest**: se il
+   proprio SST vi compare, il PUT era riuscito e la risposta si era persa (il ritentativo automatico del
+   client HTTP riceve il 412 del proprio stesso PUT): il lavoro è fatto, si prosegue dal punto 6. Se non
+   compare, un altro worker ha vinto e il proprio SST è un orfano da cancellare (o da lasciare alla
+   raccolta periodica degli SST non elencati in nessun manifest da più di un'ora). Cancellare senza
+   rileggere perde dati: il controllo negativo `DeleteOrphanBlind` di `LettureScarico.tla` lo mostra;
 6. se riesce, dice alle repliche `SCARICATO(d, fino)`; le repliche aggiornano `M[d]` e possono alzare
    `inizioDisco` fino a `min M[d]` su tutti i database (con un margine).
 
@@ -391,7 +414,9 @@ worker visita comunque ogni database con voci non scaricate almeno ogni 5 s.
 - **Orologi sbagliati.** Nessuna regola di sicurezza dipende dall'orologio: epoche, posizioni,
   `inizioValidazione` e `inizioFinestra` sono per posizione. L'orologio decide solo quando avanzare le
   finestre e quando scadono i tempi di elezione e di attesa.
-- **Un worker muore a metà scarico.** Al più un SST orfano, raccolto dopo. Il manifest è intatto.
+- **Un worker muore a metà scarico.** Al più un SST orfano, raccolto dopo. Il manifest è intatto. Se
+  muore tra il PUT del manifest e `SCARICATO`, il prossimo worker vede dal manifest (o da `scaricato[d]`
+  in `pendenti`) che `M` è già avanzata e manda `SCARICATO` senza scaricare di nuovo.
 - **Due worker sullo stesso database.** Uno vince il PUT condizionale, l'altro cancella il proprio
   SST. Nessuna perdita né duplicazione (§7.1).
 
