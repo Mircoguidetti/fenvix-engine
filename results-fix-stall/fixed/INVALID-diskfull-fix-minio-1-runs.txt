@@ -1,0 +1,25 @@
+run 1 ok 12.616622669
+run 2 ok 15.000848744
+run 3 ok 12.681587218
+run 4 ok 12.828415462
+run 5 ok 13.482016118
+run 6 ok 12.980125100
+run 7 ok 13.671646299
+run 8 ok 13.701969757
+run 9 ok 14.719077302
+run 10 ok 14.505857228
+run 11 ok 13.252449497
+run 12 ok 14.917730718
+run 13 ok 16.073843956
+run 14 ok 11.920423723
+run 15 ok 12.901709395
+run 16 STALL (loadgen exit 1 after 60.209221344 s: out: connection(127.0.0.1:27017[-8]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:57972->127.0.0.1:27017: i/o timeout )
+engine 20367 did not stop in 30 s after SIGTERM: SIGKILL
+run 17 STALL (loadgen exit 1 after 13.621914860 s: esource>/stall-1793524534-17/processes/20492-ad371427/_lease</Resource><RequestId>18E3E1134054CBA8</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 20492 did not stop in 30 s after SIGTERM: SIGKILL
+run 18 STALL (loadgen exit 1 after 4.976623365 s: esource>/stall-1793524595-18/processes/20598-5f8bf56a/_lease</Resource><RequestId>18E3E11F3987EEAA</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 20598 did not stop in 30 s after SIGTERM: SIGKILL
+run 19 STALL (loadgen exit 1 after 5.438983938 s: esource>/stall-1793524646-19/processes/20695-9658299d/_lease</Resource><RequestId>18E3E12B3F4C289E</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 20695 did not stop in 30 s after SIGTERM: SIGKILL
+run 20 STALL (loadgen exit 1 after 9.067278133 s: esource>/stall-1793524698-20/processes/20799-53475dcd/_lease</Resource><RequestId>18E3E138410FD3EB</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 20799 did not stop in 30 s after SIGTERM: SIGKILL
