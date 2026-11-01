@@ -8,11 +8,17 @@ HERE="$(cd "$(dirname "$0")" && pwd)"; BIN="${BENCH_BIN:-$HERE/.bin}"; OUT="$HER
 PERF="${PERF:-$(ls /usr/lib/linux-tools/*/perf 2>/dev/null | head -1)}"
 w=$1; layout=$2; clients=$3; secs=${4:-60}
 if [ "$layout" = 100 ]; then dbs=100; docs=2000; else dbs=1; docs=200000; fi
-pid=$("$HERE/server.sh" start fenvix 0)
-taskset -c 1-3 "$BIN/loadgen" -mode load -dbs $dbs -docs $docs -clients 16 >/dev/null
-taskset -c 1-3 "$BIN/loadgen" -mode run -workload "$w" -dbs $dbs -docs $docs -clients "$clients" -warmup $((secs + 40)) -duration 5 -pid "$pid" >/dev/null &
+# The engine's bulk load can stall (docs/bench-mongod.md): retry on a fresh server.
+for attempt in 1 2 3 4 5 6; do
+  pid=$("$HERE/server.sh" start fenvix 0)
+  taskset -c 1-3 "$BIN/loadgen" -mode load -dbs $dbs -docs $docs -clients 16 >/dev/null && break
+  echo "load stalled (attempt $attempt), fresh server" >&2
+done
+# 90 s of load before sampling, like the measured window of the matrix (after its 60 s warm-up).
+taskset -c 1-3 "$BIN/loadgen" -mode run -workload "$w" -dbs $dbs -docs $docs -clients "$clients" -warmup $((secs + 100)) -duration 5 -pid "$pid" \
+  > "$OUT/perf-$w-$layout-loadgen.json" &
 lg=$!
-sleep 30
+sleep 90
 data="$OUT/perf-$w-$layout.data"
 taskset -c 3 "$PERF" record -F 499 -g -p "$pid" -o "$data" -- sleep "$secs" 2>/dev/null
 wait $lg || true
