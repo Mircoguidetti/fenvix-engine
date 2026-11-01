@@ -5,6 +5,8 @@ disco locale o MinIO locale, mongod in Docker; nessuna spesa su AWS o altri clou
 `docs/fix-stall.md`; i dati grezzi sono in `results-fix-stall/session2/` (questa sessione) e `results-fix-stall/` (sessione
 precedente).
 
+PR in bozza: https://github.com/Mircoguidetti/fenvix-engine/pull/11 (nessun merge).
+
 ## In breve
 
 - **Causa.** La compattazione di un database aperto in scrittura veniva chiesta solo da una scrittura appena finita, al
