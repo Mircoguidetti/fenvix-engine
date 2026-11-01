@@ -36,7 +36,8 @@ CONSTANTS Clients, Workers, Owner, MaxReads,
 VARIABLES
   token,     \* client -> posizione piu' alta vista
   reads,     \* numero di letture servite (limite del modello)
-  lastRead,  \* ultima lettura servita: [c, k, s, tok, got, exp]
+  readOk,    \* FALSE appena una lettura servita e' sbagliata (valore o monotonia); i dettagli
+             \* della lettura stanno nei parametri dell'azione Read nella traccia di TLC
   wstate,    \* worker -> "idle" | "fetched" | "stored"
   wview,     \* worker -> vista del manifest letta: [pos, list, etag]
   wupto,     \* worker -> fine dell'intervallo preso
@@ -48,10 +49,9 @@ VARIABLES
   manifests, \* insieme di tutte le viste del manifest mai pubblicate
   trimmed    \* posizione fino alla quale le repliche possono aver scartato dal disco
 
-rvars == <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
+rvars == <<token, reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
 allvars == <<vars, rvars>>
 
-NoRead == [c |-> "none", k |-> "none", s |-> 0, tok |-> 0, got |-> << >>, exp |-> << >>]
 NoName == << >>
 Min2(S) == CHOOSE x \in S : \A y \in S : x <= y
 
@@ -72,7 +72,7 @@ InitR ==
   /\ Init
   /\ token = [c \in Clients |-> 0]
   /\ reads = 0
-  /\ lastRead = NoRead
+  /\ readOk = TRUE
   /\ wstate = [w \in Workers |-> "idle"]
   /\ wview = [w \in Workers |-> [pos |-> 0, list |-> << >>, etag |-> 0]]
   /\ wupto = [w \in Workers |-> 0]
@@ -97,7 +97,7 @@ Read(c, r, k, view, s) ==
   /\ LET base == WritesTo(S3Content(view), 0, k, view.pos)
          win == WritesTo(SubSeq(log[r], view.pos + 1, s), view.pos, k, s)
          exp == WritesTo(cmtLog, 0, k, s)
-     IN lastRead' = [c |-> c, k |-> k, s |-> s, tok |-> token[c], got |-> base \o win, exp |-> exp]
+     IN readOk' = readOk /\ (base \o win = exp) /\ s >= token[c]
   /\ token' = [token EXCEPT ![c] = Max({@, s})]
   /\ reads' = reads + 1
   /\ UNCHANGED <<wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
@@ -107,7 +107,7 @@ Read(c, r, k, view, s) ==
 LearnOutcome(c, t) ==
   /\ Owner[t] = c
   /\ \E p \in outcome[t] : p > token[c] /\ token' = [token EXCEPT ![c] = p]
-  /\ UNCHANGED <<reads, lastRead, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
 
 (* ---------------------------------------------------------------- scarico *)
 
@@ -120,7 +120,7 @@ Fetch(w, r) ==
           /\ wupto' = [wupto EXCEPT ![w] = upto]
           /\ wents' = [wents EXCEPT ![w] = SubSeq(log[r], m + 1, upto)]
           /\ wstate' = [wstate EXCEPT ![w] = "fetched"]
-  /\ UNCHANGED <<token, reads, lastRead, wname, objects, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<token, reads, readOk, wname, objects, deleted, manifests, manifest, trimmed>>
 
 StoreObject(w) ==
   /\ wstate[w] = "fetched"
@@ -128,7 +128,7 @@ StoreObject(w) ==
      IN /\ wname' = [wname EXCEPT ![w] = name]
         /\ objects' = [n \in DOMAIN objects \cup {name} |-> IF n = name THEN wents[w] ELSE objects[n]]
   /\ wstate' = [wstate EXCEPT ![w] = "stored"]
-  /\ UNCHANGED <<token, reads, lastRead, wview, wupto, wents, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<token, reads, readOk, wview, wupto, wents, deleted, manifests, manifest, trimmed>>
 
 PutManifest(w) ==
   /\ wstate[w] = "stored"
@@ -145,13 +145,13 @@ PutManifest(w) ==
              THEN deleted' = deleted \cup {wname[w]}   \* orfano (o creduto tale): cancellato
              ELSE UNCHANGED deleted                    \* rilettura del manifest: il proprio oggetto c'e', il PUT era riuscito
           /\ wstate' = [wstate EXCEPT ![w] = "idle"]
-  /\ UNCHANGED <<token, reads, lastRead, wview, wupto, wents, wname, trimmed>>
+  /\ UNCHANGED <<token, reads, readOk, wview, wupto, wents, wname, trimmed>>
 
 \* le repliche scartano dal disco fino alla posizione del manifest
 Trim ==
   /\ trimmed < manifest.pos
   /\ trimmed' = manifest.pos
-  /\ UNCHANGED <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest>>
+  /\ UNCHANGED <<token, reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest>>
 
 \* le azioni del registro, con lo stato delle letture e dello scarico fermo
 RElect(c, Q) == Elect(c, Q) /\ UNCHANGED rvars
@@ -178,11 +178,10 @@ SpecR == InitR /\ [][NextR]_allvars
 
 (* ------------------------------------------------------------- invarianti *)
 
-\* (a) una lettura a S restituisce esattamente le scritture confermate alla chiave con posizione <= S
-ReadsCorrect == lastRead.got = lastRead.exp
-
-\* (b) nessuna lettura servita e' piu' vecchia della posizione gia' vista dal client
-MonotonicReads == lastRead.s >= lastRead.tok
+\* (a) una lettura a S restituisce esattamente le scritture confermate alla chiave con posizione <= S,
+\* e (b) nessuna lettura servita e' piu' vecchia della posizione gia' vista dal client
+ReadsCorrect == readOk
+MonotonicReads == readOk
 
 \* (c) lo scarico non perde e non duplica: il contenuto di S3 secondo il manifest corrente e'
 \*     esattamente il prefisso confermato fino alla posizione del manifest
