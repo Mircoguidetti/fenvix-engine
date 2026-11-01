@@ -122,6 +122,23 @@ def test_update_with_sort_picks_first(srv):
     assert c.find_one_and_delete({}, sort=[("k", -1), ("_id", 1)])["k"] == 100
 
 
+def test_id_equality_with_sort_and_limit(srv):
+    # a filter on one _id is answered by a point read: the sort must not lose that document
+    c = _coll(srv, "ideq", [{"_id": i, "k": i % 3} for i in range(20)])
+    assert [d["_id"] for d in c.find({"_id": 7}, sort=[("k", 1)], limit=1)] == [7]
+    assert c.find_one({"_id": 7}, sort=[("k", -1)])["_id"] == 7
+    assert c.update_one({"_id": 8}, {"$set": {"hit": 1}}, sort={"k": 1}).modified_count == 1
+    assert c.find_one_and_update({"_id": 9}, {"$set": {"hit": 2}}, sort=[("k", 1)])["_id"] == 9
+    with srv.mc.start_session() as s:
+        s.start_transaction()
+        c.insert_one({"_id": 100, "k": 0}, session=s)
+        assert c.find_one({"_id": 100}, sort=[("k", 1)], session=s)["_id"] == 100
+        assert c.find_one({"_id": 10}, sort=[("k", 1)], session=s)["_id"] == 10
+        assert c.update_one({"_id": 11}, {"$set": {"hit": 3}}, sort={"k": 1}, session=s).modified_count == 1
+        s.commit_transaction()
+    assert sorted(d["_id"] for d in c.find({"hit": {"$exists": True}})) == [8, 9, 11]
+
+
 @pytest.mark.parametrize("indexed", [False, True])
 def test_transaction_own_writes_with_limit(srv, indexed):
     c = _coll(srv, "txn", [{"_id": i, "k": i * 10} for i in range(1, 501)])

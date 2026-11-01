@@ -790,7 +790,10 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                     stats.docs = 1;
                     let d = decode(&v)?;
                     if visible(&d, o) && matches(&d, o.filter)? {
-                        out.push(d);
+                        match topk.as_mut() {
+                            Some(t) => t.push(d),
+                            None => out.push(d),
+                        }
                     }
                 }
             }
