@@ -104,6 +104,8 @@ impl Server {
             }
             return self.find_tailable(db, coll, &filter, projection.as_ref(), limit, skip, batch, bool_arg(cmd.get("awaitData"), false), tx).await;
         }
+        // whether the collection is clustered, when the plain read below already knows it
+        let mut clustered: Option<bool> = None;
         let mut docs = if ext.active() {
             let (sort_doc, proj_doc) = (cmd.get_document("sort").ok(), cmd.get_document("projection").ok());
             if tx.is_none() {
@@ -116,14 +118,21 @@ impl Server {
             }
         } else if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?
+            let docs = self.find_part(&mut g, db, coll, &filter, &sort, want, hint_arg, None).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?;
+            // the collection's options are already in this view (read by `find_part`): no second view and no second read
+            clustered = Some(g.coll_opts(coll).await?.map(|k| k.clustered.is_some()).unwrap_or(false));
+            docs
         } else {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
             self.find_part(&mut *g, db, coll, &filter, &sort, want, hint_arg, tx_ov(tx)).await.map_err(|e| crate::find_ext::hint_error(e, &format!("{db}.{coll}"), &filter, cmd.get_document("sort").ok(), cmd.get_document("projection").ok()))?
         };
         if sort.is_empty() && cmd.get("hint").map(|h| matches!(h, Bson::Document(d) if d.contains_key("$natural"))).unwrap_or(true) {
-            if self.coll_kind(db, coll).await?.map(|k| k.clustered.is_some()).unwrap_or(false) {
+            let clustered = match clustered {
+                Some(c) => c,
+                None => self.coll_kind(db, coll).await?.map(|k| k.clustered.is_some()).unwrap_or(false),
+            };
+            if clustered {
                 let rev = natural_hint.as_ref().or_else(|| cmd.get("hint")).and_then(|h| h.as_document()).and_then(|d| d.get("$natural")).map(|n| crate::query::as_f64(n) < 0.0).unwrap_or(false);
                 crate::special_colls::sort_by_id(&mut docs, rev);
             }
