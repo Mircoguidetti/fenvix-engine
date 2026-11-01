@@ -55,8 +55,17 @@ for n in $(seq 1 "$RUNS"); do
   rc=$?
   t1=$(date +%s.%N)
   if [ $rc -eq 0 ]; then
-    log "run $n ok $(echo "$t1 - $t0" | bc)"
+    # Compaction passes and L0-watch requests of the run (tenantStats; l0WatchRequests is absent before the fix).
+    maint=$("$PY" - "$PORT" 2>/dev/null <<'PYEOF'
+import sys
+from pymongo import MongoClient
+m = MongoClient(f"mongodb://127.0.0.1:{sys.argv[1]}/?directConnection=true", serverSelectionTimeoutMS=5000).admin.command("tenantStats")["maintenance"]
+print(f"compactRuns={m.get('compactRuns')} l0WatchRequests={m.get('l0WatchRequests')}")
+PYEOF
+)
+    log "run $n ok $(echo "$t1 - $t0" | bc) $maint"
     stop_engine $SPID
+    grep -q "final flush did not finish" "$RD/server.log" && log "run $n: the close at SIGTERM gave up its final flush (unclean)"
     rm -rf "$RD/server.log.gz"; gzip -f "$RD/server.log"
     continue
   fi
