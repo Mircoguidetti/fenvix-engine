@@ -1,0 +1,43 @@
+Sun Nov  1 23:01:51 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35151 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 73 and seed 2964860113296150908 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 1647] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-registro/MCValidatingLog.tla
+Parsing file /home/claude/fenvix-engine/tla-registro/ValidatingLog.tla
+Parsing file /tmp/tlc-307879303424411449/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-307879303424411449/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-307879303424411449/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-307879303424411449/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-307879303424411449/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-307879303424411449/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-307879303424411449/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ValidatingLog
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCValidatingLog
+Linting of module ValidatingLog
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCValidatingLog
+Starting... (2026-11-01 23:01:51)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 23:01:52.
+Progress(11) at 2026-11-01 23:01:55: 53,606 states generated (53,606 s/min), 10,124 distinct states found (10,124 ds/min), 5,712 states left on queue.
+Progress(19) at 2026-11-01 23:02:55: 2,814,040 states generated (2,760,434 s/min), 294,143 distinct states found (284,019 ds/min), 60,987 states left on queue.
+Progress(23) at 2026-11-01 23:03:55: 5,316,339 states generated (2,502,299 s/min), 495,242 distinct states found (201,099 ds/min), 28,552 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.6E-7
+  based on the actual fingerprints:  val = 8.2E-8
+5973821 states generated, 539265 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 30.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 10 and the 95th percentile is 3).
+Finished in 02min 23s at (2026-11-01 23:04:15)
+EXIT=0
+Sun Nov  1 23:04:15 UTC 2026

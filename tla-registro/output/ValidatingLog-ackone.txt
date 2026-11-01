@@ -1,15 +1,16 @@
-Sun Nov  1 13:19:05 UTC 2026
+Sun Nov  1 22:57:29 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35151 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
 TLC2 Version 2026.10.30.154139 (rev: 090e85c)
-Running breadth-first search Model-Checking with fp 18 and seed -3700143303941597250 with 4 workers on 4 cores with 7282MB heap and 64MB offheap memory [pid: 6880] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/MCValidatingLog.tla
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/ValidatingLog.tla
-Parsing file /tmp/tlc-10986894168629958461/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-10986894168629958461/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-10986894168629958461/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-10986894168629958461/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-10986894168629958461/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-10986894168629958461/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
-Parsing file /tmp/tlc-10986894168629958461/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Running breadth-first search Model-Checking with fp 115 and seed 3505589620744213692 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 1150] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-registro/MCValidatingLog.tla
+Parsing file /home/claude/fenvix-engine/tla-registro/ValidatingLog.tla
+Parsing file /tmp/tlc-12756851137568088361/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-12756851137568088361/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-12756851137568088361/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-12756851137568088361/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-12756851137568088361/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-12756851137568088361/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-12756851137568088361/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
 Semantic processing of module Naturals
 Semantic processing of module Sequences
 Semantic processing of module FiniteSets
@@ -23,9 +24,9 @@ Linting of module ValidatingLog
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MCValidatingLog
-Starting... (2026-11-01 13:19:06)
+Starting... (2026-11-01 22:57:29)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-01 13:19:06.
+Finished computing initial states: 1 distinct state generated at 2026-11-01 22:57:29.
 Error: Invariant LeaderCompleteness is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
@@ -40,6 +41,7 @@ State 1: <Initial predicate>
 /\ match = ( r1 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
@@ -52,7 +54,7 @@ State 1: <Initial predicate>
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 2: <Elect(r1,{r1, r2}) line 122, col 3 to line 135, col 75 of module ValidatingLog>
+State 2: <Elect(r1,{r1, r2}) line 146, col 3 to line 161, col 86 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -64,6 +66,7 @@ State 2: <Elect(r1,{r1, r2}) line 122, col 3 to line 135, col 75 of module Valid
 /\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
@@ -76,7 +79,7 @@ State 2: <Elect(r1,{r1, r2}) line 122, col 3 to line 135, col 75 of module Valid
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 3: <Elect(r2,{r2, r3}) line 122, col 3 to line 135, col 75 of module ValidatingLog>
+State 3: <Elect(r2,{r2, r3}) line 146, col 3 to line 161, col 86 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -88,6 +91,7 @@ State 3: <Elect(r2,{r2, r3}) line 122, col 3 to line 135, col 75 of module Valid
 /\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0) @@
   r2 :> (r1 :> 0 @@ r2 :> 1 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
@@ -102,7 +106,7 @@ State 3: <Elect(r2,{r2, r3}) line 122, col 3 to line 135, col 75 of module Valid
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 4: <AdvanceCommit(r1) line 208, col 3 to line 216, col 92 of module ValidatingLog>
+State 4: <AdvanceCommit(r1) line 247, col 3 to line 255, col 103 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -114,6 +118,7 @@ State 4: <AdvanceCommit(r1) line 208, col 3 to line 216, col 92 of module Valida
 /\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0) @@
   r2 :> (r1 :> 0 @@ r2 :> 1 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
@@ -128,9 +133,9 @@ State 4: <AdvanceCommit(r1) line 208, col 3 to line 216, col 92 of module Valida
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-62 states generated, 50 distinct states found, 37 states left on queue.
-The depth of the complete state graph search is 6.
-Finished in 00s at (2026-11-01 13:19:06)
-Trace exploration spec path: ./MCValidatingLog_TTrace_1793539145.tla
+60 states generated, 38 distinct states found, 29 states left on queue.
+The depth of the complete state graph search is 4.
+Finished in 00s at (2026-11-01 22:57:30)
+Trace exploration spec path: ./MCValidatingLog_TTrace_1793573849.tla
 EXIT=12
-Sun Nov  1 13:19:06 UTC 2026
+Sun Nov  1 22:57:30 UTC 2026

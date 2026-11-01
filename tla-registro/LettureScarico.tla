@@ -27,11 +27,27 @@
 (*                   il proprio oggetto senza rileggere il manifest (il     *)
 (*                   fallimento puo' essere il 412 del ritentativo di un    *)
 (*                   PUT gia' riuscito con risposta persa)                  *)
+(* Giro 2 (revisore di S1):                                                 *)
+(*  ServeRamOnly     la replica serve solo dalla finestra in RAM            *)
+(*                   (potatoFinoA = inizioFinestra - 1): le scritture tra   *)
+(*                   60 s e lo scarico non le serve nessuno                 *)
+(*  NoServeGuard     la replica serve anche se non ha piu' (M, S] sul disco *)
+(*  LinNotReady      lettura lineare servita da un capo non ancora pronto   *)
+(* Opzioni:                                                                 *)
+(*  ReadPrepared     la S di ogni scrittura e' quella di una lettura        *)
+(*                   composta servita davvero (non una S qualsiasi), e la   *)
+(*                   chiave di sessione si legge con la stessa lettura      *)
+(*                   (scatole + quaderno), non con l'oracolo                *)
+(*  MaxLinReads      numero massimo di letture lineari                      *)
+(* Disco: ogni replica ha diskStart (inizioDisco); TrimR la alza fino alla   *)
+(* posizione del manifest + 1 e mai sopra la propria finestra. Reload e' la *)
+(* ricarica da S3 di una replica rimasta sotto l'inizioDisco del capo.      *)
 (***************************************************************************)
 EXTENDS ValidatingLog
 
 CONSTANTS Clients, Workers, Owner, MaxReads,
-          UnsafeServe, IgnoreToken, UnconditionalPut, NameByStart, UnsafeFetch, DeleteOrphanBlind
+          UnsafeServe, IgnoreToken, UnconditionalPut, NameByStart, UnsafeFetch, DeleteOrphanBlind,
+          ServeRamOnly, NoServeGuard, LinNotReady, ReadPrepared, MaxLinReads
 
 VARIABLES
   token,     \* client -> posizione piu' alta vista
@@ -47,9 +63,9 @@ VARIABLES
   deleted,   \* insieme dei nomi di oggetto cancellati
   manifest,  \* [pos, list, etag]
   manifests, \* insieme di tutte le viste del manifest mai pubblicate
-  trimmed    \* posizione fino alla quale le repliche possono aver scartato dal disco
+  linReads   \* numero di letture lineari servite (limite del modello)
 
-rvars == <<token, reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
+rvars == <<token, reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, linReads>>
 allvars == <<vars, rvars>>
 
 NoName == << >>
@@ -82,32 +98,68 @@ InitR ==
   /\ deleted = {}
   /\ manifest = [pos |-> 0, list |-> << >>, etag |-> 0]
   /\ manifests = {[pos |-> 0, list |-> << >>, etag |-> 0]}
-  /\ trimmed = 0
+  /\ linReads = 0
 
 (* ---------------------------------------------------------------- letture *)
 
 MaxLen == Max({Len(log[r]) : r \in Replicas})
+Max2(a, b) == IF a > b THEN a ELSE b
+
+\* prima posizione che la replica r sa servire: dal disco (regola giusta: potatoFinoA = inizioDisco)
+\* oppure solo dalla RAM (ServeRamOnly, la regola del primo giro letta alla lettera)
+ServedFrom(r) == IF ServeRamOnly THEN wstart[r] ELSE diskStart[r]
+\* la replica serve (M, S] solo se lo ha tutto (guardia), e comunque restituisce solo cio' che ha
+CanServe(r, view, s) ==
+  /\ alive[r]
+  /\ IF UnsafeServe THEN s <= Len(log[r]) ELSE s <= commit[r]   \* regola sicura: S <= confermataLocale
+  /\ view.pos <= s
+  /\ NoServeGuard \/ view.pos + 1 >= ServedFrom(r)
+FromPos(r, view) == Max2(view.pos + 1, ServedFrom(r))
+\* la sequenza di record che il nodo d'ingresso compone: scatole della vista + quaderno in (M, S]
+Composed(r, view, s) == S3Content(view) \o SubSeq(log[r], FromPos(r, view), s)
 
 Read(c, r, k, view, s) ==
-  /\ reads < MaxReads /\ alive[r]
+  /\ reads < MaxReads
   /\ IgnoreToken \/ s >= token[c]                       \* B: S non sotto il gettone del client
-  /\ IF UnsafeServe THEN s <= Len(log[r]) ELSE s <= commit[r]   \* la replica ha S (regola sicura: confermata)
-  /\ view.pos <= s
-  /\ view.pos + 1 >= wstart[r]                          \* la finestra della replica copre (M, S]
+  /\ CanServe(r, view, s)
   /\ LET base == WritesTo(S3Content(view), 0, k, view.pos)
-         win == WritesTo(SubSeq(log[r], view.pos + 1, s), view.pos, k, s)
+         win == WritesTo(SubSeq(log[r], FromPos(r, view), s), FromPos(r, view) - 1, k, s)
          exp == WritesTo(cmtLog, 0, k, s)
      IN readOk' = (readOk /\ base \o win = exp /\ s >= token[c])
   /\ token' = [token EXCEPT ![c] = Max({@, s})]
   /\ reads' = reads + 1
-  /\ UNCHANGED <<wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, linReads>>
+
+\* lettura lineare (readConcern linearizable, ReadIndex): il capo risponde a POSIZIONE con la propria
+\* confermata solo se e' ancora capo (epoca piu' alta: nel modello atomico equivale all'ACK di una
+\* maggioranza nella propria epoca) E pronto (barriera del proprio mandato confermata). Senza
+\* "pronto" (LinNotReady) un capo appena eletto risponde con una confermata piu' vecchia di una
+\* scrittura gia' confermata al client dal capo precedente.
+LinRead(c, l) ==
+  /\ linReads < MaxLinReads /\ alive[l] /\ role[l] = "leader" /\ epoch[l] = MaxEpochNow
+  /\ LinNotReady \/ LeaderReady(l)
+  /\ readOk' = (readOk /\ \A t \in Txns : \A p \in outcome[t] : p <= commit[l])
+  /\ token' = [token EXCEPT ![c] = Max({@, commit[l]})]
+  /\ linReads' = linReads + 1
+  /\ UNCHANGED <<reads, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest>>
+
+\* scrittura preparata su una lettura composta servita davvero (ReadPrepared): S = s della lettura,
+\* e la chiave di sessione si legge nella stessa lettura (scatole della vista + quaderno in (M, S]).
+\* La lettura deve essere esatta: la sequenza composta e' il prefisso confermato fino a S.
+SubmitFromRead(l, t, r, view, s) ==
+  /\ CanServe(r, view, s)
+  /\ LET comp == Composed(r, view, s)
+         seen == IF SessionLookup THEN {i \in 1..Len(comp) : comp[i].tx = t} ELSE {}
+     IN /\ SubmitAt(l, t, s, seen)
+        /\ readOk' = (readOk /\ comp = SubSeq(cmtLog, 1, s))
+  /\ UNCHANGED <<token, reads, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, linReads>>
 
 \* il client riceve la conferma di una propria scrittura: gettone = posizione confermata
 \* (ogni transazione e' di un client: Owner, definito nel modulo MC)
 LearnOutcome(c, t) ==
   /\ Owner[t] = c
   /\ \E p \in outcome[t] : p > token[c] /\ token' = [token EXCEPT ![c] = p]
-  /\ UNCHANGED <<reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, linReads>>
 
 (* ---------------------------------------------------------------- scarico *)
 
@@ -116,11 +168,12 @@ Fetch(w, r) ==
   /\ LET m == manifest.pos
          lim == IF UnsafeFetch THEN Len(log[r]) ELSE commit[r]
      IN \E upto \in (m + 1)..lim :
+          /\ m + 1 >= diskStart[r]          \* LEGGI_INTERVALLO solo se M >= inizioDisco
           /\ wview' = [wview EXCEPT ![w] = manifest]
           /\ wupto' = [wupto EXCEPT ![w] = upto]
           /\ wents' = [wents EXCEPT ![w] = SubSeq(log[r], m + 1, upto)]
           /\ wstate' = [wstate EXCEPT ![w] = "fetched"]
-  /\ UNCHANGED <<token, reads, readOk, wname, objects, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<token, reads, readOk, wname, objects, deleted, manifests, manifest, linReads>>
 
 StoreObject(w) ==
   /\ wstate[w] = "fetched"
@@ -128,7 +181,7 @@ StoreObject(w) ==
      IN /\ wname' = [wname EXCEPT ![w] = name]
         /\ objects' = [n \in DOMAIN objects \cup {name} |-> IF n = name THEN wents[w] ELSE objects[n]]
   /\ wstate' = [wstate EXCEPT ![w] = "stored"]
-  /\ UNCHANGED <<token, reads, readOk, wview, wupto, wents, deleted, manifests, manifest, trimmed>>
+  /\ UNCHANGED <<token, reads, readOk, wview, wupto, wents, deleted, manifests, manifest, linReads>>
 
 PutManifest(w) ==
   /\ wstate[w] = "stored"
@@ -145,34 +198,58 @@ PutManifest(w) ==
              THEN deleted' = deleted \cup {wname[w]}   \* orfano (o creduto tale): cancellato
              ELSE UNCHANGED deleted                    \* rilettura del manifest: il proprio oggetto c'e', il PUT era riuscito
           /\ wstate' = [wstate EXCEPT ![w] = "idle"]
-  /\ UNCHANGED <<token, reads, readOk, wview, wupto, wents, wname, trimmed>>
+  /\ UNCHANGED <<token, reads, readOk, wview, wupto, wents, wname, linReads>>
 
-\* le repliche scartano dal disco fino alla posizione del manifest
-Trim ==
-  /\ trimmed < manifest.pos
-  /\ trimmed' = manifest.pos
-  /\ UNCHANGED <<token, reads, readOk, wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest>>
+\* la replica r scarta dal disco fino alla posizione del manifest (SCARICATO): diskStart sale al piu' a
+\* manifest.pos + 1, e mai sopra l'inizio della propria finestra (la finestra in RAM e' una cache del
+\* disco). Le voci sotto diskStart restano nella sequenza solo come (posizione, epoca).
+TrimR(r) ==
+  /\ alive[r]
+  /\ \E d \in (diskStart[r] + 1)..Min(manifest.pos + 1, wstart[r]) :
+       diskStart' = [diskStart EXCEPT ![r] = d]
+  /\ UNCHANGED <<epoch, role, alive, log, commit, match, wstart, mapS, mapA, ids, attempts, outcome, cmtLog, losses>>
+  /\ UNCHANGED rvars
+
+\* ricarica da S3 (come InstallSnapshot di Raft): il seguace f e' sotto l'inizioDisco di un capo l, che
+\* non puo' piu' mandargli le voci. f prende dal manifest M e le scatole; se la propria voce a M
+\* coincide (stessa posizione ed epoca) tiene la propria coda, altrimenti butta tutto il log.
+Reload(f) ==
+  /\ alive[f] /\ role[f] = "follower"
+  /\ \E l \in Replicas : alive[l] /\ role[l] = "leader" /\ epoch[l] >= epoch[f]
+                         /\ MatchLen(log[l], log[f]) + 1 < diskStart[l]
+  /\ LET M == manifest.pos
+         content == S3Content(manifest)
+         keep == Len(log[f]) >= M /\ (M = 0 \/ log[f][M] = content[M])
+         newLog == IF keep THEN content \o SubSeq(log[f], M + 1, Len(log[f])) ELSE content
+     IN /\ M + 1 > diskStart[f]
+        /\ log' = [log EXCEPT ![f] = newLog]
+        /\ diskStart' = [diskStart EXCEPT ![f] = M + 1]
+        /\ wstart' = [wstart EXCEPT ![f] = Max2(@, M + 1)]
+        /\ commit' = [commit EXCEPT ![f] = Max2(@, M)]
+  /\ UNCHANGED <<epoch, role, alive, match, mapS, mapA, ids, attempts, outcome, cmtLog, losses>>
+  /\ UNCHANGED rvars
 
 \* le azioni del registro, con lo stato delle letture e dello scarico fermo
 RElect(c, Q) == Elect(c, Q) /\ UNCHANGED rvars
 RSubmit(l, t) == Submit(l, t) /\ UNCHANGED rvars
-RReplicate(l, f) == Replicate(l, f) /\ UNCHANGED rvars
-RHeartbeat(l, f) == Heartbeat(l, f) /\ UNCHANGED rvars
+RReplicate(l, f, p, n) == Replicate(l, f, p, n) /\ UNCHANGED rvars
 RAdvanceCommit(l) == AdvanceCommit(l) /\ UNCHANGED rvars
 RAdvanceWindow(l) == AdvanceWindow(l) /\ UNCHANGED rvars
 RLose(r) == Lose(r) /\ UNCHANGED rvars
 
 NextR ==
   \/ \E c \in Replicas, Q \in SUBSET Replicas : RElect(c, Q)
-  \/ \E l \in Replicas, t \in Txns : RSubmit(l, t)
-  \/ \E l, f \in Replicas : RReplicate(l, f) \/ RHeartbeat(l, f)
-  \/ \E l \in Replicas : RAdvanceCommit(l) \/ RAdvanceWindow(l) \/ RLose(l)
+  \/ ~ReadPrepared /\ \E l \in Replicas, t \in Txns : RSubmit(l, t)
+  \/ ReadPrepared /\ \E l, r \in Replicas, t \in Txns, view \in manifests, s \in 0..MaxCommit :
+        SubmitFromRead(l, t, r, view, s)
+  \/ \E l, f \in Replicas, p \in 0..MaxLog, n \in 0..1 : RReplicate(l, f, p, n)
+  \/ \E l \in Replicas : RAdvanceCommit(l) \/ RAdvanceWindow(l) \/ RLose(l) \/ TrimR(l) \/ Reload(l)
   \/ /\ UNCHANGED vars
      /\ \/ \E c \in Clients, r \in Replicas, k \in Keys, view \in manifests, s \in 0..MaxLen : Read(c, r, k, view, s)
         \/ \E c \in Clients, t \in Txns : LearnOutcome(c, t)
+        \/ \E c \in Clients, l \in Replicas : LinRead(c, l)
         \/ \E w \in Workers, r \in Replicas : Fetch(w, r)
         \/ \E w \in Workers : StoreObject(w) \/ PutManifest(w)
-        \/ Trim
 
 SpecR == InitR /\ [][NextR]_allvars
 
@@ -191,7 +268,19 @@ UploadExact ==
   /\ \A i \in 1..Len(manifest.list) : manifest.list[i] \notin deleted
 
 \* (d) niente scartato dal disco che non sia in S3
-NothingLost == trimmed <= manifest.pos
+NothingLost == \A r \in Replicas : diskStart[r] <= manifest.pos + 1
+
+\* (d2) ogni record confermato e' in S3 oppure sul disco (sopra inizioDisco) di una replica viva
+DurableOrS3 ==
+  \A i \in 1..Len(cmtLog) :
+     \/ i <= manifest.pos
+     \/ \E r \in Alive : diskStart[r] <= i /\ i <= Len(log[r]) /\ log[r][i] = cmtLog[i]
+
+\* (f) le letture si possono servire: almeno una replica viva serve dalla posizione del manifest
+ReadServable == \E r \in Alive : manifest.pos + 1 >= ServedFrom(r)
+
+\* (g) il gettone non va mai oltre la storia confermata
+TokenConfirmed == \A c \in Clients : token[c] <= Len(cmtLog)
 
 \* (e) il manifest non torna indietro
 ManifestMonotonic == [][manifest.pos' >= manifest.pos]_allvars

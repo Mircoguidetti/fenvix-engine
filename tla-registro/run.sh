@@ -26,7 +26,7 @@ run() { # modulo cfg
 if [ $# -gt 0 ]; then
   list=( "$@" )                                      # nell'ordine dato
 else
-  list=( $(ls ValidatingLog-*.cfg LettureScarico-*.cfg 2>/dev/null | sed 's/\.cfg$//') )
+  list=( $(ls ValidatingLog-*.cfg LettureScarico-*.cfg Bollettino-*.cfg 2>/dev/null | sed 's/\.cfg$//') )
 fi
 for name in "${list[@]}"; do
   cfg=$name.cfg
@@ -34,5 +34,6 @@ for name in "${list[@]}"; do
   case $cfg in
     ValidatingLog-*) run MCValidatingLog "$cfg" ;;
     LettureScarico-*) run MCLettureScarico "$cfg" ;;
+    Bollettino-*) run MCBollettino "$cfg" ;;
   esac
 done
