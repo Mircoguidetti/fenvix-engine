@@ -52,8 +52,10 @@ l'inizio della finestra) e la deduplicazione per id e per (lsid, txnNumber) finc
 3. **`stato_scarico(db)` → `(scaricato, etag, potato_fino_a)`**: serve alla scansione composta (per sapere quale
    manifest basta) e al worker. In proto-quaderno l'informazione c'è in `pendenti` solo per i database con record
    non scaricati.
-4. **`pendenti` porta anche `scaricato` del registro**: il worker lo confronta con `scaricato` del manifest per
-   riparare il caso "worker morto tra PUT del manifest e `conferma_scarico`" senza una richiesta in più per database.
+4. **`pendenti` porta per database anche byte e numero di record non su S3 e `scaricato` del registro**. In
+   proto-quaderno `Pending` restituisce solo `(db, posizione del più vecchio)`. I byte servono allo scarico "per
+   dimensione" (passo 5, variante a: 1 MB o 10 minuti); `scaricato` serve al worker per riparare il caso "worker morto
+   tra PUT del manifest e `conferma_scarico`" senza una richiesta in più per database.
 5. **Manifest per gruppo**: `conferma_scarico` riceve l'etag di un manifest che può coprire più database (variante
    "oggetto condiviso" del passo 5). Già compatibile con la firma multi-database di proto-quaderno.
 

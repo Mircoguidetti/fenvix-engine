@@ -393,3 +393,45 @@ pub fn leggi_log(p: &std::path::Path) -> anyhow::Result<Vec<LogRow>> {
     }
     Ok(out)
 }
+
+#[cfg(test)]
+mod t {
+    use super::*;
+    fn w(k: &str, kind: Kind, v: i64) -> Write {
+        Write { key: Bytes::from(k.to_string()), kind, val: Bytes::copy_from_slice(&v.to_le_bytes()) }
+    }
+    fn c(r: &RegistroSim, ws: Vec<Write>) -> Pos {
+        let mut txn = [0u8; 16];
+        txn[..8].copy_from_slice(&rand::random::<u64>().to_le_bytes());
+        match r.commit_sync(CommitReq { txn, db: db_n(1), read_pos: 0, mode: Mode::Blind, writes: ws, reads: vec![], session: None }) {
+            CommitResp::Committed(p) => p,
+            x => panic!("{x:?}"),
+        }
+    }
+    #[test]
+    fn delta_e_finestra() {
+        let r = RegistroSim::new(60_000, None).unwrap();
+        let p1 = c(&r, vec![w("x", Kind::Delta, 5)]);
+        let p2 = c(&r, vec![w("x", Kind::Delta, 7)]);
+        // solo delta nella finestra: la base è negli SST
+        assert!(matches!(r.get_sync(db_n(1), b"x", p2), GetResp::Delta { somma: 12, .. }));
+        assert!(matches!(r.get_sync(db_n(1), b"x", p1), GetResp::Delta { somma: 5, .. }));
+        let p3 = c(&r, vec![w("x", Kind::Put, 100)]);
+        let p4 = c(&r, vec![w("x", Kind::Delta, 1)]);
+        match r.get_sync(db_n(1), b"x", p4) {
+            GetResp::Valore { val, .. } => assert_eq!(delta_val(&val), 101),
+            x => panic!("{x:?}"),
+        }
+        let _ = p3;
+        assert!(matches!(r.get_sync(db_n(1), b"y", p4), GetResp::FuoriFinestra { .. }));
+        let p5 = c(&r, vec![w("x", Kind::Del, 0)]);
+        assert!(matches!(r.get_sync(db_n(1), b"x", p5), GetResp::Assente { .. }));
+        // idempotenza per id
+        let txn = [7u8; 16];
+        let req = CommitReq { txn, db: db_n(1), read_pos: 0, mode: Mode::Blind, writes: vec![w("z", Kind::Put, 1)], reads: vec![], session: None };
+        assert_eq!(r.commit_sync(req.clone()), r.commit_sync(req));
+        // validata: conflitto se la chiave è cambiata dopo read_pos
+        let req = CommitReq { txn: [8u8; 16], db: db_n(1), read_pos: p1, mode: Mode::Validated, writes: vec![w("x", Kind::Put, 1)], reads: vec![], session: None };
+        assert!(matches!(r.commit_sync(req), CommitResp::Conflict(_)));
+    }
+}

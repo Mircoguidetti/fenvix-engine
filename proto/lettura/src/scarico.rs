@@ -690,3 +690,24 @@ impl Worker {
         Ok(n)
     }
 }
+
+#[cfg(test)]
+mod t {
+    use super::*;
+    fn e(k: &str, pos: Pos, kind: Kind) -> Entry {
+        Entry { key: Bytes::from(k.to_string()), pos, kind, val: Bytes::from(format!("{k}{pos}")) }
+    }
+    #[test]
+    fn taglio_versioni() {
+        let es = vec![e("a", 10, Kind::Put), e("a", 20, Kind::Put), e("a", 30, Kind::Put), e("b", 5, Kind::Del), e("c", 8, Kind::Put), e("c", 9, Kind::Del)];
+        // orizzonte 25: per "a" restano 30 e 20 (la più nuova sotto l'orizzonte); "b" e "c" cancellati sotto
+        // l'orizzonte spariscono solo se la fusione include la run più vecchia
+        let r = fondi(es.clone(), Some(25), true);
+        let v: Vec<(String, Pos)> = r.iter().map(|x| (String::from_utf8(x.key.to_vec()).unwrap(), x.pos)).collect();
+        assert_eq!(v, vec![("a".into(), 30), ("a".into(), 20)]);
+        let r = fondi(es.clone(), Some(25), false);
+        let v: Vec<(String, Pos)> = r.iter().map(|x| (String::from_utf8(x.key.to_vec()).unwrap(), x.pos)).collect();
+        assert_eq!(v, vec![("a".into(), 30), ("a".into(), 20), ("b".into(), 5), ("c".into(), 9)]);
+        assert_eq!(fondi(es.clone(), None, true).len(), es.len());
+    }
+}
