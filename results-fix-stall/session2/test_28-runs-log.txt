@@ -1,0 +1,2 @@
+2026-11-01 11:45:46 56 batches of 500 in 61.8 s, max batch 0.76 s, compactions 1, L0 watch requests None errors=["batch 54 after 60.0 s: NetworkTimeout('127.0.0.1:25671: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeoutMS: 20000.0ms)')", "batch 57 after 60.0 s: NetworkTimeout('127.0.0.1:25671: timed out (configured timeouts: socketTimeoutMS: 60000.0ms, connectTimeoutMS: 20000.0ms)')"]
+2026-11-01 11:46:59 200 batches of 500 in 11.0 s, max batch 2.01 s, compactions 10, L0 watch requests 11 errors=[]
