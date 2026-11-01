@@ -12,7 +12,7 @@ repo) o STIMATO.
 - `docs/protocollo.md`: il protocollo nuovo in prosa, base per proto-quaderno, con le revisioni chieste
   dalla sessione proto-lettura.
 - `tla-registro/ValidatingLog.tla`: il registro con il leader che valida, 9 configurazioni.
-- `tla-registro/LettureScarico.tla`: letture a `S` e scarico su S3 sopra il registro, 8 configurazioni.
+- `tla-registro/LettureScarico.tla`: letture a `S` e scarico su S3 sopra il registro, 9 configurazioni.
 - `tla-registro/output/`: l'output di TLC di ogni modello. `tla-registro/run.sh` li riproduce.
 - `tla-registro/journal3z-vecchio/`: copia della specifica vecchia con le correzioni per farla girare e
   i 5 output.
@@ -79,7 +79,16 @@ restrizione sul log. Controesempi in parole in `docs/tla-registro.md`.
 
 ## Passo 4, LettureScarico.tla
 
-RISULTATO-LS
+I modelli base delle letture e dello scarico non si esauriscono in tempi utili su questa macchina. Il
+modello con 3 transazioni, nessun cambio di leader, 1 lettura, 2 worker e risposta del PUT che può
+perdersi è stato fermato al tetto di 60 minuti con 4 worker: 126.050.517 stati generati, 11.014.095
+distinti, 4,3 milioni in coda, profondità 22, nessuna violazione (MISURATO). Evidenza limitata.
+Il modello ridotto a 2 transazioni è stato fermato al tetto di 40 minuti con 88.932.540 stati generati,
+5.801.771 distinti, 299 mila in coda in discesa, profondità 32, nessuna violazione (MISURATO): quasi
+completo, un tetto di circa un'ora dovrebbe bastare (STIMATO). Il modello con un cambio di leader e due
+letture non è stato portato a termine. Per le letture e lo scarico l'evidenza è quindi: controlli
+negativi tutti catturati (ogni regola serve) e nessuna violazione in oltre 11 milioni di stati del
+modello base, ma non una esplorazione esaustiva.
 
 Controlli negativi, tutti catturati (MISURATO, 2-18 secondi): replica che serve dalla coda invece che
 dalla confermata (restituisce un record non confermato); gettone del client ignorato; manifest senza

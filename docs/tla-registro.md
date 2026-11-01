@@ -175,8 +175,27 @@ invarianti valgono per ogni vista e ogni cadenza.
 
 ### Risultati
 
-Modello base `LettureScarico-base2` (un cambio di leader, 1 tentativo per transazione, 2 letture, 2
-client, 2 worker, 1 worker TLC, heap 4 GB): RISULTATO-BASE-LS
+Modelli base, nessun controllo acceso. Le dimensioni sono state ridotte in due passi perché il modello
+pieno non si esaurisce in tempi utili:
+
+- `LettureScarico-base1` (3 transazioni, nessun cambio di leader, 1 lettura, 1 client, 2 worker, nessuna
+  perdita, risposta del PUT che può perdersi): esecuzione NON completata, fermata al tetto di 60 minuti
+  con 4 worker: 126.050.517 stati generati, 11.014.095 distinti, 4.310.371 in coda, profondità 22
+  raggiunta, nessuna violazione negli stati esplorati (MISURATO, `output/LettureScarico-base1.txt`).
+  Evidenza limitata.
+- `LettureScarico-base0` (come `base1` ma con 2 transazioni, `t1` e `t2`): esecuzione NON completata,
+  fermata al tetto di 40 minuti con 4 worker: 88.932.540 stati generati, 5.801.771 distinti, 299.301 in
+  coda (in discesa: il grafo era quasi esaurito), profondità 32 raggiunta, nessuna violazione negli
+  stati esplorati (MISURATO, `output/LettureScarico-base0.txt`). Un'esecuzione con un tetto più lungo
+  dovrebbe completarlo (STIMATO: circa un'ora su questa macchina).
+- `LettureScarico-base2` (con un cambio di leader e 2 letture): avviato e interrotto dopo pochi minuti
+  per far posto agli altri; nessun risultato utile, resta come configurazione per una macchina più
+  grande (`output/LettureScarico-base2-interrotto.txt`, prodotto da una versione precedente della
+  specifica).
+
+La lettura da replica isolata, la replica deposta che ha una voce poi sostituita, il manifest
+condizionale e i due worker sono nei controlli negativi qui sotto, che con la specifica definitiva
+producono il controesempio atteso in pochi secondi ciascuno.
 
 Controlli negativi (MISURATO):
 
