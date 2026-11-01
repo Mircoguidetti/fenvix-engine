@@ -117,7 +117,6 @@ func load(colls []*mongo.Collection) {
 	start := time.Now()
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, max(1, min(*clients, 16)))
-	var errs atomic.Int64
 	for di, c := range colls {
 		_ = c.Drop(context.Background())
 		for lo := 0; lo < *docs; lo += *loadBatch {
@@ -133,18 +132,17 @@ func load(colls []*mongo.Collection) {
 					batch = append(batch, bson.D{{Key: "_id", Value: int64(id)}, {Key: "f", Value: payload(r, *docSize)}})
 				}
 				if _, err := c.InsertMany(context.Background(), batch, options.InsertMany().SetOrdered(false)); err != nil {
-					errs.Add(1)
+					// The first failure ends the load at once (a stalled server would otherwise make every
+					// remaining batch wait for its own timeout).
 					fmt.Fprintln(os.Stderr, "load error:", err)
+					os.Exit(1)
 				}
 			}(c, lo, hi, di)
 		}
 	}
 	wg.Wait()
-	out := map[string]any{"mode": "load", "dbs": len(colls), "docs_per_db": *docs, "seconds": time.Since(start).Seconds(), "errors": errs.Load()}
+	out := map[string]any{"mode": "load", "dbs": len(colls), "docs_per_db": *docs, "seconds": time.Since(start).Seconds(), "errors": 0}
 	json.NewEncoder(os.Stdout).Encode(out)
-	if errs.Load() > 0 {
-		os.Exit(1)
-	}
 }
 
 func run(colls []*mongo.Collection) {
