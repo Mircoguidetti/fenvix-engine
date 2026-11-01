@@ -33,6 +33,17 @@ pub const L0_COMPACT_THRESHOLD: usize = 4;
 pub const L0_GUARD: usize = 6;
 /// Tenants garbage-collected at once by the maintenance loop.
 pub const GC_CONCURRENCY: usize = 16;
+/// How often (milliseconds) the maintenance loop looks at the L0 of every open writer and queues a compaction for each one
+/// at or above `L0_COMPACT_THRESHOLD`; the queue keeps one pass per tenant, so a tenant whose pass is queued or running is
+/// not queued again. The L0 count is the writer's own view of its manifest: no request to the store.
+///
+/// This is what starts the compaction of an open writer. It used to be started by a write that had finished (at most once
+/// every 10 s per database): once L0 reached slatedb's `l0_max_ssts` the memtable flushes stopped, every write then blocked
+/// in slatedb's backpressure (`max_unflushed_bytes`), no write finished, so no compaction was ever asked for again and the
+/// database stopped taking writes for good (docs/fix-stall.md). Here the request depends only on L0, not on the writes.
+pub static L0_WATCH_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1000);
+/// Compaction requests queued by the L0 watch (a request that joined a pass already queued is not counted).
+pub static L0_WATCH_REQUESTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 const LONG_POLL: Duration = Duration::from_secs(3600);
 
 pub fn tenant_path(id: impl std::fmt::Display) -> String {
@@ -117,6 +128,12 @@ static COMPACTED: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> 
 pub const SST_GC_MANIFEST_STEP: u64 = 16;
 /// SST cleanup passes that were due by time but skipped because nothing had changed (no request made).
 pub static SST_GC_NOOP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Open writers whose own view of the manifest holds at least `L0_COMPACT_THRESHOLD` L0 SSTs (see `L0_WATCH_MS`).
+fn writers_over_l0_threshold() -> Vec<String> {
+    let dbs: Vec<(String, Db)> = WRITER_DBS.lock().unwrap().iter().map(|(id, db)| (id.clone(), db.clone())).collect();
+    dbs.into_iter().filter(|(_, db)| db.manifest().l0().len() >= L0_COMPACT_THRESHOLD).map(|(id, _)| id).collect()
+}
 
 fn writer_manifest_id(id: &str) -> Option<u64> {
     WRITER_DBS.lock().unwrap().get(id).map(|db| db.manifest().id())
@@ -350,17 +367,21 @@ impl CompactionQueue {
         (Arc::new(Self { pending: Mutex::new(HashMap::new()), tx }), rx)
     }
 
-    pub fn request(&self, id: &str, waiter: Option<oneshot::Sender<usize>>) {
+    /// Queue a compaction pass of `id`. True: a new pass was queued; false: the request joined a pass already queued or
+    /// running (that pass reads the manifest when it starts, or the L0 watch asks again once it is over).
+    pub fn request(&self, id: &str, waiter: Option<oneshot::Sender<usize>>) -> bool {
         let mut p = self.pending.lock().unwrap();
         match p.entry(id.to_string()) {
             std::collections::hash_map::Entry::Occupied(mut e) => {
                 if let Some(w) = waiter {
                     e.get_mut().push(w);
                 }
+                false
             }
             std::collections::hash_map::Entry::Vacant(v) => {
                 v.insert(waiter.into_iter().collect());
                 let _ = self.tx.send(Some(id.to_string()));
+                true
             }
         }
     }
@@ -948,6 +969,16 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     let id = id.as_str();
     let l0_before = l0_count(raw, id).await?;
     if l0_before < L0_COMPACT_THRESHOLD {
+        // The L0 watch queued this pass from the writer's own view. When the stored manifest has fewer L0 SSTs, the writer
+        // either has not stored its newest manifest yet (the watch asks again in a moment) or has not seen a compaction yet:
+        // make it read the manifest now rather than at its next poll (`--writer-poll-secs`), its memtable flushes may be
+        // waiting on that view.
+        let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
+        if let Some(db) = writer {
+            if db.manifest().l0().len() >= L0_COMPACT_THRESHOLD {
+                let _ = db.refresh_manifest().await;
+            }
+        }
         return Ok(None);
     }
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
@@ -1480,6 +1511,8 @@ pub struct Maintenance {
     pub log: Arc<Mutex<MaintenanceLog>>,
     queue: Arc<CompactionQueue>,
     dispatcher: tokio::task::JoinHandle<()>,
+    watch_stop: Arc<std::sync::atomic::AtomicBool>,
+    l0_watch: tokio::task::JoinHandle<()>,
     gc_stop: Arc<std::sync::atomic::AtomicBool>,
     gc_task: tokio::task::JoinHandle<()>,
     workers: usize,
@@ -1519,6 +1552,7 @@ impl Maintenance {
                             }
                             Ok(None) => l0_count(&raw, &id).await.unwrap_or(0),
                             Err(e) => {
+                                eprintln!("compaction of tenant {id} failed: {e:#}");
                                 log.lock().unwrap().errors.push(format!("compact {id}: {e:#}"));
                                 usize::MAX / 2
                             }
@@ -1526,6 +1560,24 @@ impl Maintenance {
                         queue.finish(&id, l0_after);
                         drop(permit);
                     });
+                }
+            })
+        };
+        let watch_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let l0_watch = {
+            let (queue, stop) = (queue.clone(), watch_stop.clone());
+            tokio::spawn(async move {
+                use std::sync::atomic::Ordering::Relaxed;
+                while !stop.load(Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(L0_WATCH_MS.load(Relaxed).max(10))).await;
+                    if stop.load(Relaxed) {
+                        break;
+                    }
+                    for id in writers_over_l0_threshold() {
+                        if queue.request(&id, None) {
+                            L0_WATCH_REQUESTS.fetch_add(1, Relaxed);
+                        }
+                    }
                 }
             })
         };
@@ -1630,11 +1682,13 @@ impl Maintenance {
                 }
             })
         };
-        Self { log, queue, dispatcher, gc_stop, gc_task, workers, sem }
+        Self { log, queue, dispatcher, watch_stop, l0_watch, gc_stop, gc_task, workers, sem }
     }
 
     /// Stop accepting work and wait for in-flight compactions and the GC loop.
     pub async fn shutdown(self) -> Arc<Mutex<MaintenanceLog>> {
+        self.watch_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        let _ = self.l0_watch.await;
         self.queue.stop();
         let _ = self.dispatcher.await;
         let _ = self.sem.acquire_many(self.workers as u32).await;
