@@ -1,0 +1,1 @@
+{"clients":1,"dbs":1,"errors_measured":1,"errors_total":3,"gen_cores_used":0,"label":"","measured_s":5.004846709,"ops":0,"ops_per_cpu_s":0,"ops_per_s":0,"p50_ms":0,"p99_ms":0,"server_cores_used":0.009990315969136052,"server_cpu_s":0.05000000000000071,"workload":"insert"}

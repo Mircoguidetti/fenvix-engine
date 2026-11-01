@@ -25,7 +25,4 @@ wait $lg || true
 "$HERE/server.sh" stop fenvix
 taskset -c 3 "$PERF" report -i "$data" --no-children --sort symbol --stdio 2>/dev/null | grep -E '^ +[0-9]' | head -25 \
   | tee "$OUT/perf-$w-$layout-top.txt"
-# self time grouped by crate/module prefix (first path segment of the demangled name)
-taskset -c 3 "$PERF" report -i "$data" --no-children --sort dso --stdio 2>/dev/null | grep -E '^ +[0-9]' | head -10 \
-  > "$OUT/perf-$w-$layout-dso.txt"
-taskset -c 3 "$PERF" script -i "$data" 2>/dev/null | gzip > "$OUT/perf-$w-$layout.script.gz"
+taskset -c 3 "$PERF" script -i "$data" 2>/dev/null | gzip > "$OUT/perf-$w-$layout.script.gz" || true
