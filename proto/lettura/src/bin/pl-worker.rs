@@ -59,6 +59,8 @@ struct A {
     /// SOLO controllo negativo: manifest senza PUT condizionale
     #[arg(long)]
     senza_cas: bool,
+    #[arg(long, default_value_t = 0)]
+    riscrivi_max: u64,
 }
 
 #[tokio::main]
@@ -84,6 +86,7 @@ async fn main() -> anyhow::Result<()> {
         crash: a.crash,
         cache_byte: a.cache_mb << 20,
         senza_cas: a.senza_cas,
+        riscrivi_max: a.riscrivi_max,
     };
     let reg = RegistroRemoto::new(&a.addr, 4);
     let st = Store::minio(&a.bucket)?;

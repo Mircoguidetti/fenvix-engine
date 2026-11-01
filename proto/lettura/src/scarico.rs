@@ -62,6 +62,9 @@ pub struct CfgScarico {
     pub cache_byte: u64,
     /// SOLO controllo negativo del banco: manifest scritto senza condizione (deve far fallire la verifica)
     pub senza_cas: bool,
+    /// database piccolo: se tutte le sue run insieme non superano questi byte, lo scarico riscrive tutto il gruppo in
+    /// un solo SST (run vecchie + record nuovi) invece di aggiungere una run (0 = mai)
+    pub riscrivi_max: u64,
 }
 
 impl Default for CfgScarico {
@@ -86,6 +89,7 @@ impl Default for CfgScarico {
             crash: 0.0,
             cache_byte: 256 << 20,
             senza_cas: false,
+            riscrivi_max: 0,
         }
     }
 }
@@ -455,7 +459,26 @@ impl Worker {
         let nrec: u64 = got.iter().map(|(_, r)| r.len() as u64).sum();
         let voci_conf: Vec<(Db, Pos)> = got.iter().map(|(db, rs)| (*db, rs.last().unwrap().pos)).collect();
         let blocco = self.cfg.blocco;
-        let b = tokio::task::spawn_blocking(move || sst::build(voci_da_record(&got), blocco)).await?;
+        let totale: u64 = m.run.iter().map(|r| r.dim).sum();
+        let riscrivi = self.cfg.riscrivi_max > 0 && !m.run.is_empty() && totale <= self.cfg.riscrivi_max;
+        let mut vecchie = Vec::new();
+        if riscrivi {
+            for r in &m.run {
+                vecchie.push(self.leggi_run(g, r).await?);
+            }
+        }
+        let oriz = if self.cfg.tieni_tutte { None } else { Some(pos_make(now_ms().saturating_sub(self.cfg.orizzonte_ms), 0)) };
+        let b = tokio::task::spawn_blocking(move || -> anyhow::Result<sst::Built> {
+            let mut es = voci_da_record(&got);
+            if vecchie.is_empty() {
+                return Ok(sst::build(es, blocco));
+            }
+            for o in &vecchie {
+                es.extend(sst::all_entries(o)?);
+            }
+            Ok(sst::build(fondi(es, oriz, true), blocco))
+        })
+        .await??;
         let id = nuovo_id(b.max, "");
         let data = Bytes::from(b.data);
         let t_put = std::time::Instant::now();
@@ -466,6 +489,11 @@ impl Worker {
         let now = now_ms();
         let mut m2 = m.clone();
         m2.versione += 1;
+        if riscrivi {
+            for r in m2.run.drain(..) {
+                m2.da_cancellare.push(DaCancellare { id: r.id, dal_ms: now_ms() });
+            }
+        }
         m2.run.insert(0, run);
         for (db, p) in &voci_conf {
             m2.scaricato.insert(db_hex(db), *p);

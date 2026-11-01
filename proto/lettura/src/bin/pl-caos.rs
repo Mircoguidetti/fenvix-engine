@@ -57,6 +57,9 @@ struct A {
     /// controllo negativo: worker senza PUT condizionale del manifest
     #[arg(long)]
     senza_cas: bool,
+    /// passato ai worker: riscrittura completa dei database piccoli
+    #[arg(long, default_value_t = 0)]
+    riscrivi_max: u64,
     /// solo la verifica (registro ancora vivo e log già scritto)
     #[arg(long)]
     solo_verifica: bool,
@@ -76,6 +79,7 @@ fn avvia_worker(a: &A, i: usize, gen: u64) -> Child {
         .args(["--riposo-ms", "30000", "--stat-ms", "1000", "--paralleli", "4", "--intervallo-ms", "50"])
         .args(["--stat-file", a.out.join(format!("w{i}-{gen}.json")).to_str().unwrap(), "--nome", &format!("w{i}-{gen}")])
         .args(if a.senza_cas { vec!["--senza-cas"] } else { vec![] })
+        .args(["--riscrivi-max", &a.riscrivi_max.to_string()])
         .stdout(Stdio::from(out))
         .stderr(Stdio::from(err))
         .spawn()

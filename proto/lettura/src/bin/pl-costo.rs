@@ -83,6 +83,7 @@ async fn main() -> anyhow::Result<()> {
         "base" => (Raggruppa::PerDb, 60_000, 1 << 20, 16 << 20),
         "a" => (Raggruppa::PerDb, 600_000, 1 << 20, 16 << 20),
         "b" => (Raggruppa::Gruppi(1), 60_000, 256 << 20, 256 << 20),
+        "a2" => (Raggruppa::PerDb, 600_000, 1 << 20, 16 << 20),
         x => anyhow::bail!("variante sconosciuta {x}"),
     };
     let st_pre = Store::minio(&a.bucket)?;
@@ -115,6 +116,7 @@ async fn main() -> anyhow::Result<()> {
         crash: 0.0,
         cache_byte: 1 << 30,
         senza_cas: false,
+        riscrivi_max: if a.variante == "a2" { 4 << 20 } else { 0 },
     };
     let w = Worker::new(reg.clone(), st_w.clone(), wcfg);
     let cache = if a.cache == "ram" { Cache::ram(a.cache_mb << 20) } else { Cache::disco(a.cache_mb << 20, format!("/tmp/claude-0/cache-costo-{}", a.variante).into())? };
