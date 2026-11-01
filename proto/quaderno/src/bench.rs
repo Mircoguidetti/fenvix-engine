@@ -42,10 +42,9 @@ fn doc_key(s: &str) -> Bytes {
 /// Costo della validazione sul leader, isolato: validazione + codifica della voce + indicizzazione nella finestra
 /// (+ potatura per restare a regime), su un thread solo.
 pub fn valbench(records: u64, keys_per_rec: usize, dbs: u64, keyspace: u64, val: usize, window_recs: u64) {
-    let mut win = Window::new(true);
+    let mut win = Window::new(true, std::path::PathBuf::from("/nonesiste"));
     let mut pos: Pos = pos_make(now_ms(), 0);
     let value = Bytes::from(vec![7u8; val]);
-    let mut noload = |_: u64, _: u16| -> Bytes { unreachable!() };
     let mk = |i: u64| -> Vec<Write> {
         (0..keys_per_rec).map(|_| Write { key: doc_key(&format!("{:012}", rand::random::<u64>() % keyspace)), kind: Kind::Put, val: value.clone() }).collect::<Vec<_>>().into_iter().map(|w| { let _ = i; w }).collect()
     };
@@ -62,16 +61,17 @@ pub fn valbench(records: u64, keys_per_rec: usize, dbs: u64, keyspace: u64, val:
         if !ok {
             *conflicts += 1;
         }
-        let e = Entry::encode(1, index, pos, Body::Rec { txn: txn_id(), db, session: None, writes });
-        if let Body::Rec { txn, db, writes, .. } = &e.body {
-            win.apply(index, pos, *txn, db, writes, e.raw.len() as u32);
-        }
+        let e = std::sync::Arc::new(Entry::encode(1, index, pos, Body::Rec { txn: txn_id(), db, session: None, writes }));
+        win.apply(&e, crate::window::Loc::default());
         // a regime: il database esce dalla finestra dal fondo (già su S3)
-        let d = win.dbs.get_mut(&db).unwrap();
-        d.flushed = pos;
-        if d.recs.len() as u64 > per_db {
-            let p = d.recs.front().unwrap().pos;
-            win.trim_one(&db, p + 1, pos, &mut noload);
+        win.set_flushed(&db, pos, &Bytes::new());
+        let front = {
+            let d = win.db(&db).unwrap();
+            let d = d.read();
+            if d.recs.len() as u64 > per_db { d.recs.front().map(|r| r.pos) } else { None }
+        };
+        if let Some(p) = front {
+            win.trim_db(&db, p + 1, pos, Instant::now() + Duration::from_secs(1));
         }
         let t2 = Instant::now();
         if timed {
@@ -183,6 +183,10 @@ struct Iv {
     rwin: Option<Histogram<u64>>,
     rcold: Option<Histogram<u64>>,
     ryw: Option<Histogram<u64>>,
+    /// le stesse misure partendo dall'invio vero (non dal tick pianificato)
+    commit_s: Option<Histogram<u64>>,
+    rwin_s: Option<Histogram<u64>>,
+    rcold_s: Option<Histogram<u64>>,
 }
 
 const SHARDS: usize = 32;
@@ -214,7 +218,10 @@ fn rec(hs: &[Mutex<Iv>], which: u8, us: u64) {
         0 => &mut g.commit,
         1 => &mut g.rwin,
         2 => &mut g.rcold,
-        _ => &mut g.ryw,
+        3 => &mut g.ryw,
+        10 => &mut g.commit_s,
+        11 => &mut g.rwin_s,
+        _ => &mut g.rcold_s,
     };
     slot.get_or_insert_with(hist).record(us.max(1)).ok();
 }
@@ -223,8 +230,20 @@ fn merge(hs: &[Mutex<Iv>], reset: bool) -> Iv {
     let mut o = Iv::default();
     for h in hs {
         let mut g = h.lock();
-        let x = if reset { std::mem::take(&mut *g) } else { Iv { commit: g.commit.clone(), rwin: g.rwin.clone(), rcold: g.rcold.clone(), ryw: g.ryw.clone() } };
-        for (a, b) in [(&mut o.commit, x.commit), (&mut o.rwin, x.rwin), (&mut o.rcold, x.rcold), (&mut o.ryw, x.ryw)] {
+        let x = if reset {
+            std::mem::take(&mut *g)
+        } else {
+            Iv { commit: g.commit.clone(), rwin: g.rwin.clone(), rcold: g.rcold.clone(), ryw: g.ryw.clone(), commit_s: g.commit_s.clone(), rwin_s: g.rwin_s.clone(), rcold_s: g.rcold_s.clone() }
+        };
+        for (a, b) in [
+            (&mut o.commit, x.commit),
+            (&mut o.rwin, x.rwin),
+            (&mut o.rcold, x.rcold),
+            (&mut o.ryw, x.ryw),
+            (&mut o.commit_s, x.commit_s),
+            (&mut o.rwin_s, x.rwin_s),
+            (&mut o.rcold_s, x.rcold_s),
+        ] {
             if let Some(b) = b {
                 a.get_or_insert_with(hist).add(&b).ok();
             }
@@ -236,7 +255,9 @@ fn merge(hs: &[Mutex<Iv>], reset: bool) -> Iv {
 fn ivj(i: &Iv) -> serde_json::Value {
     let e = hist();
     json!({"commit": hj(i.commit.as_ref().unwrap_or(&e)), "read_window": hj(i.rwin.as_ref().unwrap_or(&e)),
-           "read_other": hj(i.rcold.as_ref().unwrap_or(&e)), "ryw": hj(i.ryw.as_ref().unwrap_or(&e))})
+           "read_other": hj(i.rcold.as_ref().unwrap_or(&e)), "ryw": hj(i.ryw.as_ref().unwrap_or(&e)),
+           "commit_from_send": hj(i.commit_s.as_ref().unwrap_or(&e)), "read_window_from_send": hj(i.rwin_s.as_ref().unwrap_or(&e)),
+           "read_other_from_send": hj(i.rcold_s.as_ref().unwrap_or(&e))})
 }
 
 /// Pianifica `rate` operazioni al secondo (ciclo aperto, tick da 1 ms); la latenza parte dall'istante pianificato.
@@ -314,12 +335,16 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
             reads: vec![],
             session: None,
         };
+        let t_send = Instant::now();
         match st.cl.commit(&c, Duration::from_secs(10)).await {
             Outcome::Committed { .. } => {
                 let us = sched.elapsed().as_micros() as u64;
+                let us_s = t_send.elapsed().as_micros() as u64;
                 st.ok.fetch_add(1, Relaxed);
                 rec(&st.iv, 0, us);
                 rec(&st.tot, 0, us);
+                rec(&st.iv, 10, us_s);
+                rec(&st.tot, 10, us_s);
                 let i = st.recent_i.fetch_add(1, Relaxed) as usize & 0xffff;
                 st.recent[i].store((db << 32) | kn, Relaxed);
             }
@@ -365,9 +390,11 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                     (HOT_DB, doc_key(&format!("cold-{}", rand::random::<u64>())))
                 };
                 let r = rand::random::<usize>() % st.cl.n();
+                let t_send = Instant::now();
                 match st.cl.call(r, &Req::Get { db: db_id(db), key, at, wait_ms: 50, spec: false, dal: 0 }, Duration::from_secs(2)).await {
                     Ok(Resp::Get(g)) => {
                         let us = sched.elapsed().as_micros() as u64;
+                        let us_s = t_send.elapsed().as_micros() as u64;
                         let ow = matches!(g, GetRes::OutOfWindow { .. });
                         if ow {
                             st.reads_ow.fetch_add(1, Relaxed);
@@ -376,6 +403,8 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                         let w = if window { 1 } else { 2 };
                         rec(&st.iv, w, us);
                         rec(&st.tot, w, us);
+                        rec(&st.iv, w + 10, us_s);
+                        rec(&st.tot, w + 10, us_s);
                     }
                     Ok(Resp::Behind(_)) => {
                         st.reads_behind.fetch_add(1, Relaxed);

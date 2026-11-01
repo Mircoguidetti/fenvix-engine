@@ -9,14 +9,22 @@
 //! - il leader valida le scritture (modalità validata) sulla finestra, che comprende anche le voci accettate ma non
 //!   ancora confermate (vengono prima nell'ordine), e assegna la posizione (orologio ibrido 48+16 bit).
 //!
-//! Tutta la logica gira su un thread solo (`Node::run`), alimentato da un canale di eventi: messaggi delle altre
-//! repliche, richieste dei client, fine dei fdatasync. Ogni giro del ciclo raccoglie tutti gli eventi pronti e poi
-//! spedisce: così le scritture si raggruppano da sole (un fdatasync e un messaggio per gruppo).
+//! La logica del registro gira su un thread solo (`Node::run`), alimentato da un canale di eventi: messaggi delle altre
+//! repliche, commit, fine dei fdatasync. Ogni giro del ciclo raccoglie gli eventi pronti e poi spedisce: così le
+//! scritture si raggruppano da sole (un fdatasync e un messaggio per gruppo).
+//!
+//! Le letture (get, scan, attendi), `scaricabili`, `pendenti`, `stato_scarico` e `status` NON passano dal thread
+//! principale: le servono i thread di rete leggendo la finestra (un lock per database) e la "posizione leggibile"
+//! pubblicata dal thread principale su un canale `watch`. I lavori periodici del thread principale (potatura,
+//! applicazione degli scarichi, indicizzazione sui follower, sfratto) procedono a passi con un limite di tempo, e un
+//! cronometro per tipo di lavoro registra il blocco più lungo di ciascuno.
 
 use crate::codec::*;
 use crate::net::{spawn_out_link, FrameReader};
 use crate::store::{self, Ckpt, DiskOp, RaftState};
-use crate::window::{Val, Window};
+use crate::window::{Loc, Window};
+use parking_lot::Mutex;
+use tokio::sync::watch;
 use bytes::{Bytes, BytesMut};
 use crossbeam_channel::{Receiver, Sender};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
@@ -49,6 +57,28 @@ pub enum Ev {
     Peer(Msg),
     Client(UnboundedSender<Vec<u8>>, u64, Req),
     Disk(u64, u64),
+}
+
+/// Stato condiviso tra il thread principale e i thread di rete.
+pub struct Shared {
+    pub win: Window,
+    /// posizione fino alla quale la replica sa rispondere: confermata E già indicizzata nella finestra
+    pub readable: watch::Sender<Pos>,
+    /// fotografia dello stato aggiornata dal thread principale ogni 100 ms
+    pub status: Mutex<Status>,
+}
+
+/// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
+pub const SW_NAMES: [&str; 16] = [
+    "commit", "lettura_spec", "append_follower", "risposte_append", "voti", "disco_fatto", "indice_follower", "potatura",
+    "scarichi_applicati", "sfratto", "fronte_e_segmenti", "invio_repliche", "invio_disco", "conferma", "fotografia", "altre_richieste",
+];
+#[derive(Clone, Copy, Default)]
+pub struct Sw {
+    pub n: u64,
+    pub tot_us: u64,
+    pub max_us: u64,
+    pub over_1ms: u64,
 }
 
 struct Reply {
@@ -93,18 +123,6 @@ struct Peer {
     probing: bool,
 }
 
-enum WaitKind {
-    Get { db: Db, key: Bytes, dal: Pos },
-    Scan { db: Db, from: Bytes, to: Bytes, limit: u32, dal: Pos },
-    Wait,
-}
-struct Waiter {
-    kind: WaitKind,
-    at: Pos,
-    deadline: Instant,
-    reply: Reply,
-}
-
 pub struct Node {
     cfg: Config,
     rx: Receiver<Ev>,
@@ -130,7 +148,19 @@ pub struct Node {
     applied: u64,
     commit_pos: Pos,
     all_match: u64,
-    win: Window,
+    sh: Arc<Shared>,
+    /// indice fino al quale le voci sono nella finestra (sui follower l'indicizzazione segue il disco)
+    indexed: u64,
+    published: Pos,
+    flush_q: VecDeque<(Db, Pos, Bytes)>,
+    trim_list: Vec<Db>,
+    trim_cursor: usize,
+    trim_next: Instant,
+    sw: [Sw; 16],
+    last_snap: Instant,
+    rounds: u64,
+    rounds_over: u64,
+    rounds_over_cpu: u64,
     txns: HashMap<TxnId, (u64, Pos)>,
     sessions: HashMap<(Bytes, u64), (u64, Pos)>,
     peers: Vec<Peer>,
@@ -138,8 +168,6 @@ pub struct Node {
     reads: Vec<(u64, u64, Reply)>,
     need_hb: bool,
     hb_seq: u64,
-    waiters: BTreeMap<(Pos, u64), Waiter>,
-    wseq: u64,
     election_deadline: Instant,
     last_heard_leader: Instant,
     prevotes: HashSet<u8>,
@@ -151,7 +179,6 @@ pub struct Node {
     evicted: u64,
     last_seen_seq: u64,
     last_ack_sent: u64,
-    last_trim: Instant,
     disk_bytes: u64,
     /// follower: le voci ricevute vanno prima al disco, poi nella finestra
     defer_index: bool,
@@ -167,6 +194,22 @@ fn rand_ms(a: u64, b: u64) -> Duration {
     Duration::from_millis(a + rand::random::<u64>() % (b - a + 1))
 }
 
+/// Tempo CPU del thread chiamante (µs).
+pub fn thread_cpu_us() -> u64 {
+    let mut ts = libc::timespec { tv_sec: 0, tv_nsec: 0 };
+    unsafe { libc::clock_gettime(libc::CLOCK_THREAD_CPUTIME_ID, &mut ts) };
+    ts.tv_sec as u64 * 1_000_000 + ts.tv_nsec as u64 / 1000
+}
+
+/// Priorità del thread chiamante (nice; negativo = più priorità). Sulla macchina condivisa dai banchi il thread
+/// principale e quello del disco delle repliche passano davanti al generatore di carico e a MinIO.
+pub fn set_thread_nice(n: i32) {
+    unsafe {
+        let tid = libc::syscall(libc::SYS_gettid) as libc::id_t;
+        libc::setpriority(libc::PRIO_PROCESS, tid, n);
+    }
+}
+
 pub fn rss_kb() -> u64 {
     std::fs::read_to_string("/proc/self/status")
         .ok()
@@ -179,7 +222,10 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
     std::fs::create_dir_all(&cfg.dir)?;
     let (ev_tx, ev_rx) = crossbeam_channel::unbounded::<Ev>();
     let (disk_tx, disk_rx) = crossbeam_channel::unbounded::<DiskOp>();
-    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(std::env::var("PQ_IO_THREADS").ok().and_then(|x| x.parse().ok()).unwrap_or(1)).enable_all().build()?;
+    let io_threads = std::env::var("PQ_IO_THREADS").ok().and_then(|x| x.parse().ok()).unwrap_or(2);
+    let io_nice: i32 = std::env::var("PQ_IO_NICE").ok().and_then(|x| x.parse().ok()).unwrap_or(-10);
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(io_threads).on_thread_start(move || set_thread_nice(io_nice)).enable_all().build()?;
+    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()) });
     let mut peers = vec![];
     {
         let _g = rt.enter();
@@ -214,11 +260,13 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
             }
         });
         let t = ev_tx.clone();
+        let sh2 = sh.clone();
         rt.spawn(async move {
             loop {
                 let Ok((s, _)) = lc.accept().await else { continue };
                 let _ = s.set_nodelay(true);
                 let t = t.clone();
+                let sh = sh2.clone();
                 tokio::spawn(async move {
                     let (rd, mut wr) = s.into_split();
                     let (rtx, mut rrx) = tokio::sync::mpsc::unbounded_channel::<Vec<u8>>();
@@ -242,8 +290,11 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                     while let Ok(body) = r.next().await {
                         match dec_req(body) {
                             Ok((id, q)) => {
-                                if t.send(Ev::Client(rtx.clone(), id, q)).is_err() {
-                                    return;
+                                // letture e richieste di servizio: qui, senza passare dal thread principale
+                                if let Some(q) = serve_local(&sh, &rtx, id, q) {
+                                    if t.send(Ev::Client(rtx.clone(), id, q)).is_err() {
+                                        return;
+                                    }
                                 }
                             }
                             Err(_) => return,
@@ -254,10 +305,17 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
         });
     }
     let dt = ev_tx.clone();
-    store::spawn_disk(cfg.dir.clone(), disk_rx, cfg.seg_bytes, move |gen, last| {
-        let _ = dt.send(Ev::Disk(gen, last));
-    });
-    let mut node = Node::recover(cfg, ev_rx, disk_tx, peers)?;
+    let sh3 = sh.clone();
+    store::spawn_disk(
+        cfg.dir.clone(),
+        disk_rx,
+        cfg.seg_bytes,
+        move |gen, last| {
+            let _ = dt.send(Ev::Disk(gen, last));
+        },
+        move || sh3.win.flushed_all(),
+    );
+    let mut node = Node::recover(cfg, ev_rx, disk_tx, peers, sh)?;
     eprintln!("replica {} pronta: indice {}..{} mandato {}", node.cfg.id, node.front, node.last_index(), node.term);
     println!("READY");
     node.run();
@@ -266,7 +324,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
 }
 
 impl Node {
-    fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Vec<u8>>)>) -> anyhow::Result<Node> {
+    fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Vec<u8>>)>, sh: Arc<Shared>) -> anyhow::Result<Node> {
         let st: RaftState = std::fs::read(cfg.dir.join("state")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(RaftState { term: 0, voted: -1 });
         let ck: Option<Ckpt> = std::fs::read(cfg.dir.join("ckpt")).ok().and_then(|b| serde_json::from_slice(&b).ok());
         let (recs, last_seg, last_len) = store::recover(&cfg.dir)?;
@@ -298,7 +356,18 @@ impl Node {
             applied: prev_index,
             commit_pos: ckv.map(|c| c.prev_pos).unwrap_or(0),
             all_match: prev_index,
-            win: Window::new(genesis),
+            sh,
+            indexed: prev_index,
+            published: 0,
+            flush_q: VecDeque::new(),
+            trim_list: vec![],
+            trim_cursor: 0,
+            trim_next: now,
+            sw: [Sw::default(); 16],
+            last_snap: now,
+            rounds: 0,
+            rounds_over: 0,
+            rounds_over_cpu: 0,
             txns: HashMap::with_capacity(1 << 21),
             sessions: HashMap::new(),
             peers: peers
@@ -309,8 +378,6 @@ impl Node {
             reads: vec![],
             need_hb: false,
             hb_seq: 0,
-            waiters: BTreeMap::new(),
-            wseq: 0,
             election_deadline: now + rand_ms(cfg.elect_min_ms, cfg.elect_max_ms),
             last_heard_leader: now - Duration::from_secs(3600),
             prevotes: HashSet::new(),
@@ -322,7 +389,6 @@ impl Node {
             evicted: 0,
             last_seen_seq: 0,
             last_ack_sent: 0,
-            last_trim: now,
             disk_bytes: 0,
             defer_index: false,
             to_index: vec![],
@@ -332,10 +398,11 @@ impl Node {
             h_loop: hdrhistogram::Histogram::new(3).unwrap(),
             cfg,
         };
+        n.sh.win.genesis.store(genesis, std::sync::atomic::Ordering::Relaxed);
         if let Some(c) = ckv {
             for (h, p) in &c.flushed {
                 if let Some(db) = store::unhex16(h) {
-                    n.win.dbs.entry(db).or_default().flushed = *p;
+                    n.sh.win.set_flushed(&db, *p, &Bytes::new());
                 }
             }
         }
@@ -410,26 +477,45 @@ impl Node {
 
     /// Aggiunge una voce in coda (in RAM e nella finestra); il disco la riceve al prossimo `submit_disk`.
     fn push_slot(&mut self, e: Arc<Entry>, seg: u32, off: u64) {
+        let loc = Loc { seg, off, len: e.raw.len() as u32 };
+        self.resident += e.raw.len() as u64;
+        self.log.push_back(Slot { term: e.term, pos: e.pos, len: e.raw.len() as u32, ent: Some(e.clone()), seg, off, done: false, t: Instant::now() });
         if self.defer_index {
             self.to_index.push(e.index);
         } else {
-            self.index_entry(&e);
+            self.index_entry(&e, loc);
+            self.indexed = e.index;
         }
-        self.resident += e.raw.len() as u64;
-        self.log.push_back(Slot { term: e.term, pos: e.pos, len: e.raw.len() as u32, ent: Some(e), seg, off, done: false, t: Instant::now() });
+    }
+
+    /// Indicizza le voci in attesa (sui follower), al più fino a `deadline`.
+    fn flush_index_until(&mut self, deadline: Option<Instant>) {
+        let mut k = 0;
+        while k < self.to_index.len() {
+            if let Some(d) = deadline {
+                if k % 8 == 7 && Instant::now() >= d {
+                    break;
+                }
+            }
+            let i = self.to_index[k];
+            let s = &self.log[(i - self.front) as usize];
+            let loc = Loc { seg: s.seg, off: s.off, len: s.len };
+            let e = s.ent.clone().expect("voce appena aggiunta");
+            self.index_entry(&e, loc);
+            self.indexed = i;
+            k += 1;
+        }
+        self.to_index.drain(..k);
     }
 
     fn flush_index(&mut self) {
-        for i in std::mem::take(&mut self.to_index) {
-            let e = self.log[(i - self.front) as usize].ent.clone().expect("voce appena aggiunta");
-            self.index_entry(&e);
-        }
+        self.flush_index_until(None);
     }
 
-    fn index_entry(&mut self, e: &Arc<Entry>) {
+    fn index_entry(&mut self, e: &Arc<Entry>, loc: Loc) {
         let index = e.index;
-        if let Body::Rec { txn, db, session, writes } = &e.body {
-            self.win.apply(index, e.pos, *txn, db, writes, e.raw.len() as u32);
+        if let Body::Rec { txn, session, .. } = &e.body {
+            self.sh.win.apply(e, loc);
             self.txns.insert(*txn, (index, e.pos));
             if let Some(s) = session {
                 self.sessions.insert((s.lsid.clone(), s.txn_number), (index, e.pos));
@@ -452,6 +538,7 @@ impl Node {
 
     fn truncate_from(&mut self, i: u64) {
         assert!(i > self.commit, "troncamento di una voce confermata ({i} ≤ {})", self.commit);
+        self.flush_index();
         let (seg, off) = {
             let s = self.slot(i).unwrap();
             (s.seg, s.off)
@@ -465,7 +552,7 @@ impl Node {
             }
             self.disk_bytes -= s.len as u64;
             if let Body::Rec { db, session, .. } = &e.body {
-                if let Some(txn) = self.win.unapply_last(db, idx) {
+                if let Some(txn) = self.sh.win.unapply_last(db, idx) {
                     if self.txns.get(&txn).map(|x| x.0) == Some(idx) {
                         self.txns.remove(&txn);
                     }
@@ -492,6 +579,7 @@ impl Node {
         self.submitted = self.submitted.min(i - 1);
         self.durable = self.durable.min(i - 1);
         self.verified = self.verified.min(i - 1);
+        self.indexed = self.indexed.min(i - 1);
         self.evict_cursor = self.evict_cursor.min(i);
         let _ = self.disk_tx.send(DiskOp::Truncate { seg, off });
     }
@@ -531,9 +619,13 @@ impl Node {
     // -------------------------------------------------------------------------------------------- ciclo
 
     pub fn run(&mut self) {
+        set_thread_nice(-10);
         loop {
+            let (mut w0, mut c0) = (Instant::now(), 0);
             match self.rx.recv_timeout(Duration::from_millis(1)) {
                 Ok(ev) => {
+                    // il giro si misura dal primo evento ricevuto (non dall'attesa a canale vuoto)
+                    (w0, c0) = (Instant::now(), thread_cpu_us());
                     // giri brevi: disco e rete partono presto (al più 1024 eventi o 0,5 ms per giro)
                     let t0 = Instant::now();
                     self.handle(ev);
@@ -547,18 +639,70 @@ impl Node {
                         }
                     }
                 }
-                Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+                Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
+                    (w0, c0) = (Instant::now(), thread_cpu_us());
+                }
                 Err(_) => return,
             }
             let t1 = Instant::now();
             self.tick();
+            let t = Instant::now();
             self.submit_disk();
+            self.sw(12, t);
+            let t = Instant::now();
             self.send_out();
+            self.sw(11, t);
+            self.publish();
             self.h_loop.record(t1.elapsed().as_micros() as u64).ok();
+            // giro lungo: lavoro vero (CPU del thread) o sospensione da parte del sistema operativo?
+            let wall = w0.elapsed().as_micros() as u64;
+            if wall > 1000 {
+                self.rounds_over += 1;
+                if thread_cpu_us().saturating_sub(c0) > 1000 {
+                    self.rounds_over_cpu += 1;
+                }
+            }
+            self.rounds += 1;
+        }
+    }
+
+    fn sw(&mut self, k: usize, t: Instant) {
+        let us = t.elapsed().as_micros() as u64;
+        let s = &mut self.sw[k];
+        s.n += 1;
+        s.tot_us += us;
+        s.max_us = s.max_us.max(us);
+        if us > 1000 {
+            s.over_1ms += 1;
+        }
+    }
+
+    /// Pubblica la posizione leggibile: confermata e già nella finestra.
+    fn publish(&mut self) {
+        let ri = self.commit.min(self.indexed);
+        let p = self.pos_at(ri).min(self.commit_pos);
+        if p > self.published {
+            self.published = p;
+            self.sh.readable.send_replace(p);
         }
     }
 
     fn handle(&mut self, ev: Ev) {
+        let t = Instant::now();
+        let k = match &ev {
+            Ev::Peer(Msg::Append { .. }) => 2,
+            Ev::Peer(Msg::AppendResp { .. }) => 3,
+            Ev::Peer(_) => 4,
+            Ev::Client(_, _, Req::Commit(_)) => 0,
+            Ev::Client(_, _, Req::Get { .. }) => 1,
+            Ev::Client(..) => 15,
+            Ev::Disk(..) => 5,
+        };
+        self.handle_ev(ev);
+        self.sw(k, t);
+    }
+
+    fn handle_ev(&mut self, ev: Ev) {
         match ev {
             Ev::Peer(m) => self.on_msg(m),
             Ev::Client(conn, id, q) => self.on_req(Reply { conn, id }, q),
@@ -613,6 +757,7 @@ impl Node {
     }
 
     fn become_leader(&mut self) {
+        self.flush_index();
         eprintln!("replica {}: guida, mandato {} (indice {})", self.me(), self.term, self.last_index());
         self.role = Role::Leader;
         self.leader = self.me() as i32;
@@ -785,13 +930,8 @@ impl Node {
             if !is_rec {
                 let e = self.entry(i);
                 if let Body::Flushed(items) = &e.body {
-                    for (db, p, etag) in items {
-                        let d = self.win.dbs.entry(*db).or_default();
-                        if *p > d.flushed {
-                            d.flushed = *p;
-                            d.etag = etag.clone();
-                        }
-                    }
+                    // applicati a passi dal tick (possono essere migliaia di database)
+                    self.flush_q.extend(items.iter().cloned());
                 }
                 if !matches!(e.body, Body::Rec { .. }) {
                     let sub = self.submitted;
@@ -820,7 +960,6 @@ impl Node {
             }
             self.check_reads();
         }
-        self.wake_waiters(false);
     }
 
     fn check_reads(&mut self) {
@@ -949,7 +1088,7 @@ impl Node {
             let first = next;
             if !probing {
                 let mut bytes = 0usize;
-                while next <= last && next - matched <= self.cfg.max_inflight && bytes < (2 << 20) {
+                while next <= last && next - matched <= self.cfg.max_inflight && bytes < (128 << 10) {
                     let r = self.raw_at(next);
                     bytes += r.len();
                     entries.push(r);
@@ -1013,66 +1152,75 @@ impl Node {
                 }
             }
         }
-        // attese scadute
-        if !self.waiters.is_empty() {
-            self.wake_waiters(true);
+        // lavori periodici, ciascuno a passi brevi e cronometrato
+        if !self.to_index.is_empty() {
+            let t = Instant::now();
+            self.flush_index_until(Some(t + Duration::from_micros(500)));
+            self.sw(6, t);
         }
-        if now.duration_since(self.last_trim) >= Duration::from_millis(200) {
-            self.last_trim = now;
-            self.trim();
+        if !self.flush_q.is_empty() {
+            let t = Instant::now();
+            let dl = t + Duration::from_micros(200);
+            let mut k = 0;
+            while let Some((db, p, etag)) = self.flush_q.pop_front() {
+                self.sh.win.set_flushed(&db, p, &etag);
+                k += 1;
+                if k % 16 == 0 && Instant::now() >= dl {
+                    break;
+                }
+            }
+            self.sw(8, t);
+        }
+        if now >= self.trim_next {
+            let t = Instant::now();
+            self.trim_step(t + Duration::from_micros(200));
+            self.sw(7, t);
+        }
+        if self.resident > self.cfg.mem_cap {
+            let t = Instant::now();
+            self.evict_step(t + Duration::from_micros(200));
+            self.sw(9, t);
+        }
+        {
+            let t = Instant::now();
+            self.front_and_segments();
+            self.sw(10, t);
+        }
+        if now.duration_since(self.last_snap) >= Duration::from_millis(100) {
+            self.last_snap = now;
+            let t = Instant::now();
+            self.snapshot();
+            self.sw(14, t);
         }
     }
 
-    fn wake_waiters(&mut self, check_deadline: bool) {
-        let cp = self.commit_pos;
-        let mut ready = vec![];
-        while let Some((&(p, s), _)) = self.waiters.first_key_value() {
-            if p > cp {
-                break;
-            }
-            ready.push(self.waiters.remove(&(p, s)).unwrap());
+    /// Potatura a passi: gira sui database con un cursore, al più fino a `deadline`.
+    fn trim_step(&mut self, deadline: Instant) {
+        if self.trim_cursor >= self.trim_list.len() {
+            self.trim_list = self.sh.win.all_dbs();
+            self.trim_cursor = 0;
         }
-        if check_deadline {
-            let now = Instant::now();
-            let late: Vec<(Pos, u64)> = self.waiters.iter().filter(|(_, w)| w.deadline <= now).map(|(k, _)| *k).collect();
-            for k in late {
-                let w = self.waiters.remove(&k).unwrap();
-                w.reply.send(&Resp::Behind(cp));
-            }
-        }
-        for w in ready {
-            self.answer_read(w.kind, w.at, w.reply);
-        }
-    }
-
-    fn answer_read(&mut self, kind: WaitKind, at: Pos, reply: Reply) {
-        let (log, front, reader) = (&self.log, self.front, &mut self.reader);
-        let mut load = |i: u64, wi: u16| load_val(log, front, reader, i, wi);
-        match kind {
-            WaitKind::Get { db, key, dal } => {
-                let g = self.win.get(&db, &key, at, dal, &mut load);
-                reply.send(&Resp::Get(g));
-            }
-            WaitKind::Scan { db, from, to, limit, dal } => {
-                let v = self.win.scan(&db, &from, &to, at, limit as usize, dal, &mut load);
-                reply.send(&Resp::Scan(v));
-            }
-            WaitKind::Wait => reply.send(&Resp::Pos(self.commit_pos)),
-        }
-    }
-
-    fn trim(&mut self) {
         let cutoff = pos_make(now_ms().saturating_sub(self.cfg.window_ms), 0);
         let cp = self.commit_pos;
         let mut gone = vec![];
-        {
-            let (log, front, reader) = (&self.log, self.front, &mut self.reader);
-            let mut load = |i: u64, wi: u16| load_val(log, front, reader, i, wi);
-            let dbs: Vec<Db> = self.win.dbs.iter().filter(|(_, d)| d.recs.front().map(|r| r.pos <= d.flushed && r.pos < cutoff).unwrap_or(false)).map(|(k, _)| *k).collect();
-            for db in dbs {
-                while let Some(r) = self.win.trim_one(&db, cutoff, cp, &mut load) {
-                    gone.push((r.index, r.txn));
-                }
+        if self.trim_list.is_empty() {
+            self.trim_next = Instant::now() + Duration::from_millis(200);
+        }
+        while self.trim_cursor < self.trim_list.len() {
+            let db = self.trim_list[self.trim_cursor];
+            let (out, more) = self.sh.win.trim_db(&db, cutoff, cp, deadline);
+            gone.extend(out);
+            if more {
+                break; // stesso database al prossimo giro
+            }
+            self.trim_cursor += 1;
+            if self.trim_cursor >= self.trim_list.len() {
+                // giro completo: il prossimo tra 200 ms
+                self.trim_next = Instant::now() + Duration::from_millis(200);
+                break;
+            }
+            if self.trim_cursor % 16 == 0 && Instant::now() >= deadline {
+                break;
             }
         }
         for (i, txn) in gone {
@@ -1093,10 +1241,15 @@ impl Node {
             let f = self.front;
             self.sessions.retain(|_, v| v.0 >= f);
         }
-        // fronte del registro in RAM: voci uscite dalla finestra, confermate e presenti su tutte e tre le repliche
+    }
+
+    /// Fronte del registro in RAM (voci uscite dalla finestra, confermate e su tutte e tre le repliche) e segmenti
+    /// interamente prima del fronte: il checkpoint e la cancellazione li fa il thread del disco.
+    fn front_and_segments(&mut self) {
         let am = if self.role == Role::Leader { self.all_match } else { self.all_match.min(self.commit) };
+        let mut k = 0;
         while let Some(s) = self.log.front() {
-            if !(s.done && self.front <= self.commit && self.front <= am && self.front <= self.durable) {
+            if !(s.done && self.front <= self.commit && self.front <= am && self.front <= self.durable && self.front <= self.indexed) {
                 break;
             }
             let s = self.log.pop_front().unwrap();
@@ -1106,94 +1259,102 @@ impl Node {
             self.prev_term = s.term;
             self.prev_pos = s.pos;
             self.front += 1;
+            k += 1;
+            if k >= 20_000 {
+                break;
+            }
         }
-        // segmenti interamente prima del fronte: si cancellano dopo aver scritto il checkpoint
         let dead: Vec<u32> = self.segs.iter().filter(|(s, (_, l))| **s != self.cur_seg && *l < self.front).map(|(s, _)| *s).collect();
         if !dead.is_empty() {
-            let ck = Ckpt {
-                prev_index: self.front - 1,
-                prev_term: self.prev_term,
-                prev_pos: self.prev_pos,
-                flushed: self.win.dbs.iter().filter(|(_, d)| d.flushed > 0).map(|(k, d)| (store::hex(k), d.flushed)).collect(),
-            };
-            store::write_atomic(&self.cfg.dir, "ckpt", &serde_json::to_vec(&ck).unwrap()).expect("checkpoint");
-            self.win.genesis = false;
-            for s in dead {
-                self.segs.remove(&s);
-                self.reader.forget(s);
-                let _ = self.disk_tx.send(DiskOp::Delete { seg: s });
+            self.sh.win.genesis.store(false, std::sync::atomic::Ordering::Relaxed);
+            for s in &dead {
+                self.segs.remove(s);
+                self.reader.forget(*s);
             }
-            self.disk_bytes = 0; // ricalcolato sotto
-            let segs: Vec<u32> = self.segs.keys().copied().collect();
-            for s in segs {
-                if let Ok(m) = std::fs::metadata(store::seg_path(&self.cfg.dir, s)) {
-                    self.disk_bytes += m.len();
+            self.disk_bytes = self.disk_bytes.saturating_sub(dead.len() as u64 * self.cfg.seg_bytes);
+            let _ = self.disk_tx.send(DiskOp::CkptDelete { prev_index: self.front - 1, prev_term: self.prev_term, prev_pos: self.prev_pos, segs: dead });
+        }
+    }
+
+    /// Tetto di RAM: i valori più vecchi ancora nella finestra vanno su disco (a passi).
+    fn evict_step(&mut self, deadline: Instant) {
+        let target = self.cfg.mem_cap / 10 * 9;
+        let mut i = self.evict_cursor.max(self.front);
+        let lim = self.durable.min(self.indexed).min(self.last_index());
+        let mut n = 0;
+        while self.resident > target && i <= lim {
+            let k = (i - self.front) as usize;
+            if let Some(e) = self.log[k].ent.clone() {
+                if let Body::Rec { db, writes, .. } = &e.body {
+                    let s = &self.log[k];
+                    self.sh.win.evict(db, e.pos, Loc { seg: s.seg, off: s.off, len: s.len }, writes);
                 }
+                self.log[k].ent = None;
+                self.resident -= self.log[k].len as u64;
+                self.evicted += 1;
+            }
+            i += 1;
+            n += 1;
+            if n % 16 == 0 && Instant::now() >= deadline {
+                break;
             }
         }
-        // tetto di RAM: i valori più vecchi ancora nella finestra vanno su disco
-        if self.resident > self.cfg.mem_cap {
-            let target = self.cfg.mem_cap / 10 * 9;
-            let mut i = self.evict_cursor.max(self.front);
-            let lim = self.durable.min(self.last_index());
-            while self.resident > target && i <= lim {
-                let k = (i - self.front) as usize;
-                if let Some(e) = self.log[k].ent.clone() {
-                    if let Body::Rec { db, writes, .. } = &e.body {
-                        self.win.evict(db, e.pos, i, writes);
-                    }
-                    self.log[k].ent = None;
-                    self.resident -= self.log[k].len as u64;
-                    self.evicted += 1;
-                }
-                i += 1;
-            }
-            self.evict_cursor = i;
-        }
+        self.evict_cursor = i;
+    }
+
+    /// Fotografia dello stato per `status` (servito dai thread di rete).
+    fn snapshot(&mut self) {
+        let sw: serde_json::Map<String, serde_json::Value> = SW_NAMES
+            .iter()
+            .zip(self.sw.iter())
+            .filter(|(_, s)| s.n > 0)
+            .map(|(n, s)| (n.to_string(), serde_json::json!({"n": s.n, "tot_ms": s.tot_us / 1000, "max_us": s.max_us, "sopra_1ms": s.over_1ms})))
+            .collect();
+        let st = Status {
+            id: self.me(),
+            role: format!("{:?}", self.role),
+            term: self.term,
+            leader: self.leader,
+            last_index: self.last_index(),
+            commit_index: self.commit,
+            commit_pos: self.commit_pos,
+            durable: self.durable,
+            log_front: self.front,
+            resident_bytes: self.resident,
+            evicted: self.evicted,
+            segments: self.segs.len() as u64,
+            disk_bytes: self.disk_bytes,
+            diag: format!(
+                "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                self.h_durable.value_at_quantile(0.5),
+                self.h_durable.value_at_quantile(0.99),
+                self.h_ack.value_at_quantile(0.5),
+                self.h_ack.value_at_quantile(0.99),
+                self.h_commit.value_at_quantile(0.5),
+                self.h_commit.value_at_quantile(0.99),
+                self.h_loop.max(),
+                self.rounds,
+                self.rounds_over,
+                self.rounds_over_cpu,
+                serde_json::Value::Object(sw)
+            ),
+            ..Default::default()
+        };
+        *self.sh.status.lock() = st;
     }
 
     // -------------------------------------------------------------------------------------------- client
 
-    fn park(&mut self, kind: WaitKind, at: Pos, wait_ms: u32, reply: Reply) {
-        if wait_ms == 0 {
-            reply.send(&Resp::Behind(self.commit_pos));
-            return;
-        }
-        self.wseq += 1;
-        self.waiters.insert((at, self.wseq), Waiter { kind, at, deadline: Instant::now() + Duration::from_millis(wait_ms as u64), reply });
-    }
-
     fn on_req(&mut self, reply: Reply, q: Req) {
         match q {
             Req::Commit(c) => self.on_commit(reply, c),
-            Req::Get { db, key, at, wait_ms, spec, dal } => {
-                if spec {
-                    if self.role != Role::Leader {
-                        reply.send(&Resp::NotLeader(self.leader));
-                        return;
-                    }
-                    self.answer_read(WaitKind::Get { db, key, dal }, Pos::MAX, reply);
+            Req::Get { db, key, dal, spec: true, .. } => {
+                // lettura speculativa (solo leader): ultima versione accettata, anche non confermata
+                if self.role != Role::Leader {
+                    reply.send(&Resp::NotLeader(self.leader));
                     return;
                 }
-                if at <= self.commit_pos {
-                    self.answer_read(WaitKind::Get { db, key, dal }, at, reply);
-                } else {
-                    self.park(WaitKind::Get { db, key, dal }, at, wait_ms, reply);
-                }
-            }
-            Req::Scan { db, from, to, at, limit, wait_ms, dal } => {
-                if at <= self.commit_pos {
-                    self.answer_read(WaitKind::Scan { db, from, to, limit, dal }, at, reply);
-                } else {
-                    self.park(WaitKind::Scan { db, from, to, limit, dal }, at, wait_ms, reply);
-                }
-            }
-            Req::Wait { pos, timeout_ms } => {
-                if pos <= self.commit_pos {
-                    reply.send(&Resp::Pos(self.commit_pos));
-                } else {
-                    self.park(WaitKind::Wait, pos, timeout_ms, reply);
-                }
+                reply.send(&Resp::Get(self.sh.win.get(&db, &key, Pos::MAX, dal)));
             }
             Req::Confirmed => {
                 if self.role != Role::Leader {
@@ -1202,31 +1363,6 @@ impl Node {
                 }
                 self.reads.push((self.commit, self.hb_seq + 1, reply));
                 self.need_hb = true;
-            }
-            Req::Flushable { dbs, upto } => {
-                let upto = upto.min(self.commit_pos);
-                let mut out = vec![];
-                let mut bytes = 0usize;
-                for db in dbs {
-                    let Some(d) = self.win.dbs.get(&db) else { continue };
-                    let fl = d.flushed;
-                    let idx: Vec<(u64, Pos)> = d.recs.iter().filter(|r| r.pos > fl && r.pos <= upto).map(|r| (r.index, r.pos)).collect();
-                    let mut recs = vec![];
-                    for (i, p) in idx {
-                        if bytes > (4 << 20) {
-                            break;
-                        }
-                        let e = self.entry(i);
-                        if let Body::Rec { writes, .. } = &e.body {
-                            bytes += e.raw.len();
-                            recs.push(FlushRec { pos: p, writes: writes.clone() });
-                        }
-                    }
-                    if !recs.is_empty() {
-                        out.push((db, recs));
-                    }
-                }
-                reply.send(&Resp::Flushable(out));
             }
             Req::FlushDone { items } => {
                 if self.role != Role::Leader {
@@ -1238,71 +1374,9 @@ impl Node {
                 self.append_new(e);
                 self.pending.entry(idx).or_default().push(reply);
             }
-            Req::Pending { limit } => {
-                let cp = self.commit_pos;
-                let mut v: Vec<PendInfo> = self
-                    .win
-                    .dbs
-                    .iter()
-                    .filter_map(|(k, d)| {
-                        let i = d.recs.partition_point(|r| r.pos <= d.flushed);
-                        d.recs.get(i).filter(|r| r.pos <= cp).map(|r| {
-                            let rest = d.recs.range(i..).filter(|x| x.pos <= cp);
-                            let (n, b) = rest.fold((0u64, 0u64), |a, x| (a.0 + 1, a.1 + x.bytes as u64));
-                            PendInfo { db: *k, oldest: r.pos, recs: n, bytes: b, flushed: d.flushed }
-                        })
-                    })
-                    .collect();
-                v.sort_by_key(|x| x.oldest);
-                v.truncate(limit as usize);
-                reply.send(&Resp::Pending(v));
-            }
-            Req::FlushState { dbs } => {
-                let v = dbs
-                    .iter()
-                    .map(|db| match self.win.dbs.get(db) {
-                        Some(d) => (*db, d.flushed, d.etag.clone(), d.trim_pos),
-                        None => (*db, 0, Bytes::new(), 0),
-                    })
-                    .collect();
-                reply.send(&Resp::FlushState(v));
-            }
-            Req::Status => {
-                let unflushed: u64 = self.win.dbs.values().map(|d| (d.recs.len() - d.recs.partition_point(|r| r.pos <= d.flushed)) as u64).sum();
-                let minp = self.win.dbs.values().filter_map(|d| d.recs.get(d.recs.partition_point(|r| r.pos <= d.flushed)).map(|r| r.pos)).min().unwrap_or(0);
-                let st = Status {
-                    id: self.me(),
-                    role: format!("{:?}", self.role),
-                    term: self.term,
-                    leader: self.leader,
-                    last_index: self.last_index(),
-                    commit_index: self.commit,
-                    commit_pos: self.commit_pos,
-                    durable: self.durable,
-                    log_front: self.front,
-                    dbs: self.win.dbs.len() as u64,
-                    keys: self.win.keys_count(),
-                    versions: self.win.versions,
-                    resident_bytes: self.resident,
-                    evicted: self.evicted,
-                    unflushed_recs: unflushed,
-                    min_unflushed_pos: minp,
-                    segments: self.segs.len() as u64,
-                    disk_bytes: self.disk_bytes,
-                    rss_kb: rss_kb(),
-                    diag: format!(
-                        "durable p50/p99 {}/{} ack {}/{} commit {}/{} giro-uscite {}/{} max {}",
-                        self.h_durable.value_at_quantile(0.5), self.h_durable.value_at_quantile(0.99),
-                        self.h_ack.value_at_quantile(0.5), self.h_ack.value_at_quantile(0.99),
-                        self.h_commit.value_at_quantile(0.5), self.h_commit.value_at_quantile(0.99),
-                        self.h_loop.value_at_quantile(0.5), self.h_loop.value_at_quantile(0.99), self.h_loop.max()
-                    ),
-                };
-                self.h_durable.reset();
-                self.h_ack.reset();
-                self.h_commit.reset();
-                self.h_loop.reset();
-                reply.send(&Resp::Status(st));
+            // servite dai thread di rete (serve_local): qui non arrivano
+            Req::Get { .. } | Req::Scan { .. } | Req::Wait { .. } | Req::Flushable { .. } | Req::Pending { .. } | Req::FlushState { .. } | Req::Status => {
+                reply.send(&Resp::Err("richiesta servita dai thread di rete".into()));
             }
             Req::Dump { from_index, max } => {
                 let mut v = vec![];
@@ -1340,7 +1414,7 @@ impl Node {
             reply.send(&Resp::NotLeader(-1));
             return;
         }
-        if let Err(k) = self.win.validate(&c.db, c.read_pos, &c.writes, c.mode == Mode::Validated, &c.reads) {
+        if let Err(k) = self.sh.win.validate(&c.db, c.read_pos, &c.writes, c.mode == Mode::Validated, &c.reads) {
             reply.send(&Resp::Conflict(k));
             return;
         }
@@ -1352,17 +1426,105 @@ impl Node {
     }
 }
 
-fn load_val(log: &VecDeque<Slot>, front: u64, reader: &mut store::Reader, i: u64, wi: u16) -> Bytes {
-    let s = &log[(i - front) as usize];
-    let e = match &s.ent {
-        Some(e) => e.clone(),
-        None => Arc::new(reader.read(s.seg, s.off, s.len).unwrap_or_else(|e| panic!("lettura valore {i}: {e}"))),
+/// Richieste servite dal thread di rete senza passare dal thread principale. Restituisce la richiesta se va al thread
+/// principale (commit, posizione confermata, conferma_scarico, letture speculative, dump).
+fn serve_local(sh: &Arc<Shared>, conn: &UnboundedSender<Vec<u8>>, id: u64, q: Req) -> Option<Req> {
+    let send = |r: Resp| {
+        let _ = conn.send(enc_resp(id, &r));
     };
-    match &e.body {
-        Body::Rec { writes, .. } => writes[wi as usize].val.clone(),
-        _ => Bytes::new(),
+    let readable = || *sh.readable.borrow();
+    match q {
+        Req::Get { spec: false, db, key, at, wait_ms, dal } => {
+            if at <= readable() {
+                send(Resp::Get(sh.win.get(&db, &key, at, dal)));
+            } else {
+                let (sh, conn) = (sh.clone(), conn.clone());
+                tokio::spawn(async move {
+                    let r = if wait_readable(&sh, at, wait_ms).await { Resp::Get(sh.win.get(&db, &key, at, dal)) } else { Resp::Behind(*sh.readable.borrow()) };
+                    let _ = conn.send(enc_resp(id, &r));
+                });
+            }
+            None
+        }
+        Req::Scan { db, from, to, at, limit, wait_ms, dal } => {
+            let (sh, conn) = (sh.clone(), conn.clone());
+            tokio::spawn(async move {
+                let r = if wait_readable(&sh, at, wait_ms).await { Resp::Scan(sh.win.scan(&db, &from, &to, at, limit as usize, dal)) } else { Resp::Behind(*sh.readable.borrow()) };
+                let _ = conn.send(enc_resp(id, &r));
+            });
+            None
+        }
+        Req::Wait { pos, timeout_ms } => {
+            if pos <= readable() {
+                send(Resp::Pos(readable()));
+            } else {
+                let (sh, conn) = (sh.clone(), conn.clone());
+                tokio::spawn(async move {
+                    let r = if wait_readable(&sh, pos, timeout_ms).await { Resp::Pos(*sh.readable.borrow()) } else { Resp::Behind(*sh.readable.borrow()) };
+                    let _ = conn.send(enc_resp(id, &r));
+                });
+            }
+            None
+        }
+        Req::Flushable { dbs, upto } => {
+            let (sh, conn) = (sh.clone(), conn.clone());
+            // può rileggere dal disco: su un thread a parte
+            tokio::task::spawn_blocking(move || {
+                let upto = upto.min(*sh.readable.borrow());
+                let mut budget = 4usize << 20;
+                let mut out = vec![];
+                for db in dbs {
+                    if budget == 0 {
+                        break;
+                    }
+                    let recs = sh.win.flushable(&db, upto, &mut budget);
+                    if !recs.is_empty() {
+                        out.push((db, recs));
+                    }
+                }
+                let _ = conn.send(enc_resp(id, &Resp::Flushable(out)));
+            });
+            None
+        }
+        Req::Pending { limit } => {
+            send(Resp::Pending(sh.win.pending_list(limit as usize)));
+            None
+        }
+        Req::FlushState { dbs } => {
+            let v = dbs
+                .iter()
+                .map(|db| {
+                    let (f, e, t) = sh.win.flush_state(db);
+                    (*db, f, e, t)
+                })
+                .collect();
+            send(Resp::FlushState(v));
+            None
+        }
+        Req::Status => {
+            let mut st = sh.status.lock().clone();
+            let (unfl, minp) = sh.win.unflushed_summary();
+            st.dbs = sh.win.ndbs.load(std::sync::atomic::Ordering::Relaxed) as u64;
+            st.keys = sh.win.nkeys.load(std::sync::atomic::Ordering::Relaxed).max(0) as u64;
+            st.versions = sh.win.versions.load(std::sync::atomic::Ordering::Relaxed).max(0) as u64;
+            st.unflushed_recs = unfl;
+            st.min_unflushed_pos = minp;
+            st.rss_kb = rss_kb();
+            send(Resp::Status(st));
+            None
+        }
+        other => Some(other),
     }
 }
 
-#[allow(dead_code)]
-fn _unused(_: Val) {}
+async fn wait_readable(sh: &Shared, at: Pos, wait_ms: u32) -> bool {
+    if *sh.readable.borrow() >= at {
+        return true;
+    }
+    if wait_ms == 0 {
+        return false;
+    }
+    let mut rx = sh.readable.subscribe();
+    let r = tokio::time::timeout(Duration::from_millis(wait_ms as u64), rx.wait_for(|p| *p >= at)).await;
+    matches!(r, Ok(Ok(_)))
+}

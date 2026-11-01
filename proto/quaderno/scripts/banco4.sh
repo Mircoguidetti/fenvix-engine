@@ -19,7 +19,7 @@ $S up --fresh > /dev/null; sleep 3
 L=$($S leader); F=$(( (L + 1) % 3 ))
 echo "leader $L, isolata $F" | tee "$OUT/4-eventi.txt"
 TOT=$((30 + ISO + 60))
-$PQ lin --replicas 127.0.0.1:7400,127.0.0.1:7401,127.0.0.1:7402 --secs $TOT --keys 200 --writers 8 --readers 16 --pause-us 2000 --out "$W/lin.csv" > "$OUT/4-carico.json" 2> "$OUT/4-carico.log" &
+$PQ lin --replicas 127.0.0.1:7400,127.0.0.1:7401,127.0.0.1:7402 --secs $TOT --keys 1000 --writers 8 --readers 16 --pause-us 2000 --out "$W/lin.csv" > "$OUT/4-carico.json" 2> "$OUT/4-carico.log" &
 LP=$!
 sleep 30
 T0=$(date +%s%3N); $S isolate $F; echo "isolata $F a $T0" >> "$OUT/4-eventi.txt"

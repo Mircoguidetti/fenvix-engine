@@ -23,6 +23,8 @@ pub enum DiskOp {
     /// tronca il segmento `seg` a `off` byte e cancella i segmenti successivi
     Truncate { seg: u32, off: u64 },
     Delete { seg: u32 },
+    /// scrivi il checkpoint (con le posizioni su S3 lette ora dalla finestra), poi cancella questi segmenti
+    CkptDelete { prev_index: u64, prev_term: u64, prev_pos: Pos, segs: Vec<u32> },
 }
 
 pub fn seg_path(dir: &Path, seg: u32) -> PathBuf {
@@ -83,7 +85,13 @@ fn open_segment(dir: &Path, seg: u32, size: u64) -> File {
 
 /// Thread del disco. `done(gen, last)` è chiamata dopo ogni fdatasync con l'ultimo indice reso durevole.
 /// Un secondo thread tiene pronto un segmento di scorta già preallocato (`spare.log`).
-pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, seg_bytes: u64, done: impl Fn(u64, u64) + Send + 'static) {
+pub fn spawn_disk(
+    dir: PathBuf,
+    rx: crossbeam_channel::Receiver<DiskOp>,
+    seg_bytes: u64,
+    done: impl Fn(u64, u64) + Send + 'static,
+    flushed: impl Fn() -> Vec<([u8; 16], Pos)> + Send + 'static,
+) {
     {
         let dir = dir.clone();
         std::thread::Builder::new()
@@ -103,6 +111,7 @@ pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, seg_byt
     std::thread::Builder::new()
         .name("disk".into())
         .spawn(move || {
+            crate::node::set_thread_nice(-10);
             let mut cur: Option<(u32, File)> = None;
             let mut buf: Vec<u8> = Vec::with_capacity(4 << 20);
             while let Ok(first) = rx.recv() {
@@ -165,6 +174,14 @@ pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, seg_byt
                         }
                         DiskOp::Delete { seg } => {
                             let _ = std::fs::remove_file(seg_path(&dir, seg));
+                        }
+                        DiskOp::CkptDelete { prev_index, prev_term, prev_pos, segs } => {
+                            // le posizioni su S3 lette adesso sono ≥ di quelle valide al momento della richiesta: vanno bene
+                            let ck = Ckpt { prev_index, prev_term, prev_pos, flushed: flushed().into_iter().map(|(d, p)| (hex(&d), p)).collect() };
+                            write_atomic(&dir, "ckpt", &serde_json::to_vec(&ck).unwrap()).expect("checkpoint");
+                            for s in segs {
+                                let _ = std::fs::remove_file(seg_path(&dir, s));
+                            }
                         }
                     }
                 }

@@ -18,12 +18,12 @@ for d in rows:
     L = d['lat']
     reps = ' '.join(f"r{r['id']}{'*' if r['role']=='Leader' else ''}:{r['rss_kb']//1024}MB/v{r['versions']//1000}k/u{r['unflushed']//1000}k/lag{r['flush_lag_s']:.0f}s" for r in d['replicas'])
     print(f"t={d['t']:6.0f}s commit/s {d['commits_per_s']:7.0f} letture/s {d['reads_per_s']:7.0f} conf {d['conflicts']:4d} ign {d['unknown']:3d} "
-          f"p99 commit {L['commit']['p99_us']/1000:6.1f}ms finestra {L['read_window']['p99_us']/1000:5.2f}ms altre {L['read_other']['p99_us']/1000:5.2f}ms ryw {L['ryw']['p99_us']/1000:5.2f}ms | {reps}")
+          f"p99 commit {L['commit']['p99_us']/1000:6.1f}ms finestra {L['read_window']['p99_us']/1000:5.2f}ms (dall'invio {L.get('read_window_from_send',{}).get('p99_us',0)/1000:5.2f}ms) altre {L['read_other']['p99_us']/1000:5.2f}ms ryw {L['ryw']['p99_us']/1000:5.2f}ms | {reps}")
 if final:
     L = final['lat']
     print(json.dumps({k: v for k, v in final.items() if k != 'lat'}))
-    for k in ('commit', 'read_window', 'read_other', 'ryw'):
-        print(k, {a: b for a, b in L[k].items()})
+    for k in ('commit', 'commit_from_send', 'read_window', 'read_window_from_send', 'read_other', 'read_other_from_send', 'ryw'):
+        print(k, {a: b for a, b in L.get(k, {}).items()})
 if rows and base:
     last = rows[-1]['replicas']
     dbs = max(r['dbs'] for r in last)
