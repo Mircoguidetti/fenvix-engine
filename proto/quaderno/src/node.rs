@@ -376,21 +376,29 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                     let mut total = 0;
                     // prima i database con più byte non su S3 (il caldo), così un run copre molto con poche schede
                     let mut cand = sh.win.pending_list(usize::MAX);
-                    cand.sort_by_key(|p| std::cmp::Reverse(p.bytes));
+                    // per byte non su S3 ancora in RAM (quelli già nella dispensa non contano)
+                    cand.retain(|p| p.ram_bytes > 0);
+                    cand.sort_by_key(|p| std::cmp::Reverse(p.ram_bytes));
+                    // al più 256 database per run: i piccoli si accumulano e finiscono nella dispensa in pochi pezzi
+                    // grandi (una scheda per database per run tiene RAM: con tutti i 10.000 in ogni run erano ~0,8 MB a run)
+                    cand.truncate(256);
                     for p in cand {
                         if p.oldest >= q.cutoff || total >= q.max_recs {
                             continue;
                         }
-                        // a pezzi: il lock in lettura del database si tiene poco
+                        // a pezzi: il lock in lettura del database si tiene poco. Al più 50.000 record per database per run:
+                        // `scaricabili` restituisce il pezzo di un run intero, e deve stare in un messaggio (< 64 MB)
                         let mut after = 0;
+                        let mut per_db = 0;
                         loop {
                             let (last, n) = sh.win.collect_spill(&p.db, after, q.cutoff, q.commit_pos, 2048, &mut ents);
                             total += n;
+                            per_db += n;
                             if n == 0 {
                                 break;
                             }
                             after = last;
-                            if n < 2048 || total >= q.max_recs {
+                            if n < 2048 || total >= q.max_recs || per_db >= 50_000 {
                                 break;
                             }
                         }
@@ -422,6 +430,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
         .name("trim-mem".into())
         .spawn(|| loop {
             std::thread::sleep(Duration::from_secs(5));
+            // con mimalloc non serve; resta per chi compila con l'allocatore di sistema
             unsafe {
                 libc::malloc_trim(0);
             }
@@ -1323,15 +1332,15 @@ impl Node {
             self.trim_step(t + Duration::from_micros(200));
             self.sw(7, t);
         }
-        // conto unico della memoria; sopra il 75% del tetto i valori vanno su disco, sopra l'80% i record vecchi non
-        // su S3 vanno nella dispensa
+        // conto unico della memoria; sopra il 65% del tetto i valori vanno su disco, sopra il 70% i record vecchi non
+        // su S3 vanno nella dispensa (margine per la memoria di lavoro della dispensa stessa)
         self.mem_used = self.mem_count().max(self.rss);
-        if self.mem_used > self.cfg.mem_cap / 4 * 3 && self.resident > 0 {
+        if self.mem_used > self.cfg.mem_cap / 20 * 13 && self.resident > 0 {
             let t = Instant::now();
             self.evict_step(t + Duration::from_micros(200));
             self.sw(9, t);
         }
-        if self.mem_used > self.cfg.mem_cap / 5 * 4 && !self.spill_busy && self.spill_q.is_empty() && self.oldest_unfl != Pos::MAX && self.last_spill.elapsed() >= Duration::from_secs(2) {
+        if self.mem_used > self.cfg.mem_cap / 10 * 7 && !self.spill_busy && self.spill_q.is_empty() && self.oldest_unfl != Pos::MAX && self.last_spill.elapsed() >= Duration::from_secs(2) {
             let cutoff = pos_make(now_ms().saturating_sub(self.cfg.window_ms), 0);
             if self.oldest_unfl < cutoff {
                 self.spill_busy = true;
@@ -1654,7 +1663,8 @@ impl Node {
         let disk = self.disk_used();
         let c = &self.cfg;
         let old = self.brake;
-        self.brake = if self.mem_used > c.mem_cap {
+        // freno di memoria con isteresi: entra sopra il tetto, esce sotto il 95%
+        self.brake = if self.mem_used > c.mem_cap || (old == 4 && self.mem_used > c.mem_cap / 20 * 19) {
             4
         } else if c.disk_ro > 0 && disk >= c.disk_ro {
             3

@@ -108,6 +108,15 @@ pub fn spawn_disk(
             })
             .unwrap();
     }
+    let (del_tx, del_rx) = crossbeam_channel::unbounded::<PathBuf>();
+    std::thread::Builder::new()
+        .name("cancella-seg".into())
+        .spawn(move || {
+            while let Ok(p) = del_rx.recv() {
+                let _ = std::fs::remove_file(p);
+            }
+        })
+        .unwrap();
     std::thread::Builder::new()
         .name("disk".into())
         .spawn(move || {
@@ -179,8 +188,10 @@ pub fn spawn_disk(
                             // le posizioni su S3 lette adesso sono ≥ di quelle valide al momento della richiesta: vanno bene
                             let ck = Ckpt { prev_index, prev_term, prev_pos, flushed: flushed().into_iter().map(|(d, p)| (hex(&d), p)).collect() };
                             write_atomic(&dir, "ckpt", &serde_json::to_vec(&ck).unwrap()).expect("checkpoint");
+                            // la cancellazione dei file (lenta con il `discard` del disco: ~1,4 s per 64 MB) va su un
+                            // thread a parte, altrimenti ferma i fdatasync e quindi i commit
                             for s in segs {
-                                let _ = std::fs::remove_file(seg_path(&dir, s));
+                                let _ = del_tx.send(seg_path(&dir, s));
                             }
                         }
                     }

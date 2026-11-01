@@ -1,0 +1,9 @@
+2
+2
+0
+thread 'tokio-rt-worker' (10658) panicked at src/window.rs:184:58:
+lettura dal registro Loc { seg: 22, off: 63695582, len: 284 }: No such file or directory (os error 2)
+--
+thread 'tokio-rt-worker' (10707) panicked at src/window.rs:184:58:
+lettura dal registro Loc { seg: 32, off: 65360841, len: 284 }: No such file or directory (os error 2)
+--

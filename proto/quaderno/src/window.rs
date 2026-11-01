@@ -178,10 +178,25 @@ pub fn delta_apply(base: Option<&[u8]>, d: &[u8]) -> Bytes {
     Bytes::copy_from_slice(&b.wrapping_add(x).to_le_bytes())
 }
 
-/// Rilegge una voce dal disco (un file aperto per lettura: è il caso raro, valori sfrattati).
-pub fn read_entry(dir: &std::path::Path, loc: &Loc) -> Entry {
+thread_local! {
+    /// una lettura dal registro su disco è fallita: il segmento è già stato cancellato, quindi la voce è già su S3
+    static GONE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+fn gone_take() -> bool {
+    GONE.with(|g| g.replace(false))
+}
+
+/// Rilegge una voce dal disco (un file aperto per lettura: è il caso raro, valori sfrattati o nella dispensa).
+/// None = il segmento non c'è più: la voce è già su S3 (un segmento si cancella solo quando tutto è scaricato).
+pub fn read_entry(dir: &std::path::Path, loc: &Loc) -> Option<Entry> {
     let mut r = crate::store::Reader::new(dir.to_path_buf());
-    r.read(loc.seg, loc.off, loc.len).unwrap_or_else(|e| panic!("lettura dal registro {loc:?}: {e}"))
+    match r.read(loc.seg, loc.off, loc.len) {
+        Ok(e) => Some(e),
+        Err(_) => {
+            GONE.with(|g| g.set(true));
+            None
+        }
+    }
 }
 
 impl Window {
@@ -231,7 +246,7 @@ impl Window {
     }
 
     pub fn load(&self, loc: &Loc, wi: u16) -> Bytes {
-        let e = read_entry(&self.dir, loc);
+        let Some(e) = read_entry(&self.dir, loc) else { return Bytes::new() };
         match &e.body {
             Body::Rec { writes, .. } => writes[wi as usize].val.clone(),
             _ => Bytes::new(),
@@ -249,7 +264,8 @@ impl Window {
         let mut p = self.pending.lock();
         if d.unfl_n > 0 {
             let oldest = d.spill.front().map(|r| r.min).or_else(|| d.recs.get(d.flushed_n).map(|r| r.pos)).unwrap_or(0);
-            p.insert(*db, PendInfo { db: *db, oldest, recs: d.unfl_n, bytes: d.unfl_bytes, flushed: d.flushed });
+            let spilled: u64 = d.spill.iter().map(|r| r.bytes).sum();
+            p.insert(*db, PendInfo { db: *db, oldest, recs: d.unfl_n, bytes: d.unfl_bytes, flushed: d.flushed, ram_bytes: d.unfl_bytes.saturating_sub(spilled) });
         } else {
             p.remove(db);
         }
@@ -383,13 +399,20 @@ impl Window {
         };
         let d = dr.read();
         let complete = d.genesis && d.trim_pos == 0 && !d.spilled_any;
-        let Some(ks) = d.keys.get(key) else {
-            if let Some(g) = self.spill_resolve(db, &d, key, at, dal, None) {
-                return g;
-            }
-            return if complete { GetRes::Absent(0) } else { GetRes::OutOfWindow { trimmed: d.trim_pos, etag: d.etag.clone() } };
+        gone_take();
+        let g = match d.keys.get(key) {
+            None => match self.spill_resolve(db, &d, key, at, dal, None) {
+                Some(g) => g,
+                None if complete => GetRes::Absent(0),
+                None => GetRes::OutOfWindow { trimmed: d.trim_pos, etag: d.etag.clone() },
+            },
+            Some(ks) => self.resolve(db, key, ks, at, complete, &d, dal),
         };
-        self.resolve(db, key, ks, at, complete, &d, dal)
+        if gone_take() {
+            // un valore era nel registro già cancellato: è su S3 (fino a `flushed`)
+            return GetRes::OutOfWindow { trimmed: d.flushed.max(d.trim_pos), etag: d.etag.clone() };
+        }
+        g
     }
 
     pub fn scan(&self, db: &Db, from: &[u8], to: &[u8], at: Pos, limit: usize, dal: Pos) -> Vec<(Bytes, GetRes)> {
@@ -406,7 +429,11 @@ impl Window {
             if out.len() >= limit {
                 break;
             }
-            let r = self.resolve(db, k.as_slice(), ks, at, complete, &d, dal);
+            gone_take();
+            let mut r = self.resolve(db, k.as_slice(), ks, at, complete, &d, dal);
+            if gone_take() {
+                r = GetRes::OutOfWindow { trimmed: d.flushed.max(d.trim_pos), etag: d.etag.clone() };
+            }
             if matches!(r, GetRes::Absent(0)) && complete {
                 continue; // non esisteva ancora a `at`
             }
@@ -456,6 +483,7 @@ impl Window {
                 Some(next) if next.kind == Kind::Delta => {
                     let unknown_base = old.kind == Kind::Delta && !ks.base_known;
                     if !unknown_base {
+                        gone_take();
                         let base: Option<Bytes> = match old.kind {
                             Kind::Del => None,
                             Kind::Put => Some(self.val_of(&old.val)),
@@ -463,8 +491,13 @@ impl Window {
                             Kind::Delta => Some(delta_apply(None, &self.val_of(&old.val))),
                         };
                         let nv = delta_apply(base.as_deref(), &self.val_of(&next.val));
-                        next.kind = Kind::Put;
-                        next.val = Val::Mem(nv);
+                        if gone_take() {
+                            // base già solo su S3: la catena di delta resta senza base nota (le letture la comporranno con gli SST)
+                            ks.base_known = false;
+                        } else {
+                            next.kind = Kind::Put;
+                            next.val = Val::Mem(nv);
+                        }
                     }
                 }
                 Some(_) => {}
@@ -714,6 +747,7 @@ impl Window {
                     return out;
                 }
                 let Some(run) = self.spill.get(r.run) else { continue };
+                let mark = out.len();
                 for e in run.db_entries(db) {
                     if e.pos <= flushed || e.pos > upto {
                         continue;
@@ -724,11 +758,20 @@ impl Window {
                         SVal::Log(l, wi) => {
                             let ent = match &last_loc {
                                 Some((ll, en)) if ll.seg == l.seg && ll.off == l.off => en.clone(),
-                                _ => {
-                                    let en = Arc::new(read_entry(&self.dir, l));
-                                    last_loc = Some((*l, en.clone()));
-                                    en
-                                }
+                                _ => match read_entry(&self.dir, l) {
+                                    Some(en) => {
+                                        let en = Arc::new(en);
+                                        last_loc = Some((*l, en.clone()));
+                                        en
+                                    }
+                                    None => {
+                                        // segmento già cancellato (tutto su S3): il run si scarta per intero e ci si
+                                        // ferma, così la risposta resta un prefisso in ordine di posizione
+                                        gone_take();
+                                        out.truncate(mark);
+                                        return out;
+                                    }
+                                },
                             };
                             match &ent.body {
                                 Body::Rec { writes, .. } => writes[*wi as usize].val.clone(),
@@ -764,7 +807,13 @@ impl Window {
         for (pos, ent, loc) in refs {
             let e = match ent {
                 Some(e) => e,
-                None => Arc::new(read_entry(&self.dir, &loc)),
+                None => match read_entry(&self.dir, &loc) {
+                    Some(e) => Arc::new(e),
+                    None => {
+                        gone_take();
+                        break;
+                    }
+                },
             };
             if let Body::Rec { writes, .. } = &e.body {
                 *budget = budget.saturating_sub(e.raw.len());

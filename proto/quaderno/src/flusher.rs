@@ -44,6 +44,8 @@ struct Group {
     merged: BTreeMap<(Db, Bytes), (Pos, Option<Bytes>)>,
     objects: Vec<String>,
     etag: Option<String>,
+    /// lo stato del manifest su S3 è noto (etag giusto, o manifest inesistente)
+    known: bool,
     flushes: u32,
 }
 
@@ -216,18 +218,38 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
             }
             // manifest del gruppo: PUT condizionale sull'etag precedente
             let man = serde_json::to_vec(&json!({"group": g, "objects": gs.objects})).unwrap();
+            // manifest SEMPRE con PUT condizionale: un PUT rimasto in coda in un magazzino bloccato e eseguito dopo non
+            // deve poter riportare indietro il manifest (prima, dopo un errore, si scriveva senza condizione e una
+            // richiesta vecchia poteva cancellare oggetti già confermati)
+            let mp = Path::from(format!("g{g:03}/manifest.json"));
+            if !gs.known {
+                match store.head(&mp).await {
+                    Ok(m) => {
+                        gs.etag = m.e_tag;
+                        gs.known = true;
+                    }
+                    Err(object_store::Error::NotFound { .. }) => {
+                        gs.etag = None;
+                        gs.known = true;
+                    }
+                    Err(e) => {
+                        eprintln!("manifest g{g}: stato ignoto ({e}), riprovo");
+                        errors += 1;
+                        break;
+                    }
+                }
+            }
             let mode = match &gs.etag {
-                None => PutMode::Overwrite,
+                None => PutMode::Create,
                 Some(e) => PutMode::Update(UpdateVersion { e_tag: Some(e.clone()), version: None }),
             };
-            let mp = Path::from(format!("g{g:03}/manifest.json"));
             let etag = match store.put_opts(&mp, PutPayload::from(man), PutOptions { mode, ..Default::default() }).await {
                 Ok(r) => r.e_tag.unwrap_or_default(),
                 Err(e) => {
                     eprintln!("manifest g{g}: {e}");
                     errors += 1;
-                    // ricomincia dall'etag attuale al prossimo giro
-                    gs.etag = store.head(&mp).await.ok().and_then(|m| m.e_tag);
+                    // stato del manifest ignoto: al prossimo giro si rilegge prima di scrivere
+                    gs.known = false;
                     break;
                 }
             };

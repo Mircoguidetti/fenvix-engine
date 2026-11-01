@@ -472,6 +472,8 @@ pub struct PendInfo {
     pub recs: u64,
     pub bytes: u64,
     pub flushed: Pos,
+    /// byte non su S3 ancora in RAM (non passati alla dispensa)
+    pub ram_bytes: u64,
 }
 
 #[derive(Clone, Debug)]
@@ -792,6 +794,7 @@ pub fn enc_resp(id: u64, s: &Resp) -> Vec<u8> {
                 b.put_u64_le(x.recs);
                 b.put_u64_le(x.bytes);
                 b.put_u64_le(x.flushed);
+                b.put_u64_le(x.ram_bytes);
             }
         }
         Resp::FlushState(v) => {
@@ -867,7 +870,7 @@ pub fn dec_resp(body: Bytes) -> R<(u64, Resp)> {
             let n = r.u32()? as usize;
             let mut v = Vec::with_capacity(n.min(1 << 16));
             for _ in 0..n {
-                v.push(PendInfo { db: r.a16()?, oldest: r.u64()?, recs: r.u64()?, bytes: r.u64()?, flushed: r.u64()? });
+                v.push(PendInfo { db: r.a16()?, oldest: r.u64()?, recs: r.u64()?, bytes: r.u64()?, flushed: r.u64()?, ram_bytes: r.u64()? });
             }
             Resp::Pending(v)
         }

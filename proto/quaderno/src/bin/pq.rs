@@ -1,5 +1,9 @@
 //! pq: replica, proxy, scaricatore, generatori di carico e controlli del prototipo "quaderno".
 use quaderno::{bench, client::Cluster, flusher, node, proxy};
+
+// allocatore che restituisce al sistema la memoria liberata (con glibc l'RSS restava alto dopo un arretrato)
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use std::collections::HashMap;
 use std::sync::Arc;
 
