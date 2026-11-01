@@ -1,0 +1,135 @@
+diff --git a/mongo-server/Cargo.toml b/mongo-server/Cargo.toml
+index 206b03b..bcb0724 100644
+--- a/mongo-server/Cargo.toml
++++ b/mongo-server/Cargo.toml
+@@ -18,7 +18,7 @@ unicode-normalization = "0.1"
+ s2 = "0.2"
+ async-trait = "0.1"
+ uuid = "1"
+-tokio = { version = "=1.54.1", features = ["full"] }
++tokio = { version = "=1.54.1", features = ["full", "taskdump"] }
+ anyhow = "1"
+ libc = "0.2"
+ bytes = "1"
+diff --git a/mongo-server/src/main.rs b/mongo-server/src/main.rs
+index 2c30393..2a4f8c3 100644
+--- a/mongo-server/src/main.rs
++++ b/mongo-server/src/main.rs
+@@ -550,6 +550,7 @@ async fn run() -> Result<()> {
+     let s3: Arc<dyn ObjectStore> = global.clone();
+     let counting = Arc::new(CountingStore::new(Arc::clone(&s3)));
+     let (queue, rx) = CompactionQueue::new();
++    let _ = tenant_bench::lifecycle::DIAG_QUEUE.set(Arc::clone(&queue));
+     let lc = if args.no_maintenance {
+         Lifecycle::with_guard(counting, None, false)
+     } else {
+@@ -568,6 +569,28 @@ async fn run() -> Result<()> {
+         let l = Arc::clone(&leases);
+         let _ = tenant_bench::lifecycle::OWNER_VALID.set(Box::new(move |id: &str| l.disabled.load(std::sync::atomic::Ordering::Relaxed) || l.valid(id)));
+     }
++    {
++        // DIAG: periodic state line every 5 s; full state plus tokio task dump on SIGUSR1.
++        let (locks, store) = (Arc::clone(&lc.maint_locks), Arc::clone(&s3));
++        tokio::spawn(async move {
++            let mut sig = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::user_defined1()).unwrap();
++            let mut tick = tokio::time::interval(Duration::from_secs(5));
++            loop {
++                tokio::select! {
++                    _ = tick.tick() => eprint!("{}", tenant_bench::lifecycle::diag_state(&store, &locks).await),
++                    _ = sig.recv() => {
++                        eprintln!("DIAG DUMP BEGIN");
++                        eprint!("{}", tenant_bench::lifecycle::diag_state(&store, &locks).await);
++                        match tokio::time::timeout(Duration::from_secs(20), tokio::runtime::Handle::current().dump()).await {
++                            Ok(dump) => for (i, t) in dump.tasks().iter().enumerate() { eprintln!("TASK {i} id={}\n{}", t.id(), t.trace()); },
++                            Err(_) => eprintln!("DIAG taskdump timed out"),
++                        }
++                        eprintln!("DIAG DUMP END");
++                    }
++                }
++            }
++        });
++    }
+     let lc_for_ctl = Arc::clone(&lc);
+     let dbs = Dbs::new(lc, Arc::clone(&s3), Duration::from_secs(args.idle_secs), Arc::clone(&leases), global);
+     dbs.spawn_reaper();
+diff --git a/src/lifecycle.rs b/src/lifecycle.rs
+index 57203bb..ff564e0 100644
+--- a/src/lifecycle.rs
++++ b/src/lifecycle.rs
+@@ -352,6 +352,7 @@ impl CompactionQueue {
+ 
+     pub fn request(&self, id: &str, waiter: Option<oneshot::Sender<usize>>) {
+         let mut p = self.pending.lock().unwrap();
++        eprintln!("DIAG COMPACTQ request tenant={id} unix_ms={} joined={} waiter={}", unix_ms(), p.contains_key(id), waiter.is_some());
+         match p.entry(id.to_string()) {
+             std::collections::hash_map::Entry::Occupied(mut e) => {
+                 if let Some(w) = waiter {
+@@ -366,6 +367,7 @@ impl CompactionQueue {
+     }
+ 
+     fn finish(&self, id: &str, l0_after: usize) {
++        eprintln!("DIAG COMPACTQ finish tenant={id} unix_ms={} l0_after={l0_after}", unix_ms());
+         let waiters = self.pending.lock().unwrap().remove(id).unwrap_or_default();
+         for w in waiters {
+             let _ = w.send(l0_after);
+@@ -846,7 +848,21 @@ impl Tenant {
+                 Op::Delete(k) => batch.delete(k),
+             }
+         }
+-        let handle = db.write(batch).await?;
++        let handle = {
++            // DIAG: report a write that stays inside slatedb's Db::write (backpressure) while holding the database lock.
++            let t0 = Instant::now();
++            let fut = db.write(batch);
++            tokio::pin!(fut);
++            loop {
++                tokio::select! {
++                    r = &mut fut => break r?,
++                    _ = tokio::time::sleep(Duration::from_secs(10)) => {
++                        let m = db.manifest();
++                        eprintln!("DIAG stage blocked in slatedb Db::write tenant={} for {:.0} s (writer_l0={} unix_ms={})", self.id, t0.elapsed().as_secs_f64(), m.l0().len(), unix_ms());
++                    }
++                }
++            }
++        };
+         note_unflushed(&self.id, handle.seqnum());
+         self.group.staged_seq.fetch_max(handle.seqnum(), std::sync::atomic::Ordering::Release);
+         Ok(Some(Commit { db: db.clone(), handle, group: Arc::clone(&self.group), tenant: self.id.clone(), local: None }))
+@@ -1511,7 +1527,10 @@ impl Maintenance {
+                     tokio::spawn(async move {
+                         let lock = maint_lock(&locks, &id);
+                         let _held = lock.lock().await;
+-                        let l0_after = match compact_tenant(&s3, &raw, &id).await {
++                        eprintln!("DIAG COMPACT begin tenant={id} unix_ms={}", unix_ms());
++                        let r = compact_tenant(&s3, &raw, &id).await;
++                        eprintln!("DIAG COMPACT end tenant={id} unix_ms={} result={:?}", unix_ms(), r.as_ref().map(|o| o.as_ref().map(|c| (c.l0_before, c.l0_after, c.secs))).map_err(|e| format!("{e:#}")));
++                        let l0_after = match r {
+                             Ok(Some(rec)) => {
+                                 let l0 = rec.l0_after;
+                                 log.lock().unwrap().compactions.push(rec);
+@@ -1643,3 +1662,25 @@ impl Maintenance {
+         self.log
+     }
+ }
++
++
++// DIAG (diagnosis build only)
++pub static DIAG_QUEUE: std::sync::OnceLock<Arc<CompactionQueue>> = std::sync::OnceLock::new();
++pub async fn diag_state(store: &Arc<dyn ObjectStore>, locks: &MaintLocks) -> String {
++    let mut out = String::new();
++    let dbs: Vec<(String, Db)> = WRITER_DBS.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.clone())).collect();
++    let pending: Vec<(String, usize)> = DIAG_QUEUE.get().map(|q| q.pending.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.len())).collect()).unwrap_or_default();
++    out += &format!("DIAG state unix_ms={} open_writers={} queue_pending={:?} lock_entries={}\n", unix_ms(), dbs.len(), pending, locks.lock().unwrap().len());
++    for (id, db) in dbs {
++        let m = db.manifest();
++        let st = db.status();
++        let lock_free = maint_lock(locks, &id).try_lock().is_ok();
++        let store_l0 = l0_count(store, &id).await.map_err(|e| e.to_string());
++        let hot = GC_HOT.lock().unwrap().get(&id).map(|h| (h.last_write.elapsed().as_secs(), h.last_sst_gc.elapsed().as_secs(), h.sst_manifest));
++        out += &format!(
++            "DIAG writer tenant={id} writer_manifest_id={} writer_l0={} writer_sorted_runs={} last_l0_seq={} durable_seq={} store_l0={:?} maint_lock_free={lock_free} hot(last_write_s,last_sstgc_s,sst_manifest)={:?} closed={:?}\n",
++            m.id(), m.l0().len(), m.compacted().len(), m.last_l0_seq(), st.durable_seq, store_l0, hot, st.close_reason
++        );
++    }
++    out
++}
