@@ -1,0 +1,76 @@
+{
+  "nostro": {
+    "blocchi_per_run": [
+      12500
+    ],
+    "cache_miss_durante_misura": 0,
+    "get_manifest_durante_misura": 0,
+    "get_store_durante_misura": 0,
+    "run": 1
+  },
+  "parametri": "A { docs: 200000, vsize: 1000, blocco: 16384, slate_blocco: 4096, run: 1, frazione: 0.02, letture: 200000, giri: 7, misure: \"nostro_get,nostro_sst,nostro_nudo,slate_get\", slate_block_mb: 2048, slate_meta_mb: 512, memtable_mb: 8, out: Some(\"risultati/grande-1run-b16k.json\") }",
+  "risultati": {
+    "nostro_get": {
+      "p99_us_mediana": 9.879,
+      "us_giri": [
+        4.435497400000001,
+        4.079647635,
+        4.46297142,
+        4.135358395,
+        4.25632941,
+        4.112856825000001,
+        3.98222471
+      ],
+      "us_mediana": 4.135358395
+    },
+    "nostro_nudo": {
+      "p99_us_mediana": 5.035,
+      "us_giri": [
+        3.500589595,
+        2.9292863099999997,
+        2.9769431650000002,
+        3.1645623449999998,
+        3.1360725799999996,
+        3.34619972,
+        2.9989852000000004
+      ],
+      "us_mediana": 3.1360725799999996
+    },
+    "nostro_sst": {
+      "p99_us_mediana": 8.951,
+      "us_giri": [
+        3.92790435,
+        4.07445651,
+        3.77735245,
+        3.836027145,
+        3.7580637199999996,
+        4.177612740000001,
+        3.6500373949999996
+      ],
+      "us_mediana": 3.836027145
+    },
+    "slate_get": {
+      "p99_us_mediana": 48.351,
+      "us_giri": [
+        20.543663485,
+        19.293578160000003,
+        19.967476625,
+        19.869608475,
+        20.92625799,
+        19.33072707,
+        19.818255275000002
+      ],
+      "us_mediana": 19.869608475
+    }
+  },
+  "slatedb": {
+    "carico_s": 24.165961982,
+    "l0": 1,
+    "sorted_run": 3,
+    "sst_per_sorted_run": [
+      4,
+      4,
+      4
+    ]
+  }
+}

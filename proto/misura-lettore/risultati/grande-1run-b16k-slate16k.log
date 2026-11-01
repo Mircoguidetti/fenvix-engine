@@ -1,0 +1,115 @@
+nostro pronto in 0.4s
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+compattazione: l0 8 sorted run 2
+slatedb pronto in 20.4s: {"carico_s":20.359752403,"l0":8,"sorted_run":2,"sst_per_sorted_run":[4,4]}
+giro 0 nostro_get: 4.26 µs/lettura (p50 3.75, p99 10.60)
+giro 0 nostro_sst: 4.09 µs/lettura (p50 3.65, p99 10.22)
+giro 0 nostro_nudo: 3.14 µs/lettura (p50 2.85, p99 5.68)
+giro 0 slate_get: 23.77 µs/lettura (p50 20.21, p99 58.30)
+giro 1 nostro_get: 4.32 µs/lettura (p50 3.87, p99 10.66)
+giro 1 nostro_sst: 4.21 µs/lettura (p50 3.70, p99 10.22)
+giro 1 nostro_nudo: 3.11 µs/lettura (p50 2.87, p99 7.12)
+giro 1 slate_get: 20.81 µs/lettura (p50 18.93, p99 45.92)
+giro 2 nostro_get: 3.71 µs/lettura (p50 3.45, p99 7.96)
+giro 2 nostro_sst: 3.73 µs/lettura (p50 3.40, p99 9.07)
+giro 2 nostro_nudo: 2.92 µs/lettura (p50 2.73, p99 4.62)
+giro 2 slate_get: 23.38 µs/lettura (p50 19.73, p99 56.26)
+giro 3 nostro_get: 4.07 µs/lettura (p50 3.72, p99 10.15)
+giro 3 nostro_sst: 4.02 µs/lettura (p50 3.56, p99 9.78)
+giro 3 nostro_nudo: 3.27 µs/lettura (p50 2.92, p99 8.02)
+giro 3 slate_get: 23.83 µs/lettura (p50 19.74, p99 61.22)
+giro 4 nostro_get: 4.16 µs/lettura (p50 3.75, p99 10.43)
+giro 4 nostro_sst: 3.94 µs/lettura (p50 3.60, p99 9.30)
+giro 4 nostro_nudo: 3.52 µs/lettura (p50 3.12, p99 8.08)
+giro 4 slate_get: 21.01 µs/lettura (p50 19.10, p99 48.73)
+giro 5 nostro_get: 4.29 µs/lettura (p50 3.84, p99 10.15)
+giro 5 nostro_sst: 3.82 µs/lettura (p50 3.49, p99 9.03)
+giro 5 nostro_nudo: 3.10 µs/lettura (p50 2.85, p99 4.50)
+giro 5 slate_get: 22.47 µs/lettura (p50 19.50, p99 54.27)
+giro 6 nostro_get: 4.20 µs/lettura (p50 3.70, p99 10.83)
+giro 6 nostro_sst: 3.63 µs/lettura (p50 3.37, p99 9.07)
+giro 6 nostro_nudo: 3.05 µs/lettura (p50 2.77, p99 6.60)
+giro 6 slate_get: 21.21 µs/lettura (p50 19.05, p99 49.57)
+{
+  "nostro": {
+    "blocchi_per_run": [
+      12500
+    ],
+    "cache_miss_durante_misura": 0,
+    "get_manifest_durante_misura": 0,
+    "get_store_durante_misura": 0,
+    "run": 1
+  },
+  "parametri": "A { docs: 200000, vsize: 1000, blocco: 16384, slate_blocco: 16384, run: 1, frazione: 0.02, letture: 200000, giri: 7, misure: \"nostro_get,nostro_sst,nostro_nudo,slate_get\", slate_block_mb: 2048, slate_meta_mb: 512, memtable_mb: 8, out: Some(\"risultati/grande-1run-b16k-slate16k.json\") }",
+  "risultati": {
+    "nostro_get": {
+      "p99_us_mediana": 10.431,
+      "us_giri": [
+        4.2609838049999995,
+        4.31876047,
+        3.705466825,
+        4.06962739,
+        4.15699369,
+        4.290613779999999,
+        4.203573225
+      ],
+      "us_mediana": 4.203573225
+    },
+    "nostro_nudo": {
+      "p99_us_mediana": 6.599,
+      "us_giri": [
+        3.1422256650000002,
+        3.11146728,
+        2.9192787549999997,
+        3.2681635850000004,
+        3.516686,
+        3.09776326,
+        3.049705515
+      ],
+      "us_mediana": 3.11146728
+    },
+    "nostro_sst": {
+      "p99_us_mediana": 9.303,
+      "us_giri": [
+        4.093511965,
+        4.213133525,
+        3.7260782650000004,
+        4.01908934,
+        3.93888627,
+        3.8168789149999998,
+        3.6345025399999997
+      ],
+      "us_mediana": 3.93888627
+    },
+    "slate_get": {
+      "p99_us_mediana": 54.271,
+      "us_giri": [
+        23.77228372,
+        20.809555765,
+        23.383576115,
+        23.831850875000004,
+        21.01308122,
+        22.471579990000002,
+        21.20871347
+      ],
+      "us_mediana": 22.471579990000002
+    }
+  },
+  "slatedb": {
+    "carico_s": 20.359752403,
+    "l0": 8,
+    "sorted_run": 2,
+    "sst_per_sorted_run": [
+      4,
+      4
+    ]
+  }
+}
