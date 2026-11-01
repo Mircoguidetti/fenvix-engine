@@ -52,6 +52,12 @@ struct A {
     bucket: String,
     #[arg(long, default_value_t = 300)]
     istantanea_s: u64,
+    /// SST letto intero se non supera questi byte (altrimenti meta + blocco)
+    #[arg(long, default_value_t = 64 << 10)]
+    intero_max: u64,
+    /// fetta di un database in un SST condiviso letta in un GET se non supera questi byte
+    #[arg(long, default_value_t = 64 << 10)]
+    fetta_max: u64,
     #[arg(long)]
     out: std::path::PathBuf,
 }
@@ -112,7 +118,7 @@ async fn main() -> anyhow::Result<()> {
     };
     let w = Worker::new(reg.clone(), st_w.clone(), wcfg);
     let cache = if a.cache == "ram" { Cache::ram(a.cache_mb << 20) } else { Cache::disco(a.cache_mb << 20, format!("/tmp/claude-0/cache-costo-{}", a.variante).into())? };
-    let lett = Lettore::new(reg.clone(), st_r.clone(), cache, CfgLettura { raggruppa, intero_max: 1 << 20, fetta_max: 1 << 20, prefetch_meta: false });
+    let lett = Lettore::new(reg.clone(), st_r.clone(), cache, CfgLettura { raggruppa, intero_max: a.intero_max, fetta_max: a.fetta_max, prefetch_meta: false });
     // i contatori di MinIO si aggiornano con qualche secondo di ritardo: il precarico deve esserci già dentro
     tokio::time::sleep(Duration::from_secs(20)).await;
     let minio0 = metriche_minio(&a.bucket).await?;
@@ -205,7 +211,7 @@ async fn main() -> anyhow::Result<()> {
     let srv = Conteggi { put: srv_put, get: srv_get, ..Default::default() };
     let r = json!({
         "variante": a.variante, "db": a.db, "docs_per_db": a.docs, "vsize": a.vsize, "scritture_s_per_db": a.wps, "letture_s_per_db": a.rps,
-        "zipf": a.zipf, "cache_mb": a.cache_mb, "cache": a.cache, "secondi": secondi, "scritture": scritte, "letture": lette,
+        "zipf": a.zipf, "cache_mb": a.cache_mb, "intero_max": a.intero_max, "fetta_max": a.fetta_max, "cache": a.cache, "secondi": secondi, "scritture": scritte, "letture": lette,
         "errori_lettura": errori.load(Ordering::Relaxed),
         "ritardo_max_del_carico_s": ritardo_max_s,
         "worker": cw, "lettori": cr, "costo_ora_intera": costi(&tot, secondi, a.db), "costo_seconda_meta": regime,
