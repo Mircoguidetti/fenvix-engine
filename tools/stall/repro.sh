@@ -8,7 +8,7 @@
 #
 # Environment: ENGINE_BIN (the mongo-server binary), LOADGEN_BIN (bench/mongod/loadgen built with `go build`),
 # PY (a python with boto3, for the MinIO buckets), STALL_SECS (a load that has not finished after this many seconds is
-# a stall; default 600: an unstalled load takes 30-90 s), ENGINE_ARGS (extra engine options), PORT (default 27017).
+# a stall; default 600), ENGINE_ARGS (extra engine options), PORT (default 27017), DOCS (documents loaded, default 200000).
 #
 # One line per run on stdout and in OUTDIR/runs.txt: "run N ok SECONDS" or "run N STALL". On a stall the evidence is
 # collected before the engine is killed: OUTDIR/run-N/{server.log, gdb.txt, cpu.txt, status.json (tenantStats, serverStatus)}, and, with a
@@ -32,6 +32,27 @@ stop_engine() {
 
 cpu_ticks() { awk '{print $14+$15}' "/proc/$1/stat" 2>/dev/null; }
 
+# Delete the run's bucket (MinIO) once the engine is stopped: 20 runs of ~250 MB each fill the disk otherwise, and MinIO
+# then refuses every PUT (XMinioStorageFull), which looks like a stall but is not one.
+drop_bucket() {
+  [ "$STORE" = minio ] || return 0
+  "$PY" - "$BUCKET" <<'PYEOF'
+import sys, boto3
+s3 = boto3.client("s3", endpoint_url="http://127.0.0.1:9000", aws_access_key_id="minioadmin",
+                  aws_secret_access_key="minioadmin", region_name="us-east-1")
+b = sys.argv[1]
+# Uploads left unfinished by a killed engine keep their parts on MinIO's disk until aborted.
+for page in s3.get_paginator("list_multipart_uploads").paginate(Bucket=b):
+    for u in page.get("Uploads", []):
+        s3.abort_multipart_upload(Bucket=b, Key=u["Key"], UploadId=u["UploadId"])
+for page in s3.get_paginator("list_objects_v2").paginate(Bucket=b):
+    keys = [{"Key": o["Key"]} for o in page.get("Contents", [])]
+    if keys:
+        s3.delete_objects(Bucket=b, Delete={"Objects": keys, "Quiet": True})
+s3.delete_bucket(Bucket=b)
+PYEOF
+}
+
 for n in $(seq 1 "$RUNS"); do
   RD="$OUT/run-$n"; rm -rf "$RD" "$DATA"; mkdir -p "$RD" "$DATA"
   case "$STORE" in
@@ -51,14 +72,18 @@ for n in $(seq 1 "$RUNS"); do
   grep -q "listening on" "$RD/server.log" || { log "run $n engine did not start"; cat "$RD/server.log" >&2; exit 1; }
   t0=$(date +%s.%N)
   timeout "$STALL_SECS" taskset -c "$GEN_CPUS" "$LOADGEN_BIN" -uri "mongodb://127.0.0.1:$PORT/?directConnection=true" \
-    -mode load -dbs 1 -docs 200000 -clients 16 >"$RD/load.out" 2>"$RD/load.err"
+    -mode load -dbs 1 -docs "${DOCS:-200000}" -clients 16 >"$RD/load.out" 2>"$RD/load.err"
   rc=$?
   t1=$(date +%s.%N)
   if [ $rc -eq 0 ]; then
     log "run $n ok $(echo "$t1 - $t0" | bc)"
     stop_engine $SPID
+    drop_bucket
     rm -rf "$RD/server.log.gz"; gzip -f "$RD/server.log"
     continue
+  fi
+  if grep -q XMinioStorageFull "$RD/server.log" "$RD/load.err" 2>/dev/null; then
+    log "run $n INVALID: MinIO is out of disk space (XMinioStorageFull), not an engine stall"
   fi
   log "run $n STALL (loadgen exit $rc after $(echo "$t1 - $t0" | bc) s: $(tail -c 200 "$RD/load.err" | tr '\n' ' '))"
   # Evidence, engine still running.
@@ -75,4 +100,5 @@ PYEOF
   # Only a diagnosis build handles SIGUSR1 (state and tokio task dump); for any other build it would kill the engine.
   [ -n "${DIAG:-}" ] && { kill -USR1 $SPID 2>/dev/null; sleep 15; }
   stop_engine $SPID
+  drop_bucket
 done
