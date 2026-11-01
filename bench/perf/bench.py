@@ -58,14 +58,20 @@ def stop_all():
             _engine.kill()
             _engine.wait()
         _engine = None
-    if subprocess.run(["pkill", "-x", "mongo-server"]).returncode == 0:
-        for _ in range(30):
-            if subprocess.run(["pgrep", "-x", "mongo-server"], capture_output=True).returncode != 0:
-                break
-            time.sleep(1)
-        else:
-            log("engine did not stop in 30 s: SIGKILL")
-            subprocess.run(["pkill", "-9", "-x", "mongo-server"])
+    # any other engine process (whatever its binary is called: mongo-server-c1 ... are cut to 15 characters in comm)
+    def engines():
+        out = subprocess.run(["ps", "-eo", "pid,comm"], capture_output=True, text=True).stdout.split("\n")[1:]
+        return [int(l.split()[0]) for l in out if l.split()[1:2] and l.split()[1].startswith("mongo-server")]
+    for p in engines():
+        os.kill(p, signal.SIGTERM)
+    for _ in range(30):
+        if not engines():
+            break
+        time.sleep(1)
+    else:
+        log("engine did not stop in 30 s: SIGKILL")
+        for p in engines():
+            os.kill(p, signal.SIGKILL)
     subprocess.run(["docker", "rm", "-f", "bench-mongod"], capture_output=True)
     for _ in range(120):
         if port_free():
