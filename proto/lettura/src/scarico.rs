@@ -539,7 +539,17 @@ impl Worker {
             }
             (0, n)
         } else if n > self.cfg.max_run {
-            (0, n - self.cfg.max_run + self.cfg.compatta_k.max(2) - 1)
+            // troppe run: si fonde la finestra di k run adiacenti meno costosa (la più piccola in byte), così una run
+            // grande non si riscrive a ogni giro
+            let k = self.cfg.compatta_k.max(2).min(n);
+            let mut best = (u64::MAX, 0);
+            for i in 0..=n - k {
+                let c: u64 = m.run[i..i + k].iter().map(|r| r.dim).sum();
+                if c < best.0 {
+                    best = (c, i);
+                }
+            }
+            (best.1, best.1 + k)
         } else {
             // gruppo più recente di run adiacenti della stessa classe con almeno k elementi
             let mut i = 0;
