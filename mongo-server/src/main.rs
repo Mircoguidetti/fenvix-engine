@@ -284,6 +284,10 @@ struct Args {
     /// and waiting for their group flush (they can disappear if the process dies before the flush).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     durable_reads: bool,
+    /// Keep the collection list, index definitions and collection options of open databases in memory (default true; see
+    /// `dbs::META_CACHE`). `--metadata-cache false` reads them from storage on every command, as before.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    metadata_cache: bool,
     /// Test control: slatedb's `l0_max_ssts` for writers (default 8, 0 keeps it). Lowering it makes the stalled-flush
     /// shutdown fallback reachable with a modest number of writes.
     #[arg(long, default_value_t = 0)]
@@ -533,6 +537,7 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
     dbs::DURABLE_READS.store(args.durable_reads, std::sync::atomic::Ordering::Relaxed);
+    dbs::META_CACHE.store(args.metadata_cache, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::L0_MAX_SSTS_OVERRIDE.store(args.l0_max_ssts, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WAL_GC_MODE.store(
         match args.wal_gc_mode.as_str() { "slatedb" => 0, "list-only" => 1, "single" => 2, "bulk" => 3, other => anyhow::bail!("unknown --wal-gc-mode {other}") },
