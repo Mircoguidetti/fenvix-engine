@@ -1,0 +1,437 @@
+{"area": "crud", "file": "replaceOne-validation.json", "test": "ReplaceOne prohibits atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-hint-unacknowledged.json", "test": "Unacknowledged updateMany with hint string on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-hint-unacknowledged.json", "test": "Unacknowledged updateMany with hint document on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-errorResponse.json", "test": "delete operations support errorResponse assertions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-errorResponse.json", "test": "bulkWrite operations support errorResponse assertions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "updateMany-collation.json", "test": "UpdateMany when many documents match with collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-dots_and_dollars.json", "test": "Updating document to set top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-dots_and_dollars.json", "test": "Updating document to set top-level dotted key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-dots_and_dollars.json", "test": "Updating document to set dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-dots_and_dollars.json", "test": "Updating document to set dotted key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete.json", "test": "FindOneAndDelete when many documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete.json", "test": "FindOneAndDelete when one document matches", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete.json", "test": "FindOneAndDelete when no documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-comment.json", "test": "insertMany with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-comment.json", "test": "insertMany with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-comment.json", "test": "insertMany with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-updateOne-sort.json", "test": "BulkWrite updateOne with sort option", "status": "FAIL", "reason": "DATA outcome.coll0[1].x: expected 22, got 1", "kind": "bug-dati", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-sort.json", "test": "BulkWrite updateOne with sort option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 7.99", "secs": 0.0}
+{"area": "crud", "file": "deleteOne-collation.json", "test": "DeleteOne when many documents matches with collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne.json", "test": "InsertOne with a non-existing document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-pipeline.json", "test": "FindOneAndUpdate using pipelines", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-hint-unacknowledged.json", "test": "Unacknowledged findOneAndReplace with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndReplace-hint-unacknowledged.json", "test": "Unacknowledged findOneAndReplace with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndReplace-hint-unacknowledged.json", "test": "Unacknowledged findOneAndReplace with hint string on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-hint-unacknowledged.json", "test": "Unacknowledged findOneAndReplace with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-hint.json", "test": "FindOneAndReplace with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-hint.json", "test": "FindOneAndReplace with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "distinct-hint.json", "test": "distinct with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "distinct-hint.json", "test": "distinct with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "db-aggregate-write-readPreference.json", "test": "Database-level aggregate with $out includes read preference for 5.0+ server", "status": "FAIL", "reason": "aggregate: unexpected error OperationFailure: Unrecognized pipeline stage name: '$out', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$out'\", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793548024, 117), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "db-aggregate-write-readPreference.json", "test": "Database-level aggregate with $out omits read preference for pre-5.0 server", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "db-aggregate-write-readPreference.json", "test": "Database-level aggregate with $merge includes read preference for 5.0+ server", "status": "FAIL", "reason": "aggregate: unexpected error OperationFailure: Unrecognized pipeline stage name: '$merge', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$merge'\", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793548024, 117), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "db-aggregate-write-readPreference.json", "test": "Database-level aggregate with $merge omits read preference for pre-5.0 server", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "findOne.json", "test": "FindOne with filter", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOne.json", "test": "FindOne with filter, sort, and skip", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-upsert.json", "test": "FindOneAndReplace when no documents match without id specified with upsert returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-upsert.json", "test": "FindOneAndReplace when no documents match without id specified with upsert returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-upsert.json", "test": "FindOneAndReplace when no documents match with id specified with upsert returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-upsert.json", "test": "FindOneAndReplace when no documents match with id specified with upsert returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-let.json", "test": "ReplaceOne with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-let.json", "test": "ReplaceOne with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "deleteMany-collation.json", "test": "DeleteMany when many documents match with collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-hint-serverError.json", "test": "FindOneAndDelete with hint string unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "findOneAndDelete-hint-serverError.json", "test": "FindOneAndDelete with hint document unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "countDocuments-comment.json", "test": "countDocuments with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "countDocuments-comment.json", "test": "countDocuments with string comment", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "countDocuments-comment.json", "test": "countDocuments with document comment on less than 4.4.0 - server error", "status": "SKIP", "reason": "req:maxServerVersion 4.3.99", "secs": 0.0}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with top-level dollar-prefixed key on pre-5.0 server yields server-side error", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with top-level dotted key", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with dollar-prefixed key in embedded doc", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with dotted key in embedded doc", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with dollar-prefixed key in _id yields server-side error", "status": "FAIL", "reason": "insertOne: expected an error {\"isClientError\": false}, got success {\"insertedId\": {\"$a\": 1}}", "kind": "diverso", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with dotted key in _id on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Inserting document with DBRef-like keys", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-dots_and_dollars.json", "test": "Unacknowledged write using dollar-prefixed or dotted keys may be silently rejected on pre-5.0 server", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-replaceOne-let.json", "test": "BulkWrite replaceOne with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-replaceOne-let.json", "test": "BulkWrite replaceOne with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.9", "secs": 0.0}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "an individual operation fails during an ordered bulkWrite", "status": "FAIL", "reason": "clientBulkWrite: expected writeErrors", "kind": "diverso", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "an individual operation fails during an unordered bulkWrite", "status": "FAIL", "reason": "clientBulkWrite: expected writeErrors", "kind": "diverso", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "detailed results are omitted from error when verboseResults is false", "status": "FAIL", "reason": "clientBulkWrite: expected writeErrors", "kind": "diverso", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "a top-level failure occurs during a bulkWrite", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "a bulk write with only errors does not report a partial result", "status": "FAIL", "reason": "clientBulkWrite: expected writeErrors", "kind": "diverso", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "a write concern error occurs during a bulkWrite", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "an empty list of write models is a client-side error", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "Requesting unacknowledged write with verboseResults is a client-side error", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errors.json", "test": "Requesting unacknowledged write with ordered is a client-side error", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-let.json", "test": "Aggregate with let option", "status": "FAIL", "reason": "aggregate: unexpected error OperationFailure: Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before the query examines any documents., full error: {'ok': 0.0, 'errmsg': 'Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before th", "kind": "errore-inatteso", "secs": 0.01}
+{"area": "crud", "file": "aggregate-let.json", "test": "Aggregate with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "aggregate-let.json", "test": "Aggregate to collection with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-let.json", "test": "Aggregate to collection with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "deleteMany-let.json", "test": "deleteMany with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-let.json", "test": "deleteMany with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "insertMany.json", "test": "InsertMany with non-existing documents", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany.json", "test": "InsertMany continue-on-error behavior with unordered (preexisting duplicate key)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany.json", "test": "InsertMany continue-on-error behavior with unordered (duplicate key in requests)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-hint-unacknowledged.json", "test": "Unacknowledged updateMany with hint string on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-hint-unacknowledged.json", "test": "Unacknowledged updateMany with hint document on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Estimated document count", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Count documents without a filter", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Count documents with a filter", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Count documents with skip and limit", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Deprecated count without a filter", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Deprecated count with a filter", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "crud", "file": "count.json", "test": "Deprecated count with skip and limit", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with deleteOne operations", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with deleteMany operations", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with insertOne operations", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with replaceOne operations", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with updateOne operations", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with updateMany operations", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with mixed ordered operations", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite with mixed unordered operations", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite continue-on-error behavior with unordered (preexisting duplicate key)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite.json", "test": "BulkWrite continue-on-error behavior with unordered (duplicate key in requests)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-updateOne-sort.json", "test": "client bulkWrite updateOne with sort option", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "updateMany-pipeline.json", "test": "UpdateMany using pipelines", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-collation.json", "test": "BulkWrite with delete operations and collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-collation.json", "test": "BulkWrite with update operations and collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint string on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-hint-unacknowledged.json", "test": "Unacknowledged updateOne with hint string on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-hint-unacknowledged.json", "test": "Unacknowledged updateOne with hint document on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-pipeline.json", "test": "UpdateOne in bulk write using pipelines", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-comment.json", "test": "BulkWrite with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-comment.json", "test": "BulkWrite with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-comment.json", "test": "BulkWrite with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "updateOne-let.json", "test": "UpdateOne with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-let.json", "test": "UpdateOne with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint string on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-let.json", "test": "BulkWrite updateOne with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateOne-let.json", "test": "BulkWrite updateOne with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.9", "secs": 0.0}
+{"area": "crud", "file": "aggregate-out-readConcern.json", "test": "readConcern majority with out stage", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-out-readConcern.json", "test": "readConcern local with out stage", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-out-readConcern.json", "test": "readConcern available with out stage", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "aggregate-out-readConcern.json", "test": "readConcern linearizable with out stage", "status": "FAIL", "reason": "aggregate: expected an error {\"isError\": true}, got success []", "kind": "diverso", "secs": 0.02}
+{"area": "crud", "file": "updateMany-validation.json", "test": "UpdateMany requires atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-allowdiskuse.json", "test": "Aggregate does not send allowDiskUse when value is not specified", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-allowdiskuse.json", "test": "Aggregate sends allowDiskUse false when false is specified", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "aggregate-allowdiskuse.json", "test": "Aggregate sends allowDiskUse true when true is specified", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-let.json", "test": "updateMany with let option", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "updateMany-let.json", "test": "updateMany with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via insertOne", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via insertMany", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via updateOne", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via updateMany", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via replaceOne", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via bulkWrite", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "create-null-ids.json", "test": "inserting _id with type null via clientBulkWrite", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "distinct-comment.json", "test": "distinct with document comment", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "distinct-comment.json", "test": "distinct with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "distinct-comment.json", "test": "distinct with document comment - pre 4.4, server error", "status": "SKIP", "reason": "req:maxServerVersion 4.4.13", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-replaceOne-sort.json", "test": "BulkWrite replaceOne with sort option", "status": "FAIL", "reason": "DATA outcome.coll0[1].x: expected 22, got 1", "kind": "bug-dati", "secs": 0.03}
+{"area": "crud", "file": "bulkWrite-replaceOne-sort.json", "test": "BulkWrite replaceOne with sort option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 7.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint string on 4.4+ server", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "bulkWrite-deleteOne-hint-unacknowledged.json", "test": "Unacknowledged deleteOne with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-collation.json", "test": "FindOneAndReplace when one document matches with collation returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-merge.json", "test": "Aggregate with $merge", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-merge.json", "test": "Aggregate with $merge and batch size of 0", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-merge.json", "test": "Aggregate with $merge and majority readConcern", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-merge.json", "test": "Aggregate with $merge and local readConcern", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-merge.json", "test": "Aggregate with $merge and available readConcern", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-dots_and_dollars.json", "test": "Replacing document with top-level dotted key on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-dots_and_dollars.json", "test": "Replacing document with dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-dots_and_dollars.json", "test": "Replacing document with dollar-prefixed key in embedded doc on pre-5.0 server yields server-side error", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndReplace-dots_and_dollars.json", "test": "Replacing document with dotted key in embedded doc on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-let.json", "test": "Find with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-let.json", "test": "Find with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "aggregate-out.json", "test": "Aggregate with $out", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "aggregate-out.json", "test": "Aggregate with $out and batch size of 0", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-comment.json", "test": "UpdateMany with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-comment.json", "test": "UpdateMany with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-comment.json", "test": "UpdateMany with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "find.json", "test": "find with multiple batches works", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find.json", "test": "Find with filter", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find.json", "test": "Find with filter, sort, skip, and limit", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find.json", "test": "Find with limit, sort, and batchsize", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "find.json", "test": "Find with batchSize equal to limit", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-hint.json", "test": "ReplaceOne with hint string", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "replaceOne-hint.json", "test": "ReplaceOne with hint document", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "bulkWrite-deleteMany-let.json", "test": "BulkWrite deleteMany with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-deleteMany-let.json", "test": "BulkWrite deleteMany with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "count-collation.json", "test": "Count documents with collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count-collation.json", "test": "Deprecated count with collation", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-let.json", "test": "findOneAndUpdate with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-let.json", "test": "findOneAndUpdate with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndDelete-hint-unacknowledged.json", "test": "Unacknowledged findOneAndDelete with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndDelete-hint-unacknowledged.json", "test": "Unacknowledged findOneAndDelete with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndDelete-hint-unacknowledged.json", "test": "Unacknowledged findOneAndDelete with hint string on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-hint-unacknowledged.json", "test": "Unacknowledged findOneAndDelete with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-dots_and_dollars.json", "test": "Inserting document with top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-dots_and_dollars.json", "test": "Inserting document with top-level dollar-prefixed key on pre-5.0 server yields server-side error", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "insertMany-dots_and_dollars.json", "test": "Inserting document with top-level dotted key", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-dots_and_dollars.json", "test": "Inserting document with dollar-prefixed key in embedded doc", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertMany-dots_and_dollars.json", "test": "Inserting document with dotted key in embedded doc", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-collation.json", "test": "FindOneAndDelete when one document matches with collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "distinct-collation.json", "test": "Distinct with a collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-hint.json", "test": "UpdateOne with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-hint.json", "test": "UpdateOne with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-results.json", "test": "client bulkWrite with verboseResults: true returns detailed results", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-results.json", "test": "client bulkWrite with verboseResults: false omits detailed results", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-results.json", "test": "client bulkWrite defaults to verboseResults: false", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-mixed-namespaces.json", "test": "client bulkWrite with mixed namespaces", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.04}
+{"area": "crud", "file": "deleteOne.json", "test": "DeleteOne when many documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne.json", "test": "DeleteOne when one document matches", "status": "PASS", "secs": 0.03}
+{"area": "crud", "file": "deleteOne.json", "test": "DeleteOne when no documents match", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-update-validation.json", "test": "client bulkWrite replaceOne prohibits atomic modifiers", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-update-validation.json", "test": "client bulkWrite updateOne requires atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-update-validation.json", "test": "client bulkWrite updateMany requires atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count-empty.json", "test": "Estimated document count with empty collection", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count-empty.json", "test": "Count documents with empty collection", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "count-empty.json", "test": "Deprecated count with empty collection", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "crud", "file": "deleteMany.json", "test": "DeleteMany when many documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany.json", "test": "DeleteMany when no document matches", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-pipeline.json", "test": "UpdateOne using pipelines", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace.json", "test": "FindOneAndReplace when many documents match returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace.json", "test": "FindOneAndReplace when many documents match returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace.json", "test": "FindOneAndReplace when one document matches returning the document before modification", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndReplace.json", "test": "FindOneAndReplace when one document matches returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace.json", "test": "FindOneAndReplace when no documents match returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace.json", "test": "FindOneAndReplace when no documents match returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-hint-unacknowledged.json", "test": "Unacknowledged updateOne with hint string on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-hint-unacknowledged.json", "test": "Unacknowledged updateOne with hint document on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-comment.json", "test": "deleteMany with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-comment.json", "test": "deleteMany with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-comment.json", "test": "deleteMany with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndDelete-comment.json", "test": "findOneAndDelete with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-comment.json", "test": "findOneAndDelete with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-comment.json", "test": "findOneAndDelete with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "insertOne-comment.json", "test": "insertOne with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-comment.json", "test": "insertOne with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "insertOne-comment.json", "test": "insertOne with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "replaceOne-hint-unacknowledged.json", "test": "Unacknowledged replaceOne with hint string on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-hint-unacknowledged.json", "test": "Unacknowledged replaceOne with hint document on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-hint.json", "test": "UpdateMany with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-hint.json", "test": "UpdateMany with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-errorResponse.json", "test": "update operations support errorResponse assertions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "findOneAndUpdate-dots_and_dollars.json", "test": "Updating document to set top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-dots_and_dollars.json", "test": "Updating document to set top-level dotted key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-dots_and_dollars.json", "test": "Updating document to set dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-dots_and_dollars.json", "test": "Updating document to set dotted key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-dots_and_dollars.json", "test": "Replacing document with top-level dotted key on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-dots_and_dollars.json", "test": "Replacing document with dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-dots_and_dollars.json", "test": "Replacing document with dollar-prefixed key in embedded doc on pre-5.0 server yields server-side error", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "replaceOne-dots_and_dollars.json", "test": "Replacing document with dotted key in embedded doc on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-dots_and_dollars.json", "test": "Unacknowledged write using dollar-prefixed or dotted keys may be silently rejected on pre-5.0 server", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "updateMany.json", "test": "UpdateMany when many documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany.json", "test": "UpdateMany when one document matches", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany.json", "test": "UpdateMany when no documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany.json", "test": "UpdateMany with upsert when no documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-comment.json", "test": "deleteOne with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-comment.json", "test": "deleteOne with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-comment.json", "test": "deleteOne with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "estimatedDocumentCount-comment.json", "test": "estimatedDocumentCount with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "estimatedDocumentCount-comment.json", "test": "estimatedDocumentCount with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "estimatedDocumentCount-comment.json", "test": "estimatedDocumentCount with document comment - pre 4.4.14, server error", "status": "SKIP", "reason": "req:maxServerVersion 4.4.13", "secs": 0.0}
+{"area": "crud", "file": "insertOne-errorResponse.json", "test": "insert operations support errorResponse assertions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is unset when first operation fails during an ordered bulk write (verbose)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is unset when first operation fails during an ordered bulk write (summary)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is set when second operation fails during an ordered bulk write (verbose)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is set when second operation fails during an ordered bulk write (summary)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is unset when all operations fail during an unordered bulk write", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is set when first operation fails during an unordered bulk write (verbose)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is set when first operation fails during an unordered bulk write (summary)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is set when second operation fails during an unordered bulk write (verbose)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-partialResults.json", "test": "partialResult is set when second operation fails during an unordered bulk write (summary)", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-deleteOne-let.json", "test": "BulkWrite deleteOne with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-deleteOne-let.json", "test": "BulkWrite deleteOne with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.9", "secs": 0.0}
+{"area": "crud", "file": "client-bulkWrite-ordered.json", "test": "client bulkWrite with ordered: false", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-ordered.json", "test": "client bulkWrite with ordered: true", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-ordered.json", "test": "client bulkWrite defaults to ordered: true", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-update-validation.json", "test": "BulkWrite replaceOne prohibits atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-update-validation.json", "test": "BulkWrite updateOne requires atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-update-validation.json", "test": "BulkWrite updateMany requires atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-hint-serverError.json", "test": "FindOneAndReplace with hint string unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.0", "secs": 0.0}
+{"area": "crud", "file": "findOneAndReplace-hint-serverError.json", "test": "FindOneAndReplace with hint document unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.0", "secs": 0.0}
+{"area": "crud", "file": "estimatedDocumentCount.json", "test": "estimatedDocumentCount always uses count", "status": "PASS", "secs": 0.03}
+{"area": "crud", "file": "estimatedDocumentCount.json", "test": "estimatedDocumentCount with maxTimeMS", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "estimatedDocumentCount.json", "test": "estimatedDocumentCount on non-existent collection", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "estimatedDocumentCount.json", "test": "estimatedDocumentCount errors correctly--command error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "estimatedDocumentCount.json", "test": "estimatedDocumentCount errors correctly--socket error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "estimatedDocumentCount.json", "test": "estimatedDocumentCount works correctly on views", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate-comment.json", "test": "findOneAndUpdate with string comment", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate-comment.json", "test": "findOneAndUpdate with document comment", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate-comment.json", "test": "findOneAndUpdate with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndUpdate-arrayFilters.json", "test": "FindOneAndUpdate when no document matches arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-arrayFilters.json", "test": "FindOneAndUpdate when one document matches arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-arrayFilters.json", "test": "FindOneAndUpdate when multiple documents match arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-delete-options.json", "test": "client bulk write delete with collation", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-delete-options.json", "test": "client bulk write delete with hint", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "deleteOne-hint.json", "test": "DeleteOne with hint string", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "deleteOne-hint.json", "test": "deleteOne with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-hint.json", "test": "FindOneAndDelete with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-hint.json", "test": "FindOneAndDelete with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-let.json", "test": "findOneAndDelete with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndDelete-let.json", "test": "findOneAndDelete with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when many documents match returning the document before modification", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when many documents match returning the document after modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when one document matches returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when one document matches returning the document after modification", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when no documents match returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when no documents match with upsert returning the document before modification", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when no documents match returning the document after modification", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate when no documents match with upsert returning the document after modification", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "replaceOne-comment.json", "test": "ReplaceOne with string comment", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "replaceOne-comment.json", "test": "ReplaceOne with document comment", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "replaceOne-comment.json", "test": "ReplaceOne with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "replaceOne-collation.json", "test": "ReplaceOne when one document matches with collation", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate-hint.json", "test": "FindOneAndUpdate with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-hint.json", "test": "FindOneAndUpdate with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne.json", "test": "ReplaceOne when many documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne.json", "test": "ReplaceOne when one document matches", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne.json", "test": "ReplaceOne when no documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne.json", "test": "ReplaceOne with upsert when no documents match without an id specified", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne.json", "test": "ReplaceOne with upsert when no documents match with an id specified", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "replaceOne-sort.json", "test": "ReplaceOne with sort option", "status": "FAIL", "reason": "DATA outcome.coll0[1].x: expected 22, got 1", "kind": "bug-dati", "secs": 0.02}
+{"area": "crud", "file": "replaceOne-sort.json", "test": "replaceOne with sort option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 7.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-updateMany-pipeline.json", "test": "UpdateMany in bulk write using pipelines", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-hint-serverError.json", "test": "DeleteOne with hint string unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "deleteOne-hint-serverError.json", "test": "DeleteOne with hint document unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "updateOne-arrayFilters.json", "test": "UpdateOne when no document matches arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "updateOne-arrayFilters.json", "test": "UpdateOne when one document matches arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "updateOne-arrayFilters.json", "test": "UpdateOne when multiple documents match arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "updateOne-arrayFilters.json", "test": "UpdateOne when no documents match multiple arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-arrayFilters.json", "test": "UpdateOne when one document matches multiple arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-update-options.json", "test": "client bulkWrite update with arrayFilters", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-update-options.json", "test": "client bulkWrite update with collation", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-update-options.json", "test": "client bulkWrite update with hint", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-update-options.json", "test": "client bulkWrite update with upsert", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-hint.json", "test": "DeleteMany with hint string", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteMany-hint.json", "test": "DeleteMany with hint document", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-hint-serverError.json", "test": "FindOneAndUpdate with hint string unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.0", "secs": 0.0}
+{"area": "crud", "file": "findOneAndUpdate-hint-serverError.json", "test": "FindOneAndUpdate with hint document unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.0", "secs": 0.0}
+{"area": "crud", "file": "updateOne-validation.json", "test": "UpdateOne requires atomic modifiers", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "Aggregate with $out passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "BulkWrite passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "FindOneAndReplace passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "FindOneAndUpdate passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "InsertMany passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "InsertOne passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "ReplaceOne passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "UpdateMany passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bypassDocumentValidation.json", "test": "UpdateOne passes bypassDocumentValidation: false", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-allowdiskuse.json", "test": "Find does not send allowDiskUse when value is not specified", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-allowdiskuse.json", "test": "Find sends allowDiskUse false when false is specified", "status": "PASS", "secs": 0.0}
+{"area": "crud", "file": "find-allowdiskuse.json", "test": "Find sends allowDiskUse true when true is specified", "status": "PASS", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-replaceOne-dots_and_dollars.json", "test": "Replacing document with top-level dotted key on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-replaceOne-dots_and_dollars.json", "test": "Replacing document with dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-replaceOne-dots_and_dollars.json", "test": "Replacing document with dollar-prefixed key in embedded doc on pre-5.0 server yields server-side error", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-replaceOne-dots_and_dollars.json", "test": "Replacing document with dotted key in embedded doc on 3.6+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-let.json", "test": "findOneAndReplace with let option", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndReplace-let.json", "test": "findOneAndReplace with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-insertOne-dots_and_dollars.json", "test": "Inserting document with top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-insertOne-dots_and_dollars.json", "test": "Inserting document with top-level dollar-prefixed key on pre-5.0 server yields server-side error", "status": "SKIP", "reason": "req:maxServerVersion 4.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-insertOne-dots_and_dollars.json", "test": "Inserting document with top-level dotted key", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-insertOne-dots_and_dollars.json", "test": "Inserting document with dollar-prefixed key in embedded doc", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-insertOne-dots_and_dollars.json", "test": "Inserting document with dotted key in embedded doc", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne.json", "test": "UpdateOne when many documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne.json", "test": "UpdateOne when one document matches", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne.json", "test": "UpdateOne when no documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne.json", "test": "UpdateOne with upsert when no documents match", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "distinct.json", "test": "Distinct without a filter", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "distinct.json", "test": "Distinct with a filter", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-delete-hint-serverError.json", "test": "BulkWrite deleteOne with hints unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-delete-hint-serverError.json", "test": "BulkWrite deleteMany with hints unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "updateOne-comment.json", "test": "UpdateOne with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-comment.json", "test": "UpdateOne with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-comment.json", "test": "UpdateOne with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "updateMany-dots_and_dollars.json", "test": "Updating document to set top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-dots_and_dollars.json", "test": "Updating document to set top-level dotted key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-dots_and_dollars.json", "test": "Updating document to set dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-dots_and_dollars.json", "test": "Updating document to set dotted key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-comment.json", "test": "find with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-comment.json", "test": "find with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-comment.json", "test": "find with document comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "find-comment.json", "test": "find with comment sets comment on getMore", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "find-comment.json", "test": "find with comment does not set comment on getMore - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.3.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-updateMany-dots_and_dollars.json", "test": "Updating document to set top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-dots_and_dollars.json", "test": "Updating document to set top-level dotted key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-dots_and_dollars.json", "test": "Updating document to set dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-dots_and_dollars.json", "test": "Updating document to set dotted key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-errorResponse.json", "test": "client bulkWrite operations support errorResponse assertions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "crud", "file": "find-collation.json", "test": "Find with a collation", "status": "PASS", "secs": 0.07}
+{"area": "crud", "file": "aggregate-merge-errorResponse.json", "test": "aggregate $merge DuplicateKey error is accessible", "status": "FAIL", "reason": "aggregate: expected error code 11000, got 40324 (Unrecognized pipeline stage name: '$merge', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$merge'\", 'code': 40324, 'codeName':)", "kind": "mancante", "secs": 0.06}
+{"area": "crud", "file": "aggregate-collation.json", "test": "Aggregate with collation", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-replaceOne-hint-unacknowledged.json", "test": "Unacknowledged replaceOne with hint string on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-replaceOne-hint-unacknowledged.json", "test": "Unacknowledged replaceOne with hint document on 4.2+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-collation.json", "test": "FindOneAndUpdate when many documents match with collation returning the document before modification", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-update-hint.json", "test": "BulkWrite updateOne with update hints", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-update-hint.json", "test": "BulkWrite updateMany with update hints", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-update-hint.json", "test": "BulkWrite replaceOne with update hints", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "deleteOne-let.json", "test": "deleteOne with let option", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "deleteOne-let.json", "test": "deleteOne with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-delete-hint.json", "test": "BulkWrite deleteOne with hints", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-delete-hint.json", "test": "BulkWrite deleteMany with hints", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "db-aggregate.json", "test": "Aggregate with $listLocalSessions", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "db-aggregate.json", "test": "Aggregate with $listLocalSessions and allowDiskUse", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "findOneAndUpdate-hint-unacknowledged.json", "test": "Unacknowledged findOneAndUpdate with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndUpdate-hint-unacknowledged.json", "test": "Unacknowledged findOneAndUpdate with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "findOneAndUpdate-hint-unacknowledged.json", "test": "Unacknowledged findOneAndUpdate with hint string on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-hint-unacknowledged.json", "test": "Unacknowledged findOneAndUpdate with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-let.json", "test": "BulkWrite updateMany with let option", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-updateMany-let.json", "test": "BulkWrite updateMany with let option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.9", "secs": 0.0}
+{"area": "crud", "file": "client-bulkWrite-update-pipeline.json", "test": "client bulkWrite updateOne with pipeline", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-update-pipeline.json", "test": "client bulkWrite updateMany with pipeline", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-arrayFilters.json", "test": "BulkWrite updateOne with arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-arrayFilters.json", "test": "BulkWrite updateMany with arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-arrayFilters.json", "test": "BulkWrite with arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "updateOne-collation.json", "test": "UpdateOne when one document matches with collation", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite comment", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite bypassDocumentValidation", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite let", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite bypassDocumentValidation: false is sent", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite writeConcern", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite inherits writeConcern from client", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.03}
+{"area": "crud", "file": "client-bulkWrite-options.json", "test": "client bulkWrite writeConcern option overrides client writeConcern", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "find-allowdiskuse-serverError.json", "test": "Find fails when allowDiskUse true is specified against pre 4.4 server (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.0", "secs": 0.0}
+{"area": "crud", "file": "find-allowdiskuse-serverError.json", "test": "Find fails when allowDiskUse false is specified against pre 4.4 server (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.0", "secs": 0.0}
+{"area": "crud", "file": "updateMany-arrayFilters.json", "test": "UpdateMany when no documents match arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-arrayFilters.json", "test": "UpdateMany when one document matches arrayFilters", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateMany-arrayFilters.json", "test": "UpdateMany when multiple documents match arrayFilters", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "bulkWrite-deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint string fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint document fails with client-side error on pre-4.4 server", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "bulkWrite-deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint string on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "bulkWrite-deleteMany-hint-unacknowledged.json", "test": "Unacknowledged deleteMany with hint document on 4.4+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-errorResponse.json", "test": "findOneAndUpdate DuplicateKey error is accessible", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndUpdate-errorResponse.json", "test": "findOneAndUpdate document validation errInfo is accessible", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate.json", "test": "aggregate with multiple batches works", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "aggregate.json", "test": "aggregate with a string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate.json", "test": "aggregate with a document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate.json", "test": "aggregate with a document comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "aggregate.json", "test": "aggregate with comment sets comment on getMore", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate.json", "test": "aggregate with comment does not set comment on getMore - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.3.99", "secs": 0.0}
+{"area": "crud", "file": "aggregate.json", "test": "Aggregate with multiple stages", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "client-bulkWrite-replaceOne-sort.json", "test": "client bulkWrite replaceOne with sort option", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.02}
+{"area": "crud", "file": "findOneAndReplace-comment.json", "test": "findOneAndReplace with string comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-comment.json", "test": "findOneAndReplace with document comment", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "findOneAndReplace-comment.json", "test": "findOneAndReplace with comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "crud", "file": "aggregate-write-readPreference.json", "test": "Aggregate with $out includes read preference for 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "aggregate-write-readPreference.json", "test": "Aggregate with $out omits read preference for pre-5.0 server", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "aggregate-write-readPreference.json", "test": "Aggregate with $merge includes read preference for 5.0+ server", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "aggregate-write-readPreference.json", "test": "Aggregate with $merge omits read preference for pre-5.0 server", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "crud", "file": "updateOne-dots_and_dollars.json", "test": "Updating document to set top-level dollar-prefixed key on 5.0+ server", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "updateOne-dots_and_dollars.json", "test": "Updating document to set top-level dotted key on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-dots_and_dollars.json", "test": "Updating document to set dollar-prefixed key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.01}
+{"area": "crud", "file": "updateOne-dots_and_dollars.json", "test": "Updating document to set dotted key in embedded doc on 5.0+ server", "status": "PASS", "secs": 0.02}
+{"area": "crud", "file": "deleteMany-hint-serverError.json", "test": "DeleteMany with hint string unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "deleteMany-hint-serverError.json", "test": "DeleteMany with hint document unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 4.3.3", "secs": 0.0}
+{"area": "crud", "file": "updateOne-sort.json", "test": "UpdateOne with sort option", "status": "FAIL", "reason": "DATA outcome.coll0[1].x: expected 22, got 23", "kind": "bug-dati", "secs": 0.02}
+{"area": "crud", "file": "updateOne-sort.json", "test": "updateOne with sort option unsupported (server-side error)", "status": "SKIP", "reason": "req:maxServerVersion 7.99", "secs": 0.0}

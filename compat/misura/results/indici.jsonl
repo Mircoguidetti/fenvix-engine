@@ -1,0 +1,15 @@
+{"area": "indici", "file": "updateSearchIndex.json", "test": "sends the correct command", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "createSearchIndex.json", "test": "no name provided for an index definition", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "createSearchIndex.json", "test": "name provided for an index definition", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "searchIndexIgnoresReadWriteConcern.json", "test": "createSearchIndex ignores read and write concern", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "searchIndexIgnoresReadWriteConcern.json", "test": "createSearchIndexes ignores read and write concern", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "searchIndexIgnoresReadWriteConcern.json", "test": "dropSearchIndex ignores read and write concern", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "searchIndexIgnoresReadWriteConcern.json", "test": "listSearchIndexes ignores read and write concern", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.01}
+{"area": "indici", "file": "searchIndexIgnoresReadWriteConcern.json", "test": "updateSearchIndex ignores the read and write concern", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "createSearchIndexes.json", "test": "empty index definition array", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "createSearchIndexes.json", "test": "no name provided for an index definition", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "createSearchIndexes.json", "test": "name provided for an index definition", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "dropSearchIndex.json", "test": "sends the correct command", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "listSearchIndexes.json", "test": "when no name is provided, it does not populate the filter", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "listSearchIndexes.json", "test": "when a name is provided, it is present in the filter", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}
+{"area": "indici", "file": "listSearchIndexes.json", "test": "aggregation cursor options are supported", "status": "SKIP", "reason": "req:atlas-search", "secs": 0.0}

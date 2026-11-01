@@ -1,0 +1,65 @@
+{"area": "monitoraggio-comandi", "file": "command.json", "test": "A successful command", "status": "PASS", "secs": 0.02}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "authenticate", "status": "PASS", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "saslStart", "status": "PASS", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "saslContinue", "status": "PASS", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "getnonce", "status": "SKIP", "reason": "req:maxServerVersion 6.1.99", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "createUser", "status": "PASS", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "updateUser", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "hello with speculative authenticate", "status": "PASS", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "legacy hello with speculative authenticate", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "hello without speculative authenticate is not redacted", "status": "PASS", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "legacy hello without speculative authenticate is not redacted", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "insertOne.json", "test": "A successful insertOne", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "insertOne.json", "test": "A successful insertOne with write errors", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "unacknowledged-client-bulkWrite.json", "test": "A successful mixed client bulkWrite", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "insertMany.json", "test": "A successful insertMany", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "insertMany.json", "test": "A successful insertMany with write errors", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "bulkWrite.json", "test": "A successful mixed bulk write", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "find.json", "test": "A successful find with no options", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "find.json", "test": "A successful find with options", "status": "FAIL", "reason": "find: unexpected error OperationFailure: error processing query: ns=command-monitoring-tests.testTree: _id $gt 1\nSort: { x: -1 }\nProj: { _id: 0, x: 1 }\n planner returned error :: caused by :: When using min()/max() a hint of which index to use must be provided, full error: {'ok': 0.0, 'errmsg': 'error processing query: ns=command-monitorin", "kind": "errore-inatteso", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "find.json", "test": "A successful find with showRecordId and returnKey", "status": "FAIL", "reason": "event[1].reply.cursor.firstBatch[0]._id: missing in actual {}", "kind": "diverso", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "find.json", "test": "A successful find with a getMore", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "find.json", "test": "A successful find event with a getmore and the server kills the cursor (<= 4.4)", "status": "SKIP", "reason": "req:maxServerVersion 4.4.99", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "find.json", "test": "A failed find event", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "server-connection-id.json", "test": "command events include server connection id", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "deleteOne.json", "test": "A successful deleteOne", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "deleteOne.json", "test": "A successful deleteOne with write errors", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "deleteMany.json", "test": "A successful deleteMany", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "deleteMany.json", "test": "A successful deleteMany with write errors", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "updateMany.json", "test": "A successful updateMany", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "updateMany.json", "test": "A successful updateMany with write errors", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "writeConcernError.json", "test": "A retryable write with write concern errors publishes success event", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "unacknowledgedBulkWrite.json", "test": "A successful unordered bulk write with an unacknowledged write concern", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "updateOne.json", "test": "A successful updateOne", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "updateOne.json", "test": "A successful updateOne with upsert where the upserted id is not an ObjectId", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "updateOne.json", "test": "A successful updateOne with write errors", "status": "PASS", "secs": 0.01}
+{"area": "monitoraggio-comandi", "file": "command.json", "test": "A successful command", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "command.json", "test": "A failed command", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "command.json", "test": "A successful commitTransaction command", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "command.json", "test": "A successful abortTransaction command", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "authenticate command and resulting server-generated error are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "network error in response to authenticate is not redacted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "saslStart command and resulting server-generated error are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "network error in response to saslStart is not redacted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "saslContinue command and resulting server-generated error are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "network error in response to saslContinue is not redacted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "getnonce command and server reply are redacted", "status": "SKIP", "reason": "req:maxServerVersion 6.1.99", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "network error in response to getnonce is not redacted", "status": "SKIP", "reason": "req:maxServerVersion 6.1.99", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "createUser command and resulting server-generated error are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "network error in response to createUser is not redacted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "updateUser command and resulting server-generated error are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "network error in response to updateUser is not redacted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "hello with speculative authenticate command and server reply are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "legacy hello with speculative authenticate command and server reply are redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "hello without speculative authenticate command and server reply are not redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "redacted-commands.json", "test": "legacy hello without speculative authenticate command and server reply are not redacted", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "unacknowledged-write.json", "test": "An unacknowledged write generates a succeeded log message with ok: 1 reply", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "no-handshake-messages.json", "test": "Handshake commands should not generate log messages", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "driver-connection-id.json", "test": "A successful command", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "driver-connection-id.json", "test": "A failed command", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "server-connection-id.json", "test": "command log messages include server connection id", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "service-id.json", "test": "command log messages include serviceId when in LB mode", "status": "SKIP", "reason": "req:topology load-balanced", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "service-id.json", "test": "command log messages omit serviceId when not in LB mode", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "operation-id.json", "test": "Successful bulk write command log messages include operationIds", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "operation-id.json", "test": "Failed bulk write command log message includes operationId", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}
+{"area": "monitoraggio-comandi", "file": "no-heartbeat-messages.json", "test": "Heartbeat commands should not generate log messages", "status": "SKIP", "reason": "runner:observeLogMessages", "secs": 0.0}

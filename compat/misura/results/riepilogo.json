@@ -1,0 +1,415 @@
+{
+ "aree": {
+  "causal-consistency": {
+   "totale": 18,
+   "passati": 16,
+   "falliti": 1,
+   "saltati": 1,
+   "percentuale_sui_eseguiti": 94.1,
+   "fallimenti_per_categoria": {
+    "mancante": 1
+   },
+   "saltati_per_motivo": {
+    "runner": 1
+   },
+   "runner_non_implementato": {
+    "runner:client.dropDatabase": 1
+   }
+  },
+  "change-streams": {
+   "totale": 89,
+   "passati": 39,
+   "falliti": 6,
+   "saltati": 44,
+   "percentuale_sui_eseguiti": 86.7,
+   "fallimenti_per_categoria": {
+    "diverso": 4,
+    "mancante": 2
+   },
+   "saltati_per_motivo": {
+    "req:minServerVersion": 2,
+    "failpoint": 21,
+    "req:maxServerVersion": 19,
+    "req:topology": 2
+   },
+   "runner_non_implementato": {}
+  },
+  "collezioni": {
+   "totale": 7,
+   "passati": 6,
+   "falliti": 1,
+   "saltati": 0,
+   "percentuale_sui_eseguiti": 85.7,
+   "fallimenti_per_categoria": {
+    "diverso": 1
+   },
+   "saltati_per_motivo": {},
+   "runner_non_implementato": {}
+  },
+  "crud": {
+   "totale": 437,
+   "passati": 306,
+   "falliti": 39,
+   "saltati": 92,
+   "percentuale_sui_eseguiti": 88.7,
+   "fallimenti_per_categoria": {
+    "bug-dati": 4,
+    "mancante": 32,
+    "diverso": 3
+   },
+   "saltati_per_motivo": {
+    "failpoint": 9,
+    "req:maxServerVersion": 78,
+    "runner": 5
+   },
+   "runner_non_implementato": {
+    "runner:collection.count": 5
+   }
+  },
+  "gridfs": {
+   "totale": 45,
+   "passati": 39,
+   "falliti": 0,
+   "saltati": 6,
+   "percentuale_sui_eseguiti": 100.0,
+   "fallimenti_per_categoria": {},
+   "saltati_per_motivo": {
+    "runner": 6
+   },
+   "runner_non_implementato": {
+    "runner:bucket.deleteByName": 2,
+    "runner:upload args ['disableMD5']": 2,
+    "runner:bucket.renameByName": 2
+   }
+  },
+  "indici": {
+   "totale": 15,
+   "passati": 0,
+   "falliti": 0,
+   "saltati": 15,
+   "percentuale_sui_eseguiti": null,
+   "fallimenti_per_categoria": {},
+   "saltati_per_motivo": {
+    "req:atlas-search": 15
+   },
+   "runner_non_implementato": {}
+  },
+  "monitoraggio-comandi": {
+   "totale": 65,
+   "passati": 29,
+   "falliti": 3,
+   "saltati": 33,
+   "percentuale_sui_eseguiti": 90.6,
+   "fallimenti_per_categoria": {
+    "mancante": 1,
+    "diverso": 2
+   },
+   "saltati_per_motivo": {
+    "req:maxServerVersion": 4,
+    "failpoint": 6,
+    "runner": 22,
+    "req:topology": 1
+   },
+   "runner_non_implementato": {
+    "runner:observeLogMessages": 22
+   }
+  },
+  "read-write-concern": {
+   "totale": 11,
+   "passati": 10,
+   "falliti": 0,
+   "saltati": 1,
+   "percentuale_sui_eseguiti": 100.0,
+   "fallimenti_per_categoria": {},
+   "saltati_per_motivo": {
+    "runner": 1
+   },
+   "runner_non_implementato": {
+    "runner:collection.mapReduce": 1
+   }
+  },
+  "retryable-reads": {
+   "totale": 380,
+   "passati": 17,
+   "falliti": 0,
+   "saltati": 363,
+   "percentuale_sui_eseguiti": 100.0,
+   "fallimenti_per_categoria": {},
+   "saltati_per_motivo": {
+    "failpoint": 327,
+    "runner": 4,
+    "req:auth": 32
+   },
+   "runner_non_implementato": {
+    "runner:client.listDatabaseObjects": 1,
+    "runner:collection.count": 1,
+    "runner:collection.mapReduce": 1,
+    "runner:database.listCollectionObjects": 1
+   }
+  },
+  "retryable-writes": {
+   "totale": 142,
+   "passati": 7,
+   "falliti": 0,
+   "saltati": 135,
+   "percentuale_sui_eseguiti": 100.0,
+   "fallimenti_per_categoria": {},
+   "saltati_per_motivo": {
+    "failpoint": 112,
+    "req:maxServerVersion": 3,
+    "req:auth": 20
+   },
+   "runner_non_implementato": {}
+  },
+  "run-command": {
+   "totale": 21,
+   "passati": 9,
+   "falliti": 0,
+   "saltati": 12,
+   "percentuale_sui_eseguiti": 100.0,
+   "fallimenti_per_categoria": {},
+   "saltati_per_motivo": {
+    "req:topology": 4,
+    "failpoint": 1,
+    "runner": 7
+   },
+   "runner_non_implementato": {
+    "runner:observeEvents connectionReadyEvent": 7
+   }
+  },
+  "sessioni": {
+   "totale": 34,
+   "passati": 5,
+   "falliti": 14,
+   "saltati": 15,
+   "percentuale_sui_eseguiti": 26.3,
+   "fallimenti_per_categoria": {
+    "bug-risposta": 5,
+    "diverso": 9
+   },
+   "saltati_per_motivo": {
+    "req:topology": 3,
+    "req:maxServerVersion": 3,
+    "failpoint": 9
+   },
+   "runner_non_implementato": {}
+  },
+  "transazioni": {
+   "totale": 287,
+   "passati": 107,
+   "falliti": 6,
+   "saltati": 174,
+   "percentuale_sui_eseguiti": 94.7,
+   "fallimenti_per_categoria": {
+    "mancante": 5,
+    "bug-dati": 1
+   },
+   "saltati_per_motivo": {
+    "failpoint": 86,
+    "req:topology": 79,
+    "runner": 1,
+    "req:secondario": 6,
+    "req:auth": 2
+   },
+   "runner_non_implementato": {
+    "runner:collection.count": 1
+   }
+  },
+  "versioned-api": {
+   "totale": 41,
+   "passati": 36,
+   "falliti": 1,
+   "saltati": 4,
+   "percentuale_sui_eseguiti": 97.3,
+   "fallimenti_per_categoria": {
+    "mancante": 1
+   },
+   "saltati_per_motivo": {
+    "req:serverParameter": 4
+   },
+   "runner_non_implementato": {}
+  }
+ },
+ "totale": {
+  "totale": 1592,
+  "passati": 626,
+  "falliti": 71,
+  "saltati": 895
+ },
+ "percentuale_totale_sui_eseguiti": 89.8,
+ "fallimenti": [
+  {
+   "categoria": "bug-dati",
+   "etichetta": "transazione: un findAndModify che non trova niente cancella al commit le scritture precedenti della stessa transazione (il commit risponde ok)",
+   "test": [
+    "transazioni/findOneAndDelete.json: findOneAndDelete"
+   ]
+  },
+  {
+   "categoria": "bug-dati",
+   "etichetta": "updateOne/replaceOne con sort (novità 8.0): il sort è ignorato e viene modificato un altro documento",
+   "test": [
+    "crud/bulkWrite-updateOne-sort.json: BulkWrite updateOne with sort option",
+    "crud/bulkWrite-replaceOne-sort.json: BulkWrite replaceOne with sort option",
+    "crud/replaceOne-sort.json: ReplaceOne with sort option",
+    "crud/updateOne-sort.json: UpdateOne with sort option"
+   ]
+  },
+  {
+   "categoria": "bug-risposta",
+   "etichetta": "sessioni snapshot: le letture vedono scritture fatte dopo l'inizio dello snapshot",
+   "test": [
+    "sessioni/snapshot-sessions.json: Find operation with snapshot",
+    "sessioni/snapshot-sessions.json: Distinct operation with snapshot",
+    "sessioni/snapshot-sessions.json: Aggregate operation with snapshot",
+    "sessioni/snapshot-sessions.json: Mixed operation with snapshot",
+    "sessioni/snapshot-sessions.json: Write commands with snapshot session do not affect snapshot reads"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "$out con readConcern linearizable: accettato (MongoDB dà errore)",
+   "test": [
+    "crud/aggregate-out-readConcern.json: readConcern linearizable with out stage"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "_id con chiave che inizia per $: accettato (MongoDB lo rifiuta)",
+   "test": [
+    "crud/insertOne-dots_and_dollars.json: Inserting document with dollar-prefixed key in _id yields server-side error"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "change stream: array troncato riportato come updatedFields invece di truncatedArrays",
+   "test": [
+    "change-streams/change-streams.json: Test array truncation"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "change stream: stadio non valido nel pipeline accettato all'apertura",
+   "test": [
+    "change-streams/change-streams-errors.json: Change Stream should error when an invalid aggregation stage is passed in"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "change stream: togliere _id con $project non dà l'errore 280 del server",
+   "test": [
+    "change-streams/change-streams-errors.json: Change Stream should error when _id is projected out",
+    "change-streams/change-streams.json: Test server error on projecting out _id"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "collezione timeseries: _id duplicati rifiutati (in MongoDB le timeseries non hanno indice unico su _id)",
+   "test": [
+    "collezioni/timeseries-collection.json: insertMany with duplicate ids"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "find con min/max e hint {_id: 1}: il server dice che manca l'hint",
+   "test": [
+    "monitoraggio-comandi/find.json: A successful find with options"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "find con returnKey: documento vuoto invece della chiave dell'indice usato",
+   "test": [
+    "monitoraggio-comandi/find.json: A successful find with showRecordId and returnKey"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "let del comando aggregate: {$literal: '$bar'} è rifiutato come accesso a un campo",
+   "test": [
+    "crud/aggregate-let.json: Aggregate with let option"
+   ]
+  },
+  {
+   "categoria": "diverso",
+   "etichetta": "sessioni snapshot: le scritture e i comandi di elenco con readConcern snapshot sono accettati (MongoDB li rifiuta)",
+   "test": [
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on insertOne with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on insertMany with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on deleteOne with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on updateOne with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on findOneAndUpdate with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on listDatabases with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on listCollections with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on listIndexes with snapshot",
+    "sessioni/snapshot-sessions-unsupported-ops.json: Server returns an error on runCommand with snapshot"
+   ]
+  },
+  {
+   "categoria": "mancante",
+   "etichetta": "$out e $merge in un aggregate a livello di database (es. dopo $documents)",
+   "test": [
+    "crud/db-aggregate-write-readPreference.json: Database-level aggregate with $out includes read preference for 5.0+ server",
+    "crud/db-aggregate-write-readPreference.json: Database-level aggregate with $merge includes read preference for 5.0+ server",
+    "crud/aggregate-merge-errorResponse.json: aggregate $merge DuplicateKey error is accessible"
+   ]
+  },
+  {
+   "categoria": "mancante",
+   "etichetta": "bulkWrite tra collezioni (comando bulkWrite di MongoDB 8.0): il server non ha il comando e si dichiara 7.0, quindi i driver lo rifiutano prima di inviarlo",
+   "test": [
+    "causal-consistency/causal-consistency-clientBulkWrite.json: clientBulkWrite includes afterClusterTime in causally consistent session",
+    "crud/client-bulkWrite-errors.json: an individual operation fails during an ordered bulkWrite",
+    "crud/client-bulkWrite-errors.json: an individual operation fails during an unordered bulkWrite",
+    "crud/client-bulkWrite-errors.json: detailed results are omitted from error when verboseResults is false",
+    "crud/client-bulkWrite-errors.json: a bulk write with only errors does not report a partial result",
+    "crud/client-bulkWrite-updateOne-sort.json: client bulkWrite updateOne with sort option",
+    "crud/create-null-ids.json: inserting _id with type null via clientBulkWrite",
+    "crud/client-bulkWrite-results.json: client bulkWrite with verboseResults: true returns detailed results",
+    "crud/client-bulkWrite-results.json: client bulkWrite with verboseResults: false omits detailed results",
+    "crud/client-bulkWrite-results.json: client bulkWrite defaults to verboseResults: false",
+    "crud/client-bulkWrite-mixed-namespaces.json: client bulkWrite with mixed namespaces",
+    "crud/client-bulkWrite-ordered.json: client bulkWrite with ordered: false",
+    "crud/client-bulkWrite-ordered.json: client bulkWrite with ordered: true",
+    "crud/client-bulkWrite-ordered.json: client bulkWrite defaults to ordered: true",
+    "crud/client-bulkWrite-delete-options.json: client bulk write delete with collation",
+    "crud/client-bulkWrite-delete-options.json: client bulk write delete with hint",
+    "crud/client-bulkWrite-update-options.json: client bulkWrite update with arrayFilters",
+    "crud/client-bulkWrite-update-options.json: client bulkWrite update with collation",
+    "crud/client-bulkWrite-update-options.json: client bulkWrite update with hint",
+    "crud/client-bulkWrite-update-options.json: client bulkWrite update with upsert",
+    "crud/client-bulkWrite-update-pipeline.json: client bulkWrite updateOne with pipeline",
+    "crud/client-bulkWrite-update-pipeline.json: client bulkWrite updateMany with pipeline",
+    "crud/client-bulkWrite-options.json: client bulkWrite comment",
+    "crud/client-bulkWrite-options.json: client bulkWrite bypassDocumentValidation",
+    "crud/client-bulkWrite-options.json: client bulkWrite let",
+    "crud/client-bulkWrite-options.json: client bulkWrite bypassDocumentValidation: false is sent",
+    "crud/client-bulkWrite-options.json: client bulkWrite writeConcern",
+    "crud/client-bulkWrite-options.json: client bulkWrite inherits writeConcern from client",
+    "crud/client-bulkWrite-options.json: client bulkWrite writeConcern option overrides client writeConcern",
+    "crud/client-bulkWrite-replaceOne-sort.json: client bulkWrite replaceOne with sort option",
+    "monitoraggio-comandi/unacknowledged-client-bulkWrite.json: A successful mixed client bulkWrite",
+    "transazioni/client-bulkWrite.json: client bulkWrite in a transaction",
+    "transazioni/client-bulkWrite.json: client writeConcern ignored for client bulkWrite in transaction",
+    "versioned-api/crud-api-version-1.json: client bulkWrite appends declared API version"
+   ]
+  },
+  {
+   "categoria": "mancante",
+   "etichetta": "campo updateDescription.disambiguatedPaths degli eventi di change stream",
+   "test": [
+    "change-streams/change-streams-disambiguatedPaths.json: disambiguatedPaths is present on updateDescription when an ambiguous path is present",
+    "change-streams/change-streams-disambiguatedPaths.json: disambiguatedPaths returns array indices as integers"
+   ]
+  },
+  {
+   "categoria": "mancante",
+   "etichetta": "creare collezioni e indici dentro una transazione (MongoDB lo permette dalla 4.4)",
+   "test": [
+    "transazioni/create-collection.json: explicitly create collection using create command",
+    "transazioni/create-index.json: create index on a non-existing collection",
+    "transazioni/create-index.json: create index on a collection created within the same transaction"
+   ]
+  }
+ ]
+}

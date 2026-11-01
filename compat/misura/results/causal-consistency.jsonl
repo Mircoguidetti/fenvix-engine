@@ -1,0 +1,18 @@
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "insertOne includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.02}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "insertMany includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "updateOne includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "updateMany includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "replaceOne includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "deleteOne includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "deleteMany includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "findOneAndUpdate includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "findOneAndDelete includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "findOneAndReplace includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "bulkWrite includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "create includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "createIndexes includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "drop includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "dropDatabase includes afterClusterTime in causally consistent session", "status": "SKIP", "reason": "runner:client.dropDatabase", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "dropIndexes includes afterClusterTime in causally consistent session", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-write-commands.json", "test": "first write command in a causally consistent session does not include afterClusterTime", "status": "PASS", "secs": 0.01}
+{"area": "causal-consistency", "file": "causal-consistency-clientBulkWrite.json", "test": "clientBulkWrite includes afterClusterTime in causally consistent session", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}

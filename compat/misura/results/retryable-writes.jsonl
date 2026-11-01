@@ -1,0 +1,142 @@
+{"area": "retryable-writes", "file": "bulkWrite-serverErrors.json", "test": "BulkWrite succeeds after retryable writeConcernError in first batch", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite-serverErrors.json", "test": "BulkWrite fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne-errorLabels.json", "test": "DeleteOne succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne-errorLabels.json", "test": "DeleteOne fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne-errorLabels.json", "test": "DeleteOne succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne-errorLabels.json", "test": "DeleteOne succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete.json", "test": "FindOneAndDelete is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete.json", "test": "FindOneAndDelete is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete.json", "test": "FindOneAndDelete is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne.json", "test": "InsertOne is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne.json", "test": "InsertOne is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne.json", "test": "InsertOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "client-bulkWrite-serverErrors.json", "test": "client bulkWrite with no multi: true operations succeeds after retryable top-level error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "client-bulkWrite-serverErrors.json", "test": "client bulkWrite with multi: true operations fails after retryable top-level error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "client-bulkWrite-serverErrors.json", "test": "client bulkWrite with no multi: true operations succeeds after retryable writeConcernError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "client-bulkWrite-serverErrors.json", "test": "client bulkWrite with multi: true operations fails after retryable writeConcernError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "client-bulkWrite-serverErrors.json", "test": "client bulkWrite with retryWrites: false does not retry", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany.json", "test": "InsertMany succeeds after one network error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany.json", "test": "InsertMany with unordered execution", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany.json", "test": "InsertMany fails after multiple network errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne succeeds after retryable writeConcernError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "RetryableWriteError label is added based on top-level code in pre-4.4 server response", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "RetryableWriteError label is added based on writeConcernError in pre-4.4 mongod response", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "RetryableWriteError label is not added based on writeConcernError in pre-4.4 mongos response", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne succeeds after connection failure", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne fails after connection failure when retryWrites option is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne fails after Interrupted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne fails after WriteConcernError Interrupted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne fails after WriteConcernError WriteConcernTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-serverErrors.json", "test": "InsertOne fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "First command is retried", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "All commands are retried", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "Both commands are retried after their first statement fails", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "Second command is retried after its second statement fails", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "BulkWrite with unordered execution", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "First insertOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "Second updateOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "Third updateOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "Single-document write following deleteMany is retried", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "Single-document write following updateMany is retried", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "collection bulkWrite with updateMany does not set txnNumber", "status": "PASS", "secs": 0.01}
+{"area": "retryable-writes", "file": "bulkWrite.json", "test": "collection bulkWrite with deleteMany does not set txnNumber", "status": "PASS", "secs": 0.01}
+{"area": "retryable-writes", "file": "insertOne-noWritesPerformedError.json", "test": "InsertOne fails after NoWritesPerformed error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne-serverErrors.json", "test": "ReplaceOne fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate-serverErrors.json", "test": "FindOneAndUpdate fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete-errorLabels.json", "test": "FindOneAndDelete succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete-errorLabels.json", "test": "FindOneAndDelete fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete-errorLabels.json", "test": "FindOneAndDelete succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete-errorLabels.json", "test": "FindOneAndDelete succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne-serverErrors.json", "test": "UpdateOne fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne-serverErrors.json", "test": "DeleteOne fails with RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "client.clientBulkWrite succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "client.clientBulkWrite succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.insertOne succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.insertOne succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.insertMany succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.insertMany succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.deleteOne succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.deleteOne succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.replaceOne succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.replaceOne succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.updateOne succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.updateOne succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.findOneAndDelete succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.findOneAndDelete succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.findOneAndReplace succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.findOneAndReplace succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.findOneAndUpdate succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.findOneAndUpdate succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.bulkWrite succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "handshakeError.json", "test": "collection.bulkWrite succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after ExceededTimeLimit", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after WriteConcernError InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after WriteConcernError InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after WriteConcernError PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertOne-errorLabels.json", "test": "InsertOne fails after multiple retryable writeConcernErrors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne.json", "test": "DeleteOne is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne.json", "test": "DeleteOne is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteOne.json", "test": "DeleteOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "deleteMany.json", "test": "DeleteMany ignores retryWrites", "status": "PASS", "secs": 0.01}
+{"area": "retryable-writes", "file": "updateOne-errorLabels.json", "test": "UpdateOne succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne-errorLabels.json", "test": "UpdateOne fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne-errorLabels.json", "test": "UpdateOne succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne-errorLabels.json", "test": "UpdateOne succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace.json", "test": "FindOneAndReplace is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace.json", "test": "FindOneAndReplace is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace.json", "test": "FindOneAndReplace is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateMany.json", "test": "UpdateMany ignores retryWrites", "status": "PASS", "secs": 0.01}
+{"area": "retryable-writes", "file": "client-bulkWrite-clientErrors.json", "test": "client bulkWrite with one network error succeeds after retry", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "client-bulkWrite-clientErrors.json", "test": "client bulkWrite with two network errors fails after retry", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndDelete-serverErrors.json", "test": "FindOneAndDelete fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace-serverErrors.json", "test": "FindOneAndReplace fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace-errorLabels.json", "test": "FindOneAndReplace succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace-errorLabels.json", "test": "FindOneAndReplace fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace-errorLabels.json", "test": "FindOneAndReplace succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndReplace-errorLabels.json", "test": "FindOneAndReplace succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "unacknowledged-write-concern.json", "test": "unacknowledged write does not set txnNumber", "status": "PASS", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate.json", "test": "FindOneAndUpdate is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne.json", "test": "ReplaceOne is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne.json", "test": "ReplaceOne is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne.json", "test": "ReplaceOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "aggregate-out-merge.json", "test": "aggregate with $out does not set txnNumber", "status": "PASS", "secs": 0.01}
+{"area": "retryable-writes", "file": "aggregate-out-merge.json", "test": "aggregate with $merge does not set txnNumber", "status": "PASS", "secs": 0.01}
+{"area": "retryable-writes", "file": "updateOne.json", "test": "UpdateOne is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne.json", "test": "UpdateOne is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne.json", "test": "UpdateOne is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne.json", "test": "UpdateOne with upsert is committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne.json", "test": "UpdateOne with upsert is not committed on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "updateOne.json", "test": "UpdateOne with upsert is never committed", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne-errorLabels.json", "test": "ReplaceOne succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne-errorLabels.json", "test": "ReplaceOne fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne-errorLabels.json", "test": "ReplaceOne succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "replaceOne-errorLabels.json", "test": "ReplaceOne succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany-errorLabels.json", "test": "InsertMany succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany-errorLabels.json", "test": "InsertMany fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany-errorLabels.json", "test": "InsertMany succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany-errorLabels.json", "test": "InsertMany succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "insertMany-serverErrors.json", "test": "InsertMany fails with a RetryableWriteError label after two connection failures", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite-errorLabels.json", "test": "BulkWrite succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite-errorLabels.json", "test": "BulkWrite fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite-errorLabels.json", "test": "BulkWrite succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "bulkWrite-errorLabels.json", "test": "BulkWrite succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate-errorLabels.json", "test": "FindOneAndUpdate succeeds with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate-errorLabels.json", "test": "FindOneAndUpdate fails if server does not return RetryableWriteError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate-errorLabels.json", "test": "FindOneAndUpdate succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-writes", "file": "findOneAndUpdate-errorLabels.json", "test": "FindOneAndUpdate succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}

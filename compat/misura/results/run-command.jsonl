@@ -1,0 +1,21 @@
+{"area": "run-command", "file": "runCommand.json", "test": "always attaches $db and implicit lsid to given command and omits default readPreference", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "always gossips the $clusterTime on the sent command", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "attaches the provided session lsid to given command", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "attaches the provided $readPreference to given command", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "does not attach $readPreference to given command on standalone", "status": "SKIP", "reason": "req:topology single", "secs": 0.0}
+{"area": "run-command", "file": "runCommand.json", "test": "does not attach primary $readPreference to given command", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "does not inherit readConcern specified at the db level", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "does not inherit writeConcern specified at the db level", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "does not retry retryable errors on given command", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "run-command", "file": "runCommand.json", "test": "attaches transaction fields to given command", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCommand.json", "test": "attaches apiVersion fields to given command when stableApi is configured on the client", "status": "PASS", "secs": 0.01}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "successfully executes checkMetadataConsistency cursor creating command", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "errors if the command response is not a cursor", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "creates an implicit session that is reused across getMores", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "accepts an explicit session that is reused across getMores", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "returns pinned connections to the pool when the cursor is exhausted", "status": "SKIP", "reason": "req:topology load-balanced", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "returns pinned connections to the pool when the cursor is closed", "status": "SKIP", "reason": "req:topology load-balanced", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "supports configuring getMore batchSize", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "supports configuring getMore maxTimeMS", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "supports configuring getMore comment", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}
+{"area": "run-command", "file": "runCursorCommand.json", "test": "does not close the cursor when receiving an empty batch", "status": "SKIP", "reason": "runner:observeEvents connectionReadyEvent", "secs": 0.0}

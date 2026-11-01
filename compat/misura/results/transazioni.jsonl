@@ -1,0 +1,287 @@
+{"area": "transazioni", "file": "create-collection.json", "test": "explicitly create collection using create command", "status": "FAIL", "reason": "createCollection: unexpected error OperationFailure: Cannot run 'create' in a multi-document transaction., full error: {'ok': 0.0, 'errmsg': \"Cannot run 'create' in a multi-document transaction.\", 'code': 263, 'codeName': 'OperationNotSupportedInTransaction', '$clusterTime': {'clusterTime': Timestamp(1793548032, 4), 'signature': {'hash': b'\\x00\\x00\\x0", "kind": "errore-inatteso", "secs": 0.02}
+{"area": "transazioni", "file": "create-collection.json", "test": "implicitly create collection using insert", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "error-labels.json", "test": "DuplicateKey errors do not contain transient label", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "error-labels.json", "test": "NotWritablePrimary errors contain transient label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "WriteConflict errors contain transient label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "NoSuchTransaction errors contain transient label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "NoSuchTransaction errors on commit contain transient label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "add TransientTransactionError label to connection errors, but do not add RetryableWriteError label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "add RetryableWriteError and UnknownTransactionCommitResult labels to connection errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "do not add RetryableWriteError label to writeConcernError ShutdownInProgress that occurs within transaction", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "add UnknownTransactionCommitResult label to writeConcernError WriteConcernTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "add UnknownTransactionCommitResult label to writeConcernError WriteConcernTimeout with wtimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "omit UnknownTransactionCommitResult label from writeConcernError UnsatisfiableWriteConcern", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "omit UnknownTransactionCommitResult label from writeConcernError UnknownReplWriteConcern", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "do not add UnknownTransactionCommitResult label to MaxTimeMSExpired inside transactions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "add UnknownTransactionCommitResult label to MaxTimeMSExpired", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels.json", "test": "add UnknownTransactionCommitResult label to writeConcernError MaxTimeMSExpired", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "do-not-retry-read-in-transaction.json", "test": "find does not retry in a transaction", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "read-concern.json", "test": "only first countDocuments includes readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "only first find includes readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "only first aggregate includes readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "only first distinct includes readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "only first runCommand includes readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "countDocuments ignores collection readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "find ignores collection readConcern", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "read-concern.json", "test": "aggregate ignores collection readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "distinct ignores collection readConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-concern.json", "test": "runCommand ignores database readConcern", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "error-labels-blockConnection.json", "test": "add RetryableWriteError and UnknownTransactionCommitResult labels to connection errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "findOneAndDelete.json", "test": "findOneAndDelete", "status": "FAIL", "reason": "DATA outcome.test: expected 2 items, got 3: [{\"_id\": 1}, {\"_id\": 2}, {\"_id\": 3}]", "kind": "bug-dati", "secs": 0.04}
+{"area": "transazioni", "file": "findOneAndDelete.json", "test": "collection writeConcern ignored for findOneAndDelete", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction only retries once with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction does not retry without RetryableWriteError label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after WriteConcernError InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after WriteConcernError InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after WriteConcernError PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort-errorLabels.json", "test": "abortTransaction succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "update.json", "test": "update", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "update.json", "test": "collections writeConcern ignored for update", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "mongos-recovery-token.json", "test": "commitTransaction explicit retries include recoveryToken", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-recovery-token.json", "test": "commitTransaction retry fails on new mongos", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-recovery-token.json", "test": "abortTransaction sends recoveryToken", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "countDocuments", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "distinct", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "find", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "insertOne", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "mixed read write operations", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "multiple commits", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "remain pinned after non-transient error on commit", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "unpin after transient error within a transaction", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "pin-mongos.json", "test": "unpin after transient error within a transaction and commit", "status": "SKIP", "reason": "req:topology sharded/load-balanced", "secs": 0.0}
+{"area": "transazioni", "file": "errors-client.json", "test": "Client side error in command starting transaction", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "errors-client.json", "test": "Client side error when transaction is in progress", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on insertOne", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient error within a transaction", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on insertOne insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on insertMany insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on updateOne update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on replaceOne update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on updateMany update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on deleteOne delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on deleteMany delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on findOneAndDelete findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on findOneAndUpdate findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on findOneAndReplace findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on bulkWrite insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on bulkWrite update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on bulkWrite delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on find find", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on countDocuments aggregate", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on aggregate aggregate", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on distinct distinct", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on runCommand insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "remain pinned after non-transient Interrupted error on clientBulkWrite bulkWrite", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on insertOne insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on insertOne insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on insertMany insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on insertMany insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on updateOne update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on updateOne update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on replaceOne update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on replaceOne update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on updateMany update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on updateMany update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on deleteOne delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on deleteOne delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on deleteMany delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on deleteMany delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on findOneAndDelete findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on findOneAndDelete findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on findOneAndUpdate findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on findOneAndUpdate findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on findOneAndReplace findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on findOneAndReplace findAndModify", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on bulkWrite insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on bulkWrite insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on bulkWrite update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on bulkWrite update", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on bulkWrite delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on bulkWrite delete", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on find find", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on find find", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on countDocuments aggregate", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on countDocuments aggregate", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on aggregate aggregate", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on aggregate aggregate", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on distinct distinct", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on distinct distinct", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on runCommand insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on runCommand insert", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient connection error on clientBulkWrite bulkWrite", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-pin-auto.json", "test": "unpin after transient ShutdownInProgress error on clientBulkWrite bulkWrite", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "count.json", "test": "count", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "transazioni", "file": "commit.json", "test": "commit", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit.json", "test": "rerun commit after empty transaction", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit.json", "test": "multiple commits in a row", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit.json", "test": "write concern error on commit", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit.json", "test": "commit without start", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "commit.json", "test": "commit after no-op abort", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "commit.json", "test": "commit after abort", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "commit.json", "test": "multiple commits after empty transaction", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit.json", "test": "reset session state commit", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "commit.json", "test": "reset session state abort", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "run-command.json", "test": "run command with default read preference", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "run-command.json", "test": "run command with secondary read preference in client option and primary read preference in transaction options", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "run-command.json", "test": "run command with explicit primary read preference", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "run-command.json", "test": "run command fails with explicit secondary read preference", "status": "SKIP", "reason": "req:secondario", "secs": 5.01}
+{"area": "transazioni", "file": "run-command.json", "test": "run command fails with secondary read preference from transaction options", "status": "SKIP", "reason": "req:secondario", "secs": 5.01}
+{"area": "transazioni", "file": "isolation.json", "test": "one transaction", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "isolation.json", "test": "two transactions", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "create-index.json", "test": "create index on a non-existing collection", "status": "FAIL", "reason": "createIndex: unexpected error OperationFailure: Cannot run 'createIndexes' in a multi-document transaction., full error: {'ok': 0.0, 'errmsg': \"Cannot run 'createIndexes' in a multi-document transaction.\", 'code': 263, 'codeName': 'OperationNotSupportedInTransaction', '$clusterTime': {'clusterTime': Timestamp(1793548042, 13), 'signature': {'hash'", "kind": "errore-inatteso", "secs": 0.02}
+{"area": "transazioni", "file": "create-index.json", "test": "create index on a collection created within the same transaction", "status": "FAIL", "reason": "createCollection: unexpected error OperationFailure: Cannot run 'create' in a multi-document transaction., full error: {'ok': 0.0, 'errmsg': \"Cannot run 'create' in a multi-document transaction.\", 'code': 263, 'codeName': 'OperationNotSupportedInTransaction', '$clusterTime': {'clusterTime': Timestamp(1793548042, 17), 'signature': {'hash': b'\\x00\\x00\\x", "kind": "errore-inatteso", "secs": 0.02}
+{"area": "transazioni", "file": "retryable-abort.json", "test": "abortTransaction only performs a single retry", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort.json", "test": "abortTransaction does not retry after Interrupted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort.json", "test": "abortTransaction does not retry after WriteConcernError Interrupted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-abort.json", "test": "abortTransaction succeeds after connection error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "read-pref.json", "test": "default readPreference", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-pref.json", "test": "primary readPreference", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "read-pref.json", "test": "secondary readPreference", "status": "SKIP", "reason": "req:secondario", "secs": 5.01}
+{"area": "transazioni", "file": "read-pref.json", "test": "primaryPreferred readPreference", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-pref.json", "test": "nearest readPreference", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "read-pref.json", "test": "secondary write only", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "commit with majority", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "commit with default", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "abort with majority", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "abort with default", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "start with unacknowledged write concern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "start with implicit unacknowledged write concern", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll insertOne", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll insertMany", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll bulkWrite", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll deleteOne", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll deleteMany", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll updateOne", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll updateMany", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll findOneAndDelete", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll findOneAndReplace", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "write-concern.json", "test": "unacknowledged write concern coll findOneAndUpdate", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "no transaction options set", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "transaction options inherited from client", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "transaction-options.json", "test": "transaction options inherited from defaultTransactionOptions", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "startTransaction options override defaults", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "transaction-options.json", "test": "defaultTransactionOptions override client options", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "readConcern local in defaultTransactionOptions", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "client writeConcern ignored for bulk", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "readPreference inherited from client", "status": "SKIP", "reason": "req:secondario", "secs": 5.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "readPreference inherited from defaultTransactionOptions", "status": "SKIP", "reason": "req:secondario", "secs": 5.02}
+{"area": "transazioni", "file": "transaction-options.json", "test": "startTransaction overrides readPreference", "status": "SKIP", "reason": "req:secondario", "secs": 5.01}
+{"area": "transazioni", "file": "findOneAndReplace.json", "test": "findOneAndReplace", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "findOneAndReplace.json", "test": "collection writeConcern ignored for findOneAndReplace", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "backpressure-retryable-writes.json", "test": "writes are retried if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-writes.json", "test": "writes are retried maxAttempts=2 times if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-writes.json", "test": "retry succeeds if backpressure labels are added to the first operation in a transaction", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "causal-consistency.json", "test": "causal consistency", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "causal-consistency.json", "test": "causal consistency disabled", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "retryable-abort-handshake.json", "test": "AbortTransaction succeeds after handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-handshake.json", "test": "CommitTransaction succeeds after handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels-errorLabels.json", "test": "add RetryableWriteError and UnknownTransactionCommitResult labels to retryable commit errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "error-labels-errorLabels.json", "test": "add RetryableWriteError and UnknownTransactionCommitResult labels to writeConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin after TransientTransactionError error on commit", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin on successful abort", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin after non-transient error on abort", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin after TransientTransactionError error on abort", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin when a new transaction is started", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin when a non-transaction write operation uses a session", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "mongos-unpin.json", "test": "unpin when a non-transaction read operation uses a session", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "findOneAndUpdate.json", "test": "findOneAndUpdate", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "findOneAndUpdate.json", "test": "collection writeConcern ignored for findOneAndUpdate", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "bulk.json", "test": "bulk", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "backpressure-retryable-abort.json", "test": "abortTransaction retries if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-abort.json", "test": "abortTransaction is retried maxAttempts=2 times if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "delete.json", "test": "delete", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "delete.json", "test": "collection writeConcern ignored for delete", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "mongos-recovery-token-errorLabels.json", "test": "commitTransaction retry succeeds on new mongos", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-reads.json", "test": "reads are retried if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-reads.json", "test": "reads are retried maxAttempts=2 times if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "abort.json", "test": "abort", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "implicit abort", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "two aborts", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "abort without start", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "abort directly after no-op commit", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "abort directly after commit", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "abort ignores TransactionAborted", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "abort.json", "test": "abort does not apply writeConcern", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "reads.json", "test": "collection readConcern without transaction", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "reads.json", "test": "find", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "reads.json", "test": "aggregate", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "reads.json", "test": "distinct", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options-repl.json", "test": "readConcern snapshot in startTransaction options", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "insert.json", "test": "insert", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "insert.json", "test": "insert with session1", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "insert.json", "test": "collection writeConcern without transaction", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "insert.json", "test": "collection writeConcern ignored for insert", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction does not retry error without RetryableWriteError label", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction retries once with RetryableWriteError from server", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after WriteConcernError InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after WriteConcernError InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after WriteConcernError PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after WriteConcernError ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit-errorLabels.json", "test": "commitTransaction succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "client-bulkWrite.json", "test": "client bulkWrite in a transaction", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "transazioni", "file": "client-bulkWrite.json", "test": "client writeConcern ignored for client bulkWrite in transaction", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "transazioni", "file": "client-bulkWrite.json", "test": "client bulkWrite with writeConcern in a transaction causes a transaction error", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "retryable-commit.json", "test": "commitTransaction fails after Interrupted", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit.json", "test": "commitTransaction is not retried after UnsatisfiableWriteConcern error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit.json", "test": "commitTransaction fails after two errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit.json", "test": "commitTransaction applies majority write concern on retries", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "retryable-commit.json", "test": "commitTransaction succeeds after connection error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-commit.json", "test": "commitTransaction retries if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "backpressure-retryable-commit.json", "test": "commitTransaction is retried maxAttempts=2 times if backpressure labels are added", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "errors.json", "test": "start insert start", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "errors.json", "test": "start twice", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "errors.json", "test": "commit and start twice", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "errors.json", "test": "write conflict commit", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "errors.json", "test": "write conflict abort", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "retryable-writes.json", "test": "increment txnNumber", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "retryable-writes.json", "test": "writes are not retried", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-transienttransactionerror-4.2.json", "test": "transaction is retried after commitTransaction TransientTransactionError (PreparedTransactionInProgress)", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-writeconcernerror.json", "test": "commitTransaction is retried after WriteConcernTimeout timeout error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-writeconcernerror.json", "test": "commitTransaction is retried after WriteConcernTimeout non-timeout error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-writeconcernerror.json", "test": "commitTransaction is not retried after UnknownReplWriteConcern error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-writeconcernerror.json", "test": "commitTransaction is not retried after UnsatisfiableWriteConcern error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-writeconcernerror.json", "test": "commitTransaction is not retried after MaxTimeMSExpired error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "callback-retry.json", "test": "callback succeeds after multiple connection errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "callback-retry.json", "test": "callback is not retried after non-transient error (DuplicateKeyError)", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit.json", "test": "withTransaction commits after callback returns", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "commit.json", "test": "withTransaction commits after callback returns (second transaction)", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "commit-retry-errorLabels.json", "test": "commit is retried after commitTransaction UnknownTransactionCommitResult (NotWritablePrimary)", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "transaction-options.json", "test": "withTransaction and no transaction options set", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "withTransaction inherits transaction options from client", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "transaction-options.json", "test": "withTransaction inherits transaction options from defaultTransactionOptions", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "withTransaction explicit transaction options", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "withTransaction explicit transaction options override defaultTransactionOptions", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "transaction-options.json", "test": "withTransaction explicit transaction options override client options", "status": "PASS", "secs": 0.02}
+{"area": "transazioni", "file": "commit-transienttransactionerror.json", "test": "transaction is retried after commitTransaction TransientTransactionError (LockTimeout)", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-transienttransactionerror.json", "test": "transaction is retried after commitTransaction TransientTransactionError (WriteConflict)", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-transienttransactionerror.json", "test": "transaction is retried after commitTransaction TransientTransactionError (SnapshotUnavailable)", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-transienttransactionerror.json", "test": "transaction is retried after commitTransaction TransientTransactionError (NoSuchTransaction)", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-retry.json", "test": "commitTransaction succeeds after multiple connection errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-retry.json", "test": "commitTransaction retry only overwrites write concern w option", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "commit-retry.json", "test": "commit is not retried after MaxTimeMSExpired error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "transazioni", "file": "callback-commits.json", "test": "withTransaction succeeds if callback commits", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "callback-commits.json", "test": "withTransaction still succeeds if callback commits and runs extra op", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "callback-aborts.json", "test": "withTransaction succeeds if callback aborts", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "callback-aborts.json", "test": "withTransaction succeeds if callback aborts with no ops", "status": "PASS", "secs": 0.01}
+{"area": "transazioni", "file": "callback-aborts.json", "test": "withTransaction still succeeds if callback aborts and runs extra op", "status": "PASS", "secs": 0.01}

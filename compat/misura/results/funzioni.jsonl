@@ -1,0 +1,107 @@
+{"area": "query", "feature": "$eq", "status": "funziona"}
+{"area": "query", "feature": "$ne", "status": "funziona"}
+{"area": "query", "feature": "$gt", "status": "funziona"}
+{"area": "query", "feature": "$gte", "status": "funziona"}
+{"area": "query", "feature": "$lt", "status": "funziona"}
+{"area": "query", "feature": "$lte", "status": "funziona"}
+{"area": "query", "feature": "$in", "status": "funziona"}
+{"area": "query", "feature": "$nin", "status": "funziona"}
+{"area": "query", "feature": "$and", "status": "funziona"}
+{"area": "query", "feature": "$or", "status": "funziona"}
+{"area": "query", "feature": "$nor", "status": "funziona"}
+{"area": "query", "feature": "$not", "status": "funziona"}
+{"area": "query", "feature": "$exists", "status": "funziona"}
+{"area": "query", "feature": "$type", "status": "funziona"}
+{"area": "query", "feature": "$regex", "status": "funziona"}
+{"area": "query", "feature": "$expr", "status": "funziona"}
+{"area": "query", "feature": "$mod", "status": "funziona"}
+{"area": "query", "feature": "$all", "status": "funziona"}
+{"area": "query", "feature": "$elemMatch", "status": "funziona"}
+{"area": "query", "feature": "$size", "status": "funziona"}
+{"area": "query", "feature": "$jsonSchema", "status": "funziona"}
+{"area": "query", "feature": "$where", "status": "funziona"}
+{"area": "query", "feature": "$bitsAllSet", "status": "funziona"}
+{"area": "query", "feature": "dot notation su array di documenti", "status": "funziona"}
+{"area": "query", "feature": "null trova anche il campo mancante", "status": "funziona"}
+{"area": "query", "feature": "$text (con indice text)", "status": "funziona"}
+{"area": "query", "feature": "$near / $geoWithin (con indice 2dsphere)", "status": "funziona"}
+{"area": "query", "feature": "projection (inclusione, esclusione, $slice, $elemMatch, $)", "status": "funziona"}
+{"area": "query", "feature": "sort, skip, limit", "status": "funziona"}
+{"area": "query", "feature": "collation (confronto senza maiuscole)", "status": "funziona"}
+{"area": "query", "feature": "cursori e getMore (batch piccoli)", "status": "funziona"}
+{"area": "query", "feature": "countDocuments / estimatedDocumentCount / distinct", "status": "funziona"}
+{"area": "query", "feature": "explain", "status": "funziona"}
+{"area": "update", "feature": "$set", "status": "funziona"}
+{"area": "update", "feature": "$unset", "status": "funziona"}
+{"area": "update", "feature": "$inc", "status": "funziona"}
+{"area": "update", "feature": "$mul", "status": "funziona"}
+{"area": "update", "feature": "$min", "status": "funziona"}
+{"area": "update", "feature": "$max", "status": "funziona"}
+{"area": "update", "feature": "$rename", "status": "funziona"}
+{"area": "update", "feature": "$currentDate", "status": "funziona"}
+{"area": "update", "feature": "$push con $each/$sort/$slice", "status": "funziona"}
+{"area": "update", "feature": "$addToSet con $each", "status": "funziona"}
+{"area": "update", "feature": "$pop", "status": "funziona"}
+{"area": "update", "feature": "$pull", "status": "funziona"}
+{"area": "update", "feature": "$pullAll", "status": "funziona"}
+{"area": "update", "feature": "$bit", "status": "funziona"}
+{"area": "update", "feature": "update con pipeline di aggregazione", "status": "funziona"}
+{"area": "update", "feature": "$setOnInsert (con upsert)", "status": "funziona"}
+{"area": "update", "feature": "$ posizionale", "status": "funziona"}
+{"area": "update", "feature": "$[] e $[id] con arrayFilters", "status": "funziona"}
+{"area": "scrittura", "feature": "insertOne / insertMany (ordered e unordered)", "status": "funziona"}
+{"area": "scrittura", "feature": "updateMany / replaceOne / deleteOne / deleteMany", "status": "funziona"}
+{"area": "scrittura", "feature": "findOneAndUpdate / findOneAndReplace / findOneAndDelete", "status": "funziona"}
+{"area": "scrittura", "feature": "bulkWrite (collezione)", "status": "funziona"}
+{"area": "scrittura", "feature": "updateOne con sort (novità 8.0)", "status": "errore", "note": "AssertionError: the sort chooses the oldest (id 3): expected 3, got 1"}
+{"area": "scrittura", "feature": "bulkWrite tra collezioni (comando bulkWrite, novità 8.0)", "status": "non supportato", "note": "OperationFailure: no such command: 'bulkWrite', full error: {'ok': 0.0, 'errmsg': \"no such command: 'bulkWrite'\", 'code': 59, 'codeName': 'CommandNotFound', '$clusterTime': {'clusterTime': Timestamp(1793547104, 1365), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"}
+{"area": "scrittura", "feature": "chiave duplicata: errore 11000", "status": "funziona"}
+{"area": "aggregazione", "feature": "$match + $group + $sum/$avg", "status": "funziona"}
+{"area": "aggregazione", "feature": "$project + $addFields + $set", "status": "funziona"}
+{"area": "aggregazione", "feature": "$sort + $limit + $skip", "status": "funziona"}
+{"area": "aggregazione", "feature": "$unwind", "status": "funziona"}
+{"area": "aggregazione", "feature": "$count", "status": "funziona"}
+{"area": "aggregazione", "feature": "$sortByCount", "status": "funziona"}
+{"area": "aggregazione", "feature": "$facet", "status": "funziona"}
+{"area": "aggregazione", "feature": "$bucket", "status": "funziona"}
+{"area": "aggregazione", "feature": "$replaceRoot", "status": "funziona"}
+{"area": "aggregazione", "feature": "$unset (stadio)", "status": "funziona"}
+{"area": "aggregazione", "feature": "$sample", "status": "funziona"}
+{"area": "aggregazione", "feature": "$group con $push/$addToSet/$first/$last/$max/$min", "status": "funziona"}
+{"area": "aggregazione", "feature": "espressioni: $cond/$ifNull/$concat/$toUpper/$dateToString", "status": "funziona"}
+{"area": "aggregazione", "feature": "espressioni su array: $filter/$map/$reduce/$size", "status": "funziona"}
+{"area": "aggregazione", "feature": "$setWindowFields", "status": "funziona"}
+{"area": "aggregazione", "feature": "$densify / $fill", "status": "funziona"}
+{"area": "aggregazione", "feature": "$lookup (semplice e con pipeline)", "status": "funziona"}
+{"area": "aggregazione", "feature": "$graphLookup", "status": "funziona"}
+{"area": "aggregazione", "feature": "$unionWith", "status": "funziona"}
+{"area": "aggregazione", "feature": "$out", "status": "funziona"}
+{"area": "aggregazione", "feature": "$merge", "status": "funziona"}
+{"area": "aggregazione", "feature": "aggregate a livello di database ($documents, $out)", "status": "non supportato", "note": "OperationFailure: Unrecognized pipeline stage name: '$out', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$out'\", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793547104, 1511), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0"}
+{"area": "aggregazione", "feature": "let e $$variabili nel comando aggregate", "status": "errore", "note": "OperationFailure: Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before the query examines any documents., full error: {'ok': 0.0, 'errmsg': 'Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before th"}
+{"area": "aggregazione", "feature": "mapReduce (deprecato)", "status": "funziona"}
+{"area": "aggregazione", "feature": "$changeStream nel pipeline (watch)", "status": "funziona"}
+{"area": "indici", "feature": "createIndex / listIndexes / dropIndex", "status": "funziona"}
+{"area": "indici", "feature": "unique (rifiuta i duplicati)", "status": "funziona"}
+{"area": "indici", "feature": "unique su dati che hanno già duplicati (deve rifiutare)", "status": "funziona"}
+{"area": "indici", "feature": "partialFilterExpression e sparse", "status": "funziona"}
+{"area": "indici", "feature": "TTL (expireAfterSeconds)", "status": "funziona"}
+{"area": "indici", "feature": "indice compound, multikey, hashed, wildcard", "status": "funziona"}
+{"area": "indici", "feature": "hint", "status": "funziona"}
+{"area": "indici", "feature": "collMod (cambia TTL, nascondi indice)", "status": "funziona"}
+{"area": "indici", "feature": "Atlas Search / Vector Search (createSearchIndexes, $search, $vectorSearch)", "status": "funziona"}
+{"area": "amministrazione", "feature": "create (validator, capped) / drop / listCollections / renameCollection", "status": "funziona"}
+{"area": "amministrazione", "feature": "views (createView)", "status": "funziona"}
+{"area": "amministrazione", "feature": "timeseries collection", "status": "funziona"}
+{"area": "amministrazione", "feature": "dropDatabase / listDatabases", "status": "in parte", "note": "Partial: data and collections are gone, but listDatabases still lists the dropped database (empty: false)"}
+{"area": "amministrazione", "feature": "dbStats / collStats / $collStats", "status": "funziona"}
+{"area": "amministrazione", "feature": "serverStatus / currentOp / killOp", "status": "funziona"}
+{"area": "amministrazione", "feature": "hello / buildInfo / ping / hostInfo / getParameter", "status": "in parte", "note": "Partial: buildInfo says version 7.0.45: drivers turn off the 8.0 features"}
+{"area": "amministrazione", "feature": "killCursors / getMore espliciti", "status": "funziona"}
+{"area": "transazioni", "feature": "transazione multi-documento: commit", "status": "funziona"}
+{"area": "transazioni", "feature": "transazione: abort annulla tutto", "status": "funziona"}
+{"area": "transazioni", "feature": "withTransaction (API comoda dei driver)", "status": "funziona"}
+{"area": "transazioni", "feature": "letture snapshot (readConcern snapshot fuori transazione)", "status": "errore", "note": "AssertionError: the snapshot must not see the later write: expected 1, got 2"}
+{"area": "transazioni", "feature": "letture causali (afterClusterTime)", "status": "funziona"}
+{"area": "autenticazione", "feature": "createUser / usersInfo / dropUser", "status": "funziona"}
+{"area": "autenticazione", "feature": "createRole / grantRolesToUser", "status": "funziona"}
