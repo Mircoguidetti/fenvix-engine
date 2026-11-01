@@ -89,7 +89,7 @@ def main():
     fails = []
     for p in sorted(glob.glob(os.path.join(HERE, "results", "*.jsonl"))):
         name = os.path.basename(p)[:-6]
-        if name == "funzioni":
+        if name in ("funzioni", "driver"):
             continue
         rs = [json.loads(l) for l in open(p)]
         c = collections.Counter(r["status"] for r in rs)

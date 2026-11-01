@@ -1,0 +1,5 @@
+{"driver":"node mongodb 7.8.0","steps":{"connessione":"ok","crud":"ok","aggregazione":"ok","transazione":"ok","indice e change stream":"ok"}}
+{"driver": "pymongo 4.19.0", "steps": {"connessione": "ok", "crud": "ok", "aggregazione": "ok", "transazione": "ok", "indice e change stream": "ok"}}
+{"driver":"go mongo-driver 2.4.0","steps":{"aggregazione":"ok","connessione":"ok","crud":"ok","indice e change stream":"ok","transazione":"ok"}}
+{"driver":"mongosh 2.14.1","steps":{"show dbs / show collections":"ok","insert/find/update/delete":"ok","aggregate":"ok","createIndex / getIndexes":"ok","explain":"ok","stats":"ok","version":"7.0.45","serverStatus / db.version()":"ok","rs.status()":"ok","transazione":"ok","createUser / getUsers":"ok"}}
+{"driver": "pymongo (autenticazione, motore con --auth)", "steps": {"primo utente (localhost exception)": "ok", "login SCRAM-SHA-256": "ok", "login SCRAM-SHA-1": "ok", "password sbagliata: errore 18": "ok", "senza login: errore 13": "ok", "ruolo read: legge, non scrive": "ok"}}

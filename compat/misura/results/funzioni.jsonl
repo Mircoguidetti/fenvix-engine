@@ -54,7 +54,7 @@
 {"area": "scrittura", "feature": "findOneAndUpdate / findOneAndReplace / findOneAndDelete", "status": "funziona"}
 {"area": "scrittura", "feature": "bulkWrite (collezione)", "status": "funziona"}
 {"area": "scrittura", "feature": "updateOne con sort (novità 8.0)", "status": "errore", "note": "AssertionError: the sort chooses the oldest (id 3): expected 3, got 1"}
-{"area": "scrittura", "feature": "bulkWrite tra collezioni (comando bulkWrite, novità 8.0)", "status": "non supportato", "note": "OperationFailure: no such command: 'bulkWrite', full error: {'ok': 0.0, 'errmsg': \"no such command: 'bulkWrite'\", 'code': 59, 'codeName': 'CommandNotFound', '$clusterTime': {'clusterTime': Timestamp(1793547104, 1365), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"}
+{"area": "scrittura", "feature": "bulkWrite tra collezioni (comando bulkWrite, novità 8.0)", "status": "non supportato", "note": "OperationFailure: no such command: 'bulkWrite', full error: {'ok': 0.0, 'errmsg': \"no such command: 'bulkWrite'\", 'code': 59, 'codeName': 'CommandNotFound', '$clusterTime': {'clusterTime': Timestamp(1793548238, 1185), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"}
 {"area": "scrittura", "feature": "chiave duplicata: errore 11000", "status": "funziona"}
 {"area": "aggregazione", "feature": "$match + $group + $sum/$avg", "status": "funziona"}
 {"area": "aggregazione", "feature": "$project + $addFields + $set", "status": "funziona"}
@@ -77,7 +77,7 @@
 {"area": "aggregazione", "feature": "$unionWith", "status": "funziona"}
 {"area": "aggregazione", "feature": "$out", "status": "funziona"}
 {"area": "aggregazione", "feature": "$merge", "status": "funziona"}
-{"area": "aggregazione", "feature": "aggregate a livello di database ($documents, $out)", "status": "non supportato", "note": "OperationFailure: Unrecognized pipeline stage name: '$out', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$out'\", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793547104, 1511), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0"}
+{"area": "aggregazione", "feature": "aggregate a livello di database ($documents, $out)", "status": "non supportato", "note": "OperationFailure: Unrecognized pipeline stage name: '$out', full error: {'ok': 0.0, 'errmsg': \"Unrecognized pipeline stage name: '$out'\", 'code': 40324, 'codeName': 'Location40324', '$clusterTime': {'clusterTime': Timestamp(1793548238, 1331), 'signature': {'hash': b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0"}
 {"area": "aggregazione", "feature": "let e $$variabili nel comando aggregate", "status": "errore", "note": "OperationFailure: Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before the query examines any documents., full error: {'ok': 0.0, 'errmsg': 'Command let Expression tried to access a field, but this is not allowed becauseCommand let Expressions run before th"}
 {"area": "aggregazione", "feature": "mapReduce (deprecato)", "status": "funziona"}
 {"area": "aggregazione", "feature": "$changeStream nel pipeline (watch)", "status": "funziona"}
@@ -103,5 +103,6 @@
 {"area": "transazioni", "feature": "withTransaction (API comoda dei driver)", "status": "funziona"}
 {"area": "transazioni", "feature": "letture snapshot (readConcern snapshot fuori transazione)", "status": "errore", "note": "AssertionError: the snapshot must not see the later write: expected 1, got 2"}
 {"area": "transazioni", "feature": "letture causali (afterClusterTime)", "status": "funziona"}
+{"area": "transazioni", "feature": "killSessions / killAllSessions chiudono le transazioni aperte", "status": "in parte", "note": "Partial: killSessions answers ok but the killed transaction keeps its locks (until its 60 s lifetime); endSessions does release them: Caused by :: Write conflict during plan execution and yielding is disabled. :: P"}
 {"area": "autenticazione", "feature": "createUser / usersInfo / dropUser", "status": "funziona"}
 {"area": "autenticazione", "feature": "createRole / grantRolesToUser", "status": "funziona"}

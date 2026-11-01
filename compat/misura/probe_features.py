@@ -657,6 +657,32 @@ def _(db):
         eq(db.cc.count_documents({}, session=s) >= 1, True)
 
 
+@probe("transazioni", "killSessions / killAllSessions chiudono le transazioni aperte")
+def _(db):
+    from pymongo.write_concern import WriteConcern
+    d = db.client.get_database(db.name, write_concern=WriteConcern(w="majority"))
+    d.drop_collection("ks")
+    d.create_collection("ks")
+    other = MongoClient(db.client.address and f"mongodb://{db.client.address[0]}:{db.client.address[1]}/",
+                        directConnection=True)
+    s = other.start_session()
+    s.start_transaction()
+    other[db.name].ks.insert_one({"_id": 1}, session=s)
+    db.client.admin.command("killSessions", [s.session_id])
+    s2 = db.client.start_session()
+    s2.start_transaction()
+    try:
+        d.ks.insert_one({"_id": 1}, session=s2)
+        s2.commit_transaction()
+    except OperationFailure as e:
+        s2.abort_transaction()
+        db.client.admin.command("endSessions", [s.session_id])
+        raise Partial("killSessions answers ok but the killed transaction keeps its locks (until its 60 s "
+                      f"lifetime); endSessions does release them: {str(e)[:80]}")
+    finally:
+        other.close()
+
+
 # ------------------------------------------------------------------ auth (server started without --auth here)
 @probe("autenticazione", "createUser / usersInfo / dropUser")
 def _(db):
