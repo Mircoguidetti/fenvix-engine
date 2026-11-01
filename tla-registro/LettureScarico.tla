@@ -97,7 +97,7 @@ Read(c, r, k, view, s) ==
   /\ LET base == WritesTo(S3Content(view), 0, k, view.pos)
          win == WritesTo(SubSeq(log[r], view.pos + 1, s), view.pos, k, s)
          exp == WritesTo(cmtLog, 0, k, s)
-     IN readOk' = readOk /\ (base \o win = exp) /\ s >= token[c]
+     IN readOk' = (readOk /\ base \o win = exp /\ s >= token[c])
   /\ token' = [token EXCEPT ![c] = Max({@, s})]
   /\ reads' = reads + 1
   /\ UNCHANGED <<wstate, wview, wupto, wents, wname, objects, deleted, manifests, manifest, trimmed>>
