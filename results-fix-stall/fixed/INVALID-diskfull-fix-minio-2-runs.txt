@@ -1,0 +1,5 @@
+run 1 STALL (loadgen exit 1 after 14.360405868 s: Resource>/stall-1793524754-1/processes/20901-a8f9dfb2/_lease</Resource><RequestId>18E3E1466D7D2CF9</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 20901 did not stop in 30 s after SIGTERM: SIGKILL
+run 2 STALL (loadgen exit 1 after 4.208852988 s: Resource>/stall-1793524814-2/processes/21009-a00fd913/_lease</Resource><RequestId>18E3E1523D0BCA9D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )
+engine 21009 did not stop in 30 s after SIGTERM: SIGKILL
+run 3 STALL (loadgen exit 1 after 7.301359003 s: Resource>/stall-1793524865-3/processes/21110-c993ab88/_lease</Resource><RequestId>18E3E15ED3B977F4</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error> )

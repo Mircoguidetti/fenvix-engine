@@ -1,0 +1,43 @@
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 1281-5cb42a58, lease ttl 30 s)
+DIAG state unix_ms=1793520491697 open_writers=0 queue_pending=[] lock_entries=0
+LEASE process_lease tenant=- holder=1281-5cb42a58 unix_ms=1793520492194 inc=2eb18d15403bf614 gen=1
+LEASE acquired tenant=bench0 holder=1281-5cb42a58 unix_ms=1793520492195 takeover_from=-
+LEASE acquired tenant=bench0 holder=1281-5cb42a58 unix_ms=1793520492198 takeover_from=-
+LEASE acquired tenant=bench0 holder=1281-5cb42a58 unix_ms=1793520492240 takeover_from=-
+LEASE acquired tenant=bench0 holder=1281-5cb42a58 unix_ms=1793520492241 takeover_from=-
+LEASE acquired tenant=bench0 holder=1281-5cb42a58 unix_ms=1793520492241 takeover_from=- new=true
+LEASE writer_open tenant=bench0 holder=1281-5cb42a58 unix_ms=1793520492245 
+DIAG COMPACTQ request tenant=bench0 unix_ms=1793520493929 joined=false waiter=false
+DIAG COMPACT begin tenant=bench0 unix_ms=1793520493931
+DIAG COMPACT end tenant=bench0 unix_ms=1793520493938 result=Ok(None)
+DIAG COMPACTQ finish tenant=bench0 unix_ms=1793520493938 l0_after=4
+DIAG state unix_ms=1793520496696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((1, 4, 2)) closed=None
+DIAG state unix_ms=1793520501696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((6, 9, 2)) closed=None
+DIAG state unix_ms=1793520506696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((11, 14, 2)) closed=None
+DIAG state unix_ms=1793520511696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((16, 19, 2)) closed=None
+DIAG state unix_ms=1793520516696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((21, 24, 2)) closed=None
+DIAG state unix_ms=1793520521697 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((26, 29, 2)) closed=None
+DIAG state unix_ms=1793520526696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((31, 34, 2)) closed=None
+DIAG state unix_ms=1793520531697 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((36, 39, 2)) closed=None
+DIAG state unix_ms=1793520536696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((41, 44, 2)) closed=None
+DIAG state unix_ms=1793520541696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((46, 49, 2)) closed=None
+DIAG state unix_ms=1793520546696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((51, 54, 2)) closed=None
+DIAG state unix_ms=1793520551696 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=9 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((56, 59, 2)) closed=None
+DIAG state unix_ms=1793520556697 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=10 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=None closed=None
+DIAG state unix_ms=1793520561697 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=10 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=None closed=None
+DIAG state unix_ms=1793520570840 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=10 writer_l0=8 writer_sorted_runs=0 last_l0_seq=181 durable_seq=268 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=None closed=None

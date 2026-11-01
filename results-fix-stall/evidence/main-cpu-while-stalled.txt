@@ -1,0 +1,15 @@
+base-local-2 run-1: engine CPU ticks (1/100 s) over 10 s while stalled: 10
+base-local-2 run-2: engine CPU ticks (1/100 s) over 10 s while stalled: 11
+base-local-2 run-3: engine CPU ticks (1/100 s) over 10 s while stalled: 10
+base-local-2 run-4: engine CPU ticks (1/100 s) over 10 s while stalled: 9
+base-local-2 run-5: engine CPU ticks (1/100 s) over 10 s while stalled: 10
+base-minio-1 run-1: engine CPU ticks (1/100 s) over 10 s while stalled: 8
+base-minio-1 run-2: engine CPU ticks (1/100 s) over 10 s while stalled: 8
+base-minio-1 run-3: engine CPU ticks (1/100 s) over 10 s while stalled: 8
+base-minio-1 run-4: engine CPU ticks (1/100 s) over 10 s while stalled: 8
+base-minio-1 run-5: engine CPU ticks (1/100 s) over 10 s while stalled: 8
+base-minio-2 run-1: engine CPU ticks (1/100 s) over 10 s while stalled: 9
+base-minio-2 run-2: engine CPU ticks (1/100 s) over 10 s while stalled: 11
+base-minio-2 run-3: engine CPU ticks (1/100 s) over 10 s while stalled: 9
+base-minio-2 run-4: engine CPU ticks (1/100 s) over 10 s while stalled: 10
+base-minio-2 run-5: engine CPU ticks (1/100 s) over 10 s while stalled: 12

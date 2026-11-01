@@ -39,6 +39,9 @@ drop_data() {
   [ "$STORE" = minio ] && "$PY" - "$BUCKET" <<'PYEOF'
 import sys, boto3
 b = boto3.resource("s3", endpoint_url="http://127.0.0.1:9000", aws_access_key_id="minioadmin", aws_secret_access_key="minioadmin", region_name="us-east-1").Bucket(sys.argv[1])
+# Uploads left unfinished by a killed engine keep their parts on MinIO's disk until aborted.
+for u in b.multipart_uploads.all():
+    u.abort()
 b.objects.all().delete(); b.delete()
 PYEOF
 }
@@ -86,6 +89,7 @@ PYEOF
     continue
   fi
   log "run $n STALL (loadgen exit $rc after $(echo "$t1 - $t0" | bc) s: $(tail -c 200 "$RD/load.err" | tr '\n' ' '))"
+  grep -q XMinioStorageFull "$RD/server.log" "$RD/load.err" 2>/dev/null && log "run $n INVALID: MinIO is out of disk space (XMinioStorageFull), not an engine stall"
   # A load that failed on errors of the store (e.g. a full disk) is not a stall: the commands come back with ok=false.
   errs=$(grep -c "ok=false" "$RD/server.log"); [ "$errs" -gt 0 ] && log "run $n: $errs commands failed with an error (ok=false in server.log): not a stall, see server.log"
   # Evidence, engine still running.
