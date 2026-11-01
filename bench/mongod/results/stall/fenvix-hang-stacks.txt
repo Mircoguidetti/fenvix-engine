@@ -1,0 +1,47 @@
+Thread 4
+#0  0x00007fa97bf2a2d2 in epoll_wait
+#1  0x000055f5c92c149c in <mio::poll::Poll>::poll
+#2  0x000055f5c92ad8b0 in <tokio::runtime::io::driver::Driver>::turn
+#3  0x000055f5c92af161 in <tokio::runtime::time::Driver>::park_thread_timeout
+#4  0x000055f5c92aedbf in <tokio::runtime::time::Driver>::park_internal
+#5  0x000055f5c92a396a in <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal
+#6  0x000055f5c92a4823 in <tokio::runtime::scheduler::multi_thread::worker::Context>::run
+#7  0x000055f5c92a5578 in <tokio::runtime::context::scoped::Scoped<tokio::runtime::scheduler::Context>>::set::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0}::{c
+#8  0x000055f5c92b23cf in tokio::runtime::context::runtime::enter_runtime::<tokio::runtime::scheduler::multi_thread::worker::run::{closure#0},
+#9  0x000055f5c92a529d in tokio::runtime::scheduler::multi_thread::worker::run
+#10 0x000055f5c92ab4b3 in <tokio::runtime::task::core::Core<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{closure
+#11 0x000055f5c9295121 in <tokio::runtime::task::harness::Harness<tokio::runtime::blocking::task::BlockingTask<<tokio::runtime::scheduler::multi_thread::worker::Launch>::launch::{c
+#12 0x000055f5c929a8bd in <tokio::runtime::blocking::pool::Inner>::run
+#13 0x000055f5c92b48a3 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0},
+#14 0x000055f5c929e0b3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0},
+#15 0x000055f5c96583ef in <std::sys::thread::unix::Thread>::new::thread_start
+#16 0x00007fa97be9cb84 in start_thread
+#17 0x00007fa97bf29ecc in clone3
+Thread 3
+#0  syscall
+#1  0x000055f5c92c47d2 in <parking_lot::condvar::Condvar>::wait_until_internal
+#2  0x000055f5c929a939 in <tokio::runtime::blocking::pool::Inner>::run
+#3  0x000055f5c92b48a3 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0},
+#4  0x000055f5c929e0b3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0},
+#5  0x000055f5c96583ef in <std::sys::thread::unix::Thread>::new::thread_start
+#6  0x00007fa97be9cb84 in start_thread
+#7  0x00007fa97bf29ecc in clone3
+Thread 2
+#0  syscall
+#1  0x000055f5c92c47d2 in <parking_lot::condvar::Condvar>::wait_until_internal
+#2  0x000055f5c929a939 in <tokio::runtime::blocking::pool::Inner>::run
+#3  0x000055f5c92b48a3 in std::sys::backtrace::__rust_begin_short_backtrace::<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0},
+#4  0x000055f5c929e0b3 in <std::thread::lifecycle::spawn_unchecked<<tokio::runtime::blocking::pool::Spawner>::spawn_thread::{closure#0},
+#5  0x000055f5c96583ef in <std::sys::thread::unix::Thread>::new::thread_start
+#6  0x00007fa97be9cb84 in start_thread
+#7  0x00007fa97bf29ecc in clone3
+Thread 1
+#0  syscall
+#1  0x000055f5c92c4809 in <parking_lot::condvar::Condvar>::wait_until_internal
+#2  0x000055f5c92aff5e in <tokio::runtime::park::Inner>::park
+#3  0x000055f5c872390c in <tokio::runtime::runtime::Runtime>::block_on::<mongo_server::run::{closure#0}>
+#4  0x000055f5c82fd176 in mongo_server::main
+#5  0x000055f5c87f54b3 in std::sys::backtrace::__rust_begin_short_backtrace::<fn() -> core::result::Result<(), anyhow::Error>, core::result::Result<(), anyhow::Error>>
+#6  0x000055f5c86e6ccd in std::rt::lang_start::<core::result::Result<(), anyhow::Error>>::{closure#0}
+#7  0x000055f5c964eec7 in std::rt::lang_start_internal
+#8  0x000055f5c8349645 in main

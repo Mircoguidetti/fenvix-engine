@@ -1,0 +1,62 @@
+insert 1db 1core fenvix: 701 op/s, 701 op/s per core assigned, 803 op per CPU-second used, CPU used 0.87 cores, p50 1.26 ms, p99 5.25 ms, clients 1, generator 0.19 cores, runs 3, spread 11.6%
+insert 1db 1core mongod: 4727 op/s, 4727 op/s per core assigned, 5039 op per CPU-second used, CPU used 0.94 cores, p50 25.17 ms, p99 54.72 ms, clients 128, generator 0.67 cores, runs 3, spread 3.4%
+insert 1db 2core mongod: 10578 op/s, 5289 op/s per core assigned, 5905 op per CPU-second used, CPU used 1.79 cores, p50 5.19 ms, p99 21.93 ms, clients 64, generator 0.95 cores, runs 3, spread 16.4%
+insert 100db 1core fenvix: 1023 op/s, 1023 op/s per core assigned, 1051 op per CPU-second used, CPU used 0.95 cores, p50 1.93 ms, p99 7.53 ms, clients 2, generator 0.23 cores, runs 3, spread 28.3%
+insert 100db 1core mongod: 4649 op/s, 4649 op/s per core assigned, 4855 op per CPU-second used, CPU used 0.96 cores, p50 50.07 ms, p99 159.90 ms, clients 256, generator 0.57 cores, runs 3, spread 0.5%
+insert 100db 2core fenvix: 1161 op/s, 581 op/s per core assigned, 787 op per CPU-second used, CPU used 1.46 cores, p50 3.07 ms, p99 9.53 ms, clients 4, generator 0.25 cores, runs 3, spread 17.5%
+insert 100db 2core mongod: 9526 op/s, 4763 op/s per core assigned, 5391 op per CPU-second used, CPU used 1.77 cores, p50 2.73 ms, p99 15.61 ms, clients 32, generator 0.87 cores, runs 3, spread 3.3%
+read 1db 1core fenvix: 2286 op/s, 2286 op/s per core assigned, 2348 op per CPU-second used, CPU used 0.97 cores, p50 1.61 ms, p99 3.71 ms, clients 4, generator 0.39 cores, runs 3, spread 8.5%
+read 1db 1core mongod: 9137 op/s, 9137 op/s per core assigned, 9474 op per CPU-second used, CPU used 0.96 cores, p50 0.40 ms, p99 0.97 ms, clients 4, generator 1.10 cores, runs 3, spread 6.2%
+read 1db 2core mongod: 23187 op/s, 11594 op/s per core assigned, 12250 op per CPU-second used, CPU used 1.89 cores, p50 0.60 ms, p99 2.77 ms, clients 16, generator 1.19 cores, runs 3, spread 0.5%
+read 100db 1core fenvix: 4974 op/s, 4974 op/s per core assigned, 5096 op per CPU-second used, CPU used 0.96 cores, p50 0.38 ms, p99 0.82 ms, clients 2, generator 0.77 cores, runs 3, spread 3.4%
+read 100db 1core mongod: 7576 op/s, 7576 op/s per core assigned, 7875 op per CPU-second used, CPU used 0.96 cores, p50 0.48 ms, p99 1.10 ms, clients 4, generator 1.07 cores, runs 3, spread 9.8%
+read 100db 2core fenvix: 12660 op/s, 6330 op/s per core assigned, 6577 op per CPU-second used, CPU used 1.93 cores, p50 2.43 ms, p99 5.83 ms, clients 32, generator 1.03 cores, runs 3, spread 5.5%
+read 100db 2core mongod: 22928 op/s, 11464 op/s per core assigned, 11817 op per CPU-second used, CPU used 1.94 cores, p50 1.29 ms, p99 3.99 ms, clients 32, generator 1.20 cores, runs 3, spread 6.3%
+rw 1db 1core fenvix: 1067 op/s, 1067 op/s per core assigned, 1096 op per CPU-second used, CPU used 0.97 cores, p50 3.46 ms, p99 9.42 ms, clients 4, generator 0.22 cores, runs 3, spread 9.9%
+rw 1db 1core mongod: 4514 op/s, 4514 op/s per core assigned, 4954 op per CPU-second used, CPU used 0.91 cores, p50 3.31 ms, p99 9.10 ms, clients 16, generator 0.73 cores, runs 3, spread 2.1%
+rw 1db 2core mongod: 10376 op/s, 5188 op/s per core assigned, 5611 op per CPU-second used, CPU used 1.85 cores, p50 6.24 ms, p99 16.76 ms, clients 64, generator 1.02 cores, runs 3, spread 1.8%
+rw 100db 1core fenvix: 2205 op/s, 2205 op/s per core assigned, 2273 op per CPU-second used, CPU used 0.97 cores, p50 0.79 ms, p99 2.46 ms, clients 2, generator 0.43 cores, runs 3, spread 70.5%
+rw 100db 1core mongod: 4216 op/s, 4216 op/s per core assigned, 4595 op per CPU-second used, CPU used 0.92 cores, p50 3.53 ms, p99 10.62 ms, clients 16, generator 0.70 cores, runs 3, spread 2.7%
+rw 100db 2core fenvix: 2284 op/s, 1142 op/s per core assigned, 1366 op per CPU-second used, CPU used 1.65 cores, p50 2.16 ms, p99 11.66 ms, clients 8, generator 0.39 cores, runs 3, spread 25.2%
+rw 100db 2core mongod: 9562 op/s, 4781 op/s per core assigned, 5320 op per CPU-second used, CPU used 1.80 cores, p50 1.52 ms, p99 5.53 ms, clients 16, generator 0.97 cores, runs 3, spread 6.3%
+
+ratio fenvix/mongod insert 1db 1core: per core assigned 0.15, per CPU-second used 0.16
+ratio fenvix/mongod insert 100db 1core: per core assigned 0.22, per CPU-second used 0.22
+ratio fenvix/mongod insert 100db 2core: per core assigned 0.12, per CPU-second used 0.15
+ratio fenvix/mongod read 1db 1core: per core assigned 0.25, per CPU-second used 0.25
+ratio fenvix/mongod read 100db 1core: per core assigned 0.66, per CPU-second used 0.65
+ratio fenvix/mongod read 100db 2core: per core assigned 0.55, per CPU-second used 0.56
+ratio fenvix/mongod rw 1db 1core: per core assigned 0.24, per CPU-second used 0.22
+ratio fenvix/mongod rw 100db 1core: per core assigned 0.52, per CPU-second used 0.49
+ratio fenvix/mongod rw 100db 2core: per core assigned 0.24, per CPU-second used 0.26
+
+insert 1 1 fenvix sweep: 1c=969/0.83cpu, 2c=893/0.95cpu
+insert 1 1 mongod sweep: 1c=1701/0.45cpu, 2c=2661/0.61cpu, 4c=3114/0.82cpu, 8c=3648/0.86cpu, 16c=4144/0.87cpu, 32c=4477/0.89cpu, 64c=4486/0.88cpu, 128c=5456/0.94cpu, 256c=5241/0.93cpu
+insert 1 2 mongod sweep: 1c=1530/0.44cpu, 2c=2660/0.71cpu, 4c=4210/0.95cpu, 8c=6191/1.25cpu, 16c=9962/1.58cpu, 32c=11691/1.67cpu, 64c=12595/1.82cpu, 128c=10804/1.76cpu
+insert 100 1 fenvix sweep: 1c=1640/0.77cpu, 2c=2349/0.98cpu, 4c=2399/0.97cpu
+insert 100 1 mongod sweep: 1c=1741/0.47cpu, 2c=2825/0.65cpu, 4c=3048/0.89cpu, 8c=3260/0.87cpu, 16c=4052/0.89cpu, 32c=3997/0.88cpu, 64c=4237/0.91cpu, 128c=4491/0.93cpu, 256c=5028/0.94cpu
+insert 100 2 fenvix sweep: 1c=1368/0.83cpu, 2c=2613/1.33cpu, 4c=3079/1.55cpu, 8c=2873/1.55cpu
+insert 100 2 mongod sweep: 1c=1512/0.46cpu, 2c=2949/0.77cpu, 4c=4528/1.03cpu, 8c=6711/1.34cpu, 16c=9878/1.64cpu, 32c=11514/1.75cpu, 64c=11335/1.76cpu, 128c=10975/1.85cpu
+read 1 1 fenvix sweep: 1c=1486/0.76cpu, 2c=2036/0.95cpu, 4c=2145/0.96cpu, 8c=2161/0.97cpu
+read 1 1 mongod sweep: 1c=5154/0.61cpu, 2c=8323/0.91cpu, 4c=9140/0.94cpu, 8c=9474/0.97cpu, 1c=5150/0.61cpu, 2c=7911/0.94cpu, 4c=9131/0.96cpu, 8c=9355/0.98cpu
+read 1 2 mongod sweep: 1c=4638/0.59cpu, 2c=9748/1.13cpu, 4c=16231/1.67cpu, 8c=19045/1.84cpu, 16c=22978/1.88cpu, 32c=23253/1.90cpu
+read 100 1 fenvix sweep: 1c=3422/0.69cpu, 2c=5394/0.97cpu, 4c=5349/0.95cpu
+read 100 1 mongod sweep: 1c=4488/0.62cpu, 2c=7706/0.94cpu, 4c=8051/0.96cpu
+read 100 2 fenvix sweep: 1c=2658/0.68cpu, 2c=4701/0.99cpu, 4c=10358/1.81cpu, 8c=11216/1.89cpu, 16c=12137/1.91cpu, 32c=13327/1.96cpu, 64c=11638/1.92cpu
+read 100 2 mongod sweep: 1c=4279/0.61cpu, 2c=9094/1.16cpu, 4c=16356/1.68cpu, 8c=20342/1.86cpu, 16c=21632/1.90cpu, 32c=22920/1.92cpu, 64c=22675/1.95cpu
+rw 1 1 fenvix sweep: 1c=1106/0.82cpu, 2c=1192/0.97cpu, 4c=1317/0.96cpu, 8c=1329/0.98cpu
+rw 1 1 mongod sweep: 1c=2228/0.51cpu, 2c=3262/0.74cpu, 4c=3753/0.90cpu, 8c=3857/0.89cpu, 16c=4523/0.92cpu, 32c=4033/0.91cpu
+rw 1 2 mongod sweep: 1c=2095/0.50cpu, 2c=4285/0.92cpu, 4c=6479/1.26cpu, 8c=8322/1.60cpu, 16c=10128/1.77cpu, 32c=10266/1.81cpu, 64c=10766/1.88cpu, 128c=10506/1.84cpu, 256c=10217/1.89cpu
+rw 100 1 fenvix sweep: 1c=2041/0.73cpu, 2c=3286/0.96cpu, 4c=3181/0.97cpu
+rw 100 1 mongod sweep: 1c=2114/0.53cpu, 2c=3285/0.78cpu, 4c=3647/0.88cpu, 8c=4047/0.91cpu, 16c=4439/0.91cpu, 32c=4133/0.91cpu
+rw 100 2 fenvix sweep: 1c=1743/0.79cpu, 2c=3290/1.27cpu, 4c=4490/1.69cpu, 8c=4768/1.77cpu, 16c=4499/1.78cpu
+rw 100 2 mongod sweep: 1c=1990/0.52cpu, 2c=3797/0.90cpu, 4c=5866/1.25cpu, 8c=8269/1.64cpu, 16c=9109/1.77cpu, 32c=9380/1.84cpu, 64c=9053/1.85cpu
+
+loads fenvix 1 1 ok=3 stalled=5
+loads fenvix 1 100 ok=3 stalled=0
+loads fenvix 2 1 ok=0 stalled=5
+loads fenvix 2 100 ok=3 stalled=0
+loads mongod 1 1 ok=2 stalled=0
+loads mongod 1 100 ok=1 stalled=0
+loads mongod 2 1 ok=1 stalled=0
+loads mongod 2 100 ok=1 stalled=0

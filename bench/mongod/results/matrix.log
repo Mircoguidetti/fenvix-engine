@@ -1,0 +1,302 @@
+21:51:06 started mongod on cpus 0, pid 13986
+21:51:07 loaded 1 x 200000 in 1.4 s
+21:51:37 sweep mongod cores=1 layout=  1 read   clients=  1 ops/s=     5154 srv_cores=0.61 gen_cores=0.86 p50=0.17 p99=0.44 err=0
+21:52:07 sweep mongod cores=1 layout=  1 read   clients=  2 ops/s=     8323 srv_cores=0.91 gen_cores=1.01 p50=0.20 p99=0.67 err=0
+21:52:37 sweep mongod cores=1 layout=  1 read   clients=  4 ops/s=     9140 srv_cores=0.94 gen_cores=1.06 p50=0.40 p99=1.10 err=0
+21:53:07 sweep mongod cores=1 layout=  1 read   clients=  8 ops/s=     9474 srv_cores=0.97 gen_cores=1.08 p50=0.79 p99=1.68 err=0
+21:53:07 saturation point: 8 clients
+21:53:54 started mongod on cpus 0, pid 14906
+21:53:55 loaded 1 x 200000 in 1.3 s
+21:54:25 sweep mongod cores=1 layout=  1 read   clients=  1 ops/s=     5150 srv_cores=0.61 gen_cores=0.86 p50=0.18 p99=0.40 err=0
+21:54:55 sweep mongod cores=1 layout=  1 read   clients=  2 ops/s=     7911 srv_cores=0.94 gen_cores=1.07 p50=0.23 p99=0.55 err=0
+21:55:25 sweep mongod cores=1 layout=  1 read   clients=  4 ops/s=     9131 srv_cores=0.96 gen_cores=1.08 p50=0.40 p99=0.98 err=0
+21:55:55 sweep mongod cores=1 layout=  1 read   clients=  8 ops/s=     9355 srv_cores=0.98 gen_cores=1.12 p50=0.80 p99=1.58 err=0
+21:55:55 saturation point: 4 clients
+21:59:55 full  mongod cores=1 layout=  1 read   clients=  4 ops/s=     8603 srv_cores=0.96 gen_cores=1.10 p50=0.42 p99=1.00 err=0
+22:03:55 full  mongod cores=1 layout=  1 read   clients=  4 ops/s=     9137 srv_cores=0.96 gen_cores=1.10 p50=0.40 p99=0.90 err=0
+22:07:55 full  mongod cores=1 layout=  1 read   clients=  4 ops/s=     9171 srv_cores=0.96 gen_cores=1.09 p50=0.40 p99=0.97 err=0
+22:08:25 sweep mongod cores=1 layout=  1 rw     clients=  1 ops/s=     2228 srv_cores=0.51 gen_cores=0.49 p50=0.33 p99=1.46 err=0
+22:08:55 sweep mongod cores=1 layout=  1 rw     clients=  2 ops/s=     3262 srv_cores=0.74 gen_cores=0.60 p50=0.52 p99=2.36 err=0
+22:09:25 sweep mongod cores=1 layout=  1 rw     clients=  4 ops/s=     3753 srv_cores=0.90 gen_cores=0.66 p50=0.99 p99=3.37 err=0
+22:09:55 sweep mongod cores=1 layout=  1 rw     clients=  8 ops/s=     3857 srv_cores=0.89 gen_cores=0.67 p50=1.91 p99=6.11 err=0
+22:10:25 sweep mongod cores=1 layout=  1 rw     clients= 16 ops/s=     4523 srv_cores=0.92 gen_cores=0.73 p50=3.35 p99=8.26 err=0
+22:10:56 sweep mongod cores=1 layout=  1 rw     clients= 32 ops/s=     4033 srv_cores=0.91 gen_cores=0.70 p50=7.25 p99=18.02 err=0
+22:10:56 saturation point: 16 clients
+22:14:56 full  mongod cores=1 layout=  1 rw     clients= 16 ops/s=     4437 srv_cores=0.91 gen_cores=0.74 p50=3.35 p99=9.39 err=0
+22:18:56 full  mongod cores=1 layout=  1 rw     clients= 16 ops/s=     4514 srv_cores=0.91 gen_cores=0.73 p50=3.31 p99=9.10 err=0
+22:22:56 full  mongod cores=1 layout=  1 rw     clients= 16 ops/s=     4532 srv_cores=0.91 gen_cores=0.73 p50=3.30 p99=9.03 err=0
+22:23:26 sweep mongod cores=1 layout=  1 insert clients=  1 ops/s=     1701 srv_cores=0.45 gen_cores=0.41 p50=0.54 p99=1.56 err=0
+22:23:56 sweep mongod cores=1 layout=  1 insert clients=  2 ops/s=     2661 srv_cores=0.61 gen_cores=0.52 p50=0.70 p99=2.18 err=0
+22:24:26 sweep mongod cores=1 layout=  1 insert clients=  4 ops/s=     3114 srv_cores=0.82 gen_cores=0.66 p50=1.15 p99=4.10 err=0
+22:24:56 sweep mongod cores=1 layout=  1 insert clients=  8 ops/s=     3648 srv_cores=0.86 gen_cores=0.69 p50=2.02 p99=6.21 err=0
+22:25:26 sweep mongod cores=1 layout=  1 insert clients= 16 ops/s=     4144 srv_cores=0.87 gen_cores=0.73 p50=3.59 p99=9.62 err=0
+22:25:56 sweep mongod cores=1 layout=  1 insert clients= 32 ops/s=     4477 srv_cores=0.89 gen_cores=0.73 p50=6.65 p99=17.34 err=0
+22:26:26 sweep mongod cores=1 layout=  1 insert clients= 64 ops/s=     4486 srv_cores=0.88 gen_cores=0.69 p50=13.29 p99=29.70 err=0
+22:26:56 sweep mongod cores=1 layout=  1 insert clients=128 ops/s=     5456 srv_cores=0.94 gen_cores=0.78 p50=22.02 p99=45.49 err=0
+22:27:26 sweep mongod cores=1 layout=  1 insert clients=256 ops/s=     5241 srv_cores=0.93 gen_cores=0.68 p50=46.81 p99=105.08 err=0
+22:27:26 saturation point: 128 clients
+22:31:27 full  mongod cores=1 layout=  1 insert clients=128 ops/s=     4727 srv_cores=0.94 gen_cores=0.68 p50=25.82 p99=51.31 err=0
+22:35:27 full  mongod cores=1 layout=  1 insert clients=128 ops/s=     4837 srv_cores=0.94 gen_cores=0.67 p50=24.71 p99=54.72 err=0
+22:39:27 full  mongod cores=1 layout=  1 insert clients=128 ops/s=     4674 srv_cores=0.93 gen_cores=0.64 p50=25.17 p99=55.92 err=0
+22:39:34 started mongod on cpus 0, pid 17241
+22:39:38 loaded 100 x 2000 in 4.1 s
+22:40:08 sweep mongod cores=1 layout=100 read   clients=  1 ops/s=     4488 srv_cores=0.62 gen_cores=0.83 p50=0.20 p99=0.51 err=0
+22:40:38 sweep mongod cores=1 layout=100 read   clients=  2 ops/s=     7706 srv_cores=0.94 gen_cores=1.01 p50=0.23 p99=0.60 err=0
+22:41:08 sweep mongod cores=1 layout=100 read   clients=  4 ops/s=     8051 srv_cores=0.96 gen_cores=1.06 p50=0.45 p99=1.05 err=0
+22:41:08 saturation point: 4 clients
+22:45:08 full  mongod cores=1 layout=100 read   clients=  4 ops/s=     7563 srv_cores=0.96 gen_cores=1.08 p50=0.49 p99=1.10 err=0
+22:49:08 full  mongod cores=1 layout=100 read   clients=  4 ops/s=     7576 srv_cores=0.96 gen_cores=1.07 p50=0.48 p99=1.14 err=0
+22:53:08 full  mongod cores=1 layout=100 read   clients=  4 ops/s=     8307 srv_cores=0.96 gen_cores=1.05 p50=0.44 p99=1.00 err=0
+22:53:38 sweep mongod cores=1 layout=100 rw     clients=  1 ops/s=     2114 srv_cores=0.53 gen_cores=0.47 p50=0.35 p99=1.56 err=0
+22:54:08 sweep mongod cores=1 layout=100 rw     clients=  2 ops/s=     3285 srv_cores=0.78 gen_cores=0.61 p50=0.55 p99=1.84 err=0
+22:54:38 sweep mongod cores=1 layout=100 rw     clients=  4 ops/s=     3647 srv_cores=0.88 gen_cores=0.62 p50=0.98 p99=4.30 err=0
+22:55:08 sweep mongod cores=1 layout=100 rw     clients=  8 ops/s=     4047 srv_cores=0.91 gen_cores=0.66 p50=1.88 p99=5.30 err=0
+22:55:38 sweep mongod cores=1 layout=100 rw     clients= 16 ops/s=     4439 srv_cores=0.91 gen_cores=0.70 p50=3.37 p99=9.39 err=0
+22:56:08 sweep mongod cores=1 layout=100 rw     clients= 32 ops/s=     4133 srv_cores=0.91 gen_cores=0.71 p50=7.27 p99=17.37 err=0
+22:56:08 saturation point: 16 clients
+23:00:08 full  mongod cores=1 layout=100 rw     clients= 16 ops/s=     4232 srv_cores=0.92 gen_cores=0.71 p50=3.52 p99=9.97 err=0
+23:04:09 full  mongod cores=1 layout=100 rw     clients= 16 ops/s=     4116 srv_cores=0.92 gen_cores=0.70 p50=3.61 p99=10.62 err=0
+23:08:09 full  mongod cores=1 layout=100 rw     clients= 16 ops/s=     4216 srv_cores=0.92 gen_cores=0.70 p50=3.53 p99=10.66 err=0
+23:08:39 sweep mongod cores=1 layout=100 insert clients=  1 ops/s=     1741 srv_cores=0.47 gen_cores=0.40 p50=0.52 p99=1.49 err=0
+23:09:09 sweep mongod cores=1 layout=100 insert clients=  2 ops/s=     2825 srv_cores=0.65 gen_cores=0.50 p50=0.67 p99=1.45 err=0
+23:09:39 sweep mongod cores=1 layout=100 insert clients=  4 ops/s=     3048 srv_cores=0.89 gen_cores=0.61 p50=1.23 p99=3.67 err=0
+23:10:09 sweep mongod cores=1 layout=100 insert clients=  8 ops/s=     3260 srv_cores=0.87 gen_cores=0.63 p50=2.32 p99=5.98 err=0
+23:10:39 sweep mongod cores=1 layout=100 insert clients= 16 ops/s=     4052 srv_cores=0.89 gen_cores=0.67 p50=3.71 p99=9.45 err=0
+23:11:09 sweep mongod cores=1 layout=100 insert clients= 32 ops/s=     3997 srv_cores=0.88 gen_cores=0.64 p50=7.29 p99=17.58 err=0
+23:11:39 sweep mongod cores=1 layout=100 insert clients= 64 ops/s=     4237 srv_cores=0.91 gen_cores=0.67 p50=14.16 p99=31.89 err=0
+23:12:09 sweep mongod cores=1 layout=100 insert clients=128 ops/s=     4491 srv_cores=0.93 gen_cores=0.68 p50=26.25 p99=65.92 err=0
+23:12:39 sweep mongod cores=1 layout=100 insert clients=256 ops/s=     5028 srv_cores=0.94 gen_cores=0.66 p50=48.37 p99=79.45 err=0
+23:12:39 saturation point: 256 clients
+23:16:39 full  mongod cores=1 layout=100 insert clients=256 ops/s=     4633 srv_cores=0.96 gen_cores=0.59 p50=50.72 p99=157.28 err=0
+23:20:40 full  mongod cores=1 layout=100 insert clients=256 ops/s=     4649 srv_cores=0.96 gen_cores=0.56 p50=49.33 p99=172.61 err=0
+23:24:40 full  mongod cores=1 layout=100 insert clients=256 ops/s=     4657 srv_cores=0.96 gen_cores=0.57 p50=50.07 p99=159.90 err=0
+23:24:47 started mongod on cpus 0-1, pid 20110
+23:24:49 loaded 1 x 200000 in 1.4 s
+23:25:19 sweep mongod cores=2 layout=  1 read   clients=  1 ops/s=     4638 srv_cores=0.59 gen_cores=0.77 p50=0.20 p99=0.46 err=0
+23:25:49 sweep mongod cores=2 layout=  1 read   clients=  2 ops/s=     9748 srv_cores=1.13 gen_cores=1.06 p50=0.19 p99=0.42 err=0
+23:26:19 sweep mongod cores=2 layout=  1 read   clients=  4 ops/s=    16231 srv_cores=1.67 gen_cores=1.20 p50=0.22 p99=0.68 err=0
+23:26:49 sweep mongod cores=2 layout=  1 read   clients=  8 ops/s=    19045 srv_cores=1.84 gen_cores=1.17 p50=0.35 p99=1.86 err=0
+23:27:19 sweep mongod cores=2 layout=  1 read   clients= 16 ops/s=    22978 srv_cores=1.88 gen_cores=1.19 p50=0.60 p99=2.92 err=0
+23:27:49 sweep mongod cores=2 layout=  1 read   clients= 32 ops/s=    23253 srv_cores=1.90 gen_cores=1.19 p50=1.19 p99=5.42 err=0
+23:27:49 saturation point: 16 clients
+23:31:49 full  mongod cores=2 layout=  1 read   clients= 16 ops/s=    23257 srv_cores=1.89 gen_cores=1.19 p50=0.60 p99=2.77 err=0
+23:35:50 full  mongod cores=2 layout=  1 read   clients= 16 ops/s=    23187 srv_cores=1.89 gen_cores=1.19 p50=0.60 p99=2.72 err=0
+23:39:50 full  mongod cores=2 layout=  1 read   clients= 16 ops/s=    23131 srv_cores=1.89 gen_cores=1.19 p50=0.60 p99=2.77 err=0
+23:40:20 sweep mongod cores=2 layout=  1 rw     clients=  1 ops/s=     2095 srv_cores=0.50 gen_cores=0.40 p50=0.35 p99=1.53 err=0
+23:40:50 sweep mongod cores=2 layout=  1 rw     clients=  2 ops/s=     4285 srv_cores=0.92 gen_cores=0.67 p50=0.36 p99=1.32 err=0
+23:41:20 sweep mongod cores=2 layout=  1 rw     clients=  4 ops/s=     6479 srv_cores=1.26 gen_cores=0.85 p50=0.53 p99=2.05 err=0
+23:41:50 sweep mongod cores=2 layout=  1 rw     clients=  8 ops/s=     8322 srv_cores=1.60 gen_cores=0.93 p50=0.84 p99=3.49 err=0
+23:42:20 sweep mongod cores=2 layout=  1 rw     clients= 16 ops/s=    10128 srv_cores=1.77 gen_cores=1.00 p50=1.43 p99=5.31 err=0
+23:42:51 sweep mongod cores=2 layout=  1 rw     clients= 32 ops/s=    10266 srv_cores=1.81 gen_cores=0.99 p50=2.84 p99=9.26 err=0
+23:43:21 sweep mongod cores=2 layout=  1 rw     clients= 64 ops/s=    10766 srv_cores=1.88 gen_cores=1.04 p50=6.04 p99=17.43 err=0
+23:43:51 sweep mongod cores=2 layout=  1 rw     clients=128 ops/s=    10506 srv_cores=1.84 gen_cores=1.01 p50=13.49 p99=32.15 err=0
+23:44:21 sweep mongod cores=2 layout=  1 rw     clients=256 ops/s=    10217 srv_cores=1.89 gen_cores=1.06 p50=31.81 p99=61.87 err=0
+23:44:21 saturation point: 64 clients
+23:48:21 full  mongod cores=2 layout=  1 rw     clients= 64 ops/s=    10376 srv_cores=1.85 gen_cores=1.02 p50=6.24 p99=16.86 err=0
+23:52:21 full  mongod cores=2 layout=  1 rw     clients= 64 ops/s=    10466 srv_cores=1.85 gen_cores=1.03 p50=6.19 p99=16.76 err=0
+23:56:22 full  mongod cores=2 layout=  1 rw     clients= 64 ops/s=    10275 srv_cores=1.85 gen_cores=1.02 p50=6.24 p99=16.61 err=0
+23:56:52 sweep mongod cores=2 layout=  1 insert clients=  1 ops/s=     1530 srv_cores=0.44 gen_cores=0.31 p50=0.60 p99=1.84 err=0
+23:57:22 sweep mongod cores=2 layout=  1 insert clients=  2 ops/s=     2660 srv_cores=0.71 gen_cores=0.57 p50=0.69 p99=2.68 err=0
+23:57:52 sweep mongod cores=2 layout=  1 insert clients=  4 ops/s=     4210 srv_cores=0.95 gen_cores=0.71 p50=0.87 p99=3.26 err=0
+23:58:22 sweep mongod cores=2 layout=  1 insert clients=  8 ops/s=     6191 srv_cores=1.25 gen_cores=0.82 p50=1.15 p99=4.26 err=0
+23:58:52 sweep mongod cores=2 layout=  1 insert clients= 16 ops/s=     9962 srv_cores=1.58 gen_cores=0.97 p50=1.44 p99=4.99 err=0
+23:59:22 sweep mongod cores=2 layout=  1 insert clients= 32 ops/s=    11691 srv_cores=1.67 gen_cores=1.01 p50=2.35 p99=8.49 err=0
+23:59:52 sweep mongod cores=2 layout=  1 insert clients= 64 ops/s=    12595 srv_cores=1.82 gen_cores=1.07 p50=4.73 p99=14.84 err=0
+00:00:22 sweep mongod cores=2 layout=  1 insert clients=128 ops/s=    10804 srv_cores=1.76 gen_cores=0.99 p50=11.18 p99=34.49 err=0
+00:00:22 saturation point: 64 clients
+00:04:22 full  mongod cores=2 layout=  1 insert clients= 64 ops/s=    10578 srv_cores=1.79 gen_cores=0.95 p50=5.19 p99=21.93 err=0
+00:08:23 full  mongod cores=2 layout=  1 insert clients= 64 ops/s=    10196 srv_cores=1.79 gen_cores=0.93 p50=5.22 p99=23.76 err=0
+00:12:23 full  mongod cores=2 layout=  1 insert clients= 64 ops/s=    11928 srv_cores=1.79 gen_cores=1.03 p50=4.89 p99=16.74 err=0
+00:12:34 started mongod on cpus 0-1, pid 22747
+00:12:37 loaded 100 x 2000 in 2.8 s
+00:13:07 sweep mongod cores=2 layout=100 read   clients=  1 ops/s=     4279 srv_cores=0.61 gen_cores=0.75 p50=0.21 p99=0.50 err=0
+00:13:37 sweep mongod cores=2 layout=100 read   clients=  2 ops/s=     9094 srv_cores=1.16 gen_cores=1.05 p50=0.20 p99=0.45 err=0
+00:14:07 sweep mongod cores=2 layout=100 read   clients=  4 ops/s=    16356 srv_cores=1.68 gen_cores=1.21 p50=0.21 p99=0.66 err=0
+00:14:37 sweep mongod cores=2 layout=100 read   clients=  8 ops/s=    20342 srv_cores=1.86 gen_cores=1.19 p50=0.34 p99=1.35 err=0
+00:15:07 sweep mongod cores=2 layout=100 read   clients= 16 ops/s=    21632 srv_cores=1.90 gen_cores=1.20 p50=0.66 p99=2.75 err=0
+00:15:37 sweep mongod cores=2 layout=100 read   clients= 32 ops/s=    22920 srv_cores=1.92 gen_cores=1.20 p50=1.27 p99=4.49 err=0
+00:16:07 sweep mongod cores=2 layout=100 read   clients= 64 ops/s=    22675 srv_cores=1.95 gen_cores=1.19 p50=2.58 p99=7.37 err=0
+00:16:07 saturation point: 32 clients
+00:20:07 full  mongod cores=2 layout=100 read   clients= 32 ops/s=    22928 srv_cores=1.94 gen_cores=1.21 p50=1.29 p99=3.99 err=0
+00:24:08 full  mongod cores=2 layout=100 read   clients= 32 ops/s=    23457 srv_cores=1.94 gen_cores=1.20 p50=1.26 p99=3.80 err=0
+00:28:08 full  mongod cores=2 layout=100 read   clients= 32 ops/s=    22013 srv_cores=1.93 gen_cores=1.19 p50=1.32 p99=4.41 err=0
+00:28:38 sweep mongod cores=2 layout=100 rw     clients=  1 ops/s=     1990 srv_cores=0.52 gen_cores=0.39 p50=0.37 p99=1.54 err=0
+00:29:08 sweep mongod cores=2 layout=100 rw     clients=  2 ops/s=     3797 srv_cores=0.90 gen_cores=0.66 p50=0.41 p99=1.59 err=0
+00:29:38 sweep mongod cores=2 layout=100 rw     clients=  4 ops/s=     5866 srv_cores=1.25 gen_cores=0.82 p50=0.58 p99=2.64 err=0
+00:30:08 sweep mongod cores=2 layout=100 rw     clients=  8 ops/s=     8269 srv_cores=1.64 gen_cores=0.94 p50=0.87 p99=3.57 err=0
+00:30:38 sweep mongod cores=2 layout=100 rw     clients= 16 ops/s=     9109 srv_cores=1.77 gen_cores=0.97 p50=1.57 p99=6.34 err=0
+00:31:08 sweep mongod cores=2 layout=100 rw     clients= 32 ops/s=     9380 srv_cores=1.84 gen_cores=1.03 p50=3.23 p99=9.38 err=0
+00:31:39 sweep mongod cores=2 layout=100 rw     clients= 64 ops/s=     9053 srv_cores=1.85 gen_cores=1.02 p50=6.99 p99=19.10 err=0
+00:31:39 saturation point: 16 clients
+00:35:39 full  mongod cores=2 layout=100 rw     clients= 16 ops/s=     9562 srv_cores=1.80 gen_cores=0.97 p50=1.52 p99=5.53 err=0
+00:39:39 full  mongod cores=2 layout=100 rw     clients= 16 ops/s=     9431 srv_cores=1.79 gen_cores=0.98 p50=1.53 p99=5.79 err=0
+00:43:39 full  mongod cores=2 layout=100 rw     clients= 16 ops/s=    10035 srv_cores=1.80 gen_cores=0.97 p50=1.46 p99=5.31 err=0
+00:44:09 sweep mongod cores=2 layout=100 insert clients=  1 ops/s=     1512 srv_cores=0.46 gen_cores=0.32 p50=0.60 p99=1.90 err=0
+00:44:39 sweep mongod cores=2 layout=100 insert clients=  2 ops/s=     2949 srv_cores=0.77 gen_cores=0.58 p50=0.63 p99=1.69 err=0
+00:45:09 sweep mongod cores=2 layout=100 insert clients=  4 ops/s=     4528 srv_cores=1.03 gen_cores=0.71 p50=0.82 p99=2.57 err=0
+00:45:39 sweep mongod cores=2 layout=100 insert clients=  8 ops/s=     6711 srv_cores=1.34 gen_cores=0.82 p50=1.09 p99=3.61 err=0
+00:46:09 sweep mongod cores=2 layout=100 insert clients= 16 ops/s=     9878 srv_cores=1.64 gen_cores=0.94 p50=1.44 p99=5.41 err=0
+00:46:39 sweep mongod cores=2 layout=100 insert clients= 32 ops/s=    11514 srv_cores=1.75 gen_cores=1.01 p50=2.48 p99=8.35 err=0
+00:47:09 sweep mongod cores=2 layout=100 insert clients= 64 ops/s=    11335 srv_cores=1.76 gen_cores=0.99 p50=5.25 p99=16.60 err=0
+00:47:39 sweep mongod cores=2 layout=100 insert clients=128 ops/s=    10975 srv_cores=1.85 gen_cores=1.02 p50=11.52 p99=30.73 err=0
+00:47:39 saturation point: 32 clients
+00:51:40 full  mongod cores=2 layout=100 insert clients= 32 ops/s=     9809 srv_cores=1.77 gen_cores=0.87 p50=2.63 p99=15.57 err=0
+00:55:40 full  mongod cores=2 layout=100 insert clients= 32 ops/s=     9496 srv_cores=1.76 gen_cores=0.87 p50=2.73 p99=15.61 err=0
+00:59:40 full  mongod cores=2 layout=100 insert clients= 32 ops/s=     9526 srv_cores=1.77 gen_cores=0.87 p50=2.75 p99=16.46 err=0
+00:59:42 started fenvix on cpus 0, pid 24752
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 123, in main
+    ld = loadgen(["-mode", "load", "-dbs", str(dbs), "-docs", str(docs), "-clients", "16"], cores)
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 55, in loadgen
+    raise RuntimeError(f"loadgen failed: {out.stderr[-2000:]}")
+RuntimeError: loadgen failed: -101]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59172->127.0.0.1:27017: i/o timeout: connection(127.0.0.1:27017[-101]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59172->127.0.0.1:27017: i/o timeout
+load error:  connection(127.0.0.1:27017[-102]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59178->127.0.0.1:27017: i/o timeout: connection(127.0.0.1:27017[-102]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59178->127.0.0.1:27017: i/o timeout
+load error:  connection(127.0.0.1:27017[-103]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59190->127.0.0.1:27017: i/o timeout: connection(127.0.0.1:27017[-103]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59190->127.0.0.1:27017: i/o timeout
+load error:  connection(127.0.0.1:27017[-104]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59192->127.0.0.1:27017: i/o timeout: connection(127.0.0.1:27017[-104]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59192->127.0.0.1:27017: i/o timeout
+load error:  connection(127.0.0.1:27017[-105]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59200->127.0.0.1:27017: i/o timeout: connection(127.0.0.1:27017[-105]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:59200->127.0.0.1:27017: i/o timeout
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 138, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 134, in main
+    server("stop", srv)
+    ~~~~~~^^^^^^^^^^^^^
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 62, in server
+    out = subprocess.run([os.path.join(HERE, "server.sh"), cmd, name] + ([cpus] if cpus else []),
+                         capture_output=True, text=True, check=True)
+  File "/usr/local/lib/python3.13/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/home/user/fenvix-engine/bench/mongod/server.sh', 'stop', 'fenvix']' returned non-zero exit status 1.
+01:32:01 started fenvix on cpus 0, pid 26767 (load attempt 1)
+01:39:13 LOAD STALLED fenvix cores=1 layout=1 attempt 1: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:46594->127.0.0.1:27017: i/o timeout
+
+01:39:46 started fenvix on cpus 0, pid 27097 (load attempt 2)
+01:53:52 LOAD STALLED fenvix cores=1 layout=1 attempt 2: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:48066->127.0.0.1:27017: i/o timeout
+
+01:54:24 started fenvix on cpus 0, pid 27721 (load attempt 3)
+01:55:30 LOAD STALLED fenvix cores=1 layout=1 attempt 3: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:47142->127.0.0.1:27017: i/o timeout
+
+01:56:03 started fenvix on cpus 0, pid 27899 (load attempt 4)
+01:56:22 loaded 1 x 200000 in 19.0 s
+01:56:52 sweep fenvix cores=1 layout=  1 read   clients=  1 ops/s=     1486 srv_cores=0.76 gen_cores=0.36 p50=0.63 p99=1.55 err=0
+01:57:22 sweep fenvix cores=1 layout=  1 read   clients=  2 ops/s=     2036 srv_cores=0.95 gen_cores=0.42 p50=0.93 p99=2.81 err=0
+01:57:52 sweep fenvix cores=1 layout=  1 read   clients=  4 ops/s=     2145 srv_cores=0.96 gen_cores=0.38 p50=1.73 p99=4.46 err=0
+01:58:22 sweep fenvix cores=1 layout=  1 read   clients=  8 ops/s=     2161 srv_cores=0.97 gen_cores=0.38 p50=3.57 p99=7.20 err=0
+01:58:22 saturation point: 4 clients
+02:02:22 full  fenvix cores=1 layout=  1 read   clients=  4 ops/s=     2286 srv_cores=0.97 gen_cores=0.39 p50=1.61 p99=3.71 err=0
+02:06:22 full  fenvix cores=1 layout=  1 read   clients=  4 ops/s=     2349 srv_cores=0.97 gen_cores=0.39 p50=1.55 p99=3.52 err=0
+02:10:22 full  fenvix cores=1 layout=  1 read   clients=  4 ops/s=     2155 srv_cores=0.97 gen_cores=0.39 p50=1.73 p99=4.12 err=0
+02:10:46 started fenvix on cpus 0, pid 28450 (load attempt 1)
+02:11:05 loaded 1 x 200000 in 18.9 s
+02:11:35 sweep fenvix cores=1 layout=  1 rw     clients=  1 ops/s=     1106 srv_cores=0.82 gen_cores=0.28 p50=0.78 p99=2.91 err=0
+02:12:05 sweep fenvix cores=1 layout=  1 rw     clients=  2 ops/s=     1192 srv_cores=0.97 gen_cores=0.27 p50=1.47 p99=5.48 err=0
+02:12:35 sweep fenvix cores=1 layout=  1 rw     clients=  4 ops/s=     1317 srv_cores=0.96 gen_cores=0.26 p50=2.73 p99=9.16 err=0
+02:13:05 sweep fenvix cores=1 layout=  1 rw     clients=  8 ops/s=     1329 srv_cores=0.98 gen_cores=0.23 p50=5.71 p99=14.35 err=0
+02:13:05 saturation point: 4 clients
+02:17:05 full  fenvix cores=1 layout=  1 rw     clients=  4 ops/s=     1133 srv_cores=0.97 gen_cores=0.24 p50=3.23 p99=9.41 err=0
+02:21:06 full  fenvix cores=1 layout=  1 rw     clients=  4 ops/s=     1067 srv_cores=0.97 gen_cores=0.22 p50=3.46 p99=9.42 err=0
+02:25:06 full  fenvix cores=1 layout=  1 rw     clients=  4 ops/s=     1027 srv_cores=0.97 gen_cores=0.22 p50=3.54 p99=10.21 err=0
+02:25:10 started fenvix on cpus 0, pid 28841 (load attempt 1)
+02:26:16 LOAD STALLED fenvix cores=1 layout=1 attempt 1: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:45614->127.0.0.1:27017: i/o timeout
+
+02:26:49 started fenvix on cpus 0, pid 29022 (load attempt 2)
+02:28:01 LOAD STALLED fenvix cores=1 layout=1 attempt 2: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:33098->127.0.0.1:27017: i/o timeout
+
+02:28:34 started fenvix on cpus 0, pid 29211 (load attempt 3)
+02:28:54 loaded 1 x 200000 in 20.2 s
+02:29:24 sweep fenvix cores=1 layout=  1 insert clients=  1 ops/s=      969 srv_cores=0.83 gen_cores=0.25 p50=0.86 p99=5.50 err=0
+02:29:54 sweep fenvix cores=1 layout=  1 insert clients=  2 ops/s=      893 srv_cores=0.95 gen_cores=0.22 p50=1.86 p99=10.69 err=0
+02:29:54 saturation point: 1 clients
+02:33:54 full  fenvix cores=1 layout=  1 insert clients=  1 ops/s=      756 srv_cores=0.86 gen_cores=0.20 p50=1.16 p99=5.14 err=0
+02:37:54 full  fenvix cores=1 layout=  1 insert clients=  1 ops/s=      701 srv_cores=0.87 gen_cores=0.19 p50=1.26 p99=5.25 err=0
+02:41:54 full  fenvix cores=1 layout=  1 insert clients=  1 ops/s=      675 srv_cores=0.88 gen_cores=0.18 p50=1.28 p99=6.52 err=0
+02:41:59 started fenvix on cpus 0, pid 29643 (load attempt 1)
+02:42:07 loaded 100 x 2000 in 7.9 s
+02:42:37 sweep fenvix cores=1 layout=100 read   clients=  1 ops/s=     3422 srv_cores=0.69 gen_cores=0.62 p50=0.27 p99=0.56 err=0
+02:43:07 sweep fenvix cores=1 layout=100 read   clients=  2 ops/s=     5394 srv_cores=0.97 gen_cores=0.81 p50=0.35 p99=0.77 err=0
+02:43:37 sweep fenvix cores=1 layout=100 read   clients=  4 ops/s=     5349 srv_cores=0.95 gen_cores=0.82 p50=0.77 p99=1.96 err=0
+02:43:37 saturation point: 2 clients
+02:47:38 full  fenvix cores=1 layout=100 read   clients=  2 ops/s=     5070 srv_cores=0.96 gen_cores=0.79 p50=0.36 p99=0.82 err=0
+02:51:38 full  fenvix cores=1 layout=100 read   clients=  2 ops/s=     4974 srv_cores=0.98 gen_cores=0.77 p50=0.38 p99=0.77 err=0
+02:55:38 full  fenvix cores=1 layout=100 read   clients=  2 ops/s=     4900 srv_cores=0.96 gen_cores=0.76 p50=0.38 p99=0.86 err=0
+02:55:45 started fenvix on cpus 0, pid 30066 (load attempt 1)
+02:55:52 loaded 100 x 2000 in 7.5 s
+02:56:32 sweep fenvix cores=1 layout=100 rw     clients=  1 ops/s=     2041 srv_cores=0.73 gen_cores=0.48 p50=0.44 p99=1.14 err=0
+02:57:02 sweep fenvix cores=1 layout=100 rw     clients=  2 ops/s=     3286 srv_cores=0.96 gen_cores=0.58 p50=0.57 p99=1.46 err=0
+02:57:32 sweep fenvix cores=1 layout=100 rw     clients=  4 ops/s=     3181 srv_cores=0.97 gen_cores=0.57 p50=1.16 p99=3.45 err=0
+02:57:32 saturation point: 2 clients
+03:01:32 full  fenvix cores=1 layout=100 rw     clients=  2 ops/s=     3372 srv_cores=0.97 gen_cores=0.59 p50=0.55 p99=1.54 err=0
+03:05:32 full  fenvix cores=1 layout=100 rw     clients=  2 ops/s=     1818 srv_cores=0.97 gen_cores=0.36 p50=0.96 p99=2.94 err=0
+03:09:33 full  fenvix cores=1 layout=100 rw     clients=  2 ops/s=     2205 srv_cores=0.97 gen_cores=0.43 p50=0.79 p99=2.46 err=0
+03:10:30 started fenvix on cpus 0, pid 30745 (load attempt 1)
+03:10:39 loaded 100 x 2000 in 9.6 s
+03:11:09 sweep fenvix cores=1 layout=100 insert clients=  1 ops/s=     1640 srv_cores=0.77 gen_cores=0.39 p50=0.56 p99=1.19 err=0
+03:11:39 sweep fenvix cores=1 layout=100 insert clients=  2 ops/s=     2349 srv_cores=0.98 gen_cores=0.46 p50=0.79 p99=1.68 err=0
+03:12:19 sweep fenvix cores=1 layout=100 insert clients=  4 ops/s=     2399 srv_cores=0.97 gen_cores=0.45 p50=1.58 p99=3.79 err=0
+03:12:19 saturation point: 2 clients
+03:16:19 full  fenvix cores=1 layout=100 insert clients=  2 ops/s=     1070 srv_cores=0.95 gen_cores=0.23 p50=1.32 p99=7.53 err=0
+03:20:19 full  fenvix cores=1 layout=100 insert clients=  2 ops/s=     1023 srv_cores=0.97 gen_cores=0.24 p50=1.93 p99=4.09 err=0
+03:24:19 full  fenvix cores=1 layout=100 insert clients=  2 ops/s=      780 srv_cores=0.95 gen_cores=0.19 p50=2.05 p99=8.80 err=0
+03:24:45 started fenvix on cpus 0-1, pid 31320 (load attempt 1)
+03:25:53 LOAD STALLED fenvix cores=2 layout=1 attempt 1: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:50994->127.0.0.1:27017: i/o timeout
+
+03:26:26 started fenvix on cpus 0-1, pid 31500 (load attempt 2)
+03:27:35 LOAD STALLED fenvix cores=2 layout=1 attempt 2: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:56066->127.0.0.1:27017: i/o timeout
+
+03:28:08 started fenvix on cpus 0-1, pid 31676 (load attempt 3)
+03:29:16 LOAD STALLED fenvix cores=2 layout=1 attempt 3: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:39396->127.0.0.1:27017: i/o timeout
+
+03:29:49 started fenvix on cpus 0-1, pid 31849 (load attempt 4)
+03:30:57 LOAD STALLED fenvix cores=2 layout=1 attempt 4: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:53498->127.0.0.1:27017: i/o timeout
+
+03:31:30 started fenvix on cpus 0-1, pid 32037 (load attempt 5)
+03:32:38 LOAD STALLED fenvix cores=2 layout=1 attempt 5: ad of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:52800->127.0.0.1:27017: i/o timeout
+
+Traceback (most recent call last):
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 190, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 160, in main
+    pid = fresh_server(srv, cores, layout)
+  File "/home/user/fenvix-engine/bench/mongod/run_matrix.py", line 125, in fresh_server
+    raise RuntimeError(f"{srv}: load failed {attempts} times")
+RuntimeError: fenvix: load failed 5 times
+03:33:45 started fenvix on cpus 0-1, pid 32252 (load attempt 1)
+03:33:52 loaded 100 x 2000 in 7.1 s
+03:34:22 sweep fenvix cores=2 layout=100 read   clients=  1 ops/s=     2658 srv_cores=0.68 gen_cores=0.51 p50=0.34 p99=1.02 err=0
+03:34:52 sweep fenvix cores=2 layout=100 read   clients=  2 ops/s=     4701 srv_cores=0.99 gen_cores=0.69 p50=0.38 p99=1.14 err=0
+03:35:22 sweep fenvix cores=2 layout=100 read   clients=  4 ops/s=    10358 srv_cores=1.81 gen_cores=0.96 p50=0.35 p99=0.90 err=0
+03:35:52 sweep fenvix cores=2 layout=100 read   clients=  8 ops/s=    11216 srv_cores=1.89 gen_cores=0.99 p50=0.67 p99=1.68 err=0
+03:36:22 sweep fenvix cores=2 layout=100 read   clients= 16 ops/s=    12137 srv_cores=1.91 gen_cores=1.00 p50=1.26 p99=3.10 err=0
+03:36:52 sweep fenvix cores=2 layout=100 read   clients= 32 ops/s=    13327 srv_cores=1.96 gen_cores=1.03 p50=2.37 p99=4.75 err=0
+03:37:23 sweep fenvix cores=2 layout=100 read   clients= 64 ops/s=    11638 srv_cores=1.92 gen_cores=1.04 p50=5.28 p99=13.47 err=0
+03:37:23 saturation point: 32 clients
+03:41:23 full  fenvix cores=2 layout=100 read   clients= 32 ops/s=    13151 srv_cores=1.94 gen_cores=1.03 p50=2.36 p99=5.51 err=0
+03:45:23 full  fenvix cores=2 layout=100 read   clients= 32 ops/s=    12660 srv_cores=1.92 gen_cores=1.03 p50=2.43 p99=5.93 err=0
+03:49:23 full  fenvix cores=2 layout=100 read   clients= 32 ops/s=    12454 srv_cores=1.93 gen_cores=1.03 p50=2.49 p99=5.83 err=0
+03:49:30 started fenvix on cpus 0-1, pid 32716 (load attempt 1)
+03:49:38 loaded 100 x 2000 in 7.6 s
+03:50:08 sweep fenvix cores=2 layout=100 rw     clients=  1 ops/s=     1743 srv_cores=0.79 gen_cores=0.36 p50=0.48 p99=1.34 err=0
+03:50:38 sweep fenvix cores=2 layout=100 rw     clients=  2 ops/s=     3290 srv_cores=1.27 gen_cores=0.53 p50=0.55 p99=1.42 err=0
+03:51:08 sweep fenvix cores=2 layout=100 rw     clients=  4 ops/s=     4490 srv_cores=1.69 gen_cores=0.64 p50=0.75 p99=2.81 err=0
+03:51:38 sweep fenvix cores=2 layout=100 rw     clients=  8 ops/s=     4768 srv_cores=1.77 gen_cores=0.65 p50=1.41 p99=4.83 err=0
+03:52:08 sweep fenvix cores=2 layout=100 rw     clients= 16 ops/s=     4499 srv_cores=1.78 gen_cores=0.63 p50=2.60 p99=11.06 err=0
+03:52:08 saturation point: 8 clients
+03:56:08 full  fenvix cores=2 layout=100 rw     clients=  8 ops/s=     1857 srv_cores=1.65 gen_cores=0.34 p50=2.81 p99=17.24 err=0
+04:00:08 full  fenvix cores=2 layout=100 rw     clients=  8 ops/s=     2432 srv_cores=1.65 gen_cores=0.40 p50=1.98 p99=10.84 err=0
+04:04:08 full  fenvix cores=2 layout=100 rw     clients=  8 ops/s=     2284 srv_cores=1.67 gen_cores=0.39 p50=2.16 p99=11.66 err=0
+04:04:46 started fenvix on cpus 0-1, pid 766 (load attempt 1)
+04:04:53 loaded 100 x 2000 in 7.3 s
+04:05:33 sweep fenvix cores=2 layout=100 insert clients=  1 ops/s=     1368 srv_cores=0.83 gen_cores=0.29 p50=0.67 p99=1.65 err=0
+04:06:03 sweep fenvix cores=2 layout=100 insert clients=  2 ops/s=     2613 srv_cores=1.33 gen_cores=0.49 p50=0.71 p99=1.86 err=0
+04:06:33 sweep fenvix cores=2 layout=100 insert clients=  4 ops/s=     3079 srv_cores=1.55 gen_cores=0.55 p50=1.20 p99=3.52 err=0
+04:07:04 sweep fenvix cores=2 layout=100 insert clients=  8 ops/s=     2873 srv_cores=1.55 gen_cores=0.52 p50=2.60 p99=6.65 err=0
+04:07:04 saturation point: 4 clients
+04:11:04 full  fenvix cores=2 layout=100 insert clients=  4 ops/s=     1100 srv_cores=1.42 gen_cores=0.24 p50=3.45 p99=9.53 err=0
+04:15:04 full  fenvix cores=2 layout=100 insert clients=  4 ops/s=     1161 srv_cores=1.48 gen_cores=0.25 p50=3.07 p99=12.12 err=0
+04:19:04 full  fenvix cores=2 layout=100 insert clients=  4 ops/s=     1303 srv_cores=1.46 gen_cores=0.29 p50=2.94 p99=6.62 err=0

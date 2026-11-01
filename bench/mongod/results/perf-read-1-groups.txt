@@ -1,0 +1,16 @@
+ 24.22%  libc malloc/free
+ 18.09%  crate slatedb
+ 10.34%  libc memcpy/memcmp
+  8.21%  kernel
+  7.59%  crate core
+  5.82%  crate bytes
+  4.07%  crate mongo_server
+  2.96%  crate foyer_memory
+  2.68%  crate tokio
+  2.65%  crate futures_util
+  2.60%  crate alloc
+  1.47%  crate ___rust
+  1.28%  crate bson
+  1.13%  crate tracing
+  1.10%  crate crossbeam_skiplist
+ 99.31%  total listed

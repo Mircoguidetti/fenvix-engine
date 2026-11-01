@@ -1,0 +1,41 @@
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 25543-4ea15869, lease ttl 30 s)
+LEASE process_lease tenant=- holder=25543-4ea15869 unix_ms=1793495403703 inc=d4e632332a979e6f gen=1
+LEASE acquired tenant=bench0 holder=25543-4ea15869 unix_ms=1793495403704 takeover_from=-
+LEASE acquired tenant=bench0 holder=25543-4ea15869 unix_ms=1793495403705 takeover_from=-
+LEASE acquired tenant=bench0 holder=25543-4ea15869 unix_ms=1793495403738 takeover_from=-
+LEASE acquired tenant=bench0 holder=25543-4ea15869 unix_ms=1793495403739 takeover_from=-
+LEASE acquired tenant=bench0 holder=25543-4ea15869 unix_ms=1793495403740 takeover_from=- new=true
+LEASE writer_open tenant=bench0 holder=25543-4ea15869 unix_ms=1793495403741 
+SLOW insert db=bench0 ms=768 ok=true
+SLOW insert db=bench0 ms=765 ok=true
+SLOW insert db=bench0 ms=775 ok=true
+SLOW insert db=bench0 ms=782 ok=true
+SLOW insert db=bench0 ms=599 ok=true
+SLOW insert db=bench0 ms=631 ok=true
+SLOW insert db=bench0 ms=665 ok=true
+SLOW insert db=bench0 ms=705 ok=true
+SLOW insert db=bench0 ms=747 ok=true
+SLOW insert db=bench0 ms=778 ok=true
+SLOW insert db=bench0 ms=811 ok=true
+SLOW insert db=bench0 ms=844 ok=true
+SLOW insert db=bench0 ms=877 ok=true
+SLOW insert db=bench0 ms=902 ok=true
+SLOW insert db=bench0 ms=929 ok=true
+SLOW insert db=bench0 ms=968 ok=true
+SLOW insert db=bench0 ms=554 ok=true
+SLOW insert db=bench0 ms=973 ok=true
+SLOW insert db=bench0 ms=982 ok=true
+SLOW insert db=bench0 ms=992 ok=true
+SLOW insert db=bench0 ms=992 ok=true
+SLOW insert db=bench0 ms=830 ok=true
+SLOW insert db=bench0 ms=822 ok=true
+SLOW insert db=bench0 ms=867 ok=true
+SLOW insert db=bench0 ms=903 ok=true
+SLOW insert db=bench0 ms=943 ok=true
+SLOW insert db=bench0 ms=979 ok=true
+SLOW insert db=bench0 ms=1012 ok=true
+SLOW insert db=bench0 ms=1051 ok=true
+SLOW insert db=bench0 ms=1081 ok=true
+SLOW insert db=bench0 ms=1117 ok=true
+SLOW insert db=bench0 ms=1148 ok=true
+SLOW insert db=bench0 ms=1183 ok=true

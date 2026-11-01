@@ -1,0 +1,1 @@
+{"clients":4,"dbs":1,"errors_measured":0,"errors_total":0,"gen_cores_used":0.40191404843002415,"label":"","measured_s":5.001069278,"ops":12667,"ops_per_cpu_s":2579.8370672097776,"ops_per_s":2532.8583340612545,"p50_ms":1.429,"p99_ms":3.097,"server_cores_used":0.9817900387021986,"server_cpu_s":4.909999999999997,"workload":"read"}
