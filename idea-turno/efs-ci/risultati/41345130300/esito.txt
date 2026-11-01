@@ -1,0 +1,1 @@
+PERMESSI: il ruolo non si lascia assumere dal branch idea-turno

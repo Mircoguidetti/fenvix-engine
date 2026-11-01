@@ -1,0 +1,1 @@
+fiducia OIDC del ruolo: aggiungere repo:Mircoguidetti/fenvix-engine:ref:refs/heads/idea-turno alla condizione token.actions.githubusercontent.com:sub
