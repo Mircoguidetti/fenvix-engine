@@ -65,6 +65,8 @@ pub struct Run {
 
 pub struct Spill {
     dir: PathBuf,
+    /// cancellazione dei file dei run su un thread a parte (lenta con il `discard` del disco)
+    del_tx: crossbeam_channel::Sender<PathBuf>,
     pub runs: RwLock<BTreeMap<u64, Arc<Run>>>,
     next: AtomicU64,
     pub disk_bytes: AtomicI64,
@@ -116,7 +118,16 @@ impl Spill {
                 }
             }
         }
-        Spill { dir, runs: RwLock::new(BTreeMap::new()), next: AtomicU64::new(1), disk_bytes: AtomicI64::new(0), ram_bytes: AtomicI64::new(0) }
+        let (del_tx, del_rx) = crossbeam_channel::unbounded::<PathBuf>();
+        std::thread::Builder::new()
+            .name("cancella-run".into())
+            .spawn(move || {
+                while let Ok(p) = del_rx.recv() {
+                    let _ = std::fs::remove_file(p);
+                }
+            })
+            .unwrap();
+        Spill { dir, del_tx, runs: RwLock::new(BTreeMap::new()), next: AtomicU64::new(1), disk_bytes: AtomicI64::new(0), ram_bytes: AtomicI64::new(0) }
     }
 
     /// Scrive un run (le voci vengono ordinate qui) e lo registra. Restituisce l'id.
@@ -165,7 +176,7 @@ impl Spill {
         let Some(run) = self.get(id) else { return };
         if run.live.fetch_sub(1, Relaxed) == 1 {
             self.runs.write().remove(&id);
-            let _ = std::fs::remove_file(&run.path);
+            let _ = self.del_tx.send(run.path.clone());
             self.ram_bytes.fetch_sub((run.sparse.len() * 64 + run.dbs.len() * 80) as i64, Relaxed);
             self.disk_bytes.fetch_sub(run.file_len as i64, Relaxed);
         }

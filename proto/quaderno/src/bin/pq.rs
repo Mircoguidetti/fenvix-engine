@@ -1,9 +1,14 @@
 //! pq: replica, proxy, scaricatore, generatori di carico e controlli del prototipo "quaderno".
 use quaderno::{bench, client::Cluster, flusher, node, proxy};
 
-// allocatore che restituisce al sistema la memoria liberata (con glibc l'RSS restava alto dopo un arretrato)
+// allocatore che restituisce al sistema la memoria liberata con un thread di sfondo (con glibc l'RSS restava alto dopo
+// un arretrato; mimalloc lo restituiva ma costava il 27% del throughput dei commit e p99 di 16 ms nel banco 1b)
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
+#[allow(non_upper_case_globals)]
+#[export_name = "_rjem_malloc_conf"]
+pub static malloc_conf: &[u8] = b"background_thread:true,dirty_decay_ms:2000,muzzy_decay_ms:2000\0";
 use std::collections::HashMap;
 use std::sync::Arc;
 

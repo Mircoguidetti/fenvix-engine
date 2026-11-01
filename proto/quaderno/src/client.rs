@@ -187,7 +187,11 @@ impl Cluster {
                 Ok(Resp::Busy { retry_ms, reason }) => {
                     busy += 1;
                     last_busy = Some(reason);
-                    let ms = retry_ms as u64 + rand::random::<u64>() % (retry_ms as u64 + 1);
+                    // attesa che raddoppia a ogni rifiuto (fino a 2 s), con un po' di caso: senza, 15.000 commit/s
+                    // rifiutati e ritentati ogni ~150 ms sovraccaricavano il capo proprio mentre frenava
+                    let base = (retry_ms as u64) << (busy - 1).min(5);
+                    let base = base.min(2000);
+                    let ms = base / 2 + rand::random::<u64>() % (base / 2 + 1);
                     tokio::time::sleep(Duration::from_millis(ms).min(deadline.saturating_sub(start.elapsed()))).await;
                 }
                 Ok(Resp::Conflict(k)) => {

@@ -509,7 +509,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         for r in 0..cl.n() {
             if let Some(s) = cl.status(r).await {
                 reps.push(json!({"id": s.id, "role": s.role, "rss_kb": s.rss_kb, "resident_mb": s.resident_bytes as f64 / 1e6, "versions": s.versions,
-                    "mem_mb": s.mem_used as f64 / 1e6, "mem_cap_mb": s.mem_cap as f64 / 1e6, "disk_used_mb": s.disk_used as f64 / 1e6,
+                    "mem_mb": s.mem_used as f64 / 1e6, "mem_est_mb": s.mem_est as f64 / 1e6, "mem_cap_mb": s.mem_cap as f64 / 1e6, "disk_used_mb": s.disk_used as f64 / 1e6,
                     "spill_runs": s.spill_runs, "spill_disk_mb": s.spill_disk as f64 / 1e6, "spilled": s.spilled_recs, "oldest_s": s.oldest_unflushed_s,
                     "alarm": s.alarm, "brake": s.brake, "busy": s.busy, "delayed": s.delayed,
                     "keys": s.keys, "dbs": s.dbs, "unflushed": s.unflushed_recs, "evicted": s.evicted, "log_len": s.last_index + 1 - s.log_front,

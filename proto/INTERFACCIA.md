@@ -38,6 +38,10 @@ valore)], reads: [chiave] (opzionale, vuoto = nessuna), session: (lsid, txnNumbe
   **con lo stesso id**: se la voce era entrata nel registro si ottiene la stessa `C`; altrimenti viene validata e
   messa in ordine adesso. Il rinvio è riconosciuto finché il record è nella finestra (60 s dopo lo scarico su S3).
   Stessa regola per la coppia (lsid, txnNumber).
+- **[aggiunta, giro 3] `freno(retry_ms, motivo)`**: contropressione. Il commit NON è entrato nel registro; si ritenta
+  dopo `retry_ms` con lo stesso id. Motivi: 1 rallentato (il database scrive troppo e la coda di attesa ha superato
+  100 ms), 2 disco del registro sopra la soglia di rifiuto, 3 sola lettura (disco sopra l'ultima soglia), 4 memoria del
+  quaderno sopra il tetto. Per il driver MongoDB equivale a un errore con etichetta `RetryableWriteError`.
 - **[aggiunta di trasporto]** `not_leader(id del leader o -1)`: la replica non è il leader; il client va dal leader
   indicato. Non è un esito: la richiesta non è entrata nel registro.
 
@@ -81,7 +85,12 @@ valore)], reads: [chiave] (opzionale, vuoto = nessuna), session: (lsid, txnNumbe
   applica alla conferma su tutte le repliche. Un record esce dalla finestra quando è su S3 **e** più vecchio di 60 s.
   **[trasporto]** più database per richiesta.
 - **[aggiunta]** `pendenti(limite)`: database con record non ancora su S3: posizione del più vecchio e
-  **[aggiunta di proto-lettura, accettata]** numero di record e byte non su S3 e `scaricato` del registro.
+  **[aggiunta di proto-lettura, accettata]** numero di record e byte non su S3 e `scaricato` del registro;
+  **[aggiunta, giro 3]** byte non su S3 ancora in RAM (non passati alla dispensa su disco).
+- **[aggiunta, giro 3]** `status` riporta il conto unico della memoria del quaderno e il tetto, il disco usato e le
+  soglie del freno, la dispensa (run e byte), l'età del record non su S3 più vecchio, l'allarme e lo stato del freno.
+  Lo scaricatore lo usa per lo scarico per pressione (sopra il 70% del tetto si scarica subito, dai database con più
+  byte non su S3, con un limite di velocità).
 - **[aggiunta di proto-lettura, accettata]** `stato_scarico(db...) -> (scaricato, etag, potato_fino_a)` per ogni
   database chiesto.
 - **[proposta di proto-lettura, già compatibile]** un manifest può coprire più database: `conferma_scarico` riceve lo

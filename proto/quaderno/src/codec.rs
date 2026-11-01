@@ -508,6 +508,9 @@ pub struct Status {
     /// conto unico della memoria del quaderno (valori, metadati per record, indice, slot, dispensa) e tetto
     #[serde(default)]
     pub mem_used: u64,
+    /// solo il conto stimato dai contatori (mem_used = il maggiore tra questo e l'RSS)
+    #[serde(default)]
+    pub mem_est: u64,
     #[serde(default)]
     pub mem_cap: u64,
     /// disco del registro e della dispensa; soglie del freno (rallenta, rifiuta, sola lettura)

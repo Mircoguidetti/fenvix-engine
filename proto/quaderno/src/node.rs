@@ -1516,6 +1516,7 @@ impl Node {
             segments: self.segs.len() as u64,
             disk_bytes: self.disk_bytes,
             mem_used: self.mem_used,
+            mem_est: self.mem_count(),
             mem_cap: self.cfg.mem_cap,
             disk_used: self.disk_used(),
             disk_soft: self.cfg.disk_soft,
@@ -1737,9 +1738,9 @@ impl Node {
         // freno: memoria sopra il tetto, poi disco (sola lettura, rifiuto, rallentamento dei database che scrivono di più)
         if self.brake >= 2 {
             let (ms, why) = match self.brake {
-                4 => (50, 4),
-                3 => (500, 3),
-                _ => (100, 2),
+                4 => (200, 4),
+                3 => (1000, 3),
+                _ => (500, 2),
             };
             self.busy_n += 1;
             reply.send(&Resp::Busy { retry_ms: ms, reason: why });
