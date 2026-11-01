@@ -454,9 +454,8 @@ impl Worker {
         }
         let nrec: u64 = got.iter().map(|(_, r)| r.len() as u64).sum();
         let voci_conf: Vec<(Db, Pos)> = got.iter().map(|(db, rs)| (*db, rs.last().unwrap().pos)).collect();
-        let es = voci_da_record(&got);
-        drop(got);
-        let b = sst::build(es, self.cfg.blocco);
+        let blocco = self.cfg.blocco;
+        let b = tokio::task::spawn_blocking(move || sst::build(voci_da_record(&got), blocco)).await?;
         let id = nuovo_id(b.max, "");
         let data = Bytes::from(b.data);
         let t_put = std::time::Instant::now();
@@ -577,16 +576,24 @@ impl Worker {
         }
         let ingressi: Vec<Run> = m.run[a..z].to_vec();
         let fondo = z == n;
-        let mut es = Vec::new();
+        let mut objs = Vec::new();
         let mut byte_in = 0u64;
         for r in &ingressi {
             let b = self.leggi_run(g, r).await?;
             byte_in += b.len() as u64;
-            es.extend(sst::all_entries(&b)?);
+            objs.push(b);
         }
         let oriz = if self.cfg.tieni_tutte { None } else { Some(pos_make(now_ms().saturating_sub(self.cfg.orizzonte_ms), 0)) };
-        let es = fondi(es, oriz, fondo);
-        let b = sst::build(es, self.cfg.blocco);
+        let blocco = self.cfg.blocco;
+        // lavoro di CPU fuori dai thread asincroni
+        let b = tokio::task::spawn_blocking(move || -> anyhow::Result<sst::Built> {
+            let mut es = Vec::new();
+            for o in &objs {
+                es.extend(sst::all_entries(o)?);
+            }
+            Ok(sst::build(fondi(es, oriz, fondo), blocco))
+        })
+        .await??;
         let id = nuovo_id(b.max, "c");
         let data = Bytes::from(b.data);
         let t_put = std::time::Instant::now();

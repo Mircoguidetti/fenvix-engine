@@ -131,18 +131,23 @@ async fn main() -> anyhow::Result<()> {
     let (mut ram_max, mut ram_somma, mut ram_n, mut pend_max) = (0u64, 0u64, 0u64, 0u64);
     let mut meta_c: Option<(Conteggi, Conteggi, f64)> = None;
     let mut out_f = std::fs::File::create(&a.out)?;
+    let mut ritardo_max_s = 0f64;
     use std::io::Write as _;
     while t0.elapsed() < fine {
         tokio::time::sleep(Duration::from_millis(10)).await;
         let el = t0.elapsed();
         let ob_w = (el.as_secs_f64() * a.wps * a.db as f64) as u64;
+        // quanto il banco è indietro rispetto al carico richiesto (secondi di letture non ancora lanciate)
+        let ob_r0 = (el.as_secs_f64() * a.rps * a.db as f64) as u64;
+        ritardo_max_s = ritardo_max_s.max(ob_r0.saturating_sub(lette) as f64 / (a.rps * a.db as f64));
         while scritte < ob_w {
             let d = rng.gen_range(0..a.db);
             let id = zipf.id(&mut rng, d);
             reg.commit_sync(put_req(dbs[d as usize], doc_key(COLL, id), valore(&mut rng, a.vsize)));
             scritte += 1;
         }
-        let ob_r = (el.as_secs_f64() * a.rps * a.db as f64) as u64;
+        // al più 100 ms di letture per giro, così istantanee e campioni non aspettano
+        let ob_r = ((el.as_secs_f64() * a.rps * a.db as f64) as u64).min(lette + (a.rps * a.db as f64 / 10.0) as u64 + 1);
         while lette < ob_r {
             let d = rng.gen_range(0..a.db);
             let id = zipf.id(&mut rng, d);
@@ -180,7 +185,7 @@ async fn main() -> anyhow::Result<()> {
                 meta_c = Some((cw, cr, el.as_secs_f64()));
             }
             let l = json!({"t_s": el.as_secs(), "worker": cw, "lettori": cr, "lettore": lett.stat(), "scarico": w.stat.leggi(), "reg": reg.stat(),
-                "rss": lettura::util::rss(0), "cpu_s": lettura::util::cpu_s(0), "lat": perc(&lat.lock()), "errori": errori.load(Ordering::Relaxed)});
+                "rss": lettura::util::rss(0), "cpu_s": lettura::util::cpu_s(0), "lat": perc(&lat.lock()), "errori": errori.load(Ordering::Relaxed), "ritardo_max_del_carico_s": ritardo_max_s});
             writeln!(out_f, "{l}")?;
             eprintln!("{l}");
         }
@@ -202,6 +207,7 @@ async fn main() -> anyhow::Result<()> {
         "variante": a.variante, "db": a.db, "docs_per_db": a.docs, "vsize": a.vsize, "scritture_s_per_db": a.wps, "letture_s_per_db": a.rps,
         "zipf": a.zipf, "cache_mb": a.cache_mb, "cache": a.cache, "secondi": secondi, "scritture": scritte, "letture": lette,
         "errori_lettura": errori.load(Ordering::Relaxed),
+        "ritardo_max_del_carico_s": ritardo_max_s,
         "worker": cw, "lettori": cr, "costo_ora_intera": costi(&tot, secondi, a.db), "costo_seconda_meta": regime,
         "minio_lato_server": minio, "costo_dai_contatori_minio": costi(&srv, secondi, a.db),
         "ram_registro_byte": {"media": ram_somma / ram_n.max(1), "max": ram_max, "non_su_s3_max": pend_max},
