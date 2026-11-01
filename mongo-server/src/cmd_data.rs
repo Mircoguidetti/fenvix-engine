@@ -735,6 +735,12 @@ impl Server {
                 }
             }
         }
+        // `sort` of an update statement (MongoDB 8.0): checked while parsing the command, like mongod 8.0 does.
+        for spec in specs {
+            if let Some(sd) = spec.as_document() {
+                update_sort(sd)?;
+            }
+        }
         let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("update", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
         let mut rr = self.retry_begin(db, cmd, specs.len(), "update").await?;
         let mut g = self.dbs.lock(db).await;
@@ -1073,6 +1079,21 @@ struct UpdAcc {
     upserted: Vec<Bson>,
 }
 
+/// The `sort` of an update statement (`updateOne` / `replaceOne`, MongoDB 8.0), parsed. Empty when there is none.
+/// As in mongod 8.0: it must be an object and it cannot be used with `multi: true`.
+fn update_sort(spec: &Document) -> R<Vec<(String, bool)>> {
+    match spec.get("sort") {
+        None => Ok(vec![]),
+        Some(Bson::Document(s)) => {
+            if bool_arg(spec.get("multi"), false) {
+                return Err(MongoError::failed_to_parse("Cannot specify sort with multi=true".into()));
+            }
+            parse_sort(s)
+        }
+        Some(v) => Err(MongoError::type_mismatch(format!("BSON field 'update.updates.sort' is the wrong type '{}', expected type 'object'", crate::update::type_name(v)))),
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<IndexDef>, ttl_specs: &[index::TtlSpec], w: &mut Writes, spec: &Bson, i: usize, acc: &mut UpdAcc) -> R<()> {
                 let series = g.coll_opts(coll).await?.and_then(|k| k.series.clone());
@@ -1085,7 +1106,10 @@ async fn update_stmt(g: &mut Entry, coll: &str, ns: &str, indexes: &mut Vec<Inde
                 let multi = bool_arg(spec.get("multi"), false);
                 let upsert = bool_arg(spec.get("upsert"), false);
                 let hint = resolve_hint(indexes, spec.get("hint"))?;
-                let (mut matched, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &[], want: if multi { None } else { Some(1) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
+                // with `sort` (only allowed with multi: false) the statement changes the first matching document in that order
+                let sort = update_sort(spec)?;
+                let (mut matched, _, _) = find_docs(g, coll, indexes, &FindOpts { filter: q, sort: &sort, want: if multi { None } else { Some(1) }, hint, ttl: ttl_ctx(ttl_specs), ov: Some(&w.ov) }).await?;
+                sort_docs(&mut matched, &sort);
         for d in matched.iter_mut() { crate::text::strip_scores(d); }
                 if !multi {
                     matched.truncate(1);
