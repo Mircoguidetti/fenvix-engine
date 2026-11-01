@@ -396,10 +396,13 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
         let max_len = if pre_auth { guard.pre_auth_max() } else { usize::MAX };
         first = false;
         match wire::read_request_bounded(&mut r, max_len, first_by, rest_within).await {
-            Ok(Some(req)) => {
+            Ok(Some(mut req)) => {
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
-                let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
+                // the command document is handed over (not copied): the reply needs only `reply_to`
+                let reply_to = req.reply_to();
+                let command = std::mem::take(&mut req.command);
+                let reply = server.handle(&req.db, command, conn_id).await;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
                     // `shutdown`: no reply; the connection closes and the process stops
@@ -410,7 +413,7 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                     continue;
                 }
                 response_id += 1;
-                if let Err(e) = wire::write_reply(&mut w, &req, &reply, response_id).await {
+                if let Err(e) = wire::write_reply(&mut w, &reply_to, &reply, response_id).await {
                     eprintln!("conn {conn_id}: write failed: {e:#}");
                     break;
                 }
