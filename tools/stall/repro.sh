@@ -7,7 +7,7 @@
 #     CORES  1 | 2           (engine pinned to CPU 0 or 0-1 with taskset, load generator on the remaining CPUs)
 #
 # Environment: ENGINE_BIN (the mongo-server binary), LOADGEN_BIN (bench/mongod/loadgen built with `go build`),
-# PY (a python with boto3, for the MinIO buckets), STALL_SECS (a load that has not finished after this many seconds is
+# PY (a python with boto3, for the MinIO buckets), DOCS (documents loaded, default 200000), STALL_SECS (a load that has not finished after this many seconds is
 # a stall; default 600: an unstalled load takes 30-90 s), ENGINE_ARGS (extra engine options), PORT (default 27017).
 #
 # One line per run on stdout and in OUTDIR/runs.txt: "run N ok SECONDS" or "run N STALL". On a stall the evidence is
@@ -16,7 +16,7 @@
 set -uo pipefail
 STORE=$1; CORES=$2; RUNS=$3; OUT=${4:-$PWD/stall-out}
 ENGINE_BIN=${ENGINE_BIN:?set ENGINE_BIN}; LOADGEN_BIN=${LOADGEN_BIN:?set LOADGEN_BIN}
-PY=${PY:-python3}; STALL_SECS=${STALL_SECS:-600}; PORT=${PORT:-27017}; ENGINE_ARGS=${ENGINE_ARGS:-}
+PY=${PY:-python3}; DOCS=${DOCS:-200000}; STALL_SECS=${STALL_SECS:-600}; PORT=${PORT:-27017}; ENGINE_ARGS=${ENGINE_ARGS:-}
 DATA=${DATA:-$OUT/data}
 if [ "$CORES" = 1 ]; then DB_CPUS=0; GEN_CPUS=1-3; else DB_CPUS=0-1; GEN_CPUS=2-3; fi
 mkdir -p "$OUT"
@@ -64,7 +64,7 @@ for n in $(seq 1 "$RUNS"); do
   grep -q "listening on" "$RD/server.log" || { log "run $n engine did not start"; cat "$RD/server.log" >&2; exit 1; }
   t0=$(date +%s.%N)
   timeout "$STALL_SECS" taskset -c "$GEN_CPUS" "$LOADGEN_BIN" -uri "mongodb://127.0.0.1:$PORT/?directConnection=true" \
-    -mode load -dbs 1 -docs 200000 -clients 16 >"$RD/load.out" 2>"$RD/load.err"
+    -mode load -dbs 1 -docs "$DOCS" -clients 16 >"$RD/load.out" 2>"$RD/load.err"
   rc=$?
   t1=$(date +%s.%N)
   if [ $rc -eq 0 ]; then
@@ -76,7 +76,9 @@ m = MongoClient(f"mongodb://127.0.0.1:{sys.argv[1]}/?directConnection=true", ser
 print(f"compactRuns={m.get('compactRuns')} l0WatchRequests={m.get('l0WatchRequests')}")
 PYEOF
 )
-    log "run $n ok $(echo "$t1 - $t0" | bc) $maint"
+    # Slowest insert the engine logged (SLOW lines): a write pause shorter than the client timeout does not fail the load.
+    slow=$(grep -o "SLOW insert db=[^ ]* ms=[0-9]*" "$RD/server.log" | sed 's/.*ms=//' | sort -n | tail -1)
+    log "run $n ok $(echo "$t1 - $t0" | bc) $maint slowestInsertMs=${slow:-none}"
     stop_engine $SPID
     drop_data
     grep -q "final flush did not finish" "$RD/server.log" && log "run $n: the close at SIGTERM gave up its final flush (unclean)"
