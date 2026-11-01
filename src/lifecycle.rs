@@ -900,8 +900,22 @@ impl Tenant {
         match self.mode.take() {
             Some(Mode::Reader(r)) => r.close().await?,
             Some(Mode::Writer(db)) => {
+                // Flush the memtable while the writer is still open and registered, then close it. A flush that waits for
+                // room in L0 (slatedb's `l0_max_ssts`) needs the L0 watch of the maintenance loop to start a compaction
+                // and that compaction to refresh this writer's manifest; once `Db::close` has begun slatedb refuses the
+                // refresh, and the flush would wait for the writer's own manifest poll (`--writer-poll-secs`).
+                let id = self.id.clone();
+                let closed = tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, async {
+                    let memtable = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable };
+                    if let Err(e) = db.flush_with_options(memtable).await {
+                        eprintln!("close of tenant {id}: memtable flush before the close failed: {e}");
+                    }
+                    writer_closed(&id);
+                    db.close().await
+                })
+                .await;
                 writer_closed(&self.id);
-                match tokio::time::timeout(CLOSE_FLUSH_TIMEOUT, db.close()).await {
+                match closed {
                     Ok(r) => r?,
                     Err(_) => {
                         // The memtable flush is stalled (L0 full, waiting for a compaction). Everything acknowledged is in
