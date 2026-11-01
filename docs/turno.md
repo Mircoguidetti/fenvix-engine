@@ -99,7 +99,7 @@ Risultati (MISURATO, TLC 1.8.0 in locale, 2 thread):
 - `Turno.cfg` (3 camerieri, 3 lotti, 2 prese): nessun errore, 189.234 stati distinti, profondità 27.
 - `Turno_medio.cfg` (3 camerieri, 2 lotti, 3 prese): nessun errore, 162.750 stati.
 - `Turno_medio3.cfg` (3 camerieri, 3 lotti, 3 prese): nessun errore, 1.485.258 stati, profondità 35.
-- `Turno_grande.cfg` (4 camerieri, 2 lotti, 3 prese): vedi `output/Turno_grande.txt` e il rapporto S12.
+- `Turno_grande.cfg` (4 camerieri, 2 lotti, 3 prese): nessun errore, 4.405.361 stati distinti, profondità 31, 2 minuti.
 
 Controlli negativi (si spegne una regola, TLC deve trovare la violazione; MISURATO):
 - A, nome `<n>-<cameriere>`: `UnSoloVincitore` violata in 6 passi; senza quella proprietà, `NessunaConfermaPersa`
