@@ -28,11 +28,14 @@ pub struct CfgLettura {
     pub raggruppa: Raggruppa,
     pub intero_max: u64,
     pub fetta_max: u64,
+    /// al primo uso di un manifest, chiede in parallelo i meta di tutte le run (lettura fredda: 3 GET in serie
+    /// invece di 2 + numero di run)
+    pub prefetch_meta: bool,
 }
 
 impl Default for CfgLettura {
     fn default() -> Self {
-        CfgLettura { raggruppa: Raggruppa::PerDb, intero_max: 1 << 20, fetta_max: 256 << 10 }
+        CfgLettura { raggruppa: Raggruppa::PerDb, intero_max: 1 << 20, fetta_max: 256 << 10, prefetch_meta: false }
     }
 }
 
@@ -64,6 +67,11 @@ pub struct StatLetturaV {
     pub cache_miss: u64,
     pub cache_sfratti: u64,
     pub cache_usati: u64,
+}
+
+/// chiave di cache di una run: gruppo + id (gli id sono unici, il gruppo è una garanzia in più)
+fn chiave_run(g: &str, run: &Run) -> Arc<str> {
+    Arc::from(format!("{g}.{}", run.id).as_str())
 }
 
 struct ManCache {
@@ -115,15 +123,20 @@ impl Lettore {
 
     /// Lettura puntuale alla posizione S. None = assente.
     pub async fn get(&self, db: Db, key: Bytes, s: Pos) -> anyhow::Result<Option<Bytes>> {
+        Ok(self.get_fonte(db, key, s).await?.0)
+    }
+
+    /// Come `get`, e dice se la risposta è venuta tutta dalla finestra del registro.
+    pub async fn get_fonte(&self, db: Db, key: Bytes, s: Pos) -> anyhow::Result<(Option<Bytes>, bool)> {
         self.stat.letture.fetch_add(1, Relaxed);
         let (somma, potato) = match self.reg.get(db, key.clone(), s).await? {
             GetResp::Valore { val, .. } => {
                 self.stat.da_finestra.fetch_add(1, Relaxed);
-                return Ok(Some(val));
+                return Ok((Some(val), true));
             }
             GetResp::Assente { .. } => {
                 self.stat.da_finestra.fetch_add(1, Relaxed);
-                return Ok(None);
+                return Ok((None, true));
             }
             GetResp::Indietro(p) => anyhow::bail!("replica indietro ({p} < {s})"),
             GetResp::Delta { somma, potato_fino_a, .. } => (Some(somma), potato_fino_a),
@@ -131,10 +144,13 @@ impl Lettore {
         };
         self.stat.da_sst.fetch_add(1, Relaxed);
         let base = self.sst_get(db, &key, s, potato).await?;
-        Ok(match somma {
-            None => base,
-            Some(x) => Some(Bytes::copy_from_slice(&base.map(|b| delta_val(&b)).unwrap_or(0).wrapping_add(x).to_le_bytes())),
-        })
+        Ok((
+            match somma {
+                None => base,
+                Some(x) => Some(Bytes::copy_from_slice(&base.map(|b| delta_val(&b)).unwrap_or(0).wrapping_add(x).to_le_bytes())),
+            },
+            false,
+        ))
     }
 
     async fn manifest(&self, g: &str, db: &Db, potato: Pos, forza: bool) -> anyhow::Result<Arc<Manifest>> {
@@ -174,11 +190,11 @@ impl Lettore {
     }
 
     async fn meta(&self, g: &str, run: &Run) -> anyhow::Result<Option<Arc<SstMeta>>> {
-        let id: Arc<str> = Arc::from(run.id.as_str());
+        let id = chiave_run(g, run);
         if let Some(m) = self.cache.meta(&id) {
             return Ok(Some(m));
         }
-        let _v = self.volo(&run.id).await;
+        let _v = self.volo(&id).await;
         if let Some(m) = self.cache.meta(&id) {
             return Ok(Some(m));
         }
@@ -193,11 +209,11 @@ impl Lettore {
     }
 
     async fn blocco(&self, g: &str, run: &Run, meta: &SstMeta, i: usize, db: &Db) -> anyhow::Result<Option<Bytes>> {
-        let id: Arc<str> = Arc::from(run.id.as_str());
+        let id = chiave_run(g, run);
         if let Some(b) = self.cache.blocco(&id, i as u32) {
             return Ok(Some(b));
         }
-        let _v = self.volo(&run.id).await;
+        let _v = self.volo(&id).await;
         if let Some(b) = self.cache.blocco(&id, i as u32) {
             return Ok(Some(b));
         }
@@ -237,6 +253,9 @@ impl Lettore {
         let mut forza = false;
         'tentativi: for _ in 0..3 {
             let m = self.manifest(&g, &db, potato, forza).await?;
+            if self.cfg.prefetch_meta && m.run.len() > 1 {
+                let _ = futures::future::join_all(m.run.iter().filter(|r| r.min <= s).map(|r| self.meta(&g, r))).await;
+            }
             let mut somma: i64 = 0;
             let mut delta = false;
             for run in &m.run {

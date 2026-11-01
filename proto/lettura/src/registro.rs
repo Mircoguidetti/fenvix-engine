@@ -102,6 +102,10 @@ impl RegistroSim {
         st.etag = etag;
     }
 
+    pub fn posizione_confermata_sync(&self) -> Pos {
+        self.inner.lock().last
+    }
+
     pub fn flush_log(&self) {
         if let Some(l) = self.inner.lock().log.as_mut() {
             let _ = l.flush();

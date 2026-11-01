@@ -275,11 +275,12 @@ impl Worker {
     }
 
     async fn leggi_run(&self, gruppo: &str, r: &Run) -> anyhow::Result<Bytes> {
-        if let Some(b) = self.cache.lock().0.get(&r.id).cloned() {
+        let k = format!("{gruppo}.{}", r.id);
+        if let Some(b) = self.cache.lock().0.get(&k).cloned() {
             return Ok(b);
         }
         let (b, _) = self.st.get(&manifest::path_sst(gruppo, &r.id)).await?.ok_or_else(|| anyhow::anyhow!("run {} sparita", r.id))?;
-        self.cache_put(&r.id, b.clone());
+        self.cache_put(&k, b.clone());
         Ok(b)
     }
 
@@ -475,7 +476,7 @@ impl Worker {
                 self.stat.scarichi.fetch_add(1, Relaxed);
                 self.stat.record.fetch_add(nrec, Relaxed);
                 self.stat.byte_sst.fetch_add(data.len() as u64, Relaxed);
-                self.cache_put(&id, data);
+                self.cache_put(&format!("{g}.{id}"), data);
                 for s in scaduti {
                     self.st.delete(&manifest::path_sst(g, &s)).await?;
                     self.stat.cancellati.fetch_add(1, Relaxed);
@@ -610,7 +611,7 @@ impl Worker {
                     self.stat.compattazioni.fetch_add(1, Relaxed);
                     self.stat.compatta_in.fetch_add(byte_in, Relaxed);
                     self.stat.compatta_out.fetch_add(data.len() as u64, Relaxed);
-                    self.cache_put(&id, data);
+                    self.cache_put(&format!("{g}.{id}"), data);
                     return Ok(true);
                 }
                 Cas::Conflitto { .. } => {

@@ -97,10 +97,10 @@ pub async fn precarica(st: &Store, reg: &RegistroSim, r: Raggruppa, dbs: &[Db], 
             })
             .await?;
             let (ds, b) = es;
-            let id = format!("{:016x}-base", b.max);
+            let id = format!("{:016x}-{:08x}b", b.max, rand::random::<u32>());
             let data = Bytes::from(b.data);
             st.put(&manifest::path_sst(&g, &id), data.clone()).await?;
-            let mut m = Manifest { versione: 1, ..Default::default() };
+            let mut m = Manifest { versione: 1, orfani_ms: now_ms(), ..Default::default() };
             m.run.push(Run { id, min: b.min, max: b.max, dim: data.len() as u64, meta_off: b.meta_off, meta_len: b.meta_len, voci: b.voci });
             for d in &ds {
                 m.scaricato.insert(db_hex(d), pos0);
