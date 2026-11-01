@@ -77,6 +77,8 @@ struct Slot {
     len: u32,
     /// uscita dalla finestra (o voce di servizio applicata): può lasciare la RAM
     done: bool,
+    /// istante dell'aggiunta (diagnostica delle latenze)
+    t: Instant,
 }
 
 struct Peer {
@@ -151,6 +153,14 @@ pub struct Node {
     last_ack_sent: u64,
     last_trim: Instant,
     disk_bytes: u64,
+    /// follower: le voci ricevute vanno prima al disco, poi nella finestra
+    defer_index: bool,
+    to_index: Vec<u64>,
+    /// diagnostica (µs): aggiunta -> fdatasync locale, aggiunta -> ack di un follower, aggiunta -> conferma; durata dei giri del ciclo
+    h_durable: hdrhistogram::Histogram<u64>,
+    h_ack: hdrhistogram::Histogram<u64>,
+    h_commit: hdrhistogram::Histogram<u64>,
+    h_loop: hdrhistogram::Histogram<u64>,
 }
 
 fn rand_ms(a: u64, b: u64) -> Duration {
@@ -169,7 +179,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
     std::fs::create_dir_all(&cfg.dir)?;
     let (ev_tx, ev_rx) = crossbeam_channel::unbounded::<Ev>();
     let (disk_tx, disk_rx) = crossbeam_channel::unbounded::<DiskOp>();
-    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build()?;
+    let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(std::env::var("PQ_IO_THREADS").ok().and_then(|x| x.parse().ok()).unwrap_or(1)).enable_all().build()?;
     let mut peers = vec![];
     {
         let _g = rt.enter();
@@ -244,7 +254,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
         });
     }
     let dt = ev_tx.clone();
-    store::spawn_disk(cfg.dir.clone(), disk_rx, move |gen, last| {
+    store::spawn_disk(cfg.dir.clone(), disk_rx, cfg.seg_bytes, move |gen, last| {
         let _ = dt.send(Ev::Disk(gen, last));
     });
     let mut node = Node::recover(cfg, ev_rx, disk_tx, peers)?;
@@ -273,7 +283,7 @@ impl Node {
             role: Role::Follower,
             leader: -1,
             leader_since: now,
-            log: VecDeque::new(),
+            log: VecDeque::with_capacity(1 << 21),
             front: prev_index + 1,
             prev_term: ckv.map(|c| c.prev_term).unwrap_or(0),
             prev_pos: ckv.map(|c| c.prev_pos).unwrap_or(0),
@@ -289,7 +299,7 @@ impl Node {
             commit_pos: ckv.map(|c| c.prev_pos).unwrap_or(0),
             all_match: prev_index,
             win: Window::new(genesis),
-            txns: HashMap::new(),
+            txns: HashMap::with_capacity(1 << 21),
             sessions: HashMap::new(),
             peers: peers
                 .into_iter()
@@ -314,6 +324,12 @@ impl Node {
             last_ack_sent: 0,
             last_trim: now,
             disk_bytes: 0,
+            defer_index: false,
+            to_index: vec![],
+            h_durable: hdrhistogram::Histogram::new(3).unwrap(),
+            h_ack: hdrhistogram::Histogram::new(3).unwrap(),
+            h_commit: hdrhistogram::Histogram::new(3).unwrap(),
+            h_loop: hdrhistogram::Histogram::new(3).unwrap(),
             cfg,
         };
         if let Some(c) = ckv {
@@ -394,6 +410,23 @@ impl Node {
 
     /// Aggiunge una voce in coda (in RAM e nella finestra); il disco la riceve al prossimo `submit_disk`.
     fn push_slot(&mut self, e: Arc<Entry>, seg: u32, off: u64) {
+        if self.defer_index {
+            self.to_index.push(e.index);
+        } else {
+            self.index_entry(&e);
+        }
+        self.resident += e.raw.len() as u64;
+        self.log.push_back(Slot { term: e.term, pos: e.pos, len: e.raw.len() as u32, ent: Some(e), seg, off, done: false, t: Instant::now() });
+    }
+
+    fn flush_index(&mut self) {
+        for i in std::mem::take(&mut self.to_index) {
+            let e = self.log[(i - self.front) as usize].ent.clone().expect("voce appena aggiunta");
+            self.index_entry(&e);
+        }
+    }
+
+    fn index_entry(&mut self, e: &Arc<Entry>) {
         let index = e.index;
         if let Body::Rec { txn, db, session, writes } = &e.body {
             self.win.apply(index, e.pos, *txn, db, writes, e.raw.len() as u32);
@@ -402,8 +435,6 @@ impl Node {
                 self.sessions.insert((s.lsid.clone(), s.txn_number), (index, e.pos));
             }
         }
-        self.resident += e.raw.len() as u64;
-        self.log.push_back(Slot { term: e.term, pos: e.pos, len: e.raw.len() as u32, ent: Some(e), seg, off, done: false });
     }
 
     fn append_new(&mut self, e: Entry) {
@@ -470,25 +501,25 @@ impl Node {
         if self.submitted >= last {
             return;
         }
-        let mut cur: Option<(u32, Vec<Bytes>, u64)> = None;
+        let mut cur: Option<(u32, u64, Vec<Bytes>, u64)> = None;
         for i in self.submitted + 1..=last {
             let s = &self.log[(i - self.front) as usize];
             let raw = s.ent.as_ref().expect("voce non ancora su disco senza corpo").raw.clone();
             match &mut cur {
-                Some((seg, v, l)) if *seg == s.seg => {
+                Some((seg, _, v, l)) if *seg == s.seg => {
                     v.push(raw);
                     *l = i;
                 }
                 _ => {
-                    if let Some((seg, v, l)) = cur.take() {
-                        let _ = self.disk_tx.send(DiskOp::Append { seg, data: v, last: l, gen: self.gen });
+                    if let Some((seg, off, v, l)) = cur.take() {
+                        let _ = self.disk_tx.send(DiskOp::Append { seg, off, data: v, last: l, gen: self.gen });
                     }
-                    cur = Some((s.seg, vec![raw], i));
+                    cur = Some((s.seg, s.off, vec![raw], i));
                 }
             }
         }
-        if let Some((seg, v, l)) = cur {
-            let _ = self.disk_tx.send(DiskOp::Append { seg, data: v, last: l, gen: self.gen });
+        if let Some((seg, off, v, l)) = cur {
+            let _ = self.disk_tx.send(DiskOp::Append { seg, off, data: v, last: l, gen: self.gen });
         }
         self.submitted = last;
     }
@@ -503,8 +534,13 @@ impl Node {
         loop {
             match self.rx.recv_timeout(Duration::from_millis(1)) {
                 Ok(ev) => {
+                    // giri brevi: disco e rete partono presto (al più 1024 eventi o 0,5 ms per giro)
+                    let t0 = Instant::now();
                     self.handle(ev);
-                    for _ in 0..50_000 {
+                    for k in 0..1024 {
+                        if k % 32 == 31 && t0.elapsed() > Duration::from_micros(500) {
+                            break;
+                        }
                         match self.rx.try_recv() {
                             Ok(ev) => self.handle(ev),
                             Err(_) => break,
@@ -514,9 +550,11 @@ impl Node {
                 Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
                 Err(_) => return,
             }
+            let t1 = Instant::now();
             self.tick();
             self.submit_disk();
             self.send_out();
+            self.h_loop.record(t1.elapsed().as_micros() as u64).ok();
         }
     }
 
@@ -526,7 +564,13 @@ impl Node {
             Ev::Client(conn, id, q) => self.on_req(Reply { conn, id }, q),
             Ev::Disk(gen, last) => {
                 if gen == self.gen {
-                    self.durable = self.durable.max(last.min(self.last_index()));
+                    let nd = last.min(self.last_index());
+                    if nd > self.durable {
+                        if let Some(sl) = self.slot(nd) {
+                            self.h_durable.record(sl.t.elapsed().as_micros() as u64).ok();
+                        }
+                    }
+                    self.durable = self.durable.max(nd);
                 }
                 if self.role == Role::Leader {
                     self.maybe_commit();
@@ -641,6 +685,7 @@ impl Node {
             }
         }
         let mut idx = prev_index;
+        self.defer_index = true;
         for raw in entries {
             idx += 1;
             if idx < self.front {
@@ -649,6 +694,9 @@ impl Node {
             let e = match Entry::decode(raw) {
                 Ok(e) => e,
                 Err(_) => {
+                    self.defer_index = false;
+                    self.submit_disk();
+                    self.flush_index();
                     fail(self, idx - 1);
                     return;
                 }
@@ -658,10 +706,14 @@ impl Node {
                 if self.term_at(idx) == Some(e.term) {
                     continue;
                 }
+                self.flush_index();
                 self.truncate_from(idx);
             }
             self.append_new(e);
         }
+        self.defer_index = false;
+        self.submit_disk();
+        self.flush_index();
         self.verified = self.verified.max(idx);
         let c = commit.min(self.verified);
         if c > self.commit {
@@ -687,6 +739,10 @@ impl Node {
         if ok {
             if ack > p.matched {
                 p.matched = ack;
+                let t = self.log.get((ack.saturating_sub(self.front)) as usize).map(|s| s.t.elapsed().as_micros() as u64);
+                if let Some(t) = t {
+                    self.h_ack.record(t).ok();
+                }
             }
             if p.probing {
                 p.probing = false;
@@ -755,6 +811,9 @@ impl Node {
             let done = std::mem::replace(&mut self.pending, rest);
             for (i, v) in done {
                 let p = self.pos_at(i);
+                if let Some(sl) = self.slot(i) {
+                    self.h_commit.record(sl.t.elapsed().as_micros() as u64).ok();
+                }
                 for r in v {
                     r.send(&Resp::Committed(p));
                 }
@@ -1216,7 +1275,18 @@ impl Node {
                     segments: self.segs.len() as u64,
                     disk_bytes: self.disk_bytes,
                     rss_kb: rss_kb(),
+                    diag: format!(
+                        "durable p50/p99 {}/{} ack {}/{} commit {}/{} giro-uscite {}/{} max {}",
+                        self.h_durable.value_at_quantile(0.5), self.h_durable.value_at_quantile(0.99),
+                        self.h_ack.value_at_quantile(0.5), self.h_ack.value_at_quantile(0.99),
+                        self.h_commit.value_at_quantile(0.5), self.h_commit.value_at_quantile(0.99),
+                        self.h_loop.value_at_quantile(0.5), self.h_loop.value_at_quantile(0.99), self.h_loop.max()
+                    ),
                 };
+                self.h_durable.reset();
+                self.h_ack.reset();
+                self.h_commit.reset();
+                self.h_loop.reset();
                 reply.send(&Resp::Status(st));
             }
             Req::Dump { from_index, max } => {
@@ -1249,11 +1319,15 @@ impl Node {
             }
             return;
         }
-        if c.mode == Mode::Validated {
-            if let Err(k) = self.win.validate(&c.db, c.read_pos, &c.writes, &c.reads) {
-                reply.send(&Resp::Conflict(k));
-                return;
-            }
+        // S più nuova del registro di questo leader: ha letto da un leader più nuovo, questo è deposto senza saperlo
+        // (S_SCONOSCIUTA in docs/protocollo.md): il client cerca il leader e rinvia
+        if c.read_pos > self.last_pos() {
+            reply.send(&Resp::NotLeader(-1));
+            return;
+        }
+        if let Err(k) = self.win.validate(&c.db, c.read_pos, &c.writes, c.mode == Mode::Validated, &c.reads) {
+            reply.send(&Resp::Conflict(k));
+            return;
         }
         let idx = self.last_index() + 1;
         let pos = self.next_pos();

@@ -9,9 +9,61 @@
 //! versione che esce restano solo delta, la versione viene "piegata" nel primo delta, che diventa un put col valore
 //! calcolato: così la finestra sa sempre rispondere alle letture a posizioni ≥ inizio finestra della chiave.
 
-use crate::codec::{Db, GetRes, Kind, Pos, Write};
+use crate::codec::{Db, Dep, GetRes, Kind, Pos, Write};
 use bytes::Bytes;
 use std::collections::{BTreeMap, HashMap, VecDeque};
+
+/// Chiave della finestra: fino a 30 byte sta dentro il nodo dell'albero (i confronti non seguono puntatori, che
+/// costavano un salto di cache ciascuno: era il 16% della CPU del leader), oltre va sullo heap.
+#[derive(Clone)]
+pub enum IKey {
+    I(u8, [u8; 30]),
+    H(Box<[u8]>),
+}
+impl IKey {
+    pub fn new(k: &[u8]) -> IKey {
+        if k.len() <= 30 {
+            let mut b = [0u8; 30];
+            b[..k.len()].copy_from_slice(k);
+            IKey::I(k.len() as u8, b)
+        } else {
+            IKey::H(k.into())
+        }
+    }
+    #[inline]
+    pub fn as_slice(&self) -> &[u8] {
+        match self {
+            IKey::I(n, b) => &b[..*n as usize],
+            IKey::H(b) => b,
+        }
+    }
+}
+impl std::borrow::Borrow<[u8]> for IKey {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+impl PartialEq for IKey {
+    fn eq(&self, o: &Self) -> bool {
+        self.as_slice() == o.as_slice()
+    }
+}
+impl Eq for IKey {}
+impl PartialOrd for IKey {
+    fn partial_cmp(&self, o: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(o))
+    }
+}
+impl Ord for IKey {
+    fn cmp(&self, o: &Self) -> std::cmp::Ordering {
+        self.as_slice().cmp(o.as_slice())
+    }
+}
+impl std::fmt::Debug for IKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", String::from_utf8_lossy(self.as_slice()))
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum Val {
@@ -33,6 +85,8 @@ pub struct KeyS {
     pub v: VecDeque<Ver>,
     /// la finestra conosce la chiave dall'inizio della sua storia (un delta senza base parte da 0)
     pub base_known: bool,
+    /// posizione dell'ultima scrittura strutturale (put o delete) nella finestra (per le dipendenze `esiste`)
+    pub last_struct: Pos,
 }
 
 /// Un record del database ancora nella finestra.
@@ -41,13 +95,13 @@ pub struct RecMeta {
     pub index: u64,
     pub pos: Pos,
     pub txn: [u8; 16],
-    pub keys: Box<[Box<[u8]>]>,
+    pub keys: Box<[IKey]>,
     pub bytes: u32,
 }
 
 #[derive(Default, Debug)]
 pub struct DbW {
-    pub keys: BTreeMap<Box<[u8]>, KeyS>,
+    pub keys: BTreeMap<IKey, KeyS>,
     /// le versioni con posizione ≤ trim_pos possono essere uscite dalla finestra
     pub trim_pos: Pos,
     /// su S3 fino a questa posizione (conferma_scarico applicata)
@@ -84,28 +138,37 @@ impl Window {
         self.dbs.entry(*db).or_insert_with(|| DbW { genesis: g, ..Default::default() })
     }
 
-    /// Validazione (solo leader): Ok se nessuna chiave scritta o letta ha versioni più recenti di `read_pos`.
-    pub fn validate(&self, db: &Db, read_pos: Pos, writes: &[Write], reads: &[Bytes]) -> Result<(), Bytes> {
+    /// Validazione (solo leader). `check_writes`: ogni chiave scritta è una dipendenza `valore` (modalità validata).
+    /// `deps`: dipendenze dichiarate. Conflitto se una chiave ha una versione (o una versione strutturale, per `esiste`)
+    /// più recente di `read_pos`.
+    pub fn validate(&self, db: &Db, read_pos: Pos, writes: &[Write], check_writes: bool, deps: &[(Bytes, Dep)]) -> Result<(), Bytes> {
+        if !check_writes && deps.is_empty() {
+            return Ok(());
+        }
         let Some(d) = self.dbs.get(db) else { return Ok(()) };
-        let check = |k: &Bytes| -> Result<(), Bytes> {
+        let check = |k: &Bytes, dep: Dep| -> Result<(), Bytes> {
             if let Some(ks) = d.keys.get(&k[..]) {
-                if let Some(last) = ks.v.back() {
-                    if last.pos > read_pos {
-                        return Err(k.clone());
-                    }
+                let last = match dep {
+                    Dep::Valore => ks.v.back().map(|v| v.pos).unwrap_or(0),
+                    Dep::Esiste => ks.last_struct,
+                };
+                if last > read_pos {
+                    return Err(k.clone());
                 }
             }
             Ok(())
         };
         // S più vecchia dell'inizio della finestra: non si può sapere se una chiave è cambiata dopo S
         if read_pos < d.trim_pos {
-            return Err(writes.first().map(|w| w.key.clone()).or_else(|| reads.first().cloned()).unwrap_or_default());
+            return Err(writes.first().map(|w| w.key.clone()).or_else(|| deps.first().map(|x| x.0.clone())).unwrap_or_default());
         }
-        for w in writes {
-            check(&w.key)?;
+        if check_writes {
+            for w in writes {
+                check(&w.key, Dep::Valore)?;
+            }
         }
-        for k in reads {
-            check(k)?;
+        for (k, dep) in deps {
+            check(k, *dep)?;
         }
         Ok(())
     }
@@ -116,13 +179,11 @@ impl Window {
         let genesis = d.genesis && d.trim_pos == 0;
         let mut keys = Vec::with_capacity(writes.len());
         for w in writes.iter() {
-            let ks = match d.keys.get_mut(&w.key[..]) {
-                Some(k) => k,
-                None => {
-                    d.keys.insert(w.key.to_vec().into_boxed_slice(), KeyS { v: VecDeque::new(), base_known: genesis });
-                    d.keys.get_mut(&w.key[..]).unwrap()
-                }
-            };
+            // una sola discesa nell'albero, anche per le chiavi nuove
+            let ks = d.keys.entry(IKey::new(&w.key)).or_insert_with(|| KeyS { v: VecDeque::new(), base_known: genesis, last_struct: 0 });
+            if w.kind != Kind::Delta {
+                ks.last_struct = pos;
+            }
             // due scritture della stessa chiave nello stesso record: vale l'ultima (una sola versione per posizione)
             if ks.v.back().map(|l| l.pos == pos).unwrap_or(false) {
                 let last = ks.v.back_mut().unwrap();
@@ -142,7 +203,7 @@ impl Window {
                 continue;
             }
             ks.v.push_back(Ver { pos, kind: w.kind, val: Val::Mem(w.val.clone()) });
-            keys.push(w.key.to_vec().into_boxed_slice());
+            keys.push(IKey::new(&w.key));
         }
         self.versions += keys.len() as u64;
         let d = self.dbs.get_mut(db).unwrap();
@@ -157,13 +218,16 @@ impl Window {
         }
         let r = d.recs.pop_back().unwrap();
         for k in r.keys.iter() {
-            if let Some(ks) = d.keys.get_mut(&k[..]) {
+            if let Some(ks) = d.keys.get_mut(k.as_slice()) {
                 if ks.v.back().map(|v| v.pos == r.pos).unwrap_or(false) {
                     ks.v.pop_back();
                     self.versions -= 1;
+                    if ks.last_struct >= r.pos {
+                        ks.last_struct = ks.v.iter().rev().find(|v| v.kind != Kind::Delta).map(|v| v.pos).unwrap_or(0);
+                    }
                 }
                 if ks.v.is_empty() {
-                    d.keys.remove(&k[..]);
+                    d.keys.remove(k.as_slice());
                 }
             }
         }
@@ -200,7 +264,7 @@ impl Window {
             if matches!(r, GetRes::Absent(0)) && complete {
                 continue; // non esisteva ancora a `at`
             }
-            out.push((Bytes::copy_from_slice(k), r));
+            out.push((Bytes::copy_from_slice(k.as_slice()), r));
         }
         out
     }
@@ -215,7 +279,7 @@ impl Window {
         }
         let r = d.recs.pop_front().unwrap();
         for k in r.keys.iter() {
-            let Some(ks) = d.keys.get_mut(&k[..]) else { continue };
+            let Some(ks) = d.keys.get_mut(k.as_slice()) else { continue };
             if ks.v.front().map(|v| v.pos != r.pos).unwrap_or(true) {
                 continue;
             }
@@ -223,7 +287,7 @@ impl Window {
             self.versions -= 1;
             match ks.v.front_mut() {
                 None => {
-                    d.keys.remove(&k[..]);
+                    d.keys.remove(k.as_slice());
                 }
                 Some(next) if next.kind == Kind::Delta => {
                     // piega la versione che esce nel primo delta
@@ -250,7 +314,7 @@ impl Window {
                 }
                 Some(_) => {}
             }
-            if let Some(ks) = d.keys.get_mut(&k[..]) {
+            if let Some(ks) = d.keys.get_mut(k.as_slice()) {
                 ks.base_known = ks.base_known || ks.v.front().map(|v| v.kind != Kind::Delta).unwrap_or(false);
             }
         }
@@ -359,8 +423,12 @@ mod tests {
         assert_eq!(v(win.get(&db, b"a", 25, &mut l)), 8);
         assert_eq!(v(win.get(&db, b"a", 30, &mut l)), 10);
         assert!(matches!(win.get(&db, b"a", 5, &mut l), GetRes::Absent(0)));
-        assert!(win.validate(&db, 20, &[w("a", Kind::Put, b"x")], &[]).is_err());
-        assert!(win.validate(&db, 30, &[w("a", Kind::Put, b"x")], &[]).is_ok());
+        assert!(win.validate(&db, 20, &[w("a", Kind::Put, b"x")], true, &[]).is_err());
+        assert!(win.validate(&db, 30, &[w("a", Kind::Put, b"x")], true, &[]).is_ok());
+        // esiste: i delta dopo S non conflittano, valore sì
+        assert!(win.validate(&db, 15, &[], false, &[(Bytes::from_static(b"a"), Dep::Esiste)]).is_ok());
+        assert!(win.validate(&db, 15, &[], false, &[(Bytes::from_static(b"a"), Dep::Valore)]).is_err());
+        assert!(win.validate(&db, 5, &[], false, &[(Bytes::from_static(b"a"), Dep::Esiste)]).is_err());
         win.dbs.get_mut(&db).unwrap().flushed = 20;
         assert!(win.trim_one(&db, 100, 30, &mut l).is_some());
         assert!(win.trim_one(&db, 100, 30, &mut l).is_some());
@@ -368,6 +436,6 @@ mod tests {
         assert_eq!(v(win.get(&db, b"a", 30, &mut l)), 10);
         assert!(matches!(win.get(&db, b"a", 25, &mut l), GetRes::OutOfWindow));
         assert!(matches!(win.get(&db, b"zz", 30, &mut l), GetRes::OutOfWindow));
-        assert!(win.validate(&db, 15, &[w("q", Kind::Put, b"x")], &[]).is_err()); // S prima della finestra
+        assert!(win.validate(&db, 15, &[w("q", Kind::Put, b"x")], true, &[]).is_err()); // S prima della finestra
     }
 }

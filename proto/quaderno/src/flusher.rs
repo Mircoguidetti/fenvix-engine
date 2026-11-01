@@ -158,7 +158,7 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
                 items.push((*db, maxp));
             }
             let sst = sst.freeze();
-            let name = format!("g{g:03}/d-{:016x}-{:08x}.sst", items.iter().map(|x| x.1).max().unwrap(), rand::random::<u32>());
+            let name = format!("g{g:03}/d-{:016x}-{:032x}.sst", items.iter().map(|x| x.1).max().unwrap(), rand::random::<u128>());
             if let Err(e) = store.put(&Path::from(name.clone()), PutPayload::from(sst.clone())).await {
                 eprintln!("put {name}: {e}");
                 errors += 1;
@@ -172,7 +172,7 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
                 for ((db, k), (p, v)) in &gs.merged {
                     sst_put(&mut full, db, k, *p, v.as_ref());
                 }
-                let fname = format!("g{g:03}/f-{:016x}-{:08x}.sst", items.iter().map(|x| x.1).max().unwrap(), rand::random::<u32>());
+                let fname = format!("g{g:03}/f-{:016x}-{:032x}.sst", items.iter().map(|x| x.1).max().unwrap(), rand::random::<u128>());
                 if store.put(&Path::from(fname.clone()), PutPayload::from(full.freeze())).await.is_ok() {
                     old = std::mem::replace(&mut gs.objects, vec![fname]);
                 }

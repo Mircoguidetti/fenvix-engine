@@ -127,7 +127,7 @@ def main():
         down()
         if '--fresh' in a:
             for i in range(N):
-                subprocess.run(['rm', '-rf', os.path.join(WORK, f'r{i}')])
+                subprocess.run(['rm', '-rf', os.path.join(WORK, f'r{i}'), os.path.join(WORK, f'r{i}.log')])
         cfg = {'mem_cap_mb': int(opt(a, '--mem-cap-mb', 4096)), 'window_ms': int(opt(a, '--window-ms', 60000))}
         p = {'cfg': cfg}
         save(p)

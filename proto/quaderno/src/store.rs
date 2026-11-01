@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 
 pub enum DiskOp {
     /// scrivi questi frame in coda al segmento `seg` (che inizia o continua); `last` = indice dell'ultima voce
-    Append { seg: u32, data: Vec<Bytes>, last: u64, gen: u64 },
+    Append { seg: u32, off: u64, data: Vec<Bytes>, last: u64, gen: u64 },
     /// tronca il segmento `seg` a `off` byte e cancella i segmenti successivi
     Truncate { seg: u32, off: u64 },
     Delete { seg: u32 },
@@ -47,8 +47,59 @@ pub fn write_atomic(dir: &Path, name: &str, data: &[u8]) -> std::io::Result<()> 
     Ok(())
 }
 
+/// Scrive `len` byte a zero da `off` (blocchi da 1 MB).
+fn zero_range(f: &File, off: u64, len: u64) -> std::io::Result<()> {
+    let z = vec![0u8; 1 << 20];
+    let mut p = off;
+    while p < off + len {
+        let n = ((off + len - p) as usize).min(z.len());
+        f.write_all_at(&z[..n], p)?;
+        p += n as u64;
+    }
+    Ok(())
+}
+
+/// Crea un file di `size` byte già scritti a zero e sincronizzati: le scritture successive sovrascrivono blocchi già
+/// allocati, così fdatasync scrive solo i dati (niente metadati né journal di ext4 a ogni gruppo).
+fn prealloc(path: &Path, size: u64) -> std::io::Result<()> {
+    let f = OpenOptions::new().create(true).truncate(true).write(true).open(path)?;
+    zero_range(&f, 0, size)?;
+    f.sync_all()
+}
+
+fn open_segment(dir: &Path, seg: u32, size: u64) -> File {
+    let p = seg_path(dir, seg);
+    if !p.exists() {
+        let spare = dir.join("spare.log");
+        if spare.exists() && std::fs::rename(&spare, &p).is_ok() {
+            sync_dir(dir);
+        } else {
+            prealloc(&p, size).expect("preallocazione segmento");
+            sync_dir(dir);
+        }
+    }
+    OpenOptions::new().write(true).open(&p).expect("apri segmento")
+}
+
 /// Thread del disco. `done(gen, last)` è chiamata dopo ogni fdatasync con l'ultimo indice reso durevole.
-pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, done: impl Fn(u64, u64) + Send + 'static) {
+/// Un secondo thread tiene pronto un segmento di scorta già preallocato (`spare.log`).
+pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, seg_bytes: u64, done: impl Fn(u64, u64) + Send + 'static) {
+    {
+        let dir = dir.clone();
+        std::thread::Builder::new()
+            .name("prealloc".into())
+            .spawn(move || loop {
+                let spare = dir.join("spare.log");
+                if !spare.exists() {
+                    let tmp = dir.join("spare.tmp");
+                    if prealloc(&tmp, seg_bytes).is_ok() && std::fs::rename(&tmp, &spare).is_ok() {
+                        sync_dir(&dir);
+                    }
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            })
+            .unwrap();
+    }
     std::thread::Builder::new()
         .name("disk".into())
         .spawn(move || {
@@ -66,23 +117,20 @@ pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, done: i
                 let mut dirty = false;
                 for op in ops {
                     match op {
-                        DiskOp::Append { seg, data, last, gen } => {
+                        DiskOp::Append { seg, off, data, last, gen } => {
                             if cur.as_ref().map(|c| c.0) != Some(seg) {
                                 if let Some((_, f)) = cur.take() {
                                     if dirty {
                                         f.sync_data().expect("fdatasync");
-                                        dirty = false;
                                     }
                                 }
-                                let f = OpenOptions::new().create(true).append(true).open(seg_path(&dir, seg)).expect("apri segmento");
-                                sync_dir(&dir);
-                                cur = Some((seg, f));
+                                cur = Some((seg, open_segment(&dir, seg, seg_bytes)));
                             }
                             buf.clear();
                             for d in &data {
                                 buf.extend_from_slice(d);
                             }
-                            cur.as_mut().unwrap().1.write_all(&buf).expect("scrittura registro");
+                            cur.as_mut().unwrap().1.write_all_at(&buf, off).expect("scrittura registro");
                             dirty = true;
                             last_done = Some((gen, last));
                         }
@@ -105,8 +153,12 @@ pub fn spawn_disk(dir: PathBuf, rx: crossbeam_channel::Receiver<DiskOp>, done: i
                                     }
                                 }
                             }
+                            // azzera da `off` alla fine: nessuna voce troncata deve poter riapparire al recupero
                             if let Ok(f) = OpenOptions::new().write(true).open(seg_path(&dir, seg)) {
-                                f.set_len(off).expect("truncate");
+                                let len = f.metadata().map(|m| m.len()).unwrap_or(0);
+                                if len > off {
+                                    zero_range(&f, off, len - off).expect("azzeramento");
+                                }
                                 f.sync_all().expect("fsync");
                             }
                             sync_dir(&dir);
@@ -168,36 +220,46 @@ pub struct Recovered {
     pub off: u64,
 }
 
-/// Rilegge tutti i segmenti in ordine; taglia la coda strappata dell'ultimo.
+/// Rilegge tutti i segmenti in ordine. Si ferma al primo frame non valido (zeri della preallocazione, coda strappata)
+/// o a una voce che non continua il registro (indice non contiguo, mandato che scende); da lì azzera il segmento e
+/// cancella quelli successivi.
 pub fn recover(dir: &Path) -> std::io::Result<(Vec<Recovered>, u32, u64)> {
     let mut segs: Vec<u32> = std::fs::read_dir(dir)?.flatten().filter_map(|e| parse_seg(&e.file_name().to_string_lossy())).collect();
     segs.sort();
-    let mut out = vec![];
+    let mut out: Vec<Recovered> = vec![];
     let mut last_seg = 0;
     let mut last_len = 0;
-    for (k, &s) in segs.iter().enumerate() {
+    let mut stop = false;
+    for &s in segs.iter() {
+        if stop {
+            std::fs::remove_file(seg_path(dir, s))?;
+            continue;
+        }
         let data = std::fs::read(seg_path(dir, s))?;
         let mut p = 0usize;
         loop {
             match read_frame(&data[p..]) {
                 FrameRead::Ok(_, end) => {
                     let raw = Bytes::copy_from_slice(&data[p..p + end]);
-                    match Entry::decode(raw) {
-                        Ok(e) => out.push(Recovered { entry: e, seg: s, off: p as u64 }),
-                        Err(_) => break,
+                    let Ok(e) = Entry::decode(raw) else { break };
+                    if let Some(prev) = out.last() {
+                        if e.index != prev.entry.index + 1 || e.term < prev.entry.term {
+                            break;
+                        }
                     }
+                    out.push(Recovered { entry: e, seg: s, off: p as u64 });
                     p += end;
                 }
                 _ => break,
             }
         }
-        if p < data.len() {
-            if k + 1 != segs.len() {
-                eprintln!("ATTENZIONE: segmento {s} corrotto a metà ({p}/{}), non è l'ultimo", data.len());
-            }
-            let f = OpenOptions::new().write(true).open(seg_path(dir, s))?;
-            f.set_len(p as u64)?;
+        let f = OpenOptions::new().write(true).open(seg_path(dir, s))?;
+        let len = data.len() as u64;
+        // dopo l'ultimo frame valido: deve essere tutto zero (un frame strappato o vecchio non deve riapparire)
+        if data[p..].iter().any(|b| *b != 0) {
+            zero_range(&f, p as u64, len - p as u64)?;
             f.sync_all()?;
+            stop = true;
         }
         last_seg = s;
         last_len = p as u64;

@@ -57,7 +57,7 @@ pub fn valbench(records: u64, keys_per_rec: usize, dbs: u64, keyspace: u64, val:
         let db = db_id(rand::random::<u64>() % dbs);
         let writes = mk(index);
         let t0 = Instant::now();
-        let ok = win.validate(&db, pos.saturating_sub(64), &writes, &[]).is_ok();
+        let ok = win.validate(&db, pos.saturating_sub(64), &writes, true, &[]).is_ok();
         let t1 = Instant::now();
         if !ok {
             *conflicts += 1;
@@ -482,6 +482,10 @@ pub async fn hot(cl: Arc<Cluster>, mode: &str, clients: usize, secs: u64, max_at
                     tries.fetch_add(1, Relaxed);
                     let c = if mode == "blind" {
                         CommitReq { txn: txn_id(), db, read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: key.clone(), kind: Kind::Delta, val: Bytes::copy_from_slice(&1i64.to_le_bytes()) }], reads: vec![], session: None }
+                    } else if mode == "esiste" {
+                        // scelta di docs/protocollo.md: $inc su _id di un documento esistente = delta con dipendenza
+                        // (_id, esiste), preparato alla posizione confermata più recente nota al nodo d'ingresso
+                        CommitReq { txn: txn_id(), db, read_pos: cl.seen.load(Relaxed), mode: Mode::Blind, writes: vec![Write { key: key.clone(), kind: Kind::Delta, val: Bytes::copy_from_slice(&1i64.to_le_bytes()) }], reads: vec![(key.clone(), Dep::Esiste)], session: None }
                     } else {
                         // leggi-modifica-scrivi validato: dal leader, alla posizione confermata più recente vista ("validated")
                         // oppure speculativa sull'ultima versione accettata ("spec")
@@ -585,17 +589,25 @@ pub async fn lin(cl: Arc<Cluster>, secs: u64, keys: u64, writers: usize, readers
     for _ in 0..readers {
         let (cl, f, stop, behind, served, cnt) = (cl.clone(), f.clone(), stop.clone(), behind.clone(), served.clone(), cnt.clone());
         ts.push(tokio::spawn(async move {
+            // una replica che ha risposto "indietro" si evita per 1 s (il nodo d'ingresso se lo ricorda)
+            let mut avoid = [Instant::now(); 3];
             while !stop.load(Relaxed) {
                 let k = rand::random::<u64>() % keys;
                 let t0 = start.elapsed().as_micros();
                 let Some(s) = cl.confirmed(Duration::from_secs(30)).await else { continue };
                 let mut r = rand::random::<usize>() % 3;
+                for _ in 0..3 {
+                    if avoid[r] > Instant::now() {
+                        r = (r + 1) % 3;
+                    }
+                }
                 let mut nb = 0;
                 let res = loop {
-                    match cl.call(r, &Req::Get { db, key: doc_key(&k.to_string()), at: s, wait_ms: 100, spec: false }, Duration::from_millis(1000)).await {
+                    match cl.call(r, &Req::Get { db, key: doc_key(&k.to_string()), at: s, wait_ms: 20, spec: false }, Duration::from_millis(1000)).await {
                         Ok(Resp::Get(g)) => break Some(g),
                         Ok(Resp::Behind(_)) | Err(CallErr::Timeout) | Err(CallErr::Closed) => {
                             behind[r].fetch_add(1, Relaxed);
+                            avoid[r] = Instant::now() + Duration::from_secs(1);
                             nb += 1;
                             r = (r + 1) % 3;
                             if nb > 30 {

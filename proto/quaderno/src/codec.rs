@@ -180,6 +180,14 @@ pub enum Mode {
     Blind = 1,
 }
 
+/// Dipendenza dichiarata (docs/protocollo.md §2, branch tla-registro): `Esiste` conflittua solo con scritture
+/// strutturali (put, delete) dopo S; `Valore` con qualsiasi scrittura dopo S (anche delta).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Dep {
+    Esiste = 0,
+    Valore = 1,
+}
+
 #[derive(Clone, Debug)]
 pub struct Session {
     pub lsid: Bytes,
@@ -194,7 +202,8 @@ pub struct CommitReq {
     pub read_pos: Pos,
     pub mode: Mode,
     pub writes: Vec<Write>,
-    pub reads: Vec<Bytes>,
+    /// chiavi lette da validare, con il modo della dipendenza
+    pub reads: Vec<(Bytes, Dep)>,
     pub session: Option<Session>,
 }
 
@@ -472,6 +481,8 @@ pub struct Status {
     pub segments: u64,
     pub disk_bytes: u64,
     pub rss_kb: u64,
+    #[serde(default)]
+    pub diag: String,
 }
 
 #[derive(Clone, Debug)]
@@ -528,8 +539,9 @@ pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
             b.put_u8(c.mode as u8);
             enc_writes(&mut b, &c.writes);
             b.put_u16_le(c.reads.len() as u16);
-            for k in &c.reads {
+            for (k, d) in &c.reads {
                 put16(&mut b, k);
+                b.put_u8(*d as u8);
             }
             enc_session(&mut b, &c.session);
         }
@@ -600,7 +612,9 @@ pub fn dec_req(body: Bytes) -> R<(u64, Req)> {
             let n = r.u16()? as usize;
             let mut reads = Vec::with_capacity(n);
             for _ in 0..n {
-                reads.push(r.bytes16()?);
+                let k = r.bytes16()?;
+                let d = if r.u8()? == 0 { Dep::Esiste } else { Dep::Valore };
+                reads.push((k, d));
             }
             let session = dec_session(&mut r)?;
             Req::Commit(CommitReq { txn, db, read_pos, mode, writes, reads, session })
