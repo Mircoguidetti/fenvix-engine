@@ -294,7 +294,7 @@ pub enum Lookup {
     Delta { pos: Pos, somma: i64 },
 }
 
-fn check_block(b: &[u8]) -> anyhow::Result<&[u8]> {
+pub fn check_block(b: &[u8]) -> anyhow::Result<&[u8]> {
     anyhow::ensure!(b.len() >= 4, "blocco corto");
     let (body, crc) = b.split_at(b.len() - 4);
     anyhow::ensure!(crc32fast::hash(body) == u32::from_le_bytes(crc.try_into()?), "crc del blocco sbagliato");

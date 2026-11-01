@@ -91,11 +91,12 @@ impl Cache {
                 Some(b)
             }
             Some(Voce::Disco(_)) => match std::fs::read(self.file(&k)) {
-                Ok(b) => {
+                // un file scritto a metà o sostituito nel frattempo: si tratta come assente
+                Ok(b) if crate::sst::check_block(&b).is_ok() => {
                     self.stat.hit.fetch_add(1, Relaxed);
                     Some(Bytes::from(b))
                 }
-                Err(_) => {
+                _ => {
                     self.stat.miss.fetch_add(1, Relaxed);
                     None
                 }
@@ -140,8 +141,13 @@ impl Cache {
     pub fn metti_blocco(&self, run: &Arc<str>, i: u32, b: &[u8]) {
         let k = Chiave { run: run.clone(), blocco: i };
         if self.disco.is_some() {
-            if std::fs::write(self.file(&k), b).is_ok() {
+            // scrittura atomica: file temporaneo e rinomina, così un lettore non vede mai un blocco a metà
+            let f = self.file(&k);
+            let tmp = f.with_extension(format!("tmp{}", rand::random::<u32>()));
+            if std::fs::write(&tmp, b).is_ok() && std::fs::rename(&tmp, &f).is_ok() {
                 self.metti(k, Voce::Disco(b.len() as u32));
+            } else {
+                let _ = std::fs::remove_file(&tmp);
             }
         } else {
             self.metti(k, Voce::Ram(Bytes::copy_from_slice(b)));
