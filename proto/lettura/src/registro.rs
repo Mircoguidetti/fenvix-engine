@@ -68,6 +68,8 @@ pub struct StatReg {
     pub pend_byte: u64,
     pub pend_rec: u64,
     pub db: u64,
+    /// età del record più vecchio non ancora su S3
+    pub ritardo_ms: u64,
 }
 
 /// Riga del log di verifica: (db, posizione, [(chiave, tipo, crc32 del valore)]).
@@ -109,9 +111,16 @@ impl RegistroSim {
     pub fn stat(&self) -> StatReg {
         let g = self.inner.lock();
         let mut s = StatReg { posizione: g.last, commit: g.commits, win_byte: g.win_byte, win_rec: g.win_rec, db: g.dbs.len() as u64, ..Default::default() };
+        let mut vecchio = u64::MAX;
         for st in g.dbs.values() {
             s.pend_byte += st.pend_byte;
             s.pend_rec += st.pend_rec;
+            if st.pend_rec > 0 {
+                vecchio = vecchio.min(st.recs[st.after(st.scaricato)].0.pos);
+            }
+        }
+        if vecchio != u64::MAX {
+            s.ritardo_ms = now_ms().saturating_sub(pos_ms(vecchio));
         }
         s
     }

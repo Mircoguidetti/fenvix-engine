@@ -60,6 +60,8 @@ pub struct CfgScarico {
     pub crash: f64,
     /// cache del worker per gli SST appena scritti o letti (evita GET in compattazione)
     pub cache_byte: u64,
+    /// SOLO controllo negativo del banco: manifest scritto senza condizione (deve far fallire la verifica)
+    pub senza_cas: bool,
 }
 
 impl Default for CfgScarico {
@@ -83,6 +85,7 @@ impl Default for CfgScarico {
             orfani_eta_ms: 300_000,
             crash: 0.0,
             cache_byte: 256 << 20,
+            senza_cas: false,
         }
     }
 }
@@ -158,6 +161,9 @@ pub struct Worker {
     pub stat: Arc<StatScarico>,
     cache: Mutex<(lru::LruCache<String, Bytes>, u64)>,
     noti: Mutex<HashMap<String, Noto>>,
+    /// ultimo manifest scritto o letto da questo worker, con il suo etag: lo scarico successivo parte da qui senza GET
+    /// (se nel frattempo un altro l'ha cambiato, il PUT condizionale fallisce e si rilegge)
+    mcache: Mutex<HashMap<String, (Manifest, String)>>,
     occupati: Mutex<std::collections::HashSet<String>>,
 }
 
@@ -248,6 +254,7 @@ impl Worker {
             stat: Arc::new(StatScarico::default()),
             cache: Mutex::new((lru::LruCache::unbounded(), 0)),
             noti: Mutex::new(HashMap::new()),
+            mcache: Mutex::new(HashMap::new()),
             occupati: Mutex::new(Default::default()),
         })
     }
@@ -290,14 +297,14 @@ impl Worker {
     pub async fn giro(self: &Arc<Self>) -> anyhow::Result<()> {
         let pend = self.reg.pendenti(1_000_000).await?;
         let now = now_ms();
-        let mut gruppi: BTreeMap<String, (Vec<Db>, Pos, u64)> = BTreeMap::new();
+        let mut gruppi: BTreeMap<String, (Vec<Pendente>, Pos, u64)> = BTreeMap::new();
         for p in &pend {
             let g = gruppi.entry(gruppo_di(&p.db, self.cfg.raggruppa)).or_insert((Vec::new(), u64::MAX, 0));
-            g.0.push(p.db);
+            g.0.push(p.clone());
             g.1 = g.1.min(p.piu_vecchio);
             g.2 += p.byte;
         }
-        let mut pronti: Vec<(String, Vec<Db>)> = gruppi
+        let mut pronti: Vec<(String, Vec<Pendente>)> = gruppi
             .into_iter()
             .filter(|(_, (_, vecchio, byte))| now.saturating_sub(pos_ms(*vecchio)) >= self.cfg.eta_ms || *byte >= self.cfg.dim_byte)
             .map(|(g, (d, _, _))| (g, d))
@@ -386,17 +393,33 @@ impl Worker {
     }
 
     /// Scarica un gruppo. Some(manifest scritto) se ha scritto una run nuova.
-    pub async fn scarica(&self, g: &str, dbs: Vec<Db>) -> anyhow::Result<Option<Manifest>> {
-        let (m, etag) = match manifest::carica(&self.st, g).await? {
+    async fn manifest_corrente(&self, g: &str) -> anyhow::Result<(Manifest, Option<String>)> {
+        if let Some((m, e)) = self.mcache.lock().get(g).cloned() {
+            return Ok((m, Some(e)));
+        }
+        Ok(match manifest::carica(&self.st, g).await? {
             Some((m, e)) => (m, Some(e)),
             None => (Manifest::default(), None),
-        };
-        // riparazione: manifest più avanti del registro
+        })
+    }
+
+    fn ricorda(&self, g: &str, m: &Manifest, etag: &str) {
+        let mut c = self.mcache.lock();
+        if c.len() > 100_000 {
+            c.clear();
+        }
+        c.insert(g.to_string(), (m.clone(), etag.to_string()));
+    }
+
+    pub async fn scarica(&self, g: &str, pend: Vec<Pendente>) -> anyhow::Result<Option<(Manifest, String)>> {
+        let (m, etag) = self.manifest_corrente(g).await?;
+        let dbs: Vec<Db> = pend.iter().map(|p| p.db).collect();
+        // riparazione: manifest più avanti del registro (worker morto tra manifest e conferma)
         let mut ripara = Vec::new();
-        for db in &dbs {
-            let s = m.scaricato_db(db);
-            if s > 0 && s > self.reg.stato_scarico(*db).await?.scaricato {
-                ripara.push((*db, s));
+        for p in &pend {
+            let s = m.scaricato_db(&p.db);
+            if s > p.scaricato {
+                ripara.push((p.db, s));
             }
         }
         if !ripara.is_empty() {
@@ -435,10 +458,19 @@ impl Worker {
         m2.ultimo_scarico_ms = now;
         let scaduti: Vec<String> = m2.da_cancellare.iter().filter(|d| d.dal_ms + self.cfg.grazia_ms <= now).map(|d| d.id.clone()).collect();
         m2.da_cancellare.retain(|d| d.dal_ms + self.cfg.grazia_ms > now);
-        match manifest::scrivi(&self.st, g, &m2, etag.as_deref()).await {
+        let esito = if self.cfg.senza_cas {
+            match self.st.put_etag(&manifest::path_manifest(g), Bytes::from(serde_json::to_vec(&m2)?)).await {
+                Ok(e) => Cas::Ok(e),
+                Err(e) => Cas::Incerto(e.to_string()),
+            }
+        } else {
+            manifest::scrivi(&self.st, g, &m2, etag.as_deref()).await
+        };
+        match esito {
             Cas::Ok(e2) => {
                 crash(self.cfg.crash, "dopo_manifest");
-                self.reg.conferma_scarico(voci_conf, e2).await?;
+                self.ricorda(g, &m2, &e2);
+                self.reg.conferma_scarico(voci_conf, e2.clone()).await?;
                 crash(self.cfg.crash, "dopo_conferma");
                 self.stat.scarichi.fetch_add(1, Relaxed);
                 self.stat.record.fetch_add(nrec, Relaxed);
@@ -449,17 +481,19 @@ impl Worker {
                     self.stat.cancellati.fetch_add(1, Relaxed);
                 }
                 self.forse_orfani(g, &m2).await;
-                Ok(Some(m2))
+                Ok(Some((m2, e2)))
             }
             Cas::Conflitto { .. } => {
                 self.stat.conflitti.fetch_add(1, Relaxed);
+                self.mcache.lock().remove(g);
                 // la nostra scrittura può essere riuscita con la risposta persa (ritentativo che vede 412)
                 if let Some((m3, e3)) = manifest::carica(&self.st, g).await? {
+                    self.ricorda(g, &m3, &e3);
                     if m3.run.iter().any(|r| r.id == id) {
                         self.stat.conflitti_vinti_dopo.fetch_add(1, Relaxed);
-                        self.reg.conferma_scarico(voci_conf, e3).await?;
+                        self.reg.conferma_scarico(voci_conf, e3.clone()).await?;
                         self.stat.scarichi.fetch_add(1, Relaxed);
-                        return Ok(Some(m3));
+                        return Ok(Some((m3, e3)));
                     }
                 }
                 self.st.delete(&manifest::path_sst(g, &id)).await?;
@@ -467,17 +501,18 @@ impl Worker {
             }
             Cas::Incerto(e) => {
                 self.stat.incerti.fetch_add(1, Relaxed);
+                self.mcache.lock().remove(g);
                 anyhow::bail!("manifest incerto: {e}")
             }
         }
     }
 
     /// Compatta un gruppo se serve (o tutto, `tutto`). Ok(true) se ha sostituito delle run.
-    pub async fn compatta(&self, g: &str, m: Option<Manifest>, tutto: bool) -> anyhow::Result<bool> {
-        let m = match m {
-            Some(m) => m,
+    pub async fn compatta(&self, g: &str, m: Option<(Manifest, String)>, tutto: bool) -> anyhow::Result<bool> {
+        let (m, etag0) = match m {
+            Some(x) => x,
             None => match manifest::carica(&self.st, g).await? {
-                Some((m, _)) => m,
+                Some(x) => x,
                 None => return Ok(false),
             },
         };
@@ -533,8 +568,15 @@ impl Worker {
         crash(self.cfg.crash, "compatta_dopo_sst");
         let nuova = Run { id: id.clone(), min: b.min, max: b.max, dim: data.len() as u64, meta_off: b.meta_off, meta_len: b.meta_len, voci: b.voci };
         let ids: Vec<&str> = ingressi.iter().map(|r| r.id.as_str()).collect();
+        let mut primo = Some((m.clone(), etag0));
         for tentativo in 0..8 {
-            let Some((mut cur, etag)) = manifest::carica(&self.st, g).await? else { break };
+            let (mut cur, etag) = match primo.take() {
+                Some(x) => x,
+                None => match manifest::carica(&self.st, g).await? {
+                    Some(x) => x,
+                    None => break,
+                },
+            };
             // le run d'ingresso devono esserci ancora, adiacenti e nello stesso ordine
             let Some(p) = cur.run.iter().position(|r| r.id == ids[0]) else { break };
             if cur.run.len() < p + ids.len() || cur.run[p..p + ids.len()].iter().map(|r| r.id.as_str()).ne(ids.iter().copied()) {
@@ -558,8 +600,9 @@ impl Worker {
                 cur.da_cancellare.push(DaCancellare { id: r.id.clone(), dal_ms: now });
             }
             match manifest::scrivi(&self.st, g, &cur, Some(&etag)).await {
-                Cas::Ok(_) => {
+                Cas::Ok(e2) => {
                     crash(self.cfg.crash, "compatta_dopo_manifest");
+                    self.ricorda(g, &cur, &e2);
                     for s in scaduti {
                         self.st.delete(&manifest::path_sst(g, &s)).await?;
                         self.stat.cancellati.fetch_add(1, Relaxed);
@@ -571,6 +614,7 @@ impl Worker {
                     return Ok(true);
                 }
                 Cas::Conflitto { .. } => {
+                    self.mcache.lock().remove(g);
                     if let Some((m3, _)) = manifest::carica(&self.st, g).await? {
                         if m3.run.iter().any(|r| r.id == id) {
                             self.stat.compattazioni.fetch_add(1, Relaxed);
@@ -579,7 +623,10 @@ impl Worker {
                     }
                     continue;
                 }
-                Cas::Incerto(e) => anyhow::bail!("manifest incerto in compattazione: {e}"),
+                Cas::Incerto(e) => {
+                    self.mcache.lock().remove(g);
+                    anyhow::bail!("manifest incerto in compattazione: {e}")
+                }
             }
         }
         // ha vinto qualcun altro: la nostra run non è referenziata da nessuno
@@ -589,6 +636,7 @@ impl Worker {
 
     /// Pulizia degli orfani (SST scritti da worker morti prima del manifest), al massimo ogni `orfani_ogni_ms`.
     async fn forse_orfani(&self, g: &str, m: &Manifest) {
+        // il manifest in memoria potrebbe cambiare sotto: la pulizia rilegge da S3
         let now = now_ms();
         if self.cfg.orfani_ogni_ms == 0 || now.saturating_sub(m.orfani_ms) < self.cfg.orfani_ogni_ms {
             return;
@@ -617,7 +665,12 @@ impl Worker {
         self.stat.orfani.fetch_add(n, Relaxed);
         m.orfani_ms = now;
         m.versione += 1;
-        let _ = manifest::scrivi(&self.st, g, &m, Some(&etag)).await;
+        match manifest::scrivi(&self.st, g, &m, Some(&etag)).await {
+            Cas::Ok(e2) => self.ricorda(g, &m, &e2),
+            _ => {
+                self.mcache.lock().remove(g);
+            }
+        }
         Ok(n)
     }
 }

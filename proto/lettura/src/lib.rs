@@ -9,3 +9,4 @@ pub mod registro;
 pub mod scarico;
 pub mod sst;
 pub mod store;
+pub mod util;

@@ -197,6 +197,13 @@ impl Store {
         Ok(())
     }
 
+    /// PUT senza condizione che restituisce l'etag (solo per il controllo negativo del banco).
+    pub async fn put_etag(&self, p: &str, b: Bytes) -> anyhow::Result<String> {
+        self.c.put.fetch_add(1, Relaxed);
+        self.c.put_byte.fetch_add(b.len() as u64, Relaxed);
+        Ok(self.inner.put_opts(&Path::from(p), PutPayload::from(b), PutOptions::default()).await?.e_tag.unwrap_or_default())
+    }
+
     /// PUT condizionale: `prev = None` crea solo se l'oggetto non c'è (If-None-Match: *), altrimenti If-Match.
     pub async fn put_cond(&self, p: &str, b: Bytes, prev: Option<&str>) -> Cas {
         self.c.put_cond.fetch_add(1, Relaxed);
