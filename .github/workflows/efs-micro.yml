@@ -1,0 +1,117 @@
+# Micro-prova EFS (S13): il quaderno a turno su Amazon EFS, eu-west-1. Comandi AWS CLI diretti, niente CDK.
+# Un solo innesco: un push sul branch idea-turno che cambia idea-turno/efs-ci/comando.json. Il campo "modo" dice cosa fare:
+#   "permessi" = solo controllo dei permessi, 0 $ (letture, --dry-run, oggetti vuoti creati e cancellati subito);
+#   "prova"    = la prova vera della scheda S12 (fase 1 Elastic <= 15 min, fase 2 Provisioned 64 MiB/s <= 3 h, poi cancellazione);
+#   "smonta"   = solo pulizia e verifica.
+# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (mascherato). Spesa: riga "SPESA" ogni minuto nel log, LIVE.md sul
+# branch ogni ~10 min; sopra 12 $ (stima) smonta tutto. Tetto 15 $. Pulizia e verifica girano sempre (if: always()).
+# Le istanze si spengono da sole (shutdown -h +300, comportamento allo spegnimento: terminate).
+name: efs-micro
+on:
+  push:
+    branches: [idea-turno]
+    paths: ['idea-turno/efs-ci/comando.json']
+permissions:
+  id-token: write
+  contents: write
+concurrency:
+  group: fenvix-prova-efs
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      WB_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      OUT: risultati-efs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Maschera account e ruolo; modo dal file di comando
+        id: mode
+        run: |
+          [ -n "$WB_ROLE" ] || { echo "secret AWS_ROLE_ARN mancante"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$WB_ROLE"); role=${WB_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          echo "R3_ACCT=$acct" >> "$GITHUB_ENV"; echo "R3_ROLE_NAME=$role" >> "$GITHUB_ENV"
+          modo=$(jq -r '.modo // "smonta"' idea-turno/efs-ci/comando.json 2>/dev/null || echo smonta)
+          # solo un comando.json aggiunto o modificato in questo commit può far partire una prova a pagamento
+          git diff --name-only --diff-filter=AM HEAD~1 HEAD | grep -qx idea-turno/efs-ci/comando.json || modo=smonta
+          case "$modo" in permessi|prova|smonta) ;; *) modo=smonta;; esac
+          echo "modo=$modo" | tee -a "$GITHUB_OUTPUT" "$GITHUB_STEP_SUMMARY"
+          mkdir -p "$OUT"
+
+      - name: Credenziali AWS (OIDC, 1 h; la prova le rinnova da sola)
+        id: creds
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Se le credenziali non arrivano, lo scrivo (fiducia OIDC del ruolo)
+        if: steps.creds.outcome != 'success'
+        run: |
+          echo "MANCA sts:AssumeRoleWithWebIdentity per repo:Mircoguidetti/fenvix-engine:ref:refs/heads/idea-turno (fiducia OIDC del ruolo)" | tee -a "$OUT/permessi.txt"
+          echo "fiducia OIDC del ruolo: aggiungere repo:Mircoguidetti/fenvix-engine:ref:refs/heads/idea-turno alla condizione token.actions.githubusercontent.com:sub" >> "$OUT/mancanti.txt"
+          echo "PERMESSI: il ruolo non si lascia assumere dal branch idea-turno" | tee "$OUT/esito.txt"
+
+      - name: Giro 1, controllo dei permessi (0 $)
+        if: steps.creds.outcome == 'success' && (steps.mode.outputs.modo == 'permessi' || steps.mode.outputs.modo == 'prova')
+        run: bash idea-turno/efs-ci/permessi.sh
+
+      - name: Compila micro-efs per arm64 (c7g), statico
+        id: build
+        if: steps.creds.outcome == 'success' && steps.mode.outputs.modo == 'prova'
+        run: |
+          grep -q '^PERMESSI: tutti' "$OUT/esito.txt" || { echo "permessi mancanti: niente prova"; exit 1; }
+          rustup target add aarch64-unknown-linux-musl
+          cd idea-turno/micro-efs
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld cargo build --release --locked --target aarch64-unknown-linux-musl
+          cp target/aarch64-unknown-linux-musl/release/micro-efs "$GITHUB_WORKSPACE/$OUT/micro-efs-arm64"
+          sha256sum "$GITHUB_WORKSPACE/$OUT/micro-efs-arm64" | tee -a "$GITHUB_STEP_SUMMARY"
+          # copia x86 per il runner: legge le metriche CloudWatch alla fine (micro-efs metriche)
+          cargo build --release --locked && echo "MICRO_EFS_X86=$PWD/target/release/micro-efs" >> "$GITHUB_ENV"
+          cargo test --release --locked
+
+      - name: La prova (spesa ogni minuto, stop a 12 $, fasi della scheda S12)
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 290
+        run: |
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          python3 -u idea-turno/efs-ci/prova.py
+
+      - name: Credenziali AWS per la pulizia
+        if: always() && steps.creds.outcome == 'success'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Pulizia di tutto fenvix-prova-efs-* e verifica che non resti niente
+        if: always() && steps.creds.outcome == 'success'
+        timeout-minutes: 30
+        run: PULIZIA_BUCKET=1 bash idea-turno/efs-ci/pulizia.sh
+
+      - name: LIVE.md finale, controllo dei segreti, pubblicazione sul branch
+        if: always()
+        run: |
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          python3 idea-turno/efs-ci/live.py fine "${{ steps.mode.outputs.modo }}" || true
+          python3 idea-turno/efs-ci/scan.py "$OUT" idea-turno/efs-ci/LIVE.md
+          rm -f "$OUT/micro-efs-arm64"
+          mkdir -p idea-turno/efs-ci/risultati && rm -rf "idea-turno/efs-ci/risultati/${{ github.run_id }}" && cp -r "$OUT" "idea-turno/efs-ci/risultati/${{ github.run_id }}"
+          git add -f idea-turno/efs-ci/LIVE.md "idea-turno/efs-ci/risultati/${{ github.run_id }}"
+          git commit -qm "efs-micro run ${{ github.run_id }}: risultati (${{ steps.mode.outputs.modo }})" || true
+          for i in 1 2 3; do git pull --rebase -q origin idea-turno && git push -q origin HEAD:idea-turno && break; sleep 5; done
+          cat "$OUT/esito.txt" "$OUT/permessi.txt" 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true

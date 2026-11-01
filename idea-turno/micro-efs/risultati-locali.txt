@@ -1,0 +1,37 @@
+quaderno: /tmp/claude-0/q   controllo: /tmp/claude-0/q   run: 1793560682
+== 1. latenza, poche combinazioni (fsync e dsync; controllo no, si, pipeline)
+39
+{"fase":"loc-64f","host":"vm","modo":"fsync","lotto_kib":4,"file":64,"controllo":"si","controllo_modo":"open","intervallo_ms":0,"prealloca_mib":0,"inizio_ms":1793560706779,"fine_ms":1793560707785,"secondi":1.007,"lotti":20130,"controlli":20130,"conferme":20130,"conferme_s":19995.1,"byte":82452480,"errori":0,"p50_ms":2.976,"p99_ms":7.368,"p999_ms":9.434,"max_ms":11.283,"sync_p50_ms":2.973,"sync_p99_ms":7.366,"sync_p999_ms":9.432,"ctl_p50_ms":0.001,"ctl_p99_ms":0.017,"ctl_p999_ms":0.428}
+{"fase":"loc-prealloca","host":"vm","modo":"fsync","lotto_kib":64,"file":4,"controllo":"si","controllo_modo":"open","intervallo_ms":0,"prealloca_mib":8,"inizio_ms":1793560708092,"fine_ms":1793560708183,"secondi":0.091,"lotti":200,"controlli":200,"conferme":200,"conferme_s":2194.6,"byte":13107200,"errori":0,"p50_ms":0.873,"p99_ms":1.609,"p999_ms":2.182,"max_ms":2.182,"sync_p50_ms":0.868,"sync_p99_ms":1.591,"sync_p999_ms":1.720,"ctl_p50_ms":0.003,"ctl_p99_ms":0.323,"ctl_p999_ms":0.591}
+{"fase":"loc-odirect","host":"vm","modo":"fsync","lotto_kib":4,"file":2,"controllo":"si","controllo_modo":"odirect","intervallo_ms":0,"prealloca_mib":0,"inizio_ms":1793560708203,"fine_ms":1793560709204,"secondi":1.001,"lotti":4610,"controlli":4610,"conferme":4610,"conferme_s":4607.1,"byte":18882560,"errori":0,"p50_ms":0.348,"p99_ms":1.230,"p999_ms":6.594,"max_ms":39.412,"sync_p50_ms":0.292,"sync_p99_ms":1.086,"sync_p999_ms":6.321,"ctl_p50_ms":0.050,"ctl_p99_ms":0.207,"ctl_p999_ms":1.361}
+== 1b. letture dalla coda mentre un altro scrive (con e senza O_DIRECT)
+{"fase":"loc-coda-si","host":"vm","modo":"lettura-odirect","lotto_kib":4,"inizio_ms":1793560709252,"fine_ms":1793560712255,"lotti":0,"letture":1501,"lotti_visti_in_coda":1510,"buchi_di_sequenza":0,"errori":0,"lettura_p50_ms":0.121,"lettura_p99_ms":0.415,"lettura_p999_ms":10.579,"lettura_max_ms":13.645,"ritardo_visibilita_p50_ms":0.865,"ritardo_visibilita_p99_ms":2.778,"ritardo_visibilita_p999_ms":17.720,"ritardo_visibilita_max_ms":27.040}
+{"fase":"loc-coda-no","host":"vm","modo":"lettura-cache","lotto_kib":4,"inizio_ms":1793560713258,"fine_ms":1793560716259,"lotti":0,"letture":1500,"lotti_visti_in_coda":1510,"buchi_di_sequenza":0,"errori":0,"lettura_p50_ms":0.002,"lettura_p99_ms":0.011,"lettura_p999_ms":0.043,"lettura_max_ms":0.110,"ritardo_visibilita_p50_ms":0.597,"ritardo_visibilita_p99_ms":1.240,"ritardo_visibilita_p999_ms":15.983,"ritardo_visibilita_max_ms":17.964}
+== 2. banco 9: gara, 3 'istanze' da 8 concorrenti, 1000 round
+gara g1793560682: 8 concorrenti da b, 1000 round ogni 5 ms, inizio tra 1998 ms
+gara g1793560682: 8 concorrenti da a, 1000 round ogni 5 ms, inizio tra 1997 ms
+gara g1793560682: 8 concorrenti da c, 1000 round ogni 5 ms, inizio tra 1996 ms
+{"run":"g1793560682","id":"c","vinti":348,"ritentati":0}
+{"run":"g1793560682","id":"a","vinti":319,"ritentati":0}
+{"run":"g1793560682","id":"b","vinti":333,"ritentati":0}
+{"banco":"9-gara","run":"g1793560682","concorrenti":24,"round":1000,"round_senza_vincitore":0,"round_con_due_vincitori":0,"vincitore_diverso_dal_file":0,"vinti_dopo_ritentativo":0,"errori":0,"esito":"PASSA"}
+== 3. presa, modo uccidi (20 cicli, fino a 100 lotti ciascuno)
+{"run":"puccidi1793560682","cicli":20,"presa_p50_ms":2.43,"presa_p99_ms":3.52,"presa_max_ms":3.52}
+{"run":"puccidi1793560682","modo":"uccidi","cicli":20,"confermati":1540}
+{"banco":"10-presa-dopo-sigkill","modo":"uccidi","run":"puccidi1793560682","cicli":20,"cicli_completi":20,"lotti_confermati":1540,"lotti_letti_dal_nuovo":1555,"lotti_confermati_mancanti":0,"byte_confermati_mancanti":0,"conferme_dopo_la_presa":0,"lotti_scritti_dallo_zombie":0,"esito":"PASSA"}
+== 3. presa, modo ferma (20 cicli, fino a 100 lotti ciascuno)
+{"run":"pferma1793560682","cicli":20,"presa_p50_ms":3.13,"presa_p99_ms":3.83,"presa_max_ms":3.83}
+{"run":"pferma1793560682","modo":"ferma","cicli":20,"confermati":1460}
+{"banco":"zombie","modo":"ferma","run":"pferma1793560682","cicli":20,"cicli_completi":20,"lotti_confermati":1460,"lotti_letti_dal_nuovo":1479,"lotti_confermati_mancanti":0,"byte_confermati_mancanti":0,"conferme_dopo_la_presa":0,"lotti_scritti_dallo_zombie":4000,"esito":"PASSA"}
+== 3. presa, modo vivo (20 cicli, fino a 100 lotti ciascuno)
+{"run":"pvivo1793560682","cicli":20,"presa_p50_ms":2.90,"presa_p99_ms":4.08,"presa_max_ms":4.08}
+{"run":"pvivo1793560682","modo":"vivo","cicli":20,"confermati":2321}
+{"banco":"zombie","modo":"vivo","run":"pvivo1793560682","cicli":20,"cicli_completi":20,"lotti_confermati":2321,"lotti_letti_dal_nuovo":2373,"lotti_confermati_mancanti":0,"byte_confermati_mancanti":0,"conferme_dopo_la_presa":0,"lotti_scritti_dallo_zombie":4000,"esito":"PASSA"}
+== 4. controllo negativo: il subentrante legge il libro PRIMA di creare l'epoca
+{"run":"pneg1793560682","cicli":3,"presa_p50_ms":2.27,"presa_p99_ms":2.28,"presa_max_ms":2.28}
+{"run":"pneg1793560682","modo":"vivo","cicli":3,"confermati":322}
+{"banco":"zombie","modo":"vivo","run":"pneg1793560682","cicli":3,"cicli_completi":1,"lotti_confermati":322,"lotti_letti_dal_nuovo":316,"lotti_confermati_mancanti":6,"byte_confermati_mancanti":24576,"conferme_dopo_la_presa":0,"lotti_scritti_dallo_zombie":600,"esito":"MUORE"}
+ok: la verifica li vede
+== 5. metriche con una AWS CLI finta (nessuna chiamata ad AWS)
+{"fase":"loc-64f","istanze":1,"da":"2026-11-01T19:18:00Z","a":"2026-11-01T19:19:00Z","finestra_sovrapposta":true,"lotti_app":20130,"controlli_app":20130,"letture_app":0,"byte_app":82452480,"DataReadIOBytes_byte":4096000,"DataReadIOBytes_op":1000,"DataReadIOBytes_kib_per_op_efs":4.00,"DataWriteIOBytes_byte":4096000,"DataWriteIOBytes_op":1000,"DataWriteIOBytes_kib_per_op_efs":4.00,"MetadataIOBytes_byte":4096000,"MetadataIOBytes_op":1000,"MetadataIOBytes_kib_per_op_efs":4.00,"MetadataReadIOBytes_byte":4096000,"MetadataReadIOBytes_op":1000,"MetadataReadIOBytes_kib_per_op_efs":4.00,"MetadataWriteIO
+FATTO

@@ -1,0 +1,238 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=41013 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 82 and seed -6090535556932432121 with 2 workers on 2 cores with 1330MB heap and 64MB offheap memory [pid: 4081] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/idea-turno/tla/Turno.tla
+Parsing file /tmp/tlc-2758091538478239157/Naturals.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-2758091538478239157/FiniteSets.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-2758091538478239157/_TLCTrace.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-2758091538478239157/Sequences.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-2758091538478239157/TLC.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-2758091538478239157/TLCExt.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-2758091538478239157/Integers.tla (jar:file:/opt/tla/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module Turno
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module Turno
+Starting... (2026-11-01 19:15:19)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 19:15:19.
+Error: Invariant NessunaConfermaPersa is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ presaN = (a :> 0 @@ b :> 0 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "normale" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 1
+/\ conosce = (a :> {} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 0 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>}
+/\ epoche = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 2: <Scrivi(a) line 101, col 5 to line 108, col 55 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 0 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {1} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "normale" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 0 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>}
+/\ epoche = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 3: <Inizia(b) line 206, col 5 to line 213, col 65 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {1} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "crea" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 0 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>}
+/\ epoche = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 4: <CreaTurno(b) line 219, col 5 to line 227, col 65 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {1} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "epoche" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 0 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>, <<2, b>>}
+/\ epoche = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 5: <Epoche(b) line 232, col 5 to line 249, col 53 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {1} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 2 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "verifica" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 0 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>, <<2, b>>}
+/\ epoche = (a :> 2 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 6: <Verifica(b) line 256, col 5 to line 261, col 65 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {1} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 2 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "leggi" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 0 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>, <<2, b>>}
+/\ epoche = (a :> 2 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 7: <Leggi(b) line 279, col 5 to line 289, col 43 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {}
+/\ lotto = (a :> {1} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 2 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "normale" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 2 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>, <<2, b>>}
+/\ epoche = (a :> 2 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 8: <Fsync(a) line 114, col 5 to line 126, col 33 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {<<a, 1, 1>>}
+/\ lotto = (a :> {} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 2 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "normale" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 2 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>, <<2, b>>}
+/\ epoche = (a :> 2 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {1} @@ b :> {} @@ c :> {})
+/\ confermati = {}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+State 9: <Controlla(a) line 134, col 5 to line 146, col 43 of module Turno>
+/\ presaN = (a :> 0 @@ b :> 2 @@ c :> 0)
+/\ libri = {<<a, 1, 1>>}
+/\ lotto = (a :> {} @@ b :> {} @@ c :> {})
+/\ catena = ( a :> (a :> 0 @@ b :> 0 @@ c :> 0) @@
+  b :> (a :> 2 @@ b :> 0 @@ c :> 0) @@
+  c :> (a :> 0 @@ b :> 0 @@ c :> 0) )
+/\ pc = (a :> "normale" @@ b :> "normale" @@ c :> "normale")
+/\ okPrima = (a :> FALSE @@ b :> FALSE @@ c :> FALSE)
+/\ prossimo = 2
+/\ conosce = (a :> {1} @@ b :> {} @@ c :> {})
+/\ mioTurno = (a :> 1 @@ b :> 2 @@ c :> 0)
+/\ miaEpoca = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ turni = {<<1, a>>, <<2, b>>}
+/\ epoche = (a :> 2 @@ b :> 1 @@ c :> 1)
+/\ manifest = [turno |-> 0, rec |-> {}]
+/\ inAttesa = (a :> {} @@ b :> {} @@ c :> {})
+/\ confermati = {1}
+/\ eredita = (a :> {} @@ b :> {} @@ c :> {})
+/\ maiScaricati = {}
+/\ cache = (a :> 1 @@ b :> 1 @@ c :> 1)
+/\ epocaVista = (a :> 0 @@ b :> 0 @@ c :> 0)
+
+2876 states generated, 1130 distinct states found, 524 states left on queue.
+The depth of the complete state graph search is 10.
+Finished in 00s at (2026-11-01 19:15:20)
+Trace exploration spec path: ./Turno_TTrace_1793560519.tla
