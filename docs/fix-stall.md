@@ -122,7 +122,16 @@ Commit c6d0feb e 00a6da0.
 - **La chiusura scarica la memtable prima di chiudere** (`Tenant::close`): prima il flush con il writer ancora aperto e in
   elenco, così il controllo di L0 lo vede e la compattazione gli aggiorna il manifest; poi il writer esce dall'elenco e si
   chiude.
-- **Osservabilità.** Gli errori di compattazione finiscono nel log e `tenantStats` riporta `maintenance.l0WatchRequests`.
+- **Osservabilità.** Gli errori di compattazione finiscono nel log e `tenantStats` riporta `maintenance.l0WatchRequests` e
+  `maintenance.l0WatchDeferred`. `MaintenanceLog.errors` tiene solo gli ultimi 1.000 errori (`errors_total` li conta tutti).
+
+- **Pausa dopo una compattazione fallita** (correzione chiesta dalla revisione). Se `compact_tenant` di un database fallisce,
+  il controllo di L0 non lo richiede prima di una pausa di 1 s, che raddoppia a ogni fallimento di fila fino a 60 s
+  (`COMPACT_RETRY_BASE`, `COMPACT_RETRY_MAX`); la azzera il primo passaggio riuscito o la chiusura del database. Le richieste
+  esplicite (chiusura, upgrade che aspetta la compattazione) non aspettano la pausa. Senza, un database la cui compattazione
+  fallisce sempre veniva ricompattato ogni secondo, rileggendo tutta la sua L0 dallo store e occupando uno dei 2 posti di
+  compattazione del processo. Test: `lifecycle::tests::always_failing_compaction_is_not_retried_every_round` (3 tentativi in
+  4 s con il controllo ogni 50 ms; senza la pausa 78) e `failed_compaction_backs_off` (al massimo 7 tentativi in un minuto).
 
 Costo (STIMATO): nessuna richiesta allo store in più quando L0 è sotto la soglia; una lettura in memoria del manifest per
 writer aperto al secondo. Le compattazioni fatte sono quelle che servono comunque.
