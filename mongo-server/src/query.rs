@@ -863,6 +863,97 @@ pub fn sort_docs(docs: &mut Vec<Document>, spec: &[(String, bool)]) {
     docs.extend(keyed.into_iter().map(|(_, d)| d));
 }
 
+/// The first `k` documents in the order of a sort specification, kept while the documents stream by: memory for `k`
+/// documents, not for every candidate. Same result as [`sort_docs`] on every pushed document followed by a truncation to
+/// `k`: equal sort keys keep their push order (the sort is stable).
+pub struct TopK<'a> {
+    k: usize,
+    spec: &'a [(String, bool)],
+    seq: u64,
+    /// Max-heap on (sort keys, push order): the top is the worst document kept.
+    heap: std::collections::BinaryHeap<TopItem<'a>>,
+}
+
+struct TopItem<'a> {
+    keys: Vec<Bson>,
+    seq: u64,
+    doc: Document,
+    spec: &'a [(String, bool)],
+}
+
+impl TopItem<'_> {
+    fn cmp_keys(&self, other: &Self) -> Ordering {
+        for (i, (_, asc)) in self.spec.iter().enumerate() {
+            let o = cmp_sort_keys(&self.keys[i], &other.keys[i]);
+            let o = if *asc { o } else { o.reverse() };
+            if o != Ordering::Equal {
+                return o;
+            }
+        }
+        Ordering::Equal
+    }
+}
+
+impl PartialEq for TopItem<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
+    }
+}
+impl Eq for TopItem<'_> {}
+impl PartialOrd for TopItem<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for TopItem<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.cmp_keys(other).then(self.seq.cmp(&other.seq))
+    }
+}
+
+impl<'a> TopK<'a> {
+    pub fn new(k: usize, spec: &'a [(String, bool)]) -> Self {
+        TopK { k, spec, seq: 0, heap: std::collections::BinaryHeap::with_capacity(k.min(4096) + 1) }
+    }
+
+    /// Push the next document (push order breaks ties).
+    pub fn push(&mut self, doc: Document) {
+        let seq = self.seq;
+        self.push_at(seq, doc);
+    }
+
+    /// Push a document with an explicit position: equal sort keys are ordered by `seq` (a later [`TopK::push`] comes
+    /// after every position given so far).
+    pub fn push_at(&mut self, seq: u64, doc: Document) {
+        self.seq = self.seq.max(seq + 1);
+        if self.k == 0 {
+            return;
+        }
+        let item = TopItem { keys: self.spec.iter().map(|(p, asc)| sort_key(&doc, p, *asc)).collect(), seq, doc, spec: self.spec };
+        if self.heap.len() < self.k {
+            self.heap.push(item);
+        } else if let Some(mut worst) = self.heap.peek_mut() {
+            if item < *worst {
+                *worst = item;
+            }
+        }
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.heap.len() >= self.k
+    }
+
+    /// The first sort key of the worst document kept (none while empty).
+    pub fn worst_first_key(&self) -> Option<&Bson> {
+        self.heap.peek().and_then(|i| i.keys.first())
+    }
+
+    /// The documents kept, in sort order.
+    pub fn into_sorted(self) -> Vec<Document> {
+        self.heap.into_sorted_vec().into_iter().map(|i| i.doc).collect()
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Projection
 // ---------------------------------------------------------------------------
@@ -1190,5 +1281,30 @@ mod tests {
         assert_eq!(project(&doc! {"_id": 1, "a": 2, "b": 3}, &p), doc! {"_id": 1, "a": 2});
         let p = parse_projection(&doc! {"a": 0, "_id": 0}).unwrap().unwrap();
         assert_eq!(project(&doc! {"_id": 1, "a": 2, "b": 3}, &p), doc! {"b": 3});
+    }
+
+    #[test]
+    fn top_k_equals_sort_then_truncate() {
+        // ties, arrays, missing fields, mixed types; every k and both directions, with plain and explicit push order
+        let vals: Vec<Bson> = vec![Bson::Int32(3), Bson::Int32(1), Bson::Null, Bson::String("a".into()), Bson::Int32(1), Bson::Array(vec![Bson::Int32(5), Bson::Int32(0)]), Bson::Array(vec![]), Bson::Double(1.0), Bson::Boolean(true), Bson::Int32(3)];
+        let docs: Vec<Document> = vals.iter().enumerate().map(|(i, v)| if i == 2 { doc! {"_id": i as i32} } else { doc! {"_id": i as i32, "a": v.clone(), "b": (i % 3) as i32} }).collect();
+        for spec in [vec![("a".to_string(), true)], vec![("a".to_string(), false)], vec![("b".to_string(), true), ("a".to_string(), false)]] {
+            let mut full = docs.clone();
+            sort_docs(&mut full, &spec);
+            for k in 0..=docs.len() + 1 {
+                let mut t = TopK::new(k, &spec);
+                for d in &docs {
+                    t.push(d.clone());
+                }
+                let expect: Vec<Document> = full.iter().take(k).cloned().collect();
+                assert_eq!(t.into_sorted(), expect, "k={k} spec={spec:?}");
+                // explicit positions pushed out of order (a range scan returns documents in key order, not plan order)
+                let mut t = TopK::new(k, &spec);
+                for (i, d) in docs.iter().enumerate().rev() {
+                    t.push_at(i as u64, d.clone());
+                }
+                assert_eq!(t.into_sorted(), expect, "push_at k={k} spec={spec:?}");
+            }
+        }
     }
 }
