@@ -1,0 +1,6 @@
+run 1 ok 343.122580426 compactRuns=2 l0WatchRequests=None slowestInsertMs=34082
+run 1: the close at SIGTERM gave up its final flush (unclean)
+run 2 ok 279.094355889 compactRuns=2 l0WatchRequests=None slowestInsertMs=23178
+run 2: the close at SIGTERM gave up its final flush (unclean)
+run 3 ok 340.231230660 compactRuns=2 l0WatchRequests=None slowestInsertMs=33897
+run 3: the close at SIGTERM gave up its final flush (unclean)

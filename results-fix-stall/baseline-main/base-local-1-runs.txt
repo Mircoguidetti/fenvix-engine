@@ -1,0 +1,10 @@
+run 1 STALL (loadgen exit 1 after 63.119068078 s: ut: connection(127.0.0.1:27017[-12]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:48908->127.0.0.1:27017: i/o timeout )
+engine 1669 did not stop in 30 s after SIGTERM: SIGKILL
+run 2 STALL (loadgen exit 1 after 64.095929569 s: ut: connection(127.0.0.1:27017[-18]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:39670->127.0.0.1:27017: i/o timeout )
+engine 1924 did not stop in 30 s after SIGTERM: SIGKILL
+run 3 STALL (loadgen exit 1 after 67.318813763 s: ut: connection(127.0.0.1:27017[-15]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:51080->127.0.0.1:27017: i/o timeout )
+engine 2212 did not stop in 30 s after SIGTERM: SIGKILL
+run 4 STALL (loadgen exit 1 after 67.337920652 s: out: connection(127.0.0.1:27017[-9]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:39006->127.0.0.1:27017: i/o timeout )
+engine 2380 did not stop in 30 s after SIGTERM: SIGKILL
+run 5 STALL (loadgen exit 1 after 63.611463997 s: ut: connection(127.0.0.1:27017[-17]) incomplete read of message header: context deadline exceeded: client timed out waiting for server response: read tcp 127.0.0.1:33616->127.0.0.1:27017: i/o timeout )
+engine 2527 did not stop in 30 s after SIGTERM: SIGKILL

@@ -1,0 +1,6 @@
+
+test_28_bulk_insert_stall.py:76: AssertionError
+=========================== short test summary info ============================
+FAILED test_28_bulk_insert_stall.py::test_bulk_insert_does_not_stall - Assert...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 122.32s (0:02:02)

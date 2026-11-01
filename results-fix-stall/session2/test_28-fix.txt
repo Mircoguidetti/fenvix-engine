@@ -1,0 +1,3 @@
+200 batches of 500 in 11.0 s, max batch 2.01 s, compactions 10, L0 watch requests 11
+.
+1 passed in 14.42s

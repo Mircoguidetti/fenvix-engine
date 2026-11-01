@@ -1,0 +1,54 @@
+DIAG state unix_ms=1793525923149 open_writers=0 queue_pending=[] lock_entries=0
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 25920-9b2c8f95, lease ttl 30 s)
+LEASE process_lease tenant=- holder=25920-9b2c8f95 unix_ms=1793525923646 inc=05fbefd161ebfc6a gen=1
+LEASE acquired tenant=bench0 holder=25920-9b2c8f95 unix_ms=1793525923646 takeover_from=-
+LEASE acquired tenant=bench0 holder=25920-9b2c8f95 unix_ms=1793525923647 takeover_from=-
+LEASE acquired tenant=bench0 holder=25920-9b2c8f95 unix_ms=1793525923682 takeover_from=-
+LEASE acquired tenant=bench0 holder=25920-9b2c8f95 unix_ms=1793525923682 takeover_from=-
+LEASE acquired tenant=bench0 holder=25920-9b2c8f95 unix_ms=1793525923683 takeover_from=- new=true
+LEASE writer_open tenant=bench0 holder=25920-9b2c8f95 unix_ms=1793525923684 
+DIAG COMPACTQ request tenant=bench0 unix_ms=1793525925371 joined=false waiter=false
+DIAG COMPACT begin tenant=bench0 unix_ms=1793525925372
+DIAG COMPACT end tenant=bench0 unix_ms=1793525927888 result=Ok(Some((4, 0, 2.5147417770000002)))
+DIAG COMPACTQ finish tenant=bench0 unix_ms=1793525927888 l0_after=0
+DIAG state unix_ms=1793525928190 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=18 writer_l0=3 writer_sorted_runs=2 last_l0_seq=249 durable_seq=285 store_l0=Ok(3) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((0, 4, 2)) closed=None
+DIAG state unix_ms=1793525933149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((2, 9, 2)) closed=None
+DIAG state unix_ms=1793525938149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((7, 14, 2)) closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 10 s (writer_l0=8 unix_ms=1793525941111)
+DIAG state unix_ms=1793525943149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((12, 19, 2)) closed=None
+DIAG state unix_ms=1793525948149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((17, 24, 2)) closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 20 s (writer_l0=8 unix_ms=1793525951112)
+DIAG state unix_ms=1793525953149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((22, 29, 2)) closed=None
+DIAG state unix_ms=1793525958150 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((27, 34, 2)) closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 30 s (writer_l0=8 unix_ms=1793525961113)
+DIAG state unix_ms=1793525963150 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((32, 39, 2)) closed=None
+DIAG state unix_ms=1793525968149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((37, 44, 2)) closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 40 s (writer_l0=8 unix_ms=1793525971114)
+DIAG state unix_ms=1793525973149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((42, 49, 2)) closed=None
+DIAG state unix_ms=1793525978150 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((47, 54, 2)) closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 50 s (writer_l0=8 unix_ms=1793525981115)
+DIAG state unix_ms=1793525983149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=23 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((52, 59, 2)) closed=None
+SSTGC begin tenant=bench0 unix_ms=1793525985329
+SSTGC end tenant=bench0 unix_ms=1793525985330 deleted_ssts=0 deleted_manifests=0 referenced=16 waiting=44
+DIAG state unix_ms=1793525988149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=24 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=Some((57, 2, 24)) closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 60 s (writer_l0=8 unix_ms=1793525991116)
+DIAG state unix_ms=1793525993149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=24 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=None closed=None
+DIAG state unix_ms=1793525998149 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=24 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=None closed=None
+DIAG stage blocked in slatedb Db::write tenant=bench0 for 70 s (writer_l0=8 unix_ms=1793526001117)
+DIAG state unix_ms=1793526006396 open_writers=1 queue_pending=[] lock_entries=1
+DIAG writer tenant=bench0 writer_manifest_id=24 writer_l0=8 writer_sorted_runs=2 last_l0_seq=361 durable_seq=448 store_l0=Ok(8) maint_lock_free=true hot(last_write_s,last_sstgc_s,sst_manifest)=None closed=None

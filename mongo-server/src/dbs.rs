@@ -119,7 +119,6 @@ pub struct Entry {
     /// Document keys written by open transactions -> transaction id (a second writer gets a write conflict at once).
     pub(crate) locks: HashMap<Vec<u8>, u64>,
     pub(crate) changes: Arc<crate::changes::ChangeLog>,
-    last_compaction_request: Option<Instant>,
     inflight: Arc<AtomicU64>,
     /// Natural order: per collection (next sequence number, reserved limit); see `natural.rs`. Cleared whenever the tenant is opened or closed.
     pub(crate) nat: HashMap<String, (u64, u64)>,
@@ -178,7 +177,6 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
-                    last_compaction_request: None,
                     inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
@@ -254,7 +252,6 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
-                        last_compaction_request: None,
                         inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
@@ -438,21 +435,6 @@ impl Entry {
                 lease::log("writer_close", &self.name, &self.leases.holder, "");
             }
             self.counted = now;
-        }
-    }
-
-    /// A writer has no compactor of its own (it would poll the manifest on every idle tenant), so ask the maintenance
-    /// queue for a compaction while the tenant is open once its L0 reaches the compaction threshold; without it a
-    /// tenant written for a few minutes fills its L0 and stalls (see `WRITER_POLL_SECS`). At most one request per
-    /// `COMPACTION_REQUEST_EVERY`.
-    fn request_compaction_if_needed(&mut self) {
-        const COMPACTION_REQUEST_EVERY: Duration = Duration::from_secs(10);
-        let (Some(t), Some(q)) = (self.tenant.as_ref(), self.lc.queue.as_ref()) else { return };
-        if t.writer_l0().map_or(false, |n| n >= tenant_bench::lifecycle::L0_COMPACT_THRESHOLD)
-            && self.last_compaction_request.map_or(true, |at| at.elapsed() >= COMPACTION_REQUEST_EVERY)
-        {
-            self.last_compaction_request = Some(Instant::now());
-            q.request(&self.name, None);
         }
     }
 
@@ -643,7 +625,6 @@ impl Entry {
         if let Some(t) = self.tenant.as_ref() {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
-        self.request_compaction_if_needed();
         let Some(mut commit) = staged? else { return Ok(()) };
         if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
             let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);

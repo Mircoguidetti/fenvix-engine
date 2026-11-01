@@ -1,0 +1,7 @@
+run 1 STALL (loadgen exit 1 after 185.486008311 s: load error: (InternalError) Closed error: db is closed )
+run 1: 1 commands failed with an error (ok=false in server.log): not a stall, see server.log
+engine 15324 did not stop in 30 s after SIGTERM: SIGKILL
+run 2 STALL (loadgen exit 1 after 142.615464964 s: load error: (InternalError) Closed error: db is closed )
+run 2: 15 commands failed with an error (ok=false in server.log): not a stall, see server.log
+engine 15542 did not stop in 30 s after SIGTERM: SIGKILL
+run 3 not started: less than 3 GB free on the disk

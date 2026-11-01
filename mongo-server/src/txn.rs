@@ -112,6 +112,14 @@ pub fn take_writes(tx: &mut Option<Txn>) -> Writes {
     }
 }
 
+/// Give the pending writes taken with [`take_writes`] back to the transaction, on a path that ends without
+/// [`Server::commit`] (which puts them back itself). Outside a transaction it does nothing.
+pub fn put_back(tx: &mut Option<Txn>, w: Writes) {
+    if let Some(t) = tx {
+        t.w = w;
+    }
+}
+
 pub fn tx_ov(tx: &Option<Txn>) -> Option<&Overlay> {
     tx.as_ref().map(|t| &t.w.ov)
 }
