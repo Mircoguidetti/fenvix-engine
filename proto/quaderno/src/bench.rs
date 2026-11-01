@@ -133,7 +133,7 @@ pub async fn commit_bench(cl: Arc<Cluster>, conc: usize, secs: u64, warm: u64, k
                     Outcome::Conflict(_) => {
                         conf.fetch_add(1, Relaxed);
                     }
-                    Outcome::Unknown => {
+                    Outcome::Unknown | Outcome::Rejected(_) => {
                         unk.fetch_add(1, Relaxed);
                     }
                 }
@@ -173,7 +173,13 @@ pub struct MixedCfg {
     pub small_keys: u64,
     pub report_every: u64,
     pub read_lag_ms: u64,
+    /// testimoni: scritture con chiave unica in un database a parte, per controllare a fine prova (sugli SST) che
+    /// ogni scrittura confermata sia arrivata su S3
+    pub witness_rate: f64,
+    pub witness_out: String,
 }
+
+pub const WITNESS_DB: u64 = 777_777_777;
 
 const HOT_DB: u64 = 999_999_999;
 
@@ -204,6 +210,11 @@ struct MixedState {
     reads_behind: AtomicU64,
     reads_err: AtomicU64,
     ryw_bad: AtomicU64,
+    /// commit rifiutati dal freno fino alla scadenza; commit confermati dopo almeno un "ritenta" del freno
+    rejected: AtomicU64,
+    slowed: AtomicU64,
+    witness: Mutex<Vec<(u64, Pos)>>,
+    witness_unknown: AtomicU64,
     /// chiavi scritte di recente, impacchettate (db << 32 | numero del documento), senza lock
     recent: Vec<AtomicU64>,
     recent_i: AtomicU64,
@@ -299,6 +310,10 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         reads_behind: AtomicU64::new(0),
         reads_err: AtomicU64::new(0),
         ryw_bad: AtomicU64::new(0),
+        rejected: AtomicU64::new(0),
+        slowed: AtomicU64::new(0),
+        witness: Mutex::new(vec![]),
+        witness_unknown: AtomicU64::new(0),
         recent: (0..1 << 16).map(|_| AtomicU64::new(u64::MAX)).collect(),
         recent_i: AtomicU64::new(0),
         lag_at: AtomicU64::new(0),
@@ -337,7 +352,10 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         };
         let t_send = Instant::now();
         match st.cl.commit(&c, Duration::from_secs(10)).await {
-            Outcome::Committed { .. } => {
+            Outcome::Committed { busy, .. } => {
+                if busy > 0 {
+                    st.slowed.fetch_add(1, Relaxed);
+                }
                 let us = sched.elapsed().as_micros() as u64;
                 let us_s = t_send.elapsed().as_micros() as u64;
                 st.ok.fetch_add(1, Relaxed);
@@ -353,6 +371,9 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
             }
             Outcome::Unknown => {
                 st.unknown.fetch_add(1, Relaxed);
+            }
+            Outcome::Rejected(_) => {
+                st.rejected.fetch_add(1, Relaxed);
             }
         }
     };
@@ -449,6 +470,32 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
             }
         }));
     }
+    {
+        let st2 = st.clone();
+        let seq = Arc::new(AtomicU64::new(0));
+        hs.push(open_loop(c.witness_rate, stop.clone(), move |_sched| {
+            let st = st2.clone();
+            let n = seq.fetch_add(1, Relaxed);
+            async move {
+                let c = CommitReq {
+                    txn: txn_id(),
+                    db: db_id(WITNESS_DB),
+                    read_pos: 0,
+                    mode: Mode::Blind,
+                    writes: vec![Write { key: doc_key(&format!("w-{n}")), kind: Kind::Put, val: Bytes::copy_from_slice(&n.to_le_bytes()) }],
+                    reads: vec![],
+                    session: None,
+                };
+                match st.cl.commit(&c, Duration::from_secs(30)).await {
+                    Outcome::Committed { pos, .. } => st.witness.lock().push((n, pos)),
+                    Outcome::Rejected(_) => {}
+                    _ => {
+                        st.witness_unknown.fetch_add(1, Relaxed);
+                    }
+                }
+            }
+        }));
+    }
     let t0 = Instant::now();
     let mut last = (0u64, 0u64, 0u64, 0u64);
     let mut lt = Instant::now();
@@ -462,6 +509,9 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         for r in 0..cl.n() {
             if let Some(s) = cl.status(r).await {
                 reps.push(json!({"id": s.id, "role": s.role, "rss_kb": s.rss_kb, "resident_mb": s.resident_bytes as f64 / 1e6, "versions": s.versions,
+                    "mem_mb": s.mem_used as f64 / 1e6, "mem_cap_mb": s.mem_cap as f64 / 1e6, "disk_used_mb": s.disk_used as f64 / 1e6,
+                    "spill_runs": s.spill_runs, "spill_disk_mb": s.spill_disk as f64 / 1e6, "spilled": s.spilled_recs, "oldest_s": s.oldest_unflushed_s,
+                    "alarm": s.alarm, "brake": s.brake, "busy": s.busy, "delayed": s.delayed,
                     "keys": s.keys, "dbs": s.dbs, "unflushed": s.unflushed_recs, "evicted": s.evicted, "log_len": s.last_index + 1 - s.log_front,
                     "disk_mb": s.disk_bytes as f64 / 1e6, "flush_lag_s": if s.min_unflushed_pos > 0 { (now_ms() as f64 - pos_ms(s.min_unflushed_pos) as f64) / 1000.0 } else { 0.0 }}));
             }
@@ -469,7 +519,8 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         println!(
             "{}",
             json!({"t": t0.elapsed().as_secs_f64(), "commits_per_s": (now.0 - last.0) as f64 / el, "reads_per_s": (now.1 - last.1) as f64 / el,
-                   "conflicts": now.2 - last.2, "unknown": now.3 - last.3, "lat": ivj(&iv), "replicas": reps})
+                   "conflicts": now.2 - last.2, "unknown": now.3 - last.3, "rejected": st.rejected.load(Relaxed), "slowed": st.slowed.load(Relaxed),
+                   "lat": ivj(&iv), "replicas": reps})
         );
         let _ = std::io::stdout().flush();
         last = now;
@@ -487,8 +538,16 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                "conflicts": st.conflicts.load(Relaxed), "unknown": st.unknown.load(Relaxed), "reads_ok": st.reads_ok.load(Relaxed),
                "reads_per_s": st.reads_ok.load(Relaxed) as f64 / el, "reads_out_of_window": st.reads_ow.load(Relaxed),
                "reads_behind": st.reads_behind.load(Relaxed), "reads_err": st.reads_err.load(Relaxed), "ryw_bad": st.ryw_bad.load(Relaxed),
+               "rejected": st.rejected.load(Relaxed), "slowed": st.slowed.load(Relaxed),
+               "witness_ok": st.witness.lock().len(), "witness_unknown": st.witness_unknown.load(Relaxed),
                "lat": ivj(&tot)})
     );
+    if !c.witness_out.is_empty() {
+        let mut f = std::io::BufWriter::new(std::fs::File::create(&c.witness_out).unwrap());
+        for (n, p) in st.witness.lock().iter() {
+            writeln!(f, "{n},{p}").unwrap();
+        }
+    }
 }
 
 // ================================================================================================ banco 3
@@ -542,7 +601,7 @@ pub async fn hot(cl: Arc<Cluster>, mode: &str, clients: usize, secs: u64, max_at
                             break;
                         }
                         Outcome::Conflict(_) => continue,
-                        Outcome::Unknown => {
+                        Outcome::Unknown | Outcome::Rejected(_) => {
                             unknown.fetch_add(1, Relaxed);
                             done = true;
                             break;
@@ -817,7 +876,7 @@ pub async fn failover(cl: Arc<Cluster>, secs: u64, dbs: u64, period_ms: u64, out
                         let r = cl.commit(&c, Duration::from_secs(60)).await;
                         let te = unix_ms_f();
                         match r {
-                            Outcome::Committed { pos, attempts, ambiguous } => {
+                            Outcome::Committed { pos, attempts, ambiguous, .. } => {
                                 f.lock().write_all(format!("{d},{ts:.3},{te:.3},{pos},{attempts},{}\n", ambiguous as u8).as_bytes()).unwrap();
                                 done.lock().push((c, pos, ambiguous));
                             }
@@ -901,5 +960,114 @@ pub async fn failover(cl: Arc<Cluster>, secs: u64, dbs: u64, period_ms: u64, out
         "{}",
         json!({"bench": "5-guasto-leader", "confirmed": done.len(), "unknown": unknown.load(Relaxed), "ambiguous_then_confirmed": amb,
                "resend_same_pos": same, "resend_different": diff, "replicas": per_rep})
+    );
+}
+
+// ================================================================================================ prova "esiste" in gara
+
+/// `$inc` con la modalità "delta + dipendenza esiste" mentre un altro client cancella e ricrea i documenti.
+/// Storico CSV: `op,chiave,valore,t0_us,t1_us,esito` con op ∈ put|del|inc|read ed esito ∈ ok|nomatch|absent|unknown.
+/// `senza_esiste` = controllo negativo: lo stesso `$inc` senza la dipendenza (deve essere bocciato dal controllo).
+pub async fn esiste_race(cl: Arc<Cluster>, secs: u64, keys: u64, incs: usize, readers: usize, out: String, senza_esiste: bool) {
+    let db = db_id(5151);
+    let start = Instant::now();
+    let f = Arc::new(Mutex::new(std::io::BufWriter::new(std::fs::File::create(&out).unwrap())));
+    let us = move || start.elapsed().as_micros() as u64;
+    let put0 = move |k: u64| CommitReq { txn: txn_id(), db, read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: doc_key(&format!("e{k}")), kind: Kind::Put, val: Bytes::copy_from_slice(&0i64.to_le_bytes()) }], reads: vec![], session: None };
+    for k in 0..keys {
+        let t0 = us();
+        let r = cl.commit(&put0(k), Duration::from_secs(10)).await;
+        let st = if matches!(r, Outcome::Committed { .. }) { "ok" } else { "unknown" };
+        writeln!(f.lock(), "put,{k},0,{t0},{},{st}", us()).unwrap();
+    }
+    let stop = Arc::new(AtomicBool::new(false));
+    let cnt = Arc::new([AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0)]); // inc ok, nomatch, conflitti, del, put
+    let mut ts = vec![];
+    // chi cancella e ricrea
+    {
+        let (cl, f, stop, cnt) = (cl.clone(), f.clone(), stop.clone(), cnt.clone());
+        ts.push(tokio::spawn(async move {
+            while !stop.load(Relaxed) {
+                let k = rand::random::<u64>() % keys;
+                let key = doc_key(&format!("e{k}"));
+                let t0 = us();
+                let c = CommitReq { txn: txn_id(), db, read_pos: 0, mode: Mode::Blind, writes: vec![Write { key: key.clone(), kind: Kind::Del, val: Bytes::new() }], reads: vec![], session: None };
+                let r = cl.commit(&c, Duration::from_secs(10)).await;
+                let st = if matches!(r, Outcome::Committed { .. }) { "ok" } else { "unknown" };
+                writeln!(f.lock(), "del,{k},0,{t0},{},{st}", us()).unwrap();
+                cnt[3].fetch_add(1, Relaxed);
+                tokio::time::sleep(Duration::from_millis(5 + rand::random::<u64>() % 20)).await;
+                let t0 = us();
+                let r = cl.commit(&put0(k), Duration::from_secs(10)).await;
+                let st = if matches!(r, Outcome::Committed { .. }) { "ok" } else { "unknown" };
+                writeln!(f.lock(), "put,{k},0,{t0},{},{st}", us()).unwrap();
+                cnt[4].fetch_add(1, Relaxed);
+                tokio::time::sleep(Duration::from_millis(5 + rand::random::<u64>() % 20)).await;
+            }
+        }));
+    }
+    // $inc: leggi a S (il documento esiste?), poi delta con dipendenza (chiave, esiste) preparato a S
+    for _ in 0..incs {
+        let (cl, f, stop, cnt) = (cl.clone(), f.clone(), stop.clone(), cnt.clone());
+        ts.push(tokio::spawn(async move {
+            while !stop.load(Relaxed) {
+                let k = rand::random::<u64>() % keys;
+                let key = doc_key(&format!("e{k}"));
+                let t0 = us();
+                let st = loop {
+                    let s = cl.seen.load(Relaxed);
+                    let r = rand::random::<usize>() % cl.n();
+                    let g = match cl.call(r, &Req::Get { db, key: key.clone(), at: s, wait_ms: 100, spec: false, dal: 0 }, Duration::from_secs(2)).await {
+                        Ok(Resp::Get(g)) => g,
+                        _ => continue,
+                    };
+                    match g {
+                        GetRes::Value(..) => {}
+                        GetRes::Absent(_) => break "nomatch",
+                        _ => continue,
+                    }
+                    let c = CommitReq { txn: txn_id(), db, read_pos: s, mode: Mode::Blind, writes: vec![Write { key: key.clone(), kind: Kind::Delta, val: Bytes::copy_from_slice(&1i64.to_le_bytes()) }], reads: if senza_esiste { vec![] } else { vec![(key.clone(), Dep::Esiste)] }, session: None };
+                    match cl.commit(&c, Duration::from_secs(10)).await {
+                        Outcome::Committed { .. } => break "ok",
+                        Outcome::Conflict(_) => {
+                            cnt[2].fetch_add(1, Relaxed);
+                            continue;
+                        }
+                        _ => break "unknown",
+                    }
+                };
+                writeln!(f.lock(), "inc,{k},1,{t0},{},{st}", us()).unwrap();
+                cnt[if st == "nomatch" { 1 } else { 0 }].fetch_add(1, Relaxed);
+            }
+        }));
+    }
+    // letture lineari
+    for _ in 0..readers {
+        let (cl, f, stop) = (cl.clone(), f.clone(), stop.clone());
+        ts.push(tokio::spawn(async move {
+            while !stop.load(Relaxed) {
+                let k = rand::random::<u64>() % keys;
+                let t0 = us();
+                let Some(s) = cl.confirmed(Duration::from_secs(10)).await else { continue };
+                let r = rand::random::<usize>() % cl.n();
+                let line = match cl.call(r, &Req::Get { db, key: doc_key(&format!("e{k}")), at: s, wait_ms: 100, spec: false, dal: 0 }, Duration::from_secs(2)).await {
+                    Ok(Resp::Get(GetRes::Value(_, b))) => format!("read,{k},{},{t0},{},ok", i64::from_le_bytes(b[..8].try_into().unwrap()), us()),
+                    Ok(Resp::Get(GetRes::Absent(_))) => format!("read,{k},0,{t0},{},absent", us()),
+                    _ => continue,
+                };
+                writeln!(f.lock(), "{line}").unwrap();
+            }
+        }));
+    }
+    tokio::time::sleep(Duration::from_secs(secs)).await;
+    stop.store(true, Relaxed);
+    for t in ts {
+        let _ = t.await;
+    }
+    f.lock().flush().unwrap();
+    println!(
+        "{}",
+        json!({"bench": "esiste-in-gara", "secs": secs, "keys": keys, "inc_ok": cnt[0].load(Relaxed), "inc_nomatch": cnt[1].load(Relaxed),
+               "conflicts_retried": cnt[2].load(Relaxed), "deletes": cnt[3].load(Relaxed), "recreates": cnt[4].load(Relaxed)})
     );
 }

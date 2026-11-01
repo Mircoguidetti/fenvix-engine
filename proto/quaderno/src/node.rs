@@ -51,12 +51,35 @@ pub struct Config {
     pub hb_ms: u64,
     pub seg_bytes: u64,
     pub max_inflight: u64,
+    /// soglie del freno sul disco (registro + dispensa), byte: rallenta, rifiuta, sola lettura (0 = disattivo)
+    pub disk_soft: u64,
+    pub disk_hard: u64,
+    pub disk_ro: u64,
+    /// allarme se il record non su S3 più vecchio supera questi secondi
+    pub alarm_s: u64,
 }
+
+/// Costi stimati in RAM per il conto unico della memoria (byte). Tarati confrontando il conto con l'RSS misurato.
+pub const C_REC: u64 = 150;
+pub const C_VER: u64 = 64;
+pub const C_KEY: u64 = 120;
+pub const C_SLOT: u64 = 96;
+pub const C_TXN: u64 = 48;
+pub const C_BODY: u64 = 200;
 
 pub enum Ev {
     Peer(Msg),
     Client(UnboundedSender<Vec<u8>>, u64, Req),
     Disk(u64, u64),
+    /// run della dispensa scritto: per ogni database, fino a che posizione i record possono uscire dalla RAM
+    Spilled(u64, Vec<(Db, Pos)>),
+}
+
+/// Richiesta al thread della dispensa.
+pub struct SpillReq {
+    pub cutoff: Pos,
+    pub commit_pos: Pos,
+    pub max_recs: usize,
 }
 
 /// Stato condiviso tra il thread principale e i thread di rete.
@@ -161,6 +184,31 @@ pub struct Node {
     rounds: u64,
     rounds_over: u64,
     rounds_over_cpu: u64,
+    // ---- tetto di memoria, dispensa, freno, allarme
+    mem_used: u64,
+    /// RSS del processo (letto ogni secondo): il controllo usa il maggiore tra conto stimato e RSS
+    rss: u64,
+    resident_n: u64,
+    spill_tx: Sender<SpillReq>,
+    spill_busy: bool,
+    last_spill: Instant,
+    spill_q: VecDeque<(Db, u64, Pos, bool)>,
+    spilled_recs: u64,
+    seg_pos: BTreeMap<u32, Pos>,
+    oldest_unfl: Pos,
+    last_sec: Instant,
+    last_alarm: Instant,
+    alarm: bool,
+    rate_cnt: HashMap<Db, u32>,
+    rate: HashMap<Db, u32>,
+    rate_total: u32,
+    tokens: HashMap<Db, f64>,
+    tok_rate: HashMap<Db, f64>,
+    last_refill: Instant,
+    delayq: VecDeque<(Instant, Reply, CommitReq)>,
+    brake: u8,
+    busy_n: u64,
+    delayed_n: u64,
     txns: HashMap<TxnId, (u64, Pos)>,
     sessions: HashMap<(Bytes, u64), (u64, Pos)>,
     peers: Vec<Peer>,
@@ -315,7 +363,71 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
         },
         move || sh3.win.flushed_all(),
     );
-    let mut node = Node::recover(cfg, ev_rx, disk_tx, peers, sh)?;
+    // thread della dispensa: raccoglie i record vecchi non su S3 e scrive i run (fuori dal thread principale)
+    let (spill_tx, spill_rx) = crossbeam_channel::unbounded::<SpillReq>();
+    {
+        let (sh, t) = (sh.clone(), ev_tx.clone());
+        std::thread::Builder::new()
+            .name("dispensa".into())
+            .spawn(move || {
+                while let Ok(q) = spill_rx.recv() {
+                    let mut ents = vec![];
+                    let mut dbs = vec![];
+                    let mut total = 0;
+                    // prima i database con più byte non su S3 (il caldo), così un run copre molto con poche schede
+                    let mut cand = sh.win.pending_list(usize::MAX);
+                    cand.sort_by_key(|p| std::cmp::Reverse(p.bytes));
+                    for p in cand {
+                        if p.oldest >= q.cutoff || total >= q.max_recs {
+                            continue;
+                        }
+                        // a pezzi: il lock in lettura del database si tiene poco
+                        let mut after = 0;
+                        loop {
+                            let (last, n) = sh.win.collect_spill(&p.db, after, q.cutoff, q.commit_pos, 2048, &mut ents);
+                            total += n;
+                            if n == 0 {
+                                break;
+                            }
+                            after = last;
+                            if n < 2048 || total >= q.max_recs {
+                                break;
+                            }
+                        }
+                        if after > 0 {
+                            dbs.push((p.db, after));
+                        }
+                    }
+                    let run = if ents.is_empty() {
+                        0
+                    } else {
+                        match sh.win.spill.write_run(ents) {
+                            Ok(r) => r.id,
+                            Err(e) => {
+                                eprintln!("dispensa: scrittura run fallita: {e}");
+                                dbs.clear();
+                                0
+                            }
+                        }
+                    };
+                    if t.send(Ev::Spilled(run, dbs)).is_err() {
+                        return;
+                    }
+                }
+            })
+            .unwrap();
+    }
+    // restituzione periodica al sistema della memoria liberata (l'allocatore di glibc la tratterrebbe)
+    std::thread::Builder::new()
+        .name("trim-mem".into())
+        .spawn(|| loop {
+            std::thread::sleep(Duration::from_secs(5));
+            unsafe {
+                libc::malloc_trim(0);
+            }
+        })
+        .unwrap();
+    let mut node = Node::recover(cfg, ev_rx, disk_tx, peers, sh, spill_tx)?;
     eprintln!("replica {} pronta: indice {}..{} mandato {}", node.cfg.id, node.front, node.last_index(), node.term);
     println!("READY");
     node.run();
@@ -324,7 +436,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
 }
 
 impl Node {
-    fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Vec<u8>>)>, sh: Arc<Shared>) -> anyhow::Result<Node> {
+    fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Vec<u8>>)>, sh: Arc<Shared>, spill_tx: Sender<SpillReq>) -> anyhow::Result<Node> {
         let st: RaftState = std::fs::read(cfg.dir.join("state")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(RaftState { term: 0, voted: -1 });
         let ck: Option<Ckpt> = std::fs::read(cfg.dir.join("ckpt")).ok().and_then(|b| serde_json::from_slice(&b).ok());
         let (recs, last_seg, last_len) = store::recover(&cfg.dir)?;
@@ -368,6 +480,29 @@ impl Node {
             rounds: 0,
             rounds_over: 0,
             rounds_over_cpu: 0,
+            mem_used: 0,
+            rss: 0,
+            resident_n: 0,
+            spill_tx,
+            spill_busy: false,
+            last_spill: now,
+            spill_q: VecDeque::new(),
+            spilled_recs: 0,
+            seg_pos: BTreeMap::new(),
+            oldest_unfl: Pos::MAX,
+            last_sec: now,
+            last_alarm: now - Duration::from_secs(3600),
+            alarm: false,
+            rate_cnt: HashMap::new(),
+            rate: HashMap::new(),
+            rate_total: 0,
+            tokens: HashMap::new(),
+            tok_rate: HashMap::new(),
+            last_refill: now,
+            delayq: VecDeque::new(),
+            brake: 0,
+            busy_n: 0,
+            delayed_n: 0,
             txns: HashMap::with_capacity(1 << 21),
             sessions: HashMap::new(),
             peers: peers
@@ -414,6 +549,7 @@ impl Node {
             assert_eq!(e.index, n.last_index() + 1, "registro non contiguo sul disco");
             let len = e.raw.len() as u64;
             n.segs.entry(r.seg).or_insert((e.index, e.index)).1 = e.index;
+            n.seg_pos.insert(r.seg, e.pos);
             n.disk_bytes += len;
             n.push_slot(Arc::new(e), r.seg, r.off);
         }
@@ -479,6 +615,7 @@ impl Node {
     fn push_slot(&mut self, e: Arc<Entry>, seg: u32, off: u64) {
         let loc = Loc { seg, off, len: e.raw.len() as u32 };
         self.resident += e.raw.len() as u64;
+        self.resident_n += 1;
         self.log.push_back(Slot { term: e.term, pos: e.pos, len: e.raw.len() as u32, ent: Some(e.clone()), seg, off, done: false, t: Instant::now() });
         if self.defer_index {
             self.to_index.push(e.index);
@@ -533,6 +670,7 @@ impl Node {
         self.cur_seg_len += len;
         self.disk_bytes += len;
         self.segs.entry(seg).or_insert((e.index, e.index)).1 = e.index;
+        self.seg_pos.insert(seg, e.pos);
         self.push_slot(Arc::new(e), seg, off);
     }
 
@@ -549,6 +687,7 @@ impl Node {
             let s = self.log.pop_back().unwrap();
             if s.ent.is_some() {
                 self.resident -= s.len as u64;
+                self.resident_n = self.resident_n.saturating_sub(1);
             }
             self.disk_bytes -= s.len as u64;
             if let Body::Rec { db, session, .. } = &e.body {
@@ -697,6 +836,7 @@ impl Node {
             Ev::Client(_, _, Req::Get { .. }) => 1,
             Ev::Client(..) => 15,
             Ev::Disk(..) => 5,
+            Ev::Spilled(..) => 15,
         };
         self.handle_ev(ev);
         self.sw(k, t);
@@ -704,6 +844,12 @@ impl Node {
 
     fn handle_ev(&mut self, ev: Ev) {
         match ev {
+            Ev::Spilled(run, dbs) => {
+                self.spill_busy = false;
+                for (db, upto) in dbs {
+                    self.spill_q.push_back((db, run, upto, true));
+                }
+            }
             Ev::Peer(m) => self.on_msg(m),
             Ev::Client(conn, id, q) => self.on_req(Reply { conn, id }, q),
             Ev::Disk(gen, last) => {
@@ -940,6 +1086,7 @@ impl Node {
                     // il corpo resta finché non è stato passato al disco
                     if i <= sub && s.ent.take().is_some() {
                         self.resident -= s.len as u64;
+                        self.resident_n = self.resident_n.saturating_sub(1);
                     }
                 }
             }
@@ -1176,10 +1323,33 @@ impl Node {
             self.trim_step(t + Duration::from_micros(200));
             self.sw(7, t);
         }
-        if self.resident > self.cfg.mem_cap {
+        // conto unico della memoria; sopra il 75% del tetto i valori vanno su disco, sopra l'80% i record vecchi non
+        // su S3 vanno nella dispensa
+        self.mem_used = self.mem_count().max(self.rss);
+        if self.mem_used > self.cfg.mem_cap / 4 * 3 && self.resident > 0 {
             let t = Instant::now();
             self.evict_step(t + Duration::from_micros(200));
             self.sw(9, t);
+        }
+        if self.mem_used > self.cfg.mem_cap / 5 * 4 && !self.spill_busy && self.spill_q.is_empty() && self.oldest_unfl != Pos::MAX && self.last_spill.elapsed() >= Duration::from_secs(2) {
+            let cutoff = pos_make(now_ms().saturating_sub(self.cfg.window_ms), 0);
+            if self.oldest_unfl < cutoff {
+                self.spill_busy = true;
+                self.last_spill = Instant::now();
+                let _ = self.spill_tx.send(SpillReq { cutoff, commit_pos: self.commit_pos.min(self.published), max_recs: 300_000 });
+            }
+        }
+        if !self.spill_q.is_empty() {
+            let t = Instant::now();
+            self.spill_step(t + Duration::from_micros(200));
+            self.sw(9, t);
+        }
+        if now.duration_since(self.last_sec) >= Duration::from_secs(1) {
+            self.last_sec = now;
+            self.every_second();
+        }
+        if self.brake == 1 || !self.delayq.is_empty() {
+            self.release_delayed();
         }
         {
             let t = Instant::now();
@@ -1233,6 +1403,7 @@ impl Node {
                 s.done = true;
                 if i <= sub && s.ent.take().is_some() {
                     self.resident -= s.len as u64;
+                    self.resident_n = self.resident_n.saturating_sub(1);
                 }
             }
         }
@@ -1255,6 +1426,7 @@ impl Node {
             let s = self.log.pop_front().unwrap();
             if s.ent.is_some() {
                 self.resident -= s.len as u64;
+                self.resident_n = self.resident_n.saturating_sub(1);
             }
             self.prev_term = s.term;
             self.prev_pos = s.pos;
@@ -1264,11 +1436,20 @@ impl Node {
                 break;
             }
         }
-        let dead: Vec<u32> = self.segs.iter().filter(|(s, (_, l))| **s != self.cur_seg && *l < self.front).map(|(s, _)| *s).collect();
+        // un segmento si cancella solo se è prima del fronte E tutti i suoi record sono su S3 (la dispensa punta al
+        // registro su disco per i valori)
+        let ou = self.oldest_unfl;
+        let dead: Vec<u32> = self
+            .segs
+            .iter()
+            .filter(|(s, (_, l))| **s != self.cur_seg && *l < self.front && self.seg_pos.get(s).map(|p| *p < ou).unwrap_or(true))
+            .map(|(s, _)| *s)
+            .collect();
         if !dead.is_empty() {
             self.sh.win.genesis.store(false, std::sync::atomic::Ordering::Relaxed);
             for s in &dead {
                 self.segs.remove(s);
+                self.seg_pos.remove(s);
                 self.reader.forget(*s);
             }
             self.disk_bytes = self.disk_bytes.saturating_sub(dead.len() as u64 * self.cfg.seg_bytes);
@@ -1291,6 +1472,7 @@ impl Node {
                 }
                 self.log[k].ent = None;
                 self.resident -= self.log[k].len as u64;
+                self.resident_n = self.resident_n.saturating_sub(1);
                 self.evicted += 1;
             }
             i += 1;
@@ -1324,6 +1506,20 @@ impl Node {
             evicted: self.evicted,
             segments: self.segs.len() as u64,
             disk_bytes: self.disk_bytes,
+            mem_used: self.mem_used,
+            mem_cap: self.cfg.mem_cap,
+            disk_used: self.disk_used(),
+            disk_soft: self.cfg.disk_soft,
+            disk_hard: self.cfg.disk_hard,
+            disk_ro: self.cfg.disk_ro,
+            spill_runs: self.sh.win.spill.runs.read().len() as u64,
+            spill_disk: self.sh.win.spill.disk_bytes.load(std::sync::atomic::Ordering::Relaxed).max(0) as u64,
+            spilled_recs: self.spilled_recs,
+            oldest_unflushed_s: if self.oldest_unfl == Pos::MAX { 0.0 } else { now_ms().saturating_sub(pos_ms(self.oldest_unfl)) as f64 / 1000.0 },
+            alarm: self.alarm,
+            brake: self.brake,
+            busy: self.busy_n,
+            delayed: self.delayed_n,
             diag: format!(
                 "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
                 self.h_durable.value_at_quantile(0.5),
@@ -1393,11 +1589,167 @@ impl Node {
         }
     }
 
+    /// Conto unico della memoria del quaderno (byte, STIMATO dai contatori con i costi C_*).
+    fn mem_count(&self) -> u64 {
+        let w = &self.sh.win;
+        let r = |a: &std::sync::atomic::AtomicI64| a.load(std::sync::atomic::Ordering::Relaxed).max(0) as u64;
+        self.resident
+            + self.resident_n * C_BODY
+            + r(&w.nrecs) * C_REC
+            + r(&w.versions) * C_VER
+            + r(&w.nkeys) * C_KEY
+            + self.log.len() as u64 * C_SLOT
+            + self.txns.len() as u64 * C_TXN
+            + r(&w.spill.ram_bytes)
+    }
+
+    fn disk_used(&self) -> u64 {
+        self.segs.len() as u64 * self.cfg.seg_bytes + self.sh.win.spill.disk_bytes.load(std::sync::atomic::Ordering::Relaxed).max(0) as u64
+    }
+
+    /// Record passati alla dispensa: escono dalla RAM a passi.
+    fn spill_step(&mut self, deadline: Instant) {
+        while let Some((db, run, upto, first)) = self.spill_q.pop_front() {
+            let (gone, more) = self.sh.win.apply_spill(&db, run, upto, first, 512);
+            self.spilled_recs += gone.len() as u64;
+            for (i, txn) in gone {
+                if self.txns.get(&txn).map(|x| x.0) == Some(i) {
+                    self.txns.remove(&txn);
+                }
+                if i >= self.front {
+                    let sub = self.submitted;
+                    let s = &mut self.log[(i - self.front) as usize];
+                    s.done = true;
+                    if i <= sub {
+                        if s.ent.take().is_some() {
+                            self.resident -= s.len as u64;
+                            self.resident_n = self.resident_n.saturating_sub(1);
+                        }
+                    }
+                }
+            }
+            if more {
+                self.spill_q.push_front((db, run, upto, false));
+            }
+            if Instant::now() >= deadline {
+                break;
+            }
+        }
+    }
+
+    /// Ogni secondo: record non su S3 più vecchio (allarme, cancellazione dei segmenti), ritmo di scrittura per database,
+    /// stato del freno.
+    fn every_second(&mut self) {
+        self.rss = rss_kb() * 1024;
+        self.oldest_unfl = self.sh.win.pending.lock().values().map(|p| p.oldest).filter(|p| *p > 0).min().unwrap_or(Pos::MAX);
+        let age = if self.oldest_unfl == Pos::MAX { 0 } else { now_ms().saturating_sub(pos_ms(self.oldest_unfl)) / 1000 };
+        self.alarm = self.cfg.alarm_s > 0 && age > self.cfg.alarm_s;
+        if self.alarm && self.last_alarm.elapsed() >= Duration::from_secs(30) {
+            self.last_alarm = Instant::now();
+            eprintln!("ALLARME replica {}: il record non su S3 più vecchio ha {age} s (soglia {} s); memoria {} MB su {} MB, disco {} MB", self.me(), self.cfg.alarm_s, self.mem_used >> 20, self.cfg.mem_cap >> 20, self.disk_used() >> 20);
+        }
+        self.rate = std::mem::take(&mut self.rate_cnt);
+        self.rate_total = self.rate.values().sum();
+        // freno
+        let disk = self.disk_used();
+        let c = &self.cfg;
+        let old = self.brake;
+        self.brake = if self.mem_used > c.mem_cap {
+            4
+        } else if c.disk_ro > 0 && disk >= c.disk_ro {
+            3
+        } else if c.disk_hard > 0 && disk >= c.disk_hard {
+            2
+        } else if c.disk_soft > 0 && disk >= c.disk_soft {
+            1
+        } else {
+            0
+        };
+        if self.brake != old {
+            eprintln!("replica {}: freno {} -> {} (disco {} MB, memoria {} MB su {} MB)", self.me(), old, self.brake, disk >> 20, self.mem_used >> 20, c.mem_cap >> 20);
+        }
+        // rallentamento: i database che scrivono di più ricevono gettoni a un ritmo ridotto, tanto più quanto il disco
+        // si avvicina alla soglia di rifiuto
+        self.tok_rate.clear();
+        if self.brake == 1 {
+            let frac = if c.disk_hard > c.disk_soft { (disk - c.disk_soft) as f64 / (c.disk_hard - c.disk_soft) as f64 } else { 1.0 };
+            let f = (1.0 - 0.8 * frac).clamp(0.2, 1.0);
+            let heavy = (self.rate_total as f64 * 0.2).max(1000.0);
+            for (db, r) in &self.rate {
+                if *r as f64 >= heavy {
+                    // gettoni al ms
+                    self.tok_rate.insert(*db, (*r as f64 * f).max(100.0) / 1000.0);
+                }
+            }
+        }
+        self.tokens.retain(|db, _| self.tok_rate.contains_key(db));
+        for db in self.tok_rate.keys() {
+            self.tokens.entry(*db).or_insert(0.0);
+        }
+    }
+
+    /// Commit trattenuti dal rallentamento: escono quando il database ha gettoni (che si ricaricano a ogni ms);
+    /// dopo 100 ms di attesa si rifiutano con l'errore ritentabile.
+    fn release_delayed(&mut self) {
+        let dt = self.last_refill.elapsed().as_secs_f64() * 1000.0;
+        self.last_refill = Instant::now();
+        for (db, tk) in self.tokens.iter_mut() {
+            let r = self.tok_rate.get(db).copied().unwrap_or(0.0);
+            *tk = (*tk + r * dt).min(r * 50.0 + 1.0);
+        }
+        let mut keep = VecDeque::new();
+        while let Some((t, reply, c)) = self.delayq.pop_front() {
+            let ok = match self.tokens.get_mut(&c.db) {
+                Some(tk) if *tk >= 1.0 => {
+                    *tk -= 1.0;
+                    true
+                }
+                Some(_) => false,
+                None => true,
+            };
+            if ok && self.brake <= 1 {
+                self.commit_now(reply, c);
+            } else if t.elapsed() > Duration::from_millis(100) || self.brake >= 2 {
+                self.busy_n += 1;
+                reply.send(&Resp::Busy { retry_ms: 50, reason: 1 });
+            } else {
+                keep.push_back((t, reply, c));
+            }
+        }
+        self.delayq = keep;
+    }
+
     fn on_commit(&mut self, reply: Reply, c: CommitReq) {
         if self.role != Role::Leader {
             reply.send(&Resp::NotLeader(self.leader));
             return;
         }
+        // freno: memoria sopra il tetto, poi disco (sola lettura, rifiuto, rallentamento dei database che scrivono di più)
+        if self.brake >= 2 {
+            let (ms, why) = match self.brake {
+                4 => (50, 4),
+                3 => (500, 3),
+                _ => (100, 2),
+            };
+            self.busy_n += 1;
+            reply.send(&Resp::Busy { retry_ms: ms, reason: why });
+            return;
+        }
+        *self.rate_cnt.entry(c.db).or_insert(0) += 1;
+        if self.brake == 1 {
+            if let Some(tk) = self.tokens.get_mut(&c.db) {
+                if *tk < 1.0 {
+                    self.delayed_n += 1;
+                    self.delayq.push_back((Instant::now(), reply, c));
+                    return;
+                }
+                *tk -= 1.0;
+            }
+        }
+        self.commit_now(reply, c);
+    }
+
+    fn commit_now(&mut self, reply: Reply, c: CommitReq) {
         // stesso id (o stessa sessione) già nel registro: stessa posizione
         let dup = self.txns.get(&c.txn).copied().or_else(|| c.session.as_ref().and_then(|s| self.sessions.get(&(s.lsid.clone(), s.txn_number)).copied()));
         if let Some((i, p)) = dup {

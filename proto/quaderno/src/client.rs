@@ -109,11 +109,14 @@ pub struct Cluster {
 
 #[derive(Debug, Clone)]
 pub enum Outcome {
-    /// confermato a questa posizione; `ambiguous` = almeno un tentativo è finito senza risposta certa
-    Committed { pos: Pos, attempts: u32, ambiguous: bool },
+    /// confermato a questa posizione; `ambiguous` = almeno un tentativo è finito senza risposta certa; `busy` = quante
+    /// volte il freno ha chiesto di ritentare
+    Committed { pos: Pos, attempts: u32, ambiguous: bool, busy: u32 },
     Conflict(Bytes),
     /// tempo scaduto senza esito certo
     Unknown,
+    /// tempo scaduto mentre il freno rifiutava (errore ritentabile pulito: il commit non è entrato nel registro)
+    Rejected(u8),
 }
 
 impl Cluster {
@@ -162,18 +165,30 @@ impl Cluster {
         let q = Req::Commit(c.clone());
         let mut attempts = 0;
         let mut ambiguous = false;
+        let mut busy = 0u32;
+        let mut last_busy: Option<u8> = None;
         let mut target = self.leader_guess();
         loop {
             attempts += 1;
             let left = deadline.saturating_sub(start.elapsed());
             if left.is_zero() {
-                return Outcome::Unknown;
+                // un rifiuto del freno vale solo se nessun tentativo precedente è rimasto senza risposta certa
+                return match last_busy {
+                    Some(r) if !ambiguous => Outcome::Rejected(r),
+                    _ => Outcome::Unknown,
+                };
             }
             match self.call(target, &q, left.min(Duration::from_millis(1500))).await {
                 Ok(Resp::Committed(p)) => {
                     self.leader.store(target as i32, Relaxed);
                     self.note_pos(p);
-                    return Outcome::Committed { pos: p, attempts, ambiguous };
+                    return Outcome::Committed { pos: p, attempts, ambiguous, busy };
+                }
+                Ok(Resp::Busy { retry_ms, reason }) => {
+                    busy += 1;
+                    last_busy = Some(reason);
+                    let ms = retry_ms as u64 + rand::random::<u64>() % (retry_ms as u64 + 1);
+                    tokio::time::sleep(Duration::from_millis(ms).min(deadline.saturating_sub(start.elapsed()))).await;
                 }
                 Ok(Resp::Conflict(k)) => {
                     self.leader.store(target as i32, Relaxed);

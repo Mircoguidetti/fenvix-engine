@@ -503,6 +503,38 @@ pub struct Status {
     pub rss_kb: u64,
     #[serde(default)]
     pub diag: String,
+    /// conto unico della memoria del quaderno (valori, metadati per record, indice, slot, dispensa) e tetto
+    #[serde(default)]
+    pub mem_used: u64,
+    #[serde(default)]
+    pub mem_cap: u64,
+    /// disco del registro e della dispensa; soglie del freno (rallenta, rifiuta, sola lettura)
+    #[serde(default)]
+    pub disk_used: u64,
+    #[serde(default)]
+    pub disk_soft: u64,
+    #[serde(default)]
+    pub disk_hard: u64,
+    #[serde(default)]
+    pub disk_ro: u64,
+    #[serde(default)]
+    pub spill_runs: u64,
+    #[serde(default)]
+    pub spill_disk: u64,
+    #[serde(default)]
+    pub spilled_recs: u64,
+    /// età del record non su S3 più vecchio (s) e allarme
+    #[serde(default)]
+    pub oldest_unflushed_s: f64,
+    #[serde(default)]
+    pub alarm: bool,
+    /// freno: stato (0 libero, 1 rallenta, 2 rifiuta per disco, 3 sola lettura, 4 rifiuta per memoria), commit rifiutati e ritardati
+    #[serde(default)]
+    pub brake: u8,
+    #[serde(default)]
+    pub busy: u64,
+    #[serde(default)]
+    pub delayed: u64,
 }
 
 #[derive(Clone, Debug)]
@@ -522,6 +554,10 @@ pub enum Resp {
     Status(Status),
     Dump(Vec<(u64, TxnId, Pos)>),
     Err(String),
+    /// freno (contropressione): il commit non è entrato nel registro; si ritenta dopo `retry_ms` con lo stesso id.
+    /// `reason`: 1 rallentato (coda piena), 2 disco, 3 sola lettura, 4 memoria. Equivale a un errore MongoDB con
+    /// etichetta RetryableWriteError
+    Busy { retry_ms: u32, reason: u8 },
 }
 
 fn enc_getres(b: &mut BytesMut, g: &GetRes) {
@@ -785,6 +821,11 @@ pub fn enc_resp(id: u64, s: &Resp) -> Vec<u8> {
             b.put_u8(13);
             put16(&mut b, e.as_bytes());
         }
+        Resp::Busy { retry_ms, reason } => {
+            b.put_u8(15);
+            b.put_u32_le(*retry_ms);
+            b.put_u8(*reason);
+        }
     }
     frame(&b)
 }
@@ -851,6 +892,7 @@ pub fn dec_resp(body: Bytes) -> R<(u64, Resp)> {
             Resp::Dump(v)
         }
         13 => Resp::Err(String::from_utf8_lossy(&r.bytes16()?).into_owned()),
+        15 => Resp::Busy { retry_ms: r.u32()?, reason: r.u8()? },
         _ => return Err(Short),
     };
     Ok((id, s))

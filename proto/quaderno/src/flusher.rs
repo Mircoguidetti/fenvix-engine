@@ -30,6 +30,13 @@ pub struct FlushCfg {
     pub interval_ms: u64,
     pub compact_every: u32,
     pub hot_db: Option<Db>,
+    /// si scarica anche un database con più di questi byte non su S3, a qualsiasi età (regola per dimensione)
+    pub size_bytes: u64,
+    /// scarico per pressione: sopra questa frazione del tetto di memoria di una replica si scarica subito, dai
+    /// database con più byte non su S3
+    pub pressure: f64,
+    /// limite di velocità dello scarico per pressione (byte/s verso S3)
+    pub pressure_rate: u64,
 }
 
 #[derive(Default)]
@@ -54,7 +61,7 @@ pub fn s3(endpoint: &str, bucket: &str) -> anyhow::Result<AmazonS3> {
         .build()?)
 }
 
-fn group_of(db: &Db, c: &FlushCfg) -> u64 {
+pub fn group_of(db: &Db, c: &FlushCfg) -> u64 {
     if Some(*db) == c.hot_db {
         return c.groups;
     }
@@ -84,6 +91,7 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
     let t_start = Instant::now();
     let mut last_report = Instant::now();
     let mut rr = 0usize;
+    let mut last_press = Instant::now() - Duration::from_secs(60);
     loop {
         let t_cycle = Instant::now();
         rr += 1;
@@ -96,10 +104,39 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
             }
         };
         let now = now_ms();
+        // pressione di memoria: la replica più piena decide
+        let mut press = 0.0f64;
+        for k in 0..cl.n() {
+            if let Some(st) = cl.status(k).await {
+                if st.mem_cap > 0 {
+                    press = press.max(st.mem_used as f64 / st.mem_cap as f64);
+                }
+            }
+        }
+        let pressure = press >= c.pressure;
         let mut due: BTreeMap<u64, Vec<Db>> = BTreeMap::new();
+        let mut pressed = vec![];
         for x in pending {
-            if now.saturating_sub(pos_ms(x.oldest)) >= c.age_ms {
+            if now.saturating_sub(pos_ms(x.oldest)) >= c.age_ms || x.bytes >= c.size_bytes {
                 due.entry(group_of(&x.db, &c)).or_default().push(x.db);
+            } else if pressure {
+                pressed.push(x);
+            }
+        }
+        if pressure {
+            // dai database più grossi, entro il limite di velocità di un ciclo
+            pressed.sort_by_key(|x| std::cmp::Reverse(x.bytes));
+            let mut budget = c.pressure_rate * c.interval_ms / 1000;
+            for (i, x) in pressed.into_iter().enumerate() {
+                if budget < x.bytes && i > 0 {
+                    break;
+                }
+                budget = budget.saturating_sub(x.bytes);
+                due.entry(group_of(&x.db, &c)).or_default().push(x.db);
+            }
+            if last_press.elapsed() >= Duration::from_secs(10) {
+                last_press = Instant::now();
+                eprintln!("scaricatore: pressione di memoria {:.0}% del tetto, scarico anticipato", press * 100.0);
             }
         }
         for (g, dbs) in due {
@@ -230,4 +267,63 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
             tokio::time::sleep(Duration::from_millis(c.interval_ms) - el).await;
         }
     }
+}
+
+/// Controllo di fine prova: ogni scrittura testimone confermata (file "n,posizione") deve stare negli SST elencati dai
+/// manifest, con il suo valore e la sua posizione.
+pub async fn check_sst(endpoint: &str, bucket: &str, groups: u64, db: Db, witness: &str) -> anyhow::Result<serde_json::Value> {
+    use crate::codec::{read_frame, FrameRead, Rd};
+    let store = s3(endpoint, bucket)?;
+    let mut found: HashMap<Bytes, (Pos, Bytes)> = HashMap::new();
+    let mut objects = 0;
+    for g in 0..=groups {
+        let mp = Path::from(format!("g{g:03}/manifest.json"));
+        let Ok(m) = store.get(&mp).await else { continue };
+        let m: serde_json::Value = serde_json::from_slice(&m.bytes().await?)?;
+        for o in m["objects"].as_array().cloned().unwrap_or_default() {
+            let name = o.as_str().unwrap_or_default().to_string();
+            let data = store.get(&Path::from(name)).await?.bytes().await?;
+            objects += 1;
+            let mut p = 0;
+            while let FrameRead::Ok(st, en) = read_frame(&data[p..]) {
+                let mut r = Rd::new(data.slice(p + st..p + en));
+                p += en;
+                let d = r.a16().map_err(|_| anyhow::anyhow!("sst"))?;
+                let pos = r.u64().map_err(|_| anyhow::anyhow!("sst"))?;
+                let _kind = r.u8().map_err(|_| anyhow::anyhow!("sst"))?;
+                let key = r.bytes16().map_err(|_| anyhow::anyhow!("sst"))?;
+                let val = r.bytes32().map_err(|_| anyhow::anyhow!("sst"))?;
+                if d == db {
+                    let e = found.entry(key).or_insert((0, Bytes::new()));
+                    if pos >= e.0 {
+                        *e = (pos, val);
+                    }
+                }
+            }
+        }
+    }
+    let (mut n, mut missing, mut wrong) = (0u64, 0u64, 0u64);
+    let mut examples = vec![];
+    for l in std::fs::read_to_string(witness)?.lines() {
+        let Some((a, b)) = l.split_once(',') else { continue };
+        let (k, pos): (u64, u64) = (a.parse()?, b.parse()?);
+        n += 1;
+        match found.get(&Bytes::from(format!("doc/w-{k}"))) {
+            None => {
+                missing += 1;
+                if examples.len() < 5 {
+                    examples.push(format!("manca w-{k} (pos {pos})"));
+                }
+            }
+            Some((p, v)) => {
+                if *p != pos || v.get(..8).map(|x| u64::from_le_bytes(x.try_into().unwrap())) != Some(k) {
+                    wrong += 1;
+                    if examples.len() < 5 {
+                        examples.push(format!("w-{k}: pos {p} invece di {pos}"));
+                    }
+                }
+            }
+        }
+    }
+    Ok(json!({"check": "testimoni-su-s3", "confirmed": n, "missing": missing, "wrong": wrong, "objects_read": objects, "keys_in_sst": found.len(), "examples": examples}))
 }

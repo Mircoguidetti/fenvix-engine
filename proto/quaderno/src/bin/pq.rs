@@ -31,6 +31,14 @@ impl Args {
     }
 }
 
+fn mem_total_mb() -> u64 {
+    std::fs::read_to_string("/proc/meminfo")
+        .ok()
+        .and_then(|s| s.lines().find(|l| l.starts_with("MemTotal:")).and_then(|l| l.split_whitespace().nth(1)?.parse::<u64>().ok()))
+        .map(|kb| kb / 1024)
+        .unwrap_or(4096)
+}
+
 fn cluster(a: &Args) -> Arc<Cluster> {
     let addrs: Vec<String> = a.s("replicas", "127.0.0.1:7200,127.0.0.1:7201,127.0.0.1:7202").split(',').map(String::from).collect();
     Cluster::new(addrs, a.u("conns", 16) as usize)
@@ -62,12 +70,17 @@ fn main() -> anyhow::Result<()> {
                 listen_client: a.s("client-listen", "127.0.0.1:7200"),
                 peers,
                 window_ms: a.u("window-ms", 60_000),
-                mem_cap: a.u("mem-cap-mb", 4096) << 20,
+                // tetto del quaderno: predefinito il 60% della RAM della macchina
+                mem_cap: a.u("mem-cap-mb", mem_total_mb() * 6 / 10) << 20,
                 elect_min_ms: a.u("elect-min-ms", 1000),
                 elect_max_ms: a.u("elect-max-ms", 2000),
                 hb_ms: a.u("hb-ms", 50),
                 seg_bytes: a.u("seg-mb", 64) << 20,
                 max_inflight: a.u("max-inflight", 200_000),
+                disk_soft: a.u("disk-soft-mb", 0) << 20,
+                disk_hard: a.u("disk-hard-mb", 0) << 20,
+                disk_ro: a.u("disk-ro-mb", 0) << 20,
+                alarm_s: a.u("alarm-s", 120),
             })?;
         }
         "proxy" => {
@@ -100,6 +113,8 @@ fn main() -> anyhow::Result<()> {
                     small_keys: a.u("small-keys", 20),
                     report_every: a.u("report-every", 10),
                     read_lag_ms: a.u("read-lag-ms", 5),
+                    witness_rate: a.f("witness-rate", 0.0),
+                    witness_out: a.s("witness-out", ""),
                 },
             ));
         }
@@ -110,6 +125,10 @@ fn main() -> anyhow::Result<()> {
         "lin" => {
             let r = rt(a.u("threads", 2) as usize);
             r.block_on(bench::lin(cluster(&a), a.u("secs", 60), a.u("keys", 200), a.u("writers", 8) as usize, a.u("readers", 16) as usize, a.s("out", "lin.csv"), a.u("pause-us", 0)));
+        }
+        "esiste-race" => {
+            let r = rt(a.u("threads", 2) as usize);
+            r.block_on(bench::esiste_race(cluster(&a), a.u("secs", 60), a.u("keys", 4), a.u("incs", 16) as usize, a.u("readers", 4) as usize, a.s("out", "esiste.csv"), a.0.contains_key("senza-esiste")));
         }
         "check-lin" => {
             let iso = a.0.get("iso").map(|s| {
@@ -135,8 +154,16 @@ fn main() -> anyhow::Result<()> {
                     interval_ms: a.u("interval-ms", 1000),
                     compact_every: a.u("compact-every", 10) as u32,
                     hot_db: hot,
+                    size_bytes: a.u("size-kb", 1024) << 10,
+                    pressure: a.f("pressure", 0.7),
+                    pressure_rate: a.u("pressure-mbs", 64) << 20,
                 },
             ))?;
+        }
+        "check-sst" => {
+            let r = rt(2);
+            let v = r.block_on(flusher::check_sst(&a.s("s3", "http://127.0.0.1:9000"), &a.s("bucket", "pq-sst"), a.u("groups", 16), bench::db_id(a.u("db", bench::WITNESS_DB)), &a.s("witness", "witness.csv")))?;
+            println!("{v}");
         }
         "status" => {
             let r = rt(1);

@@ -6,7 +6,8 @@ Porte: replica i ascolta le altre repliche su 7100+i e i client su 7200+i. Il pr
   c->r{i}   su 7400+i      (verso 7200+i): i client che devono poter essere tagliati fuori passano dal proxy.
 Cartella di lavoro: $PQ_WORK (default /root/pq-work), fuori dal repository.
 
-  cluster.py up [--fresh] [--mem-cap-mb N] [--window-ms N] [--delay-ms D]
+  cluster.py up [--fresh] [--mem-cap-mb N] [--window-ms N] [--delay-ms D] [--disk-soft-mb N --disk-hard-mb N --disk-ro-mb N] [--alarm-s N]
+     (--mem-cap-mb: tetto del quaderno per replica; qui le 3 repliche stanno sulla stessa macchina)
   cluster.py down | status | leader
   cluster.py kill I | start I | sigstop I | sigcont I
   cluster.py isolate I [--clients]   (blackhole tra I e le altre repliche; con --clients anche c->rI)
@@ -74,7 +75,9 @@ def replica_args(i, cfg):
     peers = ','.join(f'{b}=127.0.0.1:{7300 + 10 * i + b}' for b in range(N) if b != i)
     return [PQ, 'replica', '--id', str(i), '--dir', os.path.join(WORK, f'r{i}'), '--peer-listen', f'127.0.0.1:{7100 + i}',
             '--client-listen', f'127.0.0.1:{7200 + i}', '--peers', peers, '--mem-cap-mb', str(cfg.get('mem_cap_mb', 4096)),
-            '--window-ms', str(cfg.get('window_ms', 60000))]
+            '--window-ms', str(cfg.get('window_ms', 60000)), '--disk-soft-mb', str(cfg.get('disk_soft_mb', 0)),
+            '--disk-hard-mb', str(cfg.get('disk_hard_mb', 0)), '--disk-ro-mb', str(cfg.get('disk_ro_mb', 0)),
+            '--alarm-s', str(cfg.get('alarm_s', 120))]
 
 
 def start_replica(i):
@@ -128,7 +131,9 @@ def main():
         if '--fresh' in a:
             for i in range(N):
                 subprocess.run(['rm', '-rf', os.path.join(WORK, f'r{i}'), os.path.join(WORK, f'r{i}.log')])
-        cfg = {'mem_cap_mb': int(opt(a, '--mem-cap-mb', 4096)), 'window_ms': int(opt(a, '--window-ms', 60000))}
+        cfg = {'mem_cap_mb': int(opt(a, '--mem-cap-mb', 4096)), 'window_ms': int(opt(a, '--window-ms', 60000)),
+               'disk_soft_mb': int(opt(a, '--disk-soft-mb', 0)), 'disk_hard_mb': int(opt(a, '--disk-hard-mb', 0)),
+               'disk_ro_mb': int(opt(a, '--disk-ro-mb', 0)), 'alarm_s': int(opt(a, '--alarm-s', 120))}
         p = {'cfg': cfg}
         save(p)
         json.dump(routes(), open(os.path.join(WORK, 'routes.json'), 'w'))

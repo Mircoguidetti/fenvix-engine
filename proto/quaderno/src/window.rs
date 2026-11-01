@@ -15,6 +15,7 @@
 //! thread di rete sa rileggerli.
 
 use crate::codec::{Body, Db, Dep, Entry, FlushRec, GetRes, Kind, PendInfo, Pos, Write};
+use crate::spill::{SEntry, SVal, Spill};
 use bytes::Bytes;
 use parking_lot::{Mutex, RwLock};
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -135,6 +136,21 @@ pub struct DbW {
     pub flushed_n: usize,
     pub unfl_n: u64,
     pub unfl_bytes: u64,
+    /// record non ancora su S3 usciti dalla RAM verso la dispensa (run su disco), dal più vecchio
+    pub spill: VecDeque<SpillRef>,
+    pub spilled_any: bool,
+    /// le versioni con posizione ≤ spill_upto possono stare solo nella dispensa
+    pub spill_upto: Pos,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct SpillRef {
+    pub run: u64,
+    pub min: Pos,
+    pub max: Pos,
+    /// record e byte non su S3 spostati nel run (per `pendenti`)
+    pub recs: u64,
+    pub bytes: u64,
 }
 
 pub type DbRef = Arc<RwLock<DbW>>;
@@ -148,6 +164,9 @@ pub struct Window {
     pub versions: AtomicI64,
     pub nkeys: AtomicI64,
     pub ndbs: AtomicI64,
+    /// record nella finestra in RAM (per il conto della memoria)
+    pub nrecs: AtomicI64,
+    pub spill: Arc<Spill>,
     /// database con record non ancora su S3, aggiornato a ogni cambiamento (risposta a `pendenti` senza scorrere tutto)
     pub pending: Mutex<HashMap<Db, PendInfo>>,
     dir: PathBuf,
@@ -173,6 +192,8 @@ impl Window {
             versions: AtomicI64::new(0),
             nkeys: AtomicI64::new(0),
             ndbs: AtomicI64::new(0),
+            nrecs: AtomicI64::new(0),
+            spill: Arc::new(Spill::new(dir.clone())),
             pending: Mutex::new(HashMap::new()),
             dir,
         }
@@ -227,7 +248,7 @@ impl Window {
     fn sync_pending(&self, db: &Db, d: &DbW) {
         let mut p = self.pending.lock();
         if d.unfl_n > 0 {
-            let oldest = d.recs.get(d.flushed_n).map(|r| r.pos).unwrap_or(0);
+            let oldest = d.spill.front().map(|r| r.min).or_else(|| d.recs.get(d.flushed_n).map(|r| r.pos)).unwrap_or(0);
             p.insert(*db, PendInfo { db: *db, oldest, recs: d.unfl_n, bytes: d.unfl_bytes, flushed: d.flushed });
         } else {
             p.remove(db);
@@ -256,7 +277,7 @@ impl Window {
             Ok(())
         };
         // S più vecchia dell'inizio della finestra: non si può sapere se una chiave è cambiata dopo S
-        if read_pos < d.trim_pos {
+        if read_pos < d.trim_pos || read_pos < d.spill_upto {
             return Err(writes.first().map(|w| w.key.clone()).or_else(|| deps.first().map(|x| x.0.clone())).unwrap_or_default());
         }
         if check_writes {
@@ -313,6 +334,7 @@ impl Window {
         self.nkeys.fetch_add(newk, Relaxed);
         let bytes = e.raw.len() as u32;
         d.recs.push_back(RecMeta { index, pos, txn: *txn, keys: keys.into_boxed_slice(), bytes, loc, ent: Some(e.clone()) });
+        self.nrecs.fetch_add(1, Relaxed);
         d.unfl_n += 1;
         d.unfl_bytes += bytes as u64;
         self.sync_pending(db, &d);
@@ -326,6 +348,7 @@ impl Window {
             return None;
         }
         let r = d.recs.pop_back().unwrap();
+        self.nrecs.fetch_sub(1, Relaxed);
         if d.recs.len() >= d.flushed_n {
             d.unfl_n = d.unfl_n.saturating_sub(1);
             d.unfl_bytes = d.unfl_bytes.saturating_sub(r.bytes as u64);
@@ -359,18 +382,21 @@ impl Window {
             return if self.genesis.load(Relaxed) { GetRes::Absent(0) } else { GetRes::OutOfWindow { trimmed: 0, etag: Bytes::new() } };
         };
         let d = dr.read();
-        let complete = d.genesis && d.trim_pos == 0;
+        let complete = d.genesis && d.trim_pos == 0 && !d.spilled_any;
         let Some(ks) = d.keys.get(key) else {
+            if let Some(g) = self.spill_resolve(db, &d, key, at, dal, None) {
+                return g;
+            }
             return if complete { GetRes::Absent(0) } else { GetRes::OutOfWindow { trimmed: d.trim_pos, etag: d.etag.clone() } };
         };
-        self.resolve(ks, at, complete, &d, dal)
+        self.resolve(db, key, ks, at, complete, &d, dal)
     }
 
     pub fn scan(&self, db: &Db, from: &[u8], to: &[u8], at: Pos, limit: usize, dal: Pos) -> Vec<(Bytes, GetRes)> {
         let mut out = vec![];
         let Some(dr) = self.db(db) else { return out };
         let d = dr.read();
-        let complete = d.genesis && d.trim_pos == 0;
+        let complete = d.genesis && d.trim_pos == 0 && !d.spilled_any;
         let range = if to.is_empty() {
             d.keys.range::<[u8], _>((std::ops::Bound::Included(from), std::ops::Bound::Unbounded))
         } else {
@@ -380,7 +406,7 @@ impl Window {
             if out.len() >= limit {
                 break;
             }
-            let r = self.resolve(ks, at, complete, &d, dal);
+            let r = self.resolve(db, k.as_slice(), ks, at, complete, &d, dal);
             if matches!(r, GetRes::Absent(0)) && complete {
                 continue; // non esisteva ancora a `at`
             }
@@ -405,45 +431,210 @@ impl Window {
             if n % 16 == 0 && Instant::now() >= deadline {
                 return (out, true);
             }
-            let r = d.recs.pop_front().unwrap();
+            let r = self.pop_front_rec(&mut d);
             d.flushed_n = d.flushed_n.saturating_sub(1);
             out.push((r.index, r.txn));
-            for k in r.keys.iter() {
-                let Some(ks) = d.keys.get_mut(k.as_slice()) else { continue };
-                if ks.v.front().map(|v| v.pos != r.pos).unwrap_or(true) {
-                    continue;
-                }
-                let old = ks.v.pop_front().unwrap();
-                self.versions.fetch_sub(1, Relaxed);
-                let mut remove = false;
-                match ks.v.front_mut() {
-                    None => remove = true,
-                    Some(next) if next.kind == Kind::Delta => {
-                        // piega la versione che esce nel primo delta
-                        let unknown_base = old.kind == Kind::Delta && !ks.base_known;
-                        if !unknown_base {
-                            let base: Option<Bytes> = match old.kind {
-                                Kind::Del => None,
-                                Kind::Put => Some(self.val_of(&old.val)),
-                                // primo della catena con base nota: il suo valore è 0 + delta
-                                Kind::Delta => Some(delta_apply(None, &self.val_of(&old.val))),
-                            };
-                            let nv = delta_apply(base.as_deref(), &self.val_of(&next.val));
-                            next.kind = Kind::Put;
-                            next.val = Val::Mem(nv);
-                        }
-                    }
-                    Some(_) => {}
-                }
-                if remove {
-                    d.keys.remove(k.as_slice());
-                    self.nkeys.fetch_sub(1, Relaxed);
-                } else if let Some(ks) = d.keys.get_mut(k.as_slice()) {
-                    ks.base_known = ks.base_known || ks.v.front().map(|v| v.kind != Kind::Delta).unwrap_or(false);
-                }
-            }
             d.trim_pos = d.trim_pos.max(r.pos);
         }
+    }
+
+    /// Toglie il record più vecchio del database dalla finestra in RAM (versioni comprese). Se dopo la versione che
+    /// esce restano solo delta, la versione si piega nel primo delta (che diventa un put col valore calcolato).
+    fn pop_front_rec(&self, d: &mut DbW) -> RecMeta {
+        let r = d.recs.pop_front().unwrap();
+        self.nrecs.fetch_sub(1, Relaxed);
+        for k in r.keys.iter() {
+            let Some(ks) = d.keys.get_mut(k.as_slice()) else { continue };
+            if ks.v.front().map(|v| v.pos != r.pos).unwrap_or(true) {
+                continue;
+            }
+            let old = ks.v.pop_front().unwrap();
+            self.versions.fetch_sub(1, Relaxed);
+            let mut remove = false;
+            match ks.v.front_mut() {
+                None => remove = true,
+                Some(next) if next.kind == Kind::Delta => {
+                    let unknown_base = old.kind == Kind::Delta && !ks.base_known;
+                    if !unknown_base {
+                        let base: Option<Bytes> = match old.kind {
+                            Kind::Del => None,
+                            Kind::Put => Some(self.val_of(&old.val)),
+                            // primo della catena con base nota: il suo valore è 0 + delta
+                            Kind::Delta => Some(delta_apply(None, &self.val_of(&old.val))),
+                        };
+                        let nv = delta_apply(base.as_deref(), &self.val_of(&next.val));
+                        next.kind = Kind::Put;
+                        next.val = Val::Mem(nv);
+                    }
+                }
+                Some(_) => {}
+            }
+            if remove {
+                d.keys.remove(k.as_slice());
+                self.nkeys.fetch_sub(1, Relaxed);
+            } else if let Some(ks) = d.keys.get_mut(k.as_slice()) {
+                ks.base_known = ks.base_known || ks.v.front().map(|v| v.kind != Kind::Delta).unwrap_or(false);
+            }
+        }
+        r
+    }
+
+    // ------------------------------------------------------------------------------------------ dispensa (spill)
+
+    /// Candidati per la dispensa: record non su S3, confermati, più vecchi di `cutoff`, dopo `after`, al più `max`
+    /// record. Gira sul thread della dispensa con il lock in lettura (breve: si chiama a pezzi).
+    pub fn collect_spill(&self, db: &Db, after: Pos, cutoff: Pos, commit_pos: Pos, max: usize, out: &mut Vec<SEntry>) -> (Pos, usize) {
+        let Some(dr) = self.db(db) else { return (after, 0) };
+        let d = dr.read();
+        let start = d.recs.partition_point(|r| r.pos <= after.max(d.flushed));
+        let mut last = after;
+        let mut n = 0;
+        for r in d.recs.range(start..) {
+            if r.pos >= cutoff || r.pos > commit_pos || n >= max {
+                break;
+            }
+            for k in r.keys.iter() {
+                let Some(ks) = d.keys.get(k.as_slice()) else { continue };
+                let Some(v) = ks.v.iter().find(|v| v.pos == r.pos) else { continue };
+                let val = match (&v.kind, &v.val) {
+                    (Kind::Del, _) => SVal::None,
+                    (_, Val::Disk(l, wi)) => SVal::Log(*l, *wi),
+                    (_, Val::Mem(b)) => {
+                        // il valore è quello originale della voce? allora basta puntare al registro su disco
+                        let orig = r.ent.as_ref().and_then(|e| {
+                            let (lo, hi) = (e.raw.as_ptr() as usize, e.raw.as_ptr() as usize + e.raw.len());
+                            let p = b.as_ptr() as usize;
+                            if p >= lo && p + b.len() <= hi {
+                                if let Body::Rec { writes, .. } = &e.body {
+                                    return writes.iter().position(|w| w.key.as_ptr() as usize >= lo && &w.key[..] == k.as_slice()).map(|wi| wi as u16);
+                                }
+                            }
+                            None
+                        });
+                        match orig {
+                            Some(wi) => SVal::Log(r.loc, wi),
+                            None => SVal::Inline(b.clone()),
+                        }
+                    }
+                };
+                out.push(SEntry { db: *db, key: Bytes::copy_from_slice(k.as_slice()), pos: r.pos, kind: v.kind, val });
+            }
+            last = r.pos;
+            n += 1;
+        }
+        (last, n)
+    }
+
+    /// Dopo la scrittura del run: i record del database fino a `upto` escono dalla RAM (al più `max` per chiamata).
+    /// Restituisce (indice, txn) dei record usciti e `true` se ne restano.
+    pub fn apply_spill(&self, db: &Db, run: u64, upto: Pos, first_call: bool, max: usize) -> (Vec<(u64, [u8; 16])>, bool) {
+        let mut out = vec![];
+        let Some(dr) = self.db(db) else {
+            if first_call {
+                self.spill.release(run);
+            }
+            return (out, false);
+        };
+        let mut d = dr.write();
+        if first_call {
+            let (min, max_p) = self.spill.get(run).and_then(|r| r.dbs.get(db).map(|x| (x.min_pos, x.max_pos))).unwrap_or((0, 0));
+            // record non su S3 tra quelli spostati: per i contatori di `pendenti`
+            let (mut n, mut b) = (0u64, 0u64);
+            for r in d.recs.iter() {
+                if r.pos > upto {
+                    break;
+                }
+                if r.pos > d.flushed {
+                    n += 1;
+                    b += r.bytes as u64;
+                }
+            }
+            if min > 0 && max_p > d.flushed {
+                d.spill.push_back(SpillRef { run, min, max: max_p, recs: n, bytes: b });
+                d.spilled_any = true;
+                d.spill_upto = d.spill_upto.max(upto);
+            } else {
+                self.spill.release(run);
+            }
+        }
+        let mut k = 0;
+        while let Some(f) = d.recs.front() {
+            if f.pos > upto {
+                break;
+            }
+            if k >= max {
+                return (out, true);
+            }
+            let was_flushed = d.flushed_n > 0;
+            let r = self.pop_front_rec(&mut d);
+            if was_flushed {
+                d.flushed_n -= 1;
+                d.trim_pos = d.trim_pos.max(r.pos);
+            }
+            out.push((r.index, r.txn));
+            k += 1;
+        }
+        self.sync_pending(db, &d);
+        (out, false)
+    }
+
+    /// Lettura che scende nella dispensa: versioni ≤ at dal run più nuovo al più vecchio. `ram` = delta già trovati
+    /// in RAM sopra la dispensa (posizione più alta, somma). None = la dispensa non sa nulla della chiave.
+    fn spill_resolve(&self, db: &Db, d: &DbW, key: &[u8], at: Pos, dal: Pos, ram: Option<(Pos, Vec<Bytes>)>) -> Option<GetRes> {
+        if d.spill.is_empty() {
+            return None;
+        }
+        let (mut top, mut deltas): (Pos, Vec<Bytes>) = ram.unwrap_or((0, vec![]));
+        let mut found = top > 0;
+        for r in d.spill.iter().rev() {
+            if r.min > at {
+                continue;
+            }
+            let Some(run) = self.spill.get(r.run) else { continue };
+            let mut vs = run.lookup(db, key);
+            vs.retain(|e| e.pos <= at);
+            for e in vs.iter().rev() {
+                if !found {
+                    top = e.pos;
+                    found = true;
+                }
+                let v = || match &e.val {
+                    SVal::Log(l, wi) => self.load(l, *wi),
+                    SVal::Inline(b) => b.clone(),
+                    SVal::None => Bytes::new(),
+                };
+                match e.kind {
+                    Kind::Delta => {
+                        if e.pos > dal || dal == 0 {
+                            deltas.push(v());
+                        }
+                    }
+                    Kind::Put => {
+                        let mut cur = Some(v());
+                        for x in deltas.iter().rev() {
+                            cur = Some(delta_apply(cur.as_deref(), x));
+                        }
+                        return Some(GetRes::Value(top, cur.unwrap()));
+                    }
+                    Kind::Del => {
+                        if deltas.is_empty() {
+                            return Some(GetRes::Absent(top));
+                        }
+                        let mut cur: Option<Bytes> = None;
+                        for x in deltas.iter().rev() {
+                            cur = Some(delta_apply(cur.as_deref(), x));
+                        }
+                        return Some(GetRes::Value(top, cur.unwrap()));
+                    }
+                }
+            }
+        }
+        if !found {
+            return None;
+        }
+        // solo delta: la base è negli SST
+        let sum = deltas.iter().fold(0i64, |a, x| a.wrapping_add(x.get(..8).map(|b| i64::from_le_bytes(b.try_into().unwrap())).unwrap_or(0)));
+        Some(GetRes::Delta { pos: top, sum, trimmed: d.trim_pos })
     }
 
     /// conferma_scarico applicata: il database è su S3 fino a `p`.
@@ -456,10 +647,23 @@ impl Window {
         d.flushed = p;
         d.etag = etag.clone();
         while d.flushed_n < d.recs.len() && d.recs[d.flushed_n].pos <= p {
-            let b = d.recs[d.flushed_n].bytes as u64;
-            d.unfl_n = d.unfl_n.saturating_sub(1);
-            d.unfl_bytes = d.unfl_bytes.saturating_sub(b);
+            // i record già passati alla dispensa (≤ spill_upto) si contano nel loro run, non qui
+            if d.recs[d.flushed_n].pos > d.spill_upto {
+                let b = d.recs[d.flushed_n].bytes as u64;
+                d.unfl_n = d.unfl_n.saturating_sub(1);
+                d.unfl_bytes = d.unfl_bytes.saturating_sub(b);
+            }
             d.flushed_n += 1;
+        }
+        // run della dispensa ormai interamente su S3 per questo database
+        while let Some(r) = d.spill.front().copied() {
+            if r.max > p {
+                break;
+            }
+            d.unfl_n = d.unfl_n.saturating_sub(r.recs);
+            d.unfl_bytes = d.unfl_bytes.saturating_sub(r.bytes);
+            d.spill.pop_front();
+            self.spill.release(r.run);
         }
         self.sync_pending(db, &d);
     }
@@ -497,6 +701,50 @@ impl Window {
     /// copia solo i riferimenti (breve), poi costruisce la risposta senza lock.
     pub fn flushable(&self, db: &Db, upto: Pos, budget: &mut usize) -> Vec<FlushRec> {
         let Some(dr) = self.db(db) else { return vec![] };
+        let mut out = vec![];
+        // 1) la dispensa: run interi, dal più vecchio (le loro posizioni vengono prima di quelle in RAM)
+        let (spill, flushed) = {
+            let d = dr.read();
+            (d.spill.iter().copied().collect::<Vec<_>>(), d.flushed)
+        };
+        if !spill.is_empty() {
+            let mut last_loc: Option<(Loc, Arc<Entry>)> = None;
+            for r in &spill {
+                if *budget == 0 {
+                    return out;
+                }
+                let Some(run) = self.spill.get(r.run) else { continue };
+                for e in run.db_entries(db) {
+                    if e.pos <= flushed || e.pos > upto {
+                        continue;
+                    }
+                    let val = match &e.val {
+                        SVal::Inline(b) => b.clone(),
+                        SVal::None => Bytes::new(),
+                        SVal::Log(l, wi) => {
+                            let ent = match &last_loc {
+                                Some((ll, en)) if ll.seg == l.seg && ll.off == l.off => en.clone(),
+                                _ => {
+                                    let en = Arc::new(read_entry(&self.dir, l));
+                                    last_loc = Some((*l, en.clone()));
+                                    en
+                                }
+                            };
+                            match &ent.body {
+                                Body::Rec { writes, .. } => writes[*wi as usize].val.clone(),
+                                _ => Bytes::new(),
+                            }
+                        }
+                    };
+                    *budget = budget.saturating_sub(val.len() + e.key.len() + 16);
+                    out.push(FlushRec { pos: e.pos, writes: vec![Write { key: e.key, kind: e.kind, val }] });
+                }
+            }
+            if *budget == 0 {
+                return out;
+            }
+        }
+        // 2) i record in RAM: sotto il lock solo i riferimenti (breve), poi la risposta senza lock
         let mut refs: Vec<(Pos, Option<Arc<Entry>>, Loc)> = vec![];
         {
             let d = dr.read();
@@ -513,7 +761,6 @@ impl Window {
                 refs.push((r.pos, r.ent.clone(), r.loc));
             }
         }
-        let mut out = Vec::with_capacity(refs.len());
         for (pos, ent, loc) in refs {
             let e = match ent {
                 Some(e) => e,
@@ -564,11 +811,15 @@ impl Window {
         v
     }
 
-    fn resolve(&self, ks: &KeyS, at: Pos, complete: bool, d: &DbW, dal: Pos) -> GetRes {
+    #[allow(clippy::too_many_arguments)]
+    fn resolve(&self, db: &Db, key: &[u8], ks: &KeyS, at: Pos, complete: bool, d: &DbW, dal: Pos) -> GetRes {
         let oow = || GetRes::OutOfWindow { trimmed: d.trim_pos, etag: d.etag.clone() };
         // ultima versione con pos ≤ at
         let n = ks.v.partition_point(|v| v.pos <= at);
         if n == 0 {
+            if let Some(g) = self.spill_resolve(db, d, key, at, dal, None) {
+                return g;
+            }
             return if complete { GetRes::Absent(0) } else { oow() };
         }
         let top = &ks.v[n - 1];
@@ -595,6 +846,13 @@ impl Window {
                     Kind::Put => Some(self.val_of(&first.val)),
                     Kind::Del => None,
                     Kind::Delta => {
+                        if !ks.base_known && !d.spill.is_empty() {
+                            // la base può stare nella dispensa
+                            let ram: Vec<Bytes> = deltas.iter().map(|&j| self.val_of(&ks.v[j].val)).collect();
+                            if let Some(g) = self.spill_resolve(db, d, key, at, dal, Some((top.pos, ram))) {
+                                return g;
+                            }
+                        }
                         if !ks.base_known {
                             // base negli SST: somma dei delta della finestra dopo il manifest di chi legge
                             if dal != 0 && dal < d.trim_pos {
@@ -691,5 +949,62 @@ mod tests {
         // manifest più vecchio di quanto è uscito dalla finestra: va riletto
         assert!(matches!(win.get(&db, b"c", 30, 5), GetRes::OutOfWindow { trimmed: 10, .. }));
         assert!(matches!(win.get(&db, b"zz", 30, 0), GetRes::OutOfWindow { trimmed: 10, .. }));
+    }
+
+    #[test]
+    fn dispensa_letture_e_scarico() {
+        use std::io::Write as _;
+        let dir = std::env::temp_dir().join(format!("pq-test-spill-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let win = Window::new(true, dir.clone());
+        let db = [3u8; 16];
+        let mut seg = std::fs::File::create(crate::store::seg_path(&dir, 1)).unwrap();
+        let mut off = 0u64;
+        let mut put = |index: u64, pos: Pos, ws: Vec<Write>| {
+            let e = Arc::new(Entry::encode(1, index, pos, Body::Rec { txn: [index as u8; 16], db, session: None, writes: ws }));
+            seg.write_all(&e.raw).unwrap();
+            let loc = Loc { seg: 1, off, len: e.raw.len() as u32 };
+            off += e.raw.len() as u64;
+            win.apply(&e, loc);
+        };
+        put(1, 10, vec![w("a", Kind::Put, &5i64.to_le_bytes()), w("b", Kind::Put, b"bbbbbbbb")]);
+        put(2, 20, vec![w("a", Kind::Delta, &3i64.to_le_bytes())]);
+        put(3, 30, vec![w("b", Kind::Del, b"")]);
+        put(4, 40, vec![w("a", Kind::Delta, &1i64.to_le_bytes())]);
+        drop(put);
+        let v = |g: GetRes| match g {
+            GetRes::Value(_, b) => i64::from_le_bytes(b[..8].try_into().unwrap()),
+            o => panic!("{o:?}"),
+        };
+        // 10, 20, 30 nella dispensa; 40 resta in RAM
+        let mut ents = vec![];
+        let (upto, n) = win.collect_spill(&db, 0, 35, 40, 100, &mut ents);
+        assert_eq!((upto, n), (30, 3));
+        let run = win.spill.write_run(ents).unwrap();
+        let (gone, more) = win.apply_spill(&db, run.id, upto, true, 100);
+        assert_eq!((gone.len(), more), (3, false));
+        assert_eq!(win.nrecs.load(Relaxed), 1);
+        // letture: uguali a prima, ora anche dalla dispensa
+        assert_eq!(v(win.get(&db, b"a", 40, 0)), 9);
+        assert_eq!(v(win.get(&db, b"a", 25, 0)), 8);
+        assert_eq!(v(win.get(&db, b"a", 15, 0)), 5);
+        assert!(matches!(win.get(&db, b"b", 35, 0), GetRes::Absent(30)));
+        assert!(matches!(win.get(&db, b"b", 15, 0), GetRes::Value(10, _)));
+        assert!(matches!(win.get(&db, b"zz", 40, 0), GetRes::OutOfWindow { .. }));
+        // S più vecchia della dispensa: conflitto (non si può validare)
+        assert!(win.validate(&db, 25, &[w("a", Kind::Put, b"x")], true, &[]).is_err());
+        // pendenti: 4 record non su S3 (3 nella dispensa + 1 in RAM), il più vecchio a 10
+        let p = win.pending_list(10);
+        assert_eq!((p[0].recs, p[0].oldest), (4, 10));
+        // scaricabili: prima la dispensa (4 scritture), poi la RAM (1)
+        let mut budget = 1 << 20;
+        let fr = win.flushable(&db, 100, &mut budget);
+        assert_eq!(fr.len(), 5);
+        assert_eq!(fr.iter().map(|r| r.pos).max(), Some(40));
+        win.set_flushed(&db, 40, &Bytes::new());
+        assert!(win.pending_list(10).is_empty());
+        assert!(win.spill.runs.read().is_empty()); // run cancellato
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

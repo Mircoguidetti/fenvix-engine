@@ -23,6 +23,14 @@ type in struct {
 type out struct{ val uint64 }
 
 func main() {
+	if os.Args[1] == "esiste" {
+		t := 600
+		if len(os.Args) > 3 {
+			t, _ = strconv.Atoi(os.Args[3])
+		}
+		runEsiste(os.Args[2], t)
+		return
+	}
 	f, err := os.Open(os.Args[1])
 	if err != nil {
 		panic(err)
