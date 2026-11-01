@@ -1,0 +1,16 @@
+[package]
+name = "micro-efs"
+version = "0.1.0"
+edition = "2021"
+description = "Micro-prova del quaderno a turno su Amazon EFS (S12): latenza, gara del turno, presa dopo SIGKILL, zombie, metriche CloudWatch"
+publish = false
+
+# Crate autonomo: non fa parte del workspace del motore.
+[workspace]
+
+[dependencies]
+libc = "0.2"
+
+[profile.release]
+opt-level = 3
+debug = false
