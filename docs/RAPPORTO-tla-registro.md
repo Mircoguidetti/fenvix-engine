@@ -1,6 +1,7 @@
 # Rapporto finale, branch tla-registro
 
-Data: 1 novembre 2026. Branch `tla-registro` da `origin/main`; PR in bozza verso `main`, nessun merge.
+Data: 1 novembre 2026. Branch `tla-registro` da `origin/main`; PR in bozza verso `main`
+(https://github.com/Mircoguidetti/fenvix-engine/pull/8), nessun merge.
 Nessun altro branch toccato (la specifica vecchia e `proto/INTERFACCIA.md` di proto-lettura letti con
 `git show`). Nessuna spesa su cloud: tutto in locale, Java 21 del contenitore e `tla2tools.jar` dalla
 release ufficiale v1.8.0 di `tlaplus/tlaplus`. Ogni numero è MISURATO (dagli output di TLC salvati nel
