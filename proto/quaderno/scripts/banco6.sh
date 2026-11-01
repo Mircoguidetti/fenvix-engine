@@ -5,6 +5,7 @@
 # Tetto del quaderno CAP MB per replica (qui le 3 repliche stanno sulla stessa macchina); freno sul disco a
 # SOFT/HARD/RO MB per replica. A fine prova: tutte le repliche vive, tutto su S3, ogni testimone confermato negli SST.
 # Uso: scripts/banco6.sh [cartella] [BLOCK=600] [CAP=1536] [SOFT=1500] [HARD=2000] [RO=2500]
+# Variabili (giro 4, per macchine più piccole): HOT=10000 SMALL=0.5 (scritture/s per db piccolo) WIT=500 PRE=120 POST=1200
 set -u
 cd "$(dirname "$0")/.."
 OUT=${1:-results/banco6}
@@ -24,10 +25,11 @@ $S minio-up
 $S flusher-up --age-ms 10000 --interval-ms 1000
 sleep 3
 PIDS=$(python3 -c "import json;p=json.load(open('$W/pids.json'));print(p['r0'],p['r1'],p['r2'])")
-TOT=$((120 + BLOCK + 1200))
-$PQ mixed --secs "$TOT" --small-rate 0.5 --hot-rate 10000 --reads 0 --ryw 0 --witness-rate 500 --witness-out "$W/witness.csv" --report-every 10 > "$OUT/6-carico.jsonl" &
+HOT=${HOT:-10000}; SMALL=${SMALL:-0.5}; WIT=${WIT:-500}; PRE=${PRE:-120}; POST=${POST:-1200}
+TOT=$((PRE + BLOCK + POST))
+$PQ mixed --secs "$TOT" --small-rate "$SMALL" --hot-rate "$HOT" --reads 0 --ryw 0 --witness-rate "$WIT" --witness-out "$W/witness.csv" --report-every 10 > "$OUT/6-carico.jsonl" &
 LP=$!
-sleep 120
+sleep "$PRE"
 echo "minio sospeso a $(date +%s%3N)" | tee "$OUT/6-eventi.txt"; $S minio-stop
 sleep "$BLOCK"
 echo "minio ripreso a $(date +%s%3N)" | tee -a "$OUT/6-eventi.txt"; $S minio-cont

@@ -1,0 +1,36 @@
+ALLARME replica 0: il record non su S3 più vecchio ha 61 s (soglia 60 s); memoria 482 MB su 1024 MB, disco 128 MB
+replica 0: freno 0 -> 1 (disco 192 MB, memoria 523 MB su 1024 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 91 s (soglia 60 s); memoria 597 MB su 1024 MB, disco 192 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 121 s (soglia 60 s); memoria 734 MB su 1024 MB, disco 265 MB
+replica 0: freno 1 -> 2 (disco 265 MB, memoria 734 MB su 1024 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 151 s (soglia 60 s); memoria 738 MB su 1024 MB, disco 273 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 181 s (soglia 60 s); memoria 747 MB su 1024 MB, disco 281 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 211 s (soglia 60 s); memoria 691 MB su 1024 MB, disco 284 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 241 s (soglia 60 s); memoria 690 MB su 1024 MB, disco 284 MB
+replica 0: freno 2 -> 0 (disco 64 MB, memoria 621 MB su 1024 MB)
+replica 0: freno 0 -> 1 (disco 192 MB, memoria 635 MB su 1024 MB)
+replica 0: freno 1 -> 0 (disco 128 MB, memoria 640 MB su 1024 MB)
+ALLARME replica 1: il record non su S3 più vecchio ha 61 s (soglia 60 s); memoria 475 MB su 1024 MB, disco 128 MB
+replica 1: freno 0 -> 1 (disco 192 MB, memoria 515 MB su 1024 MB)
+ALLARME replica 1: il record non su S3 più vecchio ha 91 s (soglia 60 s); memoria 589 MB su 1024 MB, disco 192 MB
+replica 1: freno 1 -> 2 (disco 259 MB, memoria 737 MB su 1024 MB)
+ALLARME replica 1: il record non su S3 più vecchio ha 121 s (soglia 60 s); memoria 738 MB su 1024 MB, disco 262 MB
+ALLARME replica 1: il record non su S3 più vecchio ha 151 s (soglia 60 s); memoria 731 MB su 1024 MB, disco 273 MB
+ALLARME replica 1: il record non su S3 più vecchio ha 181 s (soglia 60 s); memoria 732 MB su 1024 MB, disco 281 MB
+ALLARME replica 1: il record non su S3 più vecchio ha 211 s (soglia 60 s); memoria 672 MB su 1024 MB, disco 284 MB
+ALLARME replica 1: il record non su S3 più vecchio ha 241 s (soglia 60 s); memoria 678 MB su 1024 MB, disco 284 MB
+replica 1: freno 2 -> 0 (disco 64 MB, memoria 633 MB su 1024 MB)
+replica 1: freno 0 -> 1 (disco 192 MB, memoria 656 MB su 1024 MB)
+replica 1: freno 1 -> 0 (disco 128 MB, memoria 660 MB su 1024 MB)
+ALLARME replica 2: il record non su S3 più vecchio ha 61 s (soglia 60 s); memoria 474 MB su 1024 MB, disco 128 MB
+replica 2: freno 0 -> 1 (disco 192 MB, memoria 505 MB su 1024 MB)
+ALLARME replica 2: il record non su S3 più vecchio ha 91 s (soglia 60 s); memoria 583 MB su 1024 MB, disco 192 MB
+ALLARME replica 2: il record non su S3 più vecchio ha 121 s (soglia 60 s); memoria 732 MB su 1024 MB, disco 262 MB
+replica 2: freno 1 -> 2 (disco 262 MB, memoria 732 MB su 1024 MB)
+ALLARME replica 2: il record non su S3 più vecchio ha 151 s (soglia 60 s); memoria 724 MB su 1024 MB, disco 273 MB
+ALLARME replica 2: il record non su S3 più vecchio ha 181 s (soglia 60 s); memoria 722 MB su 1024 MB, disco 281 MB
+ALLARME replica 2: il record non su S3 più vecchio ha 211 s (soglia 60 s); memoria 708 MB su 1024 MB, disco 282 MB
+ALLARME replica 2: il record non su S3 più vecchio ha 241 s (soglia 60 s); memoria 708 MB su 1024 MB, disco 282 MB
+replica 2: freno 2 -> 0 (disco 64 MB, memoria 651 MB su 1024 MB)
+replica 2: freno 0 -> 1 (disco 192 MB, memoria 601 MB su 1024 MB)
+replica 2: freno 1 -> 0 (disco 128 MB, memoria 607 MB su 1024 MB)

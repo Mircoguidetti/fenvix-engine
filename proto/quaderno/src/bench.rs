@@ -520,7 +520,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
             "{}",
             json!({"t": t0.elapsed().as_secs_f64(), "commits_per_s": (now.0 - last.0) as f64 / el, "reads_per_s": (now.1 - last.1) as f64 / el,
                    "conflicts": now.2 - last.2, "unknown": now.3 - last.3, "rejected": st.rejected.load(Relaxed), "slowed": st.slowed.load(Relaxed),
-                   "lat": ivj(&iv), "replicas": reps})
+                   "diag": st.cl.diag.json(), "lat": ivj(&iv), "replicas": reps})
         );
         let _ = std::io::stdout().flush();
         last = now;
@@ -540,7 +540,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                "reads_behind": st.reads_behind.load(Relaxed), "reads_err": st.reads_err.load(Relaxed), "ryw_bad": st.ryw_bad.load(Relaxed),
                "rejected": st.rejected.load(Relaxed), "slowed": st.slowed.load(Relaxed),
                "witness_ok": st.witness.lock().len(), "witness_unknown": st.witness_unknown.load(Relaxed),
-               "lat": ivj(&tot)})
+               "diag": st.cl.diag.json(), "lat": ivj(&tot)})
     );
     if !c.witness_out.is_empty() {
         let mut f = std::io::BufWriter::new(std::fs::File::create(&c.witness_out).unwrap());

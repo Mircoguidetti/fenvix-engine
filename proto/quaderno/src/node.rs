@@ -89,6 +89,12 @@ pub struct Shared {
     pub readable: watch::Sender<Pos>,
     /// fotografia dello stato aggiornata dal thread principale ogni 100 ms
     pub status: Mutex<Status>,
+    /// livello del freno pubblicato dal thread principale (solo sul leader; 0 altrimenti). Da 2 in su i commit si
+    /// rifiutano già nel thread di rete, senza mettersi in coda dietro al thread principale (giro 4: era la coda a
+    /// far scadere i tentativi e a lasciare esiti ignoti)
+    pub brake: std::sync::atomic::AtomicU8,
+    /// commit rifiutati dal freno nel thread di rete
+    pub fast_busy: std::sync::atomic::AtomicU64,
 }
 
 /// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
@@ -273,7 +279,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
     let io_threads = std::env::var("PQ_IO_THREADS").ok().and_then(|x| x.parse().ok()).unwrap_or(2);
     let io_nice: i32 = std::env::var("PQ_IO_NICE").ok().and_then(|x| x.parse().ok()).unwrap_or(-10);
     let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(io_threads).on_thread_start(move || set_thread_nice(io_nice)).enable_all().build()?;
-    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()) });
+    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default() });
     let mut peers = vec![];
     {
         let _g = rt.enter();
@@ -904,6 +910,7 @@ impl Node {
             }
         }
         self.role = Role::Follower;
+        self.publish_brake();
         self.leader = -1;
         self.verified = 0;
         self.prevotes.clear();
@@ -915,6 +922,7 @@ impl Node {
         self.flush_index();
         eprintln!("replica {}: guida, mandato {} (indice {})", self.me(), self.term, self.last_index());
         self.role = Role::Leader;
+        self.publish_brake();
         self.leader = self.me() as i32;
         self.leader_since = Instant::now();
         let last = self.last_index();
@@ -1528,7 +1536,7 @@ impl Node {
             oldest_unflushed_s: if self.oldest_unfl == Pos::MAX { 0.0 } else { now_ms().saturating_sub(pos_ms(self.oldest_unfl)) as f64 / 1000.0 },
             alarm: self.alarm,
             brake: self.brake,
-            busy: self.busy_n,
+            busy: self.busy_n + self.sh.fast_busy.load(std::sync::atomic::Ordering::Relaxed),
             delayed: self.delayed_n,
             diag: format!(
                 "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
@@ -1676,6 +1684,7 @@ impl Node {
         } else {
             0
         };
+        self.publish_brake();
         if self.brake != old {
             eprintln!("replica {}: freno {} -> {} (disco {} MB, memoria {} MB su {} MB)", self.me(), old, self.brake, disk >> 20, self.mem_used >> 20, c.mem_cap >> 20);
         }
@@ -1697,6 +1706,13 @@ impl Node {
         for db in self.tok_rate.keys() {
             self.tokens.entry(*db).or_insert(0.0);
         }
+    }
+
+    /// Il livello del freno visto dai thread di rete: quello vero sul leader, 0 sulle altre repliche (che rispondono
+    /// "non sono il leader" dal thread principale).
+    fn publish_brake(&self) {
+        let b = if self.role == Role::Leader { self.brake } else { 0 };
+        self.sh.brake.store(b, std::sync::atomic::Ordering::Relaxed);
     }
 
     /// Commit trattenuti dal rallentamento: escono quando il database ha gettoni (che si ricaricano a ogni ms);
@@ -1862,6 +1878,19 @@ fn serve_local(sh: &Arc<Shared>, conn: &UnboundedSender<Vec<u8>>, id: u64, q: Re
                 })
                 .collect();
             send(Resp::FlushState(v));
+            None
+        }
+        Req::Commit(_) if sh.brake.load(std::sync::atomic::Ordering::Relaxed) >= 2 => {
+            // freno che rifiuta: risposta subito, dal thread di rete. Il commit non entra nel registro: errore
+            // ritentabile pulito, come il rifiuto del thread principale (stessi tempi di attesa suggeriti)
+            let b = sh.brake.load(std::sync::atomic::Ordering::Relaxed);
+            let ms = match b {
+                4 => 200,
+                3 => 1000,
+                _ => 500,
+            };
+            sh.fast_busy.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            send(Resp::Busy { retry_ms: ms, reason: b });
             None
         }
         Req::Status => {

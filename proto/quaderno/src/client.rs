@@ -13,6 +13,9 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio::sync::{mpsc, oneshot};
 
+/// tempo di un tentativo di commit
+pub const ATTEMPT: Duration = Duration::from_millis(1500);
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CallErr {
     Timeout,
@@ -105,6 +108,35 @@ pub struct Cluster {
     pub leader: AtomicI32,
     /// la posizione confermata più alta vista in una risposta (per letture non lineari "recenti")
     pub seen: AtomicU64,
+    /// diagnostica dei commit dall'esito ignoto: perché un tentativo è finito senza risposta certa
+    pub diag: Diag,
+}
+
+/// Contatori di diagnostica dei commit (vedi `Diag::json`).
+#[derive(Default)]
+pub struct Diag {
+    /// tentativo scaduto con il tempo pieno (1,5 s)
+    pub to_full: AtomicU64,
+    /// tentativo scaduto con un tempo ridotto dalla scadenza del commit (ultimo tentativo dopo un'attesa)
+    pub to_short: AtomicU64,
+    /// connessione chiusa durante un tentativo
+    pub closed: AtomicU64,
+    /// risposta "ambiguo" dal capo (il capo ha lasciato la guida)
+    pub amb_resp: AtomicU64,
+    /// commit finiti con esito ignoto dopo almeno un rifiuto del freno
+    pub unknown_after_busy: AtomicU64,
+    /// commit finiti con esito ignoto senza nessun rifiuto del freno
+    pub unknown_no_busy: AtomicU64,
+    /// commit restituiti come "rifiutati" prima della scadenza, perché l'attesa successiva non ci stava più
+    pub rejected_early: AtomicU64,
+}
+impl Diag {
+    pub fn json(&self) -> serde_json::Value {
+        serde_json::json!({"timeout_full": self.to_full.load(Relaxed), "timeout_short": self.to_short.load(Relaxed),
+            "closed": self.closed.load(Relaxed), "ambiguous_resp": self.amb_resp.load(Relaxed),
+            "unknown_after_busy": self.unknown_after_busy.load(Relaxed), "unknown_no_busy": self.unknown_no_busy.load(Relaxed),
+            "rejected_early": self.rejected_early.load(Relaxed)})
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -122,7 +154,7 @@ pub enum Outcome {
 impl Cluster {
     pub fn new(addrs: Vec<String>, conns_per_replica: usize) -> Arc<Cluster> {
         let conns = addrs.iter().map(|_| (0..conns_per_replica).map(|_| Mutex::new(None)).collect()).collect();
-        Arc::new(Cluster { addrs, conns, rr: AtomicUsize::new(0), leader: AtomicI32::new(-1), seen: AtomicU64::new(0) })
+        Arc::new(Cluster { addrs, conns, rr: AtomicUsize::new(0), leader: AtomicI32::new(-1), seen: AtomicU64::new(0), diag: Diag::default() })
     }
 
     pub fn n(&self) -> usize {
@@ -173,12 +205,10 @@ impl Cluster {
             let left = deadline.saturating_sub(start.elapsed());
             if left.is_zero() {
                 // un rifiuto del freno vale solo se nessun tentativo precedente è rimasto senza risposta certa
-                return match last_busy {
-                    Some(r) if !ambiguous => Outcome::Rejected(r),
-                    _ => Outcome::Unknown,
-                };
+                return self.give_up(last_busy, ambiguous, busy);
             }
-            match self.call(target, &q, left.min(Duration::from_millis(1500))).await {
+            let budget = left.min(ATTEMPT);
+            match self.call(target, &q, budget).await {
                 Ok(Resp::Committed(p)) => {
                     self.leader.store(target as i32, Relaxed);
                     self.note_pos(p);
@@ -192,7 +222,18 @@ impl Cluster {
                     let base = (retry_ms as u64) << (busy - 1).min(5);
                     let base = base.min(2000);
                     let ms = base / 2 + rand::random::<u64>() % (base / 2 + 1);
-                    tokio::time::sleep(Duration::from_millis(ms).min(deadline.saturating_sub(start.elapsed()))).await;
+                    // giro 4: se dopo l'attesa non resta il tempo pieno per un tentativo, ci si ferma adesso con il
+                    // rifiuto ritentabile. Prima si dormiva fino a poco prima della scadenza e l'ultimo tentativo
+                    // partiva con pochi ms: scadeva prima della risposta e il commit diventava "esito ignoto"
+                    // (MISURATO: tutti gli esiti ignoti sotto il freno erano tentativi così)
+                    if start.elapsed() + Duration::from_millis(ms) + ATTEMPT > deadline {
+                        let o = self.give_up(last_busy, ambiguous, busy);
+                        if matches!(o, Outcome::Rejected(_)) {
+                            self.diag.rejected_early.fetch_add(1, Relaxed);
+                        }
+                        return o;
+                    }
+                    tokio::time::sleep(Duration::from_millis(ms)).await;
                 }
                 Ok(Resp::Conflict(k)) => {
                     self.leader.store(target as i32, Relaxed);
@@ -208,7 +249,15 @@ impl Cluster {
                     target = (target + 1) % self.n();
                     tokio::time::sleep(Duration::from_millis(20)).await;
                 }
-                Ok(Resp::Ambiguous) | Err(CallErr::Timeout) => {
+                r @ (Ok(Resp::Ambiguous) | Err(CallErr::Timeout)) => {
+                    let d = &self.diag;
+                    if r.is_ok() {
+                        d.amb_resp.fetch_add(1, Relaxed);
+                    } else if budget < ATTEMPT {
+                        d.to_short.fetch_add(1, Relaxed);
+                    } else {
+                        d.to_full.fetch_add(1, Relaxed);
+                    }
                     ambiguous = true;
                     self.leader.store(-1, Relaxed);
                     target = (target + 1) % self.n();
@@ -216,12 +265,27 @@ impl Cluster {
                 }
                 Err(CallErr::Closed) => {
                     // la richiesta può essere arrivata: ambiguo
+                    self.diag.closed.fetch_add(1, Relaxed);
                     ambiguous = true;
                     self.leader.store(-1, Relaxed);
                     target = (target + 1) % self.n();
                     tokio::time::sleep(Duration::from_millis(20)).await;
                 }
                 Ok(other) => panic!("risposta inattesa al commit: {other:?}"),
+            }
+        }
+    }
+
+    fn give_up(&self, last_busy: Option<u8>, ambiguous: bool, busy: u32) -> Outcome {
+        match last_busy {
+            Some(r) if !ambiguous => Outcome::Rejected(r),
+            _ => {
+                if busy > 0 {
+                    self.diag.unknown_after_busy.fetch_add(1, Relaxed);
+                } else {
+                    self.diag.unknown_no_busy.fetch_add(1, Relaxed);
+                }
+                Outcome::Unknown
             }
         }
     }

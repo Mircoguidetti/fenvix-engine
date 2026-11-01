@@ -177,8 +177,17 @@ def main():
         os.makedirs(os.path.join(WORK, 'minio'), exist_ok=True)
         env = dict(os.environ, MINIO_ROOT_USER='minioadmin', MINIO_ROOT_PASSWORD='minioadmin')
         f = open(os.path.join(WORK, 'minio.log'), 'ab')
-        p['minio'] = subprocess.Popen([MINIO, 'server', os.path.join(WORK, 'minio'), '--address', '127.0.0.1:9000', '--console-address', '127.0.0.1:9001'],
-                                      stdout=f, stderr=f, env=env, start_new_session=True).pid
+        if os.path.exists(MINIO):
+            p['minio'] = subprocess.Popen([MINIO, 'server', os.path.join(WORK, 'minio'), '--address', '127.0.0.1:9000', '--console-address', '127.0.0.1:9001'],
+                                          stdout=f, stderr=f, env=env, start_new_session=True).pid
+        else:
+            # senza il binario di MinIO (ambiente senza rete verso dl.min.io): moto, server S3 locale in Python, con PUT
+            # condizionali (If-None-Match / If-Match) come MinIO. I corpi vanno su file temporanei, non in RAM.
+            tmp = os.path.join(WORK, 'minio', 'tmp')
+            os.makedirs(tmp, exist_ok=True)
+            env.update(MOTO_S3_DEFAULT_KEY_BUFFER_SIZE='1024', TMPDIR=tmp)
+            p['minio'] = subprocess.Popen(['moto_server', '-H', '127.0.0.1', '-p', '9000'],
+                                          stdout=f, stderr=f, env=env, start_new_session=True).pid
         save(p)
         wait_port(9000, 30)
         time.sleep(1)
