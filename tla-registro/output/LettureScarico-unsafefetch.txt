@@ -1,16 +1,16 @@
-Sun Nov  1 12:38:51 UTC 2026
+Sun Nov  1 14:07:04 UTC 2026
 TLC2 Version 2026.10.30.154139 (rev: 090e85c)
-Running breadth-first search Model-Checking with fp 80 and seed 2015047298107847625 with 1 worker on 4 cores with 1820MB heap and 64MB offheap memory [pid: 4474] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/ls/MCLettureScarico.tla
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/ls/LettureScarico.tla
-Parsing file /tmp/tlc-9470040139762367623/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/ls/ValidatingLog.tla
-Parsing file /tmp/tlc-9470040139762367623/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-9470040139762367623/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-9470040139762367623/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-9470040139762367623/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-9470040139762367623/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
-Parsing file /tmp/tlc-9470040139762367623/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Running breadth-first search Model-Checking with fp 17 and seed -5230336794662081809 with 1 worker on 4 cores with 1820MB heap and 64MB offheap memory [pid: 10112] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/MCLettureScarico.tla
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/LettureScarico.tla
+Parsing file /tmp/tlc-11076191986358172044/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/ValidatingLog.tla
+Parsing file /tmp/tlc-11076191986358172044/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-11076191986358172044/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-11076191986358172044/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-11076191986358172044/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-11076191986358172044/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-11076191986358172044/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
 Semantic processing of module Naturals
 Semantic processing of module Sequences
 Semantic processing of module FiniteSets
@@ -26,9 +26,9 @@ Linting of module LettureScarico
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MCLettureScarico
-Starting... (2026-11-01 12:38:53)
+Starting... (2026-11-01 14:07:06)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-01 12:38:53.
+Finished computing initial states: 1 distinct state generated at 2026-11-01 14:07:06.
 Error: Invariant UploadExact is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
@@ -50,15 +50,16 @@ State 1: <Initial predicate>
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = (r1 :> <<>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ deleted = {}
 /\ wents = (w1 :> <<>> @@ w2 :> <<>>)
 /\ objects = <<>>
 /\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
-/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
 /\ losses = 0
 /\ token = (c1 :> 0)
 /\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
 /\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ readOk = TRUE
 /\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
 /\ role = (r1 :> "follower" @@ r2 :> "follower" @@ r3 :> "follower")
 /\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
@@ -68,7 +69,7 @@ State 1: <Initial predicate>
 /\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
   w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
 
-State 2: <RElect(r1,{r1, r2}) line 144, col 17 to line 144, col 46 of module LettureScarico>
+State 2: <RElect(r1,{r1, r2}) line 157, col 17 to line 157, col 46 of module LettureScarico>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -87,15 +88,16 @@ State 2: <RElect(r1,{r1, r2}) line 144, col 17 to line 144, col 46 of module Let
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = (r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ deleted = {}
 /\ wents = (w1 :> <<>> @@ w2 :> <<>>)
 /\ objects = <<>>
 /\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
-/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
 /\ losses = 0
 /\ token = (c1 :> 0)
 /\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
 /\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ readOk = TRUE
 /\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
 /\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
@@ -105,7 +107,7 @@ State 2: <RElect(r1,{r1, r2}) line 144, col 17 to line 144, col 46 of module Let
 /\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
   w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
 
-State 3: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+State 3: <NextR line 170, col 6 to line 175, col 15 of module LettureScarico>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -124,15 +126,16 @@ State 3: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = (r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ deleted = {}
 /\ wents = (w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ w2 :> <<>>)
 /\ objects = <<>>
 /\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
-/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
 /\ losses = 0
 /\ token = (c1 :> 0)
 /\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
 /\ wstate = (w1 :> "fetched" @@ w2 :> "idle")
+/\ readOk = TRUE
 /\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
 /\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
@@ -142,7 +145,7 @@ State 3: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
 /\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
   w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
 
-State 4: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+State 4: <NextR line 170, col 6 to line 175, col 15 of module LettureScarico>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -161,15 +164,16 @@ State 4: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = (r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ deleted = {}
 /\ wents = (w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ w2 :> <<>>)
 /\ objects = (<<"sst", 0, 1, w1>> :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>)
 /\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
-/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
 /\ losses = 0
 /\ token = (c1 :> 0)
 /\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
 /\ wstate = (w1 :> "stored" @@ w2 :> "idle")
+/\ readOk = TRUE
 /\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
 /\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
@@ -179,7 +183,7 @@ State 4: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
 /\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
   w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
 
-State 5: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+State 5: <NextR line 170, col 6 to line 175, col 15 of module LettureScarico>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -198,15 +202,16 @@ State 5: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = (r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ deleted = {}
 /\ wents = (w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ w2 :> <<>>)
 /\ objects = (<<"sst", 0, 1, w1>> :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>)
 /\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
-/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
 /\ losses = 0
 /\ token = (c1 :> 0)
 /\ manifest = [list |-> <<<<"sst", 0, 1, w1>>>>, pos |-> 1, etag |-> 1]
 /\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ readOk = TRUE
 /\ manifests = { [list |-> <<>>, pos |-> 0, etag |-> 0],
   [list |-> <<<<"sst", 0, 1, w1>>>>, pos |-> 1, etag |-> 1] }
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -217,9 +222,9 @@ State 5: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
 /\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
   w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
 
-317 states generated, 148 distinct states found, 106 states left on queue.
+311 states generated, 142 distinct states found, 100 states left on queue.
 The depth of the complete state graph search is 5.
-Finished in 02s at (2026-11-01 12:38:54)
-Trace exploration spec path: ./MCLettureScarico_TTrace_1793536731.tla
+Finished in 02s at (2026-11-01 14:07:07)
+Trace exploration spec path: ./MCLettureScarico_TTrace_1793542025.tla
 EXIT=12
-Sun Nov  1 12:38:54 UTC 2026
+Sun Nov  1 14:07:07 UTC 2026

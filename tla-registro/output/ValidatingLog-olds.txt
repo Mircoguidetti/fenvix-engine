@@ -1,15 +1,15 @@
-Sun Nov  1 12:22:44 UTC 2026
+Sun Nov  1 13:18:38 UTC 2026
 TLC2 Version 2026.10.30.154139 (rev: 090e85c)
-Running breadth-first search Model-Checking with fp 31 and seed 7493334082059662447 with 1 worker on 4 cores with 1820MB heap and 64MB offheap memory [pid: 2513] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/vl/MCValidatingLog.tla
-Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/vl/ValidatingLog.tla
-Parsing file /tmp/tlc-8975432923382839341/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-8975432923382839341/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-8975432923382839341/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-8975432923382839341/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-8975432923382839341/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-8975432923382839341/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
-Parsing file /tmp/tlc-8975432923382839341/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Running breadth-first search Model-Checking with fp 113 and seed 7571607985185441816 with 4 workers on 4 cores with 7282MB heap and 64MB offheap memory [pid: 6739] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/MCValidatingLog.tla
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run/ValidatingLog.tla
+Parsing file /tmp/tlc-14308880843217441055/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-14308880843217441055/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-14308880843217441055/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-14308880843217441055/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-14308880843217441055/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-14308880843217441055/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-14308880843217441055/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
 Semantic processing of module Naturals
 Semantic processing of module Sequences
 Semantic processing of module FiniteSets
@@ -23,10 +23,10 @@ Linting of module ValidatingLog
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MCValidatingLog
-Starting... (2026-11-01 12:22:45)
+Starting... (2026-11-01 13:18:39)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-01 12:22:45.
-Progress(9) at 2026-11-01 12:22:48: 39,750 states generated (39,750 s/min), 16,635 distinct states found (16,635 ds/min), 11,964 states left on queue.
+Finished computing initial states: 1 distinct state generated at 2026-11-01 13:18:39.
+Progress(10) at 2026-11-01 13:18:42: 27,720 states generated (27,720 s/min), 11,731 distinct states found (11,731 ds/min), 7,606 states left on queue.
 Error: Invariant NoConflictingCommits is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
@@ -53,7 +53,7 @@ State 1: <Initial predicate>
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 2: <Elect(r1,{r1, r2}) line 116, col 3 to line 129, col 75 of module ValidatingLog>
+State 2: <Elect(r1,{r1, r2}) line 122, col 3 to line 135, col 75 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
@@ -77,24 +77,24 @@ State 2: <Elect(r1,{r1, r2}) line 116, col 3 to line 129, col 75 of module Valid
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 3: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module ValidatingLog>
+State 3: <Replicate(r1,r3) line 186, col 3 to line 194, col 84 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 1) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
-  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
-  r3 :> <<>> )
+  r2 :> <<>> @@
+  r3 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> )
 /\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
@@ -103,24 +103,24 @@ State 3: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module Validat
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 4: <AdvanceCommit(r1) line 194, col 3 to line 202, col 92 of module ValidatingLog>
+State 4: <AdvanceCommit(r1) line 208, col 3 to line 216, col 92 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 1) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
 /\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
-  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
-  r3 :> <<>> )
+  r2 :> <<>> @@
+  r3 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> )
 /\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
@@ -129,16 +129,16 @@ State 4: <AdvanceCommit(r1) line 194, col 3 to line 202, col 92 of module Valida
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 5: <Submit(r1,t1) line 146, col 3 to line 167, col 69 of module ValidatingLog>
+State 5: <Submit(r1,t1) line 152, col 3 to line 181, col 69 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 0 @@ r3 :> 1) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
@@ -147,8 +147,8 @@ State 5: <Submit(r1,t1) line 146, col 3 to line 167, col 69 of module Validating
 /\ log = ( r1 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
-  r3 :> <<>> )
+  r2 :> <<>> @@
+  r3 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> )
 /\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
@@ -157,16 +157,16 @@ State 5: <Submit(r1,t1) line 146, col 3 to line 167, col 69 of module Validating
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 6: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module ValidatingLog>
+State 6: <Replicate(r1,r3) line 186, col 3 to line 194, col 84 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 0 @@ r3 :> 2) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
@@ -175,11 +175,11 @@ State 6: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module Validat
 /\ log = ( r1 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r2 :>
+  r2 :> <<>> @@
+  r3 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
-         [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+         [s |-> 0, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 1)
 /\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -187,59 +187,29 @@ State 6: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module Validat
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 7: <AdvanceCommit(r1) line 194, col 3 to line 202, col 92 of module ValidatingLog>
+State 7: <AdvanceWindow(r1) line 225, col 3 to line 231, col 92 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
-/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 0, ep |-> 1, tx |-> t1]>>
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 0 @@ r3 :> 2) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
-/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
 /\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
 /\ log = ( r1 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r2 :>
+  r2 :> <<>> @@
+  r3 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
-         [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
-/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
-/\ losses = 0
-/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
-/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
-  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
-  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
-
-State 8: <AdvanceWindow(r1) line 211, col 3 to line 217, col 92 of module ValidatingLog>
-/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
-  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
-  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
-/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 0, ep |-> 1, tx |-> t1]>>
-/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
-  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
-  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
-  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
-  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
-/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
-/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
-/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
-/\ log = ( r1 :>
-      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
-         [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r2 :>
-      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
-         [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+         [s |-> 0, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 1)
 /\ wstart = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -247,16 +217,16 @@ State 8: <AdvanceWindow(r1) line 211, col 3 to line 217, col 92 of module Valida
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 9: <AdvanceWindow(r1) line 211, col 3 to line 217, col 92 of module ValidatingLog>
-/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+State 8: <AdvanceCommit(r1) line 208, col 3 to line 216, col 92 of module ValidatingLog>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 0, ep |-> 1, tx |-> t1]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 0 @@ r3 :> 2) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
@@ -265,11 +235,41 @@ State 9: <AdvanceWindow(r1) line 211, col 3 to line 217, col 92 of module Valida
 /\ log = ( r1 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r2 :>
+  r2 :> <<>> @@
+  r3 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 0 @@ r3 :> 1)
+/\ wstart = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 1)
+/\ losses = 0
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+
+State 9: <AdvanceWindow(r1) line 225, col 3 to line 231, col 92 of module ValidatingLog>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 0, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 0 @@ r3 :> 2) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+  r2 :> <<>> @@
+  r3 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 0 @@ r3 :> 1)
 /\ wstart = (r1 :> 3 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -277,16 +277,16 @@ State 9: <AdvanceWindow(r1) line 211, col 3 to line 217, col 92 of module Valida
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 10: <Submit(r1,t3) line 146, col 3 to line 167, col 69 of module ValidatingLog>
+State 10: <Submit(r1,t3) line 152, col 3 to line 181, col 69 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 3 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 0, ep |-> 1, tx |-> t1]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 2 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 0 @@ r3 :> 2) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 1)
@@ -296,11 +296,11 @@ State 10: <Submit(r1,t3) line 146, col 3 to line 167, col 69 of module Validatin
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1],
          [s |-> 0, ep |-> 1, tx |-> t3] >> @@
-  r2 :>
+  r2 :> <<>> @@
+  r3 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
-         [s |-> 0, ep |-> 1, tx |-> t1] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+         [s |-> 0, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 0 @@ r3 :> 1)
 /\ wstart = (r1 :> 3 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -308,16 +308,16 @@ State 10: <Submit(r1,t3) line 146, col 3 to line 167, col 69 of module Validatin
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 11: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module ValidatingLog>
+State 11: <Replicate(r1,r3) line 186, col 3 to line 194, col 84 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 3 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 0, ep |-> 1, tx |-> t1]>>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 0 @@ r3 :> 3) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 1)
@@ -327,12 +327,12 @@ State 11: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module Valida
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1],
          [s |-> 0, ep |-> 1, tx |-> t3] >> @@
-  r2 :>
+  r2 :> <<>> @@
+  r3 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1],
-         [s |-> 0, ep |-> 1, tx |-> t3] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0)
+         [s |-> 0, ep |-> 1, tx |-> t3] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 0 @@ r3 :> 2)
 /\ wstart = (r1 :> 3 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -340,18 +340,18 @@ State 11: <Replicate(r1,r2) line 172, col 3 to line 180, col 84 of module Valida
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-State 12: <AdvanceCommit(r1) line 194, col 3 to line 202, col 92 of module ValidatingLog>
+State 12: <AdvanceCommit(r1) line 208, col 3 to line 216, col 92 of module ValidatingLog>
 /\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 3 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
 /\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
    [s |-> 0, ep |-> 1, tx |-> t1],
    [s |-> 0, ep |-> 1, tx |-> t3] >>
 /\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
   r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
-/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0) @@
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 0 @@ r3 :> 3) @@
   r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
   r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
 /\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 1)
@@ -361,12 +361,12 @@ State 12: <AdvanceCommit(r1) line 194, col 3 to line 202, col 92 of module Valid
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1],
          [s |-> 0, ep |-> 1, tx |-> t3] >> @@
-  r2 :>
+  r2 :> <<>> @@
+  r3 :>
       << [s |-> 0, ep |-> 1, tx |-> "barriera"],
          [s |-> 0, ep |-> 1, tx |-> t1],
-         [s |-> 0, ep |-> 1, tx |-> t3] >> @@
-  r3 :> <<>> )
-/\ commit = (r1 :> 3 @@ r2 :> 2 @@ r3 :> 0)
+         [s |-> 0, ep |-> 1, tx |-> t3] >> )
+/\ commit = (r1 :> 3 @@ r2 :> 0 @@ r3 :> 2)
 /\ wstart = (r1 :> 3 @@ r2 :> 1 @@ r3 :> 1)
 /\ losses = 0
 /\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
@@ -374,9 +374,9 @@ State 12: <AdvanceCommit(r1) line 194, col 3 to line 202, col 92 of module Valid
   r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
   r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
 
-1083528 states generated, 339667 distinct states found, 215790 states left on queue.
-The depth of the complete state graph search is 12.
-Finished in 43s at (2026-11-01 12:23:28)
-Trace exploration spec path: ./MCValidatingLog_TTrace_1793535764.tla
+477230 states generated, 162543 distinct states found, 94027 states left on queue.
+The depth of the complete state graph search is 13.
+Finished in 10s at (2026-11-01 13:18:49)
+Trace exploration spec path: ./MCValidatingLog_TTrace_1793539118.tla
 EXIT=12
-Sun Nov  1 12:23:28 UTC 2026
+Sun Nov  1 13:18:49 UTC 2026

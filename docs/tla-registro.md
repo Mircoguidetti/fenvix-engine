@@ -100,35 +100,40 @@ violazione. 61.811.817 stati generati, 17.695.505 distinti, profondità 32, 22 m
 `RetryBeyondWindow` qui sotto, che viola: la chiave di sessione chiude il buco. Un commit ritentato
 restituisce il primo esito (la stessa posizione) anche dopo la morte del leader che lo aveva confermato.
 
-Modello `ValidatingLog-base3` (`MaxEpoch = 3`, due cambi di leader): RISULTATO-BASE3-VL
+Modello `ValidatingLog-base3` (`MaxEpoch = 3`, due cambi di leader, stesse altre dimensioni): esecuzione
+NON completata, fermata al tetto di 40 minuti: 71.060.112 stati generati, 27.190.939 distinti, 14.115.234
+ancora in coda, esplorazione in ampiezza arrivata alla profondità 18, nessuna violazione negli stati
+esplorati (MISURATO, `output/ValidatingLog-base3.txt`). È evidenza limitata, non una prova: con due cambi
+di leader lo spazio è almeno 3 volte quello del base e non è stato esaurito.
 
-Controlli negativi, ognuno con una sola costante a TRUE (MISURATO, output in `tla-registro/output/`):
+Controlli negativi, ognuno con una sola costante a TRUE, eseguiti con la specifica definitiva e 4 worker
+(MISURATO, output in `tla-registro/output/`); i tempi sono quelli fino al primo controesempio:
 
-- `NoValidate` (il leader non valida): `NoConflictingCommits` violata in 3 s, 13.109 stati distinti,
-  profondità 9. Controesempio in parole: `t1` (`$inc` su `k1`) viene confermato alla posizione 2 con
+- `NoValidate` (il leader non valida): `NoConflictingCommits` violata in 2 s, 6.168 stati distinti,
+  profondità 10. Controesempio in parole: `t1` (`$inc` su `k1`) viene confermato alla posizione 2 con
   `S = 1`; `t3`, preparato anch'esso a `S = 1`, ha letto `k1` prima del `$inc` e viene confermato alla
   posizione 3: ha deciso su un valore già cambiato.
 - `AcceptOldS` (il leader accetta `S` sotto l'inizio della finestra): `NoConflictingCommits` violata in
-  43 s, 339.667 stati, profondità 12. `t1` confermato a 2; la finestra avanza fino a 3 e il leader
+  10 s, 162.543 stati, profondità 13. `t1` confermato a 2; la finestra avanza fino a 3 e il leader
   dimentica che `k1` è stata scritta a 2; `t3` arriva con `S = 1`, la mappa non ricorda nulla, passa.
   È il motivo della regola "S sotto la finestra: rifiuta".
-- `NoRebuild` (il nuovo leader parte con mappe e tabella id vuote): `NoDuplicateIds` violata in 59 s,
-  570.881 stati, profondità 12. `t1` confermato dal leader `r1` a 2; `r2` eletto e pronto; il nodo
+- `NoRebuild` (il nuovo leader parte con mappe e tabella id vuote): `NoDuplicateIds` violata in 8 s,
+  172.856 stati, profondità 14. `t1` confermato dal leader `r1` a 2; `r2` eletto e pronto; il nodo
   d'ingresso rimanda `t1` (risposta persa); `r2` non ha `t1` in tabella e lo scrive una seconda volta
   alla posizione 4. Con la ricostruzione, `r2` risponde con la posizione 2.
 - `RetryBeyondWindow` (ritentativo di un id che il leader ha già dimenticato): `NoDuplicateIds`
-  violata in 3 min 34 s, 1.073.614 stati, profondità 14. `t1` e `t2` confermati a 2 e 3; la finestra
+  violata in 7 s, 105.903 stati, profondità 15. `t1` e `t2` confermati a 2 e 3; la finestra
   avanza oltre 2 e il leader dimentica l'id di `t1`; `t1` viene rimandato con `S = 3` e scritto di
   nuovo. Non è un difetto della specifica ma del protocollo così com'è: la deduplicazione dura quanto
   la finestra (60 s). Vale per un tentativo ripetuto più di 60 s dopo l'originale senza aver mai
   ricevuto risposta. È il buco che il passo 5 (sessioni) deve chiudere; il modello base lo esclude con
   il vincolo "si ritenta solo entro la finestra".
-- `AckOnOne` (conferma con 1 replica su 3): `LeaderCompleteness` violata in 1 s, 18 stati, profondità
-  4. `r1` eletto e scrive la barriera; `r2` eletto da `{r2, r3}` con epoca 2; `r1`, che non lo sa,
+- `AckOnOne` (conferma con 1 replica su 3): `LeaderCompleteness` violata in meno di 1 s, 50 stati, profondità
+  6. `r1` eletto e scrive la barriera; `r2` eletto da `{r2, r3}` con epoca 2; `r1`, che non lo sa,
   conferma la propria barriera da solo: un record "confermato" che il leader vero non ha e che
   sparirà.
 - `NoVoteRestriction` (si vota un candidato col log indietro): `LeaderCompleteness` violata in 1 s,
-  166 stati, profondità 5. `r1` replica la barriera a `r2`; `r3`, senza quella voce, viene eletto con il
+  257 stati, profondità 7. `r1` replica la barriera a `r2`; `r3`, senza quella voce, viene eletto con il
   voto di `r2`; `r1` conferma la barriera (era su `r1` e `r2`, maggioranza): record confermato assente
   dal log del leader nuovo. È la restrizione del voto di Raft, indispensabile.
 
@@ -176,21 +181,21 @@ client, 2 worker, 1 worker TLC, heap 4 GB): RISULTATO-BASE-LS
 Controlli negativi (MISURATO):
 
 - `UnsafeServe` (la replica serve se ha `S` in coda, ignorando la confermata): `ReadsCorrect` violata
-  in 3 s, 1.801 stati, profondità 6. Il leader scrive `t1` (`k1`) a 2 solo su se stesso; una lettura di
+  in 2 s, 499 stati, profondità 6. Il leader scrive `t1` (`k1`) a 2 solo su se stesso; una lettura di
   `k1` a `S = 2` dalla replica leader restituisce la scrittura 2, che non è confermata e può sparire.
   Con la regola sicura la replica risponde "non ho ancora S".
-- `IgnoreToken` (il nodo d'ingresso ignora il gettone): `MonotonicReads` violata in 2 s, 513 stati,
+- `IgnoreToken` (il nodo d'ingresso ignora il gettone): `MonotonicReads` violata in 2 s, 164 stati,
   profondità 6: un client che ha visto la posizione 2 riceve una lettura a 1.
-- `UnconditionalPut` (manifest scritto senza condizione sull'etag): `ManifestMonotonic` violata in 24
-  s, 69.441 stati, profondità 13. Due worker partono dallo stesso manifest a 0; `w2` scarica fino a 2 e
+- `UnconditionalPut` (manifest scritto senza condizione sull'etag): `ManifestMonotonic` violata in 18
+  s, 50.545 stati, profondità 13. Due worker partono dallo stesso manifest a 0; `w2` scarica fino a 2 e
   pubblica; `w1`, che aveva preso solo fino a 1, pubblica dopo e il manifest torna a 1. Se le repliche
   avevano già scartato fino a 2, il record 2 non è più da nessuna parte.
-- `NameByStart` (oggetto SST chiamato con la sola posizione iniziale): `UploadExact` violata in 13 s,
-  33.121 stati, profondità 12. Due worker scrivono entrambi l'oggetto "0": uno con i record fino a 2,
+- `NameByStart` (oggetto SST chiamato con la sola posizione iniziale): `UploadExact` violata in 9 s,
+  19.231 stati, profondità 12. Due worker scrivono entrambi l'oggetto "0": uno con i record fino a 2,
   l'altro fino a 1; vince il manifest di quello a 1 ma l'oggetto contiene 2 record: il contenuto non
   corrisponde al manifest. I nomi degli oggetti devono essere unici per tentativo.
 - `UnsafeFetch` (il worker prende dalla replica anche record non confermati): `UploadExact` violata
-  in 2 s, 148 stati, profondità 5: finisce in S3 la barriera non ancora confermata di un leader.
+  in 2 s, 142 stati, profondità 5: finisce in S3 la barriera non ancora confermata di un leader.
 - `DeleteOrphanBlind` (dopo un PUT condizionale fallito il worker cancella il proprio oggetto senza
   rileggere il manifest): `UploadExact` violata in 2 s, 807 stati distinti. Il PUT del manifest riesce
   ma la risposta si perde; il worker ritenta, riceve il 412 del proprio stesso PUT, crede di aver perso
