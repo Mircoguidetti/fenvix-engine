@@ -203,17 +203,17 @@ AdvanceCommit(l) ==
 
 (* ------------------------------------------------------- finestra e guasti *)
 
-\* la finestra avanza di una posizione (solo su voci confermate: una voce vecchia di 60 s e' confermata);
-\* un leader dimentica chiavi e id usciti dalla finestra
+\* la finestra del leader avanza di una posizione (solo su voci confermate: una voce vecchia di 60 s
+\* e' confermata) e il leader dimentica chiavi e id usciti dalla finestra. Per contenere lo spazio degli
+\* stati la finestra dei seguaci resta ferma: un nuovo leader ricostruisce da tutto il proprio log e
+\* puo' poi far avanzare la finestra, che copre lo stesso insieme di comportamenti a meno dei tempi.
 AdvanceWindow(s) ==
-  /\ alive[s] /\ wstart[s] <= commit[s]
+  /\ alive[s] /\ role[s] = "leader" /\ wstart[s] <= commit[s]
   /\ LET nw == wstart[s] + 1
      IN /\ wstart' = [wstart EXCEPT ![s] = nw]
-        /\ IF role[s] = "leader"
-           THEN /\ mapS' = [mapS EXCEPT ![s] = [k \in Keys |-> IF @[k] < nw THEN 0 ELSE @[k]]]
-                /\ mapA' = [mapA EXCEPT ![s] = [k \in Keys |-> IF @[k] < nw THEN 0 ELSE @[k]]]
-                /\ ids' = [ids EXCEPT ![s] = [t \in Txns |-> IF @[t] < nw THEN 0 ELSE @[t]]]
-           ELSE UNCHANGED <<mapS, mapA, ids>>
+        /\ mapS' = [mapS EXCEPT ![s] = [k \in Keys |-> IF @[k] < nw THEN 0 ELSE @[k]]]
+        /\ mapA' = [mapA EXCEPT ![s] = [k \in Keys |-> IF @[k] < nw THEN 0 ELSE @[k]]]
+        /\ ids' = [ids EXCEPT ![s] = [t \in Txns |-> IF @[t] < nw THEN 0 ELSE @[t]]]
   /\ UNCHANGED <<epoch, role, alive, log, commit, match, attempts, outcome, cmtLog, losses>>
 
 Lose(r) ==

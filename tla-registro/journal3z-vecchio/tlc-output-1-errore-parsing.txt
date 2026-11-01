@@ -1,0 +1,46 @@
+Sun Nov  1 11:35:44 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35037 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 47 and seed -925770351988063105 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 475] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run-old/MC.tla
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run-old/Journal3Z.tla
+Parsing file /tmp/tlc-9499520297325586474/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-9499520297325586474/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-9499520297325586474/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-9499520297325586474/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-9499520297325586474/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-9499520297325586474/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-9499520297325586474/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Journal3Z
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MC
+Semantic errors:
+
+*** Errors: 3
+
+line 3, col 22 to line 3, col 23 of module MC
+
+Unknown operator: `n1'.
+
+
+line 3, col 26 to line 3, col 27 of module MC
+
+Unknown operator: `n2'.
+
+
+line 3, col 30 to line 3, col 31 of module MC
+
+Unknown operator: `n3'.
+
+
+Starting... (2026-11-01 11:35:45)
+Error: Parsing or semantic analysis failed.
+Finished in 00s at (2026-11-01 11:35:45)
+EXIT=150
+Sun Nov  1 11:35:45 UTC 2026

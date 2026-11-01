@@ -140,8 +140,20 @@ Trim ==
   /\ trimmed' = manifest.pos
   /\ UNCHANGED <<token, reads, lastRead, wstate, wview, wupto, wents, wname, objects, manifests, manifest>>
 
+\* le azioni del registro, con lo stato delle letture e dello scarico fermo
+RElect(c, Q) == Elect(c, Q) /\ UNCHANGED rvars
+RSubmit(l, t) == Submit(l, t) /\ UNCHANGED rvars
+RReplicate(l, f) == Replicate(l, f) /\ UNCHANGED rvars
+RHeartbeat(l, f) == Heartbeat(l, f) /\ UNCHANGED rvars
+RAdvanceCommit(l) == AdvanceCommit(l) /\ UNCHANGED rvars
+RAdvanceWindow(l) == AdvanceWindow(l) /\ UNCHANGED rvars
+RLose(r) == Lose(r) /\ UNCHANGED rvars
+
 NextR ==
-  \/ (Next /\ UNCHANGED rvars)
+  \/ \E c \in Replicas, Q \in SUBSET Replicas : RElect(c, Q)
+  \/ \E l \in Replicas, t \in Txns : RSubmit(l, t)
+  \/ \E l, f \in Replicas : RReplicate(l, f) \/ RHeartbeat(l, f)
+  \/ \E l \in Replicas : RAdvanceCommit(l) \/ RAdvanceWindow(l) \/ RLose(l)
   \/ /\ UNCHANGED vars
      /\ \/ \E c \in Clients, r \in Replicas, k \in Keys, view \in manifests, s \in 0..MaxLen : Read(c, r, k, view, s)
         \/ \E c \in Clients, t \in Txns : LearnOutcome(c, t)

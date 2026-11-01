@@ -1,0 +1,604 @@
+Sun Nov  1 12:38:12 UTC 2026
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 99 and seed -272348670253752460 with 1 worker on 4 cores with 1820MB heap and 64MB offheap memory [pid: 4339] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/ls/MCLettureScarico.tla
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/ls/LettureScarico.tla
+Parsing file /tmp/tlc-18294932321693599362/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/ls/ValidatingLog.tla
+Parsing file /tmp/tlc-18294932321693599362/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-18294932321693599362/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-18294932321693599362/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-18294932321693599362/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-18294932321693599362/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-18294932321693599362/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ValidatingLog
+Semantic processing of module LettureScarico
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCLettureScarico
+Linting of module ValidatingLog
+Linting of module LettureScarico
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCLettureScarico
+Starting... (2026-11-01 12:38:13)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 12:38:14.
+Progress(10) at 2026-11-01 12:38:17: 24,993 states generated (24,993 s/min), 6,627 distinct states found (6,627 ds/min), 3,737 states left on queue.
+Error: Action property ManifestMonotonic is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = (r1 :> <<>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "follower" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 2: <RElect(r1,{r1, r2}) line 144, col 17 to line 144, col 46 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = (r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 3: <RReplicate(r1,r2) line 146, col 21 to line 146, col 54 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r3 :> <<>> )
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 4: <RAdvanceCommit(r1) line 148, col 22 to line 148, col 56 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r3 :> <<>> )
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 5: <RSubmit(r1,t1) line 145, col 18 to line 145, col 48 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r3 :> <<>> )
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 6: <RReplicate(r1,r2) line 146, col 21 to line 146, col 54 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 7: <RAdvanceCommit(r1) line 148, col 22 to line 148, col 56 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = (w1 :> <<>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 0 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 8: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = (w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ w2 :> <<>>)
+/\ objects = <<>>
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "fetched" @@ w2 :> "idle")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 1 @@ w2 :> 0)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 9: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = ( w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  w2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ objects = <<>>
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "fetched" @@ w2 :> "fetched")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 1 @@ w2 :> 2)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 10: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<"sst", 0, 1, w1>> @@ w2 :> <<>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = ( w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  w2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ objects = (<<"sst", 0, 1, w1>> :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>)
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "stored" @@ w2 :> "fetched")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 1 @@ w2 :> 2)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 11: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<"sst", 0, 1, w1>> @@ w2 :> <<"sst", 0, 2, w2>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = ( w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  w2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ objects = ( <<"sst", 0, 1, w1>> :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  <<"sst", 0, 2, w2>> :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<>>, pos |-> 0, etag |-> 0]
+/\ wstate = (w1 :> "stored" @@ w2 :> "stored")
+/\ manifests = {[list |-> <<>>, pos |-> 0, etag |-> 0]}
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 1 @@ w2 :> 2)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 12: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<"sst", 0, 1, w1>> @@ w2 :> <<"sst", 0, 2, w2>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = ( w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  w2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ objects = ( <<"sst", 0, 1, w1>> :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  <<"sst", 0, 2, w2>> :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<<<"sst", 0, 2, w2>>>>, pos |-> 2, etag |-> 1]
+/\ wstate = (w1 :> "stored" @@ w2 :> "idle")
+/\ manifests = { [list |-> <<>>, pos |-> 0, etag |-> 0],
+  [list |-> <<<<"sst", 0, 2, w2>>>>, pos |-> 2, etag |-> 1] }
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 1 @@ w2 :> 2)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+State 13: <NextR line 157, col 6 to line 162, col 15 of module LettureScarico>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ reads = 0
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"], [s |-> 1, ep |-> 1, tx |-> t1]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0 @@ k3 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ attempts = (t1 :> 1 @@ t2 :> 0 @@ t3 :> 0)
+/\ trimmed = 0
+/\ wname = (w1 :> <<"sst", 0, 1, w1>> @@ w2 :> <<"sst", 0, 2, w2>>)
+/\ outcome = (t1 :> {2} @@ t2 :> {} @@ t3 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ wents = ( w1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  w2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ objects = ( <<"sst", 0, 1, w1>> :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  <<"sst", 0, 2, w2>> :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> )
+/\ commit = (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ lastRead = [k |-> "none", c |-> "none", s |-> 0, tok |-> 0, got |-> <<>>, exp |-> <<>>]
+/\ losses = 0
+/\ token = (c1 :> 0)
+/\ manifest = [list |-> <<<<"sst", 0, 1, w1>>>>, pos |-> 1, etag |-> 2]
+/\ wstate = (w1 :> "idle" @@ w2 :> "idle")
+/\ manifests = { [list |-> <<>>, pos |-> 0, etag |-> 0],
+  [list |-> <<<<"sst", 0, 1, w1>>>>, pos |-> 1, etag |-> 2],
+  [list |-> <<<<"sst", 0, 2, w2>>>>, pos |-> 2, etag |-> 1] }
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0 @@ t3 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0 @@ t3 :> 0) )
+/\ wupto = (w1 :> 1 @@ w2 :> 2)
+/\ wview = ( w1 :> [list |-> <<>>, pos |-> 0, etag |-> 0] @@
+  w2 :> [list |-> <<>>, pos |-> 0, etag |-> 0] )
+
+351691 states generated, 69441 distinct states found, 36340 states left on queue.
+The depth of the complete state graph search is 13.
+Finished in 24s at (2026-11-01 12:38:37)
+Trace exploration spec path: ./MCLettureScarico_TTrace_1793536692.tla
+EXIT=13
+Sun Nov  1 12:38:37 UTC 2026
