@@ -7,6 +7,32 @@ Codice: `proto/lettura` (crate Rust autonomo, `cargo build --release` dentro la 
 Tutte le misure sono su una macchina da 4 core e 15 GB di RAM, con MinIO in locale (compilato dai sorgenti, commit
 7aac2a2c5b7c), un solo disco condiviso da MinIO, cache e banchi. Nessun servizio cloud.
 
+## Risultati
+
+Riassunto del rapporto (dettagli, prove e limiti in `docs/RAPPORTO-proto-lettura.md`):
+
+- Passo 1, scarico da chiunque: SUPERATO. In un'ora, con 3 worker sugli stessi database, 408 uccisioni SIGKILL e 269
+  abort spontanei, 2.879.083 scritture confermate, zero perse e zero doppie (MISURATO). MinIO risponde 412 e non 304
+  ai PUT condizionali falliti: il bug non c'è in questa versione (MISURATO).
+- Passo 2, velocità: SUPERATO. 20.000 scritture/s da 1,2 KB, cioè 25 MB/s, scaricate con 0,11 core; ritardo
+  massimo verso S3 0,7 s (MISURATO).
+- Passo 3, lettura composta: SUPERATO. p99 delle letture servite dagli SST 0,68 ms con cache in RAM e 1,17 ms con
+  cache su disco; nessun valore sbagliato nella verifica (MISURATO). Senza cache, da MinIO, p99 68 ms (MISURATO).
+- Passo 4, database fermo: SUPERATO. Al massimo 5 richieste S3 per la prima risposta, 2-3 se il database è
+  compattato (MISURATO); con 30 ms per GET la prima risposta arriva in 69-174 ms (MISURATO), 40-200 ms su S3
+  Standard (STIMATO).
+- Passo 5, costo per database piccolo: SUPERATO solo con una variante che non era tra le due proposte. Scarico ogni
+  10 minuti in cui un database piccolo (fino a 4 MB) viene riscritto intero in un solo SST: $0,048 al mese per
+  database, di cui GET $0,005 (MISURATO a regime, poi riportato al mese). Le due varianti proposte non stanno nelle
+  soglie: (a) scarico a 10 minuti con run aggiunte costa $0,16-0,18, quasi tutto di GET; (b) oggetto condiviso per
+  server costa $0,22-0,26, tutto di GET (MISURATO). Il costo della variante buona si paga in RAM del registro: fino a
+  690 MB ogni 1.000 database per replica (MISURATO).
+- Passo 6: schema dei prefissi S3 progettato, con hash del gruppo in testa alla chiave; con la variante buona,
+  100.000 database stanno tre ordini di grandezza sotto i limiti per prefisso (STIMATO).
+- Lungo la strada ho trovato e corretto sei difetti miei (descritti sotto), due dei quali hanno fatto ripartire la
+  prova di un'ora del passo 1. La prima corsa del passo 5 è stata invalidata perché fatta insieme al passo 1 sulla
+  stessa macchina.
+
 ## Come funziona
 
 **Registro (simulato).** `src/registro.rs`: un processo fa da leader e da replica; ogni commit è confermato subito.
@@ -66,7 +92,8 @@ database nell'SST se piccola, altrimenti il solo blocco.
     ./target/release/pl-fusione                                                                                      # fusione per core
     ./target/release/pl-lettura --cache ram|disco|nessuna --verifica --bucket lettura --out x.json                   # passo 3
     ./target/release/pl-freddo --bucket freddo --out x.json                                                          # passo 4
-    ./target/release/pl-costo --variante base|a|b --bucket costo-x --out x.jsonl                                     # passo 5
+    ./target/release/pl-costo --variante a|b --bucket costo-x --out x.jsonl                                          # passo 5
+    ./target/release/pl-costo --variante a2 --intero-max 1048576 --bucket costo-a2 --out x.jsonl                     # passo 5, a2
 
 Ogni banco vuole il suo bucket vuoto (`scripts/bucket.py --svuota nome`).
 
