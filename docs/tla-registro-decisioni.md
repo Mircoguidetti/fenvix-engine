@@ -204,6 +204,24 @@ di metadati con dipendenza `valore` sulla chiave della collezione. Non trattate 
   sotto la soglia prudenziale alla modifica successiva. Da misurare se la soglia (proposta: 15 MB,
   STIMATO) basta.
 
+### Indici non unici e delta ciechi (giro 2, domanda del revisore della specifica)
+
+Problema: due `$set` concorrenti sullo stesso documento, su un campo con indice non unico, sono due
+delta ciechi senza conflitto. Se ognuno scrivesse nel record le voci d'indice calcolate dal valore a `S`
+("togli la vecchia, metti la mia"), alla fine resterebbero due voci per un documento con un solo valore.
+
+Opzioni: (1) un delta su un campo indicizzato diventa dipendenza `valore` (corretto, ma i contatori
+indicizzati, come il punteggio di una classifica, tornano a un commit per giro: il caso 1 di sopra);
+(2) le voci d'indice non stanno nel record e si ricalcolano dai documenti in ordine di registro, allo
+scarico (worker) e alla lettura per indice (nodo d'ingresso, sulle voci della collezione in `(M, S]` che
+riceve già); (3) voci d'indice "da verificare" alla lettura e pulite dalla compattazione.
+
+Scelta: **(2)**, scritta in `docs/protocollo.md` §4.7. Tiene i delta ciechi senza conflitto anche sui
+campi indicizzati e lascia nelle scatole l'indice del valore finale. Costo: il worker deve avere il
+valore a `M` di ogni documento toccato (per i database piccoli c'è già con la variante a2; per i grandi
+una lettura per documento toccato, da misurare). Gli indici unici restano chiavi del deposito validate
+dal leader.
+
 ### Raccomandazione
 
 Adottare (c). Costo in più rispetto ad (a): un bit per chiave scritta (strutturale o delta), un modo
