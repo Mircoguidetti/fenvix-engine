@@ -5,7 +5,7 @@ use crate::agg::run_pipeline;
 use crate::cmd::{bool_arg, collection_name, int_arg, write_error, Server, R};
 use crate::coll::{find_docs, resolve_hint, FindOpts, Hint, Writes};
 use crate::dbs::Entry;
-use crate::txn::{attach, take_writes, tx_ov, Txn};
+use crate::txn::{attach, put_back, take_writes, tx_ov, Txn};
 use crate::error::MongoError;
 use crate::index::{self, IndexDef};
 use crate::layout::{doc_prefix, encode_sortable};
@@ -922,7 +922,11 @@ impl Server {
         let hit = matched.into_iter().next();
         if remove {
             return Ok(match hit {
-                None => doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 },
+                None => {
+                    // nothing to delete: the writes made earlier in the transaction stay in it
+                    put_back(tx, w);
+                    doc! { "lastErrorObject": { "n": 0 }, "value": Bson::Null, "ok": 1.0 }
+                }
                 Some(old) => {
                     w.delete(&mut g, db, coll, &indexes, &old).await?;
                     if let Some(b) = rr.as_mut() {
@@ -952,6 +956,9 @@ impl Server {
                     if let Some(b) = rr.as_mut() {
                         b.run.apply();
                     }
+                } else {
+                    // the update changes nothing: the writes made earlier in the transaction stay in it
+                    put_back(tx, w);
                 }
                 let value = shape(Some(if want_new { new } else { old }))?;
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": true }, "value": value, "ok": 1.0 })
@@ -983,7 +990,11 @@ impl Server {
                 let value = if want_new { shape(Some(nd))? } else { Bson::Null };
                 Ok(doc! { "lastErrorObject": { "n": 1, "updatedExisting": false, "upserted": id }, "value": value, "ok": 1.0 })
             }
-            None => Ok(doc! { "lastErrorObject": { "n": 0, "updatedExisting": false }, "value": Bson::Null, "ok": 1.0 }),
+            None => {
+                // no document and no upsert: the writes made earlier in the transaction stay in it
+                put_back(tx, w);
+                Ok(doc! { "lastErrorObject": { "n": 0, "updatedExisting": false }, "value": Bson::Null, "ok": 1.0 })
+            }
         }
     }
 
