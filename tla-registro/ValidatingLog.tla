@@ -36,12 +36,18 @@
 (*  NoVoteRestriction si vota anche un candidato con il log indietro        *)
 (*  RetryBeyondWindow il nodo d'ingresso ritenta un id che il leader ha     *)
 (*                    gia' dimenticato (oltre la finestra)                  *)
+(* Passo 5 (sessioni): con SessionLookup = TRUE ogni scrittura scrive anche *)
+(* la chiave di sessione con il proprio esito, e il nodo d'ingresso, prima  *)
+(* di inviare un tentativo, legge quella chiave a S: se l'id e' gia' li'    *)
+(* restituisce l'esito memorizzato senza inviare nulla. Nel modello la      *)
+(* lettura a S della chiave di sessione e' "t compare in cmtLog entro S".   *)
 (***************************************************************************)
 EXTENDS Naturals, Sequences, FiniteSets, TLC
 
 CONSTANTS Replicas, Keys, Txns, Deps, Writes,
           MaxEpoch, MaxAttempts, MaxLoss,
-          NoValidate, NoRebuild, AcceptOldS, AckOnOne, NoVoteRestriction, RetryBeyondWindow
+          NoValidate, NoRebuild, AcceptOldS, AckOnOne, NoVoteRestriction, RetryBeyondWindow,
+          SessionLookup
 
 Barrier == "barriera"
 Majority == IF AckOnOne THEN 1 ELSE (Cardinality(Replicas) \div 2) + 1
@@ -147,12 +153,16 @@ Submit(l, t) ==
   /\ attempts[t] < MaxAttempts
   /\ RetryBeyondWindow \/ RetryWithinWindow(l, t)
   /\ attempts' = [attempts EXCEPT ![t] = @ + 1]
-  /\ IF ids[l][t] /= 0
-     THEN \* id gia' visto: stesso esito, nessuna voce nuova
+  /\ \E s \in 0..MaxCommit :   \* S: una posizione confermata letta dal nodo d'ingresso
+     IF SessionLookup /\ \E i \in 1..s : cmtLog[i].tx = t
+     THEN \* la chiave di sessione letta a S porta gia' l'esito: nessun invio
+          /\ outcome' = [outcome EXCEPT ![t] = @ \cup {i \in 1..s : cmtLog[i].tx = t}]
+          /\ UNCHANGED <<log, match, mapS, mapA, ids>>
+     ELSE IF ids[l][t] /= 0
+     THEN \* id gia' visto dal leader: stesso esito, nessuna voce nuova
           /\ outcome' = IF ids[l][t] <= commit[l] THEN [outcome EXCEPT ![t] = @ \cup {ids[l][t]}] ELSE outcome
           /\ UNCHANGED <<log, match, mapS, mapA, ids>>
-     ELSE \E s \in 0..MaxCommit :   \* S: una posizione confermata letta dal nodo d'ingresso
-          IF \/ (s < wstart[l] /\ ~AcceptOldS)      \* S troppo vecchia: non si puo' validare
+     ELSE IF \/ (s < wstart[l] /\ ~AcceptOldS)      \* S troppo vecchia: non si puo' validare
              \/ s > Len(log[l])                      \* S sconosciuta: il leader e' deposto
              \/ (~NoValidate /\ Conflict(l, t, s))   \* conflitto
           THEN UNCHANGED <<log, match, mapS, mapA, ids, outcome>>

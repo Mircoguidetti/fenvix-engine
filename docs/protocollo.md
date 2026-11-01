@@ -162,6 +162,31 @@ dipendenza `(k, valore)` per ogni chiave scritta. Letture non validate (isolamen
 MongoDB). Un `abortTransaction` scarta tutto senza toccare il registro. Se il nodo d'ingresso muore a
 metà, la transazione è persa e il client riceve `TransientTransactionError` alla prossima operazione.
 
+### 4.6 Sessioni e scritture ritentabili (passo 5)
+
+La tabella degli id del leader dura quanto la finestra (60 s). Un tentativo ripetuto più tardi, senza
+aver mai ricevuto risposta, verrebbe eseguito due volte (il controllo negativo `RetryBeyondWindow` di
+`tla-registro/ValidatingLog.tla` lo mostra). Per chiudere il buco senza stato in più nel leader:
+
+1. ogni scrittura ritentabile scrive anche la **chiave di sessione** `(db, sessione, lsid)` con valore
+   `(numero di transazione, risposta)`: è una chiave normale, scrittura `strutturale`, che finisce nella
+   finestra delle repliche e poi negli SST come tutte le altre;
+2. prima di inviare un tentativo, il nodo d'ingresso legge la chiave di sessione a `S` (nella stessa
+   lettura con cui legge il documento). Se contiene già quel numero di transazione, risponde al client
+   con la `risposta` memorizzata e non invia nulla;
+3. il leader continua a deduplicare per id dentro la finestra e a rifiutare `S < inizioValidazione`.
+
+Perché basta: sia `p` la posizione del primo tentativo confermato. Un secondo tentativo preparato a `S`
+con `S >= p` vede la chiave di sessione e non invia. Con `S < p`: se `p` è ancora nella finestra il leader
+lo deduplica; se `p` è uscito dalla finestra allora `S < p < inizioValidazione` e il leader rifiuta
+"S troppo vecchia"; il nodo d'ingresso rilegge a una `S` più recente, che è almeno
+`inizioValidazione > p`, e vede la chiave di sessione. Nessun caso porta a una seconda voce. Verificato
+in `ValidatingLog.tla` con `SessionLookup = TRUE` e `RetryBeyondWindow = TRUE` (modello
+`ValidatingLog-sessioni`): `NoDuplicateIds` e `OneOutcome` valgono, cioè un commit ritentato restituisce
+il primo esito anche se il leader che lo aveva confermato è morto. La chiave di sessione va potata (per
+esempio dopo 30 minuti senza uso, come `localLogicalSessionTimeoutMinutes` di MongoDB): fuori da questa
+fase.
+
 ## 5. Replicazione, conferma, cambio di leader
 
 ### 5.1 Epoche e voto
@@ -353,9 +378,8 @@ worker visita comunque ogni database con voci non scaricate almeno ogni 5 s.
   sicurezza.
 - **Nodo d'ingresso si ferma.** I client riconnettono a un altro nodo d'ingresso. Le scritture
   ritentabili (`id` di sessione) vengono rimandate dal driver e trovano l'esito nella tabella degli id
-  se dentro la finestra (60 s); oltre la finestra, il tentativo verrebbe eseguito di nuovo: è il
-  limite da chiudere nel passo 5 (sessioni), per esempio tenendo gli ultimi esiti per sessione in un
-  record di sessione che finisce negli SST. Le transazioni aperte sono perse.
+  se dentro la finestra (60 s) o nella chiave di sessione (§4.6) altrimenti. Le transazioni aperte sono
+  perse.
 - **Messaggi duplicati, in ritardo, fuori ordine.** Ogni messaggio porta l'epoca ed è idempotente:
   `APPEND` per posizione (una voce già presente con la stessa epoca non cambia nulla), `ACK` per massimo,
   `VOTO` per epoca, `COMMIT` per `id`, `SCARICATO` per massimo, PUT del manifest per ETag.
@@ -375,5 +399,5 @@ worker visita comunque ogni database con voci non scaricate almeno ogni 5 s.
 
 Cambio dell'insieme delle repliche (voce `configurazione`), autenticazione tra parti, cifratura,
 multi-regione, limiti di spazio per database, raccolta degli SST orfani, metadati delle collezioni e
-degli indici (strada separata, serializzata per collezione), sessioni oltre la finestra di 60 s (passo
-5), misure di prestazione.
+degli indici (strada separata, serializzata per collezione), potatura delle chiavi di sessione, misure di
+prestazione.
