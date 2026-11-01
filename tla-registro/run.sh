@@ -23,11 +23,14 @@ run() { # modulo cfg
   rm -rf "states-$name" ./*_TTrace_*.tla ./*_TTrace_*.bin 2>/dev/null
 }
 
-all=( $(ls ValidatingLog-*.cfg LettureScarico-*.cfg 2>/dev/null) )
-sel=( "$@" )
-for cfg in "${all[@]}"; do
-  name=${cfg%.cfg}
-  if [ ${#sel[@]} -gt 0 ] && ! printf '%s\n' "${sel[@]}" | grep -qx "$name"; then continue; fi
+if [ $# -gt 0 ]; then
+  list=( "$@" )                                      # nell'ordine dato
+else
+  list=( $(ls ValidatingLog-*.cfg LettureScarico-*.cfg 2>/dev/null | sed 's/\.cfg$//') )
+fi
+for name in "${list[@]}"; do
+  cfg=$name.cfg
+  [ -f "$cfg" ] || { echo "manca $cfg"; continue; }
   case $cfg in
     ValidatingLog-*) run MCValidatingLog "$cfg" ;;
     LettureScarico-*) run MCLettureScarico "$cfg" ;;

@@ -63,7 +63,7 @@ VARIABLES
   mapS,     \* leader -> chiave -> ultima posizione di una scrittura strutturale nella finestra (0 = nessuna)
   mapA,     \* leader -> chiave -> ultima posizione di una scrittura qualsiasi nella finestra
   ids,      \* leader -> transazione -> posizione nella finestra (0 = sconosciuta)
-  attempts, \* transazione -> numero di COMMIT inviati (limite del modello)
+  attempts, \* transazione -> numero di voci scritte per la transazione (limite del modello)
   outcome,  \* transazione -> insieme delle posizioni restituite al client come CONFERMATO
   cmtLog,   \* fantasma: il prefisso confermato piu' lungo mai osservato
   losses    \* numero di repliche perse
@@ -150,30 +150,34 @@ RetryWithinWindow(l, t) == \A i \in 1..Len(log[l]) : log[l][i].tx = t => i >= ws
 
 Submit(l, t) ==
   /\ alive[l] /\ role[l] = "leader" /\ LeaderReady(l)
-  /\ attempts[t] < MaxAttempts
-  /\ RetryBeyondWindow \/ RetryWithinWindow(l, t)
-  /\ attempts' = [attempts EXCEPT ![t] = @ + 1]
   /\ \E s \in 0..MaxCommit :   \* S: una posizione confermata letta dal nodo d'ingresso
      IF SessionLookup /\ \E i \in 1..s : cmtLog[i].tx = t
      THEN \* la chiave di sessione letta a S porta gia' l'esito: nessun invio
-          /\ outcome' = [outcome EXCEPT ![t] = @ \cup {i \in 1..s : cmtLog[i].tx = t}]
-          /\ UNCHANGED <<log, match, mapS, mapA, ids>>
+          LET P == {i \in 1..s : cmtLog[i].tx = t}
+          IN /\ ~(P \subseteq outcome[t])
+             /\ outcome' = [outcome EXCEPT ![t] = @ \cup P]
+             /\ UNCHANGED <<log, match, mapS, mapA, ids, attempts>>
      ELSE IF ids[l][t] /= 0
      THEN \* id gia' visto dal leader: stesso esito, nessuna voce nuova
-          /\ outcome' = IF ids[l][t] <= commit[l] THEN [outcome EXCEPT ![t] = @ \cup {ids[l][t]}] ELSE outcome
-          /\ UNCHANGED <<log, match, mapS, mapA, ids>>
-     ELSE IF \/ (s < wstart[l] /\ ~AcceptOldS)      \* S troppo vecchia: non si puo' validare
-             \/ s > Len(log[l])                      \* S sconosciuta: il leader e' deposto
-             \/ (~NoValidate /\ Conflict(l, t, s))   \* conflitto
-          THEN UNCHANGED <<log, match, mapS, mapA, ids, outcome>>
-          ELSE LET c == Len(log[l]) + 1
-                   ws == Writes[t]
-               IN /\ log' = [log EXCEPT ![l] = Append(@, Entry(epoch[l], t, s))]
-                  /\ match' = [match EXCEPT ![l][l] = c]
-                  /\ mapS' = [mapS EXCEPT ![l] = [k \in Keys |-> IF \E w \in ws : w.k = k /\ w.kind = "strutturale" THEN c ELSE @[k]]]
-                  /\ mapA' = [mapA EXCEPT ![l] = [k \in Keys |-> IF \E w \in ws : w.k = k THEN c ELSE @[k]]]
-                  /\ ids' = [ids EXCEPT ![l][t] = c]
-                  /\ UNCHANGED outcome
+          /\ ids[l][t] <= commit[l] /\ ids[l][t] \notin outcome[t]
+          /\ outcome' = [outcome EXCEPT ![t] = @ \cup {ids[l][t]}]
+          /\ UNCHANGED <<log, match, mapS, mapA, ids, attempts>>
+     ELSE \* tentativo nuovo: validazione e voce. Un rifiuto non cambia lo stato (il nodo d'ingresso
+          \* ritenta con un'altra S: e' un'altra scelta di s), quindi non e' un passo del modello.
+          /\ attempts[t] < MaxAttempts
+          /\ RetryBeyondWindow \/ RetryWithinWindow(l, t)
+          /\ s >= wstart[l] \/ AcceptOldS                 \* S sotto la finestra: rifiuto
+          /\ s <= Len(log[l])                              \* S sconosciuta (leader deposto): rifiuto
+          /\ NoValidate \/ ~Conflict(l, t, s)              \* conflitto: rifiuto
+          /\ LET c == Len(log[l]) + 1
+                 ws == Writes[t]
+             IN /\ log' = [log EXCEPT ![l] = Append(@, Entry(epoch[l], t, s))]
+                /\ match' = [match EXCEPT ![l][l] = c]
+                /\ mapS' = [mapS EXCEPT ![l] = [k \in Keys |-> IF \E w \in ws : w.k = k /\ w.kind = "strutturale" THEN c ELSE @[k]]]
+                /\ mapA' = [mapA EXCEPT ![l] = [k \in Keys |-> IF \E w \in ws : w.k = k THEN c ELSE @[k]]]
+                /\ ids' = [ids EXCEPT ![l][t] = c]
+                /\ attempts' = [attempts EXCEPT ![t] = @ + 1]
+                /\ UNCHANGED outcome
   /\ UNCHANGED <<epoch, role, alive, commit, wstart, cmtLog, losses>>
 
 (* ----------------------------------------------------------- replicazione *)
