@@ -20,10 +20,13 @@ the local disk). Results and conclusions: `docs/bench-mongod.md`.
 - `run_matrix.py`: the whole matrix (server x 1/2 cores x 1 db of 200 000 docs / 100 dbs of 2 000 docs x 3 workloads).
   Per cell: a client sweep (1, 2, 4 ... 256 clients, 10 s warm-up + 20 s) to find the saturation point (smallest client
   count within 3% of the best throughput), then 3 runs of 60 s warm-up + 180 s measured there. Appends to
-  `$BENCH_RESULTS/raw.jsonl` (default `results/`) and skips finished cells, so it can be restarted.
+  `$BENCH_RESULTS/raw.jsonl` (default `results/`) and skips finished cells, so it can be restarted. Each workload gets a
+  fresh, freshly loaded server; a load or run that stalls (the engine's write stall, see `docs/bench-mongod.md`) is recorded
+  and repeated on a new server (5 load attempts, 4 run attempts).
 - `summarize.py`: medians of the 3 runs per cell, ratios engine/mongod, sweep curves.
-- `profile.sh WORKLOAD LAYOUT CLIENTS [SECONDS]`: perf profile of the engine on one core under one workload; top
-  functions by self time to `results/perf-*-top.txt`.
+- `profile.sh WORKLOAD LAYOUT CLIENTS [SECONDS]`: perf profile of the engine on one core under one workload, sampled after
+  90 s of load; top functions by self time to `results/perf-*-top.txt`.
+- `results/`: raw results, summary, matrix log, profiles, and the evidence of the stall (`results/stall/`).
 
 ## Run it
 

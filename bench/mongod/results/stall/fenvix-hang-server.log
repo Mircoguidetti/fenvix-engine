@@ -1,0 +1,72 @@
+mongo-server listening on 127.0.0.1:27017 (idle close after 60 s, holder 24752-19f1007c, lease ttl 30 s)
+LEASE process_lease tenant=- holder=24752-19f1007c unix_ms=1793494782224 inc=b330a50ddcb400e9 gen=1
+LEASE acquired tenant=bench0 holder=24752-19f1007c unix_ms=1793494782224 takeover_from=-
+LEASE acquired tenant=bench0 holder=24752-19f1007c unix_ms=1793494782229 takeover_from=-
+LEASE acquired tenant=bench0 holder=24752-19f1007c unix_ms=1793494782242 takeover_from=-
+LEASE acquired tenant=bench0 holder=24752-19f1007c unix_ms=1793494782243 takeover_from=-
+LEASE acquired tenant=bench0 holder=24752-19f1007c unix_ms=1793494782244 takeover_from=- new=true
+LEASE writer_open tenant=bench0 holder=24752-19f1007c unix_ms=1793494782250 
+SLOW insert db=bench0 ms=749 ok=true
+SLOW insert db=bench0 ms=755 ok=true
+SLOW insert db=bench0 ms=767 ok=true
+SLOW insert db=bench0 ms=775 ok=true
+SLOW insert db=bench0 ms=610 ok=true
+SLOW insert db=bench0 ms=651 ok=true
+SLOW insert db=bench0 ms=685 ok=true
+SLOW insert db=bench0 ms=717 ok=true
+SLOW insert db=bench0 ms=756 ok=true
+SLOW insert db=bench0 ms=787 ok=true
+SLOW insert db=bench0 ms=816 ok=true
+SLOW insert db=bench0 ms=849 ok=true
+SLOW insert db=bench0 ms=881 ok=true
+SLOW insert db=bench0 ms=910 ok=true
+SLOW insert db=bench0 ms=939 ok=true
+SLOW insert db=bench0 ms=968 ok=true
+SLOW insert db=bench0 ms=577 ok=true
+SLOW hello db=admin ms=10044 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=bench0 unix_ms=1793494844000
+SSTGC end tenant=bench0 unix_ms=1793494844001 deleted_ssts=0 deleted_manifests=0 referenced=16 waiting=45
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+shutting down: closing tenants cleanly
+SLOW hello db=admin ms=10000 ok=true
