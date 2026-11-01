@@ -1,0 +1,11 @@
+{"area": "read-write-concern", "file": "default-write-concern-3.2.json", "test": "findAndModify operations omit default write concern", "status": "PASS", "secs": 0.02}
+{"area": "read-write-concern", "file": "default-write-concern-2.6.json", "test": "DeleteOne omits default write concern", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-2.6.json", "test": "DeleteMany omits default write concern", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-2.6.json", "test": "BulkWrite with all models omits default write concern", "status": "PASS", "secs": 0.02}
+{"area": "read-write-concern", "file": "default-write-concern-2.6.json", "test": "InsertOne and InsertMany omit default write concern", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-2.6.json", "test": "UpdateOne, UpdateMany, and ReplaceOne omit default write concern", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-3.4.json", "test": "Aggregate with $out omits default write concern", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-3.4.json", "test": "RunCommand with a write command omits default write concern (runCommand should never inherit write concern)", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-3.4.json", "test": "CreateIndex and dropIndex omits default write concern", "status": "PASS", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-3.4.json", "test": "MapReduce omits default write concern", "status": "SKIP", "reason": "runner:collection.mapReduce", "secs": 0.01}
+{"area": "read-write-concern", "file": "default-write-concern-4.2.json", "test": "Aggregate with $merge omits default write concern", "status": "PASS", "secs": 0.01}

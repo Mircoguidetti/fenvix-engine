@@ -1,0 +1,89 @@
+{"area": "change-streams", "file": "change-streams-nsType.json", "test": "nsType is present when creating collections", "status": "SKIP", "reason": "req:minServerVersion 8.1.0", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-nsType.json", "test": "nsType is present when creating views", "status": "SKIP", "reason": "req:minServerVersion 8.1.0", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-clusterTime.json", "test": "clusterTime is present", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocument:whenAvailable with changeStreamPreAndPostImages enabled", "status": "PASS", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocument:whenAvailable with changeStreamPreAndPostImages disabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocument:required with changeStreamPreAndPostImages enabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocument:required with changeStreamPreAndPostImages disabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocumentBeforeChange:whenAvailable with changeStreamPreAndPostImages enabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocumentBeforeChange:whenAvailable with changeStreamPreAndPostImages disabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocumentBeforeChange:required with changeStreamPreAndPostImages enabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocumentBeforeChange:required with changeStreamPreAndPostImages disabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocumentBeforeChange:off with changeStreamPreAndPostImages enabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-pre_and_post_images.json", "test": "fullDocumentBeforeChange:off with changeStreamPreAndPostImages disabled", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after a network error", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after HostUnreachable", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after HostNotFound", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after NetworkTimeout", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after ShutdownInProgress", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after PrimarySteppedDown", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after ExceededTimeLimit", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after SocketException", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after NotWritablePrimary", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after InterruptedAtShutdown", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after NotPrimaryOrSecondary", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after StaleShardVersion", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after StaleEpoch", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after RetryChangeStream", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after FailedToSatisfyReadPreference", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-allowlist.json", "test": "change stream resumes after CursorNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after ExceededTimeLimit", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after StaleShardVersion", "status": "SKIP", "reason": "req:maxServerVersion 6.0.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after StaleEpoch", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after RetryChangeStream", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes after FailedToSatisfyReadPreference", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream resumes if error contains ResumableChangeStreamError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-resume-errorLabels.json", "test": "change stream does not resume if error does not contain ResumableChangeStreamError", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-errors.json", "test": "The watch helper must not throw a custom exception when executed against a single server topology, but instead depend on a server error", "status": "SKIP", "reason": "req:topology single", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams-errors.json", "test": "Change Stream should error when an invalid aggregation stage is passed in", "status": "FAIL", "reason": "createChangeStream: expected an error {\"errorCode\": 40324}, got success <pymongo.synchronous.change_stream.CollectionChangeStream object at 0x7f86fc59d6d0>", "kind": "diverso", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-errors.json", "test": "Change Stream should error when _id is projected out", "status": "FAIL", "reason": "iterateUntilDocumentOrError: expected error code 280, got None (Cannot provide resume functionality when the resume token is missing.)", "kind": "diverso", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams-errors.json", "test": "change stream errors on ElectionInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test array truncation", "status": "FAIL", "reason": "iterateUntilDocumentOrError.result.updateDescription.updatedFields: unexpected fields ['array'] in {\"array\": [\"foo\", {\"a\": \"bar\"}]}", "kind": "diverso", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test with document comment", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test with document comment - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.2.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test with string comment", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test that comment is set on getMore", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test that comment is not set on getMore - pre 4.4", "status": "SKIP", "reason": "req:maxServerVersion 4.3.99", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams.json", "test": "to field is set in a rename change event", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test unknown operationType MUST NOT err", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test newField added in response MUST NOT err", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test new structure in ns document MUST NOT err", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test modified structure in ns document MUST NOT err", "status": "PASS", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test server error on projecting out _id", "status": "FAIL", "reason": "iterateUntilDocumentOrError: expected error code 280, got None (Cannot provide resume functionality when the resume token is missing.)", "kind": "diverso", "secs": 0.03}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test projection in change stream returns expected fields", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "$changeStream must be the first stage in a change stream pipeline sent to the server", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "The server returns change stream responses in the specified server response format", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Executing a watch helper on a Collection results in notifications for changes to the specified collection", "status": "PASS", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams.json", "test": "Change Stream should allow valid aggregate pipeline stages", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Executing a watch helper on a Database results in notifications for changes to all collections in the specified database.", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Executing a watch helper on a MongoClient results in notifications for changes to all collections in all databases in the cluster.", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test insert, update, replace, and delete event types", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test rename and invalidate event types", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test drop and invalidate event types", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test consecutive resume", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "change-streams", "file": "change-streams.json", "test": "Test wallTime field is set in a change event", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-disambiguatedPaths.json", "test": "disambiguatedPaths is not present when showExpandedEvents is false/unset", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-disambiguatedPaths.json", "test": "disambiguatedPaths is present on updateDescription when an ambiguous path is present", "status": "FAIL", "reason": "iterateUntilDocumentOrError.result.updateDescription.disambiguatedPaths.a.1: missing in actual {}", "kind": "diverso", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-disambiguatedPaths.json", "test": "disambiguatedPaths returns array indices as integers", "status": "FAIL", "reason": "iterateUntilDocumentOrError.result.updateDescription.disambiguatedPaths.a.0.1: missing in actual {}", "kind": "diverso", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when provided, showExpandedEvents is sent as a part of the aggregate command", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when omitted, showExpandedEvents is not sent as a part of the aggregate command", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, new fields on change stream events are handled appropriately", "status": "PASS", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, createIndex events are reported", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, dropIndexes events are reported", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, create events are reported", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, create events on views are reported", "status": "PASS", "secs": 0.02}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, modify events are reported", "status": "PASS", "secs": 0.01}
+{"area": "change-streams", "file": "change-streams-showExpandedEvents.json", "test": "when showExpandedEvents is true, shardCollection events are reported", "status": "SKIP", "reason": "req:topology sharded", "secs": 0.0}

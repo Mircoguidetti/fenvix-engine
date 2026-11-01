@@ -1,0 +1,41 @@
+{"area": "versioned-api", "file": "test-commands-strict-mode.json", "test": "Running a command that is not part of the versioned API results in an error", "status": "SKIP", "reason": "req:serverParameter enableTestCommands", "secs": 0.0}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "aggregate on collection appends declared API version", "status": "PASS", "secs": 0.02}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "aggregate on database appends declared API version", "status": "PASS", "secs": 0.02}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "bulkWrite appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "client bulkWrite appends declared API version", "status": "FAIL", "reason": "clientBulkWrite: unexpected error InvalidOperation: MongoClient.bulk_write requires MongoDB server version 8.0+.", "kind": "mancante", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "countDocuments appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "deleteMany appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "deleteOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "distinct appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "estimatedDocumentCount appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "find and getMore append API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "findOneAndDelete appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "findOneAndReplace appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "findOneAndUpdate appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "insertMany appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "insertOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "replaceOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "updateMany appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1.json", "test": "updateOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "test-commands-deprecation-errors.json", "test": "Running a command that is deprecated raises a deprecation error", "status": "SKIP", "reason": "req:serverParameter enableTestCommands", "secs": 0.0}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "aggregate on collection appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "aggregate on database appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "bulkWrite appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "countDocuments appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "deleteMany appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "deleteOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "distinct appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "estimatedDocumentCount appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "find and getMore append API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "findOneAndDelete appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "findOneAndReplace appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "findOneAndUpdate appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "insertMany appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "insertOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "replaceOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "updateMany appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "crud-api-version-1-strict.json", "test": "updateOne appends declared API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "transaction-handling.json", "test": "All commands in a transaction declare an API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "transaction-handling.json", "test": "abortTransaction includes an API version", "status": "PASS", "secs": 0.01}
+{"area": "versioned-api", "file": "runcommand-helper-no-api-version-declared.json", "test": "runCommand does not inspect or change the command document", "status": "SKIP", "reason": "req:serverParameter requireApiVersion", "secs": 0.0}
+{"area": "versioned-api", "file": "runcommand-helper-no-api-version-declared.json", "test": "runCommand does not prevent sending invalid API version declarations", "status": "SKIP", "reason": "req:serverParameter requireApiVersion", "secs": 0.0}

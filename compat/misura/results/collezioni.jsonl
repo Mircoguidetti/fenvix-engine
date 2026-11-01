@@ -1,0 +1,7 @@
+{"area": "collezioni", "file": "timeseries-collection.json", "test": "createCollection with all options", "status": "PASS", "secs": 0.01}
+{"area": "collezioni", "file": "timeseries-collection.json", "test": "insertMany with duplicate ids", "status": "FAIL", "reason": "insertMany: unexpected error BulkWriteError: batch op errors occurred, full error: {'writeErrors': [{'index': 1, 'code': 11000, 'errmsg': 'E11000 duplicate key error collection: ts-tests.test index: _id_ dup key: { _id: 1 }', 'keyPattern': {'_id': 1}, 'keyValue': {'_id': 1}, 'op': {'_id': 1, 'time': datetime.datetime(2019, 3, 18, 22, 53, 50, 4", "kind": "errore-inatteso", "secs": 0.01}
+{"area": "collezioni", "file": "timeseries-collection.json", "test": "createCollection with bucketing options", "status": "PASS", "secs": 0.01}
+{"area": "collezioni", "file": "createCollection-pre_and_post_images.json", "test": "createCollection with changeStreamPreAndPostImages enabled", "status": "PASS", "secs": 0.01}
+{"area": "collezioni", "file": "clustered-indexes.json", "test": "createCollection with clusteredIndex", "status": "PASS", "secs": 0.01}
+{"area": "collezioni", "file": "clustered-indexes.json", "test": "listCollections includes clusteredIndex", "status": "PASS", "secs": 0.01}
+{"area": "collezioni", "file": "clustered-indexes.json", "test": "listIndexes returns the index", "status": "PASS", "secs": 0.02}

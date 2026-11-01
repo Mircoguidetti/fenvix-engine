@@ -1,0 +1,380 @@
+{"area": "retryable-reads", "file": "countDocuments.json", "test": "CountDocuments succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "countDocuments.json", "test": "CountDocuments succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments.json", "test": "CountDocuments fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments.json", "test": "CountDocuments fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch-serverErrors.json", "test": "db.coll.watch fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "exceededTimeLimit.json", "test": "Find succeeds on second attempt after ExceededTimeLimit", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames.json", "test": "ListDatabaseNames succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "listDatabaseNames.json", "test": "ListDatabaseNames succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames.json", "test": "ListDatabaseNames fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames.json", "test": "ListDatabaseNames fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount-serverErrors.json", "test": "EstimatedDocumentCount fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne.json", "test": "FindOne succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "findOne.json", "test": "FindOne succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne.json", "test": "FindOne fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne.json", "test": "FindOne fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "countDocuments-serverErrors.json", "test": "CountDocuments fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-serverErrors.json", "test": "Aggregate fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects-serverErrors.json", "test": "ListCollectionObjects fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseNames-serverErrors.json", "test": "ListDatabaseNames fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects.json", "test": "ListDatabaseObjects succeeds on first attempt", "status": "SKIP", "reason": "runner:client.listDatabaseObjects", "secs": 0.01}
+{"area": "retryable-reads", "file": "listDatabaseObjects.json", "test": "ListDatabaseObjects succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects.json", "test": "ListDatabaseObjects fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects.json", "test": "ListDatabaseObjects fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count.json", "test": "Count succeeds on first attempt", "status": "SKIP", "reason": "runner:collection.count", "secs": 0.01}
+{"area": "retryable-reads", "file": "count.json", "test": "Count succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count.json", "test": "Count fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count.json", "test": "Count fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames-serverErrors.json", "test": "ListIndexNames fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "findOne-serverErrors.json", "test": "FindOne fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "count-serverErrors.json", "test": "Count fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "mapReduce.json", "test": "MapReduce succeeds with retry on", "status": "SKIP", "reason": "runner:collection.mapReduce", "secs": 0.01}
+{"area": "retryable-reads", "file": "mapReduce.json", "test": "MapReduce fails with retry on", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "mapReduce.json", "test": "MapReduce fails with retry off", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes.json", "test": "ListIndexes succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "listIndexes.json", "test": "ListIndexes succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes.json", "test": "ListIndexes fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes.json", "test": "ListIndexes fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames.json", "test": "ListCollectionNames succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "listCollectionNames.json", "test": "ListCollectionNames succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames.json", "test": "ListCollectionNames fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames.json", "test": "ListCollectionNames fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "client.listDatabases succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "client.listDatabases succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "client.listDatabaseNames succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "client.listDatabaseNames succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "client.createChangeStream succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "client.createChangeStream succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.aggregate succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.aggregate succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.listCollections succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.listCollections succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.listCollectionNames succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.listCollectionNames succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.createChangeStream succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "database.createChangeStream succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.aggregate succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.aggregate succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.countDocuments succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.countDocuments succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.estimatedDocumentCount succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.estimatedDocumentCount succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.distinct succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.distinct succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.find succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.find succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.findOne succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.findOne succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.listIndexes succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.listIndexes succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.listIndexNames succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.listIndexNames succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.createChangeStream succeeds after retryable handshake network error", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "handshakeError.json", "test": "collection.createChangeStream succeeds after retryable handshake server error (ShutdownInProgress)", "status": "SKIP", "reason": "req:auth", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate-merge.json", "test": "Aggregate with $merge does not retry", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases.json", "test": "ListDatabases succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "listDatabases.json", "test": "ListDatabases succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases.json", "test": "ListDatabases fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases.json", "test": "ListDatabases fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find.json", "test": "Find succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "find.json", "test": "Find succeeds on second attempt with explicit clientOptions", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find.json", "test": "Find succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find.json", "test": "Find fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find.json", "test": "Find fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabases-serverErrors.json", "test": "ListDatabases fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "find-serverErrors.json", "test": "Find fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch.json", "test": "client.watch succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "changeStreams-client.watch.json", "test": "client.watch succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch.json", "test": "client.watch fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch.json", "test": "client.watch fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount.json", "test": "EstimatedDocumentCount succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "estimatedDocumentCount.json", "test": "EstimatedDocumentCount succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount.json", "test": "EstimatedDocumentCount fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "estimatedDocumentCount.json", "test": "EstimatedDocumentCount fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames.json", "test": "ListIndexNames succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "listIndexNames.json", "test": "ListIndexNames succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames.json", "test": "ListIndexNames fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexNames.json", "test": "ListIndexNames fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listDatabaseObjects-serverErrors.json", "test": "ListDatabaseObjects fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName-serverErrors.json", "test": "DownloadByName fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct-serverErrors.json", "test": "Distinct fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download.json", "test": "Download succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "gridfs-download.json", "test": "Download succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download.json", "test": "Download fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download.json", "test": "Download fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections.json", "test": "ListCollections succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "listCollections.json", "test": "ListCollections succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections.json", "test": "ListCollections fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections.json", "test": "ListCollections fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionNames-serverErrors.json", "test": "ListCollectionNames fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listIndexes-serverErrors.json", "test": "ListIndexes fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct.json", "test": "Distinct succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "distinct.json", "test": "Distinct succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct.json", "test": "Distinct fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "distinct.json", "test": "Distinct fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch.json", "test": "db.watch succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "changeStreams-db.watch.json", "test": "db.watch succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch.json", "test": "db.watch fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch.json", "test": "db.watch fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-client.watch-serverErrors.json", "test": "client.watch fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "readConcernMajorityNotAvailableYet.json", "test": "Find succeeds on second attempt after ReadConcernMajorityNotAvailableYet", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.watch-serverErrors.json", "test": "db.watch fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-download-serverErrors.json", "test": "Download fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects.json", "test": "ListCollectionObjects succeeds on first attempt", "status": "SKIP", "reason": "runner:database.listCollectionObjects", "secs": 0.01}
+{"area": "retryable-reads", "file": "listCollectionObjects.json", "test": "ListCollectionObjects succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects.json", "test": "ListCollectionObjects fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollectionObjects.json", "test": "ListCollectionObjects fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName.json", "test": "DownloadByName succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "gridfs-downloadByName.json", "test": "DownloadByName succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName.json", "test": "DownloadByName fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "gridfs-downloadByName.json", "test": "DownloadByName fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate.json", "test": "Aggregate succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "aggregate.json", "test": "Aggregate succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate.json", "test": "Aggregate fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate.json", "test": "Aggregate fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "aggregate.json", "test": "Aggregate with $out does not retry", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch.json", "test": "db.coll.watch succeeds on first attempt", "status": "PASS", "secs": 0.01}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch.json", "test": "db.coll.watch succeeds on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch.json", "test": "db.coll.watch fails on first attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "changeStreams-db.coll.watch.json", "test": "db.coll.watch fails on second attempt", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after InterruptedAtShutdown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after InterruptedDueToReplStateChange", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after NotWritablePrimary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after NotPrimaryNoSecondaryOk", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after NotPrimaryOrSecondary", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after PrimarySteppedDown", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after ShutdownInProgress", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after HostNotFound", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after HostUnreachable", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after NetworkTimeout", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections succeeds after SocketException", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections fails after two NotWritablePrimary errors", "status": "SKIP", "reason": "failpoint", "secs": 0.0}
+{"area": "retryable-reads", "file": "listCollections-serverErrors.json", "test": "ListCollections fails after NotWritablePrimary when retryReads is false", "status": "SKIP", "reason": "failpoint", "secs": 0.0}

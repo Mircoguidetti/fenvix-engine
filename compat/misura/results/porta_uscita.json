@@ -1,0 +1,59 @@
+{
+ "steps": {
+  "mongodump cartella": {
+   "rc": 0,
+   "log": "2026-11-01T15:47:13.259+0000\twriting uscita_src.dati to /tmp/claude-0/uscita/cartella/uscita_src/dati.bson\n2026-11-01T15:47:13.260+0000\twriting uscita_src.limitata to /tmp/claude-0/uscita/cartella/uscita_src/limitata.bson\n2026-11-01T15:47:13.261+0000\twriting uscita_src.fs.chunks to /tmp/claude-0/uscita/cartella/uscita_src/fs.chunks.bson\n2026-11-01T15:47:13.261+0000\twriting uscita_src.validata to /tmp/claude-0/uscita/cartella/uscita_src/validata.bson\n2026-11-01T15:47:13.269+0000\tdone dumping uscita_src.validata (10 documents)\n2026-11-01T15:47:13.269+0000\twriting uscita_src.fs.files to /tmp/claude-0/uscita/cartella/uscita_src/fs.files.bson\n2026-11-01T15:47:13.270+0000\tdone dumping uscita_src.fs.files (1 document)\n2026-11-01T15:47:13.275+0000\tdone dumping uscita_src.limitata (100 documents)\n2026-11-01T15:47:13.282+0000\tdone dumping uscita_src.fs.chunks (13 documents)\n2026-11-01T15:47:14.193+0000\tdone dumping uscita_src.dati (20000 documents)\n"
+  },
+  "mongodump archivio gzip": {
+   "rc": 0,
+   "log": "src.vista (0 documents)\n2026-11-01T15:47:14.775+0000\twriting uscita_src.validata to archive '/tmp/claude-0/uscita/a.gz'\n2026-11-01T15:47:14.857+0000\tdone dumping uscita_src.limitata (100 documents)\n2026-11-01T15:47:14.857+0000\twriting uscita_src.fs.files to archive '/tmp/claude-0/uscita/a.gz'\n2026-11-01T15:47:14.860+0000\tdone dumping uscita_src.fs.chunks (13 documents)\n2026-11-01T15:47:14.860+0000\tdone dumping uscita_src.validata (10 documents)\n2026-11-01T15:47:14.875+0000\tdone dumping uscita_src.fs.files (1 document)\n2026-11-01T15:47:16.026+0000\tdone dumping uscita_src.dati (20000 documents)\n"
+  },
+  "mongorestore -> uscita_dst1": {
+   "rc": 0,
+   "log": ":-1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:18.149+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"part\", \"v\":2}, Key:primitive.D{primitive.E{Key:\"opt\", Value:1}}, PartialFilterExpression:primitive.D{primitive.E{Key:\"opt\", Value:primitive.D{primitive.E{Key:\"$exists\", Value:true}}}}}\n2026-11-01T15:47:18.149+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"nil_1\", \"sparse\":true, \"v\":2}, Key:primitive.D{primitive.E{Key:\"nil\", Value:1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:18.149+0000\tno indexes to restore for collection uscita_dst1.validata\n2026-11-01T15:47:18.149+0000\trestoring indexes for collection uscita_dst1.fs.chunks from metadata\n2026-11-01T15:47:18.149+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"files_id_1_n_1\", \"unique\":true, \"v\":2}, Key:primitive.D{primitive.E{Key:\"files_id\", Value:1}, primitive.E{Key:\"n\", Value:1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:18.150+0000\trestoring indexes for collection uscita_dst1.fs.files from metadata\n2026-11-01T15:47:18.150+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"filename_1_uploadDate_1\", \"v\":2}, Key:primitive.D{primitive.E{Key:\"filename\", Value:1}, primitive.E{Key:\"uploadDate\", Value:1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:18.150+0000\tno indexes to restore for collection uscita_dst1.limitata\n2026-11-01T15:47:21.627+0000\t20124 document(s) restored successfully. 0 document(s) failed to restore.\n",
+   "differences": [
+    "dati.indexes: before ['{\"default_language\": \"italian\", \"key\": {\"_fts\": \"text\", \"_ftsx\": 1}, \"language_override\": \"language\", \"name\": \"txt_text\", \"textIndexVersion\": 3, \"weights\": {\"txt\": 1}}'] / after ['{\"default_language\": \"italian\", \"key\": {\"_fts\": \"text\", \"_ftsx\": 1}, \"language_override\": \"language\", \"name\": \"txt_text\", \"textIndexVersion\": 3, \"weights\": {\"_fts\": 1, \"txt\": 1}}']"
+   ],
+   "gridfs_same_bytes": true
+  },
+  "mongorestore -> uscita_dst2": {
+   "rc": 0,
+   "log": ", Value:primitive.D{primitive.E{Key:\"$exists\", Value:true}}}}}\n2026-11-01T15:47:24.592+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"nil_1\", \"sparse\":true, \"v\":2}, Key:primitive.D{primitive.E{Key:\"nil\", Value:1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:24.592+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"default_language\":\"italian\", \"language_override\":\"language\", \"name\":\"txt_text\", \"textIndexVersion\":3, \"v\":2, \"weights\":primitive.M{\"txt\":1}}, Key:primitive.D{primitive.E{Key:\"_fts\", Value:\"text\"}, primitive.E{Key:\"_ftsx\", Value:1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:24.592+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"2dsphereIndexVersion\":3, \"name\":\"loc_2dsphere\", \"v\":2}, Key:primitive.D{primitive.E{Key:\"loc\", Value:\"2dsphere\"}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:24.592+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"hash\", \"v\":2}, Key:primitive.D{primitive.E{Key:\"s\", Value:\"hashed\"}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:24.592+0000\trestoring indexes for collection uscita_dst2.fs.chunks from metadata\n2026-11-01T15:47:24.592+0000\tindex: &idx.IndexDocument{Options:primitive.M{\"name\":\"files_id_1_n_1\", \"unique\":true, \"v\":2}, Key:primitive.D{primitive.E{Key:\"files_id\", Value:1}, primitive.E{Key:\"n\", Value:1}}, PartialFilterExpression:primitive.D(nil)}\n2026-11-01T15:47:28.030+0000\t20124 document(s) restored successfully. 0 document(s) failed to restore.\n",
+   "differences": [
+    "dati.indexes: before ['{\"default_language\": \"italian\", \"key\": {\"_fts\": \"text\", \"_ftsx\": 1}, \"language_override\": \"language\", \"name\": \"txt_text\", \"textIndexVersion\": 3, \"weights\": {\"txt\": 1}}'] / after ['{\"default_language\": \"italian\", \"key\": {\"_fts\": \"text\", \"_ftsx\": 1}, \"language_override\": \"language\", \"name\": \"txt_text\", \"textIndexVersion\": 3, \"weights\": {\"_fts\": 1, \"txt\": 1}}']"
+   ],
+   "gridfs_same_bytes": true
+  }
+ },
+ "source": {
+  "dati": {
+   "count": 20000,
+   "type": "collection"
+  },
+  "fs.chunks": {
+   "count": 13,
+   "type": "collection"
+  },
+  "fs.files": {
+   "count": 1,
+   "type": "collection"
+  },
+  "limitata": {
+   "count": 100,
+   "type": "collection"
+  },
+  "system.views": {
+   "count": 1,
+   "type": "collection"
+  },
+  "validata": {
+   "count": 10,
+   "type": "collection"
+  },
+  "vista": {
+   "count": null,
+   "type": "view"
+  }
+ },
+ "dump_file_problems": []
+}
