@@ -64,12 +64,12 @@ jobs:
           echo "PERMESSI: il ruolo non si lascia assumere dal branch idea-turno" | tee "$OUT/esito.txt"
 
       - name: Giro 1, controllo dei permessi (0 $)
-        if: steps.creds.outcome == 'success' && (steps.mode.outputs.mode == 'permessi' || steps.mode.outputs.mode == 'prova')
+        if: steps.creds.outcome == 'success' && (steps.mode.outputs.modo == 'permessi' || steps.mode.outputs.modo == 'prova')
         run: bash idea-turno/efs-ci/permessi.sh
 
       - name: Compila micro-efs per arm64 (c7g), statico
         id: build
-        if: steps.creds.outcome == 'success' && steps.mode.outputs.mode == 'prova'
+        if: steps.creds.outcome == 'success' && steps.mode.outputs.modo == 'prova'
         run: |
           grep -q '^PERMESSI: tutti' "$OUT/esito.txt" || { echo "permessi mancanti: niente prova"; exit 1; }
           rustup target add aarch64-unknown-linux-musl
@@ -77,6 +77,9 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld cargo build --release --locked --target aarch64-unknown-linux-musl
           cp target/aarch64-unknown-linux-musl/release/micro-efs "$GITHUB_WORKSPACE/$OUT/micro-efs-arm64"
           sha256sum "$GITHUB_WORKSPACE/$OUT/micro-efs-arm64" | tee -a "$GITHUB_STEP_SUMMARY"
+          # copia x86 per il runner: legge le metriche CloudWatch alla fine (micro-efs metriche)
+          cargo build --release --locked && echo "MICRO_EFS_X86=$PWD/target/release/micro-efs" >> "$GITHUB_ENV"
+          cargo test --release --locked
 
       - name: La prova (spesa ogni minuto, stop a 12 $, fasi della scheda S12)
         if: steps.build.outcome == 'success'
@@ -104,11 +107,11 @@ jobs:
         if: always()
         run: |
           git config user.name github-actions; git config user.email actions@users.noreply.github.com
-          python3 idea-turno/efs-ci/live.py fine "${{ steps.mode.outputs.mode }}" || true
+          python3 idea-turno/efs-ci/live.py fine "${{ steps.mode.outputs.modo }}" || true
           python3 idea-turno/efs-ci/scan.py "$OUT" idea-turno/efs-ci/LIVE.md
           rm -f "$OUT/micro-efs-arm64"
           mkdir -p idea-turno/efs-ci/risultati && rm -rf "idea-turno/efs-ci/risultati/${{ github.run_id }}" && cp -r "$OUT" "idea-turno/efs-ci/risultati/${{ github.run_id }}"
           git add -f idea-turno/efs-ci/LIVE.md "idea-turno/efs-ci/risultati/${{ github.run_id }}"
-          git commit -qm "efs-micro run ${{ github.run_id }}: risultati (${{ steps.mode.outputs.mode }})" || true
+          git commit -qm "efs-micro run ${{ github.run_id }}: risultati (${{ steps.mode.outputs.modo }})" || true
           for i in 1 2 3; do git pull --rebase -q origin idea-turno && git push -q origin HEAD:idea-turno && break; sleep 5; done
           cat "$OUT/esito.txt" "$OUT/permessi.txt" 2>/dev/null | tee -a "$GITHUB_STEP_SUMMARY" || true

@@ -50,12 +50,12 @@ for Z in a b c; do
   SN=$(aws ec2 describe-subnets --filters Name=default-for-az,Values=true Name=availability-zone,Values=$R$Z --query 'Subnets[0].SubnetId' --output text 2>/dev/null)
   if [ -z "$SN" ] || [ "$SN" = None ] || [ -z "$AMI" ] || [ "$AMI" = None ]; then nonso "ec2:RunInstances ($R$Z)" "manca subnet o AMI"; continue; fi
   prova "ec2:RunInstances ($TIPO, $R$Z, con tag)" aws ec2 run-instances --dry-run --image-id "$AMI" --instance-type $TIPO --subnet-id "$SN" \
-    --instance-initiated-shutdown-behavior terminate --tag-specifications "$TAGS" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-prova-efs}]"
+    --instance-initiated-shutdown-behavior terminate --tag-specifications "$TAGS" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-prova-efs}]" "ResourceType=network-interface,Tags=[{Key=project,Value=fenvix-prova-efs}]"
 done
 SN=$(aws ec2 describe-subnets --filters Name=default-for-az,Values=true Name=availability-zone,Values=${R}a --query 'Subnets[0].SubnetId' --output text 2>/dev/null)
 # profilo di istanza per i nodi (S3 dei risultati): esiste? posso passarlo?
 e=$(aws ec2 run-instances --dry-run --image-id "$AMI" --instance-type $TIPO --subnet-id "$SN" --iam-instance-profile Name=fenvix-prova-efs-ec2 \
-    --tag-specifications "$TAGS" 2>&1); echo "[profilo] $(head -c 300 <<<"$e")" >> "$OUT/dettagli.txt"
+    --tag-specifications "$TAGS" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-prova-efs}]" "ResourceType=network-interface,Tags=[{Key=project,Value=fenvix-prova-efs}]" 2>&1); echo "[profilo] $(head -c 300 <<<"$e")" >> "$OUT/dettagli.txt"
 if grep -q DryRunOperation <<<"$e"; then ok "iam:PassRole (profilo fenvix-prova-efs-ec2)";
 elif grep -qi "Invalid IAM Instance Profile" <<<"$e"; then manca "profilo di istanza fenvix-prova-efs-ec2 (non esiste)";
 elif grep -qiE "UnauthorizedOperation|not authorized" <<<"$e"; then manca "iam:PassRole su role/fenvix-prova-efs-ec2 (o ec2:RunInstances)";
