@@ -252,7 +252,7 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
-                            inflight: self.inflight_counter(name),
+                        inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
                     }))
