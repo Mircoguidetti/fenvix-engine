@@ -32,7 +32,7 @@ struct A {
     no_compatta: bool,
     #[arg(long, default_value_t = 4)]
     compatta_k: usize,
-    #[arg(long, default_value_t = 12)]
+    #[arg(long, default_value_t = 30)]
     max_run: usize,
     #[arg(long, default_value_t = 0)]
     riposo_ms: u64,

@@ -72,7 +72,7 @@ fn avvia_worker(a: &A, i: usize, gen: u64) -> Child {
     Command::new(bin("pl-worker"))
         .args(["--addr", &a.addr, "--bucket", &a.bucket, "--gruppi", &a.gruppi.to_string(), "--eta-ms", &a.eta_ms.to_string()])
         .args(["--dim", &(1u64 << 20).to_string(), "--tieni-tutte", "--crash", &a.crash.to_string()])
-        .args(["--grazia-ms", "20000", "--orfani-ogni-ms", "60000", "--orfani-eta-ms", "30000", "--compatta-k", "4", "--max-run", "10"])
+        .args(["--grazia-ms", "20000", "--orfani-ogni-ms", "60000", "--orfani-eta-ms", "30000", "--compatta-k", "4", "--max-run", "30"])
         .args(["--riposo-ms", "30000", "--stat-ms", "1000", "--paralleli", "4", "--intervallo-ms", "50"])
         .args(["--stat-file", a.out.join(format!("w{i}-{gen}.json")).to_str().unwrap(), "--nome", &format!("w{i}-{gen}")])
         .args(if a.senza_cas { vec!["--senza-cas"] } else { vec![] })

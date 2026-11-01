@@ -76,7 +76,7 @@ impl Default for CfgScarico {
             paralleli: 8,
             compatta: true,
             compatta_k: 4,
-            max_run: 12,
+            max_run: 30,
             riposo_ms: 0,
             tieni_tutte: false,
             orizzonte_ms: 120_000,
@@ -539,9 +539,9 @@ impl Worker {
             }
             (0, n)
         } else if n > self.cfg.max_run {
-            // troppe run: si fonde la finestra di k run adiacenti meno costosa (la più piccola in byte), così una run
+            // troppe run: si fonde la coppia di run adiacenti meno costosa (la più piccola in byte), così una run
             // grande non si riscrive a ogni giro
-            let k = self.cfg.compatta_k.max(2).min(n);
+            let k = 2;
             let mut best = (u64::MAX, 0);
             for i in 0..=n - k {
                 let c: u64 = m.run[i..i + k].iter().map(|r| r.dim).sum();
