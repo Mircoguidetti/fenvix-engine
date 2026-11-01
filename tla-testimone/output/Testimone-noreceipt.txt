@@ -1,0 +1,139 @@
+Sun Nov  1 23:04:46 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=36663 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 28 and seed -3002130201582797512 with 2 workers on 2 cores with 3641MB heap and 64MB offheap memory [pid: 1426] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-testimone/MCTestimone.tla
+Parsing file /home/claude/fenvix-engine/tla-testimone/Testimone.tla
+Parsing file /tmp/tlc-1823966532336482953/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-1823966532336482953/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-1823966532336482953/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-1823966532336482953/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-1823966532336482953/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-1823966532336482953/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-1823966532336482953/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Testimone
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCTestimone
+Linting of module Testimone
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCTestimone
+Starting... (2026-11-01 23:04:46)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 23:04:47.
+Error: Invariant LeaderCompleteness is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ epoch = (a :> 0 @@ b :> 0)
+/\ match = (a :> 0 @@ b :> 0)
+/\ alive = (a :> TRUE @@ b :> TRUE)
+/\ log = (a :> <<>> @@ b :> <<>>)
+/\ mode = (a :> "pieno" @@ b :> "pieno")
+/\ wEpoch = 0
+/\ wRec = [ep |-> 0, n |-> 0]
+/\ degBy = {}
+/\ cmt = <<>>
+/\ losses = 0
+/\ restarts = 0
+/\ role = (a :> "seguace" @@ b :> "seguace")
+/\ cmtAt = <<>>
+/\ split = FALSE
+/\ pienoMax = 0
+
+State 2: <ElectByCopy(a,1) line 121, col 3 to line 128, col 97 of module Testimone>
+/\ epoch = (a :> 1 @@ b :> 1)
+/\ match = (a :> 0 @@ b :> 0)
+/\ alive = (a :> TRUE @@ b :> TRUE)
+/\ log = (a :> <<>> @@ b :> <<>>)
+/\ mode = (a :> "pieno" @@ b :> "pieno")
+/\ wEpoch = 0
+/\ wRec = [ep |-> 0, n |-> 0]
+/\ degBy = {}
+/\ cmt = <<>>
+/\ losses = 0
+/\ restarts = 0
+/\ role = (a :> "capo" @@ b :> "seguace")
+/\ cmtAt = <<>>
+/\ split = FALSE
+/\ pienoMax = 0
+
+State 3: <ClientWrite(a) line 145, col 3 to line 148, col 118 of module Testimone>
+/\ epoch = (a :> 1 @@ b :> 1)
+/\ match = (a :> 0 @@ b :> 0)
+/\ alive = (a :> TRUE @@ b :> TRUE)
+/\ log = (a :> <<1>> @@ b :> <<>>)
+/\ mode = (a :> "pieno" @@ b :> "pieno")
+/\ wEpoch = 0
+/\ wRec = [ep |-> 0, n |-> 0]
+/\ degBy = {}
+/\ cmt = <<>>
+/\ losses = 0
+/\ restarts = 0
+/\ role = (a :> "capo" @@ b :> "seguace")
+/\ cmtAt = <<>>
+/\ split = FALSE
+/\ pienoMax = 0
+
+State 4: <EnterDegraded(a) line 176, col 3 to line 180, col 109 of module Testimone>
+/\ epoch = (a :> 1 @@ b :> 1)
+/\ match = (a :> 0 @@ b :> 0)
+/\ alive = (a :> TRUE @@ b :> TRUE)
+/\ log = (a :> <<1>> @@ b :> <<>>)
+/\ mode = (a :> "degradato" @@ b :> "pieno")
+/\ wEpoch = 1
+/\ wRec = [ep |-> 0, n |-> 0]
+/\ degBy = {}
+/\ cmt = <<>>
+/\ losses = 0
+/\ restarts = 0
+/\ role = (a :> "capo" @@ b :> "seguace")
+/\ cmtAt = <<>>
+/\ split = FALSE
+/\ pienoMax = 0
+
+State 5: <CommitDegraded(a,1) line 190, col 3 to line 201, col 91 of module Testimone>
+/\ epoch = (a :> 1 @@ b :> 1)
+/\ match = (a :> 0 @@ b :> 0)
+/\ alive = (a :> TRUE @@ b :> TRUE)
+/\ log = (a :> <<1>> @@ b :> <<>>)
+/\ mode = (a :> "degradato" @@ b :> "pieno")
+/\ wEpoch = 1
+/\ wRec = [ep |-> 0, n |-> 0]
+/\ degBy = {a}
+/\ cmt = <<1>>
+/\ losses = 0
+/\ restarts = 0
+/\ role = (a :> "capo" @@ b :> "seguace")
+/\ cmtAt = <<1>>
+/\ split = FALSE
+/\ pienoMax = 0
+
+State 6: <ElectByWitness(b,2) line 132, col 3 to line 141, col 89 of module Testimone>
+/\ epoch = (a :> 1 @@ b :> 2)
+/\ match = (a :> 0 @@ b :> 0)
+/\ alive = (a :> TRUE @@ b :> TRUE)
+/\ log = (a :> <<1>> @@ b :> <<>>)
+/\ mode = (a :> "degradato" @@ b :> "pieno")
+/\ wEpoch = 2
+/\ wRec = [ep |-> 0, n |-> 0]
+/\ degBy = {a}
+/\ cmt = <<1>>
+/\ losses = 0
+/\ restarts = 0
+/\ role = (a :> "capo" @@ b :> "capo")
+/\ cmtAt = <<1>>
+/\ split = FALSE
+/\ pienoMax = 0
+
+3396 states generated, 1534 distinct states found, 1059 states left on queue.
+The depth of the complete state graph search is 7.
+Finished in 01s at (2026-11-01 23:04:47)
+Trace exploration spec path: ./MCTestimone_TTrace_1793574286.tla
+EXIT=12
+Sun Nov  1 23:04:47 UTC 2026
