@@ -219,7 +219,30 @@ produzione il timeout dei client è sotto i 30 s, quelle pause diventano errori 
 
 ## Nuovo confronto con mongod sugli inserimenti
 
-DA COMPLETARE (prova in corso).
+Ripetuto una volta il carico "solo inserimenti" del banco bench-mongod (`run_matrix.py --workloads insert`, script del branch
+bench-mongod senza modifiche): per ogni cella uno sweep dei client, poi 3 corse da 60 s di riscaldamento e 180 s di misura al
+punto di saturazione; server nuovo e caricato per ogni cella; write concern `{w: 1, j: true}`. Motore: binario di HEAD (con
+la correzione e con jemalloc, già in main), `--store local`. mongod 8.0.34 in Docker. Dati grezzi in
+`results-fix-stall/session2/mongod/`. Mediane di 3 corse (MISURATO); i rapporti sono calcolati dalle mediane (STIMATO).
+
+- 1 core, 1 database da 200.000 documenti. Motore: 723 op/s (1 client, p50 1,24 ms). mongod: 5.842 op/s (256 client).
+  **Rapporto per core: 0,12** (0,14 per secondo di CPU usata). Nel banco era 0,15.
+- 2 core, 1 database da 200.000 documenti. Motore: 2.257 op/s, cioè 1.128 per core (64 client, scarto tra le corse 25%).
+  mongod: 14.001 op/s, 7.001 per core. **Rapporto per core: 0,16.** Nel banco questa cella non era misurabile per il
+  motore: il caricamento si bloccava 5 volte su 5.
+- 1 core, 100 database da 2.000 documenti. Motore: 1.107 op/s (8 client). mongod: 5.061 op/s (16 client).
+  **Rapporto per core: 0,22** (come nel banco).
+- 2 core, 100 database. Motore: 1.269 op/s, 635 per core (4 client; usa 1,47 core su 2). mongod: 10.744 op/s, 5.372 per core.
+  **Rapporto per core: 0,12** (come nel banco).
+
+In tutta la prova nessun blocco: i 4 caricamenti del motore sono riusciti al primo tentativo (nel banco, con 1 database,
+erano riusciti 3 caricamenti su 13) e nessuna delle 12 corse da 4 minuti del motore ha avuto errori (MISURATO).
+
+Come leggere questi numeri. La macchina non è quella del banco, quindi conta il rapporto, non il valore assoluto. In valore
+assoluto il motore fa qui un po' più che nel banco (723 contro 701, 1.107 contro 1.023, 1.269 contro 1.161 op/s), ma anche mongod
+fa di più (5.842 contro 4.727), quindi non si può attribuire a jemalloc un miglioramento: i rapporti restano tra 0,12 e 0,22
+(STIMATO). La correzione serve a non bloccarsi, non a scrivere più in fretta. Resta anche il calo nel tempo già visto nel banco:
+con 1 core e 1 database lo sweep da 30 s dà 1.035 op/s e le corse da 4 minuti 723 (MISURATO).
 
 ## Problemi incontrati
 
