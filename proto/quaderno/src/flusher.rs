@@ -97,9 +97,9 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
         };
         let now = now_ms();
         let mut due: BTreeMap<u64, Vec<Db>> = BTreeMap::new();
-        for (db, p) in pending {
-            if now.saturating_sub(pos_ms(p)) >= c.age_ms {
-                due.entry(group_of(&db, &c)).or_default().push(db);
+        for x in pending {
+            if now.saturating_sub(pos_ms(x.oldest)) >= c.age_ms {
+                due.entry(group_of(&x.db, &c)).or_default().push(x.db);
             }
         }
         for (g, dbs) in due {

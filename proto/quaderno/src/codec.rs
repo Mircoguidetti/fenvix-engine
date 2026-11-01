@@ -427,8 +427,10 @@ pub enum Req {
     Commit(CommitReq),
     /// get(db, chiave, S). `spec` = lettura speculativa dal leader (ultima versione accettata, anche non ancora
     /// confermata): aggiunta del prototipo per la modalità validata sulla chiave calda, vedi INTERFACCIA.md
-    Get { db: Db, key: Bytes, at: Pos, wait_ms: u32, spec: bool },
-    Scan { db: Db, from: Bytes, to: Bytes, at: Pos, limit: u32, wait_ms: u32 },
+    /// `dal` (facoltativo, 0 = assente): posizione `scaricato` del manifest che chi legge userà; serve a non contare
+    /// due volte i delta già negli SST. Se dal < potato_fino_a la risposta è fuori_finestra (manifest troppo vecchio)
+    Get { db: Db, key: Bytes, at: Pos, wait_ms: u32, spec: bool, dal: Pos },
+    Scan { db: Db, from: Bytes, to: Bytes, at: Pos, limit: u32, wait_ms: u32, dal: Pos },
     /// posizione_confermata(): lineare (ReadIndex sul leader); un follower risponde NotLeader
     Confirmed,
     /// attendi(C, timeout)
@@ -437,8 +439,11 @@ pub enum Req {
     Flushable { dbs: Vec<Db>, upto: Pos },
     /// conferma_scarico(db, fino_a, etag) per più database in un colpo
     FlushDone { items: Vec<(Db, Pos, Bytes)> },
-    /// aiuto per gli scaricatori: database con record non ancora su S3 (e posizione del più vecchio)
+    /// aiuto per gli scaricatori: database con record non ancora su S3 (posizione del più vecchio, numero, byte,
+    /// posizione già su S3)
     Pending { limit: u32 },
+    /// stato_scarico(db) -> (scaricato, etag, potato_fino_a), proposta di proto-lettura
+    FlushState { dbs: Vec<Db> },
     Status,
     /// solo per i controlli dei banchi: voci da `from_index` (txn, posizione) già confermate
     Dump { from_index: u64, max: u32 },
@@ -450,8 +455,23 @@ pub enum GetRes {
     Value(Pos, Bytes),
     /// cancellata o mai scritta (finestra completa); posizione della cancellazione o 0
     Absent(Pos),
-    /// la finestra non basta: la risposta sta negli SST
-    OutOfWindow,
+    /// la finestra non basta: la risposta sta negli SST. `trimmed` (potato_fino_a, proposta di proto-lettura): i record
+    /// fino a qui sono usciti dalla finestra, serve un manifest con scaricato ≥ trimmed; `etag`: ultimo manifest
+    /// confermato al registro per il database
+    OutOfWindow { trimmed: Pos, etag: Bytes },
+    /// (proposta di proto-lettura, con correzione) la finestra ha solo delta per la chiave e la base è negli SST:
+    /// valore = valore SST al manifest usato (scaricato = `dal` della richiesta) + `sum`, dove `sum` somma i delta in
+    /// (dal, S]. `pos` = posizione dell'ultimo delta ≤ S
+    Delta { pos: Pos, sum: i64, trimmed: Pos },
+}
+
+#[derive(Clone, Debug)]
+pub struct PendInfo {
+    pub db: Db,
+    pub oldest: Pos,
+    pub recs: u64,
+    pub bytes: u64,
+    pub flushed: Pos,
 }
 
 #[derive(Clone, Debug)]
@@ -497,7 +517,8 @@ pub enum Resp {
     Behind(Pos),
     Pos(Pos),
     Flushable(Vec<(Db, Vec<FlushRec>)>),
-    Pending(Vec<(Db, Pos)>),
+    Pending(Vec<PendInfo>),
+    FlushState(Vec<(Db, Pos, Bytes, Pos)>),
     Status(Status),
     Dump(Vec<(u64, TxnId, Pos)>),
     Err(String),
@@ -514,14 +535,25 @@ fn enc_getres(b: &mut BytesMut, g: &GetRes) {
             b.put_u8(1);
             b.put_u64_le(*p);
         }
-        GetRes::OutOfWindow => b.put_u8(2),
+        GetRes::OutOfWindow { trimmed, etag } => {
+            b.put_u8(2);
+            b.put_u64_le(*trimmed);
+            put16(b, etag);
+        }
+        GetRes::Delta { pos, sum, trimmed } => {
+            b.put_u8(3);
+            b.put_u64_le(*pos);
+            b.put_i64_le(*sum);
+            b.put_u64_le(*trimmed);
+        }
     }
 }
 fn dec_getres(r: &mut Rd) -> R<GetRes> {
     Ok(match r.u8()? {
         0 => GetRes::Value(r.u64()?, r.bytes32()?),
         1 => GetRes::Absent(r.u64()?),
-        2 => GetRes::OutOfWindow,
+        2 => GetRes::OutOfWindow { trimmed: r.u64()?, etag: r.bytes16()? },
+        3 => GetRes::Delta { pos: r.u64()?, sum: r.u64()? as i64, trimmed: r.u64()? },
         _ => return Err(Short),
     })
 }
@@ -545,15 +577,16 @@ pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
             }
             enc_session(&mut b, &c.session);
         }
-        Req::Get { db, key, at, wait_ms, spec } => {
+        Req::Get { db, key, at, wait_ms, spec, dal } => {
             b.put_u8(2);
             b.put_slice(db);
             put16(&mut b, key);
             b.put_u64_le(*at);
             b.put_u32_le(*wait_ms);
             b.put_u8(*spec as u8);
+            b.put_u64_le(*dal);
         }
-        Req::Scan { db, from, to, at, limit, wait_ms } => {
+        Req::Scan { db, from, to, at, limit, wait_ms, dal } => {
             b.put_u8(3);
             b.put_slice(db);
             put16(&mut b, from);
@@ -561,6 +594,7 @@ pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
             b.put_u64_le(*at);
             b.put_u32_le(*limit);
             b.put_u32_le(*wait_ms);
+            b.put_u64_le(*dal);
         }
         Req::Confirmed => b.put_u8(4),
         Req::Wait { pos, timeout_ms } => {
@@ -590,6 +624,13 @@ pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
             b.put_u32_le(*limit);
         }
         Req::Status => b.put_u8(9),
+        Req::FlushState { dbs } => {
+            b.put_u8(11);
+            b.put_u32_le(dbs.len() as u32);
+            for d in dbs {
+                b.put_slice(d);
+            }
+        }
         Req::Dump { from_index, max } => {
             b.put_u8(10);
             b.put_u64_le(*from_index);
@@ -619,8 +660,8 @@ pub fn dec_req(body: Bytes) -> R<(u64, Req)> {
             let session = dec_session(&mut r)?;
             Req::Commit(CommitReq { txn, db, read_pos, mode, writes, reads, session })
         }
-        2 => Req::Get { db: r.a16()?, key: r.bytes16()?, at: r.u64()?, wait_ms: r.u32()?, spec: r.u8()? != 0 },
-        3 => Req::Scan { db: r.a16()?, from: r.bytes16()?, to: r.bytes16()?, at: r.u64()?, limit: r.u32()?, wait_ms: r.u32()? },
+        2 => Req::Get { db: r.a16()?, key: r.bytes16()?, at: r.u64()?, wait_ms: r.u32()?, spec: r.u8()? != 0, dal: r.u64()? },
+        3 => Req::Scan { db: r.a16()?, from: r.bytes16()?, to: r.bytes16()?, at: r.u64()?, limit: r.u32()?, wait_ms: r.u32()?, dal: r.u64()? },
         4 => Req::Confirmed,
         5 => Req::Wait { pos: r.u64()?, timeout_ms: r.u32()? },
         6 => {
@@ -643,6 +684,14 @@ pub fn dec_req(body: Bytes) -> R<(u64, Req)> {
         8 => Req::Pending { limit: r.u32()? },
         9 => Req::Status,
         10 => Req::Dump { from_index: r.u64()?, max: r.u32()? },
+        11 => {
+            let n = r.u32()? as usize;
+            let mut dbs = Vec::with_capacity(n.min(1 << 16));
+            for _ in 0..n {
+                dbs.push(r.a16()?);
+            }
+            Req::FlushState { dbs }
+        }
         _ => return Err(Short),
     };
     r.end()?;
@@ -701,9 +750,22 @@ pub fn enc_resp(id: u64, s: &Resp) -> Vec<u8> {
         Resp::Pending(v) => {
             b.put_u8(10);
             b.put_u32_le(v.len() as u32);
-            for (db, p) in v {
+            for x in v {
+                b.put_slice(&x.db);
+                b.put_u64_le(x.oldest);
+                b.put_u64_le(x.recs);
+                b.put_u64_le(x.bytes);
+                b.put_u64_le(x.flushed);
+            }
+        }
+        Resp::FlushState(v) => {
+            b.put_u8(14);
+            b.put_u32_le(v.len() as u32);
+            for (db, f, e, t) in v {
                 b.put_slice(db);
-                b.put_u64_le(*p);
+                b.put_u64_le(*f);
+                put16(&mut b, e);
+                b.put_u64_le(*t);
             }
         }
         Resp::Status(st) => {
@@ -764,9 +826,17 @@ pub fn dec_resp(body: Bytes) -> R<(u64, Resp)> {
             let n = r.u32()? as usize;
             let mut v = Vec::with_capacity(n.min(1 << 16));
             for _ in 0..n {
-                v.push((r.a16()?, r.u64()?));
+                v.push(PendInfo { db: r.a16()?, oldest: r.u64()?, recs: r.u64()?, bytes: r.u64()?, flushed: r.u64()? });
             }
             Resp::Pending(v)
+        }
+        14 => {
+            let n = r.u32()? as usize;
+            let mut v = Vec::with_capacity(n.min(1 << 16));
+            for _ in 0..n {
+                v.push((r.a16()?, r.u64()?, r.bytes16()?, r.u64()?));
+            }
+            Resp::FlushState(v)
         }
         11 => {
             let s = r.bytes32()?;

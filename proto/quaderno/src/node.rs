@@ -94,8 +94,8 @@ struct Peer {
 }
 
 enum WaitKind {
-    Get { db: Db, key: Bytes },
-    Scan { db: Db, from: Bytes, to: Bytes, limit: u32 },
+    Get { db: Db, key: Bytes, dal: Pos },
+    Scan { db: Db, from: Bytes, to: Bytes, limit: u32, dal: Pos },
     Wait,
 }
 struct Waiter {
@@ -1049,12 +1049,12 @@ impl Node {
         let (log, front, reader) = (&self.log, self.front, &mut self.reader);
         let mut load = |i: u64, wi: u16| load_val(log, front, reader, i, wi);
         match kind {
-            WaitKind::Get { db, key } => {
-                let g = self.win.get(&db, &key, at, &mut load);
+            WaitKind::Get { db, key, dal } => {
+                let g = self.win.get(&db, &key, at, dal, &mut load);
                 reply.send(&Resp::Get(g));
             }
-            WaitKind::Scan { db, from, to, limit } => {
-                let v = self.win.scan(&db, &from, &to, at, limit as usize, &mut load);
+            WaitKind::Scan { db, from, to, limit, dal } => {
+                let v = self.win.scan(&db, &from, &to, at, limit as usize, dal, &mut load);
                 reply.send(&Resp::Scan(v));
             }
             WaitKind::Wait => reply.send(&Resp::Pos(self.commit_pos)),
@@ -1166,26 +1166,26 @@ impl Node {
     fn on_req(&mut self, reply: Reply, q: Req) {
         match q {
             Req::Commit(c) => self.on_commit(reply, c),
-            Req::Get { db, key, at, wait_ms, spec } => {
+            Req::Get { db, key, at, wait_ms, spec, dal } => {
                 if spec {
                     if self.role != Role::Leader {
                         reply.send(&Resp::NotLeader(self.leader));
                         return;
                     }
-                    self.answer_read(WaitKind::Get { db, key }, Pos::MAX, reply);
+                    self.answer_read(WaitKind::Get { db, key, dal }, Pos::MAX, reply);
                     return;
                 }
                 if at <= self.commit_pos {
-                    self.answer_read(WaitKind::Get { db, key }, at, reply);
+                    self.answer_read(WaitKind::Get { db, key, dal }, at, reply);
                 } else {
-                    self.park(WaitKind::Get { db, key }, at, wait_ms, reply);
+                    self.park(WaitKind::Get { db, key, dal }, at, wait_ms, reply);
                 }
             }
-            Req::Scan { db, from, to, at, limit, wait_ms } => {
+            Req::Scan { db, from, to, at, limit, wait_ms, dal } => {
                 if at <= self.commit_pos {
-                    self.answer_read(WaitKind::Scan { db, from, to, limit }, at, reply);
+                    self.answer_read(WaitKind::Scan { db, from, to, limit, dal }, at, reply);
                 } else {
-                    self.park(WaitKind::Scan { db, from, to, limit }, at, wait_ms, reply);
+                    self.park(WaitKind::Scan { db, from, to, limit, dal }, at, wait_ms, reply);
                 }
             }
             Req::Wait { pos, timeout_ms } => {
@@ -1239,18 +1239,33 @@ impl Node {
                 self.pending.entry(idx).or_default().push(reply);
             }
             Req::Pending { limit } => {
-                let mut v: Vec<(Db, Pos)> = self
+                let cp = self.commit_pos;
+                let mut v: Vec<PendInfo> = self
                     .win
                     .dbs
                     .iter()
                     .filter_map(|(k, d)| {
                         let i = d.recs.partition_point(|r| r.pos <= d.flushed);
-                        d.recs.get(i).filter(|r| r.pos <= self.commit_pos).map(|r| (*k, r.pos))
+                        d.recs.get(i).filter(|r| r.pos <= cp).map(|r| {
+                            let rest = d.recs.range(i..).filter(|x| x.pos <= cp);
+                            let (n, b) = rest.fold((0u64, 0u64), |a, x| (a.0 + 1, a.1 + x.bytes as u64));
+                            PendInfo { db: *k, oldest: r.pos, recs: n, bytes: b, flushed: d.flushed }
+                        })
                     })
                     .collect();
-                v.sort_by_key(|x| x.1);
+                v.sort_by_key(|x| x.oldest);
                 v.truncate(limit as usize);
                 reply.send(&Resp::Pending(v));
+            }
+            Req::FlushState { dbs } => {
+                let v = dbs
+                    .iter()
+                    .map(|db| match self.win.dbs.get(db) {
+                        Some(d) => (*db, d.flushed, d.etag.clone(), d.trim_pos),
+                        None => (*db, 0, Bytes::new(), 0),
+                    })
+                    .collect();
+                reply.send(&Resp::FlushState(v));
             }
             Req::Status => {
                 let unflushed: u64 = self.win.dbs.values().map(|d| (d.recs.len() - d.recs.partition_point(|r| r.pos <= d.flushed)) as u64).sum();

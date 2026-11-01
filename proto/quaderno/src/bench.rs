@@ -185,10 +185,13 @@ struct Iv {
     ryw: Option<Histogram<u64>>,
 }
 
+const SHARDS: usize = 32;
+
 struct MixedState {
     cl: Arc<Cluster>,
-    iv: Mutex<Iv>,
-    tot: Mutex<Iv>,
+    // istogrammi a frammenti: un lock globale a 130.000 operazioni/s serializzava il generatore
+    iv: Vec<Mutex<Iv>>,
+    tot: Vec<Mutex<Iv>>,
     ok: AtomicU64,
     conflicts: AtomicU64,
     unknown: AtomicU64,
@@ -197,14 +200,16 @@ struct MixedState {
     reads_behind: AtomicU64,
     reads_err: AtomicU64,
     ryw_bad: AtomicU64,
-    recent: Mutex<Vec<(u64, Bytes)>>,
+    /// chiavi scritte di recente, impacchettate (db << 32 | numero del documento), senza lock
+    recent: Vec<AtomicU64>,
     recent_i: AtomicU64,
-    lagpos: Mutex<std::collections::VecDeque<(Instant, Pos)>>,
+    /// posizione "un po' indietro" per le letture non lineari, calcolata in background
+    lag_at: AtomicU64,
     val: Bytes,
 }
 
-fn rec(h: &Mutex<Iv>, which: u8, us: u64) {
-    let mut g = h.lock();
+fn rec(hs: &[Mutex<Iv>], which: u8, us: u64) {
+    let mut g = hs[rand::random::<usize>() % hs.len()].lock();
     let slot = match which {
         0 => &mut g.commit,
         1 => &mut g.rwin,
@@ -212,6 +217,20 @@ fn rec(h: &Mutex<Iv>, which: u8, us: u64) {
         _ => &mut g.ryw,
     };
     slot.get_or_insert_with(hist).record(us.max(1)).ok();
+}
+
+fn merge(hs: &[Mutex<Iv>], reset: bool) -> Iv {
+    let mut o = Iv::default();
+    for h in hs {
+        let mut g = h.lock();
+        let x = if reset { std::mem::take(&mut *g) } else { Iv { commit: g.commit.clone(), rwin: g.rwin.clone(), rcold: g.rcold.clone(), ryw: g.ryw.clone() } };
+        for (a, b) in [(&mut o.commit, x.commit), (&mut o.rwin, x.rwin), (&mut o.rcold, x.rcold), (&mut o.ryw, x.ryw)] {
+            if let Some(b) = b {
+                a.get_or_insert_with(hist).add(&b).ok();
+            }
+        }
+    }
+    o
 }
 
 fn ivj(i: &Iv) -> serde_json::Value {
@@ -249,8 +268,8 @@ where
 pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     let st = Arc::new(MixedState {
         cl: cl.clone(),
-        iv: Mutex::new(Iv::default()),
-        tot: Mutex::new(Iv::default()),
+        iv: (0..SHARDS).map(|_| Mutex::new(Iv::default())).collect(),
+        tot: (0..SHARDS).map(|_| Mutex::new(Iv::default())).collect(),
         ok: AtomicU64::new(0),
         conflicts: AtomicU64::new(0),
         unknown: AtomicU64::new(0),
@@ -259,44 +278,33 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         reads_behind: AtomicU64::new(0),
         reads_err: AtomicU64::new(0),
         ryw_bad: AtomicU64::new(0),
-        recent: Mutex::new(vec![(0, Bytes::new()); 1 << 16]),
+        recent: (0..1 << 16).map(|_| AtomicU64::new(u64::MAX)).collect(),
         recent_i: AtomicU64::new(0),
-        lagpos: Mutex::new(Default::default()),
+        lag_at: AtomicU64::new(0),
         val: Bytes::from(vec![5u8; c.val]),
     });
     let stop = Arc::new(AtomicBool::new(false));
     // posizione "un po' indietro" per le letture non lineari
     {
         let (st, stop) = (st.clone(), stop.clone());
+        let lag = Duration::from_millis(c.read_lag_ms);
         tokio::spawn(async move {
+            let mut q: std::collections::VecDeque<(Instant, Pos)> = Default::default();
             while !stop.load(Relaxed) {
-                let p = st.cl.seen.load(Relaxed);
-                {
-                    let mut g = st.lagpos.lock();
-                    g.push_back((Instant::now(), p));
-                    while g.len() > 2000 {
-                        g.pop_front();
-                    }
+                q.push_back((Instant::now(), st.cl.seen.load(Relaxed)));
+                while q.len() > 1 && q[1].0.elapsed() >= lag {
+                    q.pop_front();
+                }
+                if q[0].0.elapsed() >= lag {
+                    st.lag_at.store(q[0].1, Relaxed);
                 }
                 tokio::time::sleep(Duration::from_millis(1)).await;
             }
         });
     }
-    let lag = Duration::from_millis(c.read_lag_ms);
-    let lagged = move |st: &MixedState| -> Pos {
-        let g = st.lagpos.lock();
-        let now = Instant::now();
-        let mut p = g.front().map(|x| x.1).unwrap_or(0);
-        for (t, q) in g.iter() {
-            if now.duration_since(*t) >= lag {
-                p = *q;
-            } else {
-                break;
-            }
-        }
-        p
-    };
-    let write = |st: Arc<MixedState>, db: u64, key: Bytes, sched: Instant| async move {
+    let lagged = |st: &MixedState| -> Pos { st.lag_at.load(Relaxed) };
+    let write = |st: Arc<MixedState>, db: u64, kn: u64, sched: Instant| async move {
+        let key = doc_key(&kn.to_string());
         let c = CommitReq {
             txn: txn_id(),
             db: db_id(db),
@@ -313,7 +321,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                 rec(&st.iv, 0, us);
                 rec(&st.tot, 0, us);
                 let i = st.recent_i.fetch_add(1, Relaxed) as usize & 0xffff;
-                st.recent.lock()[i] = (db, key);
+                st.recent[i].store((db << 32) | kn, Relaxed);
             }
             Outcome::Conflict(_) => {
                 st.conflicts.fetch_add(1, Relaxed);
@@ -329,21 +337,18 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
         let (n, k) = (c.small_dbs, c.small_keys);
         hs.push(open_loop(c.small_rate * c.small_dbs as f64, stop.clone(), move |sched| {
             let db = rand::random::<u64>() % n;
-            let key = doc_key(&format!("{}", rand::random::<u64>() % k));
-            write(st2.clone(), db, key, sched)
+            write(st2.clone(), db, rand::random::<u64>() % k, sched)
         }));
     }
     {
         let st2 = st.clone();
         let k = c.hot_keys;
         hs.push(open_loop(c.hot_rate, stop.clone(), move |sched| {
-            let key = doc_key(&format!("{}", rand::random::<u64>() % k));
-            write(st2.clone(), HOT_DB, key, sched)
+            write(st2.clone(), HOT_DB, rand::random::<u64>() % k, sched)
         }));
     }
     {
         let st2 = st.clone();
-        let lagged = lagged.clone();
         hs.push(open_loop(c.reads, stop.clone(), move |sched| {
             let st = st2.clone();
             let at = lagged(&st);
@@ -351,18 +356,19 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                 let window = rand::random::<bool>();
                 let (db, key) = if window {
                     let i = rand::random::<usize>() & 0xffff;
-                    st.recent.lock()[i].clone()
+                    let x = st.recent[i].load(Relaxed);
+                    if x == u64::MAX {
+                        return;
+                    }
+                    (x >> 32, doc_key(&(x & 0xffff_ffff).to_string()))
                 } else {
                     (HOT_DB, doc_key(&format!("cold-{}", rand::random::<u64>())))
                 };
-                if key.is_empty() {
-                    return;
-                }
                 let r = rand::random::<usize>() % st.cl.n();
-                match st.cl.call(r, &Req::Get { db: db_id(db), key, at, wait_ms: 50, spec: false }, Duration::from_secs(2)).await {
+                match st.cl.call(r, &Req::Get { db: db_id(db), key, at, wait_ms: 50, spec: false, dal: 0 }, Duration::from_secs(2)).await {
                     Ok(Resp::Get(g)) => {
                         let us = sched.elapsed().as_micros() as u64;
-                        let ow = matches!(g, GetRes::OutOfWindow);
+                        let ow = matches!(g, GetRes::OutOfWindow { .. });
                         if ow {
                             st.reads_ow.fetch_add(1, Relaxed);
                         }
@@ -398,7 +404,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                 if r as i32 == l {
                     r = (r + 1) % st.cl.n();
                 }
-                match st.cl.call(r, &Req::Get { db: db_id(HOT_DB), key, at: pos, wait_ms: 1000, spec: false }, Duration::from_secs(2)).await {
+                match st.cl.call(r, &Req::Get { db: db_id(HOT_DB), key, at: pos, wait_ms: 1000, spec: false, dal: 0 }, Duration::from_secs(2)).await {
                     Ok(Resp::Get(GetRes::Value(p, got))) if p >= pos => {
                         let us = t0.elapsed().as_micros() as u64;
                         if p == pos && got != v {
@@ -419,7 +425,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     let mut lt = Instant::now();
     while t0.elapsed().as_secs() < c.secs {
         tokio::time::sleep(Duration::from_secs(c.report_every.min(c.secs))).await;
-        let iv = std::mem::take(&mut *st.iv.lock());
+        let iv = merge(&st.iv, true);
         let el = lt.elapsed().as_secs_f64();
         lt = Instant::now();
         let now = (st.ok.load(Relaxed), st.reads_ok.load(Relaxed), st.conflicts.load(Relaxed), st.unknown.load(Relaxed));
@@ -445,7 +451,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     }
     tokio::time::sleep(Duration::from_secs(2)).await;
     let el = t0.elapsed().as_secs_f64();
-    let tot = st.tot.lock();
+    let tot = merge(&st.tot, false);
     println!(
         "{}",
         json!({"final": true, "secs": el, "commits_ok": st.ok.load(Relaxed), "commits_per_s": st.ok.load(Relaxed) as f64 / el,
@@ -491,7 +497,7 @@ pub async fn hot(cl: Arc<Cluster>, mode: &str, clients: usize, secs: u64, max_at
                         // oppure speculativa sull'ultima versione accettata ("spec")
                         let spec = mode == "spec";
                         let at = cl.seen.load(Relaxed);
-                        let r = cl.call_leader(&Req::Get { db, key: key.clone(), at, wait_ms: 100, spec }, Duration::from_secs(5)).await;
+                        let r = cl.call_leader(&Req::Get { db, key: key.clone(), at, wait_ms: 100, spec, dal: 0 }, Duration::from_secs(5)).await;
                         let (vp, v) = match r {
                             Some(Resp::Get(GetRes::Value(p, b))) => (p, i64::from_le_bytes(b[..8].try_into().unwrap())),
                             _ => continue,
@@ -529,7 +535,7 @@ pub async fn hot(cl: Arc<Cluster>, mode: &str, clients: usize, secs: u64, max_at
     let el = t0.elapsed().as_secs_f64();
     // controllo: il contatore vale quanto gli aggiornamenti riusciti
     let p = cl.confirmed(Duration::from_secs(5)).await.unwrap_or(0);
-    let fin = match cl.call_leader(&Req::Get { db, key: key.clone(), at: p, wait_ms: 1000, spec: false }, Duration::from_secs(5)).await {
+    let fin = match cl.call_leader(&Req::Get { db, key: key.clone(), at: p, wait_ms: 1000, spec: false, dal: 0 }, Duration::from_secs(5)).await {
         Some(Resp::Get(GetRes::Value(_, b))) => i64::from_le_bytes(b[..8].try_into().unwrap()),
         _ => -1,
     };
@@ -603,7 +609,7 @@ pub async fn lin(cl: Arc<Cluster>, secs: u64, keys: u64, writers: usize, readers
                 }
                 let mut nb = 0;
                 let res = loop {
-                    match cl.call(r, &Req::Get { db, key: doc_key(&k.to_string()), at: s, wait_ms: 20, spec: false }, Duration::from_millis(1000)).await {
+                    match cl.call(r, &Req::Get { db, key: doc_key(&k.to_string()), at: s, wait_ms: 20, spec: false, dal: 0 }, Duration::from_millis(1000)).await {
                         Ok(Resp::Get(g)) => break Some(g),
                         Ok(Resp::Behind(_)) | Err(CallErr::Timeout) | Err(CallErr::Closed) => {
                             behind[r].fetch_add(1, Relaxed);
@@ -624,7 +630,7 @@ pub async fn lin(cl: Arc<Cluster>, secs: u64, keys: u64, writers: usize, readers
                 let (val, pos) = match g {
                     GetRes::Value(p, b) => (u64::from_le_bytes(b[..8].try_into().unwrap()), p),
                     GetRes::Absent(p) => (0, p),
-                    GetRes::OutOfWindow => (u64::MAX, 0),
+                    GetRes::OutOfWindow { .. } | GetRes::Delta { .. } => (u64::MAX, 0),
                 };
                 f.lock().write_all(format!("r,{k},{val},{t0},{t1},{pos},{r},{s},{nb}\n").as_bytes()).unwrap();
                 if pause_us > 0 {

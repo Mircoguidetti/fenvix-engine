@@ -33,7 +33,7 @@ impl Args {
 
 fn cluster(a: &Args) -> Arc<Cluster> {
     let addrs: Vec<String> = a.s("replicas", "127.0.0.1:7200,127.0.0.1:7201,127.0.0.1:7202").split(',').map(String::from).collect();
-    Cluster::new(addrs, a.u("conns", 4) as usize)
+    Cluster::new(addrs, a.u("conns", 16) as usize)
 }
 
 fn rt(threads: usize) -> tokio::runtime::Runtime {

@@ -236,18 +236,19 @@ impl Window {
 
     /// Valore di una chiave alla posizione `at` (chi chiama garantisce at ≤ posizione confermata, oppure legge
     /// speculativamente sul leader con at = MAX).
-    pub fn get(&self, db: &Db, key: &[u8], at: Pos, load: Loader) -> GetRes {
+    /// `dal`: posizione `scaricato` del manifest che userà chi legge (0 = non detta).
+    pub fn get(&self, db: &Db, key: &[u8], at: Pos, dal: Pos, load: Loader) -> GetRes {
         let Some(d) = self.dbs.get(db) else {
-            return if self.genesis { GetRes::Absent(0) } else { GetRes::OutOfWindow };
+            return if self.genesis { GetRes::Absent(0) } else { GetRes::OutOfWindow { trimmed: 0, etag: Bytes::new() } };
         };
         let complete = d.genesis && d.trim_pos == 0;
         let Some(ks) = d.keys.get(key) else {
-            return if complete { GetRes::Absent(0) } else { GetRes::OutOfWindow };
+            return if complete { GetRes::Absent(0) } else { GetRes::OutOfWindow { trimmed: d.trim_pos, etag: d.etag.clone() } };
         };
-        resolve(ks, at, complete, load)
+        resolve(ks, at, complete, d, dal, load)
     }
 
-    pub fn scan(&self, db: &Db, from: &[u8], to: &[u8], at: Pos, limit: usize, load: Loader) -> Vec<(Bytes, GetRes)> {
+    pub fn scan(&self, db: &Db, from: &[u8], to: &[u8], at: Pos, limit: usize, dal: Pos, load: Loader) -> Vec<(Bytes, GetRes)> {
         let mut out = vec![];
         let Some(d) = self.dbs.get(db) else { return out };
         let complete = d.genesis && d.trim_pos == 0;
@@ -260,7 +261,7 @@ impl Window {
             if out.len() >= limit {
                 break;
             }
-            let r = resolve(ks, at, complete, load);
+            let r = resolve(ks, at, complete, d, dal, load);
             if matches!(r, GetRes::Absent(0)) && complete {
                 continue; // non esisteva ancora a `at`
             }
@@ -355,11 +356,12 @@ fn val_of(v: &Val, load: Loader) -> Bytes {
     }
 }
 
-fn resolve(ks: &KeyS, at: Pos, complete: bool, load: Loader) -> GetRes {
+fn resolve(ks: &KeyS, at: Pos, complete: bool, d: &DbW, dal: Pos, load: Loader) -> GetRes {
+    let oow = || GetRes::OutOfWindow { trimmed: d.trim_pos, etag: d.etag.clone() };
     // ultima versione con pos ≤ at
     let n = ks.v.partition_point(|v| v.pos <= at);
     if n == 0 {
-        return if complete { GetRes::Absent(0) } else { GetRes::OutOfWindow };
+        return if complete { GetRes::Absent(0) } else { oow() };
     }
     let top = &ks.v[n - 1];
     match top.kind {
@@ -386,7 +388,17 @@ fn resolve(ks: &KeyS, at: Pos, complete: bool, load: Loader) -> GetRes {
                 Kind::Del => None,
                 Kind::Delta => {
                     if !ks.base_known {
-                        return GetRes::OutOfWindow;
+                        // base negli SST: somma dei delta della finestra dopo il manifest di chi legge
+                        if dal != 0 && dal < d.trim_pos {
+                            return oow(); // manifest troppo vecchio: va riletto
+                        }
+                        let mut sum = 0i64;
+                        for &j in deltas.iter() {
+                            if ks.v[j].pos > dal {
+                                sum = sum.wrapping_add(i64::from_le_bytes(val_of(&ks.v[j].val, load).get(..8).map(|x| x.try_into().unwrap()).unwrap_or([0; 8])));
+                            }
+                        }
+                        return GetRes::Delta { pos: top.pos, sum, trimmed: d.trim_pos };
                     }
                     None
                 }
@@ -420,9 +432,9 @@ mod tests {
             GetRes::Value(_, b) => i64::from_le_bytes(b[..8].try_into().unwrap()),
             o => panic!("{o:?}"),
         };
-        assert_eq!(v(win.get(&db, b"a", 25, &mut l)), 8);
-        assert_eq!(v(win.get(&db, b"a", 30, &mut l)), 10);
-        assert!(matches!(win.get(&db, b"a", 5, &mut l), GetRes::Absent(0)));
+        assert_eq!(v(win.get(&db, b"a", 25, 0, &mut l)), 8);
+        assert_eq!(v(win.get(&db, b"a", 30, 0, &mut l)), 10);
+        assert!(matches!(win.get(&db, b"a", 5, 0, &mut l), GetRes::Absent(0)));
         assert!(win.validate(&db, 20, &[w("a", Kind::Put, b"x")], true, &[]).is_err());
         assert!(win.validate(&db, 30, &[w("a", Kind::Put, b"x")], true, &[]).is_ok());
         // esiste: i delta dopo S non conflittano, valore sì
@@ -433,9 +445,34 @@ mod tests {
         assert!(win.trim_one(&db, 100, 30, &mut l).is_some());
         assert!(win.trim_one(&db, 100, 30, &mut l).is_some());
         assert!(win.trim_one(&db, 100, 30, &mut l).is_none()); // 30 non è su S3
-        assert_eq!(v(win.get(&db, b"a", 30, &mut l)), 10);
-        assert!(matches!(win.get(&db, b"a", 25, &mut l), GetRes::OutOfWindow));
-        assert!(matches!(win.get(&db, b"zz", 30, &mut l), GetRes::OutOfWindow));
+        assert_eq!(v(win.get(&db, b"a", 30, 0, &mut l)), 10);
+        assert!(matches!(win.get(&db, b"a", 25, 0, &mut l), GetRes::OutOfWindow { .. }));
+        assert!(matches!(win.get(&db, b"zz", 30, 0, &mut l), GetRes::OutOfWindow { .. }));
         assert!(win.validate(&db, 15, &[w("q", Kind::Put, b"x")], true, &[]).is_err()); // S prima della finestra
+    }
+
+    #[test]
+    fn delta_con_base_negli_sst() {
+        // database che esisteva già negli SST (finestra non dalla nascita)
+        let mut win = Window::new(false);
+        let db = [2u8; 16];
+        let mut l = noload();
+        win.apply(1, 10, [0; 16], &db, &[w("c", Kind::Put, &5i64.to_le_bytes())], 8);
+        win.dbs.get_mut(&db).unwrap().flushed = 10;
+        assert!(win.trim_one(&db, 100, 10, &mut l).is_some()); // "c" esce: la base sta negli SST
+        win.apply(2, 20, [1; 16], &db, &[w("c", Kind::Delta, &3i64.to_le_bytes())], 8);
+        win.apply(3, 30, [2; 16], &db, &[w("c", Kind::Delta, &4i64.to_le_bytes())], 8);
+        match win.get(&db, b"c", 30, 0, &mut l) {
+            GetRes::Delta { pos, sum, trimmed } => assert_eq!((pos, sum, trimmed), (30, 7, 10)),
+            o => panic!("{o:?}"),
+        }
+        // il manifest di chi legge copre già il delta a 20: si somma solo quello a 30
+        match win.get(&db, b"c", 30, 20, &mut l) {
+            GetRes::Delta { sum, .. } => assert_eq!(sum, 4),
+            o => panic!("{o:?}"),
+        }
+        // manifest più vecchio di quanto è uscito dalla finestra: va riletto
+        assert!(matches!(win.get(&db, b"c", 30, 5, &mut l), GetRes::OutOfWindow { trimmed: 10, .. }));
+        assert!(matches!(win.get(&db, b"zz", 30, 0, &mut l), GetRes::OutOfWindow { trimmed: 10, .. }));
     }
 }

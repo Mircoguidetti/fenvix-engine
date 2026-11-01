@@ -47,14 +47,20 @@ valore)], reads: [chiave] (opzionale, vuoto = nessuna), session: (lsid, txnNumbe
   - Valido per `S ≤` posizione confermata nota alla replica. Se la replica non ha ancora applicato `S`, aspetta fino a
     `wait_ms` **[parametro aggiunto]**, poi risponde **`indietro(posizione confermata nota)` [aggiunta]**: è il caso
     della replica isolata, che così non serve mai letture vecchie; il lettore prova un'altra replica.
-  - `fuori_finestra`: la finestra non basta (la chiave non ha versioni nella finestra, oppure `S` precede la prima
-    versione rimasta): la risposta sta negli SST, che contengono tutto fino all'inizio della finestra.
+  - `fuori_finestra(potato_fino_a, etag)`: la finestra non basta (la chiave non ha versioni nella finestra, oppure
+    `S` precede la prima versione rimasta): la risposta sta negli SST. **[aggiunta di proto-lettura, accettata]**
+    `potato_fino_a` = posizione fino alla quale i record del database sono usciti dalla finestra: chi legge deve
+    usare un manifest con `scaricato >= potato_fino_a`; `etag` = ultimo manifest confermato al registro.
   - `assente` con posizione 0 si ha solo per un database la cui storia è interamente nella finestra (nato dopo
     l'avvio del registro, mai potato).
-  - Delta: la replica compone la catena di delta fino al primo put/delete. Se la base è fuori dalla finestra (il
-    database esisteva già negli SST) risponde `fuori_finestra` **[limite noto: per comporre servirebbero i delta
-    grezzi della finestra; con la potatura del prototipo succede solo se una chiave riceve solo delta dopo essere
-    uscita dalla finestra]**.
+  - Delta: la replica compone la catena di delta fino al primo put/delete. Se la base è fuori dalla finestra
+    risponde **`delta(pos, somma, potato_fino_a)` [aggiunta di proto-lettura, accettata con una correzione]**: il
+    valore è (valore negli SST al manifest usato) + `somma`. **Correzione**: un delta resta nella finestra fino a 60 s
+    anche dopo essere finito su S3, quindi la somma va fatta solo sui delta che il manifest di chi legge non contiene
+    già. Per questo `get` e `scan` hanno il parametro facoltativo **`dal`** = `scaricato` del manifest che chi legge
+    userà: `somma` = delta in `(dal, S]`. Se `dal < potato_fino_a` la risposta è `fuori_finestra` (manifest troppo
+    vecchio, va riletto). Con `dal = 0` la somma comprende tutti i delta della finestra ≤ S (corretta solo se il
+    manifest usato ha `scaricato` = `potato_fino_a`).
   - **[aggiunta]** `get` con `spec = vero`, solo sul leader: ultima versione accettata, anche non confermata. Serve
     alla modalità validata sulla chiave calda (banco 3): il valore letto non arriva mai all'utente se il commit che ne
     dipende non viene confermato (le voci si confermano in ordine).
@@ -74,5 +80,9 @@ valore)], reads: [chiave] (opzionale, vuoto = nessuna), session: (lsid, txnNumbe
 - `conferma_scarico(db, fino_a, etag_del_manifest)`: va al leader, entra nel registro come voce di servizio e si
   applica alla conferma su tutte le repliche. Un record esce dalla finestra quando è su S3 **e** più vecchio di 60 s.
   **[trasporto]** più database per richiesta.
-- **[aggiunta]** `pendenti(limite)`: database con record non ancora su S3 e posizione del più vecchio (serve agli
-  scaricatori per sapere cosa scaricare).
+- **[aggiunta]** `pendenti(limite)`: database con record non ancora su S3: posizione del più vecchio e
+  **[aggiunta di proto-lettura, accettata]** numero di record e byte non su S3 e `scaricato` del registro.
+- **[aggiunta di proto-lettura, accettata]** `stato_scarico(db...) -> (scaricato, etag, potato_fino_a)` per ogni
+  database chiesto.
+- **[proposta di proto-lettura, già compatibile]** un manifest può coprire più database: `conferma_scarico` riceve lo
+  stesso etag per tutti (lo scaricatore del prototipo fa già così, 16 gruppi più il database caldo da solo).
