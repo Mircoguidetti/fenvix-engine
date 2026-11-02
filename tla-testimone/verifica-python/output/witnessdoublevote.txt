@@ -1,0 +1,5 @@
+flags=['WitnessDoubleVote'] generati=37 distinti=22
+VIOLATA ElectionSafety, traccia di 3 stati:
+ 1: epoch=(0, 0) capo=(0, 0) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=0 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 2: epoch=(0, 1) capo=(0, 1) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=1 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 3: epoch=(1, 1) capo=(1, 1) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=1 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False

@@ -41,12 +41,19 @@
 (*                    ricevuta azzerate (disco del testimone perso)         *)
 (*  NoOwnEpochRule    in modo degradato si confermano anche voci di epoche  *)
 (*                    vecchie (regola di Raft sul commit tolta)             *)
+(*  Aggiunti su richiesta del revisore notturno (regole non nel prompt):    *)
+(*  NoVoteLogCheck    l'altra copia vota senza guardare il quaderno del     *)
+(*                    candidato (AtLeast tolto in ElectByCopy)              *)
+(*  ReplicateToHigher il capo copia il quaderno anche su una copia con un   *)
+(*                    turno piu' alto (epoch[f] <= epoch[l] tolto)          *)
+(*  NoAckReset        l'ack non si azzera all'elezione (match tenuto)       *)
 (***************************************************************************)
 EXTENDS Naturals, Sequences, FiniteSets
 
 CONSTANTS Copies, MaxEpoch, MaxLen, MaxLoss, MaxRestart,
           AckOnOne, NoWitnessGrant, NoReceipt, NoReceiptCheck,
-          WitnessDoubleVote, WitnessAmnesia, NoOwnEpochRule
+          WitnessDoubleVote, WitnessAmnesia, NoOwnEpochRule,
+          NoVoteLogCheck, ReplicateToHigher, NoAckReset
 
 ASSUME Cardinality(Copies) = 2
 
@@ -120,11 +127,11 @@ ElectByCopy(c, e) ==
   LET v == Other(c) IN
   /\ alive[c] /\ alive[v]
   /\ epoch[c] < e /\ epoch[v] < e
-  /\ AtLeast(log[c], LastEp(log[v]), Len(log[v]))
+  /\ NoVoteLogCheck \/ AtLeast(log[c], LastEp(log[v]), Len(log[v]))
   /\ epoch' = [epoch EXCEPT ![c] = e, ![v] = e]
   /\ role' = [role EXCEPT ![c] = "capo", ![v] = "seguace"]
   /\ mode' = [mode EXCEPT ![c] = "pieno", ![v] = "pieno"]
-  /\ match' = [match EXCEPT ![c] = 0]
+  /\ match' = IF NoAckReset THEN match ELSE [match EXCEPT ![c] = 0]
   /\ UNCHANGED <<log, alive, wEpoch, wRec, cmt, cmtAt, pienoMax, split, degBy, losses, restarts>>
 
 (* R1: elezione con il voto del testimone *)
@@ -137,7 +144,7 @@ ElectByWitness(c, e) ==
   /\ epoch' = [epoch EXCEPT ![c] = e]
   /\ role' = [role EXCEPT ![c] = "capo"]
   /\ mode' = [mode EXCEPT ![c] = "pieno"]
-  /\ match' = [match EXCEPT ![c] = 0]
+  /\ match' = IF NoAckReset THEN match ELSE [match EXCEPT ![c] = 0]
   /\ UNCHANGED <<log, alive, wRec, cmt, cmtAt, pienoMax, split, degBy, losses, restarts>>
 
 (* Il capo scrive una voce nuova nel suo quaderno (non ancora confermata). *)
@@ -153,7 +160,7 @@ ClientWrite(l) ==
 Replicate(l) ==
   LET f == Other(l) IN
   /\ alive[l] /\ alive[f] /\ role[l] = "capo"
-  /\ epoch[f] <= epoch[l]
+  /\ ReplicateToHigher \/ epoch[f] <= epoch[l]
   /\ log[f] # log[l] \/ match[l] # Len(log[l])
   /\ log' = [log EXCEPT ![f] = log[l]]
   /\ epoch' = [epoch EXCEPT ![f] = epoch[l]]

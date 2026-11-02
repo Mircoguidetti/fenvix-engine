@@ -10,6 +10,8 @@ Origine: revisore delle idee pazze 3, punto 1 (`fenvix-brain/sessions/2026-11-01
 - `MCTestimone.tla`: simmetria tra le due copie.
 - `Testimone-*.cfg`: una configurazione per ogni esecuzione.
 - `output/`: output completo di TLC di ogni configurazione.
+- `verifica-python/`: traduzione a mano del modello in Python (ricerca in ampiezza con la stessa
+  simmetria), usata nel giro 2 quando TLC non si poteva eseguire; i suoi output in `verifica-python/output/`.
 - `run.sh`: riproduce tutto (`./run.sh` oppure `./run.sh Testimone-base`). Serve `tla2tools.jar` v1.8.0
   nella cartella (vedi la testa di `run.sh`).
 
@@ -50,6 +52,45 @@ Origine: revisore delle idee pazze 3, punto 1 (`fenvix-brain/sessions/2026-11-01
 - Controlli di raggiungibilità (devono essere violati, e lo sono): `sanity-degradato` (si arriva a una
   conferma in modo degradato) e `sanity-cambio` (dopo il modo degradato l'altra copia prende il comando
   e la copia che confermava da sola perde il disco).
+
+## Giro 2 (2 novembre 2026): tre controlli negativi in più (revisore notturno)
+
+Il revisore ha chiesto di togliere anche le tre regole che il prompt non elencava. Nuove costanti in
+`Testimone.tla` (tutte FALSE nelle configurazioni di prima, che quindi non cambiano) e tre configurazioni:
+
+- `novotelogcheck` (l'altra copia vota senza guardare il quaderno del candidato): `LeaderCompleteness`
+  violata, traccia di 6 stati. La copia `b` conferma una voce in modo degradato con la ricevuta; poi la
+  copia `a`, con il quaderno vuoto, si fa eleggere con il voto di `b` e comanda senza quella voce.
+- `replicatetohigher` (il capo copia il quaderno anche su una copia con un turno più alto):
+  `LeaderCompleteness` violata, traccia di 8 stati. Un capo vecchio (turno 1) sovrascrive il quaderno
+  del capo nuovo (turno 2), che aveva appena confermato una voce in modo degradato, e gli abbassa il turno.
+- `noackreset` (l'ack non si azzera all'elezione): **nessuna violazione**, modello completo (623.950
+  stati distinti). Il perché, controllato con un'invariante in più: in questo modello il capo copia il
+  quaderno **intero**, quindi la parte confermata dall'ack è sempre uguale sulle due copie, anche dopo un
+  cambio di capo. Un ack vecchio non è mai sbagliato qui. Nel motore vero (copia voce per voce, messaggi
+  in ritardo) un ack vecchio può indicare voci che l'altra copia ha già perso nel troncamento: la regola
+  serve, ma questo modello è troppo semplice per mostrarlo. Va provata nella versione con i messaggi in
+  volo (correzione 5 del revisore), non tolta.
+
+**Come sono stati misurati.** In questa sessione l'ambiente ha bloccato l'esecuzione di
+`tla2tools.jar` scaricato (lo stesso blocco del revisore notturno). Per non lasciare i controlli senza
+prova ho tradotto `Testimone.tla` a mano in Python (`verifica-python/testimone.py`, ricerca in ampiezza
+con la simmetria tra le due copie). La traduzione è controllata contro TLC: sul modello `base` trova
+**esattamente 534.951 stati distinti** come TLC, e trova violati, con la stessa invariante, tutti i 7
+controlli negativi vecchi e i 2 di raggiungibilità (MISURATO, output in `verifica-python/output/`).
+I numeri dei tre controlli nuovi sono quindi MISURATI con la traduzione, **non con TLC**: le
+configurazioni `.cfg` sono pronte e vanno rifatte girare con `./run.sh` appena TLC si può eseguire.
+`base-grande` (9,6 milioni di stati) non è stato rifatto: in Python non sta nella memoria della macchina.
+
+## Due frasi da portare nel disegno
+
+- **RPO zero solo in modo pieno.** In modo degradato una conferma sta su un disco solo: se quel disco
+  muore, la perdita possibile è la coda non ancora copiata su S3 (circa l'ultimo secondo, STIMATO; N1
+  ha misurato 0,6–0,75 s di coda persa in locale). Ovunque si parli di "due zone più testimone", anche
+  verso i clienti, si scrive "RPO zero in modo pieno, circa 1 s in modo degradato".
+- **Il testimone è un componente nuovo e deve avere epoca e ricevuta su memoria durevole** (il controllo
+  `witnessamnesia` mostra che senza si rompe tutto). Dove metterlo (piccola macchina con EBS, oggetto S3
+  con scrittura condizionale, altro) è una scelta di disegno: decide il fondatore.
 
 ## Cosa NON copre
 
