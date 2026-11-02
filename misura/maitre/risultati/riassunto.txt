@@ -1,0 +1,126 @@
+
+### catalogo base  eventi=93014480
+cache_app=0 W=300 letture=5029180 al_db=5029180 coll=22.9% int=35.4% tetto=60.1% pronte=88570
+   point  al_db=2549091 coll=33.3% int=53.4% tetto=69.5%
+   filter al_db=1654066 coll=13.0% int=16.8% tetto=41.7%
+   count  al_db=321111 coll=16.4% int=22.8% tetto=81.7%
+   agg    al_db=504912 coll=6.8% int=13.5% tetto=59.1%
+cache_app=0 W=600 letture=5029180 al_db=5029180 coll=23.4% int=37.3% tetto=63.5% pronte=144972
+   point  al_db=2549091 coll=34.2% int=56.4% tetto=74.3%
+   filter al_db=1654066 coll=13.3% int=17.6% tetto=44.0%
+   count  al_db=321111 coll=16.4% int=23.3% tetto=82.9%
+   agg    al_db=504912 coll=6.9% int=14.0% tetto=60.6%
+cache_app=0 W=3600 letture=5029180 al_db=5029180 coll=24.2% int=40.8% tetto=70.4% pronte=469014
+   point  al_db=2549091 coll=35.4% int=62.2% tetto=84.6%
+   filter al_db=1654066 coll=13.8% int=19.1% tetto=48.3%
+   count  al_db=321111 coll=16.4% int=24.0% tetto=85.5%
+   agg    al_db=504912 coll=7.0% int=14.6% tetto=62.1%
+cache_app=60 W=300 letture=5029180 al_db=2729853 coll=5.6% int=12.4% tetto=26.3% pronte=88343
+   point  al_db=1197870 coll=9.7% int=21.6% tetto=34.9%
+   filter al_db=1180880 coll=2.9% int=5.5% tetto=18.2%
+   count  al_db=104707 coll=0.0% int=4.0% tetto=43.9%
+   agg    al_db=246396 coll=0.5% int=4.9% tetto=16.0%
+cache_app=60 W=600 letture=5029180 al_db=2729853 coll=6.6% int=15.9% tetto=32.7% pronte=144895
+   point  al_db=1197870 coll=11.7% int=28.0% tetto=45.3%
+   filter al_db=1180880 coll=3.3% int=6.6% tetto=21.5%
+   count  al_db=104707 coll=0.0% int=5.4% tetto=47.5%
+   agg    al_db=246396 coll=0.7% int=6.0% tetto=19.3%
+   app con almeno 50 letture al db: 77; mediana coll=3.1% int=17.2%; sopra 50% coll: 2; 25-50%: 9; sotto 25%: 66
+      38-moduli                    al_db=    1468 coll=61.4% int=61.6% tetto=70.1%
+      76-webhook                   al_db=    2403 coll=50.0% int=50.0% tetto=50.0%
+      57-contatori-energia         al_db=    5230 coll=47.9% int=47.9% tetto=47.9%
+      66-interruttori              al_db=    5527 coll=44.7% int=80.5% tetto=91.5%
+      12-newsletter                al_db=  118283 coll=43.8% int=43.8% tetto=44.2%
+      50-eval                      al_db=     615 coll=42.3% int=42.6% tetto=72.4%
+      34-presenze                  al_db=   17772 coll=36.6% int=56.3% tetto=88.7%
+      49-assistente-mcp            al_db=     149 coll=33.6% int=33.6% tetto=34.2%
+      51-sensori                   al_db=   34180 coll=31.1% int=31.1% tetto=48.8%
+      29-biglietteria              al_db=     153 coll=27.5% int=37.9% tetto=58.2%
+      30-trasporti                 al_db=  167263 coll=25.9% int=25.9% tetto=26.1%
+      24-prenota-tavoli            al_db=   26662 coll=23.6% int=32.8% tetto=40.2%
+      23-lavagna                   al_db=    6170 coll=23.5% int=23.5% tetto=25.9%
+      36-kanban                    al_db=   15825 coll=22.3% int=35.3% tetto=54.2%
+      54-monitoraggio              al_db=    7440 coll=19.3% int=22.1% tetto=43.0%
+   app con più letture al db:
+      47-cache-modelli             al_db=  308553 coll=0.0% int=26.3% tetto=33.4%
+      22-presenza                  al_db=  287548 coll=0.0% int=0.0% tetto=0.0%
+      83-saas-200                  al_db=  240723 coll=0.0% int=0.7% tetto=52.5%
+      25-consegne                  al_db=  219387 coll=0.0% int=11.6% tetto=24.6%
+      30-trasporti                 al_db=  167263 coll=25.9% int=25.9% tetto=26.1%
+      74-accorciatore              al_db=  142244 coll=0.0% int=22.3% tetto=53.6%
+      12-newsletter                al_db=  118283 coll=43.8% int=43.8% tetto=44.2%
+      52-telemetria-secchielli     al_db=   98918 coll=0.0% int=8.6% tetto=23.5%
+cache_app=60 W=3600 letture=5029180 al_db=2729853 coll=8.1% int=22.5% tetto=45.5% pronte=469017
+   point  al_db=1197870 coll=14.2% int=40.4% tetto=67.0%
+   filter al_db=1180880 coll=4.1% int=8.7% tetto=27.6%
+   count  al_db=104707 coll=0.0% int=7.7% tetto=55.4%
+   agg    al_db=246396 coll=0.8% int=7.1% tetto=22.3%
+
+### catalogo favorevole  eventi=92992243
+cache_app=0 W=300 letture=5026415 al_db=5026415 coll=33.0% int=43.7% tetto=74.5% pronte=44667
+   point  al_db=2545225 coll=44.5% int=67.2% tetto=91.5%
+   filter al_db=1656800 coll=22.4% int=19.9% tetto=49.8%
+   count  al_db=320566 coll=36.0% int=25.2% tetto=86.4%
+   agg    al_db=503824 coll=7.6% int=15.2% tetto=62.4%
+cache_app=0 W=600 letture=5026415 al_db=5026415 coll=33.2% int=44.5% tetto=76.0% pronte=79115
+   point  al_db=2545225 coll=44.7% int=68.4% tetto=93.6%
+   filter al_db=1656800 coll=22.6% int=20.2% tetto=50.9%
+   count  al_db=320566 coll=36.0% int=25.4% tetto=86.8%
+   agg    al_db=503824 coll=7.6% int=15.3% tetto=62.6%
+cache_app=0 W=3600 letture=5026415 al_db=5026415 coll=33.4% int=45.7% tetto=78.5% pronte=308600
+   point  al_db=2545225 coll=45.0% int=70.4% tetto=97.2%
+   filter al_db=1656800 coll=22.8% int=20.9% tetto=52.8%
+   count  al_db=320566 coll=36.0% int=25.6% tetto=87.5%
+   agg    al_db=503824 coll=7.6% int=15.3% tetto=62.8%
+cache_app=60 W=300 letture=5026415 al_db=1786850 coll=5.8% int=11.6% tetto=28.2% pronte=44620
+   point  al_db=541707 coll=14.6% int=30.4% tetto=59.6%
+   filter al_db=970275 coll=2.3% int=3.6% tetto=14.3%
+   count  al_db=64149 coll=0.0% int=3.7% tetto=32.0%
+   agg    al_db=210719 coll=0.5% int=2.8% tetto=10.2%
+cache_app=60 W=600 letture=5026415 al_db=1786850 coll=6.3% int=13.7% tetto=32.4% pronte=79059
+   point  al_db=541707 coll=15.9% int=35.9% tetto=69.9%
+   filter al_db=970275 coll=2.6% int=4.2% tetto=16.1%
+   count  al_db=64149 coll=0.0% int=4.4% tetto=34.1%
+   agg    al_db=210719 coll=0.5% int=2.9% tetto=10.6%
+   app con almeno 50 letture al db: 75; mediana coll=6.0% int=19.4%; sopra 50% coll: 5; 25-50%: 6; sotto 25%: 64
+      76-webhook                   al_db=     938 coll=79.7% int=79.7% tetto=79.7%
+      57-contatori-energia         al_db=    3196 coll=66.6% int=66.6% tetto=66.6%
+      38-moduli                    al_db=     539 coll=65.9% int=65.9% tetto=87.9%
+      29-biglietteria              al_db=     109 coll=56.9% int=56.9% tetto=93.6%
+      12-newsletter                al_db=   56668 coll=53.2% int=53.2% tetto=53.2%
+      54-monitoraggio              al_db=    4826 coll=39.4% int=39.4% tetto=80.3%
+      49-assistente-mcp            al_db=     123 coll=39.0% int=39.0% tetto=39.0%
+      34-presenze                  al_db=    4477 coll=35.4% int=50.3% tetto=92.2%
+      50-eval                      al_db=     142 coll=33.8% int=35.2% tetto=62.0%
+      37-scuola                    al_db=    1486 coll=29.3% int=46.3% tetto=58.5%
+      43-chatbot                   al_db=    3724 coll=26.6% int=34.3% tetto=50.4%
+      66-interruttori              al_db=    1092 coll=24.0% int=33.1% tetto=61.7%
+      16-chat                      al_db=   56313 coll=23.4% int=24.6% tetto=44.6%
+      10-cms-headless              al_db=    2604 coll=23.0% int=30.7% tetto=47.5%
+      27-alloggi                   al_db=   32536 coll=20.4% int=25.1% tetto=29.6%
+   app con più letture al db:
+      22-presenza                  al_db=  288280 coll=0.0% int=0.0% tetto=0.0%
+      25-consegne                  al_db=  169257 coll=0.0% int=5.5% tetto=13.7%
+      83-saas-200                  al_db=  149866 coll=0.0% int=0.2% tetto=60.9%
+      30-trasporti                 al_db=  128805 coll=13.0% int=13.0% tetto=13.1%
+      47-cache-modelli             al_db=  121908 coll=0.0% int=41.2% tetto=59.6%
+      52-telemetria-secchielli     al_db=   80230 coll=0.0% int=3.7% tetto=9.6%
+      28-bici                      al_db=   57093 coll=0.0% int=0.0% tetto=1.9%
+      12-newsletter                al_db=   56668 coll=53.2% int=53.2% tetto=53.2%
+cache_app=60 W=3600 letture=5026415 al_db=1786850 coll=6.9% int=17.2% tetto=39.5% pronte=308602
+   point  al_db=541707 coll=17.3% int=45.6% tetto=86.9%
+   filter al_db=970275 coll=3.0% int=5.3% tetto=19.4%
+   count  al_db=64149 coll=0.0% int=5.4% tetto=37.6%
+   agg    al_db=210719 coll=0.5% int=3.1% tetto=11.1%
+
+### twitter: 54 cluster
+senza cache app: letture al db=37227263 pesato coll=19.6% int=62.9% tetto=69.1% | mediana coll=4.4% int=49.0% | cluster sopra 50% coll=4 int=27 | cluster con almeno 300 s: 25, mediana int=24.1%
+cache app 10 s: letture al db=17327664 pesato coll=1.4% int=26.1% tetto=33.7% | mediana coll=0.0% int=19.9% | cluster sopra 50% coll=0 int=13 | cluster con almeno 300 s: 25, mediana int=8.2%
+cache app 60 s: letture al db=13821858 pesato coll=0.7% int=12.4% tetto=16.8% | mediana coll=0.0% int=6.2% | cluster sopra 50% coll=0 int=2 | cluster con almeno 300 s: 25, mediana int=4.7%
+durata dei campioni: min 49 s, mediana 249.5 s, max 509593 s
+
+### twitter-riempimenti: 54 cluster
+senza cache app: letture al db=37227263 pesato coll=40.7% int=68.8% tetto=69.1% | mediana coll=25.8% int=71.9% | cluster sopra 50% coll=16 int=30 | cluster con almeno 300 s: 25, mediana int=43.6%
+cache app 10 s: letture al db=17327664 pesato coll=10.3% int=33.3% tetto=33.7% | mediana coll=0.0% int=28.8% | cluster sopra 50% coll=5 int=16 | cluster con almeno 300 s: 25, mediana int=21.3%
+cache app 60 s: letture al db=13821858 pesato coll=3.9% int=16.6% tetto=16.8% | mediana coll=0.0% int=11.2% | cluster sopra 50% coll=0 int=3 | cluster con almeno 300 s: 25, mediana int=12.7%
+durata dei campioni: min 49 s, mediana 249.5 s, max 509593 s

@@ -1,0 +1,3650 @@
+{
+ "cluster001": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 994331,
+   "assorbite_app": 0,
+   "letture_al_db": 994331,
+   "scritture": 5669,
+   "picco_risposte_pronte": 9087,
+   "per_tipo": {
+    "point": {
+     "letture": 994331,
+     "al_db": 994331,
+     "collezione": 0.37524928821489023,
+     "intervallo": 0.9872859239026038,
+     "tetto": 0.9907384965368675
+    }
+   },
+   "collezione": 0.37524928821489023,
+   "intervallo": 0.9872859239026038,
+   "tetto": 0.9907384965368675,
+   "durata_s": 93
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 994331,
+   "assorbite_app": 957522,
+   "letture_al_db": 36809,
+   "scritture": 5669,
+   "picco_risposte_pronte": 9087,
+   "per_tipo": {
+    "point": {
+     "letture": 994331,
+     "al_db": 36809,
+     "collezione": 0.0,
+     "intervallo": 0.6955635849928007,
+     "tetto": 0.7498166209350974
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.6955635849928007,
+   "tetto": 0.7498166209350974,
+   "durata_s": 93
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 994331,
+   "assorbite_app": 980773,
+   "letture_al_db": 13558,
+   "scritture": 5669,
+   "picco_risposte_pronte": 9087,
+   "per_tipo": {
+    "point": {
+     "letture": 994331,
+     "al_db": 13558,
+     "collezione": 0.0,
+     "intervallo": 0.23801445640949992,
+     "tetto": 0.32077002507744506
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.23801445640949992,
+   "tetto": 0.32077002507744506,
+   "durata_s": 93
+  }
+ ],
+ "cluster002": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 997678,
+   "assorbite_app": 0,
+   "letture_al_db": 997678,
+   "scritture": 2322,
+   "picco_risposte_pronte": 17083,
+   "per_tipo": {
+    "point": {
+     "letture": 997678,
+     "al_db": 997678,
+     "collezione": 0.8535780081348893,
+     "intervallo": 0.9792698646256608,
+     "tetto": 0.9810981098109811
+    }
+   },
+   "collezione": 0.8535780081348893,
+   "intervallo": 0.9792698646256608,
+   "tetto": 0.9810981098109811,
+   "durata_s": 203
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 997678,
+   "assorbite_app": 954821,
+   "letture_al_db": 42857,
+   "scritture": 2322,
+   "picco_risposte_pronte": 17083,
+   "per_tipo": {
+    "point": {
+     "letture": 997678,
+     "al_db": 42857,
+     "collezione": 9.333364444548149e-05,
+     "intervallo": 0.5587185290617636,
+     "tetto": 0.5599785332617775
+    }
+   },
+   "collezione": 9.333364444548149e-05,
+   "intervallo": 0.5587185290617636,
+   "tetto": 0.5599785332617775,
+   "durata_s": 203
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 997678,
+   "assorbite_app": 972853,
+   "letture_al_db": 24825,
+   "scritture": 2322,
+   "picco_risposte_pronte": 17083,
+   "per_tipo": {
+    "point": {
+     "letture": 997678,
+     "al_db": 24825,
+     "collezione": 0.00016112789526686808,
+     "intervallo": 0.2388318227593152,
+     "tetto": 0.24036253776435046
+    }
+   },
+   "collezione": 0.00016112789526686808,
+   "intervallo": 0.2388318227593152,
+   "tetto": 0.24036253776435046,
+   "durata_s": 203
+  }
+ ],
+ "cluster003": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 992394,
+   "assorbite_app": 0,
+   "letture_al_db": 992394,
+   "scritture": 7606,
+   "picco_risposte_pronte": 73499,
+   "per_tipo": {
+    "point": {
+     "letture": 992394,
+     "al_db": 992394,
+     "collezione": 0.2904652789114001,
+     "intervallo": 0.8952966261384088,
+     "tetto": 0.8979397295832099
+    }
+   },
+   "collezione": 0.2904652789114001,
+   "intervallo": 0.8952966261384088,
+   "tetto": 0.8979397295832099,
+   "durata_s": 943
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 992394,
+   "assorbite_app": 669284,
+   "letture_al_db": 323110,
+   "scritture": 7606,
+   "picco_risposte_pronte": 73499,
+   "per_tipo": {
+    "point": {
+     "letture": 992394,
+     "al_db": 323110,
+     "collezione": 0.0,
+     "intervallo": 0.6800656123301662,
+     "tetto": 0.6865278078672897
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.6800656123301662,
+   "tetto": 0.6865278078672897,
+   "durata_s": 943
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 992394,
+   "assorbite_app": 783900,
+   "letture_al_db": 208494,
+   "scritture": 7606,
+   "picco_risposte_pronte": 73500,
+   "per_tipo": {
+    "point": {
+     "letture": 992394,
+     "al_db": 208494,
+     "collezione": 0.0,
+     "intervallo": 0.5052183755887459,
+     "tetto": 0.5137605878346619
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.5052183755887459,
+   "tetto": 0.5137605878346619,
+   "durata_s": 943
+  }
+ ],
+ "cluster004": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 921606,
+   "assorbite_app": 0,
+   "letture_al_db": 921606,
+   "scritture": 78394,
+   "picco_risposte_pronte": 193737,
+   "per_tipo": {
+    "point": {
+     "letture": 921606,
+     "al_db": 921606,
+     "collezione": 0.04140815055457538,
+     "intervallo": 0.7463829445554825,
+     "tetto": 0.7857750492075789
+    }
+   },
+   "collezione": 0.04140815055457538,
+   "intervallo": 0.7463829445554825,
+   "tetto": 0.7857750492075789,
+   "durata_s": 614
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 921606,
+   "assorbite_app": 371483,
+   "letture_al_db": 550123,
+   "scritture": 78394,
+   "picco_risposte_pronte": 193737,
+   "per_tipo": {
+    "point": {
+     "letture": 921606,
+     "al_db": 550123,
+     "collezione": 0.0,
+     "intervallo": 0.5863197866658911,
+     "tetto": 0.6411148052344657
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.5863197866658911,
+   "tetto": 0.6411148052344657,
+   "durata_s": 614
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 921606,
+   "assorbite_app": 580098,
+   "letture_al_db": 341508,
+   "scritture": 78394,
+   "picco_risposte_pronte": 193737,
+   "per_tipo": {
+    "point": {
+     "letture": 921606,
+     "al_db": 341508,
+     "collezione": 0.0,
+     "intervallo": 0.3558364664956604,
+     "tetto": 0.42187591505909083
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.3558364664956604,
+   "tetto": 0.42187591505909083,
+   "durata_s": 614
+  }
+ ],
+ "cluster005": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 576307,
+   "assorbite_app": 0,
+   "letture_al_db": 576307,
+   "scritture": 423693,
+   "picco_risposte_pronte": 301854,
+   "per_tipo": {
+    "point": {
+     "letture": 576307,
+     "al_db": 576307,
+     "collezione": 0.011431407218721965,
+     "intervallo": 0.20338291917328785,
+     "tetto": 0.4470325711816792
+    }
+   },
+   "collezione": 0.011431407218721965,
+   "intervallo": 0.20338291917328785,
+   "tetto": 0.4470325711816792,
+   "durata_s": 126
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 576307,
+   "assorbite_app": 196602,
+   "letture_al_db": 379705,
+   "scritture": 423693,
+   "picco_risposte_pronte": 301854,
+   "per_tipo": {
+    "point": {
+     "letture": 576307,
+     "al_db": 379705,
+     "collezione": 0.0,
+     "intervallo": 0.01582280981288105,
+     "tetto": 0.16071950593223686
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.01582280981288105,
+   "tetto": 0.16071950593223686,
+   "durata_s": 126
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 576307,
+   "assorbite_app": 243674,
+   "letture_al_db": 332633,
+   "scritture": 423693,
+   "picco_risposte_pronte": 301854,
+   "per_tipo": {
+    "point": {
+     "letture": 576307,
+     "al_db": 332633,
+     "collezione": 0.0,
+     "intervallo": 0.0030273604843776775,
+     "tetto": 0.04195013723833775
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0030273604843776775,
+   "tetto": 0.04195013723833775,
+   "durata_s": 126
+  }
+ ],
+ "cluster006": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 972922,
+   "assorbite_app": 0,
+   "letture_al_db": 972922,
+   "scritture": 27078,
+   "picco_risposte_pronte": 123778,
+   "per_tipo": {
+    "point": {
+     "letture": 972922,
+     "al_db": 972922,
+     "collezione": 0.045865958422155115,
+     "intervallo": 0.8470350141121282,
+     "tetto": 0.8602601236275879
+    }
+   },
+   "collezione": 0.045865958422155115,
+   "intervallo": 0.8470350141121282,
+   "tetto": 0.8602601236275879,
+   "durata_s": 105
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 972922,
+   "assorbite_app": 624297,
+   "letture_al_db": 348625,
+   "scritture": 27078,
+   "picco_risposte_pronte": 123778,
+   "per_tipo": {
+    "point": {
+     "letture": 972922,
+     "al_db": 348625,
+     "collezione": 0.0,
+     "intervallo": 0.5846167084976694,
+     "tetto": 0.6100222301900323
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.5846167084976694,
+   "tetto": 0.6100222301900323,
+   "durata_s": 105
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 972922,
+   "assorbite_app": 795592,
+   "letture_al_db": 177330,
+   "scritture": 27078,
+   "picco_risposte_pronte": 123779,
+   "per_tipo": {
+    "point": {
+     "letture": 972922,
+     "al_db": 177330,
+     "collezione": 0.0,
+     "intervallo": 0.20651891952856258,
+     "tetto": 0.23331641572210005
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.20651891952856258,
+   "tetto": 0.23331641572210005,
+   "durata_s": 105
+  }
+ ],
+ "cluster007": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 755524,
+   "assorbite_app": 0,
+   "letture_al_db": 755524,
+   "scritture": 244476,
+   "picco_risposte_pronte": 186907,
+   "per_tipo": {
+    "point": {
+     "letture": 755524,
+     "al_db": 755524,
+     "collezione": 0.27653390229827246,
+     "intervallo": 0.7016415097336418,
+     "tetto": 0.7328026641112658
+    }
+   },
+   "collezione": 0.27653390229827246,
+   "intervallo": 0.7016415097336418,
+   "tetto": 0.7328026641112658,
+   "durata_s": 649
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 755524,
+   "assorbite_app": 501635,
+   "letture_al_db": 253889,
+   "scritture": 244476,
+   "picco_risposte_pronte": 186893,
+   "per_tipo": {
+    "point": {
+     "letture": 755524,
+     "al_db": 253889,
+     "collezione": 1.1816187388977072e-05,
+     "intervallo": 0.1986773747582605,
+     "tetto": 0.20487299567921413
+    }
+   },
+   "collezione": 1.1816187388977072e-05,
+   "intervallo": 0.1986773747582605,
+   "tetto": 0.20487299567921413,
+   "durata_s": 649
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 755524,
+   "assorbite_app": 532673,
+   "letture_al_db": 222851,
+   "scritture": 244476,
+   "picco_risposte_pronte": 186866,
+   "per_tipo": {
+    "point": {
+     "letture": 755524,
+     "al_db": 222851,
+     "collezione": 0.0,
+     "intervallo": 0.08857039008126506,
+     "tetto": 0.09412567141273766
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.08857039008126506,
+   "tetto": 0.09412567141273766,
+   "durata_s": 649
+  }
+ ],
+ "cluster008": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 500484,
+   "assorbite_app": 0,
+   "letture_al_db": 500484,
+   "scritture": 499516,
+   "picco_risposte_pronte": 112711,
+   "per_tipo": {
+    "point": {
+     "letture": 500484,
+     "al_db": 500484,
+     "collezione": 0.0,
+     "intervallo": 0.0011488878765355136,
+     "tetto": 0.7739388272152556
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0011488878765355136,
+   "tetto": 0.7739388272152556,
+   "durata_s": 395
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 500484,
+   "assorbite_app": 32206,
+   "letture_al_db": 468278,
+   "scritture": 499516,
+   "picco_risposte_pronte": 112711,
+   "per_tipo": {
+    "point": {
+     "letture": 500484,
+     "al_db": 468278,
+     "collezione": 0.0,
+     "intervallo": 0.0007986708749930597,
+     "tetto": 0.7583913828964846
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0007986708749930597,
+   "tetto": 0.7583913828964846,
+   "durata_s": 395
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 500484,
+   "assorbite_app": 180502,
+   "letture_al_db": 319982,
+   "scritture": 499516,
+   "picco_risposte_pronte": 112711,
+   "per_tipo": {
+    "point": {
+     "letture": 500484,
+     "al_db": 319982,
+     "collezione": 0.0,
+     "intervallo": 0.0006250351582276503,
+     "tetto": 0.6464176109906182
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0006250351582276503,
+   "tetto": 0.6464176109906182,
+   "durata_s": 395
+  }
+ ],
+ "cluster009": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 989182,
+   "assorbite_app": 0,
+   "letture_al_db": 989182,
+   "scritture": 10818,
+   "picco_risposte_pronte": 69757,
+   "per_tipo": {
+    "point": {
+     "letture": 989182,
+     "al_db": 989182,
+     "collezione": 0.1865561645885186,
+     "intervallo": 0.9233690059058899,
+     "tetto": 0.9270639781152508
+    }
+   },
+   "collezione": 0.1865561645885186,
+   "intervallo": 0.9233690059058899,
+   "tetto": 0.9270639781152508,
+   "durata_s": 94
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 989182,
+   "assorbite_app": 818958,
+   "letture_al_db": 170224,
+   "scritture": 10818,
+   "picco_risposte_pronte": 69757,
+   "per_tipo": {
+    "point": {
+     "letture": 989182,
+     "al_db": 170224,
+     "collezione": 0.0,
+     "intervallo": 0.5696846508130463,
+     "tetto": 0.5761643481530219
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.5696846508130463,
+   "tetto": 0.5761643481530219,
+   "durata_s": 94
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 989182,
+   "assorbite_app": 900347,
+   "letture_al_db": 88835,
+   "scritture": 10818,
+   "picco_risposte_pronte": 69758,
+   "per_tipo": {
+    "point": {
+     "letture": 989182,
+     "al_db": 88835,
+     "collezione": 0.0,
+     "intervallo": 0.18474700287049023,
+     "tetto": 0.1878538864186413
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.18474700287049023,
+   "tetto": 0.1878538864186413,
+   "durata_s": 94
+  }
+ ],
+ "cluster010": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 500897,
+   "assorbite_app": 0,
+   "letture_al_db": 500897,
+   "scritture": 499103,
+   "picco_risposte_pronte": 1625,
+   "per_tipo": {
+    "point": {
+     "letture": 500897,
+     "al_db": 500897,
+     "collezione": 1.996418425344931e-06,
+     "intervallo": 5.989255276034794e-06,
+     "tetto": 5.989255276034794e-06
+    }
+   },
+   "collezione": 1.996418425344931e-06,
+   "intervallo": 5.989255276034794e-06,
+   "tetto": 5.989255276034794e-06,
+   "durata_s": 509593
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 500897,
+   "assorbite_app": 1,
+   "letture_al_db": 500896,
+   "scritture": 499103,
+   "picco_risposte_pronte": 1625,
+   "per_tipo": {
+    "point": {
+     "letture": 500897,
+     "al_db": 500896,
+     "collezione": 0.0,
+     "intervallo": 3.9928448220788345e-06,
+     "tetto": 3.9928448220788345e-06
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 3.9928448220788345e-06,
+   "tetto": 3.9928448220788345e-06,
+   "durata_s": 509593
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 500897,
+   "assorbite_app": 3,
+   "letture_al_db": 500894,
+   "scritture": 499103,
+   "picco_risposte_pronte": 1625,
+   "per_tipo": {
+    "point": {
+     "letture": 500897,
+     "al_db": 500894,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 509593
+  }
+ ],
+ "cluster011": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 980073,
+   "assorbite_app": 0,
+   "letture_al_db": 980073,
+   "scritture": 19927,
+   "picco_risposte_pronte": 440796,
+   "per_tipo": {
+    "point": {
+     "letture": 980073,
+     "al_db": 980073,
+     "collezione": 0.10025783793656187,
+     "intervallo": 0.5081448014586668,
+     "tetto": 0.5089018879205937
+    }
+   },
+   "collezione": 0.10025783793656187,
+   "intervallo": 0.5081448014586668,
+   "tetto": 0.5089018879205937,
+   "durata_s": 151
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 980073,
+   "assorbite_app": 338037,
+   "letture_al_db": 642036,
+   "scritture": 19927,
+   "picco_risposte_pronte": 440796,
+   "per_tipo": {
+    "point": {
+     "letture": 980073,
+     "al_db": 642036,
+     "collezione": 9.968288382582908e-05,
+     "intervallo": 0.24995950382844576,
+     "tetto": 0.2503348721878524
+    }
+   },
+   "collezione": 9.968288382582908e-05,
+   "intervallo": 0.24995950382844576,
+   "tetto": 0.2503348721878524,
+   "durata_s": 151
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 980073,
+   "assorbite_app": 448364,
+   "letture_al_db": 531709,
+   "scritture": 19927,
+   "picco_risposte_pronte": 440796,
+   "per_tipo": {
+    "point": {
+     "letture": 980073,
+     "al_db": 531709,
+     "collezione": 4.513747181258922e-05,
+     "intervallo": 0.09456112271938222,
+     "tetto": 0.09478304862246079
+    }
+   },
+   "collezione": 4.513747181258922e-05,
+   "intervallo": 0.09456112271938222,
+   "tetto": 0.09478304862246079,
+   "durata_s": 151
+  }
+ ],
+ "cluster012": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 198797,
+   "assorbite_app": 0,
+   "letture_al_db": 198797,
+   "scritture": 801203,
+   "picco_risposte_pronte": 143062,
+   "per_tipo": {
+    "point": {
+     "letture": 198797,
+     "al_db": 198797,
+     "collezione": 0.0,
+     "intervallo": 0.2712716992711158,
+     "tetto": 0.27159363571884887
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.2712716992711158,
+   "tetto": 0.27159363571884887,
+   "durata_s": 211
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 198797,
+   "assorbite_app": 43711,
+   "letture_al_db": 155086,
+   "scritture": 801203,
+   "picco_risposte_pronte": 143062,
+   "per_tipo": {
+    "point": {
+     "letture": 198797,
+     "al_db": 155086,
+     "collezione": 0.0,
+     "intervallo": 0.06608591362211934,
+     "tetto": 0.06629225075119612
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.06608591362211934,
+   "tetto": 0.06629225075119612,
+   "durata_s": 211
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 198797,
+   "assorbite_app": 52916,
+   "letture_al_db": 145881,
+   "scritture": 801203,
+   "picco_risposte_pronte": 143062,
+   "per_tipo": {
+    "point": {
+     "letture": 198797,
+     "al_db": 145881,
+     "collezione": 0.0,
+     "intervallo": 0.0072936160295035,
+     "tetto": 0.007375874856903915
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0072936160295035,
+   "tetto": 0.007375874856903915,
+   "durata_s": 211
+  }
+ ],
+ "cluster013": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 370359,
+   "assorbite_app": 0,
+   "letture_al_db": 370359,
+   "scritture": 629641,
+   "picco_risposte_pronte": 201544,
+   "per_tipo": {
+    "point": {
+     "letture": 370359,
+     "al_db": 370359,
+     "collezione": 0.0002322071287588529,
+     "intervallo": 0.24063678754937776,
+     "tetto": 0.3906695935565222
+    }
+   },
+   "collezione": 0.0002322071287588529,
+   "intervallo": 0.24063678754937776,
+   "tetto": 0.3906695935565222,
+   "durata_s": 673
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 370359,
+   "assorbite_app": 139907,
+   "letture_al_db": 230452,
+   "scritture": 629641,
+   "picco_risposte_pronte": 201400,
+   "per_tipo": {
+    "point": {
+     "letture": 370359,
+     "al_db": 230452,
+     "collezione": 0.0,
+     "intervallo": 0.007520004165726486,
+     "tetto": 0.02074618575668686
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.007520004165726486,
+   "tetto": 0.02074618575668686,
+   "durata_s": 673
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 370359,
+   "assorbite_app": 144371,
+   "letture_al_db": 225988,
+   "scritture": 629641,
+   "picco_risposte_pronte": 201283,
+   "per_tipo": {
+    "point": {
+     "letture": 370359,
+     "al_db": 225988,
+     "collezione": 0.0,
+     "intervallo": 0.00047347646777705013,
+     "tetto": 0.0014027293484609803
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.00047347646777705013,
+   "tetto": 0.0014027293484609803,
+   "durata_s": 673
+  }
+ ],
+ "cluster014": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 519668,
+   "assorbite_app": 0,
+   "letture_al_db": 519668,
+   "scritture": 280332,
+   "picco_risposte_pronte": 80187,
+   "per_tipo": {
+    "point": {
+     "letture": 519668,
+     "al_db": 519668,
+     "collezione": 0.01845793852998453,
+     "intervallo": 0.7685522295003733,
+     "tetto": 0.8247823610458985
+    }
+   },
+   "collezione": 0.01845793852998453,
+   "intervallo": 0.7685522295003733,
+   "tetto": 0.8247823610458985,
+   "durata_s": 176
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 519668,
+   "assorbite_app": 350383,
+   "letture_al_db": 169285,
+   "scritture": 280332,
+   "picco_risposte_pronte": 80187,
+   "per_tipo": {
+    "point": {
+     "letture": 519668,
+     "al_db": 169285,
+     "collezione": 0.0,
+     "intervallo": 0.341471483002038,
+     "tetto": 0.46212009333372717
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.341471483002038,
+   "tetto": 0.46212009333372717,
+   "durata_s": 176
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 519668,
+   "assorbite_app": 406763,
+   "letture_al_db": 112905,
+   "scritture": 280332,
+   "picco_risposte_pronte": 80187,
+   "per_tipo": {
+    "point": {
+     "letture": 519668,
+     "al_db": 112905,
+     "collezione": 0.0,
+     "intervallo": 0.08012045524998893,
+     "tetto": 0.19352553031309508
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.08012045524998893,
+   "tetto": 0.19352553031309508,
+   "durata_s": 176
+  }
+ ],
+ "cluster015": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 1201,
+   "assorbite_app": 0,
+   "letture_al_db": 1201,
+   "scritture": 998799,
+   "picco_risposte_pronte": 1164,
+   "per_tipo": {
+    "point": {
+     "letture": 1201,
+     "al_db": 1201,
+     "collezione": 0.0,
+     "intervallo": 0.005828476269775187,
+     "tetto": 0.005828476269775187
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.005828476269775187,
+   "tetto": 0.005828476269775187,
+   "durata_s": 214
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 1201,
+   "assorbite_app": 7,
+   "letture_al_db": 1194,
+   "scritture": 998799,
+   "picco_risposte_pronte": 1164,
+   "per_tipo": {
+    "point": {
+     "letture": 1201,
+     "al_db": 1194,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 214
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 1201,
+   "assorbite_app": 7,
+   "letture_al_db": 1194,
+   "scritture": 998799,
+   "picco_risposte_pronte": 1164,
+   "per_tipo": {
+    "point": {
+     "letture": 1201,
+     "al_db": 1194,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 214
+  }
+ ],
+ "cluster016": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 897604,
+   "assorbite_app": 0,
+   "letture_al_db": 897604,
+   "scritture": 102396,
+   "picco_risposte_pronte": 151735,
+   "per_tipo": {
+    "point": {
+     "letture": 897604,
+     "al_db": 897604,
+     "collezione": 0.08011105119852407,
+     "intervallo": 0.7800979050895495,
+     "tetto": 0.8156993507159059
+    }
+   },
+   "collezione": 0.08011105119852407,
+   "intervallo": 0.7800979050895495,
+   "tetto": 0.8156993507159059,
+   "durata_s": 100
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 897604,
+   "assorbite_app": 611437,
+   "letture_al_db": 286167,
+   "scritture": 102396,
+   "picco_risposte_pronte": 151735,
+   "per_tipo": {
+    "point": {
+     "letture": 897604,
+     "al_db": 286167,
+     "collezione": 0.0,
+     "intervallo": 0.39278463274940856,
+     "tetto": 0.4219144765119668
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.39278463274940856,
+   "tetto": 0.4219144765119668,
+   "durata_s": 100
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 897604,
+   "assorbite_app": 705895,
+   "letture_al_db": 191709,
+   "scritture": 102396,
+   "picco_risposte_pronte": 151736,
+   "per_tipo": {
+    "point": {
+     "letture": 897604,
+     "al_db": 191709,
+     "collezione": 0.0,
+     "intervallo": 0.12311889373999134,
+     "tetto": 0.13708276606732078
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.12311889373999134,
+   "tetto": 0.13708276606732078,
+   "durata_s": 100
+  }
+ ],
+ "cluster017": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 996770,
+   "assorbite_app": 0,
+   "letture_al_db": 996770,
+   "scritture": 3230,
+   "picco_risposte_pronte": 61137,
+   "per_tipo": {
+    "point": {
+     "letture": 996770,
+     "al_db": 996770,
+     "collezione": 0.2841869237637569,
+     "intervallo": 0.8906136821934849,
+     "tetto": 0.8907742006681582
+    }
+   },
+   "collezione": 0.2841869237637569,
+   "intervallo": 0.8906136821934849,
+   "tetto": 0.8907742006681582,
+   "durata_s": 1384
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 996770,
+   "assorbite_app": 516983,
+   "letture_al_db": 479787,
+   "scritture": 3230,
+   "picco_risposte_pronte": 61130,
+   "per_tipo": {
+    "point": {
+     "letture": 996770,
+     "al_db": 479787,
+     "collezione": 0.017076327620381544,
+     "intervallo": 0.7727449889221676,
+     "tetto": 0.7730722174631659
+    }
+   },
+   "collezione": 0.017076327620381544,
+   "intervallo": 0.7727449889221676,
+   "tetto": 0.7730722174631659,
+   "durata_s": 1384
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 996770,
+   "assorbite_app": 709257,
+   "letture_al_db": 287513,
+   "scritture": 3230,
+   "picco_risposte_pronte": 61009,
+   "per_tipo": {
+    "point": {
+     "letture": 996770,
+     "al_db": 287513,
+     "collezione": 0.0,
+     "intervallo": 0.6204241199528369,
+     "tetto": 0.6208414923846922
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.6204241199528369,
+   "tetto": 0.6208414923846922,
+   "durata_s": 1384
+  }
+ ],
+ "cluster018": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 971166,
+   "assorbite_app": 0,
+   "letture_al_db": 971166,
+   "scritture": 28834,
+   "picco_risposte_pronte": 109234,
+   "per_tipo": {
+    "point": {
+     "letture": 971166,
+     "al_db": 971166,
+     "collezione": 0.4019796821552649,
+     "intervallo": 0.8220304252825984,
+     "tetto": 0.8396648976591026
+    }
+   },
+   "collezione": 0.4019796821552649,
+   "intervallo": 0.8220304252825984,
+   "tetto": 0.8396648976591026,
+   "durata_s": 49
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 971166,
+   "assorbite_app": 739358,
+   "letture_al_db": 231808,
+   "scritture": 28834,
+   "picco_risposte_pronte": 109235,
+   "per_tipo": {
+    "point": {
+     "letture": 971166,
+     "al_db": 231808,
+     "collezione": 0.057150745444505796,
+     "intervallo": 0.3229741855328548,
+     "tetto": 0.3282716731087797
+    }
+   },
+   "collezione": 0.057150745444505796,
+   "intervallo": 0.3229741855328548,
+   "tetto": 0.3282716731087797,
+   "durata_s": 49
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 971166,
+   "assorbite_app": 815454,
+   "letture_al_db": 155712,
+   "scritture": 28834,
+   "picco_risposte_pronte": 109235,
+   "per_tipo": {
+    "point": {
+     "letture": 971166,
+     "al_db": 155712,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 49
+  }
+ ],
+ "cluster019": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 740259,
+   "assorbite_app": 0,
+   "letture_al_db": 740259,
+   "scritture": 259741,
+   "picco_risposte_pronte": 613514,
+   "per_tipo": {
+    "point": {
+     "letture": 740259,
+     "al_db": 740259,
+     "collezione": 0.0071231825617790534,
+     "intervallo": 0.11937038252827727,
+     "tetto": 0.14442107424563566
+    }
+   },
+   "collezione": 0.0071231825617790534,
+   "intervallo": 0.11937038252827727,
+   "tetto": 0.14442107424563566,
+   "durata_s": 525
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 740259,
+   "assorbite_app": 61969,
+   "letture_al_db": 678290,
+   "scritture": 259741,
+   "picco_risposte_pronte": 613514,
+   "per_tipo": {
+    "point": {
+     "letture": 740259,
+     "al_db": 678290,
+     "collezione": 0.0,
+     "intervallo": 0.057336832328355125,
+     "tetto": 0.06625484674696663
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.057336832328355125,
+   "tetto": 0.06625484674696663,
+   "durata_s": 525
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 740259,
+   "assorbite_app": 70002,
+   "letture_al_db": 670257,
+   "scritture": 259741,
+   "picco_risposte_pronte": 613514,
+   "per_tipo": {
+    "point": {
+     "letture": 740259,
+     "al_db": 670257,
+     "collezione": 0.0,
+     "intervallo": 0.04744299574640772,
+     "tetto": 0.05506395308068398
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.04744299574640772,
+   "tetto": 0.05506395308068398,
+   "durata_s": 525
+  }
+ ],
+ "cluster020": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 939781,
+   "assorbite_app": 0,
+   "letture_al_db": 939781,
+   "scritture": 60219,
+   "picco_risposte_pronte": 111270,
+   "per_tipo": {
+    "point": {
+     "letture": 939781,
+     "al_db": 939781,
+     "collezione": 0.5644687432497572,
+     "intervallo": 0.8751783660235736,
+     "tetto": 0.8808381952816667
+    }
+   },
+   "collezione": 0.5644687432497572,
+   "intervallo": 0.8751783660235736,
+   "tetto": 0.8808381952816667,
+   "durata_s": 362
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 939781,
+   "assorbite_app": 744102,
+   "letture_al_db": 195679,
+   "scritture": 60219,
+   "picco_risposte_pronte": 111270,
+   "per_tipo": {
+    "point": {
+     "letture": 939781,
+     "al_db": 195679,
+     "collezione": 0.0,
+     "intervallo": 0.42387277122225686,
+     "tetto": 0.4277055790350523
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.42387277122225686,
+   "tetto": 0.4277055790350523,
+   "durata_s": 362
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 939781,
+   "assorbite_app": 793064,
+   "letture_al_db": 146717,
+   "scritture": 60219,
+   "picco_risposte_pronte": 111270,
+   "per_tipo": {
+    "point": {
+     "letture": 939781,
+     "al_db": 146717,
+     "collezione": 0.0,
+     "intervallo": 0.23391290716140598,
+     "tetto": 0.23672103437229497
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.23391290716140598,
+   "tetto": 0.23672103437229497,
+   "durata_s": 362
+  }
+ ],
+ "cluster021": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 0,
+   "assorbite_app": 0,
+   "letture_al_db": 0,
+   "scritture": 1000000,
+   "picco_risposte_pronte": 0,
+   "per_tipo": {},
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 200
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 0,
+   "assorbite_app": 0,
+   "letture_al_db": 0,
+   "scritture": 1000000,
+   "picco_risposte_pronte": 0,
+   "per_tipo": {},
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 200
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 0,
+   "assorbite_app": 0,
+   "letture_al_db": 0,
+   "scritture": 1000000,
+   "picco_risposte_pronte": 0,
+   "per_tipo": {},
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 200
+  }
+ ],
+ "cluster022": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 780861,
+   "assorbite_app": 0,
+   "letture_al_db": 780861,
+   "scritture": 219139,
+   "picco_risposte_pronte": 418848,
+   "per_tipo": {
+    "point": {
+     "letture": 780861,
+     "al_db": 780861,
+     "collezione": 0.10565644845881661,
+     "intervallo": 0.43428343840965294,
+     "tetto": 0.45025427060642037
+    }
+   },
+   "collezione": 0.10565644845881661,
+   "intervallo": 0.43428343840965294,
+   "tetto": 0.45025427060642037,
+   "durata_s": 553
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 780861,
+   "assorbite_app": 206581,
+   "letture_al_db": 574280,
+   "scritture": 219139,
+   "picco_risposte_pronte": 418848,
+   "per_tipo": {
+    "point": {
+     "letture": 780861,
+     "al_db": 574280,
+     "collezione": 0.0,
+     "intervallo": 0.23966183743121822,
+     "tetto": 0.2524987810823988
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.23966183743121822,
+   "tetto": 0.2524987810823988,
+   "durata_s": 553
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 780861,
+   "assorbite_app": 279460,
+   "letture_al_db": 501401,
+   "scritture": 219139,
+   "picco_risposte_pronte": 418848,
+   "per_tipo": {
+    "point": {
+     "letture": 780861,
+     "al_db": 501401,
+     "collezione": 0.0,
+     "intervallo": 0.13679869007042267,
+     "tetto": 0.1438489352833361
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.13679869007042267,
+   "tetto": 0.1438489352833361,
+   "durata_s": 553
+  }
+ ],
+ "cluster023": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 327262,
+   "assorbite_app": 0,
+   "letture_al_db": 327262,
+   "scritture": 672738,
+   "picco_risposte_pronte": 221661,
+   "per_tipo": {
+    "point": {
+     "letture": 327262,
+     "al_db": 327262,
+     "collezione": 0.028897336079349266,
+     "intervallo": 0.21195250288759465,
+     "tetto": 0.28952032316614823
+    }
+   },
+   "collezione": 0.028897336079349266,
+   "intervallo": 0.21195250288759465,
+   "tetto": 0.28952032316614823,
+   "durata_s": 219
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 327262,
+   "assorbite_app": 61473,
+   "letture_al_db": 265789,
+   "scritture": 672738,
+   "picco_risposte_pronte": 221661,
+   "per_tipo": {
+    "point": {
+     "letture": 327262,
+     "al_db": 265789,
+     "collezione": 0.0005229712290576359,
+     "intervallo": 0.10569662401378536,
+     "tetto": 0.12519705480663232
+    }
+   },
+   "collezione": 0.0005229712290576359,
+   "intervallo": 0.10569662401378536,
+   "tetto": 0.12519705480663232,
+   "durata_s": 219
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 327262,
+   "assorbite_app": 86228,
+   "letture_al_db": 241034,
+   "scritture": 672738,
+   "picco_risposte_pronte": 221661,
+   "per_tipo": {
+    "point": {
+     "letture": 327262,
+     "al_db": 241034,
+     "collezione": 9.957101487756913e-05,
+     "intervallo": 0.02459404067475958,
+     "tetto": 0.03535185907382361
+    }
+   },
+   "collezione": 9.957101487756913e-05,
+   "intervallo": 0.02459404067475958,
+   "tetto": 0.03535185907382361,
+   "durata_s": 219
+  }
+ ],
+ "cluster024": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 992844,
+   "assorbite_app": 0,
+   "letture_al_db": 992844,
+   "scritture": 7156,
+   "picco_risposte_pronte": 103223,
+   "per_tipo": {
+    "point": {
+     "letture": 992844,
+     "al_db": 992844,
+     "collezione": 0.2484045831973603,
+     "intervallo": 0.8892766638061972,
+     "tetto": 0.8905890552795807
+    }
+   },
+   "collezione": 0.2484045831973603,
+   "intervallo": 0.8892766638061972,
+   "tetto": 0.8905890552795807,
+   "durata_s": 323
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 992844,
+   "assorbite_app": 689324,
+   "letture_al_db": 303520,
+   "scritture": 7156,
+   "picco_risposte_pronte": 103223,
+   "per_tipo": {
+    "point": {
+     "letture": 992844,
+     "al_db": 303520,
+     "collezione": 0.0,
+     "intervallo": 0.6404816816025303,
+     "tetto": 0.6421059567738534
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.6404816816025303,
+   "tetto": 0.6421059567738534,
+   "durata_s": 323
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 992844,
+   "assorbite_app": 812756,
+   "letture_al_db": 180088,
+   "scritture": 7156,
+   "picco_risposte_pronte": 103223,
+   "per_tipo": {
+    "point": {
+     "letture": 992844,
+     "al_db": 180088,
+     "collezione": 0.0,
+     "intervallo": 0.394851405979299,
+     "tetto": 0.39680600595264537
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.394851405979299,
+   "tetto": 0.39680600595264537,
+   "durata_s": 323
+  }
+ ],
+ "cluster025": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 968601,
+   "assorbite_app": 0,
+   "letture_al_db": 968601,
+   "scritture": 31399,
+   "picco_risposte_pronte": 7727,
+   "per_tipo": {
+    "point": {
+     "letture": 968601,
+     "al_db": 968601,
+     "collezione": 0.6939152447705506,
+     "intervallo": 0.9829496356084704,
+     "tetto": 0.9841286556590382
+    }
+   },
+   "collezione": 0.6939152447705506,
+   "intervallo": 0.9829496356084704,
+   "tetto": 0.9841286556590382,
+   "durata_s": 58
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 968601,
+   "assorbite_app": 952568,
+   "letture_al_db": 16033,
+   "scritture": 31399,
+   "picco_risposte_pronte": 7728,
+   "per_tipo": {
+    "point": {
+     "letture": 968601,
+     "al_db": 16033,
+     "collezione": 0.0,
+     "intervallo": 0.03449136156676854,
+     "tetto": 0.04116509698746336
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.03449136156676854,
+   "tetto": 0.04116509698746336,
+   "durata_s": 58
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 968601,
+   "assorbite_app": 953228,
+   "letture_al_db": 15373,
+   "scritture": 31399,
+   "picco_risposte_pronte": 7728,
+   "per_tipo": {
+    "point": {
+     "letture": 968601,
+     "al_db": 15373,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 58
+  }
+ ],
+ "cluster026": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 61874,
+   "assorbite_app": 0,
+   "letture_al_db": 61874,
+   "scritture": 18126,
+   "picco_risposte_pronte": 974,
+   "per_tipo": {
+    "point": {
+     "letture": 61874,
+     "al_db": 61874,
+     "collezione": 0.09212270097294502,
+     "intervallo": 0.09866826130523322,
+     "tetto": 0.10004202088114555
+    }
+   },
+   "collezione": 0.09212270097294502,
+   "intervallo": 0.09866826130523322,
+   "tetto": 0.10004202088114555,
+   "durata_s": 37678
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 61874,
+   "assorbite_app": 1099,
+   "letture_al_db": 60775,
+   "scritture": 18126,
+   "picco_risposte_pronte": 974,
+   "per_tipo": {
+    "point": {
+     "letture": 61874,
+     "al_db": 60775,
+     "collezione": 0.07572192513368985,
+     "intervallo": 0.08238584944467298,
+     "tetto": 0.08376799670917318
+    }
+   },
+   "collezione": 0.07572192513368985,
+   "intervallo": 0.08238584944467298,
+   "tetto": 0.08376799670917318,
+   "durata_s": 37678
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 61874,
+   "assorbite_app": 1546,
+   "letture_al_db": 60328,
+   "scritture": 18126,
+   "picco_risposte_pronte": 976,
+   "per_tipo": {
+    "point": {
+     "letture": 61874,
+     "al_db": 60328,
+     "collezione": 0.06903925208858241,
+     "intervallo": 0.07558679220262565,
+     "tetto": 0.07697918048004243
+    }
+   },
+   "collezione": 0.06903925208858241,
+   "intervallo": 0.07558679220262565,
+   "tetto": 0.07697918048004243,
+   "durata_s": 37678
+  }
+ ],
+ "cluster027": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 771765,
+   "assorbite_app": 0,
+   "letture_al_db": 771765,
+   "scritture": 228235,
+   "picco_risposte_pronte": 607248,
+   "per_tipo": {
+    "point": {
+     "letture": 771765,
+     "al_db": 771765,
+     "collezione": 0.032933600253963316,
+     "intervallo": 0.18711524881278627,
+     "tetto": 0.19360556646129326
+    }
+   },
+   "collezione": 0.032933600253963316,
+   "intervallo": 0.18711524881278627,
+   "tetto": 0.19360556646129326,
+   "durata_s": 91
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 771765,
+   "assorbite_app": 118472,
+   "letture_al_db": 653293,
+   "scritture": 228235,
+   "picco_risposte_pronte": 607248,
+   "per_tipo": {
+    "point": {
+     "letture": 771765,
+     "al_db": 653293,
+     "collezione": 0.0,
+     "intervallo": 0.04368177831386529,
+     "tetto": 0.0473692508568131
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.04368177831386529,
+   "tetto": 0.0473692508568131,
+   "durata_s": 91
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 771765,
+   "assorbite_app": 143259,
+   "letture_al_db": 628506,
+   "scritture": 228235,
+   "picco_risposte_pronte": 607248,
+   "per_tipo": {
+    "point": {
+     "letture": 771765,
+     "al_db": 628506,
+     "collezione": 0.0,
+     "intervallo": 0.009134359894734498,
+     "tetto": 0.009799429122395013
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.009134359894734498,
+   "tetto": 0.009799429122395013,
+   "durata_s": 91
+  }
+ ],
+ "cluster028": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 871864,
+   "assorbite_app": 0,
+   "letture_al_db": 871864,
+   "scritture": 128136,
+   "picco_risposte_pronte": 49280,
+   "per_tipo": {
+    "point": {
+     "letture": 871864,
+     "al_db": 871864,
+     "collezione": 0.1516337410421809,
+     "intervallo": 0.9208488938641807,
+     "tetto": 0.9433099657744786
+    }
+   },
+   "collezione": 0.1516337410421809,
+   "intervallo": 0.9208488938641807,
+   "tetto": 0.9433099657744786,
+   "durata_s": 210
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 871864,
+   "assorbite_app": 686752,
+   "letture_al_db": 185112,
+   "scritture": 128136,
+   "picco_risposte_pronte": 49280,
+   "per_tipo": {
+    "point": {
+     "letture": 871864,
+     "al_db": 185112,
+     "collezione": 0.00040516011927913914,
+     "intervallo": 0.6880969359090713,
+     "tetto": 0.7329940792601236
+    }
+   },
+   "collezione": 0.00040516011927913914,
+   "intervallo": 0.6880969359090713,
+   "tetto": 0.7329940792601236,
+   "durata_s": 210
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 871864,
+   "assorbite_app": 782815,
+   "letture_al_db": 89049,
+   "scritture": 128136,
+   "picco_risposte_pronte": 49280,
+   "per_tipo": {
+    "point": {
+     "letture": 871864,
+     "al_db": 89049,
+     "collezione": 0.0001235274960976541,
+     "intervallo": 0.3779042998798414,
+     "tetto": 0.44495727071612257
+    }
+   },
+   "collezione": 0.0001235274960976541,
+   "intervallo": 0.3779042998798414,
+   "tetto": 0.44495727071612257,
+   "durata_s": 210
+  }
+ ],
+ "cluster029": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 859039,
+   "assorbite_app": 0,
+   "letture_al_db": 859039,
+   "scritture": 140961,
+   "picco_risposte_pronte": 224248,
+   "per_tipo": {
+    "point": {
+     "letture": 859039,
+     "al_db": 859039,
+     "collezione": 0.19478277470522293,
+     "intervallo": 0.6852657446285908,
+     "tetto": 0.7118209999778823
+    }
+   },
+   "collezione": 0.19478277470522293,
+   "intervallo": 0.6852657446285908,
+   "tetto": 0.7118209999778823,
+   "durata_s": 134
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 859039,
+   "assorbite_app": 493177,
+   "letture_al_db": 365862,
+   "scritture": 140961,
+   "picco_risposte_pronte": 224248,
+   "per_tipo": {
+    "point": {
+     "letture": 859039,
+     "al_db": 365862,
+     "collezione": 0.0,
+     "intervallo": 0.31198102016607354,
+     "tetto": 0.3233596274004953
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.31198102016607354,
+   "tetto": 0.3233596274004953,
+   "durata_s": 134
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 859039,
+   "assorbite_app": 579162,
+   "letture_al_db": 279877,
+   "scritture": 140961,
+   "picco_risposte_pronte": 224249,
+   "per_tipo": {
+    "point": {
+     "letture": 859039,
+     "al_db": 279877,
+     "collezione": 0.0,
+     "intervallo": 0.11000189368901339,
+     "tetto": 0.11547929983528478
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.11000189368901339,
+   "tetto": 0.11547929983528478,
+   "durata_s": 134
+  }
+ ],
+ "cluster030": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 988762,
+   "assorbite_app": 0,
+   "letture_al_db": 988762,
+   "scritture": 11238,
+   "picco_risposte_pronte": 101336,
+   "per_tipo": {
+    "point": {
+     "letture": 988762,
+     "al_db": 988762,
+     "collezione": 0.14900855817679076,
+     "intervallo": 0.8874360058335575,
+     "tetto": 0.8896620218009996
+    }
+   },
+   "collezione": 0.14900855817679076,
+   "intervallo": 0.8874360058335575,
+   "tetto": 0.8896620218009996,
+   "durata_s": 268
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 988762,
+   "assorbite_app": 702796,
+   "letture_al_db": 285966,
+   "scritture": 11238,
+   "picco_risposte_pronte": 101336,
+   "per_tipo": {
+    "point": {
+     "letture": 988762,
+     "al_db": 285966,
+     "collezione": 0.0,
+     "intervallo": 0.61193988096487,
+     "tetto": 0.6184931075722289
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.61193988096487,
+   "tetto": 0.6184931075722289,
+   "durata_s": 268
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 988762,
+   "assorbite_app": 819885,
+   "letture_al_db": 168877,
+   "scritture": 11238,
+   "picco_risposte_pronte": 101337,
+   "per_tipo": {
+    "point": {
+     "letture": 988762,
+     "al_db": 168877,
+     "collezione": 0.0,
+     "intervallo": 0.34579605274845004,
+     "tetto": 0.35397952355856627
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.34579605274845004,
+   "tetto": 0.35397952355856627,
+   "durata_s": 268
+  }
+ ],
+ "cluster031": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 65389,
+   "assorbite_app": 0,
+   "letture_al_db": 65389,
+   "scritture": 934611,
+   "picco_risposte_pronte": 56430,
+   "per_tipo": {
+    "point": {
+     "letture": 65389,
+     "al_db": 65389,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 696
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 65389,
+   "assorbite_app": 0,
+   "letture_al_db": 65389,
+   "scritture": 934611,
+   "picco_risposte_pronte": 56430,
+   "per_tipo": {
+    "point": {
+     "letture": 65389,
+     "al_db": 65389,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 696
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 65389,
+   "assorbite_app": 0,
+   "letture_al_db": 65389,
+   "scritture": 934611,
+   "picco_risposte_pronte": 56430,
+   "per_tipo": {
+    "point": {
+     "letture": 65389,
+     "al_db": 65389,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 696
+  }
+ ],
+ "cluster032": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 40366,
+   "assorbite_app": 0,
+   "letture_al_db": 40366,
+   "scritture": 959634,
+   "picco_risposte_pronte": 38245,
+   "per_tipo": {
+    "point": {
+     "letture": 40366,
+     "al_db": 40366,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 378
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 40366,
+   "assorbite_app": 0,
+   "letture_al_db": 40366,
+   "scritture": 959634,
+   "picco_risposte_pronte": 38245,
+   "per_tipo": {
+    "point": {
+     "letture": 40366,
+     "al_db": 40366,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 378
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 40366,
+   "assorbite_app": 0,
+   "letture_al_db": 40366,
+   "scritture": 959634,
+   "picco_risposte_pronte": 38245,
+   "per_tipo": {
+    "point": {
+     "letture": 40366,
+     "al_db": 40366,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 378
+  }
+ ],
+ "cluster033": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 986301,
+   "assorbite_app": 0,
+   "letture_al_db": 986301,
+   "scritture": 13699,
+   "picco_risposte_pronte": 102056,
+   "per_tipo": {
+    "point": {
+     "letture": 986301,
+     "al_db": 986301,
+     "collezione": 0.14802479162040796,
+     "intervallo": 0.8900092365312415,
+     "tetto": 0.8937738073874
+    }
+   },
+   "collezione": 0.14802479162040796,
+   "intervallo": 0.8900092365312415,
+   "tetto": 0.8937738073874,
+   "durata_s": 92
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 986301,
+   "assorbite_app": 810556,
+   "letture_al_db": 175745,
+   "scritture": 13699,
+   "picco_risposte_pronte": 102057,
+   "per_tipo": {
+    "point": {
+     "letture": 986301,
+     "al_db": 175745,
+     "collezione": 2.276024922472901e-05,
+     "intervallo": 0.3971208284730718,
+     "tetto": 0.4038464821189792
+    }
+   },
+   "collezione": 2.276024922472901e-05,
+   "intervallo": 0.3971208284730718,
+   "tetto": 0.4038464821189792,
+   "durata_s": 92
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 986301,
+   "assorbite_app": 868701,
+   "letture_al_db": 117600,
+   "scritture": 13699,
+   "picco_risposte_pronte": 102058,
+   "per_tipo": {
+    "point": {
+     "letture": 986301,
+     "al_db": 117600,
+     "collezione": 0.0,
+     "intervallo": 0.10438775510204082,
+     "tetto": 0.10909013605442176
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.10438775510204082,
+   "tetto": 0.10909013605442176,
+   "durata_s": 92
+  }
+ ],
+ "cluster034": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 942102,
+   "assorbite_app": 0,
+   "letture_al_db": 942102,
+   "scritture": 57898,
+   "picco_risposte_pronte": 524904,
+   "per_tipo": {
+    "point": {
+     "letture": 942102,
+     "al_db": 942102,
+     "collezione": 0.03464168423376662,
+     "intervallo": 0.3968115978949201,
+     "tetto": 0.39910858909120245
+    }
+   },
+   "collezione": 0.03464168423376662,
+   "intervallo": 0.3968115978949201,
+   "tetto": 0.39910858909120245,
+   "durata_s": 258
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 942102,
+   "assorbite_app": 305689,
+   "letture_al_db": 636413,
+   "scritture": 57898,
+   "picco_risposte_pronte": 524904,
+   "per_tipo": {
+    "point": {
+     "letture": 942102,
+     "al_db": 636413,
+     "collezione": 0.0,
+     "intervallo": 0.1094760792127125,
+     "tetto": 0.11048171548978415
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.1094760792127125,
+   "tetto": 0.11048171548978415,
+   "durata_s": 258
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 942102,
+   "assorbite_app": 349093,
+   "letture_al_db": 593009,
+   "scritture": 57898,
+   "picco_risposte_pronte": 524904,
+   "per_tipo": {
+    "point": {
+     "letture": 942102,
+     "al_db": 593009,
+     "collezione": 0.0,
+     "intervallo": 0.044683976128524185,
+     "tetto": 0.04537536529799716
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.044683976128524185,
+   "tetto": 0.04537536529799716,
+   "durata_s": 258
+  }
+ ],
+ "cluster035": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 968476,
+   "assorbite_app": 0,
+   "letture_al_db": 968476,
+   "scritture": 31524,
+   "picco_risposte_pronte": 60171,
+   "per_tipo": {
+    "point": {
+     "letture": 968476,
+     "al_db": 968476,
+     "collezione": 0.8481862224773768,
+     "intervallo": 0.9362028589247436,
+     "tetto": 0.9362420958289106
+    }
+   },
+   "collezione": 0.8481862224773768,
+   "intervallo": 0.9362028589247436,
+   "tetto": 0.9362420958289106,
+   "durata_s": 522
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 968476,
+   "assorbite_app": 906728,
+   "letture_al_db": 61748,
+   "scritture": 31524,
+   "picco_risposte_pronte": 60172,
+   "per_tipo": {
+    "point": {
+     "letture": 968476,
+     "al_db": 61748,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 522
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 968476,
+   "assorbite_app": 906728,
+   "letture_al_db": 61748,
+   "scritture": 31524,
+   "picco_risposte_pronte": 60172,
+   "per_tipo": {
+    "point": {
+     "letture": 968476,
+     "al_db": 61748,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 522
+  }
+ ],
+ "cluster036": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 939177,
+   "assorbite_app": 0,
+   "letture_al_db": 939177,
+   "scritture": 60823,
+   "picco_risposte_pronte": 163890,
+   "per_tipo": {
+    "point": {
+     "letture": 939177,
+     "al_db": 939177,
+     "collezione": 0.14616201205949464,
+     "intervallo": 0.763624961003091,
+     "tetto": 0.8032042948240854
+    }
+   },
+   "collezione": 0.14616201205949464,
+   "intervallo": 0.763624961003091,
+   "tetto": 0.8032042948240854,
+   "durata_s": 139
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 939177,
+   "assorbite_app": 652866,
+   "letture_al_db": 286311,
+   "scritture": 60823,
+   "picco_risposte_pronte": 163890,
+   "per_tipo": {
+    "point": {
+     "letture": 939177,
+     "al_db": 286311,
+     "collezione": 0.0,
+     "intervallo": 0.3460886937630758,
+     "tetto": 0.3544572161041665
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.3460886937630758,
+   "tetto": 0.3544572161041665,
+   "durata_s": 139
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 939177,
+   "assorbite_app": 727198,
+   "letture_al_db": 211979,
+   "scritture": 60823,
+   "picco_risposte_pronte": 163891,
+   "per_tipo": {
+    "point": {
+     "letture": 939177,
+     "al_db": 211979,
+     "collezione": 0.0,
+     "intervallo": 0.12513975440963493,
+     "tetto": 0.12809287712462084
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.12513975440963493,
+   "tetto": 0.12809287712462084,
+   "durata_s": 139
+  }
+ ],
+ "cluster037": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 611957,
+   "assorbite_app": 0,
+   "letture_al_db": 611957,
+   "scritture": 388043,
+   "picco_risposte_pronte": 337433,
+   "per_tipo": {
+    "point": {
+     "letture": 611957,
+     "al_db": 611957,
+     "collezione": 0.0015556648588054389,
+     "intervallo": 0.26983758662781865,
+     "tetto": 0.43918608660412417
+    }
+   },
+   "collezione": 0.0015556648588054389,
+   "intervallo": 0.26983758662781865,
+   "tetto": 0.43918608660412417,
+   "durata_s": 334
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 611957,
+   "assorbite_app": 98552,
+   "letture_al_db": 513405,
+   "scritture": 388043,
+   "picco_risposte_pronte": 337434,
+   "per_tipo": {
+    "point": {
+     "letture": 611957,
+     "al_db": 513405,
+     "collezione": 0.0,
+     "intervallo": 0.14086150310183967,
+     "tetto": 0.33153358459695564
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.14086150310183967,
+   "tetto": 0.33153358459695564,
+   "durata_s": 334
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 611957,
+   "assorbite_app": 217154,
+   "letture_al_db": 394803,
+   "scritture": 388043,
+   "picco_risposte_pronte": 337434,
+   "per_tipo": {
+    "point": {
+     "letture": 611957,
+     "al_db": 394803,
+     "collezione": 0.0,
+     "intervallo": 0.016841310729655043,
+     "tetto": 0.13072089117863847
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.016841310729655043,
+   "tetto": 0.13072089117863847,
+   "durata_s": 334
+  }
+ ],
+ "cluster038": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 70260,
+   "assorbite_app": 0,
+   "letture_al_db": 70260,
+   "scritture": 929740,
+   "picco_risposte_pronte": 53902,
+   "per_tipo": {
+    "point": {
+     "letture": 70260,
+     "al_db": 70260,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 785
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 70260,
+   "assorbite_app": 0,
+   "letture_al_db": 70260,
+   "scritture": 929740,
+   "picco_risposte_pronte": 53902,
+   "per_tipo": {
+    "point": {
+     "letture": 70260,
+     "al_db": 70260,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 785
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 70260,
+   "assorbite_app": 0,
+   "letture_al_db": 70260,
+   "scritture": 929740,
+   "picco_risposte_pronte": 53902,
+   "per_tipo": {
+    "point": {
+     "letture": 70260,
+     "al_db": 70260,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 785
+  }
+ ],
+ "cluster039": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 74164,
+   "assorbite_app": 0,
+   "letture_al_db": 74164,
+   "scritture": 925836,
+   "picco_risposte_pronte": 46948,
+   "per_tipo": {
+    "point": {
+     "letture": 74164,
+     "al_db": 74164,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 956
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 74164,
+   "assorbite_app": 0,
+   "letture_al_db": 74164,
+   "scritture": 925836,
+   "picco_risposte_pronte": 46948,
+   "per_tipo": {
+    "point": {
+     "letture": 74164,
+     "al_db": 74164,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 956
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 74164,
+   "assorbite_app": 0,
+   "letture_al_db": 74164,
+   "scritture": 925836,
+   "picco_risposte_pronte": 46948,
+   "per_tipo": {
+    "point": {
+     "letture": 74164,
+     "al_db": 74164,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 956
+  }
+ ],
+ "cluster040": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 502633,
+   "assorbite_app": 0,
+   "letture_al_db": 502633,
+   "scritture": 497367,
+   "picco_risposte_pronte": 267165,
+   "per_tipo": {
+    "point": {
+     "letture": 502633,
+     "al_db": 502633,
+     "collezione": 0.0,
+     "intervallo": 0.0016333985233759024,
+     "tetto": 0.43480034140217616
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0016333985233759024,
+   "tetto": 0.43480034140217616,
+   "durata_s": 160
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 502633,
+   "assorbite_app": 109979,
+   "letture_al_db": 392654,
+   "scritture": 497367,
+   "picco_risposte_pronte": 267165,
+   "per_tipo": {
+    "point": {
+     "letture": 502633,
+     "al_db": 392654,
+     "collezione": 0.0,
+     "intervallo": 0.0009117441819006046,
+     "tetto": 0.2764927900900029
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0009117441819006046,
+   "tetto": 0.2764927900900029,
+   "durata_s": 160
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 502633,
+   "assorbite_app": 184203,
+   "letture_al_db": 318430,
+   "scritture": 497367,
+   "picco_risposte_pronte": 267165,
+   "per_tipo": {
+    "point": {
+     "letture": 502633,
+     "al_db": 318430,
+     "collezione": 0.0,
+     "intervallo": 0.00038941054548880444,
+     "tetto": 0.10784787865464937
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.00038941054548880444,
+   "tetto": 0.10784787865464937,
+   "durata_s": 160
+  }
+ ],
+ "cluster041": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 502830,
+   "assorbite_app": 0,
+   "letture_al_db": 502830,
+   "scritture": 497170,
+   "picco_risposte_pronte": 257963,
+   "per_tipo": {
+    "point": {
+     "letture": 502830,
+     "al_db": 502830,
+     "collezione": 3.97748742119603e-06,
+     "intervallo": 0.0021478432074458565,
+     "tetto": 0.45184455979157967
+    }
+   },
+   "collezione": 3.97748742119603e-06,
+   "intervallo": 0.0021478432074458565,
+   "tetto": 0.45184455979157967,
+   "durata_s": 193
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 502830,
+   "assorbite_app": 109766,
+   "letture_al_db": 393064,
+   "scritture": 497170,
+   "picco_risposte_pronte": 257963,
+   "per_tipo": {
+    "point": {
+     "letture": 502830,
+     "al_db": 393064,
+     "collezione": 0.0,
+     "intervallo": 0.0013789103046832067,
+     "tetto": 0.29876813953961695
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0013789103046832067,
+   "tetto": 0.29876813953961695,
+   "durata_s": 193
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 502830,
+   "assorbite_app": 185727,
+   "letture_al_db": 317103,
+   "scritture": 497170,
+   "picco_risposte_pronte": 257963,
+   "per_tipo": {
+    "point": {
+     "letture": 502830,
+     "al_db": 317103,
+     "collezione": 0.0,
+     "intervallo": 0.0007347770282841853,
+     "tetto": 0.13079031103458497
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0007347770282841853,
+   "tetto": 0.13079031103458497,
+   "durata_s": 193
+  }
+ ],
+ "cluster042": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 932188,
+   "assorbite_app": 0,
+   "letture_al_db": 932188,
+   "scritture": 67812,
+   "picco_risposte_pronte": 99405,
+   "per_tipo": {
+    "point": {
+     "letture": 932188,
+     "al_db": 932188,
+     "collezione": 0.058626586053457025,
+     "intervallo": 0.8692420413049728,
+     "tetto": 0.8912869507009316
+    }
+   },
+   "collezione": 0.058626586053457025,
+   "intervallo": 0.8692420413049728,
+   "tetto": 0.8912869507009316,
+   "durata_s": 309
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 932188,
+   "assorbite_app": 647639,
+   "letture_al_db": 284549,
+   "scritture": 67812,
+   "picco_risposte_pronte": 99405,
+   "per_tipo": {
+    "point": {
+     "letture": 932188,
+     "al_db": 284549,
+     "collezione": 0.0,
+     "intervallo": 0.5845249851519422,
+     "tetto": 0.6438539583692088
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.5845249851519422,
+   "tetto": 0.6438539583692088,
+   "durata_s": 309
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 932188,
+   "assorbite_app": 764341,
+   "letture_al_db": 167847,
+   "scritture": 67812,
+   "picco_risposte_pronte": 99405,
+   "per_tipo": {
+    "point": {
+     "letture": 932188,
+     "al_db": 167847,
+     "collezione": 0.0,
+     "intervallo": 0.3164429510208702,
+     "tetto": 0.3962298998492675
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.3164429510208702,
+   "tetto": 0.3962298998492675,
+   "durata_s": 309
+  }
+ ],
+ "cluster043": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 503128,
+   "assorbite_app": 0,
+   "letture_al_db": 503128,
+   "scritture": 496872,
+   "picco_risposte_pronte": 240027,
+   "per_tipo": {
+    "point": {
+     "letture": 503128,
+     "al_db": 503128,
+     "collezione": 1.3912960518993178e-05,
+     "intervallo": 0.01126552288880762,
+     "tetto": 0.3957144106469924
+    }
+   },
+   "collezione": 1.3912960518993178e-05,
+   "intervallo": 0.01126552288880762,
+   "tetto": 0.3957144106469924,
+   "durata_s": 78
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 503128,
+   "assorbite_app": 88086,
+   "letture_al_db": 415042,
+   "scritture": 496872,
+   "picco_risposte_pronte": 240027,
+   "per_tipo": {
+    "point": {
+     "letture": 503128,
+     "al_db": 415042,
+     "collezione": 0.0,
+     "intervallo": 0.002968374285012119,
+     "tetto": 0.2674644975689207
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.002968374285012119,
+   "tetto": 0.2674644975689207,
+   "durata_s": 78
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 503128,
+   "assorbite_app": 184546,
+   "letture_al_db": 318582,
+   "scritture": 496872,
+   "picco_risposte_pronte": 240028,
+   "per_tipo": {
+    "point": {
+     "letture": 503128,
+     "al_db": 318582,
+     "collezione": 0.0,
+     "intervallo": 0.000593253856150065,
+     "tetto": 0.04566799128638781
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.000593253856150065,
+   "tetto": 0.04566799128638781,
+   "durata_s": 78
+  }
+ ],
+ "cluster044": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 978888,
+   "assorbite_app": 0,
+   "letture_al_db": 978888,
+   "scritture": 21112,
+   "picco_risposte_pronte": 205353,
+   "per_tipo": {
+    "point": {
+     "letture": 978888,
+     "al_db": 978888,
+     "collezione": 0.2581490425870988,
+     "intervallo": 0.7788459966819493,
+     "tetto": 0.7886080940822647
+    }
+   },
+   "collezione": 0.2581490425870988,
+   "intervallo": 0.7788459966819493,
+   "tetto": 0.7886080940822647,
+   "durata_s": 241
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 978888,
+   "assorbite_app": 581967,
+   "letture_al_db": 396921,
+   "scritture": 21112,
+   "picco_risposte_pronte": 205354,
+   "per_tipo": {
+    "point": {
+     "letture": 978888,
+     "al_db": 396921,
+     "collezione": 0.0,
+     "intervallo": 0.46951912345277774,
+     "tetto": 0.47866452014380695
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.46951912345277774,
+   "tetto": 0.47866452014380695,
+   "durata_s": 241
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 978888,
+   "assorbite_app": 705752,
+   "letture_al_db": 273136,
+   "scritture": 21112,
+   "picco_risposte_pronte": 205354,
+   "per_tipo": {
+    "point": {
+     "letture": 978888,
+     "al_db": 273136,
+     "collezione": 0.0,
+     "intervallo": 0.2367209009431199,
+     "tetto": 0.24239572959990627
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.2367209009431199,
+   "tetto": 0.24239572959990627,
+   "durata_s": 241
+  }
+ ],
+ "cluster045": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 773859,
+   "assorbite_app": 0,
+   "letture_al_db": 773859,
+   "scritture": 226141,
+   "picco_risposte_pronte": 5446,
+   "per_tipo": {
+    "point": {
+     "letture": 773859,
+     "al_db": 773859,
+     "collezione": 0.006501184324276128,
+     "intervallo": 0.07082039492982571,
+     "tetto": 0.07082685605517285
+    }
+   },
+   "collezione": 0.006501184324276128,
+   "intervallo": 0.07082039492982571,
+   "tetto": 0.07082685605517285,
+   "durata_s": 210031
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 773859,
+   "assorbite_app": 14353,
+   "letture_al_db": 759506,
+   "scritture": 226141,
+   "picco_risposte_pronte": 5446,
+   "per_tipo": {
+    "point": {
+     "letture": 773859,
+     "al_db": 759506,
+     "collezione": 0.0,
+     "intervallo": 0.05326093539748205,
+     "tetto": 0.05326488533336142
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.05326093539748205,
+   "tetto": 0.05326488533336142,
+   "durata_s": 210031
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 773859,
+   "assorbite_app": 25749,
+   "letture_al_db": 748110,
+   "scritture": 226141,
+   "picco_risposte_pronte": 5445,
+   "per_tipo": {
+    "point": {
+     "letture": 773859,
+     "al_db": 748110,
+     "collezione": 0.0,
+     "intervallo": 0.03878039325767601,
+     "tetto": 0.03878440336314178
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.03878039325767601,
+   "tetto": 0.03878440336314178,
+   "durata_s": 210031
+  }
+ ],
+ "cluster046": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 659879,
+   "assorbite_app": 0,
+   "letture_al_db": 659879,
+   "scritture": 340121,
+   "picco_risposte_pronte": 241285,
+   "per_tipo": {
+    "point": {
+     "letture": 659879,
+     "al_db": 659879,
+     "collezione": 0.006040501364644124,
+     "intervallo": 0.4680964237382914,
+     "tetto": 0.5559337393673689
+    }
+   },
+   "collezione": 0.006040501364644124,
+   "intervallo": 0.4680964237382914,
+   "tetto": 0.5559337393673689,
+   "durata_s": 109
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 659879,
+   "assorbite_app": 334567,
+   "letture_al_db": 325312,
+   "scritture": 340121,
+   "picco_risposte_pronte": 241286,
+   "per_tipo": {
+    "point": {
+     "letture": 659879,
+     "al_db": 325312,
+     "collezione": 0.0,
+     "intervallo": 0.037942037182766085,
+     "tetto": 0.09923396616171552
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.037942037182766085,
+   "tetto": 0.09923396616171552,
+   "durata_s": 109
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 659879,
+   "assorbite_app": 360176,
+   "letture_al_db": 299703,
+   "scritture": 340121,
+   "picco_risposte_pronte": 241286,
+   "per_tipo": {
+    "point": {
+     "letture": 659879,
+     "al_db": 299703,
+     "collezione": 0.0,
+     "intervallo": 0.00572566841172761,
+     "tetto": 0.022265376055628405
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.00572566841172761,
+   "tetto": 0.022265376055628405,
+   "durata_s": 109
+  }
+ ],
+ "cluster047": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 998685,
+   "assorbite_app": 0,
+   "letture_al_db": 998685,
+   "scritture": 1315,
+   "picco_risposte_pronte": 83803,
+   "per_tipo": {
+    "point": {
+     "letture": 998685,
+     "al_db": 998685,
+     "collezione": 0.35794870254384514,
+     "intervallo": 0.9106324817134532,
+     "tetto": 0.9111992269834833
+    }
+   },
+   "collezione": 0.35794870254384514,
+   "intervallo": 0.9106324817134532,
+   "tetto": 0.9111992269834833,
+   "durata_s": 198
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 998685,
+   "assorbite_app": 754994,
+   "letture_al_db": 243691,
+   "scritture": 1315,
+   "picco_risposte_pronte": 83803,
+   "per_tipo": {
+    "point": {
+     "letture": 998685,
+     "al_db": 243691,
+     "collezione": 0.0,
+     "intervallo": 0.6344386949046128,
+     "tetto": 0.6360801178541677
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.6344386949046128,
+   "tetto": 0.6360801178541677,
+   "durata_s": 198
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 998685,
+   "assorbite_app": 862665,
+   "letture_al_db": 136020,
+   "scritture": 1315,
+   "picco_risposte_pronte": 83803,
+   "per_tipo": {
+    "point": {
+     "letture": 998685,
+     "al_db": 136020,
+     "collezione": 0.0,
+     "intervallo": 0.3462579032495221,
+     "tetto": 0.3480076459344214
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.3462579032495221,
+   "tetto": 0.3480076459344214,
+   "durata_s": 198
+  }
+ ],
+ "cluster048": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 527152,
+   "assorbite_app": 0,
+   "letture_al_db": 527152,
+   "scritture": 472848,
+   "picco_risposte_pronte": 301235,
+   "per_tipo": {
+    "point": {
+     "letture": 527152,
+     "al_db": 527152,
+     "collezione": 1.5175888548274502e-05,
+     "intervallo": 0.20647555164354872,
+     "tetto": 0.22345926791513643
+    }
+   },
+   "collezione": 1.5175888548274502e-05,
+   "intervallo": 0.20647555164354872,
+   "tetto": 0.22345926791513643,
+   "durata_s": 852
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 527152,
+   "assorbite_app": 6650,
+   "letture_al_db": 520502,
+   "scritture": 472848,
+   "picco_risposte_pronte": 301235,
+   "per_tipo": {
+    "point": {
+     "letture": 527152,
+     "al_db": 520502,
+     "collezione": 0.0,
+     "intervallo": 0.19838924730356464,
+     "tetto": 0.21353808438776412
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.19838924730356464,
+   "tetto": 0.21353808438776412,
+   "durata_s": 852
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 527152,
+   "assorbite_app": 19844,
+   "letture_al_db": 507308,
+   "scritture": 472848,
+   "picco_risposte_pronte": 301235,
+   "per_tipo": {
+    "point": {
+     "letture": 527152,
+     "al_db": 507308,
+     "collezione": 0.0,
+     "intervallo": 0.17860550198301622,
+     "tetto": 0.19301883668304068
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.17860550198301622,
+   "tetto": 0.19301883668304068,
+   "durata_s": 852
+  }
+ ],
+ "cluster049": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 552825,
+   "assorbite_app": 0,
+   "letture_al_db": 552825,
+   "scritture": 447175,
+   "picco_risposte_pronte": 118938,
+   "per_tipo": {
+    "point": {
+     "letture": 552825,
+     "al_db": 552825,
+     "collezione": 0.0002442002442002442,
+     "intervallo": 0.05904942793831683,
+     "tetto": 0.753607380274047
+    }
+   },
+   "collezione": 0.0002442002442002442,
+   "intervallo": 0.05904942793831683,
+   "tetto": 0.753607380274047,
+   "durata_s": 723
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 552825,
+   "assorbite_app": 175611,
+   "letture_al_db": 377214,
+   "scritture": 447175,
+   "picco_risposte_pronte": 118880,
+   "per_tipo": {
+    "point": {
+     "letture": 552825,
+     "al_db": 377214,
+     "collezione": 0.0,
+     "intervallo": 0.023029367944986136,
+     "tetto": 0.6388946327548819
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.023029367944986136,
+   "tetto": 0.6388946327548819,
+   "durata_s": 723
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 552825,
+   "assorbite_app": 289387,
+   "letture_al_db": 263438,
+   "scritture": 447175,
+   "picco_risposte_pronte": 118168,
+   "per_tipo": {
+    "point": {
+     "letture": 552825,
+     "al_db": 263438,
+     "collezione": 0.0,
+     "intervallo": 0.01424244034649519,
+     "tetto": 0.48275875158481313
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.01424244034649519,
+   "tetto": 0.48275875158481313,
+   "durata_s": 723
+  }
+ ],
+ "cluster050": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 519003,
+   "assorbite_app": 0,
+   "letture_al_db": 519003,
+   "scritture": 480997,
+   "picco_risposte_pronte": 1385,
+   "per_tipo": {
+    "point": {
+     "letture": 519003,
+     "al_db": 519003,
+     "collezione": 0.00025433378997809263,
+     "intervallo": 0.011481629200601924,
+     "tetto": 0.01155099296150504
+    }
+   },
+   "collezione": 0.00025433378997809263,
+   "intervallo": 0.011481629200601924,
+   "tetto": 0.01155099296150504,
+   "durata_s": 506660
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 519003,
+   "assorbite_app": 165,
+   "letture_al_db": 518838,
+   "scritture": 480997,
+   "picco_risposte_pronte": 1385,
+   "per_tipo": {
+    "point": {
+     "letture": 519003,
+     "al_db": 518838,
+     "collezione": 3.8547677695157255e-06,
+     "intervallo": 0.011167262228287057,
+     "tetto": 0.01123664804813834
+    }
+   },
+   "collezione": 3.8547677695157255e-06,
+   "intervallo": 0.011167262228287057,
+   "tetto": 0.01123664804813834,
+   "durata_s": 506660
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 519003,
+   "assorbite_app": 342,
+   "letture_al_db": 518661,
+   "scritture": 480997,
+   "picco_risposte_pronte": 1385,
+   "per_tipo": {
+    "point": {
+     "letture": 519003,
+     "al_db": 518661,
+     "collezione": 0.0,
+     "intervallo": 0.010827881795623731,
+     "tetto": 0.010897291294313627
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.010827881795623731,
+   "tetto": 0.010897291294313627,
+   "durata_s": 506660
+  }
+ ],
+ "cluster051": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 881235,
+   "assorbite_app": 0,
+   "letture_al_db": 881235,
+   "scritture": 118765,
+   "picco_risposte_pronte": 73035,
+   "per_tipo": {
+    "point": {
+     "letture": 881235,
+     "al_db": 881235,
+     "collezione": 0.10031603374809217,
+     "intervallo": 0.8039387904474969,
+     "tetto": 0.9161188559237887
+    }
+   },
+   "collezione": 0.10031603374809217,
+   "intervallo": 0.8039387904474969,
+   "tetto": 0.9161188559237887,
+   "durata_s": 121
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 881235,
+   "assorbite_app": 714525,
+   "letture_al_db": 166710,
+   "scritture": 118765,
+   "picco_risposte_pronte": 73035,
+   "per_tipo": {
+    "point": {
+     "letture": 881235,
+     "al_db": 166710,
+     "collezione": 0.0,
+     "intervallo": 0.35176654069941815,
+     "tetto": 0.5566012836662467
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.35176654069941815,
+   "tetto": 0.5566012836662467,
+   "durata_s": 121
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 881235,
+   "assorbite_app": 786604,
+   "letture_al_db": 94631,
+   "scritture": 118765,
+   "picco_risposte_pronte": 73035,
+   "per_tipo": {
+    "point": {
+     "letture": 881235,
+     "al_db": 94631,
+     "collezione": 0.0,
+     "intervallo": 0.11301793281271465,
+     "tetto": 0.21887119442888694
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.11301793281271465,
+   "tetto": 0.21887119442888694,
+   "durata_s": 121
+  }
+ ],
+ "cluster052": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 921543,
+   "assorbite_app": 0,
+   "letture_al_db": 921543,
+   "scritture": 78457,
+   "picco_risposte_pronte": 139289,
+   "per_tipo": {
+    "point": {
+     "letture": 921543,
+     "al_db": 921543,
+     "collezione": 0.1187898991148541,
+     "intervallo": 0.6963505772383926,
+     "tetto": 0.732740631744802
+    }
+   },
+   "collezione": 0.1187898991148541,
+   "intervallo": 0.6963505772383926,
+   "tetto": 0.732740631744802,
+   "durata_s": 58
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 921543,
+   "assorbite_app": 594669,
+   "letture_al_db": 326874,
+   "scritture": 78457,
+   "picco_risposte_pronte": 139291,
+   "per_tipo": {
+    "point": {
+     "letture": 921543,
+     "al_db": 326874,
+     "collezione": 0.000321224692083188,
+     "intervallo": 0.2421789435684698,
+     "tetto": 0.24652618440132895
+    }
+   },
+   "collezione": 0.000321224692083188,
+   "intervallo": 0.2421789435684698,
+   "tetto": 0.24652618440132895,
+   "durata_s": 58
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 921543,
+   "assorbite_app": 675252,
+   "letture_al_db": 246291,
+   "scritture": 78457,
+   "picco_risposte_pronte": 139292,
+   "per_tipo": {
+    "point": {
+     "letture": 921543,
+     "al_db": 246291,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.0,
+   "tetto": 0.0,
+   "durata_s": 58
+  }
+ ],
+ "cluster053": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 857297,
+   "assorbite_app": 0,
+   "letture_al_db": 857297,
+   "scritture": 142703,
+   "picco_risposte_pronte": 123200,
+   "per_tipo": {
+    "point": {
+     "letture": 857297,
+     "al_db": 857297,
+     "collezione": 0.4699374895747915,
+     "intervallo": 0.7684723030641656,
+     "tetto": 0.8119811453906872
+    }
+   },
+   "collezione": 0.4699374895747915,
+   "intervallo": 0.7684723030641656,
+   "tetto": 0.8119811453906872,
+   "durata_s": 876
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 857297,
+   "assorbite_app": 350399,
+   "letture_al_db": 506898,
+   "scritture": 142703,
+   "picco_risposte_pronte": 123176,
+   "per_tipo": {
+    "point": {
+     "letture": 857297,
+     "al_db": 506898,
+     "collezione": 0.4235151845144388,
+     "intervallo": 0.6254966482408689,
+     "tetto": 0.6820030854333613
+    }
+   },
+   "collezione": 0.4235151845144388,
+   "intervallo": 0.6254966482408689,
+   "tetto": 0.6820030854333613,
+   "durata_s": 876
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 857297,
+   "assorbite_app": 535468,
+   "letture_al_db": 321829,
+   "scritture": 142703,
+   "picco_risposte_pronte": 123105,
+   "per_tipo": {
+    "point": {
+     "letture": 857297,
+     "al_db": 321829,
+     "collezione": 0.2908314663998583,
+     "intervallo": 0.4469733927023357,
+     "tetto": 0.4989326629980518
+    }
+   },
+   "collezione": 0.2908314663998583,
+   "intervallo": 0.4469733927023357,
+   "tetto": 0.4989326629980518,
+   "durata_s": 876
+  }
+ ],
+ "cluster054": [
+  {
+   "app_ttl": 0,
+   "window": 600,
+   "letture": 978051,
+   "assorbite_app": 0,
+   "letture_al_db": 978051,
+   "scritture": 21949,
+   "picco_risposte_pronte": 244806,
+   "per_tipo": {
+    "point": {
+     "letture": 978051,
+     "al_db": 978051,
+     "collezione": 0.0007811453594955682,
+     "intervallo": 0.4725939649363888,
+     "tetto": 0.4744813920746464
+    }
+   },
+   "collezione": 0.0007811453594955682,
+   "intervallo": 0.4725939649363888,
+   "tetto": 0.4744813920746464,
+   "durata_s": 1448
+  },
+  {
+   "app_ttl": 10,
+   "window": 600,
+   "letture": 978051,
+   "assorbite_app": 56893,
+   "letture_al_db": 921158,
+   "scritture": 21949,
+   "picco_risposte_pronte": 244796,
+   "per_tipo": {
+    "point": {
+     "letture": 978051,
+     "al_db": 921158,
+     "collezione": 0.0,
+     "intervallo": 0.4400092058039989,
+     "tetto": 0.4420121195278117
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.4400092058039989,
+   "tetto": 0.4420121195278117,
+   "durata_s": 1448
+  },
+  {
+   "app_ttl": 60,
+   "window": 600,
+   "letture": 978051,
+   "assorbite_app": 181628,
+   "letture_al_db": 796423,
+   "scritture": 21949,
+   "picco_risposte_pronte": 244527,
+   "per_tipo": {
+    "point": {
+     "letture": 978051,
+     "al_db": 796423,
+     "collezione": 0.0,
+     "intervallo": 0.3518971702223567,
+     "tetto": 0.3541823880023555
+    }
+   },
+   "collezione": 0.0,
+   "intervallo": 0.3518971702223567,
+   "tetto": 0.3541823880023555,
+   "durata_s": 1448
+  }
+ ]
+}
