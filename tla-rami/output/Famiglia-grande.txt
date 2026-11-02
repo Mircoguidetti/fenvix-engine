@@ -1,0 +1,45 @@
+Mon Nov  2 01:08:02 UTC 2026
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 95 and seed 74067505647554085 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 6802] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/w/fenvix-engine/tla-rami/MCFamiglia.tla
+Parsing file /home/claude/w/fenvix-engine/tla-rami/Famiglia.tla
+Parsing file /tmp/tlc-3875810562261316964/TLC.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-3875810562261316964/_TLCTrace.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-3875810562261316964/Naturals.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-3875810562261316964/FiniteSets.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-3875810562261316964/Sequences.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-3875810562261316964/TLCExt.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-3875810562261316964/Integers.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Famiglia
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCFamiglia
+Linting of module Famiglia
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCFamiglia
+Starting... (2026-11-02 01:08:02)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-02 01:08:03.
+Progress(10) at 2026-11-02 01:08:06: 88,595 states generated (88,595 s/min), 29,164 distinct states found (29,164 ds/min), 16,761 states left on queue.
+Progress(19) at 2026-11-02 01:09:06: 9,921,160 states generated (9,832,565 s/min), 2,051,688 distinct states found (2,022,524 ds/min), 464,651 states left on queue.
+Progress(22) at 2026-11-02 01:10:06: 19,237,290 states generated (9,316,130 s/min), 3,897,389 distinct states found (1,845,701 ds/min), 774,628 states left on queue.
+Progress(24) at 2026-11-02 01:11:06: 28,810,590 states generated (9,573,300 s/min), 5,691,336 distinct states found (1,793,947 ds/min), 947,825 states left on queue.
+Progress(26) at 2026-11-02 01:12:06: 38,283,234 states generated (9,472,644 s/min), 7,396,106 distinct states found (1,704,770 ds/min), 1,010,169 states left on queue.
+Progress(28) at 2026-11-02 01:13:06: 48,222,914 states generated (9,939,680 s/min), 8,970,558 distinct states found (1,574,452 ds/min), 783,177 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 2.6E-5
+  based on the actual fingerprints:  val = 2.7E-6
+57879982 states generated, 10128195 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 33.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 12 and the 95th percentile is 3).
+Finished in 06min 01s at (2026-11-02 01:14:04)
+EXIT=0
+Mon Nov  2 01:14:04 UTC 2026

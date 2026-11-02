@@ -1,0 +1,164 @@
+Mon Nov  2 00:00:40 UTC 2026
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 54 and seed 7798085766837957242 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 4771] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/w/fenvix-engine/tla-rami/MCFamiglia.tla
+Parsing file /home/claude/w/fenvix-engine/tla-rami/Famiglia.tla
+Parsing file /tmp/tlc-9280500730052817458/TLC.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-9280500730052817458/_TLCTrace.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-9280500730052817458/Naturals.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-9280500730052817458/FiniteSets.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-9280500730052817458/Sequences.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-9280500730052817458/TLCExt.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-9280500730052817458/Integers.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Famiglia
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCFamiglia
+Linting of module Famiglia
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCFamiglia
+Starting... (2026-11-02 00:00:41)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-02 00:00:41.
+Error: Invariant PinsLive is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {})
+/\ cst = (c1 :> "idle")
+/\ nextBox = 2
+/\ rheld = (r1 :> {})
+/\ mf = (d1 :> {1} @@ d2 :> {})
+/\ nPoints = 0
+/\ cycle = 0
+/\ wst = (d1 :> "idle" @@ d2 :> "idle")
+/\ rfail = FALSE
+/\ bcyc = <<0, 0, 0>>
+/\ cpins = (c1 :> {})
+/\ win = (d1 :> {} @@ d2 :> {})
+/\ pins = {}
+/\ rdb = (r1 :> d1)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
+/\ cmem = (c1 :> {})
+/\ fst = (d1 :> "none" @@ d2 :> "none")
+/\ cused = (c1 :> {})
+/\ used = {d1}
+/\ rst = (r1 :> "idle")
+/\ wcyc = (d1 :> 0 @@ d2 :> 0)
+/\ boxSt = <<"live", "none", "none">>
+/\ fpin = (d1 :> {} @@ d2 :> {})
+/\ cread = (c1 :> {})
+/\ rcyc = (r1 :> 0)
+/\ members = {d1}
+/\ seen = {}
+/\ owner = <<d1, "nessuno", "nessuno">>
+
+State 2: <FlushWrite(d1) line 182, col 3 to line 187, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {})
+/\ cst = (c1 :> "idle")
+/\ nextBox = 3
+/\ rheld = (r1 :> {})
+/\ mf = (d1 :> {1} @@ d2 :> {})
+/\ nPoints = 0
+/\ cycle = 0
+/\ wst = (d1 :> "flush" @@ d2 :> "idle")
+/\ rfail = FALSE
+/\ bcyc = <<0, 0, 0>>
+/\ cpins = (c1 :> {})
+/\ win = (d1 :> {} @@ d2 :> {})
+/\ pins = {}
+/\ rdb = (r1 :> d1)
+/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
+/\ cmem = (c1 :> {})
+/\ fst = (d1 :> "none" @@ d2 :> "none")
+/\ cused = (c1 :> {})
+/\ used = {d1}
+/\ rst = (r1 :> "idle")
+/\ wcyc = (d1 :> 0 @@ d2 :> 0)
+/\ boxSt = <<"live", "live", "none">>
+/\ fpin = (d1 :> {} @@ d2 :> {})
+/\ cread = (c1 :> {})
+/\ rcyc = (r1 :> 0)
+/\ members = {d1}
+/\ seen = {}
+/\ owner = <<d1, d1, "nessuno">>
+
+State 3: <ForkStart(d2) line 233, col 3 to line 246, col 89 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {})
+/\ cst = (c1 :> "idle")
+/\ nextBox = 3
+/\ rheld = (r1 :> {})
+/\ mf = (d1 :> {1} @@ d2 :> {})
+/\ nPoints = 0
+/\ cycle = 0
+/\ wst = (d1 :> "flush" @@ d2 :> "idle")
+/\ rfail = FALSE
+/\ bcyc = <<0, 0, 0>>
+/\ cpins = (c1 :> {})
+/\ win = (d1 :> {} @@ d2 :> {})
+/\ pins = {[pin |-> {1}, k |-> "fork", db |-> d2, id |-> 0]}
+/\ rdb = (r1 :> d1)
+/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
+/\ cmem = (c1 :> {})
+/\ fst = (d1 :> "none" @@ d2 :> "pinned")
+/\ cused = (c1 :> {})
+/\ used = {d1, d2}
+/\ rst = (r1 :> "idle")
+/\ wcyc = (d1 :> 0 @@ d2 :> 0)
+/\ boxSt = <<"live", "live", "none">>
+/\ fpin = (d1 :> {} @@ d2 :> {1})
+/\ cread = (c1 :> {})
+/\ rcyc = (r1 :> 0)
+/\ members = {d1}
+/\ seen = {}
+/\ owner = <<d1, d1, "nessuno">>
+
+State 4: <Drop(d1) line 300, col 3 to line 310, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {})
+/\ cst = (c1 :> "idle")
+/\ nextBox = 3
+/\ rheld = (r1 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {})
+/\ nPoints = 0
+/\ cycle = 0
+/\ wst = (d1 :> "idle" @@ d2 :> "idle")
+/\ rfail = FALSE
+/\ bcyc = <<0, 0, 0>>
+/\ cpins = (c1 :> {})
+/\ win = (d1 :> {} @@ d2 :> {})
+/\ pins = {[pin |-> {1}, k |-> "fork", db |-> d2, id |-> 0]}
+/\ rdb = (r1 :> d1)
+/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
+/\ cmem = (c1 :> {})
+/\ fst = (d1 :> "none" @@ d2 :> "pinned")
+/\ cused = (c1 :> {})
+/\ used = {d1, d2}
+/\ rst = (r1 :> "idle")
+/\ wcyc = (d1 :> 0 @@ d2 :> 0)
+/\ boxSt = <<"gone", "gone", "none">>
+/\ fpin = (d1 :> {} @@ d2 :> {1})
+/\ cread = (c1 :> {})
+/\ rcyc = (r1 :> 0)
+/\ members = {}
+/\ seen = {}
+/\ owner = <<d1, d1, "nessuno">>
+
+77 states generated, 57 distinct states found, 42 states left on queue.
+The depth of the complete state graph search is 4.
+Finished in 00s at (2026-11-02 00:00:41)
+Trace exploration spec path: ./MCFamiglia_TTrace_1793577640.tla
+EXIT=12
+Mon Nov  2 00:00:41 UTC 2026
