@@ -187,6 +187,12 @@ fn with_scope<T>(pooled: bool, f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
         let started = Instant::now();
         let max = COMMAND_MAX_MS.load(Relaxed);
         let used = JS_USED_US.try_with(|u| u.get()).ok();
+        if let Some(u) = used {
+            // short calls end before QuickJS ever asks the interrupt handler: check the budget before each call too
+            if max > 0 && u >= max * 1000 {
+                return Err(command_over());
+            }
+        }
         CMD_DEADLINE.with(|d| d.set(match used {
             Some(u) if max > 0 => Some(started + Duration::from_micros((max * 1000).saturating_sub(u))),
             _ => None,
