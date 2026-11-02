@@ -1,0 +1,32 @@
+{'nome': 'favorevole', 'seed': 1, 'card': 0.1, 'zipf': 1.3, 'uniq': 0.0, 'durata': 14400, 'eventi': 92992243, 'secondi_cpu': 2856.4}
+== catalogo favorevole
+cache_app=0s W=300s letture=5026415 assorbite_app=0 al_db=5026415 scritture=87965828 | collezione=33.0% intervallo=43.7% tetto=74.5% | picco_pronte=44667
+    point  letture=2545225 al_db=2545225 collezione=44.5% intervallo=67.2% tetto=91.5%
+    filter letture=1656800 al_db=1656800 collezione=22.4% intervallo=19.9% tetto=49.8%
+    count  letture=320566 al_db=320566 collezione=36.0% intervallo=25.2% tetto=86.4%
+    agg    letture=503824 al_db=503824 collezione=7.6% intervallo=15.2% tetto=62.4%
+cache_app=0s W=600s letture=5026415 assorbite_app=0 al_db=5026415 scritture=87965828 | collezione=33.2% intervallo=44.5% tetto=76.0% | picco_pronte=79115
+    point  letture=2545225 al_db=2545225 collezione=44.7% intervallo=68.4% tetto=93.6%
+    filter letture=1656800 al_db=1656800 collezione=22.6% intervallo=20.2% tetto=50.9%
+    count  letture=320566 al_db=320566 collezione=36.0% intervallo=25.4% tetto=86.8%
+    agg    letture=503824 al_db=503824 collezione=7.6% intervallo=15.3% tetto=62.6%
+cache_app=0s W=3600s letture=5026415 assorbite_app=0 al_db=5026415 scritture=87965828 | collezione=33.4% intervallo=45.7% tetto=78.5% | picco_pronte=308600
+    point  letture=2545225 al_db=2545225 collezione=45.0% intervallo=70.4% tetto=97.2%
+    filter letture=1656800 al_db=1656800 collezione=22.8% intervallo=20.9% tetto=52.8%
+    count  letture=320566 al_db=320566 collezione=36.0% intervallo=25.6% tetto=87.5%
+    agg    letture=503824 al_db=503824 collezione=7.6% intervallo=15.3% tetto=62.8%
+cache_app=60s W=300s letture=5026415 assorbite_app=3239565 al_db=1786850 scritture=87965828 | collezione=5.8% intervallo=11.6% tetto=28.2% | picco_pronte=44620
+    point  letture=2545225 al_db=541707 collezione=14.6% intervallo=30.4% tetto=59.6%
+    filter letture=1656800 al_db=970275 collezione=2.3% intervallo=3.6% tetto=14.3%
+    count  letture=320566 al_db=64149 collezione=0.0% intervallo=3.7% tetto=32.0%
+    agg    letture=503824 al_db=210719 collezione=0.5% intervallo=2.8% tetto=10.2%
+cache_app=60s W=600s letture=5026415 assorbite_app=3239565 al_db=1786850 scritture=87965828 | collezione=6.3% intervallo=13.7% tetto=32.4% | picco_pronte=79059
+    point  letture=2545225 al_db=541707 collezione=15.9% intervallo=35.9% tetto=69.9%
+    filter letture=1656800 al_db=970275 collezione=2.6% intervallo=4.2% tetto=16.1%
+    count  letture=320566 al_db=64149 collezione=0.0% intervallo=4.4% tetto=34.1%
+    agg    letture=503824 al_db=210719 collezione=0.5% intervallo=2.9% tetto=10.6%
+cache_app=60s W=3600s letture=5026415 assorbite_app=3239565 al_db=1786850 scritture=87965828 | collezione=6.9% intervallo=17.2% tetto=39.5% | picco_pronte=308602
+    point  letture=2545225 al_db=541707 collezione=17.3% intervallo=45.6% tetto=86.9%
+    filter letture=1656800 al_db=970275 collezione=3.0% intervallo=5.3% tetto=19.4%
+    count  letture=320566 al_db=64149 collezione=0.0% intervallo=5.4% tetto=37.6%
+    agg    letture=503824 al_db=210719 collezione=0.5% intervallo=3.1% tetto=11.1%
