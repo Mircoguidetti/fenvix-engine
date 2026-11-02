@@ -1,0 +1,18 @@
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'proto/bancone/risultati/simula/d/risultati.jsonl'
+Traceback (most recent call last):
+  File "/home/runner/work/fenvix-engine/fenvix-engine/proto/bancone/verifica_lcs.py", line 3, in <module>
+    import sys, json, libcachesim as l
+ModuleNotFoundError: No module named 'libcachesim'
+byte compressi scaricati 1560830688
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'main' (2456) panicked at src/trace.rs:86:29:
+index out of bounds: the len is 1 but the index is 118
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+durata_s 28
+4.0K	/home/runner/tracce

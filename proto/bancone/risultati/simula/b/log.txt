@@ -1,0 +1,13 @@
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+sort: write failed: 'standard output': Broken pipe
+sort: write error
+byte compressi scaricati 2700000000
+tencentBlock-2982 0+1+2+3+4 w65536 e0.5 b=0.5 0.8s
+tencentBlock-2982 4 w262144 b=0.5 0.6s
+tencentBlock-2982 0+1+2+3+4 w262144 e0.5 b=0.5 0.6s
+tencentBlock-2982 4 w1048576 b=0.5 0.6s
+tencentBlock-2982 0+1+2+3+4 w1048576 e0.5 b=0.5 0.6s
+durata_s 2654
+4.0K	/home/runner/tracce

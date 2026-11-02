@@ -1,0 +1,15 @@
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "LRU", "cap": 148021248, "miss_ratio": 0.459204, "byte_miss_ratio": 0.459204}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "LRU", "cap": 370053120, "miss_ratio": 0.419708, "byte_miss_ratio": 0.419708}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "LRU", "cap": 740106240, "miss_ratio": 0.36571, "byte_miss_ratio": 0.36571}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "LRU", "cap": 1480212480, "miss_ratio": 0.300199, "byte_miss_ratio": 0.300199}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "LRU", "cap": 3700531200, "miss_ratio": 0.192976, "byte_miss_ratio": 0.192976}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "S3FIFO", "cap": 148021248, "miss_ratio": 0.433889, "byte_miss_ratio": 0.433889}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "S3FIFO", "cap": 370053120, "miss_ratio": 0.394609, "byte_miss_ratio": 0.394609}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "S3FIFO", "cap": 740106240, "miss_ratio": 0.331584, "byte_miss_ratio": 0.331584}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "S3FIFO", "cap": 1480212480, "miss_ratio": 0.274154, "byte_miss_ratio": 0.274154}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "S3FIFO", "cap": 3700531200, "miss_ratio": 0.188962, "byte_miss_ratio": 0.188962}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "ARC", "cap": 148021248, "miss_ratio": 0.448511, "byte_miss_ratio": 0.448511}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "ARC", "cap": 370053120, "miss_ratio": 0.406699, "byte_miss_ratio": 0.406699}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "ARC", "cap": 740106240, "miss_ratio": 0.345446, "byte_miss_ratio": 0.345446}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "ARC", "cap": 1480212480, "miss_ratio": 0.272857, "byte_miss_ratio": 0.272857}
+{"trace": "alibaba-79", "kind": "libcachesim", "policy": "ARC", "cap": 3700531200, "miss_ratio": 0.198118, "byte_miss_ratio": 0.198118}

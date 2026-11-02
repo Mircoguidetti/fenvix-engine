@@ -1,0 +1,43 @@
+# M15 bancone piccolo: simulazione su tracce pubbliche (cacheMon, CC BY 4.0). Solo letture anonime dal bucket pubblico
+# cache-datasets (--no-sign-request): nessun segreto AWS, nessuna risorsa AWS, nessun costo per noi.
+# Un solo innesco: un push sul branch proto-bancone-piccolo che cambia proto/bancone/run.json.
+# Il runner esegue proto/bancone/ci/run.sh e fa commit dei risultati in proto/bancone/risultati/ su questo branch.
+name: bancone-piccolo
+on:
+  push:
+    branches: [proto-bancone-piccolo]
+    paths: ['proto/bancone/run.json']
+permissions:
+  contents: write
+concurrency:
+  group: fenvix-bancone-piccolo
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [a, b, c, d]
+    env:
+      PARTE: ${{ matrix.parte }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strumenti
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y zstd >/dev/null
+          pip install -q --break-system-packages numpy libcachesim==0.3.5 || pip install -q --break-system-packages numpy libcachesim
+          python3 -c "import libcachesim; print('libcachesim ok')"
+      - name: Esegui
+        run: bash proto/bancone/ci/run.sh
+      - name: Commit dei risultati
+        if: always()
+        run: |
+          git config user.name "bancone-piccolo-ci"
+          git config user.email "actions@users.noreply.github.com"
+          git add proto/bancone/risultati
+          git commit -q -m "bancone: risultati della corsa ${{ github.run_id }} parte ${{ matrix.parte }}" || exit 0
+          git checkout -- . 2>/dev/null; git clean -fdq proto/bancone/sim 2>/dev/null || true
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
