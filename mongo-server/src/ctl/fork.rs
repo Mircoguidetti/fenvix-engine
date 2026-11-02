@@ -153,9 +153,25 @@ async fn do_fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str, chain: &[S
         let m = meta::default_meta(target, now_ms(), "fork");
         let mut m = m;
         m["forked_from"] = fm;
+        // A fresh record (no users, no pin), but never fewer network restrictions than the source: its allow list is
+        // copied (TLS is per listener, so the fork has the same TLS mode). The source's entry lock is held: the list
+        // cannot change meanwhile. A stored list that does not parse fails the fork rather than giving an open fork.
+        let src_meta = rec::get(&ctl.store, &meta::meta_path(src)).await?;
+        let list = src_meta.as_ref().and_then(crate::netguard::stored_entries).transpose().map_err(|e| anyhow::anyhow!("the allow list of {src} is not valid: {e}"))?;
+        if let Some(l) = &list {
+            m["ip_allowlist"] = json!(l.iter().map(|n| n.to_string()).collect::<Vec<_>>());
+        }
         rec::put(&ctl.store, &meta::meta_path(target), &m).await?;
-        // a fresh record: the fork has no allow list (like it has no users)
-        crate::netguard::get().forget_cached(target);
+        crate::netguard::get().set_cached(target, list);
+        // The source's TTL hints (written at its clean close): the maintenance pass finds the fork's due documents too.
+        let hints: Vec<Path> = ctl.store.list(Some(&rec::path(&["ttl-hints", src]))).map_ok(|o| o.location).try_collect().await?;
+        for h in hints {
+            if let Some(f) = h.filename() {
+                ctl.store.copy(&h, &rec::path(&["ttl-hints", target, f])).await?;
+            }
+        }
+        // A resume token of the source (or any token from before the fork) is not a point in the fork's history.
+        ctl.dbs.changes.mark_born(target);
         super::failpoint("fork.after_meta").await;
         Ok::<_, anyhow::Error>(manifest_id)
     }

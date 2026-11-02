@@ -90,11 +90,14 @@ pub struct ChangeLog {
     nonce: u32,
     /// The cluster time (seconds) before the first write.
     boot: u32,
+    /// Databases forked in this process, with the position of the log when they were born: an earlier resume token
+    /// (the source's, or any older one) is not a point in their history.
+    born: Mutex<std::collections::HashMap<String, u64>>,
 }
 
 impl Default for ChangeLog {
     fn default() -> Self {
-        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32 }
+        ChangeLog { inner: Mutex::new(Inner { events: VecDeque::new(), sizes: VecDeque::new(), bytes: 0, next_seq: 1, last_time: (0, 0) }), notify: Notify::new(), nonce: rand::random(), boot: (bson::DateTime::now().timestamp_millis() / 1000) as u32, born: Mutex::default() }
     }
 }
 
@@ -191,6 +194,20 @@ impl ChangeLog {
             return Err(lost());
         }
         Ok(seq)
+    }
+
+    /// A fork of another database was just made under this name.
+    pub fn mark_born(&self, db: &str) {
+        let at = self.head();
+        self.born.lock().unwrap().insert(db.to_string(), at);
+    }
+
+    /// A stream on `db` resuming after `seq`: a position from before the database was forked cannot be resumed there.
+    pub fn check_born(&self, db: &str, seq: u64) -> Result<(), MongoError> {
+        match self.born.lock().unwrap().get(db) {
+            Some(&at) if seq < at => Err(MongoError::new(286, "ChangeStreamHistoryLost", format!("Resume of change stream was not possible: the resume token is from before database '{db}' was forked from another database."))),
+            _ => Ok(()),
+        }
     }
 
     /// Position of "now": events published later have a larger sequence number.

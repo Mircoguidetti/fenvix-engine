@@ -311,7 +311,8 @@ def test_list_survives_sleep_wake_and_restart(env):
     assert scram_ok(srv.port, "127.0.0.2", "sleepy", "u1", PW)
 
 
-def test_fork_does_not_inherit_the_list(env):
+def test_fork_inherits_the_list(env):
+    # a fork is never more reachable than its source (it used to start with no list: see test_30)
     srv, _ = env
     new_db(srv, "parent")
     r = root(srv)
@@ -319,10 +320,11 @@ def test_fork_does_not_inherit_the_list(env):
     assert put_list(srv, "parent", ["127.0.0.2/32"])[0] == 200
     st, f = srv.admin.post("/v1/databases/parent/fork", {"target": "child"})
     assert st == 201, f
-    assert get_list(srv, "child")[1]["entries"] == []
-    r.child.command("createUser", "u1", pwd=PW, roles=[{"role": "readWrite", "db": "child"}])     # a fork has no users either
+    assert get_list(srv, "child")[1]["entries"] == ["127.0.0.2/32"]
+    r.child.command("createUser", "u1", pwd=PW, roles=[{"role": "readWrite", "db": "child"}])     # a fork has no users
     r.close()
-    assert scram_ok(srv.port, "127.0.0.3", "child", "u1", PW)
+    assert not scram_ok(srv.port, "127.0.0.3", "child", "u1", PW)
+    assert scram_ok(srv.port, "127.0.0.2", "child", "u1", PW)
     assert not scram_ok(srv.port, "127.0.0.3", "parent", "u1", PW)
     assert get_list(srv, "parent")[1]["entries"] == ["127.0.0.2/32"]
 
