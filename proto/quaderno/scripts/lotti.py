@@ -12,7 +12,7 @@ Uso: lotti.py OUT RATE "1,16,32" "64,256" REPS [KEYS] [VAL] [extra args per le r
 """
 import json, os, subprocess, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
-PQ = os.path.join(HERE, '..', 'target', 'release', 'pq')
+PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', 'pq')
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 hz = os.sysconf('SC_CLK_TCK')
 out, rate, batches, clients, reps = sys.argv[1], float(sys.argv[2]), [int(x) for x in sys.argv[3].split(',')], [int(x) for x in sys.argv[4].split(',')], int(sys.argv[5])

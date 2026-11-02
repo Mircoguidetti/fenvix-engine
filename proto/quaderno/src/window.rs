@@ -9,6 +9,14 @@
 //! versione che esce restano solo delta, la versione viene "piegata" nel primo delta, che diventa un put col valore
 //! calcolato: così la finestra sa sempre rispondere alle letture a posizioni ≥ inizio finestra della chiave.
 //!
+//! Giro 6 (M16, "capo veloce"): le versioni stanno in una **mappa a hash** (chiave → versioni), non più in un albero
+//! ordinato. Controllo, aggiunta e potatura sul thread principale fanno solo accessi a hash (prima ogni chiave era una
+//! discesa nell'albero con una serie di cache miss: il costo cresceva con la finestra). L'ordine delle chiavi serve
+//! solo a `scan`: lo tiene un insieme ordinato a parte (`OrdIdx`), aggiornato da una coda di operazioni (chiave nata,
+//! chiave uscita) che il thread principale riempie e che svuota l'indicizzatore (un thread a parte) oppure `scan`
+//! stessa prima di leggere. La potatura segue la coda dei record in ordine di posizione (`recs`), come prima.
+//! La semantica non cambia: stesse versioni, stessi confini (`trim_pos`, `spill_upto`) sotto lo stesso lock.
+//!
 //! Concorrenza: un lock lettore/scrittore per database. Scrive solo il thread principale della replica (aggiunta,
 //! troncamento, potatura, sfratto, scarichi applicati); leggono i thread di rete (get, scan, scaricabili, pendenti),
 //! senza passare dal thread principale. I valori sfrattati portano la loro collocazione sul disco, così anche un
@@ -18,18 +26,30 @@ use crate::codec::{Body, Db, Dep, Entry, FlushRec, GetRes, Kind, PendInfo, Pos, 
 use crate::spill::{SEntry, SVal, Spill};
 use bytes::Bytes;
 use parking_lot::{Mutex, RwLock};
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicI64, Ordering::Relaxed};
 use std::sync::Arc;
 use std::time::Instant;
 
-/// Chiave della finestra: fino a 30 byte sta dentro il nodo dell'albero (i confronti non seguono puntatori, che
-/// costavano un salto di cache ciascuno: era il 16% della CPU del leader), oltre va sullo heap.
+/// Chiave della finestra: fino a 30 byte sta dentro la voce (niente puntatori da seguire), oltre va sullo heap.
+/// Giro 6: sullo heap con `Arc`, così la stessa chiave nella mappa, nel record e nell'insieme ordinato costa una sola
+/// allocazione (le copie sono un contatore).
 #[derive(Clone)]
 pub enum IKey {
     I(u8, [u8; 30]),
-    H(Box<[u8]>),
+    H(Arc<[u8]>),
+}
+impl std::hash::Hash for IKey {
+    // uguale all'hash di `[u8]`: serve perché la mappa si interroga con `&[u8]` (Borrow)
+    fn hash<H: std::hash::Hasher>(&self, h: &mut H) {
+        self.as_slice().hash(h)
+    }
+}
+impl From<&[u8]> for IKey {
+    fn from(k: &[u8]) -> IKey {
+        IKey::new(k)
+    }
 }
 impl IKey {
     pub fn new(k: &[u8]) -> IKey {
@@ -121,9 +141,26 @@ pub struct RecMeta {
     pub ent: Option<Arc<Entry>>,
 }
 
+/// Mappa chiave → versioni (giro 6: hash al posto dell'albero ordinato).
+pub type KMap = hashbrown::HashMap<IKey, KeyS>;
+
+/// Operazione in coda per l'insieme ordinato delle chiavi: `true` = chiave nata nella mappa, `false` = uscita.
+pub type OrdOp = (bool, IKey);
+
+/// L'ordine delle chiavi, solo per `scan`. Dopo aver applicato tutta la coda contiene esattamente le chiavi della mappa.
+#[derive(Default, Debug)]
+pub struct OrdIdx {
+    pub set: BTreeSet<IKey>,
+}
+
 #[derive(Default, Debug)]
 pub struct DbW {
-    pub keys: BTreeMap<IKey, KeyS>,
+    pub keys: KMap,
+    /// operazioni non ancora applicate a `ord`, in ordine (le scrive chi ha il lock in scrittura del database)
+    pub ordq: Vec<OrdOp>,
+    /// insieme ordinato delle chiavi. Lock sempre preso PRIMA di quello del database (stesso ordine per tutti), e
+    /// la coda si stacca da `ordq` solo tenendo questo lock: così le operazioni si applicano nell'ordine in cui sono nate.
+    pub ord: Arc<Mutex<OrdIdx>>,
     /// le versioni con posizione ≤ trim_pos possono essere uscite dalla finestra
     pub trim_pos: Pos,
     /// su S3 fino a questa posizione (conferma_scarico applicata)
@@ -169,6 +206,10 @@ pub struct Window {
     pub spill: Arc<Spill>,
     /// database con record non ancora su S3, aggiornato a ogni cambiamento (risposta a `pendenti` senza scorrere tutto)
     pub pending: Mutex<HashMap<Db, PendInfo>>,
+    /// database con operazioni in `ordq` (per l'indicizzatore)
+    pub ord_dirty: Mutex<std::collections::HashSet<Db>>,
+    /// operazioni applicate agli insiemi ordinati (per la diagnosi)
+    pub ord_ops: std::sync::atomic::AtomicU64,
     dir: PathBuf,
 }
 
@@ -210,8 +251,49 @@ impl Window {
             nrecs: AtomicI64::new(0),
             spill: Arc::new(Spill::new(dir.clone())),
             pending: Mutex::new(HashMap::new()),
+            ord_dirty: Mutex::new(Default::default()),
+            ord_ops: Default::default(),
             dir,
         }
+    }
+
+    /// Mette in coda un'operazione per l'insieme ordinato (chi chiama ha il lock in scrittura del database).
+    #[inline]
+    fn ord_push(&self, db: &Db, d: &mut DbW, op: OrdOp) {
+        if d.ordq.is_empty() {
+            self.ord_dirty.lock().insert(*db);
+        }
+        d.ordq.push(op);
+    }
+
+    /// Applica a `ord` le operazioni in coda. Chi chiama tiene già il lock di `ord` (sempre prima di quello del
+    /// database). Il lock in scrittura del database si prende solo per staccare la coda (breve).
+    fn ord_catch_up(&self, dr: &DbRef, o: &mut OrdIdx) -> usize {
+        let q = std::mem::take(&mut dr.write().ordq);
+        let n = q.len();
+        for (ins, k) in q {
+            if ins {
+                o.set.insert(k);
+            } else {
+                o.set.remove(k.as_slice());
+            }
+        }
+        self.ord_ops.fetch_add(n as u64, Relaxed);
+        n
+    }
+
+    /// L'indicizzatore: porta in pari gli insiemi ordinati dei database con operazioni in coda. Gira su un thread
+    /// a parte (fuori dal thread principale). Restituisce le operazioni applicate.
+    pub fn index_pending(&self) -> usize {
+        let dbs: Vec<Db> = self.ord_dirty.lock().drain().collect();
+        let mut n = 0;
+        for db in dbs {
+            let Some(dr) = self.db(&db) else { continue };
+            let ord = dr.read().ord.clone();
+            let mut o = ord.lock();
+            n += self.ord_catch_up(&dr, &mut o);
+        }
+        n
     }
 
     fn shard(&self, db: &Db) -> &RwLock<HashMap<Db, DbRef>> {
@@ -316,10 +398,12 @@ impl Window {
         let genesis = d.genesis && d.trim_pos == 0;
         let mut keys = Vec::with_capacity(writes.len());
         let mut newk = 0i64;
+        let d = &mut *d;
         for w in writes.iter() {
-            // una sola discesa nell'albero, anche per le chiavi nuove
-            let ks = d.keys.entry(IKey::new(&w.key)).or_insert_with(|| {
-                newk += 1;
+            // un solo accesso alla mappa, anche per le chiavi nuove (la chiave si costruisce solo se manca)
+            let mut born = false;
+            let ks = d.keys.entry_ref(&w.key[..]).or_insert_with(|| {
+                born = true;
                 KeyS { v: VecDeque::new(), base_known: genesis, last_struct: 0 }
             });
             if w.kind != Kind::Delta {
@@ -344,7 +428,15 @@ impl Window {
                 continue;
             }
             ks.v.push_back(Ver { pos, kind: w.kind, val: Val::Mem(w.val.clone()) });
-            keys.push(IKey::new(&w.key));
+            let ik = IKey::new(&w.key);
+            if born {
+                newk += 1;
+                if d.ordq.is_empty() {
+                    self.ord_dirty.lock().insert(*db);
+                }
+                d.ordq.push((true, ik.clone()));
+            }
+            keys.push(ik);
         }
         self.versions.fetch_add(keys.len() as i64, Relaxed);
         self.nkeys.fetch_add(newk, Relaxed);
@@ -383,6 +475,7 @@ impl Window {
                 if ks.v.is_empty() {
                     d.keys.remove(k.as_slice());
                     self.nkeys.fetch_sub(1, Relaxed);
+                    self.ord_push(db, &mut d, (false, k.clone()));
                 }
             }
         }
@@ -418,17 +511,36 @@ impl Window {
     pub fn scan(&self, db: &Db, from: &[u8], to: &[u8], at: Pos, limit: usize, dal: Pos) -> Vec<(Bytes, GetRes)> {
         let mut out = vec![];
         let Some(dr) = self.db(db) else { return out };
+        // ordine dei lock: prima l'insieme ordinato, poi il database. Si porta in pari l'insieme (stacca la coda col
+        // lock in scrittura, breve) e poi si legge col lock in lettura: nel frattempo il thread principale non può
+        // aggiungere né togliere chiavi, quindi l'insieme contiene esattamente le chiavi della mappa.
+        let ord = dr.read().ord.clone();
+        let mut o = ord.lock();
+        self.ord_catch_up(&dr, &mut o);
         let d = dr.read();
+        if !d.ordq.is_empty() {
+            // tra il distacco e il lock in lettura il thread principale ha aggiunto qualcosa: si applica anche questo
+            // (solo lettura della coda: resta lì e l'indicizzatore la riapplicherà, le operazioni sono idempotenti
+            // nell'ordine in cui sono nate)
+            for (ins, k) in d.ordq.iter() {
+                if *ins {
+                    o.set.insert(k.clone());
+                } else {
+                    o.set.remove(k.as_slice());
+                }
+            }
+        }
         let complete = d.genesis && d.trim_pos == 0 && !d.spilled_any;
         let range = if to.is_empty() {
-            d.keys.range::<[u8], _>((std::ops::Bound::Included(from), std::ops::Bound::Unbounded))
+            o.set.range::<[u8], _>((std::ops::Bound::Included(from), std::ops::Bound::Unbounded))
         } else {
-            d.keys.range::<[u8], _>((std::ops::Bound::Included(from), std::ops::Bound::Excluded(to)))
+            o.set.range::<[u8], _>((std::ops::Bound::Included(from), std::ops::Bound::Excluded(to)))
         };
-        for (k, ks) in range {
+        for k in range {
             if out.len() >= limit {
                 break;
             }
+            let Some(ks) = d.keys.get(k.as_slice()) else { continue };
             gone_take();
             let mut r = self.resolve(db, k.as_slice(), ks, at, complete, &d, dal);
             if gone_take() {
@@ -458,7 +570,7 @@ impl Window {
             if n % 16 == 0 && Instant::now() >= deadline {
                 return (out, true);
             }
-            let r = self.pop_front_rec(&mut d);
+            let r = self.pop_front_rec(db, &mut d);
             d.flushed_n = d.flushed_n.saturating_sub(1);
             out.push((r.index, r.txn));
             d.trim_pos = d.trim_pos.max(r.pos);
@@ -467,7 +579,7 @@ impl Window {
 
     /// Toglie il record più vecchio del database dalla finestra in RAM (versioni comprese). Se dopo la versione che
     /// esce restano solo delta, la versione si piega nel primo delta (che diventa un put col valore calcolato).
-    fn pop_front_rec(&self, d: &mut DbW) -> RecMeta {
+    fn pop_front_rec(&self, db: &Db, d: &mut DbW) -> RecMeta {
         let r = d.recs.pop_front().unwrap();
         self.nrecs.fetch_sub(1, Relaxed);
         for k in r.keys.iter() {
@@ -505,6 +617,10 @@ impl Window {
             if remove {
                 d.keys.remove(k.as_slice());
                 self.nkeys.fetch_sub(1, Relaxed);
+                if d.ordq.is_empty() {
+                    self.ord_dirty.lock().insert(*db);
+                }
+                d.ordq.push((false, k.clone()));
             } else if let Some(ks) = d.keys.get_mut(k.as_slice()) {
                 ks.base_known = ks.base_known || ks.v.front().map(|v| v.kind != Kind::Delta).unwrap_or(false);
             }
@@ -599,7 +715,7 @@ impl Window {
                 return (out, true);
             }
             let was_flushed = d.flushed_n > 0;
-            let r = self.pop_front_rec(&mut d);
+            let r = self.pop_front_rec(db, &mut d);
             if was_flushed {
                 d.flushed_n -= 1;
                 d.trim_pos = d.trim_pos.max(r.pos);
@@ -1056,4 +1172,147 @@ mod tests {
         assert!(win.spill.runs.read().is_empty()); // run cancellato
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    // ---------------------------------------------------------------- giro 6 (M16): mappa a hash e potatura
+
+    fn scan_keys(win: &Window, db: &Db, at: Pos) -> Vec<String> {
+        win.scan(db, b"", b"", at, usize::MAX, 0).into_iter().map(|(k, _)| String::from_utf8(k.to_vec()).unwrap()).collect()
+    }
+
+    #[test]
+    fn potatura_hash_chiave_che_rinasce() {
+        // una chiave esce dalla finestra (potatura) e rinasce nel record dopo: la mappa la deve rivedere con la
+        // posizione nuova, l'insieme ordinato la deve avere una volta sola, i controlli devono vederla
+        let win = Window::new(true, PathBuf::from("/nonesiste"));
+        let db = [7u8; 16];
+        rec(&win, &db, 1, 10, vec![w("k", Kind::Put, b"uno"), w("ix/1/a/k", Kind::Put, b"k")]);
+        rec(&win, &db, 2, 20, vec![w("altro", Kind::Put, b"x")]);
+        assert_eq!(win.index_pending(), 3);
+        win.set_flushed(&db, 10, &Bytes::new());
+        assert_eq!(win.trim_db(&db, 100, 20, far()).0.len(), 1); // esce solo 10 (20 non è su S3)
+        // "k" non è più nella mappa: un controllo con S prima del confine è un conflitto (non si sa cosa è cambiato)
+        assert!(win.validate(&db, 5, &[w("k", Kind::Put, b"y")], true, &[]).is_err());
+        // S dopo il confine e chiave assente: nessun conflitto
+        assert!(win.validate(&db, 10, &[w("k", Kind::Put, b"y")], true, &[]).is_ok());
+        // la chiave rinasce a 30, prima che l'indicizzatore abbia applicato l'uscita
+        rec(&win, &db, 3, 30, vec![w("k", Kind::Put, b"due")]);
+        assert!(win.validate(&db, 25, &[w("k", Kind::Put, b"z")], true, &[]).is_err());
+        assert!(win.validate(&db, 30, &[w("k", Kind::Put, b"z")], true, &[]).is_ok());
+        // "esiste" vede la scrittura strutturale nuova
+        assert!(win.validate(&db, 25, &[], false, &[(Bytes::from_static(b"k"), Dep::Esiste)]).is_err());
+        // scan: k una volta sola, l'indice uscito non c'è più (coda: uscita k, uscita ix, nascita k)
+        assert_eq!(scan_keys(&win, &db, 30), vec!["altro", "k"]);
+        assert_eq!(win.index_pending(), 0); // scan ha già portato in pari
+        match win.get(&db, b"k", 30, 0) {
+            GetRes::Value(30, v) => assert_eq!(&v[..], b"due"),
+            o => panic!("{o:?}"),
+        }
+        assert!(matches!(win.get(&db, b"k", 25, 0), GetRes::OutOfWindow { .. }));
+        assert_eq!(win.nkeys.load(Relaxed), 2);
+    }
+
+    #[test]
+    fn potatura_hash_versioni_multiple_e_troncamento() {
+        // una chiave con più versioni: la potatura toglie solo la più vecchia (la chiave resta nella mappa e
+        // nell'insieme), il troncamento (unapply_last) toglie l'ultima e rimette l'ultima posizione strutturale giusta
+        let win = Window::new(true, PathBuf::from("/nonesiste"));
+        let db = [8u8; 16];
+        rec(&win, &db, 1, 10, vec![w("c", Kind::Put, &5i64.to_le_bytes())]);
+        rec(&win, &db, 2, 20, vec![w("c", Kind::Delta, &3i64.to_le_bytes())]);
+        rec(&win, &db, 3, 30, vec![w("c", Kind::Put, &1i64.to_le_bytes()), w("nuova", Kind::Put, b"n")]);
+        win.set_flushed(&db, 10, &Bytes::new());
+        assert_eq!(win.trim_db(&db, 100, 30, far()).0.len(), 1);
+        // il delta a 20 è stato piegato in un put (5+3)
+        match win.get(&db, b"c", 20, 0) {
+            GetRes::Value(20, v) => assert_eq!(i64::from_le_bytes(v[..8].try_into().unwrap()), 8),
+            o => panic!("{o:?}"),
+        }
+        assert_eq!(scan_keys(&win, &db, 30), vec!["c", "nuova"]);
+        // troncamento del record a 30: "nuova" sparisce, "c" torna all'ultima versione 20 (strutturale: il put piegato)
+        assert_eq!(win.unapply_last(&db, 3), Some([3u8; 16]));
+        assert_eq!(scan_keys(&win, &db, 30), vec!["c"]);
+        assert!(win.validate(&db, 20, &[w("c", Kind::Put, b"q")], true, &[]).is_ok());
+        assert!(win.validate(&db, 15, &[w("c", Kind::Put, b"q")], true, &[]).is_err());
+        // dopo la piega il delta a 20 è un put, quindi il troncamento ricalcola l'ultima posizione strutturale a 20
+        // (come prima del giro 6: al più un falso conflitto su `esiste`, mai una scrittura persa)
+        let ks_last_struct = win.db(&db).unwrap().read().keys.get(&b"c"[..]).unwrap().last_struct;
+        assert_eq!(ks_last_struct, 20);
+        assert_eq!(win.nkeys.load(Relaxed), 1);
+        assert_eq!(win.versions.load(Relaxed), 1);
+    }
+
+    #[test]
+    fn insieme_ordinato_uguale_alla_mappa_a_caso() {
+        // sequenza a caso di aggiunte, potature, troncamenti e passaggi dell'indicizzatore: dopo ogni passo lo scan
+        // completo deve dare esattamente le chiavi della mappa, in ordine, e ogni get deve dare l'ultima versione
+        use rand::{Rng, SeedableRng};
+        for seed in 0..20u64 {
+            let mut g = rand::rngs::StdRng::seed_from_u64(seed);
+            let win = Window::new(true, PathBuf::from("/nonesiste"));
+            let db = [9u8; 16];
+            let mut index = 0u64;
+            let mut flushed = 0u64;
+            let mut last: std::collections::BTreeMap<String, (Pos, bool)> = Default::default();
+            for _ in 0..400 {
+                match g.gen_range(0..10) {
+                    0..=5 => {
+                        index += 1;
+                        let pos = index * 10;
+                        let n = g.gen_range(1..4);
+                        let ws: Vec<Write> = (0..n)
+                            .map(|_| {
+                                let k = format!("k{:02}{}", g.gen_range(0..40), if g.gen_bool(0.5) { "-una-chiave-lunga-oltre-trenta-byte" } else { "" });
+                                if g.gen_bool(0.2) { w(&k, Kind::Del, b"") } else { w(&k, Kind::Put, k.as_bytes()) }
+                            })
+                            .collect();
+                        rec(&win, &db, index, pos, ws);
+                    }
+                    6 => {
+                        flushed = (flushed + 10 * g.gen_range(0..4)).min(index * 10);
+                        win.set_flushed(&db, flushed, &Bytes::new());
+                        let _ = win.trim_db(&db, flushed + 1, index * 10, far());
+                    }
+                    7 => {
+                        // troncamento solo dei record non ancora su S3 (come un follower)
+                        if index * 10 > flushed && index > 0 {
+                            if win.unapply_last(&db, index).is_some() {
+                                index -= 1;
+                            }
+                        }
+                    }
+                    _ => {
+                        win.index_pending();
+                    }
+                }
+                // modello: dalla mappa stessa (le chiavi ancora con versioni) contro lo scan
+                let dref = win.db(&db);
+                let mut want: Vec<String> = match &dref {
+                    Some(d) => d.read().keys.keys().map(|k| String::from_utf8(k.as_slice().to_vec()).unwrap()).collect(),
+                    None => vec![],
+                };
+                want.sort();
+                let got: Vec<String> = win.scan(&db, b"", b"", Pos::MAX, usize::MAX, 0).into_iter().map(|(k, _)| String::from_utf8(k.to_vec()).unwrap()).collect();
+                // scan non mostra le chiavi che a Pos::MAX non esistono (solo cancellate) se la finestra è completa
+                let complete = dref.as_ref().map(|d| { let d = d.read(); d.genesis && d.trim_pos == 0 && !d.spilled_any }).unwrap_or(true);
+                let want: Vec<String> = want
+                    .into_iter()
+                    .filter(|k| !(complete && matches!(win.get(&db, k.as_bytes(), Pos::MAX, 0), GetRes::Absent(0))))
+                    .collect();
+                assert_eq!(got, want, "seme {seed}");
+                // l'insieme ordinato, una volta in pari, ha esattamente le chiavi della mappa
+                if let Some(d) = &dref {
+                    win.index_pending();
+                    let ord = d.read().ord.clone();
+                    let o = ord.lock();
+                    let dd = d.read();
+                    assert!(dd.ordq.is_empty());
+                    assert_eq!(o.set.len(), dd.keys.len(), "seme {seed}");
+                    assert!(o.set.iter().all(|k| dd.keys.contains_key(k.as_slice())), "seme {seed}");
+                }
+                last.clear();
+            }
+            let _ = last;
+        }
+    }
+
 }

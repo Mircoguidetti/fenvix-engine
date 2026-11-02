@@ -18,7 +18,7 @@ Cartella di lavoro: $PQ_WORK (default /root/pq-work), fuori dal repository.
 import json, os, signal, subprocess, sys, time, socket
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PQ = os.path.join(HERE, '..', 'target', 'release', 'pq')
+PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', 'pq')
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 MINIO = os.environ.get('MINIO', '/root/pq-tools/bin/minio')
 N = 3
