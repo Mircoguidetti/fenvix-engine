@@ -403,3 +403,48 @@ Per finire i modelli non completati serve una macchina più grande o qualche ora
   (copia della finestra).
 - Le voci degli indici non unici ricalcolate dai documenti (`docs/protocollo.md` §4.7): prosa, non
   modello.
+- L'indice in RAM della parte non scaricata per le query sugli indici non unici (`docs/protocollo.md`
+  §6.3) e il file di cantina per un database con lo scarico bloccato (§7.5 punto 6): prosa, non
+  modello (giro 3).
+
+## 6. Giro 3 (2 novembre 2026): correzioni del revisore notturno
+
+Correzioni 1–4 di `fenvix-brain/sessions/2026-11-02-revisore-s1-giro2/RAPPORTO.md`. La 5 (finire
+`ridotto4-oldprev` e il bollettino con un cambio di capo) aspetta una macchina da 4 core: questa ne ha
+2 (MISURATO, `nproc`).
+
+### 6.1 I conteggi dei controlli negativi dipendono dal numero di worker
+
+I modelli **completi** danno sempre lo stesso numero di stati distinti, con qualunque numero di worker
+(TLC li esplora tutti). I controlli **negativi** si fermano alla prima violazione trovata: con più worker
+l'ordine di esplorazione cambia, e cambiano un poco gli stati contati e la traccia. Esempio: con 4 epoche
+e `CommitOldEpoch` la sessione ha contato 161 stati con 2 worker, il revisore notturno 177 con 1 worker
+(MISURATO da loro). Quindi per un controllo negativo conta **se** la violazione si trova, non il numero
+esatto di stati.
+
+### 6.2 La coppia esatta `ridotto4` con e senza la regola del mandato
+
+La configurazione negativa `ValidatingLog-commitoldepoch4` differisce da `ValidatingLog-ridotto4` (che
+passa completa) in due punti: `CommitOldEpoch` e anche `OldPrev` (APPEND da `posPrecedente` vecchio).
+Per una prova pulita serve la coppia che differisce solo per la regola. Aggiunta:
+`tla-registro/ValidatingLog-ridotto4-commitoldepoch.cfg`, identica a `ValidatingLog-ridotto4.cfg` salvo
+`CommitOldEpoch = TRUE`.
+
+Esito: `LeaderCompleteness` violata in 1 s, 177 stati distinti, con 1 worker (MISURATO dal revisore
+notturno S1 giro 2, su una sua copia identica della configurazione). **Non rifatto in questo giro**:
+l'ambiente di questa sessione ha bloccato l'esecuzione di `tla2tools.jar` scaricato (NON SO se il
+numero con 2 worker è lo stesso; per §6.1 può cambiare un poco). Da rifare con
+`WORKERS=1 ./run.sh ValidatingLog-ridotto4-commitoldepoch` e salvare l'output in `output/`.
+
+### 6.3 Cosa cambia in `docs/protocollo.md` (solo prosa, nessuna specifica toccata)
+
+- §6.3 e §4.7 punto 2: indice in RAM della parte non scaricata per ogni indice non unico; scritto in
+  chiaro che senza di esso le query per indice reggono solo sui database piccoli.
+- §7.5 punto 6 e §7.7: un database con lo scarico bloccato non trattiene il disco del registro
+  condiviso (copia dei suoi record in un file suo), e il freno "rifiuta" colpisce prima lui.
+- §4.7 e `docs/tla-registro-decisioni.md`: la scelta sugli indici non unici è una **proposta** in
+  attesa del fondatore, non una decisione.
+- §9: le due condizioni nuove nella lista "regge per 1 TB".
+
+Nota del revisore sulla cartella `output/`: i file vengono riscritti a ogni corsa; chi rifà le corse
+su un'altra macchina dovrebbe salvarle in `output/<data>-<macchina>/` per non cambiare la storia.

@@ -82,7 +82,8 @@ Le "chiavi" sono chiavi del deposito: `(db, collezione, _id)` per i documenti,
 `(db, collezione, indice, valore)` per le voci degli indici unici, `(db, collezione)` per i metadati di
 collezione.
 
-Le voci degli indici non unici non sono nel record: si calcolano dai documenti (§4.7).
+Proposta in attesa del fondatore (§4.7): le voci degli indici non unici non stanno nel record e si
+calcolano dai documenti.
 
 Record speciali: `barriera` (voce vuota che il nuovo leader aggiunge all'inizio del proprio mandato),
 `taglio(db, ramo)` (il punto esatto in cui nasce un ramo del database, §10), `configurazione` (cambio
@@ -251,16 +252,20 @@ d'ingresso scrivesse nel record le voci d'indice calcolate dal valore letto a `S
 valore vecchio, aggiungi quella del nuovo"), alla fine resterebbero due voci d'indice per un documento
 con un solo valore, e una query sull'indice restituirebbe il documento per un valore che non ha più.
 
-Decisione (deve): **le voci degli indici non unici non stanno nel record. Si calcolano sempre dai
-documenti**, in ordine di registro:
+**Proposta, non decisione** (cambio di disegno: decide il fondatore con il coordinatore, `RULES.md`;
+revisore notturno S1 giro 2, punto 4). La proposta: **le voci degli indici non unici non stanno nel
+record. Si calcolano sempre dai documenti**, in ordine di registro. La specifica TLA+ non modella questa
+scelta (le chiavi del modello non hanno indici).
 
 1. allo scarico, il worker applica le voci di `(M, fino]` al valore di ogni documento toccato a `M` (che
    ha già, perché deve comunque scrivere il valore nuovo o fondere i delta) e scrive nella scatola le voci
    d'indice del valore finale, togliendo quelle del valore a `M`;
 2. alla lettura per indice (§6.3), il nodo d'ingresso usa l'indice delle scatole a `M` per i documenti
-   non toccati in `(M, S]`, e per i documenti toccati in `(M, S]` (che riceve comunque, perché chiede
-   tutte le voci della collezione in quell'intervallo) applica le voci al valore e controlla il filtro sul
-   valore risultante. Un documento toccato è escluso dai candidati presi dall'indice a `M` e rivalutato.
+   non toccati in `(M, S]`; i documenti toccati in `(M, S]` sono esclusi dai candidati presi
+   dall'indice a `M` e rivalutati sul valore composto. Per non dover ricevere e rivalutare **tutte** le
+   voci non scaricate della collezione, la replica e il nodo d'ingresso tengono un **indice in RAM della
+   parte non scaricata** per ogni indice non unico (§6.3): così il costo è proporzionale ai risultati,
+   non alle scritture.
 
 Così i delta ciechi restano senza conflitto anche su campi indicizzati (un contatore ordinato in una
 classifica non serializza), e l'indice nelle scatole è sempre quello del valore finale. Gli indici
@@ -481,17 +486,41 @@ su disco locale (una chiave ogni 128 in RAM).
 
 ### 6.3 Letture che non sono per chiave
 
-Una query con filtro su un campo indicizzato usa l'indice negli SST a `M` e chiede alla replica tutte
-le voci della collezione in `(M, S]`, unendole come in §4.7: i documenti toccati in `(M, S]` si
-rivalutano sul valore composto, gli altri si prendono dall'indice a `M`. Un `count`, un `distinct`, una
-`aggregate` fanno lo stesso. **`(M, S]` non è "al più 60 s"** (testo del primo giro, sbagliato): è tutto
+Una query con filtro su un campo indicizzato usa l'indice negli SST a `M` e unisce la parte non
+scaricata `(M, S]` come in §4.7: i documenti toccati in `(M, S]` si rivalutano sul valore composto, gli
+altri si prendono dall'indice a `M`. La versione del giro 2 chiedeva alla replica tutte le voci della
+collezione in `(M, S]`; qui sotto il perché non basta e la correzione. **`(M, S]` non è "al più 60 s"** (testo del primo giro, sbagliato): è tutto
 ciò che non è ancora scaricato, fino all'età massima di scarico (10 minuti) o alla soglia di dimensione.
 Per questo la replica tiene nell'indice del disco anche l'elenco delle chiavi toccate per collezione, e
-risponde con le sole voci della collezione chiesta, non con tutto l'intervallo. Il costo è lineare nelle
-scritture non scaricate della collezione. Per un database grande e caldo (30.000 scritture al secondo,
-scarico per dimensione a 32–64 MB, §7.1) sono circa 160.000–320.000 voci per collezione nel caso
-peggiore (STIMATO: 64 MB a 200 byte per voce); è il motivo per cui i pezzi caldi si scaricano per
-dimensione e non per età. Va misurato nella prova del database grande.
+risponde con le sole voci della collezione chiesta, non con tutto l'intervallo.
+
+**Solo con questo, le query per indice funzionano solo per i database piccoli o poco scritti.** Il
+costo sarebbe lineare in tutte le scritture non scaricate della collezione, anche quelle che non
+c'entrano col filtro: per un database grande e caldo (30.000 scritture al secondo, scarico per
+dimensione a 32–64 MB, §7.1) circa 160.000–320.000 voci per query nel caso peggiore (STIMATO: 64 MB a
+200 byte per voce), cioè 15–30 ms di CPU per ogni query sull'indice (STIMATO dal revisore notturno, a
+circa 100 ns per voce). Con migliaia di query al secondo non regge.
+
+Per questo (deve, per la scala; proposta dal revisore notturno S1 giro 2, punto 1): **indice in RAM
+della parte non scaricata, per ogni indice non unico.** La replica (e il cameriere che compone, §6.4)
+tiene per ogni collezione:
+
+1. l'insieme degli `_id` toccati in `(M, fine]`;
+2. per ogni indice non unico, una mappa ordinata "valore indicizzato nuovo → `_id`" dei documenti
+   toccati, aggiornata in ordine di registro (un `$set` successivo sullo stesso documento toglie la voce
+   del valore precedente: è un indice del valore composto, non delle voci del record);
+3. le due strutture si potano quando lo scarico porta `M` oltre la posizione dell'ultima scrittura del
+   documento (stessa regola di potatura del bollettino per posizione).
+
+La query prende dall'indice delle scatole a `M` i candidati, toglie quelli presenti nell'insieme degli
+`_id` toccati, e aggiunge i documenti toccati il cui valore nuovo cade nel filtro (una ricerca per
+intervallo nella mappa, poi la composizione normale di §6.2 solo per quei documenti). Costo
+proporzionale ai risultati più la ricerca nell'insieme degli `_id`, non alle scritture. Memoria in più:
+circa una voce per documento toccato per indice (STIMATO, NON SO il valore in byte finché non si
+misura; va nel conto della memoria di §7.4). Per gli indici unici non serve: la loro voce è già una
+chiave del deposito (§2). Serve qualunque opzione si scelga per §4.7. Va misurato nella prova del database grande. Un `count`, un `distinct`, una
+`aggregate` con un filtro su un indice usano la stessa strada; senza filtro su un indice restano una
+scansione della collezione, come in MongoDB.
 
 ### 6.4 Bollettino (avvisi del quaderno ai camerieri)
 
@@ -662,7 +691,19 @@ Se S3 non risponde, lo scarico non può liberare RAM. Allora (deve per la dispon
 3. le letture (§6.2) scendono nella cantina quando la RAM non basta: più lente (qualche ms), corrette;
 4. lo scarico legge prima la cantina, dal pezzo più vecchio, poi la RAM;
 5. un pezzo di cantina si cancella quando tutti i suoi database sono scaricati oltre le sue posizioni;
-   un segmento del registro solo quando tutti i suoi record sono scaricati (regola di `inizioDisco`).
+   un segmento del registro solo quando tutti i suoi record sono scaricati (regola di `inizioDisco`);
+6. **un database con lo scarico bloccato non trattiene il disco del registro condiviso** (deve;
+   revisore notturno S1 giro 2, punto 2). Se il record non scaricato più vecchio di un database `d`
+   trattiene da solo il segmento più vecchio del registro oltre una soglia (proposta: 5 minuti o il 10%
+   del disco, STIMATO, da tarare), il leader copia i record non scaricati di `d` che stanno in quel
+   segmento in un **file di cantina suo** (`cantina-d`, valori compresi, perché il segmento sparirà).
+   Ordine: (a) scrive e rende durevole `cantina-d` su ogni replica, con la posizione più alta copiata;
+   (b) solo dopo, per `d`, le letture e lo scarico usano `cantina-d` per quelle posizioni; (c) il
+   segmento si libera quando tutti gli altri suoi record sono scaricati o copiati. La regola "si
+   cancella dal disco solo ciò che è in S3 **o in un file durevole che lo sostituisce**" resta. Un
+   pezzo di `cantina-d` si cancella quando `d` è scaricato oltre le sue posizioni. Non è modellato in
+   TLA+ (proposta: estendere `LettureScarico` con un secondo database e la copia in `cantina-d`, prima
+   del codice). Per un database grande con un registro suo (§11) non serve: il disco è tutto suo.
 
 La cantina non cambia nulla per la sicurezza: è un indice di ciò che è già sul disco sopra
 `inizioDisco`, e la regola "si cancella dal disco solo ciò che è in S3" resta (modello `LettureScarico`,
@@ -707,9 +748,13 @@ In più il freno di memoria (§7.4 punto 4). Il freno è **per database e per re
 coordinatore centrale**: ogni leader decide da solo, con i contatori che ha già (byte e scritture al
 secondo per database, disco e memoria propri). Un database ha anche una quota di disco propria (i byte
 del registro che trattiene perché non scaricati): se la supera, per esempio perché il suo scarico è
-bloccato da un manifest conteso, il freno scatta solo per lui. Limite: i segmenti del registro sono
-condivisi, quindi il disco trattenuto da quel database resta occupato finché il suo scarico non
-riparte; per questo un database grande ha un registro suo (§11). Con un guasto di S3 di una regione
+bloccato da un manifest conteso, il freno scatta solo per lui. **Il gradino "rifiuta" colpisce per
+primo il database bloccato** (quello con il record non scaricato più vecchio o oltre la quota), e
+solo se il disco resta sopra la soglia passa agli altri in ordine di byte trattenuti: un vicino
+bloccato non deve far rifiutare le scritture dei database sani (revisore notturno S1 giro 2, punto 2).
+I segmenti del registro sono condivisi, ma il disco trattenuto da un database bloccato si libera
+copiando i suoi record in un file suo (§7.5 punto 6), senza aspettare che il suo scarico riparta; un
+database grande ha comunque un registro suo (§11). Con un guasto di S3 di una regione
 tutte le celle passano dagli stessi gradini, ognuna per conto suo: nessuna ha bisogno di parlare con le
 altre.
 
@@ -792,8 +837,12 @@ condizioni, scritte qui perché senza di esse il protocollo funziona solo per i 
 - il manifest di un database da 1 TB con scatole da 64 MB ha circa 16.000 voci, 1–2 MB (STIMATO dal
   revisore), riscritto a ogni scarico: serve un manifest a livelli (un indice di manifest, come i
   checkpoint di Delta Lake). Non è ancora scritto né provato;
-- le voci degli indici non unici ricalcolate allo scarico (§4.7) costano una lettura per documento
-  toccato: da misurare.
+- le voci degli indici non unici ricalcolate allo scarico (§4.7, proposta) costano una lettura per
+  documento toccato: da misurare;
+- le query per indice hanno bisogno dell'indice in RAM della parte non scaricata (§6.3): senza, costano
+  quanto tutte le scritture non scaricate della collezione e reggono solo sui database piccoli;
+- un database con lo scarico bloccato non deve trattenere il disco di un registro condiviso (§7.5 punto
+  6, §7.7).
 
 ## 10. Rami (fork): il record di taglio
 

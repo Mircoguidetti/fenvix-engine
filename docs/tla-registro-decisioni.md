@@ -216,7 +216,8 @@ indicizzati, come il punteggio di una classifica, tornano a un commit per giro: 
 scarico (worker) e alla lettura per indice (nodo d'ingresso, sulle voci della collezione in `(M, S]` che
 riceve già); (3) voci d'indice "da verificare" alla lettura e pulite dalla compattazione.
 
-Scelta: **(2)**, scritta in `docs/protocollo.md` §4.7. Tiene i delta ciechi senza conflitto anche sui
+Proposta (non decisione: è un cambio di disegno, decide il fondatore con il coordinatore; revisore
+notturno S1 giro 2, punto 4): **(2)**, scritta in `docs/protocollo.md` §4.7. Tiene i delta ciechi senza conflitto anche sui
 campi indicizzati e lascia nelle scatole l'indice del valore finale. Costo: il worker deve avere il
 valore a `M` di ogni documento toccato (per i database piccoli c'è già con la variante a2; per i grandi
 una lettura per documento toccato, da misurare). Gli indici unici restano chiavi del deposito validate
