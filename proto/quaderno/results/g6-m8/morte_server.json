@@ -1,0 +1,152 @@
+{
+ "prova": "morte_server",
+ "secondi": 25.2,
+ "esiti": {
+  "ok": 10287,
+  "dup": 2909,
+  "ignoto": 8
+ },
+ "per_server": {
+  "A": {
+   "ok": 4239,
+   "dup": 1338,
+   "ignoto": 8
+  },
+  "B": {
+   "dup": 1571,
+   "ok": 6048
+  }
+ },
+ "ops_confermate_al_secondo": 524.3,
+ "numeri": {
+  "stesso_id": {
+   "valori_confermati": 2930,
+   "documenti": 2930,
+   "valori_con_ignoti": 2
+  },
+  "stessa_email": {
+   "valori_confermati": 2905,
+   "documenti": 2905,
+   "valori_con_ignoti": 2
+  },
+  "incrementi": {
+   "incrementi_confermati": 4452,
+   "ignoti": 3,
+   "somma_finale": 4452
+  }
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 3561,
+   "conflicts": 109,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 109,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 2,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642458, 183)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642458, 183)"
+  },
+  "B": {
+   "commits": 7623,
+   "conflicts": 171,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 171,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 4,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642458, 172)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642458, 172)"
+  }
+ },
+ "codici": {
+  "dup:11000": 2909,
+  "ignoto:AutoReconnect": 8
+ },
+ "t_uccisione_s": 7.06,
+ "buco_massimo_dopo_uccisione_s": {
+  "A": 6.094,
+  "B": 0.065
+ },
+ "ops_al_secondo": {
+  "A": [
+   249,
+   273,
+   270,
+   347,
+   302,
+   267,
+   291,
+   19,
+   0,
+   0,
+   0,
+   0,
+   0,
+   257,
+   314,
+   292,
+   263,
+   280,
+   266,
+   312,
+   326,
+   265,
+   285,
+   379,
+   276,
+   44
+  ],
+  "B": [
+   223,
+   273,
+   255,
+   348,
+   304,
+   256,
+   301,
+   316,
+   331,
+   331,
+   329,
+   334,
+   336,
+   319,
+   314,
+   297,
+   308,
+   277,
+   266,
+   319,
+   309,
+   293,
+   293,
+   371,
+   274,
+   42
+  ]
+ },
+ "restart_s": 0.065277099609375,
+ "prima_op_di_A_dopo_ripartenza_s": 0.045,
+ "durata_s": 29.8
+}

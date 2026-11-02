@@ -1,0 +1,66 @@
+{
+ "prova": "coda",
+ "secondi": 20.3,
+ "esiti": {
+  "ok": 1924
+ },
+ "per_server": {
+  "A": {
+   "ok": 910
+  },
+  "B": {
+   "ok": 1014
+  }
+ },
+ "ops_confermate_al_secondo": 94.9,
+ "numeri": {
+  "lavori_presi": 1924,
+  "lavori_presi_nel_db": 1924
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 918,
+   "conflicts": 1098,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 1098,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 4,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642604, 45)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642604, 45)"
+  },
+  "B": {
+   "commits": 1014,
+   "conflicts": 992,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 992,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642604, 43)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642604, 43)"
+  }
+ },
+ "codici": {},
+ "durata_s": 23.3
+}

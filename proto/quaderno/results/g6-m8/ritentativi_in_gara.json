@@ -1,0 +1,58 @@
+{
+ "prova": "ritentativi_in_gara",
+ "secondi": 20.0,
+ "numeri": {
+  "scritture_distinte": 6778,
+  "confermate": 6778,
+  "ignote": 0,
+  "somma_n": 6778
+ },
+ "esiti_coppie": {
+  "ok+ok": 6778
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 3388,
+   "conflicts": 1789,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 1789,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 1,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642652, 242)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642652, 242)"
+  },
+  "B": {
+   "commits": 3393,
+   "conflicts": 1671,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 1671,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642652, 240)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642652, 240)"
+  }
+ },
+ "durata_s": 22.5
+}
