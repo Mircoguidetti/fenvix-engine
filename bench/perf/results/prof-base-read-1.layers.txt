@@ -1,0 +1,189 @@
+samples: 8807
+
+# by layer (whole call stack)
+  68.9%  slatedb
+  29.4%  mongodb
+   1.1%  net
+   0.6%  runtime
+   0.0%  other
+
+# slatedb layer: which MongoDB-layer read asked for it
+  16.3%  collection list (view_lookup: is it a view?)
+  13.8%  collection options read a second time (coll_kind)
+  12.8%  index definitions (load_indexes)
+  11.6%  collection options (load_indexes)
+   8.6%  the document itself (find_docs)
+   3.9%  block fetches after a cache miss (background tasks)
+   1.9%  local object store I/O (WAL/SST files written, blocks read)
+   0.1%  other / stack cut
+   0.0%  memtable flush / WAL (background)
+
+# slatedb layer: kind of work (leaf function)
+  17.6%  iterators and blocks
+   9.4%  other
+   8.8%  block / filter cache
+   8.3%  allocation (malloc/free)
+   6.7%  Bytes reference counts
+   5.9%  bloom filters
+   5.4%  SST paths (format!, object_store::Path)
+   5.3%  memory copies
+   1.6%  kernel (file reads)
+
+# mongodb layer: kind of work
+  10.5%  command logic and the rest
+   7.7%  kernel (socket read/write, wakeups)
+   5.6%  memory copies of async state (futures moved between wrappers)
+   2.6%  allocation (malloc/free)
+   2.1%  BSON encode/decode
+   0.9%  memory copies of data (BSON, buffers)
+
+# mongodb layer: first mongo_server frame from the leaf (top 30)
+   9.0%  mongo_server::handle_connection_inner::{closure#0}
+   3.1%  mongo_server::diag::as_op::<<>::guarded<<>::dispatch_durable::{closure#0}>::{closure#0}>::{closure#0}
+   3.0%  <mongo_server::cmd::Server>::dispatch::{closure#0}
+   1.7%  mongo_server::fair::timed::<tokio::task::task_local::TaskLocalFuture<core::cell::Cell<core::option::Option<>>, <>::handle::{closure#0}::{clo
+   1.3%  <mongo_server::cmd::Server>::dispatch_commands::{closure#0}
+   1.0%  <bson::document::Document as core::iter::traits::collect::FromIterator<>>::from_iter::<core::iter::adapters::GenericShunt<core::iter::adapte
+   0.8%  <mongo_server::cmd::Server>::find::{closure#0}
+   0.6%  <mongo_server::diag::Diag>::end
+   0.6%  <mongo_server::diag::Diag>::begin
+   0.6%  ?
+   0.4%  <mongo_server::lease::Leases>::valid
+   0.3%  <mongo_server::fair::Timed<tokio::task::task_local::TaskLocalFuture<core::cell::Cell<core::option::Option<>>, <>::handle::{closure#0}::{clos
+   0.2%  <mongo_server::dbs::ReadView>::coll_opts::{closure#0}
+   0.2%  mongo_server::coll::find_docs_inner::<mongo_server::dbs::ReadView>::{closure#0}
+   0.2%  <bson::bson::Bson as core::clone::Clone>::clone
+   0.2%  <mongo_server::dbs::Dbs>::entry
+   0.2%  <mongo_server::cmd::Server>::route::{closure#0}
+   0.2%  <bson::document::Document>::insert::<&str, bson::bson::Bson>
+   0.2%  <bson::raw::iter::RawIter as core::iter::traits::iterator::Iterator>::next
+   0.2%  <bson::bson::Bson as core::convert::TryFrom<bson::raw::bson::RawBson>>::try_from
+   0.2%  <bson::document::Document>::append_to
+   0.2%  <bson::raw::bson::RawBson as core::convert::From<bson::raw::bson_ref::RawBsonRef>>::from
+   0.2%  mongo_server::collopts::meta_key
+   0.2%  <bson::bson::Bson>::append_to
+   0.2%  mongo_server::auth::redact_command
+   0.2%  <mongo_server::dbs::ReadView>::get::{closure#0}
+   0.2%  bson::raw::reader_to_vec::<&[u8]>
+   0.1%  <mongo_server::ctl::usage::Usage>::command
+   0.1%  <mongo_server::dbs::Dbs>::read::{closure#0}
+   0.1%  <mongo_server::dbs::ReadView>::collections::{closure#0}
+
+# slatedb: leaf functions (top 30)
+   5.2%  __memcpy_avx512_unaligned_erms
+   3.4%  bytes::bytes::shared_drop
+   3.3%  bytes::bytes::shared_clone
+   1.9%  _rjem_sdallocx
+   1.8%  _rjem_malloc
+   1.6%  <futures_util::stream::futures_unordered::FuturesUnordered<futures_util::stream::futures_ordered::OrderWrapper<<>::with_lookahead::init_sour
+   1.2%  __memcmp_evex_movbe
+   1.0%  <slatedb::db_iter::GetIterator as slatedb::iter::RowEntryIterator>::next::{closure#0}
+   1.0%  <core::str::pattern::TwoWaySearcher>::next::<core::str::pattern::MatchOnly>
+   1.0%  <slatedb::filter_iterator::FilterIterator<alloc::boxed::Box<>> as slatedb::iter::RowEntryIterator>::next::{closure#0}
+   1.0%  do_rallocx
+   0.9%  <alloc::borrow::Cow<str> as core::convert::From<percent_encoding::PercentEncode>>::from
+   0.9%  <slatedb::sst_iter::FilterIterator as slatedb::iter::RowEntryIterator>::init::{closure#0}
+   0.8%  <foyer_memory::raw::RawCache<foyer_memory::eviction::lru::Lru<>, core::hash::BuildHasherDefault<>, foyer_memory::indexer::hash_table::HashTa
+   0.8%  _rjem_je_arena_ralloc
+   0.8%  <alloc::boxed::Box<dyn slatedb::iter::RowEntryIterator> as slatedb::iter::RowEntryIterator>::next::{closure#0}
+   0.8%  _rjem_je_arena_ralloc_no_move
+   0.8%  slatedb::segment_iterator::build_segment_iter
+   0.8%  slatedb::filter::probes_for_key
+   0.7%  <alloc::boxed::Box<dyn slatedb::iter::RowEntryIterator> as slatedb::iter::RowEntryIterator>::init::{closure#0}
+   0.7%  <slatedb::bytes_range::BytesRange>::new
+   0.7%  <>::partition_first_key
+   0.7%  <slatedb::db_cache::foyer::FoyerCache>::dedup_fetch::{closure#0}
+   0.7%  <foyer_memory::raw::RawCacheShard<foyer_memory::eviction::lru::Lru<>, core::hash::BuildHasherDefault<>, foyer_memory::indexer::hash_table::H
+   0.7%  <slatedb::sst_iter::SstIterator>::new_owned_with_stats::<slatedb::bytes_range::BytesRange>
+   0.7%  <slatedb::tablestore::TableStore>::read_loader
+   0.6%  <slatedb::filter_iterator::FilterIterator<alloc::boxed::Box<>> as slatedb::iter::RowEntryIterator>::init::{closure#0}
+   0.6%  <tracing::instrument::Instrumented<<>::read_filters_inner::{closure#0}> as core::future::future::Future>::poll
+   0.6%  __rustc::__rust_dealloc
+   0.6%  [k] finish_task_switch.isra.0
+
+# mongodb: leaf functions (top 30)
+   6.5%  __memcpy_avx512_unaligned_erms
+   2.3%  [k] _raw_spin_unlock_irqrestore
+   0.9%  [k] clear_page_erms
+   0.7%  _rjem_sdallocx
+   0.6%  [k] _copy_from_iter
+   0.5%  mongo_server::handle_connection_inner::{closure#0}
+   0.5%  _rjem_malloc
+   0.4%  [unknown]
+   0.4%  core::ptr::drop_glue::<bson::bson::Bson>
+   0.3%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<alloc::vec::Vec<>>, <>::dispatch_durable::{closure#0}::{closure#0}> as core::f
+   0.3%  <tokio::task::task_local::TaskLocalFuture<core::cell::Cell<core::option::Option<>>, <>::handle::{closure#0}::{closure#1}> as core::future::f
+   0.3%  __memcmp_evex_movbe
+   0.2%  <ahash::random_state::RandomState as core::hash::BuildHasher>::hash_one::<&str>
+   0.2%  <mongo_server::cmd::Server>::dispatch_commands::{closure#0}
+   0.2%  <mongo_server::cmd::Server>::find::{closure#0}
+   0.2%  <mongo_server::cmd::Server>::dispatch::{closure#0}
+   0.2%  <bson::raw::iter::RawIter as core::iter::traits::iterator::Iterator>::next
+   0.2%  <indexmap::inner::Core<alloc::string::String, bson::bson::Bson>>::get_index_of::<str>
+   0.2%  tokio::macros::support::thread_rng_n
+   0.2%  <mongo_server::lease::Leases>::valid
+   0.2%  mongo_server::coll::find_docs_inner::<mongo_server::dbs::ReadView>::{closure#0}
+   0.2%  do_rallocx
+   0.2%  <mongo_server::cmd::Server>::route::{closure#0}
+   0.2%  <core::hash::sip::Hasher<core::hash::sip::Sip13Rounds> as core::hash::Hasher>::write
+   0.2%  <mongo_server::dbs::ReadView>::get::{closure#0}
+   0.1%  __rustc::__rust_no_alloc_shim_is_unstable_v2
+   0.1%  <core::iter::adapters::map::Map<bson::raw::iter::Iter, <bson::document::Document as core::convert::TryFrom<>>::try_from::{closure#0}> as cor
+   0.1%  mongo_server::diag::as_op::<<>::guarded<<>::dispatch_durable::{closure#0}>::{closure#0}>::{closure#0}
+   0.1%  [k] do_syscall_64
+   0.1%  <core::pin::Pin<alloc::boxed::Box<<>::dispatch_inner::{closure#0}>> as core::future::future::Future>::poll
+
+# net: leaf functions (top 30)
+   0.6%  [k] finish_task_switch.isra.0
+   0.1%  [k] _raw_spin_unlock_irqrestore
+   0.0%  [k] _raw_spin_unlock_irq
+   0.0%  [k] sock_poll
+   0.0%  epoll_wait
+   0.0%  [k] __x64_sys_epoll_wait
+   0.0%  [k] __futex_wait
+   0.0%  <mio::poll::Poll>::poll
+   0.0%  [k] __schedule
+   0.0%  [k] __list_del_entry_valid_or_report
+   0.0%  [k] ep_poll
+   0.0%  [k] get_timespec64
+   0.0%  [k] blkcg_maybe_throttle_current
+   0.0%  [k] ep_send_events
+   0.0%  [k] __put_user_nocheck_4
+   0.0%  [k] futex_wait_setup
+   0.0%  __GI___pthread_enable_asynccancel
+   0.0%  [k] tcp_poll
+   0.0%  [k] __get_user_8
+   0.0%  [k] do_epoll_wait
+   0.0%  [k] _copy_from_user
+
+# runtime: leaf functions (top 30)
+   0.1%  <tokio::runtime::scheduler::multi_thread::worker::Context>::run
+   0.1%  <parking_lot::condvar::Condvar>::wait_until_internal
+   0.1%  <tokio::runtime::scheduler::multi_thread::worker::Context>::run_task
+   0.0%  tokio::runtime::task::raw::schedule::<alloc::sync::Arc<tokio::runtime::scheduler::multi_thread::handle::Handle>>
+   0.0%  [unknown]
+   0.0%  syscall
+   0.0%  __floattidf
+   0.0%  __pow
+   0.0%  <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal
+   0.0%  <tokio::runtime::time::wheel::Wheel>::next_expiration
+   0.0%  <tokio::runtime::time::Driver>::park_internal
+   0.0%  __ieee754_pow_fma
+   0.0%  <std::time::Instant as core::ops::arith::AddAssign<core::time::Duration>>::add_assign
+   0.0%  <tokio::runtime::time::wheel::Wheel>::poll
+   0.0%  <alloc::sync::Arc<tokio::runtime::scheduler::multi_thread::handle::Handle> as tokio::runtime::task::Schedule>::schedule
+   0.0%  log_inline
+   0.0%  <tokio::runtime::scheduler::multi_thread::park::Unparker>::unpark
+   0.0%  <std::time::Instant>::elapsed
+   0.0%  <tokio::runtime::blocking::pool::Inner>::run
+   0.0%  tokio::runtime::context::with_scheduler::<(), tokio::runtime::scheduler::multi_thread::worker::with_current<(), <>::schedule_task::{closure#
+   0.0%  <tokio::runtime::driver::Driver>::park_timeout
+   0.0%  <tokio::runtime::task::state::State>::transition_to_notified_by_val
+   0.0%  __pow_finite@GLIBC_2.15@plt
+   0.0%  <tokio::runtime::context::scoped::Scoped<>>::with::<tokio::runtime::scheduler::multi_thread::worker::with_current<(), <>::schedule_task::{cl
+   0.0%  <std::sys::pal::unix::time::Timespec>::now
+
+# other: leaf functions (top 30)
+   0.0%  do_rallocx
+   0.0%  core::fmt::write
+   0.0%  <alloc::string::String as core::fmt::Write>::write_str

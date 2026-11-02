@@ -161,6 +161,8 @@ impl Server {
     }
 
     pub async fn handle(self: &Arc<Self>, db: &str, cmd: Document, conn_id: i64) -> Document {
+        // shared with the operation record of `currentOp` (diag.rs) instead of copied there
+        let cmd = Arc::new(cmd);
         let Some(name) = cmd.keys().next().cloned() else {
             return MongoError::new(59, "CommandNotFound", "Empty command document".into()).to_reply();
         };
@@ -170,7 +172,7 @@ impl Server {
         // fair queue between databases under saturation, safety limits, per-database metrics (fair.rs)
         // Only commands that pass authentication and authorization take a place (and touch per-database counters); the
         // others go straight to `run_command`, which answers with the same error.
-        let _permit = if crate::fair::exempt(&name) || self.authorize(conn_id, db, &name, &cmd).await.is_err() {
+        let _permit = if crate::fair::exempt(&name) || self.authorize_if_on(conn_id, db, &name, &cmd).await.is_err() {
             None
         } else {
             match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {
@@ -213,6 +215,15 @@ impl Server {
             reply.insert("operationTime", Bson::Timestamp(op));
         }
         reply
+    }
+
+    /// `authorize`, whose future (about 9 KB) is built and awaited only when authentication is on: with it off, `authorize`
+    /// allows everything at once, but its future still made the future of every command 9 KB larger.
+    async fn authorize_if_on(&self, conn_id: i64, db: &str, name: &str, cmd: &Document) -> R<()> {
+        if !self.auth.enabled.load(Relaxed) {
+            return Ok(());
+        }
+        Box::pin(self.authorize(conn_id, db, name, cmd)).await
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -262,7 +273,7 @@ impl Server {
     }
 
     async fn dispatch(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
-        self.authorize(conn_id, db, name, cmd).await?;
+        self.authorize_if_on(conn_id, db, name, cmd).await?;
         crate::stable_api::check(name, cmd)?;
         if matches!(name, "commitTransaction" | "abortTransaction") && db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
@@ -324,6 +335,7 @@ impl Server {
         }
     }
 
+    /// The commands answered here are boxed like the ones of `route` (they made this future about 22 KB).
     async fn dispatch_commands(&self, db: &str, name: &str, cmd: &Document, conn_id: i64) -> R<Document> {
         // Commands that do not touch a tenant.
         match name {
@@ -357,26 +369,26 @@ impl Server {
                         d = n;
                     }
                 }
-                self.auth_hello(cmd, &mut d).await?;
+                Box::pin(self.auth_hello(cmd, &mut d)).await?;
                 return Ok(d);
             }
-            "saslStart" => return self.sasl_start(conn_id, db, cmd).await,
-            "authenticate" => return self.authenticate(conn_id, db, cmd).await,
-            "saslContinue" => return self.sasl_continue(conn_id, cmd).await,
+            "saslStart" => return Box::pin(self.sasl_start(conn_id, db, cmd)).await,
+            "authenticate" => return Box::pin(self.authenticate(conn_id, db, cmd)).await,
+            "saslContinue" => return Box::pin(self.sasl_continue(conn_id, cmd)).await,
             "logout" => return self.logout(conn_id, db),
-            "createUser" => return self.create_user(db, cmd).await,
-            "updateUser" => return self.update_user(db, cmd).await,
-            "dropUser" => return self.drop_user(db, cmd).await,
-            "dropAllUsersFromDatabase" => return self.drop_all_users(db).await,
-            "grantRolesToUser" => return self.grant_roles_to_user(db, cmd, false).await,
-            "revokeRolesFromUser" => return self.grant_roles_to_user(db, cmd, true).await,
-            "usersInfo" => return self.users_info(db, cmd).await,
-            "createRole" => return self.create_role(db, cmd).await,
-            "updateRole" => return self.update_role(db, cmd).await,
-            "dropRole" => return self.drop_role(db, cmd).await,
-            "dropAllRolesFromDatabase" => return self.drop_all_roles(db).await,
-            "grantRolesToRole" | "revokeRolesFromRole" | "grantPrivilegesToRole" | "revokePrivilegesFromRole" => return self.role_delta(db, cmd, name).await,
-            "rolesInfo" => return self.roles_info(db, cmd).await,
+            "createUser" => return Box::pin(self.create_user(db, cmd)).await,
+            "updateUser" => return Box::pin(self.update_user(db, cmd)).await,
+            "dropUser" => return Box::pin(self.drop_user(db, cmd)).await,
+            "dropAllUsersFromDatabase" => return Box::pin(self.drop_all_users(db)).await,
+            "grantRolesToUser" => return Box::pin(self.grant_roles_to_user(db, cmd, false)).await,
+            "revokeRolesFromUser" => return Box::pin(self.grant_roles_to_user(db, cmd, true)).await,
+            "usersInfo" => return Box::pin(self.users_info(db, cmd)).await,
+            "createRole" => return Box::pin(self.create_role(db, cmd)).await,
+            "updateRole" => return Box::pin(self.update_role(db, cmd)).await,
+            "dropRole" => return Box::pin(self.drop_role(db, cmd)).await,
+            "dropAllRolesFromDatabase" => return Box::pin(self.drop_all_roles(db)).await,
+            "grantRolesToRole" | "revokeRolesFromRole" | "grantPrivilegesToRole" | "revokePrivilegesFromRole" => return Box::pin(self.role_delta(db, cmd, name)).await,
+            "rolesInfo" => return Box::pin(self.roles_info(db, cmd)).await,
             "invalidateUserCache" => {
                 crate::fields::check("invalidateUserCache", cmd)?;
                 return Ok(ok());
@@ -385,21 +397,21 @@ impl Server {
             "buildInfo" | "buildinfo" => return Ok(build_info()),
             "getParameter" => return crate::params::get_parameter(cmd, self.is_rs()),
             "setParameter" => return crate::params::set_parameter(cmd, self.is_rs()),
-            "endSessions" => return self.end_sessions(cmd).await,
+            "endSessions" => return Box::pin(self.end_sessions(cmd)).await,
             "killSessions" | "refreshSessions" => return Ok(ok()),
             "commitTransaction" | "abortTransaction" if db != "admin" => {
                 return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
             }
-            "commitTransaction" => return self.commit_txn(cmd).await,
-            "abortTransaction" => return self.abort_txn(cmd).await,
+            "commitTransaction" => return Box::pin(self.commit_txn(cmd)).await,
+            "abortTransaction" => return Box::pin(self.abort_txn(cmd)).await,
             "whatsmyuri" => return Ok(doc! { "you": "127.0.0.1:0", "ok": 1.0 }),
-            "connectionStatus" => return self.connection_status(conn_id, cmd).await,
-            "listDatabases" => return self.list_databases(db, cmd, conn_id).await,
+            "connectionStatus" => return Box::pin(self.connection_status(conn_id, cmd)).await,
+            "listDatabases" => return Box::pin(self.list_databases(db, cmd, conn_id)).await,
             "tenantStats" => return Ok(self.tenant_stats()),
-            "renameCollection" => return self.rename_collection(db, cmd).await,
+            "renameCollection" => return Box::pin(self.rename_collection(db, cmd)).await,
             "ttlPass" => {
                 let gap = int_arg(cmd.get("minGapSecs")).unwrap_or(0) as u64;
-                self.dbs.ttl_pass(std::time::Duration::from_secs(gap), int_arg(cmd.get("maxWakes")).unwrap_or(1000) as usize).await?;
+                Box::pin(self.dbs.ttl_pass(std::time::Duration::from_secs(gap), int_arg(cmd.get("maxWakes")).unwrap_or(1000) as usize)).await?;
                 return Ok(ok());
             }
             _ => {}
@@ -410,7 +422,7 @@ impl Server {
         crate::fields::check(name, cmd)?;
         self.check_txn_number(name, cmd)?;
         if let Some(tc) = crate::txn::parse(cmd)? {
-            return self.run_in_txn(db, name, cmd, &tc).await;
+            return Box::pin(self.run_in_txn(db, name, cmd, &tc)).await;
         }
         let col = if matches!(name, "find" | "aggregate" | "count" | "distinct" | "findAndModify" | "findandmodify" | "mapReduce" | "mapreduce") {
             crate::collation::of_command(name, cmd)?
@@ -434,42 +446,44 @@ impl Server {
         crate::collation::scope(col, self.route(db, name, cmd)).await
     }
 
+    /// Every command's future is boxed: inline, the largest of them made this future (and the futures that await it) about
+    /// 21 KB, copied several times per command whatever the command.
     async fn route(&self, db: &str, name: &str, cmd: &Document) -> R<Document> {
         let mut no_tx: Option<crate::txn::Txn> = None;
         let tx = &mut no_tx;
-        if let Some(d) = self.view_route(db, name, cmd, tx).await? {
+        if let Some(d) = Box::pin(self.view_route(db, name, cmd, tx)).await? {
             return Ok(d);
         }
         match name {
-            "compactStructuredEncryptionData" => self.compact_structured_encryption_data(db, cmd).await,
-            "createSearchIndexes" => self.create_search_indexes(db, cmd).await,
-            "dropSearchIndex" => self.drop_search_index(db, cmd).await,
-            "updateSearchIndex" => self.update_search_index(db, cmd).await,
-            "insert" => self.insert(db, cmd, tx).await,
-            "find" => self.find(db, cmd, tx).await,
-            "getMore" => self.get_more(db, cmd).await,
+            "compactStructuredEncryptionData" => Box::pin(self.compact_structured_encryption_data(db, cmd)).await,
+            "createSearchIndexes" => Box::pin(self.create_search_indexes(db, cmd)).await,
+            "dropSearchIndex" => Box::pin(self.drop_search_index(db, cmd)).await,
+            "updateSearchIndex" => Box::pin(self.update_search_index(db, cmd)).await,
+            "insert" => Box::pin(self.insert(db, cmd, tx)).await,
+            "find" => Box::pin(self.find(db, cmd, tx)).await,
+            "getMore" => Box::pin(self.get_more(db, cmd)).await,
             "killCursors" => self.kill_cursors(cmd),
-            "update" => self.update(db, cmd, tx).await,
-            "delete" => self.delete(db, cmd, tx).await,
-            "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd, tx).await,
-            "count" => self.count(db, cmd, tx).await,
-            "distinct" => self.distinct(db, cmd, tx).await,
-            "aggregate" => self.aggregate(db, cmd, tx).await,
-            "mapReduce" | "mapreduce" => self.map_reduce(db, cmd, tx).await,
-            "drop" => self.drop_collection(db, cmd).await,
-            "create" => self.create(db, cmd).await,
-            "dropIndexes" => self.drop_indexes(db, cmd).await,
-            "collMod" => self.coll_mod(db, cmd).await,
-            "convertToCapped" => self.convert_to_capped(db, cmd).await,
-            "cloneCollectionAsCapped" => self.clone_as_capped(db, cmd).await,
-            "explain" => self.explain(db, cmd).await,
-            "validate" => self.validate(db, cmd).await,
-            "collStats" => self.coll_stats(db, cmd).await,
-            "dbStats" => self.db_stats(db, cmd).await,
-            "createIndexes" => self.create_indexes(db, cmd).await,
-            "listIndexes" => self.list_indexes(db, cmd).await,
-            "listCollections" => self.list_collections(db, cmd).await,
-            "dropDatabase" => {
+            "update" => Box::pin(self.update(db, cmd, tx)).await,
+            "delete" => Box::pin(self.delete(db, cmd, tx)).await,
+            "findAndModify" | "findandmodify" => Box::pin(self.find_and_modify(db, cmd, tx)).await,
+            "count" => Box::pin(self.count(db, cmd, tx)).await,
+            "distinct" => Box::pin(self.distinct(db, cmd, tx)).await,
+            "aggregate" => Box::pin(self.aggregate(db, cmd, tx)).await,
+            "mapReduce" | "mapreduce" => Box::pin(self.map_reduce(db, cmd, tx)).await,
+            "drop" => Box::pin(self.drop_collection(db, cmd)).await,
+            "create" => Box::pin(self.create(db, cmd)).await,
+            "dropIndexes" => Box::pin(self.drop_indexes(db, cmd)).await,
+            "collMod" => Box::pin(self.coll_mod(db, cmd)).await,
+            "convertToCapped" => Box::pin(self.convert_to_capped(db, cmd)).await,
+            "cloneCollectionAsCapped" => Box::pin(self.clone_as_capped(db, cmd)).await,
+            "explain" => Box::pin(self.explain(db, cmd)).await,
+            "validate" => Box::pin(self.validate(db, cmd)).await,
+            "collStats" => Box::pin(self.coll_stats(db, cmd)).await,
+            "dbStats" => Box::pin(self.db_stats(db, cmd)).await,
+            "createIndexes" => Box::pin(self.create_indexes(db, cmd)).await,
+            "listIndexes" => Box::pin(self.list_indexes(db, cmd)).await,
+            "listCollections" => Box::pin(self.list_collections(db, cmd)).await,
+            "dropDatabase" => Box::pin(async {
                 let colls = self.dbs.lock(db).await.collections().await?;
                 let n_colls = colls.len();
                 self.dbs.lock(db).await.drop_database().await?;
@@ -477,8 +491,9 @@ impl Server {
                 evs.push(crate::changes::EvSpec { db: db.to_string(), coll: None, op: "dropDatabase", doc_key: None, full: None, desc: None, txn: None, ..Default::default() });
                 self.dbs.changes.publish(evs);
                 Ok(doc! { "dropped": db, "\u{0}ncolls": n_colls as i32, "ok": 1.0 })
-            }
-            "tenantAdmin" => self.tenant_admin(db, cmd).await,
+            })
+            .await,
+            "tenantAdmin" => Box::pin(self.tenant_admin(db, cmd)).await,
             "tenantTrace" => Box::pin(self.tenant_trace(db, cmd)).await,
             other => {
                 eprintln!("UNKNOWN COMMAND {other:?} db={db}");

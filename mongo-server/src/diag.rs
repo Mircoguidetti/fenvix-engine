@@ -78,11 +78,23 @@ struct ConnInfo {
     metadata: Option<Document>,
 }
 
+/// Lower-case hex of `b` (the key of a logical session).
+fn hex_key(b: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut s = String::with_capacity(b.len() * 2);
+    for x in b {
+        s.push(HEX[(x >> 4) as usize] as char);
+        s.push(HEX[(x & 15) as usize] as char);
+    }
+    s
+}
+
 struct OpRec {
     conn: i64,
     db: String,
     name: String,
-    cmd: Document,
+    /// The command as received (not redacted: see `begin`).
+    cmd: Arc<Document>,
     start: Instant,
     kill: Arc<Notify>,
 }
@@ -220,15 +232,23 @@ impl Diag {
     }
 
     /// An operation starts: it is listed by `currentOp` until `end`.
-    pub fn begin(&self, conn: i64, db: &str, name: &str, cmd: &Document) -> (i64, Arc<Notify>) {
+    /// The command is shared with the running operation, not copied: `currentOp` redacts it when it shows it.
+    pub fn begin(&self, conn: i64, db: &str, name: &str, cmd: &Arc<Document>) -> (i64, Arc<Notify>) {
         let id = self.next_op.fetch_add(1, Relaxed);
         if let Some(Bson::Binary(b)) = cmd.get_document("lsid").ok().and_then(|l| l.get("id")) {
-            let key: String = b.bytes.iter().map(|x| format!("{x:02x}")).collect();
-            self.sessions.lock().unwrap().insert(key, (Bson::Binary(b.clone()), bson::DateTime::now()));
+            let key = hex_key(&b.bytes);
+            let now = bson::DateTime::now();
+            let mut sessions = self.sessions.lock().unwrap();
+            match sessions.get_mut(&key) {
+                Some(e) => e.1 = now,
+                None => {
+                    sessions.insert(key, (Bson::Binary(b.clone()), now));
+                }
+            }
         }
         let kill = Arc::new(Notify::new());
         self.requests.fetch_add(1, Relaxed);
-        self.ops.lock().unwrap().insert(id, OpRec { conn, db: db.to_string(), name: name.to_string(), cmd: crate::auth::redact_command(name, cmd), start: Instant::now(), kill: Arc::clone(&kill) });
+        self.ops.lock().unwrap().insert(id, OpRec { conn, db: db.to_string(), name: name.to_string(), cmd: Arc::clone(cmd), start: Instant::now(), kill: Arc::clone(&kill) });
         (id, kill)
     }
 
@@ -329,8 +349,9 @@ tokio::task_local! {
 static KILLED: Mutex<Vec<i64>> = Mutex::new(Vec::new());
 
 /// Run a command as operation `id`.
-pub async fn as_op<F: std::future::Future>(id: i64, fut: F) -> F::Output {
-    CUR_OP.scope(id, fut).await
+/// (A plain function, not an `async fn`: an async wrapper would copy the whole command future into a state of its own.)
+pub fn as_op<F: std::future::Future>(id: i64, fut: F) -> impl std::future::Future<Output = F::Output> {
+    CUR_OP.scope(id, fut)
 }
 
 /// Has `killOp` stopped the operation running on this task? (JavaScript checks this while it runs.)
@@ -480,11 +501,13 @@ fn md5_hex(data: &[u8]) -> String {
 
 impl Server {
     /// Diagnostic and administration commands; `None` when `name` is not one of them.
+    /// (The commands that await are boxed: this function runs for every command, and inline they made its future, part of
+    /// every command's future, about 14 KB.)
     pub(crate) async fn diag_command(&self, db: &str, name: &str, cmd: &Document) -> Option<R<Document>> {
         Some(match name {
             "serverStatus" => self.server_status(cmd),
             "hostInfo" => Ok(self.host_info()),
-            "currentOp" => self.current_op(db, cmd).await,
+            "currentOp" => Box::pin(self.current_op(db, cmd)).await,
             "killOp" => self.kill_op(db, cmd),
             "top" => self.top(db),
             "getCmdLineOpts" => admin_only(db, name).map(|_| self.cmd_line_opts()),
@@ -498,23 +521,23 @@ impl Server {
             "getClusterParameter" => self.get_cluster_parameter(cmd),
             "setClusterParameter" => self.set_cluster_parameter(cmd),
             "profile" => self.profile(db, cmd),
-            "dbHash" => self.db_hash(db, cmd).await,
-            "dataSize" => self.data_size(cmd).await,
-            "validateDBMetadata" => self.validate_db_metadata(cmd).await,
+            "dbHash" => Box::pin(self.db_hash(db, cmd)).await,
+            "dataSize" => Box::pin(self.data_size(cmd)).await,
+            "validateDBMetadata" => Box::pin(self.validate_db_metadata(cmd)).await,
             "startSession" => {
                 let r = start_session();
                 if let Some(Bson::Binary(b)) = r.get_document("id").ok().and_then(|i| i.get("id").cloned()) {
-                    let key: String = b.bytes.iter().map(|x| format!("{x:02x}")).collect();
+                    let key = hex_key(&b.bytes);
                     self.diag.sessions.lock().unwrap().insert(key, (Bson::Binary(b), bson::DateTime::now()));
                 }
                 Ok(r)
             }
             "killAllSessions" | "killAllSessionsByPattern" => kill_all_sessions(name, cmd),
-            "planCacheListFilters" | "planCacheSetFilter" | "planCacheClearFilters" | "planCacheClear" => self.plan_cache(db, name, cmd).await,
-            "reIndex" => self.re_index(db, cmd).await,
-            "compact" => self.compact(db, cmd).await,
-            "filemd5" => self.filemd5(db, cmd).await,
-            "setIndexCommitQuorum" => self.set_index_commit_quorum(db, cmd).await,
+            "planCacheListFilters" | "planCacheSetFilter" | "planCacheClearFilters" | "planCacheClear" => Box::pin(self.plan_cache(db, name, cmd)).await,
+            "reIndex" => Box::pin(self.re_index(db, cmd)).await,
+            "compact" => Box::pin(self.compact(db, cmd)).await,
+            "filemd5" => Box::pin(self.filemd5(db, cmd)).await,
+            "setIndexCommitQuorum" => Box::pin(self.set_index_commit_quorum(db, cmd)).await,
             "logRotate" => crate::admin_cmds::log_rotate(db, cmd),
             "fsync" => self.fsync(db, cmd),
             "fsyncUnlock" => self.fsync_unlock(db),
@@ -762,7 +785,7 @@ impl Server {
             d.insert("currentOpTime", now_string());
             d.insert("threaded", true);
             d.insert("opid", *id as i32);
-            let mut command = o.cmd.clone();
+            let mut command = crate::auth::redact_command(&o.name, &o.cmd);
             command.remove("$clusterTime");
             command.remove("$readPreference");
             command.remove("txnNumber");

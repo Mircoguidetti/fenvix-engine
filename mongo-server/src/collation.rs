@@ -129,12 +129,13 @@ tokio::task_local! {
 
 /// Run `f` with the collation named by the command (`Some`: `Some(None)` is `simple`, `None`: none named, the default of
 /// the collection the command works on applies once [`note_default`] sees it).
-pub async fn scope<F: std::future::Future>(explicit: Option<Option<Arc<Collation>>>, f: F) -> F::Output {
+/// (A plain function, not an `async fn`: an async wrapper would copy the whole command future into a state of its own.)
+pub fn scope<F: std::future::Future>(explicit: Option<Option<Arc<Collation>>>, f: F) -> impl std::future::Future<Output = F::Output> {
     let ctx = match explicit {
         Some(c) => Ctx { explicit: true, defaulted: true, c },
         None => Ctx { explicit: false, defaulted: false, c: None },
     };
-    CUR.scope(std::cell::RefCell::new(ctx), f).await
+    CUR.scope(std::cell::RefCell::new(ctx), f)
 }
 
 /// Synchronous code under a given collation (an index's own).

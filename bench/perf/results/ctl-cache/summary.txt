@@ -1,0 +1,41 @@
+test_01_databases: 10 passed in 12.39s
+test_02_fork: 13 passed in 44.65s
+test_02b_fork_crash: 12 passed, 11 warnings in 42.03s
+test_03_restore: 11 passed in 119.98s (0:01:59)
+test_03b_restore_gc_crash: 11 passed in 150.80s (0:02:30)
+test_03c_retention_cost: 1 passed in 114.05s (0:01:54)
+test_04_export: 9 passed, 1 skipped in 48.57s
+test_04b_export_vs_real_mongo: 2 skipped in 0.18s
+test_05_erase: 19 passed in 44.34s
+test_06_keepawake: 13 passed in 137.56s (0:02:17)
+test_07_usage: 10 passed in 62.70s (0:01:02)
+test_08_costs: 3 passed in 341.94s (0:05:41)
+test_08b_pin_cost: 1 passed in 66.78s (0:01:06)
+test_09_security: 30 passed in 4.30s
+test_09b_users_restore: 1 passed in 10.33s
+test_09c_tls_rotate: 3 passed in 6.82s
+test_09d_s3_env: 6 passed in 12.99s
+test_09e_local_store: 4 passed in 26.47s
+test_09f_wal_retention_guard: 4 passed in 112.28s (0:01:52)
+test_09g_export_natural_order: 2 passed in 4.38s
+test_10_end_to_end: 1 passed in 14.83s
+test_11_tls_modes: 4 passed in 49.04s
+test_12_shutdown: 2 passed in 8.55s
+test_13_ip_allowlist: 84 passed in 24.43s
+test_14_auth_limits: 10 passed in 42.32s
+test_15_admin_cmd_privileges: 54 passed in 6.34s
+test_16_block_defaults: 5 passed in 6.33s
+test_17_grantable_roles: 94 passed in 20.32s
+test_18_unblock_per_database: 4 passed in 2.37s
+test_19_imds_credential_refresh: 4 passed in 190.60s (0:03:10)
+test_20_process_lease: 9 passed in 94.02s (0:01:34)
+test_21_fair_limits_metrics: 4 passed in 12.55s
+test_22_wal_gc_stored_manifest: 1 passed in 8.99s
+test_23_process_lease_late: 6 passed in 125.25s (0:02:05)
+test_24_local_log: 8 passed in 74.91s (0:01:14)
+test_25_review_fixes: 8 passed in 42.12s
+test_26_drop_forgets: 3 passed in 350.85s (0:05:50)
+test_27_memory_per_write: 2 passed in 262.77s (0:04:22)
+test_28_bulk_insert_stall: 1 passed in 14.35s
+test_29_compat_data_bugs: 10 passed in 2.37s
+test_33_metadata_cache: 10 passed in 30.35s

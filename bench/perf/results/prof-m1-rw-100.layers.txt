@@ -1,0 +1,176 @@
+samples: 8665
+
+# by layer (whole call stack)
+  60.2%  slatedb
+  35.4%  mongodb
+   3.1%  net
+   1.3%  runtime
+   0.0%  other
+
+# slatedb layer: which MongoDB-layer read asked for it
+  24.2%  local object store I/O (WAL/SST files written, blocks read)
+  14.2%  the document itself (find_docs)
+   9.5%  memtable flush / WAL (background)
+   5.2%  writes (apply, stage, flush)
+   4.1%  other / stack cut
+   3.0%  block fetches after a cache miss (background tasks)
+   0.0%  compaction (background)
+
+# slatedb layer: kind of work (leaf function)
+  21.3%  kernel (file reads)
+  16.3%  other
+  10.7%  iterators and blocks
+   3.8%  allocation (malloc/free)
+   2.9%  block / filter cache
+   1.8%  memory copies
+   1.4%  bloom filters
+   1.2%  SST paths (format!, object_store::Path)
+   0.8%  Bytes reference counts
+
+# mongodb layer: kind of work
+  16.3%  command logic and the rest
+   8.8%  kernel (socket read/write, wakeups)
+   4.3%  BSON encode/decode
+   3.6%  allocation (malloc/free)
+   1.4%  memory copies of async state (futures moved between wrappers)
+   1.0%  memory copies of data (BSON, buffers)
+
+# mongodb layer: first mongo_server frame from the leaf (top 25)
+  11.2%  mongo_server::handle_connection_inner::{closure#0}
+   2.2%  <mongo_server::fair::Timed<tokio::task::task_local::TaskLocalFuture<core::cell::Cell<core::option::Option<>>, <>::handle::{closure#0}::{clos
+   1.7%  <mongo_server::cmd::Server>::dispatch_commands::{closure#0}
+   1.6%  <bson::document::Document as core::iter::traits::collect::FromIterator<>>::from_iter::<core::iter::adapters::GenericShunt<core::iter::adapte
+   1.0%  <mongo_server::cmd::Server>::update::{closure#0}
+   1.0%  <mongo_server::diag::Diag>::end
+   0.6%  <mongo_server::cmd::Server>::find::{closure#0}
+   0.6%  <bson::document::Document>::insert::<&str, bson::bson::Bson>
+   0.5%  ?
+   0.5%  bson::raw::reader_to_vec::<&[u8]>
+   0.5%  <mongo_server::lease::Leases>::valid
+   0.5%  <mongo_server::coll::Writes>::put::{closure#0}
+   0.5%  bson::raw::write_string
+   0.4%  <bson::bson::Bson as core::clone::Clone>::clone
+   0.4%  <bson::document::Document>::append_to
+   0.4%  <mongo_server::changes::ChangeLog>::publish
+   0.4%  <mongo_server::dbs::Entry>::meta_lookup
+   0.4%  <bson::raw::iter::RawElement>::value
+   0.4%  <bson::raw::bson::RawBson as core::convert::From<bson::raw::bson_ref::RawBsonRef>>::from
+   0.3%  <mongo_server::dbs::Entry>::apply::{closure#0}
+   0.3%  <mongo_server::ctl::usage::Usage>::command
+   0.3%  <mongo_server::diag::Diag>::begin
+   0.3%  mongo_server::layout::doc_prefix
+   0.3%  mongo_server::fields::check
+   0.3%  <bson::raw::iter::RawIter as core::iter::traits::iterator::Iterator>::next
+
+# slatedb: leaf functions (top 25)
+   2.2%  [k] recently_deleted
+   2.0%  __memcmp_evex_movbe
+   1.8%  __memcpy_avx512_unaligned_erms
+   1.7%  [k] finish_task_switch.isra.0
+   1.4%  [k] lookup_bh_lru
+   1.2%  <crossbeam_skiplist::base::RefRange<>>::next
+   0.9%  [k] __d_lookup_rcu
+   0.9%  _rjem_malloc
+   0.8%  _rjem_sdallocx
+   0.7%  [k] _raw_spin_unlock_irqrestore
+   0.6%  [k] __find_get_block_slow
+   0.6%  <foyer_memory::raw::RawCacheShard<foyer_memory::eviction::lru::Lru<>, core::hash::BuildHasherDefault<>, foyer_memory::indexer::hash_table::H
+   0.6%  [k] __d_lookup
+   0.5%  [k] xas_load
+   0.5%  <futures_util::stream::futures_unordered::FuturesUnordered<futures_util::stream::futures_ordered::OrderWrapper<<>::with_lookahead::init_sour
+   0.5%  [k] filemap_get_entry
+   0.4%  <slatedb::db::DbInner>::check_closed
+   0.4%  [k] shuffle_freelist
+   0.4%  bytes::bytes::shared_clone
+   0.4%  [k] __brelse
+   0.4%  bytes::bytes::shared_drop
+   0.4%  [k] __ext4_check_dir_entry
+   0.4%  <>::partition_first_key
+   0.3%  __rustc::__rust_dealloc
+   0.3%  <futures_util::stream::futures_unordered::FuturesUnordered<core::pin::Pin<alloc::boxed::Box<dyn core::future::future::Future<Output = (slate
+
+# mongodb: leaf functions (top 25)
+   3.5%  [k] _raw_spin_unlock_irqrestore
+   2.4%  __memcpy_avx512_unaligned_erms
+   0.8%  __memcmp_evex_movbe
+   0.7%  _rjem_sdallocx
+   0.7%  mongo_server::handle_connection_inner::{closure#0}
+   0.6%  _rjem_malloc
+   0.5%  core::ptr::drop_glue::<bson::bson::Bson>
+   0.5%  do_rallocx
+   0.5%  _rjem_je_arena_ralloc_no_move
+   0.4%  <ahash::random_state::RandomState as core::hash::BuildHasher>::hash_one::<&str>
+   0.4%  <mongo_server::cmd::Server>::update::{closure#0}
+   0.4%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<alloc::vec::Vec<>>, <>::dispatch_durable::{closure#0}::{closure#0}> as core::f
+   0.3%  <mongo_server::lease::Leases>::valid
+   0.3%  [unknown]
+   0.3%  <core::iter::adapters::map::Map<bson::raw::iter::Iter, <bson::document::Document as core::convert::TryFrom<>>::try_from::{closure#0}> as cor
+   0.3%  <mongo_server::diag::Diag>::end
+   0.3%  core::str::converts::from_utf8
+   0.3%  <bson::raw::iter::RawIter as core::iter::traits::iterator::Iterator>::next
+   0.2%  <bson::raw::iter::RawElement>::value
+   0.2%  <mongo_server::cmd::Server>::find::{closure#0}
+   0.2%  <mongo_server::dbs::Entry>::meta_lookup
+   0.2%  bson::raw::reader_to_vec::<&[u8]>
+   0.2%  <core::hash::sip::Hasher<core::hash::sip::Sip13Rounds> as core::hash::Hasher>::write
+   0.2%  <bson::document::Document>::append_to
+   0.2%  <tokio::task::task_local::TaskLocalFuture<core::cell::RefCell<>, <>::route::{closure#0}> as core::future::future::Future>::poll
+
+# net: leaf functions (top 25)
+   2.1%  [k] finish_task_switch.isra.0
+   0.2%  [k] _raw_spin_unlock_irqrestore
+   0.1%  [k] futex_do_wait
+   0.0%  [k] __futex_wait
+   0.0%  [k] __get_user_8
+   0.0%  [k] read_tsc
+   0.0%  epoll_wait
+   0.0%  [k] futex_wait
+   0.0%  [k] sock_poll
+   0.0%  [k] ktime_get
+   0.0%  [k] tcp_poll
+   0.0%  [k] fdget
+   0.0%  [k] __put_user_nocheck_4
+   0.0%  [k] do_futex
+   0.0%  [k] ep_poll
+   0.0%  [k] __x64_sys_epoll_wait
+   0.0%  [k] do_syscall_64
+   0.0%  [k] ep_item_poll.isra.0
+   0.0%  [k] futex_hash
+   0.0%  [k] futex_unqueue
+   0.0%  [k] exit_to_user_mode_loop
+   0.0%  [k] _copy_from_user
+   0.0%  [k] futex_ref_get
+   0.0%  [k] __list_del_entry_valid_or_report
+   0.0%  [k] __rcu_read_unlock
+
+# runtime: leaf functions (top 25)
+   0.2%  <tokio::runtime::scheduler::multi_thread::worker::Context>::run_task
+   0.2%  syscall
+   0.1%  <parking_lot::condvar::Condvar>::wait_until_internal
+   0.1%  <tokio::runtime::scheduler::multi_thread::worker::Context>::run
+   0.1%  <tokio::runtime::scheduler::multi_thread::handle::Handle>::notify_parked_local
+   0.1%  __GI___clock_gettime
+   0.1%  __ieee754_pow_fma
+   0.1%  [unknown]
+   0.0%  <tokio::runtime::time::wheel::Wheel>::poll
+   0.0%  exp_inline
+   0.0%  <tokio::runtime::signal::Driver>::process
+   0.0%  tokio::runtime::task::raw::schedule::<alloc::sync::Arc<tokio::runtime::scheduler::multi_thread::handle::Handle>>
+   0.0%  <tokio::runtime::time::Driver>::park_internal
+   0.0%  <tokio::time::clock::Clock>::now
+   0.0%  <tokio::runtime::task::state::State>::transition_to_notified_by_val
+   0.0%  <std::time::Instant as core::ops::arith::Sub>::sub
+   0.0%  <tokio::runtime::time::wheel::Wheel>::next_expiration
+   0.0%  <tokio::runtime::time::handle::Handle>::process_at_time
+   0.0%  <tokio::runtime::blocking::pool::Inner>::run
+   0.0%  __pow_finite@GLIBC_2.15@plt
+   0.0%  <tokio::process::imp::orphan::OrphanQueueImpl<std::process::Child>>::reap_orphans
+   0.0%  <tokio::runtime::time::Driver>::park_thread_timeout
+   0.0%  <tokio::runtime::scheduler::multi_thread::worker::Context>::park_internal
+   0.0%  <tokio::runtime::io::driver::Driver>::turn
+   0.0%  __pow
+
+# other: leaf functions (top 25)
+   0.0%  __popcountdi2
+   0.0%  <alloc::string::String as core::fmt::Write>::write_str
+   0.0%  <alloc::string::String as core::fmt::Write>::write_char
