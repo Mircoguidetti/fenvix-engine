@@ -936,18 +936,25 @@ impl Tenant {
     /// Give the tenant up without any of the clean-close bookkeeping (no marker, no compaction request):
     /// used when ownership was lost, where flushing would only be fenced anyway.
     ///
-    /// No final flush and a bounded wait. `Db::close` flushes the memtable by default, and with L0 full that flush waits
-    /// for a compaction that never comes: the writer is already out of the L0 watch, and the store may still be down. The
-    /// caller holds the tenant's lock, so before this every command on the database and the SIGTERM close waited forever
-    /// (the engine stuck after losing its lease to a store outage longer than the lease). Nothing is lost by skipping the
-    /// flush: acknowledged writes are in durable WAL objects, and without a clean marker the next owner replays them.
+    /// A WAL flush instead of the memtable flush, and a bounded wait. `Db::close` flushes the memtable by default, and with
+    /// L0 full that flush waits for a compaction that never comes: the writer is already out of the L0 watch, and the store
+    /// may still be down. The caller holds the tenant's lock, so before this every command on the database and the SIGTERM
+    /// close waited forever (the engine stuck after losing its lease to a store outage longer than the lease). The WAL
+    /// flush needs no room in L0 and still uploads what was acknowledged before the WAL write (local log, relaxed
+    /// durability) as the memtable flush did; a fenced WAL write fails, as it should. Without a clean marker the next owner
+    /// replays the WAL.
     pub async fn abandon(mut self) {
-        let no_flush = slatedb::config::CloseOptions { flush_type: None };
         let done = match self.mode.take() {
             Some(Mode::Reader(r)) => tokio::time::timeout(ABANDON_CLOSE_TIMEOUT, r.close()).await.is_ok(),
             Some(Mode::Writer(db)) => {
                 writer_closed(&self.id);
-                tokio::time::timeout(ABANDON_CLOSE_TIMEOUT, db.close_with_options(no_flush)).await.is_ok()
+                tokio::time::timeout(ABANDON_CLOSE_TIMEOUT, async {
+                    let wal = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal };
+                    let _ = db.flush_with_options(wal).await;
+                    db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await
+                })
+                .await
+                .is_ok()
             }
             None => true,
         };
@@ -1952,15 +1959,18 @@ mod tests {
             db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
         }
         assert_eq!(db.manifest().l0().len(), l0_max);
-        // Acknowledged as the engine does it: once its WAL object is written. It stays in the memtable (L0 has no room).
+        // One write in its WAL object (acknowledged as the engine does it), one only in the WAL buffer (acknowledged before
+        // the WAL write: local log, relaxed durability). Both stay in the memtable (L0 has no room).
         db.put(b"last", b"v").await.unwrap();
         db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal }).await.unwrap();
+        db.put(b"buffered", b"v").await.unwrap();
         let t0 = Instant::now();
         tokio::time::timeout(ABANDON_CLOSE_TIMEOUT + Duration::from_secs(5), t.abandon()).await.expect("abandon did not return");
         assert!(t0.elapsed() < ABANDON_CLOSE_TIMEOUT, "abandon took {:?}", t0.elapsed());
         // Nothing acknowledged is lost: the next owner (a writer open replays the WAL) reads it.
         let next = writer_builder(id, &store).build().await.unwrap();
         assert!(next.get(b"last").await.unwrap().is_some());
+        assert!(next.get(b"buffered").await.unwrap().is_some(), "abandon uploads the WAL buffer");
         next.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await.unwrap();
     }
 
