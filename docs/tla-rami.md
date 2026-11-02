@@ -84,9 +84,14 @@ Modelli con le regole giuste, devono passare:
 - `contagiri-piccolo` (età come "giri di fila", taglia piccola): nessuna violazione, completa,
   7.226.247 stati distinti. Il difetto di quella regola compare solo con un giro in più (`contagiri`):
   un'altra ragione per non fidarsi di una regola che passa solo sui modelli piccoli.
-- CATENA
-- DUE
-- GRANDE
+- `catena` (3 database, rami di rami, nessun cameriere): nessuna violazione, completa, 24.113.305
+  stati distinti (122.504.112 generati), profondità 32, 14 minuti e 9 secondi.
+- `due-raccoglitori` (due raccoglitori insieme, nessun cameriere, con la rinuncia al giro troppo
+  lungo): nessuna violazione, completa, 52.565.463 stati distinti (255.275.066 generati), profondità
+  46, 31 minuti e 17 secondi.
+- `grande` (`Grace = 2`, scritture in volo fino a 1 giro, fogli dei camerieri fino a 2 giri, 4
+  giri): nessuna violazione, completa, 10.128.195 stati distinti (57.879.982 generati), profondità 33,
+  6 minuti e 1 secondo. Conferma la regola 3c con margini diversi da quelli del modello base.
 
 Controlli negativi, devono fallire (fra parentesi l'invariante violata e la lunghezza della traccia):
 tutti e 12 falliscono come previsto. `noregisterfirst` (NoDangling, 10 stati), `splitpin`
@@ -105,7 +110,7 @@ legge ancora una scatola del nonno dopo che nonno e padre sono usciti (`sanity-c
 ## 3. I controesempi in parole
 
 Ognuno è la traccia più corta trovata da TLC (ricerca in ampiezza), letta passo per passo
-(`tla-rami/trace2.py` la stampa in forma corta). "d1" è il padre, "d2" il ramo, le scatole sono 1, 2, 3.
+(`python3 tla-rami/trace2.py tla-rami/output/<modello>.txt` la stampa in forma corta). "d1" è il padre, "d2" il ramo, le scatole sono 1, 2, 3.
 
 1. **`noregisterfirst`, registrazione dopo la condivisione.** Il fork legge il foglio di d1 (scatola
    1) senza spilla; d1 viene cancellato; il fork scrive il foglio di d2 con la scatola 1, ma d2 non è
