@@ -87,6 +87,7 @@ fn main() -> anyhow::Result<()> {
                 seg_bytes: a.u("seg-mb", 64) << 20,
                 max_inflight: a.u("max-inflight", 200_000),
                 zstd: std::env::var("PQ_ZSTD").ok().and_then(|x| x.parse().ok()).unwrap_or(0),
+                zstd_main: std::env::var("PQ_ZSTD_MAIN").map(|x| x == "1").unwrap_or(false),
                 disk_soft: a.u("disk-soft-mb", 0) << 20,
                 disk_hard: a.u("disk-hard-mb", 0) << 20,
                 disk_ro: a.u("disk-ro-mb", 0) << 20,
@@ -131,7 +132,7 @@ fn main() -> anyhow::Result<()> {
         "lotti" => {
             let r = rt(a.u("threads", 2) as usize);
             r.block_on(bench::lotti(cluster(&a), a.f("rate", 4000.0), a.u("batch", 1) as usize, a.u("clients", 64) as usize, a.u("secs", 20), a.u("warm", 5),
-                a.u("keys", 1) as usize, a.u("val", 200) as usize, a.u("dbs", 100)));
+                a.u("keys", 1) as usize, a.u("val", 200) as usize, a.u("dbs", 100), a.u("real", 0) == 1));
         }
         "hot" => {
             let r = rt(a.u("threads", 2) as usize);

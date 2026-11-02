@@ -1,0 +1,75 @@
+g5-10k-k3 lotto 32 (n=2): thread principale 19.8 µs/record [20.1, 19.5], processo capo 39.7, repliche 25.9, record/s 10004, main core 0.20, byte/record grezzi 2512 sul filo 780, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 14.0, invio_repliche 5.9, invio_disco 2.5, risposte_append 1.9
+g5-10k-k3 lotto 64 (n=2): thread principale 17.9 µs/record [17.8, 18.1], processo capo 31.9, repliche 21.7, record/s 10051, main core 0.18, byte/record grezzi 2509 sul filo 756, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 12.4, invio_repliche 4.0, invio_disco 1.9, risposte_append 1.1
+g5-10k-k5 lotto 32 (n=2): thread principale 25.5 µs/record [25.7, 25.2], processo capo 45.2, repliche 31.1, record/s 9972, main core 0.25, byte/record grezzi 2728 sul filo 809, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 20.7, invio_repliche 7.4, invio_disco 2.2, risposte_append 1.9
+g5-10k-k5 lotto 64 (n=2): thread principale 23.4 µs/record [23.5, 23.3], processo capo 38.0, repliche 26.2, record/s 10036, main core 0.23, byte/record grezzi 2722 sul filo 786, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 18.3, invio_repliche 5.6, invio_disco 1.8, risposte_append 1.1
+g5-10k-k8 lotto 32 (n=2): thread principale 34.1 µs/record [34.1, 34.2], processo capo 53.3, repliche 37.6, record/s 10035, main core 0.34, byte/record grezzi 3103 sul filo 877, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 29.9, invio_repliche 8.5, invio_disco 2.1, risposte_append 1.5
+g5-10k-k8 lotto 64 (n=2): thread principale 32.9 µs/record [32.4, 33.5], processo capo 48.5, repliche 34.7, record/s 9980, main core 0.33, byte/record grezzi 3111 sul filo 858, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 29.4, invio_repliche 9.3, invio_disco 2.1, risposte_append 1.3
+g5-fine-k8 lotto 64 (n=1): thread principale 28.1 µs/record [28.1], processo capo 40.1, repliche 28.6, record/s 13261, main core 0.37, byte/record grezzi 2895 sul filo 805, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 26.5, commit_valida 14.5, invio_repliche 7.2, commit_aggiunta 6.7, commit_codifica 2.8, invio_disco 1.1, risposte_append 1.0
+g5-nozstd-k5 lotto 32 (n=2): thread principale 23.0 µs/record [23.1, 22.8], processo capo 30.6, repliche 22.6, record/s 16148, main core 0.37, byte/record grezzi 2725 sul filo 2725, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 21.5, invio_repliche 4.0, risposte_append 1.2, invio_disco 1.0
+g5-nozstd-k5 lotto 64 (n=2): thread principale 24.6 µs/record [25.3, 23.8], processo capo 32.0, repliche 24.2, record/s 15187, main core 0.37, byte/record grezzi 2728 sul filo 2728, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 22.4, invio_repliche 4.2, invio_disco 1.1, risposte_append 1.0
+g5-nozstd-k8 lotto 32 (n=2): thread principale 34.0 µs/record [34.6, 33.4], processo capo 43.0, repliche 32.4, record/s 11583, main core 0.39, byte/record grezzi 3113 sul filo 3113, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 32.2, invio_repliche 4.6, invio_disco 1.3, risposte_append 1.2
+g5-nozstd-k8 lotto 64 (n=2): thread principale 33.7 µs/record [34.1, 33.3], processo capo 42.6, repliche 31.9, record/s 11560, main core 0.39, byte/record grezzi 3105 sul filo 3105, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 31.7, invio_repliche 4.7, invio_disco 1.4, risposte_append 1.0
+g5-prova-scaricatore lotto 64 (n=1): thread principale 47.2 µs/record [47.2], processo capo 66.4, repliche 51.9, record/s 4992, main core 0.24, byte/record grezzi 3110 sul filo 860, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 26.6, potatura 14.8, commit_valida 14.5, commit_aggiunta 7.1, invio_repliche 4.6, invio_disco 2.8, commit_codifica 2.5, risposte_append 1.4
+    memoria contata per replica (MB): [{'0': 574, '1': 519, '2': 519}]
+g5-regime10k-k3 lotto 32 (n=2): thread principale 24.6 µs/record [24.1, 25.0], processo capo 43.4, repliche 28.8, record/s 10077, main core 0.25, byte/record grezzi 2508 sul filo 768, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 14.5, potatura 6.4, commit_valida 5.9, invio_repliche 5.4, commit_aggiunta 3.9, invio_disco 2.2, commit_codifica 2.2, risposte_append 1.7
+    memoria contata per replica (MB): [{'0': 595, '1': 645, '2': 640}, {'0': 738, '1': 841, '2': 822}]
+g5-regime10k-k3 lotto 64 (n=2): thread principale 22.7 µs/record [23.1, 22.3], processo capo 36.8, repliche 26.9, record/s 10024, main core 0.23, byte/record grezzi 2509 sul filo 753, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 12.5, potatura 6.7, commit_valida 5.3, invio_repliche 4.2, commit_aggiunta 3.1, invio_disco 1.8, commit_codifica 1.6, risposte_append 1.3
+    memoria contata per replica (MB): [{'0': 603, '1': 588, '2': 584}, {'0': 552, '1': 568, '2': 542}]
+g5-regime5k-k3 lotto 64 (n=2): thread principale 25.6 µs/record [25.5, 25.7], processo capo 41.2, repliche 29.2, record/s 5004, main core 0.13, byte/record grezzi 2508 sul filo 755, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 11.6, potatura 6.1, commit_valida 4.8, commit_aggiunta 3.0, invio_disco 2.4, invio_repliche 2.0, commit_codifica 1.4, risposte_append 1.4
+    memoria contata per replica (MB): [{'0': 334, '1': 387, '2': 340}, {'0': 386, '1': 341, '2': 333}]
+g5-regime5k-k5 lotto 64 (n=2): thread principale 35.1 µs/record [35.8, 34.5], processo capo 52.6, repliche 38.4, record/s 5014, main core 0.18, byte/record grezzi 2723 sul filo 786, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 18.6, potatura 9.6, commit_valida 9.0, commit_aggiunta 4.9, invio_repliche 3.3, invio_disco 2.6, commit_codifica 2.2, risposte_append 1.3
+    memoria contata per replica (MB): [{'0': 459, '1': 408, '2': 405}, {'0': 403, '1': 408, '2': 454}]
+g5-regime5k-k8-l32 lotto 32 (n=2): thread principale 45.7 µs/record [46.8, 44.7], processo capo 68.9, repliche 53.7, record/s 5009, main core 0.23, byte/record grezzi 3111 sul filo 885, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 25.4, potatura 14.2, commit_valida 13.8, commit_aggiunta 6.8, invio_repliche 5.4, invio_disco 3.4, commit_codifica 2.3, risposte_append 2.0
+    memoria contata per replica (MB): [{'0': 542, '1': 525, '2': 523}, {'0': 540, '1': 513, '2': 512}]
+g5-regime5k-k8 lotto 64 (n=2): thread principale 44.9 µs/record [44.7, 45.0], processo capo 62.7, repliche 48.6, record/s 4996, main core 0.22, byte/record grezzi 3108 sul filo 858, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 24.8, potatura 14.1, commit_valida 13.6, commit_aggiunta 6.5, invio_repliche 3.8, invio_disco 2.7, commit_codifica 2.2, risposte_append 1.3
+    memoria contata per replica (MB): [{'0': 576, '1': 514, '2': 503}, {'0': 575, '1': 512, '2': 507}]
+g5-regime5k-solodoc-k5 lotto 64 (n=2): thread principale 33.3 µs/record [33.2, 33.4], processo capo 50.2, repliche 38.4, record/s 5013, main core 0.17, byte/record grezzi 2724 sul filo 786, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 16.4, commit_aggiunta 10.7, potatura 9.4, invio_repliche 2.5, invio_disco 2.5, commit_codifica 2.0, risposte_append 1.3, commit_valida 1.3
+    memoria contata per replica (MB): [{'0': 399, '1': 454, '2': 411}, {'0': 455, '1': 411, '2': 399}]
+g5-regime5k-solodoc-k8 lotto 64 (n=2): thread principale 43.8 µs/record [44.1, 43.5], processo capo 62.3, repliche 48.9, record/s 5006, main core 0.22, byte/record grezzi 3107 sul filo 859, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 23.6, commit_aggiunta 17.4, potatura 14.2, invio_repliche 3.8, invio_disco 2.8, commit_codifica 2.5, risposte_append 1.3, commit_valida 1.2
+    memoria contata per replica (MB): [{'0': 508, '1': 577, '2': 512}, {'0': 499, '1': 579, '2': 515}]
+g5-avvio-k5 lotto 64 (n=2): thread principale 28.4 µs/record [29.4, 27.5], processo capo 46.0, repliche 30.0, record/s 5031, main core 0.14, byte/record grezzi 2726 sul filo 786, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 19.4, commit_valida 9.1, commit_aggiunta 5.7, invio_repliche 5.3, invio_disco 2.7, commit_codifica 2.0, risposte_append 1.1
+    memoria contata per replica (MB): [{'0': 483, '1': 558, '2': 483}, {'0': 566, '1': 484, '2': 483}]
+g5-avvio-k8 lotto 64 (n=2): thread principale 34.6 µs/record [35.3, 34.0], processo capo 54.3, repliche 36.2, record/s 5042, main core 0.17, byte/record grezzi 3105 sul filo 857, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 26.6, commit_valida 13.2, commit_aggiunta 8.4, invio_repliche 5.7, invio_disco 2.6, commit_codifica 2.4, risposte_append 1.1
+    memoria contata per replica (MB): [{'0': 632, '1': 718, '2': 632}, {'0': 632, '1': 730, '2': 632}]
+g5-regime-k5 lotto 64 (n=2): thread principale 31.1 µs/record [31.0, 31.2], processo capo 47.8, repliche 32.2, record/s 5009, main core 0.16, byte/record grezzi 2727 sul filo 787, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 21.9, commit_valida 12.3, invio_repliche 5.8, commit_aggiunta 5.1, invio_disco 2.5, commit_codifica 2.1, risposte_append 1.1
+    memoria contata per replica (MB): [{'0': 1608, '1': 1340, '2': 1341}, {'0': 1341, '1': 1610, '2': 1341}]
+g5-regime-k8 lotto 64 (n=2): thread principale 54.8 µs/record [54.5, 55.2], processo capo 97.4, repliche 76.5, record/s 5012, main core 0.27, byte/record grezzi 3110 sul filo 858, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 36.6, commit_valida 19.0, sfratto 17.8, commit_aggiunta 12.4, invio_repliche 7.2, commit_codifica 2.7, invio_disco 2.4, risposte_append 1.3, potatura 0.5
+    memoria contata per replica (MB): [{'0': 1179, '1': 1023, '2': 1024}, {'0': 1047, '1': 1771, '2': 1777}]
+g5-tetto-k3 lotto 32 (n=3): thread principale 15.6 µs/record [15.6, 15.0, 15.9], processo capo 26.3, repliche 16.6, record/s 20409, main core 0.32, byte/record grezzi 2508 sul filo 740, ignoti 0 rifiuti 0 conflitti 0
+g5-tetto-k3 lotto 64 (n=3): thread principale 15.6 µs/record [15.6, 15.8, 14.2], processo capo 25.8, repliche 17.0, record/s 20507, main core 0.32, byte/record grezzi 2508 sul filo 740, ignoti 0 rifiuti 0 conflitti 0
+g5-tetto-k5 lotto 32 (n=3): thread principale 22.9 µs/record [23.0, 21.1, 22.9], processo capo 34.7, repliche 23.7, record/s 15524, main core 0.35, byte/record grezzi 2731 sul filo 776, ignoti 0 rifiuti 0 conflitti 0
+g5-tetto-k5 lotto 64 (n=3): thread principale 22.4 µs/record [22.4, 21.8, 22.9], processo capo 34.0, repliche 24.8, record/s 15347, main core 0.34, byte/record grezzi 2724 sul filo 773, ignoti 0 rifiuti 0 conflitti 0
+g5-tetto-k8 lotto 32 (n=3): thread principale 33.1 µs/record [33.1, 34.7, 31.5], processo capo 47.6, repliche 35.4, record/s 10913, main core 0.36, byte/record grezzi 3109 sul filo 850, ignoti 0 rifiuti 0 conflitti 0
+g5-tetto-k8 lotto 64 (n=3): thread principale 32.4 µs/record [31.6, 33.0, 32.4], processo capo 46.3, repliche 33.6, record/s 11086, main core 0.36, byte/record grezzi 3111 sul filo 849, ignoti 0 rifiuti 0 conflitti 0
+g5-zmain-k5 lotto 32 (n=2): thread principale 26.4 µs/record [26.8, 26.0], processo capo 33.2, repliche 23.0, record/s 15840, main core 0.42, byte/record grezzi 2725 sul filo 774, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 20.7, invio_repliche 8.4, risposte_append 1.1, invio_disco 1.0
+g5-zmain-k5 lotto 64 (n=2): thread principale 26.4 µs/record [25.7, 27.2], processo capo 32.7, repliche 23.2, record/s 15734, main core 0.42, byte/record grezzi 2725 sul filo 774, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 20.3, invio_repliche 8.0, invio_disco 1.0, risposte_append 0.9
+g5-zmain-k8 lotto 32 (n=2): thread principale 35.7 µs/record [35.5, 35.9], processo capo 43.7, repliche 31.6, record/s 12047, main core 0.43, byte/record grezzi 3109 sul filo 850, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 29.6, invio_repliche 8.9, invio_disco 1.1, risposte_append 1.1
+g5-zmain-k8 lotto 64 (n=2): thread principale 37.4 µs/record [36.0, 38.9], processo capo 45.7, repliche 34.0, record/s 10925, main core 0.41, byte/record grezzi 3116 sul filo 850, ignoti 0 rifiuti 0 conflitti 0
+    cronometro (µs di orologio per record, mediana): commit 30.7, invio_repliche 9.5, invio_disco 1.4, risposte_append 1.0

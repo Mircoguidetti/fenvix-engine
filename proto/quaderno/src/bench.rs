@@ -1115,8 +1115,34 @@ pub fn json_doc(target: usize) -> Bytes {
     Bytes::from(s)
 }
 
-pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, secs: u64, warm: u64, keys: usize, val: usize, dbs: u64) {
+/// Record "vero" (giro 5, prova del tetto): un inserimento MongoDB in una collezione con `keys - 1` indici
+/// secondari. Chiave 0 = il documento (JSON da circa 1 KB, come nel giro 4); chiavi 1.. = voci d'indice
+/// `ix/<indice>/<valore>/<_id>` con valore corto (12 byte, l'_id). STIMATO realistico: non è un campione di clienti.
+pub fn real_record(keys: usize) -> Vec<Write> {
+    use rand::Rng;
+    let mut g = rand::thread_rng();
+    let id = format!("{:024x}", g.gen::<u128>() & ((1u128 << 96) - 1));
+    let mut w = Vec::with_capacity(keys);
+    // documenti presi da una scorta di 8.192 già pronti: generarli al volo costava al generatore più CPU di quanta ne
+    // abbia la macchina da 2 vCPU a 25.000 record/s. Il capo non vede differenza (byte e chiavi uguali).
+    static POOL: std::sync::OnceLock<Vec<Bytes>> = std::sync::OnceLock::new();
+    let pool = POOL.get_or_init(|| (0..8192).map(|_| json_doc(1024)).collect());
+    w.push(Write { key: doc_key(&id), kind: Kind::Put, val: pool[g.gen_range(0..pool.len())].clone() });
+    for i in 1..keys {
+        let v = match i % 4 {
+            1 => format!("{:024x}", g.gen::<u128>() & ((1u128 << 96) - 1)), // userId
+            2 => format!("2026-{:02}-{:02}T{:02}:{:02}", g.gen_range(1..13), g.gen_range(1..29), g.gen_range(0..24), g.gen_range(0..60)), // createdAt
+            3 => WORDS[g.gen_range(0..WORDS.len())].to_string(), // status
+            _ => format!("{}", g.gen_range(0..100_000)), // amount, zip, ...
+        };
+        w.push(Write { key: Bytes::from(format!("ix/{i}/{v}/{id}")), kind: Kind::Put, val: Bytes::from(id.clone().into_bytes()).slice(..12) });
+    }
+    w
+}
+
+pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, secs: u64, warm: u64, keys: usize, val: usize, dbs: u64, real: bool) {
     // val = 0: documenti JSON da circa 1 KB invece di un valore fisso (prova della compressione)
+    // real: record "vero" (un documento + voci d'indice, giro 5)
     let json = val == 0;
     let stop = Arc::new(AtomicBool::new(false));
     let measuring = Arc::new(AtomicBool::new(false));
@@ -1137,9 +1163,13 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
                 let cs: Vec<CommitReq> = (0..batch)
                     .map(|_| {
                         let db = db_id(rand::random::<u64>() % dbs);
-                        let writes = (0..keys)
-                            .map(|_| Write { key: doc_key(&format!("{:016x}", rand::random::<u64>())), kind: Kind::Put, val: if json { json_doc(1024) } else { value.clone() } })
-                            .collect();
+                        let writes = if real {
+                            real_record(keys)
+                        } else {
+                            (0..keys)
+                                .map(|_| Write { key: doc_key(&format!("{:016x}", rand::random::<u64>())), kind: Kind::Put, val: if json { json_doc(1024) } else { value.clone() } })
+                                .collect()
+                        };
                         CommitReq { txn: txn_id(), db, read_pos: rp, mode: Mode::Validated, writes, reads: vec![], session: None }
                     })
                     .collect();
@@ -1180,7 +1210,7 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
     let n = ok.load(Relaxed) as f64;
     println!(
         "{}",
-        json!({"bench": "lotti", "rate": rate, "batch": batch, "clients": clients, "keys_per_rec": keys, "val_bytes": val, "dbs": dbs,
+        json!({"bench": "lotti", "rate": rate, "batch": batch, "clients": clients, "keys_per_rec": keys, "val_bytes": val, "dbs": dbs, "real": real,
                "secs": el, "recs_per_s": n / el, "latency": hj(&h.lock()), "conflicts": conf.load(Relaxed),
                "unknown": unk.load(Relaxed), "rejected": rej.load(Relaxed), "diag": cl.diag.json()})
     );

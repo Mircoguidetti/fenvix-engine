@@ -6,6 +6,8 @@ le altre due repliche e il generatore sul core 1. Carico fisso a ciclo aperto (R
 si misura per SAMPLE secondi la CPU del processo del capo e del suo thread principale (da /proc) e i record confermati
 (commit_index del capo): µs di CPU del capo per record.
 
+Giro 5: PQ_REAL=1 record "veri" (documento + voci d'indice), PQ_ZSTD_MAIN=1 compressione sul thread principale.
+
 Uso: lotti.py OUT RATE "1,16,32" "64,256" REPS [KEYS] [VAL] [extra args per le repliche via env PQ_*]
 """
 import json, os, subprocess, sys, time
@@ -16,7 +18,8 @@ hz = os.sysconf('SC_CLK_TCK')
 out, rate, batches, clients, reps = sys.argv[1], float(sys.argv[2]), [int(x) for x in sys.argv[3].split(',')], [int(x) for x in sys.argv[4].split(',')], int(sys.argv[5])
 keys = int(sys.argv[6]) if len(sys.argv) > 6 else 1
 val = int(sys.argv[7]) if len(sys.argv) > 7 else 200
-WARM, SECS, SAMPLE = 6, 20, 12
+WARM, SAMPLE = int(os.environ.get('PQ_WARM', 6)), int(os.environ.get('PQ_SAMPLE', 12))
+SECS = SAMPLE + 8  # giro 5: regolabili (PQ_WARM, PQ_SAMPLE) per misurare a regime, con la potatura della finestra attiva
 os.makedirs(out, exist_ok=True)
 
 
@@ -38,33 +41,44 @@ res = []
 for rep in range(reps):
     for b in batches:
         for c in clients:
-            subprocess.run(['python3', os.path.join(HERE, 'cluster.py'), 'up', '--fresh', '--no-proxy', '--mem-cap-mb', '2048'], capture_output=True)
+            subprocess.run(['python3', os.path.join(HERE, 'cluster.py'), 'up', '--fresh', '--no-proxy', '--mem-cap-mb', os.environ.get('PQ_MEMCAP', '2048'), '--window-ms', os.environ.get('PQ_WINDOW_MS', '60000')], capture_output=True)
+            if os.environ.get('PQ_FLUSHER', '0') == '1':
+                # giro 5: scaricatore acceso, così la finestra si pota davvero (senza, niente va su S3 e la RAM cresce)
+                subprocess.run(['python3', os.path.join(HERE, 'cluster.py'), 'minio-up'], capture_output=True)
+                subprocess.run(['python3', os.path.join(HERE, 'cluster.py'), 'flusher-up', '--age-ms', os.environ.get('PQ_FLUSH_AGE_MS', '2000'), '--interval-ms', '1000'], capture_output=True)
             pids = json.load(open(os.path.join(WORK, 'pids.json')))
             st = status()
             lid = [s['id'] for s in st if s['role'] == 'Leader'][0]
             lp = pids[f'r{lid}']
             for k, v in pids.items():
-                if k.startswith('r') or k == 'proxy':
+                if k.startswith('r') or k in ('proxy', 'flusher', 'minio'):
                     pin(v, 0 if v == lp else 1)
-            gen = subprocess.Popen(['taskset', '-c', '1', PQ, 'lotti', '--rate', str(rate), '--batch', str(b), '--clients', str(c), '--conns', str(min(c, 256)),
-                                    '--secs', str(SECS), '--warm', str(WARM), '--keys', str(keys), '--val', str(val)], stdout=subprocess.PIPE, text=True)
+            gen = subprocess.Popen(['nice', '-n', os.environ.get('PQ_GEN_NICE', '0'), 'taskset', '-c', '1', PQ, 'lotti', '--rate', str(rate), '--batch', str(b), '--clients', str(c), '--conns', str(min(c, 256)),
+                                    '--secs', str(SECS), '--warm', str(WARM), '--keys', str(keys), '--val', str(val), '--real', os.environ.get('PQ_REAL', '0')], stdout=subprocess.PIPE, text=True)
             time.sleep(WARM + 3)
-            s0 = [s for s in status() if s['id'] == lid][0]
+            s0 = [s for s in status() if s.get('id') == lid][0]
             ci0 = s0['commit_index']
             p0, t0 = cpu(f'/proc/{lp}/stat'), cpu(f'/proc/{lp}/task/{lp}/stat')
             f0 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
             w0 = time.time()
             time.sleep(SAMPLE)
-            s1 = [s for s in status() if s['id'] == lid][0]
+            s1 = [s for s in status() if s.get('id') == lid][0]
             ci1 = s1['commit_index']
             p1, t1 = cpu(f'/proc/{lp}/stat'), cpu(f'/proc/{lp}/task/{lp}/stat')
             f1 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
             el = time.time() - w0
-            g = json.loads(gen.communicate()[0].strip().splitlines()[-1])
             n = ci1 - ci0
-            r = {'rep': rep, 'batch': b, 'clients': c, 'rate': rate, 'keys': keys, 'val': val, 'recs_sampled': n, 'recs_per_s_sampled': n / el,
+            g = json.loads(gen.communicate()[0].strip().splitlines()[-1])
+            def crono(st):
+                try:
+                    return {k: v['tot_ms'] for k, v in json.loads(st['diag'])['cronometro'].items()}
+                except Exception:
+                    return {}
+            c0, c1 = crono(s0), crono(s1)
+            ms = {s['id']: s.get('mem_used') for s in status() if 'id' in s}
+            r = {'rep': rep, 'mem_used_bytes': ms, 'window_ms': os.environ.get('PQ_WINDOW_MS', '60000'), 'flusher': os.environ.get('PQ_FLUSHER', '0'), 'crono_us_per_rec': {k: round((c1[k] - c0.get(k, 0)) * 1000 / max(n, 1), 2) for k in c1 if c1[k] - c0.get(k, 0) > 0}, 'batch': b, 'clients': c, 'rate': rate, 'keys': keys, 'val': val, 'recs_sampled': n, 'recs_per_s_sampled': n / el,
                  'leader_proc_us_per_rec': (p1 - p0) * 1e6 / max(n, 1), 'leader_main_us_per_rec': (t1 - t0) * 1e6 / max(n, 1),
-                 'leader_cores': (p1 - p0) / el, 'follower_us_per_rec': {k: (f1[k] - f0[k]) * 1e6 / max(n, 1) for k in f0},
+                 'leader_cores': (p1 - p0) / el, 'leader_main_cores': (t1 - t0) / el, 'real': os.environ.get('PQ_REAL', '0'), 'zstd_main': os.environ.get('PQ_ZSTD_MAIN', '0'), 'follower_us_per_rec': {k: (f1[k] - f0[k]) * 1e6 / max(n, 1) for k in f0},
                  'zstd': os.environ.get('PQ_ZSTD', '0'),
                  'repl_raw_bytes_per_rec': (s1.get('repl_raw', 0) - s0.get('repl_raw', 0)) / max(n, 1),
                  'repl_sent_bytes_per_rec': (s1.get('repl_sent', 0) - s0.get('repl_sent', 0)) / max(n, 1),
