@@ -34,7 +34,8 @@
 (*  ScartaAnnunciVecchi   il cameriere butta i toccati degli annunci con    *)
 (*                        confermataLocale piu' bassa di cio' che sa        *)
 (*  FotoSostituisce       alla nuova iscrizione la fotografia sostituisce i *)
-(*                        fatti invece di unirsi                            *)
+(*                        database e le chiavi toccati invece di unirsi     *)
+(*                        (sapereFinoA resta il massimo)                    *)
 (*  SMinoreDiM            non si applica S := max(S, M)                     *)
 (*  CapoNuovoSenzaAnnunci le voci nuove scritte al posto di voci troncate   *)
 (*                        (cambio di capo) non vengono riannunciate         *)
@@ -160,7 +161,7 @@ Subscribe(r) ==
          photo == [d \in Dbs |-> IF FotoSenzaM THEN LastOn(r, d, from) ELSE Max2(LastOn(r, d, from), Mdb[d])]
      IN /\ ultima' = [d \in Dbs |-> IF FotoSostituisce THEN photo[d] ELSE Max2(ultima[d], photo[d])]
         /\ toccate' = [k \in Keys |-> IF FotoSostituisce THEN photo[DbOf[k]] ELSE Max2(toccate[k], photo[DbOf[k]])]
-        /\ sapere' = IF FotoSostituisce THEN commit[r] ELSE Max2(sapere, commit[r])
+        /\ sapere' = Max2(sapere, commit[r])
   /\ sub' = r
   /\ ann' = Len(log[r])
   /\ UNCHANGED vars

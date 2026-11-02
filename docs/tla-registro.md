@@ -224,8 +224,8 @@ Controlli negativi (MISURATO):
 
 ## 4. Che cosa NON è coperto
 
-- Sessioni e scritture ritentabili oltre la finestra di 60 s (passo 5): mostrato il buco con
-  `RetryBeyondWindow`, non modellata la chiusura.
+- (Corretto al giro 2: la chiusura delle sessioni è modellata, vedi `ValidatingLog-sessioni` nella
+  sezione 2 e `LettureScarico-sessioni` nella sezione 5.)
 - Cambio dell'insieme delle repliche e rientro di una replica che ha perso il disco: nel modello la
   perdita è permanente.
 - Rete esplicita: la replicazione è modellata come copia atomica di una voce dopo il prefisso comune
@@ -242,3 +242,119 @@ Controlli negativi (MISURATO):
   di leader, 1 perdita, 2 letture, 2 worker. Nessuna garanzia oltre questi limiti.
 - Il modello RetryBeyondWindow e i quattro modelli con `MaxEpoch = 1` o `MaxReads = 0` sono ridotti
   rispetto al base per trovare il controesempio in tempi brevi: lo dicono le rispettive configurazioni.
+
+## 5. Giro 2 (1–2 novembre 2026): correzioni del revisore, disco, bollettino
+
+Sessione nuova al posto di S1, sulle correzioni di `fenvix-brain/sessions/2026-11-01-revisore-s1/`.
+Macchina: 2 core, 7 GB di RAM (MISURATO), metà di quella del primo giro: i modelli sono più piccoli.
+TLC `tla2tools.jar` v1.8.0, Java 21, 2 worker, heap 5 GB. Tutti i numeri qui sotto sono MISURATI
+dagli output in `tla-registro/output/`, salvo dove è scritto STIMATO.
+
+### 5.1 Che cosa è cambiato nelle specifiche
+
+`ValidatingLog.tla`:
+
+- **APPEND con `posPrecedente` qualsiasi** (opzione `OldPrev`): `Replicate(l, f, p, n)` con `p` sotto
+  il punto in cui i log combaciano e `n` in 0..1 (`n = 0` è il battito; il vecchio `Heartbeat` è
+  sparito). Il seguace tronca solo dal primo conflitto e **tiene la propria coda** se le voci ricevute
+  combaciano: è la semplificazione del primo giro (coda sempre troncata) che nascondeva l'errore di
+  §5.3 punto 6. La confermata del seguace è `min(confermata, p + n)` (regola di Raft).
+- **`diskStart`** per replica (inizioDisco): le voci sotto restano nella sequenza solo come
+  (posizione, epoca), come lo snapshot di Raft; il leader non manda voci sotto il proprio `diskStart`.
+- **Finestra dei seguaci che avanza** (opzione `FollowerWindow`).
+- `Submit` diviso in `SubmitAt(l, t, s, seen)`, così che `LettureScarico` possa dare la `S` e la lettura
+  della chiave di sessione da una lettura vera.
+- Controlli negativi nuovi: `CommitByTail`, `ValidateCommittedOnly`, `RebuildCommittedOnly`,
+  `CommitOldEpoch`.
+
+`LettureScarico.tla`:
+
+- `TrimR(r)`: la replica cancella dal disco fino a `manifest.pos + 1`, mai sopra la propria finestra.
+  `Reload(f)`: la ricarica da S3 di un seguace rimasto sotto l'`inizioDisco` del leader.
+- La replica serve **dal disco** (`potatoFinoA = inizioDisco`), e restituisce comunque solo ciò che ha
+  (le voci sotto `diskStart` non ci sono più): così la guardia è messa alla prova davvero.
+- `LinRead(c, l)`: la lettura lineare del revisore, con la regola "solo se `pronto`".
+- `SubmitFromRead` (opzione `ReadPrepared`): la `S` di ogni scrittura è quella di una lettura composta
+  servita davvero, e la chiave di sessione si legge con la stessa lettura (scatole della vista più
+  quaderno), non con l'oracolo; la lettura deve essere esatta (`readOk`).
+- Invarianti nuove: `DurableOrS3` (al posto di `Durability`), `ReadServable`, `TokenConfirmed`,
+  `NothingLost` riscritta per replica.
+- Controlli negativi nuovi: `ServeRamOnly`, `NoServeGuard`, `LinNotReady`.
+
+`Bollettino.tla` (nuovo, sopra `ValidatingLog`): 2 database con il loro `M`, scarico astratto (la
+correttezza dello scarico è già in `LettureScarico`), disco che si svuota fino alla prima voce non
+scaricata, ricarica da S3, riavvio di una replica (confermataLocale a 0), un cameriere che si iscrive
+(fotografia da finestra **e** disco, più `M` del database), riceve gli annunci voce per voce e la
+confermata solo fino a ciò che ha annunciato, si stacca, adotta manifest nuovi potando le chiavi per
+posizione, e legge senza chiedere al quaderno. Invarianti: `ReadsCorrect` (la lettura senza domanda dà
+lo stesso risultato della lettura completa alla stessa `S`), `BollettinoVero`, `ChiaviVere`,
+`SapereConfermato`, `NothingLost`, `StableOrder`.
+
+### 5.2 Controlli negativi (ognuno con una sola regola rotta; tutti trovati)
+
+Revisore della specifica (i suoi 1–4 e 6, più `CommitOldEpoch`):
+
+- `CommitByTail` (§5.3 punto 6 del primo giro): `StableOrder` violata in 1 s, 73 stati distinti,
+  traccia di 6 stati. r1 eletto (epoca 1) scrive la barriera solo su sé; r2 eletto con r3 (epoca 2)
+  conferma la propria barriera alla stessa posizione 1; manda a r1 un battito con `posPrecedente = 0`;
+  r1 prende `min(1, 1) = 1` e crede confermata la propria voce dell'epoca 1, mai confermata.
+- `ValidateCommittedOnly`: `NoConflictingCommits` violata in 2 s, 4.602 stati distinti.
+- `RebuildCommittedOnly`: `NoDuplicateIds` violata in 7 s, 52.907 stati distinti.
+- `LinNotReady`: `ReadsCorrect` violata in 2 s, 2.617 stati distinti: un capo appena eletto, non ancora
+  pronto, risponde a `POSIZIONE` con una confermata più bassa di una scrittura già confermata al client.
+- `ServeRamOnly` (`potatoFinoA = inizioFinestra - 1`): `ReadServable` violata in 3 s, 4.045 stati
+  distinti: tutte le finestre superano `M` senza scarico, nessuno serve più il database.
+- `CommitOldEpoch`: con 4 epoche `LeaderCompleteness` violata in meno di 1 s, 161 stati distinti; con 3
+  epoche **non trovata**: modello `ValidatingLog-commitoldepoch3` COMPLETO senza violazioni, 589.806
+  stati distinti, profondità 30, 2 min 58 s. È la misura che serve un modello con 4 epoche.
+
+Nuovi del giro 2:
+
+- `NoServeGuard` (la replica serve anche se ha già cancellato dal disco parte di `(M, S]`):
+  `ReadsCorrect` violata in 57 s, 196.997 stati distinti. Un cameriere con un manifest vecchio (`M = 0`)
+  legge da una replica che ha già cancellato fino a 2: la lettura salta la scrittura 2.
+- `ReadPrepared` con `NoServeGuard`: `ReadsCorrect` violata in 3 s (la `S` della scrittura viene da una
+  lettura sbagliata).
+- `LettureScarico-sessioni-senza` (stessa configurazione di `LettureScarico-sessioni` ma senza la
+  lettura della chiave di sessione): `NoDuplicateIds` violata in 15 s, 58.238 stati distinti. Serve a
+  mostrare che il modello delle sessioni con la lettura vera vede il buco.
+
+Bollettino (i sei del revisore di letture e affinità, più tre del revisore della specifica):
+
+- `FattoSottoS`: `ReadsCorrect` violata in 2 s, 5.480 stati distinti.
+- `AnnuncioDopoConferma`: `BollettinoVero` violata in 6 s, 33.784 stati distinti.
+- `FotografiaSoloFinestra` (errore 1 del revisore): `BollettinoVero` violata in 12 s, 95.465 stati.
+- `FotoSenzaM` (fotografia che non dice fino a dove il database è scaricato, al posto di
+  `FotografiaDopoTrim`): `BollettinoVero` violata in 1 min 39 s, 966.399 stati distinti.
+- `SvuotaChiaviAlManifest` (errore 2): `ChiaviVere` violata in 10 s, 97.850 stati distinti.
+- `ScartaAnnunciVecchi` (errore 3, con il riavvio della replica): `BollettinoVero` violata in 28 s,
+  87.161 stati distinti (modello ridotto: 1 transazione, nessun cambio di capo).
+- `FotoSostituisce` (`RiavvioReplica`: alla nuova iscrizione la fotografia sostituisce i toccati invece
+  di unirsi): `BollettinoVero` violata in 2 s, 3.410 stati distinti. Nota: se la fotografia sostituisce
+  **anche** `sapereFinoA` (lo abbassa a quello della replica nuova), il modello ridotto è COMPLETO senza
+  violazioni (885.336 stati distinti, 7 min 56 s; output non conservato, sovrascritto dalla corsa
+  successiva): l'errore vero è mescolare fatti nuovi con un `sapereFinoA` vecchio.
+- `SMinoreDiM` (correzione 7): `ReadsCorrect` violata in 6 s, 9.455 stati distinti.
+- `CapoNuovoSenzaAnnunci`: RISULTATO_CAPONUOVO
+
+### 5.3 Modelli completi e limitati
+
+RISULTATI_POSITIVI
+
+### 5.4 Che cosa resta non coperto
+
+- La rete esplicita (messaggi persi, duplicati, in ritardo): il giro 2 aggiunge il caso che conta di
+  più, il battito con `posPrecedente` vecchio, ma resta una copia atomica.
+- Riconfigurazione dei membri e rimpiazzo della copia caduta; spostamento di un database tra registri;
+  transazioni tra registri (fuori al lancio); raccolta di famiglia dei rami e taglio coordinato.
+- Liveness: niente. `ReadServable` è solo la forma di invariante del "le letture si possono servire".
+- Orologio ibrido: il modello usa gli indici; la regola "indice e posizione crescono insieme"
+  (`docs/protocollo.md` §2) è ciò che rende valide le prove anche per le posizioni.
+- Tetto di memoria, cantina, freno, scarico per pressione o d'emergenza: sono regole di disponibilità;
+  nel modello sono coperte solo in quanto lo scarico e la cancellazione dal disco possono avvenire in
+  qualunque momento (ogni cadenza è un comportamento del modello) e la cantina è un indice di ciò che è
+  già sul disco.
+- Il bollettino con la strada dei metadati (correzione 8), la regola `T_max` (tempo), il livello 3
+  (copia della finestra).
+- Le voci degli indici non unici ricalcolate dai documenti (`docs/protocollo.md` §4.7): prosa, non
+  modello.
