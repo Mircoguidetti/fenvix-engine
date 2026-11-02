@@ -33,7 +33,7 @@ fn hj(h: &Histogram<u64>) -> serde_json::Value {
     json!({"n": h.len(), "p50_us": h.value_at_quantile(0.5), "p90_us": h.value_at_quantile(0.9), "p99_us": h.value_at_quantile(0.99),
            "p999_us": h.value_at_quantile(0.999), "max_us": h.max()})
 }
-fn doc_key(s: &str) -> Bytes {
+pub fn doc_key(s: &str) -> Bytes {
     Bytes::from(format!("doc/{s}"))
 }
 
@@ -177,6 +177,8 @@ pub struct MixedCfg {
     /// ogni scrittura confermata sia arrivata su S3
     pub witness_rate: f64,
     pub witness_out: String,
+    /// primo numero dei testimoni (prova-zone: un secondo carico non deve riusare le chiavi del primo)
+    pub witness_start: u64,
 }
 
 pub const WITNESS_DB: u64 = 777_777_777;
@@ -213,7 +215,8 @@ struct MixedState {
     /// commit rifiutati dal freno fino alla scadenza; commit confermati dopo almeno un "ritenta" del freno
     rejected: AtomicU64,
     slowed: AtomicU64,
-    witness: Mutex<Vec<(u64, Pos)>>,
+    /// (numero, posizione, istante della conferma in ms dall'epoca)
+    witness: Mutex<Vec<(u64, Pos, u64)>>,
     witness_unknown: AtomicU64,
     /// chiavi scritte di recente, impacchettate (db << 32 | numero del documento), senza lock
     recent: Vec<AtomicU64>,
@@ -472,7 +475,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     }
     {
         let st2 = st.clone();
-        let seq = Arc::new(AtomicU64::new(0));
+        let seq = Arc::new(AtomicU64::new(c.witness_start));
         hs.push(open_loop(c.witness_rate, stop.clone(), move |_sched| {
             let st = st2.clone();
             let n = seq.fetch_add(1, Relaxed);
@@ -487,7 +490,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
                     session: None,
                 };
                 match st.cl.commit(&c, Duration::from_secs(30)).await {
-                    Outcome::Committed { pos, .. } => st.witness.lock().push((n, pos)),
+                    Outcome::Committed { pos, .. } => st.witness.lock().push((n, pos, now_ms())),
                     Outcome::Rejected(_) => {}
                     _ => {
                         st.witness_unknown.fetch_add(1, Relaxed);
@@ -544,8 +547,8 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     );
     if !c.witness_out.is_empty() {
         let mut f = std::io::BufWriter::new(std::fs::File::create(&c.witness_out).unwrap());
-        for (n, p) in st.witness.lock().iter() {
-            writeln!(f, "{n},{p}").unwrap();
+        for (n, p, t) in st.witness.lock().iter() {
+            writeln!(f, "{n},{p},{t}").unwrap();
         }
     }
 }

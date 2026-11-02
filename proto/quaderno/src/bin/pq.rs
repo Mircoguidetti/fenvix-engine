@@ -91,6 +91,18 @@ fn main() -> anyhow::Result<()> {
                 disk_hard: a.u("disk-hard-mb", 0) << 20,
                 disk_ro: a.u("disk-ro-mb", 0) << 20,
                 alarm_s: a.u("alarm-s", 120),
+                copy: if a.0.contains_key("copy-s3") {
+                    Some(quaderno::copia::CopyCfg {
+                        endpoint: a.s("copy-s3", ""),
+                        bucket: a.s("copy-bucket", "pq-sst"),
+                        prefix: a.s("copy-prefix", "cella"),
+                        interval_ms: a.u("copy-ms", 1000),
+                        max_bytes: a.u("copy-max-mb", 8) << 20,
+                        alarm_ms: a.u("copy-alarm-ms", 5000),
+                    })
+                } else {
+                    None
+                },
             })?;
         }
         "proxy" => {
@@ -125,6 +137,7 @@ fn main() -> anyhow::Result<()> {
                     read_lag_ms: a.u("read-lag-ms", 5),
                     witness_rate: a.f("witness-rate", 0.0),
                     witness_out: a.s("witness-out", ""),
+                    witness_start: a.u("witness-start", 0),
                 },
             ));
         }
@@ -178,6 +191,24 @@ fn main() -> anyhow::Result<()> {
         "check-sst" => {
             let r = rt(2);
             let v = r.block_on(flusher::check_sst(&a.s("s3", "http://127.0.0.1:9000"), &a.s("bucket", "pq-sst"), a.u("groups", 16), bench::db_id(a.u("db", bench::WITNESS_DB)), &a.s("witness", "witness.csv")))?;
+            println!("{v}");
+        }
+        "ripristina" => {
+            let r = rt(2);
+            let v = r.block_on(quaderno::copia::ripristina(quaderno::copia::RestoreCfg {
+                endpoint: a.s("s3", "http://127.0.0.1:9000"),
+                bucket: a.s("bucket", "pq-sst"),
+                prefix: a.s("prefix", "cella"),
+                groups: a.u("groups", 16),
+                dirs: a.s("dirs", "").split(',').filter(|x| !x.is_empty()).map(std::path::PathBuf::from).collect(),
+                seg_bytes: a.u("seg-mb", 64) << 20,
+            }))?;
+            println!("{v}");
+        }
+        "check-zona" => {
+            let r = rt(2);
+            let v = r.block_on(quaderno::copia::check_zona(cluster(&a), &a.s("s3", "http://127.0.0.1:9000"), &a.s("bucket", "pq-sst"), a.u("groups", 16),
+                &a.s("witness", "witness.csv"), a.u("kill-ms", 0), a.u("window-ms", 1500), a.u("buco-pos", 0)))?;
             println!("{v}");
         }
         "status" => {

@@ -14,6 +14,11 @@ Cartella di lavoro: $PQ_WORK (default /root/pq-work), fuori dal repository.
   cluster.py heal
   cluster.py minio-up | minio-down | minio-stop | minio-cont
   cluster.py flusher-up [args...] | flusher-down
+  prova-zone:
+  cluster.py up ... --copy [--copy-ms N]   copia del quaderno su S3 (attraverso la rotta s3 del proxy, porta 9100)
+  cluster.py zone-kill        SIGKILL di tutte e 3 le repliche e dello scaricatore, poi cancellazione delle cartelle
+  cluster.py restore          ripristino da zero in cartelle nuove (pq ripristina), poi avvio delle 3 repliche
+  cluster.py s3 pass|blackhole|delay MS   stato della rotta s3 del proxy (copia e scaricatore passano da lì)
 """
 import json, os, signal, subprocess, sys, time, socket
 
@@ -32,6 +37,8 @@ def routes():
                 r.append({'name': f'r{a}->r{b}', 'listen': f'127.0.0.1:{7300 + 10 * a + b}', 'target': f'127.0.0.1:{7100 + b}'})
     for i in range(N):
         r.append({'name': f'c->r{i}', 'listen': f'127.0.0.1:{7400 + i}', 'target': f'127.0.0.1:{7200 + i}'})
+    # prova-zone: S3 dietro il proxy, per renderlo lento o irraggiungibile
+    r.append({'name': 's3', 'listen': '127.0.0.1:9100', 'target': '127.0.0.1:9000'})
     return r
 
 
@@ -81,7 +88,8 @@ def replica_args(i, cfg):
             '--client-listen', f'127.0.0.1:{7200 + i}', '--peers', peers, '--mem-cap-mb', str(cfg.get('mem_cap_mb', 4096)),
             '--window-ms', str(cfg.get('window_ms', 60000)), '--disk-soft-mb', str(cfg.get('disk_soft_mb', 0)),
             '--disk-hard-mb', str(cfg.get('disk_hard_mb', 0)), '--disk-ro-mb', str(cfg.get('disk_ro_mb', 0)),
-            '--alarm-s', str(cfg.get('alarm_s', 120))]
+            '--alarm-s', str(cfg.get('alarm_s', 120))] + (
+            ['--copy-s3', 'http://127.0.0.1:9100', '--copy-ms', str(cfg.get('copy_ms', 1000))] if cfg.get('copy') else [])
 
 
 def start_replica(i):
@@ -138,7 +146,7 @@ def main():
         cfg = {'mem_cap_mb': int(opt(a, '--mem-cap-mb', 4096)), 'window_ms': int(opt(a, '--window-ms', 60000)),
                'disk_soft_mb': int(opt(a, '--disk-soft-mb', 0)), 'disk_hard_mb': int(opt(a, '--disk-hard-mb', 0)),
                'disk_ro_mb': int(opt(a, '--disk-ro-mb', 0)), 'alarm_s': int(opt(a, '--alarm-s', 120)),
-               'no_proxy': '--no-proxy' in a}
+               'no_proxy': '--no-proxy' in a, 'copy': '--copy' in a, 'copy_ms': int(opt(a, '--copy-ms', 1000))}
         p = {'cfg': cfg}
         save(p)
         json.dump(routes(), open(os.path.join(WORK, 'routes.json'), 'w'))
@@ -177,6 +185,44 @@ def main():
         ctl(m)
     elif cmd == 'heal':
         ctl(base_ctl())
+    elif cmd == 'zone-kill':
+        p = pids()
+        for k in ['r0', 'r1', 'r2', 'flusher']:
+            if k in p:
+                try:
+                    os.kill(p[k], signal.SIGCONT)
+                    os.kill(p[k], signal.SIGKILL)
+                except Exception:
+                    pass
+        # istante della morte (ms dall'epoca), dopo l'ultimo SIGKILL
+        print(int(time.time() * 1000))
+        time.sleep(0.3)
+        # la zona è morta: anche i dischi (cartelle del registro e della dispensa) spariscono
+        for i in range(N):
+            subprocess.run(['rm', '-rf', os.path.join(WORK, f'r{i}')])
+    elif cmd == 'restore':
+        dirs = ','.join(os.path.join(WORK, f'r{i}') for i in range(N))
+        t0 = time.time()
+        out = subprocess.run([PQ, 'ripristina', '--s3', 'http://127.0.0.1:9100', '--dirs', dirs], capture_output=True, text=True)
+        print(out.stdout.strip())
+        if out.returncode != 0:
+            print(out.stderr, file=sys.stderr)
+            sys.exit(1)
+        t1 = time.time()
+        for i in range(N):
+            start_replica(i)
+        l = leader()
+        print(json.dumps({'ripristino_s': round(t1 - t0, 3), 'repliche_e_capo_s': round(time.time() - t1, 3), 'capo': l}))
+    elif cmd == 's3':
+        m = base_ctl()
+        mode = a[1]
+        if mode == 'delay':
+            m['s3'] = {'mode': 'pass', 'delay_ms': int(a[2])}
+        else:
+            m['s3'] = {'mode': mode}
+        bc = dict(m)
+        json.dump(bc, open(os.path.join(WORK, 'base_ctl.json'), 'w'))
+        ctl(m)
     elif cmd == 'minio-up':
         p = pids()
         os.makedirs(os.path.join(WORK, 'minio'), exist_ok=True)

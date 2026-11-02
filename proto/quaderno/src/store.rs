@@ -24,7 +24,7 @@ pub enum DiskOp {
     Truncate { seg: u32, off: u64 },
     Delete { seg: u32 },
     /// scrivi il checkpoint (con le posizioni su S3 lette ora dalla finestra), poi cancella questi segmenti
-    CkptDelete { prev_index: u64, prev_term: u64, prev_pos: Pos, segs: Vec<u32> },
+    CkptDelete { prev_index: u64, prev_term: u64, prev_pos: Pos, copied: u64, segs: Vec<u32> },
 }
 
 pub fn seg_path(dir: &Path, seg: u32) -> PathBuf {
@@ -184,9 +184,9 @@ pub fn spawn_disk(
                         DiskOp::Delete { seg } => {
                             let _ = std::fs::remove_file(seg_path(&dir, seg));
                         }
-                        DiskOp::CkptDelete { prev_index, prev_term, prev_pos, segs } => {
+                        DiskOp::CkptDelete { prev_index, prev_term, prev_pos, copied, segs } => {
                             // le posizioni su S3 lette adesso sono ≥ di quelle valide al momento della richiesta: vanno bene
-                            let ck = Ckpt { prev_index, prev_term, prev_pos, flushed: flushed().into_iter().map(|(d, p)| (hex(&d), p)).collect() };
+                            let ck = Ckpt { prev_index, prev_term, prev_pos, flushed: flushed().into_iter().map(|(d, p)| (hex(&d), p)).collect(), copied };
                             write_atomic(&dir, "ckpt", &serde_json::to_vec(&ck).unwrap()).expect("checkpoint");
                             // la cancellazione dei file (lenta con il `discard` del disco: ~1,4 s per 64 MB) va su un
                             // thread a parte, altrimenti ferma i fdatasync e quindi i commit
@@ -309,6 +309,9 @@ pub struct Ckpt {
     pub prev_pos: Pos,
     /// (db esadecimale, posizione su S3)
     pub flushed: Vec<(String, Pos)>,
+    /// prova-zone: indice fino al quale il registro è copiato su S3 (voce `Copiato` confermata)
+    #[serde(default)]
+    pub copied: u64,
 }
 
 pub fn hex(b: &[u8]) -> String {
