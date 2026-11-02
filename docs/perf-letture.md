@@ -49,7 +49,7 @@ Ogni comando leggeva da SlateDB tre chiavi di metadati oltre al documento: `meta
 
 ### Test
 
-`ctl-tests/test_30_metadata_cache.py`, 10 test: ognuno prima legge (la cache tiene i metadati vecchi), poi cambia collezioni, indici o opzioni, poi controlla la lettura successiva. Casi: indice creato e poi usato con `hint`; indice cancellato; 15 giri di crea/cancella con un secondo client; collezione cancellata e sostituita da una vista con lo stesso nome; collezione ricreata senza la sua collation; `collMod` con validatore; `renameCollection` che porta con sé gli indici; `dropDatabase`; chiusura per inattività e riapertura; un secondo processo che prende il database mentre il primo è fermo oltre il suo lease, crea un indice e lo restituisce.
+`ctl-tests/test_33_metadata_cache.py`, 10 test: ognuno prima legge (la cache tiene i metadati vecchi), poi cambia collezioni, indici o opzioni, poi controlla la lettura successiva. Casi: indice creato e poi usato con `hint`; indice cancellato; 15 giri di crea/cancella con un secondo client; collezione cancellata e sostituita da una vista con lo stesso nome; collezione ricreata senza la sua collation; `collMod` con validatore; `renameCollection` che porta con sé gli indici; `dropDatabase`; chiusura per inattività e riapertura; un secondo processo che prende il database mentre il primo è fermo oltre il suo lease, crea un indice e lo restituisce.
 
 Controlli negativi (MISURATO): con un binario che non svuota la cache in `apply_mode` falliscono 9 test su 10; con un binario che non la svuota alla riapertura fallisce il test del secondo processo. Con il binario vero passano tutti e 10.
 

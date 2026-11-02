@@ -38,4 +38,4 @@ test_26_drop_forgets: 3 passed in 350.85s (0:05:50)
 test_27_memory_per_write: 2 passed in 262.77s (0:04:22)
 test_28_bulk_insert_stall: 1 passed in 14.35s
 test_29_compat_data_bugs: 10 passed in 2.37s
-test_30_metadata_cache: 10 passed in 30.35s
+test_33_metadata_cache: 10 passed in 30.35s
