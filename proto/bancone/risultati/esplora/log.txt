@@ -1,0 +1,8 @@
+    48 proto/bancone/risultati/esplora/cachelib.txt
+   905 proto/bancone/risultati/esplora/elenco.txt
+     0 proto/bancone/risultati/esplora/log.txt
+     8 proto/bancone/risultati/esplora/radice.txt
+    14 proto/bancone/risultati/esplora/radice_txt.txt
+   975 total
+durata_s 14
+4.0K	/home/runner/tracce
