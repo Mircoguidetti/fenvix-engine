@@ -473,6 +473,11 @@ impl Cameriere {
 
     /// Il database aperto (dall'LRU, o risvegliato). `true` se è stato risvegliato da questa chiamata.
     pub async fn apri(&self, idx: u64) -> anyhow::Result<(Arc<Aperto>, bool)> {
+        // prima l'LRU (chiave numerica), poi la riga dei conosciuti solo se serve un risveglio: così la lettura da
+        // un database aperto non tocca la mappa dei conosciuti (un milione di righe) e non costruisce il nome
+        if let Some(a) = self.aperti.lock().get(&idx) {
+            return Ok((a.clone(), false));
+        }
         let n = nome(idx);
         let db = *self.conosciuti.mappa.get(n.as_str()).context("database sconosciuto")?;
         // `atteso`: la lettura ha aspettato il risveglio fatto da un'altra (conta come lettura con risveglio)
@@ -575,11 +580,13 @@ pub fn scrivi_riga(f: &Option<PathBuf>, v: &serde_json::Value) {
 }
 
 pub fn perc(h: &hdrhistogram::Histogram<u64>) -> serde_json::Value {
-    serde_json::json!({ "n": h.len(), "p50_us": h.value_at_quantile(0.5), "p99_us": h.value_at_quantile(0.99), "p999_us": h.value_at_quantile(0.999), "max_us": h.max(), "media_us": (h.mean() * 10.0).round() / 10.0 })
+    // l'istogramma è in nanosecondi (3 cifre significative); qui in microsecondi con i decimali
+    let us = |x: u64| x as f64 / 1000.0;
+    serde_json::json!({ "n": h.len(), "p50_us": us(h.value_at_quantile(0.5)), "p99_us": us(h.value_at_quantile(0.99)), "p999_us": us(h.value_at_quantile(0.999)), "max_us": us(h.max()), "media_us": (h.mean() / 100.0).round() / 10.0 })
 }
 
 pub fn hist() -> hdrhistogram::Histogram<u64> {
-    hdrhistogram::Histogram::new_with_bounds(1, 120_000_000, 3).unwrap()
+    hdrhistogram::Histogram::new_with_bounds(1, 300_000_000_000, 3).unwrap()
 }
 
 /// Scomposizione (contata a mano, byte chiesti all'allocatore) di un database aperto, per sapere dove vanno i byte.

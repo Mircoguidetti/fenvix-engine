@@ -49,6 +49,10 @@ struct A {
     /// ritardo artificiale per GET (latenza di S3 Standard sopra il finto S3 locale)
     #[arg(long, default_value_t = 0)]
     ritardo_get_ms: u64,
+    /// il generatore scarta i ranghi oltre la capienza: si legge solo dai database già aperti (misura del costo di
+    /// conoscerne N senza i risvegli)
+    #[arg(long)]
+    solo_aperti: bool,
     #[arg(long, default_value = "milione")]
     bucket: String,
     #[arg(long)]
@@ -68,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
     st.ritardo_get = Duration::from_millis(a.ritardo_get_ms);
     let reg = RegistroSim::new(60_000, None)?;
     reg.avanza(pos_make(now_ms(), 0));
-    let base = json!({"etichetta": a.etichetta, "n": a.n, "capienza": a.capienza, "dati": a.dati, "ritardo_get_ms": a.ritardo_get_ms, "lettori": a.lettori});
+    let base = json!({"etichetta": a.etichetta, "n": a.n, "capienza": a.capienza, "dati": a.dati, "ritardo_get_ms": a.ritardo_get_ms, "lettori": a.lettori, "solo_aperti": a.solo_aperti});
 
     // zipf prima di tutto (la sua CDF è del banco, non del cameriere)
     let s = Zipf::esponente(a.n, 0.05, 0.95);
@@ -146,23 +150,35 @@ async fn main() -> anyhow::Result<()> {
     for l in 0..a.lettori {
         let (cam, z, fine, misura, tutte, hit, sveglie) = (cam.clone(), z.clone(), fine.clone(), misura.clone(), tutte.clone(), hit.clone(), sveglie.clone());
         let n = a.n;
+        let (solo, cap) = (a.solo_aperti, m);
         hs.push(tokio::spawn(async move {
             let mut rng = rand::rngs::SmallRng::seed_from_u64(l * 7919 + 1);
             let (mut ht, mut hh, mut hw) = (hist(), hist(), hist());
             let mut misurando = false;
+            let mut k = 0u64;
             while !fine.load(Relaxed) {
+                // la lettura da un database aperto non si ferma mai su un await: si cede il posto ogni 32 letture,
+                // altrimenti i lettori tengono occupati i 2 thread e il timer della prova non scatta (fuori dalla misura)
+                k += 1;
+                if k % 32 == 0 {
+                    tokio::task::yield_now().await;
+                }
                 if !misurando && misura.load(Relaxed) {
                     misurando = true;
                     ht.reset();
                     hh.reset();
                     hw.reset();
                 }
-                let idx = mescola(z.rango(&mut rng), n);
+                let mut r = z.rango(&mut rng);
+                while solo && r >= cap {
+                    r = z.rango(&mut rng);
+                }
+                let idx = mescola(r, n);
                 let d = rng.gen_range(0..DOCS);
                 let t = Instant::now();
                 match cam.leggi(idx, d).await {
                     Ok((v, sv)) => {
-                        let us = t.elapsed().as_micros() as u64;
+                        let us = t.elapsed().as_nanos() as u64;
                         let _ = ht.record(us.max(1));
                         let _ = if sv { hw.record(us.max(1)) } else { hh.record(us.max(1)) };
                         if v != Some(crc_atteso(idx, d)) {
@@ -246,7 +262,7 @@ async fn main() -> anyhow::Result<()> {
                 match cam.leggi(idx, 1).await {
                     Ok((v, _)) if v == Some(crc_atteso(idx, 1)) => {
                         fatte.fetch_add(1, Relaxed);
-                        let _ = lat.lock().record(t.elapsed().as_micros() as u64);
+                        let _ = lat.lock().record(t.elapsed().as_nanos() as u64);
                     }
                     Ok(_) => {
                         cam.stat.sbagliate.fetch_add(1, Relaxed);

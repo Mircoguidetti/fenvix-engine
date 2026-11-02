@@ -151,7 +151,7 @@ async fn main() -> anyhow::Result<()> {
                     match r {
                         Ok(()) => {
                             fatti.fetch_add(1, Relaxed);
-                            let _ = lat.lock().record(t.elapsed().as_micros() as u64);
+                            let _ = lat.lock().record(t.elapsed().as_nanos() as u64);
                         }
                         Err(e) => {
                             if errori.fetch_add(1, Relaxed) < 5 {
