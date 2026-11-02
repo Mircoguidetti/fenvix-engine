@@ -644,6 +644,20 @@ fn main() {
         if grid == "verifica" {
             continue;
         }
+        if grid == "snello" {
+            // giro finale con pochi minuti: le combinazioni che decidono
+            cfgs.push(("0+1+2 e1".into(), Cfg { e: 1.0, ..base("s3fifo", b) }));
+            cfgs.push(("0+1+2 copia-piena".into(), Cfg { full: true, ..base("s3fifo", b) }));
+            let pf = if block { Pf::Seq } else { Pf::Corr };
+            cfgs.push((format!("0+3 {}", pfname(pf)), Cfg { pf, ..base("s3fifo", b) }));
+            cfgs.push((format!("0+1+2+3 {} e0.5", pfname(pf)), Cfg { pf, e: 0.5, ..base("s3fifo", b) }));
+            if block {
+                for w in [65536u32, 262144] {
+                    cfgs.push((format!("4 w{}", w), Cfg { w, ..base("s3fifo", b) }));
+                }
+            }
+            continue;
+        }
         for e in [0.2, 0.5, 1.0] {
             cfgs.push((format!("0+1+2 e{}", e), Cfg { e, ..base("s3fifo", b) }));
         }
@@ -664,7 +678,7 @@ fn main() {
         let o = simulate(&tr, c, 0.2, 50);
         let line = report(&tr, c, &o, combo);
         writeln!(f, "{}", line).unwrap();
-        if (combo == "0" || combo == "0-lru") && (c.b == 0.10 || c.b == 0.50 || c.b == 0.02) {
+        if (combo == "0" || (combo == "0-lru" && grid != "snello")) && (c.b == 0.10 || c.b == 0.50 || c.b == 0.02) {
             // curva del riscaldamento: dall'avvio a vuoto, senza scartare niente
             let o2 = simulate(&tr, c, 0.0, 100);
             let mut s = format!("{{\"trace\":\"{}\",\"kind\":\"warm\",\"combo\":\"{}\",\"b\":{},\"win\":[", tr.name, combo, c.b);

@@ -16,7 +16,7 @@ jobs:
   run:
     if: github.repository == 'Mircoguidetti/fenvix-engine'
     runs-on: ubuntu-24.04
-    timeout-minutes: 80
+    timeout-minutes: 22
     strategy:
       fail-fast: false
       matrix:
@@ -39,4 +39,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add proto/bancone/risultati
           git commit -q -m "bancone: risultati della corsa ${{ github.run_id }} parte ${{ matrix.parte }}" || exit 0
+          git checkout -- . 2>/dev/null; git clean -fdq proto/bancone/sim 2>/dev/null || true
           for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
