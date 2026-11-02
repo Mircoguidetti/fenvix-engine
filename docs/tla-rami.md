@@ -62,14 +62,45 @@ Invarianti (nomi nel file):
 Dimensione del modello `base`: database {d1, d2} (d1 radice), 3 scatole, 1 punto di ripristino,
 1 lettore, 1 raccoglitore, 3 giri, `Grace = 1`, `Hold = 0`, `RHold = 1`. Varianti: `reread` (regola
 del 404, lettori con fogli vecchi quanto si vuole), `catena` con 3 database (rami di rami) e nessun
-lettore, `due-raccoglitori`, `grande` con `Grace = 2`, `Hold = 1`, `RHold = 2` e 4 giri. Per stare nella
+lettore, `due-raccoglitori` (senza lettore), `grande` con `Grace = 2`, `Hold = 1`, `RHold = 2` e 4 giri. Per stare nella
 memoria la configurazione usa una `VIEW`: due stati che differiscono solo in campi che nessuno leggerà
 più (i dati di un'operazione già finita, sovrascritti dalla prossima prima di essere letti) contano
 come uno. Non toglie comportamenti.
 
 ## 2. Esiti
 
-RISULTATI
+Tutti i numeri sono MISURATI dagli output in `tla-rami/output/` (un file per modello, stesso nome del
+`.cfg`). Una ricerca "completa" vuol dire che TLC ha esplorato tutti gli stati raggiungibili del
+modello, non una parte.
+
+Modelli con le regole giuste, devono passare:
+
+- `base`: nessuna violazione, ricerca completa, 4.118.114 stati distinti (22.925.443 generati),
+  profondità 28, 2 minuti e 19 secondi.
+- `reread` (regola del 404, il cameriere tiene il foglio quanto vuole): nessuna violazione, completa,
+  4.115.439 stati distinti, profondità 28, 2 minuti e 30 secondi.
+- `noregcheck` (senza il ricontrollo del registro, con l'età contata bene): nessuna violazione,
+  completa, 4.075.007 stati distinti, profondità 27, 2 minuti e 25 secondi. Vedi regola 5.
+- `contagiri-piccolo` (età come "giri di fila", taglia piccola): nessuna violazione, completa,
+  7.226.247 stati distinti. Il difetto di quella regola compare solo con un giro in più (`contagiri`):
+  un'altra ragione per non fidarsi di una regola che passa solo sui modelli piccoli.
+- CATENA
+- DUE
+- GRANDE
+
+Controlli negativi, devono fallire (fra parentesi l'invariante violata e la lunghezza della traccia):
+tutti e 12 falliscono come previsto. `noregisterfirst` (NoDangling, 10 stati), `splitpin`
+(PinsLive, 10), `ownerdeletes` (ReadersOK, 5), `dropdeletesprefix` (PinsLive, 4), `nograce`
+(NoDangling, 7), `nograce-reread` (NoDangling, 7), `hold-troppo` (NoDangling, 11), `lettore-vecchio`
+(ReadersOK, 13), `agebycreation` (ReadersOK, 13), `contagiri` (ReadersOK, 19),
+`noregcheck-contagiri` (PinsLive, 13), `due-raccoglitori-lenti` (NoDangling, 11).
+
+Controlli che il modello non sia vuoto, devono fallire: tutti e 6 falliscono, cioè questi casi
+succedono davvero nel modello: il raccoglitore cancella qualcosa (`sanity-delete`, 9 stati); un ramo
+vivo legge scatole di un padre uscito (`sanity-orfano`, 6); il raccoglitore recupera le scatole di
+un database uscito (`sanity-raccolta`, 8); un cameriere rilegge il foglio dopo un 404
+(`sanity-rilettura`, 13); un ramo nasce da un punto di ripristino (`sanity-punto`, 5); un nipote
+legge ancora una scatola del nonno dopo che nonno e padre sono usciti (`sanity-catena`, 10).
 
 ## 3. I controesempi in parole
 

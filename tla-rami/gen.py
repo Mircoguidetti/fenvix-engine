@@ -6,7 +6,7 @@ inv="TypeOK NoDangling PinsLive ReadersOK InFlightLive"
 cfgs={
  "base":{},
  "reread":dict(Reread="TRUE"),
- "due-raccoglitori":dict(Collectors="{c1, c2}"),
+ "due-raccoglitori":dict(Collectors="{c1, c2}",Readers="{}"),
  "catena":dict(DBs="{d1, d2, d3}",Readers="{}"),
  "grande":dict(Grace=2,Hold=1,RHold=2,MaxCycles=4),
  # negativi
@@ -20,7 +20,7 @@ cfgs={
  "hold-troppo":dict(Hold=1),
  "lettore-vecchio":dict(RHold=2),
  "agebycreation":dict(AgeByCreation="TRUE"),
- "due-raccoglitori-lenti":dict(Collectors="{c1, c2}",NoSlowCheck="TRUE"),
+ "due-raccoglitori-lenti":dict(Collectors="{c1, c2}",Readers="{}",NoSlowCheck="TRUE"),
  "contagiri-piccolo":dict(CountSweeps="TRUE",Grace=2,RHold=0),
  "noregcheck-contagiri":dict(NoRegCheck="TRUE",CountSweeps="TRUE",Grace=2,RHold=0),
  "contagiri":dict(CountSweeps="TRUE",Grace=3,Hold=1,RHold=1,MaxCycles=4),
