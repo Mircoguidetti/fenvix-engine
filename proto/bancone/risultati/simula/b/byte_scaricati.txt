@@ -1,0 +1,15 @@
+cache_dataset_lcs/tencentBlock/2982.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/8043.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/12695.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/1548.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/1261.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/1707.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/1252.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/21025.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/19728.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/1976.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/3580.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/1497.lcs.zst 100000000
+cache_dataset_lcs/tencentBlock/3580.lcs.zst 500000000
+cache_dataset_lcs/tencentBlock/1548.lcs.zst 500000000
+cache_dataset_lcs/tencentBlock/2982.lcs.zst 500000000
