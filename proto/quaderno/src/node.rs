@@ -59,6 +59,8 @@ pub struct Config {
     pub disk_ro: u64,
     /// allarme se il record non su S3 più vecchio supera questi secondi
     pub alarm_s: u64,
+    /// prova-zone: copia grezza del registro su S3 (None = spenta)
+    pub copy: Option<crate::copia::CopyCfg>,
 }
 
 /// Costi stimati in RAM per il conto unico della memoria (byte). Tarati confrontando il conto con l'RSS misurato.
@@ -75,6 +77,8 @@ pub enum Ev {
     Disk(u64, u64),
     /// run della dispensa scritto: per ogni database, fino a che posizione i record possono uscire dalla RAM
     Spilled(u64, Vec<(Db, Pos)>),
+    /// prova-zone: un tratto del registro è su S3
+    Copied(crate::copia::Copied),
 }
 
 /// Richiesta al thread della dispensa.
@@ -100,9 +104,10 @@ pub struct Shared {
 }
 
 /// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
-pub const SW_NAMES: [&str; 16] = [
+pub const SW_NAMES: [&str; 17] = [
     "commit", "lettura_spec", "append_follower", "risposte_append", "voti", "disco_fatto", "indice_follower", "potatura",
     "scarichi_applicati", "sfratto", "fronte_e_segmenti", "invio_repliche", "invio_disco", "conferma", "fotografia", "altre_richieste",
+    "copia",
 ];
 #[derive(Clone, Copy, Default)]
 pub struct Sw {
@@ -211,7 +216,7 @@ pub struct Node {
     trim_list: Vec<Db>,
     trim_cursor: usize,
     trim_next: Instant,
-    sw: [Sw; 16],
+    sw: [Sw; 17],
     last_snap: Instant,
     rounds: u64,
     rounds_over: u64,
@@ -271,6 +276,21 @@ pub struct Node {
     h_ack: hdrhistogram::Histogram<u64>,
     h_commit: hdrhistogram::Histogram<u64>,
     h_loop: hdrhistogram::Histogram<u64>,
+    // ---- prova-zone: copia del registro su S3
+    copy_tx: Option<Sender<crate::copia::CopyJob>>,
+    copy_stats: Arc<crate::copia::CopyStats>,
+    copy_busy: bool,
+    /// ultimo indice passato al thread della copia (capo)
+    copy_sent: u64,
+    /// indice copiato su S3 secondo il registro (voce Copiato confermata): limita la cancellazione dei segmenti
+    copied: u64,
+    /// fine dell'ultimo PUT riuscito visto da questa replica (capo)
+    copied_s3: u64,
+    last_copy_hand: Instant,
+    copy_more: bool,
+    last_copy_del: Instant,
+    copy_alarm: bool,
+    last_copy_alarm: Instant,
 }
 
 fn rand_ms(a: u64, b: u64) -> Duration {
@@ -471,7 +491,16 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
             }
         })
         .unwrap();
+    let copy = cfg.copy.clone();
     let mut node = Node::recover(cfg, ev_rx, disk_tx, peers, sh, spill_tx)?;
+    if let Some(cc) = copy {
+        let (tx, rx) = crossbeam_channel::unbounded();
+        let t = ev_tx.clone();
+        crate::copia::spawn(cc, rx, node.copy_stats.clone(), move |c| {
+            let _ = t.send(Ev::Copied(c));
+        });
+        node.copy_tx = Some(tx);
+    }
     eprintln!("replica {} pronta: indice {}..{} mandato {}", node.cfg.id, node.front, node.last_index(), node.term);
     println!("READY");
     node.run();
@@ -519,7 +548,7 @@ impl Node {
             trim_list: vec![],
             trim_cursor: 0,
             trim_next: now,
-            sw: [Sw::default(); 16],
+            sw: [Sw::default(); 17],
             last_snap: now,
             rounds: 0,
             rounds_over: 0,
@@ -577,6 +606,17 @@ impl Node {
             h_ack: hdrhistogram::Histogram::new(3).unwrap(),
             h_commit: hdrhistogram::Histogram::new(3).unwrap(),
             h_loop: hdrhistogram::Histogram::new(3).unwrap(),
+            copy_tx: None,
+            copy_stats: Arc::new(Default::default()),
+            copy_busy: false,
+            copy_sent: ckv.map(|c| c.copied).unwrap_or(0),
+            copied: ckv.map(|c| c.copied).unwrap_or(0),
+            copied_s3: ckv.map(|c| c.copied).unwrap_or(0),
+            last_copy_hand: now,
+            copy_more: false,
+            last_copy_del: now,
+            copy_alarm: false,
+            last_copy_alarm: now - Duration::from_secs(3600),
             cfg,
         };
         n.sh.win.genesis.store(genesis, std::sync::atomic::Ordering::Relaxed);
@@ -883,6 +923,7 @@ impl Node {
             Ev::Client(..) => 15,
             Ev::Disk(..) => 5,
             Ev::Spilled(..) => 15,
+            Ev::Copied(..) => 16,
         };
         self.handle_ev(ev);
         self.sw(k, t);
@@ -894,6 +935,18 @@ impl Node {
                 self.spill_busy = false;
                 for (db, upto) in dbs {
                     self.spill_q.push_back((db, run, upto, true));
+                }
+            }
+            Ev::Copied(c) => {
+                self.copy_busy = false;
+                self.copied_s3 = self.copied_s3.max(c.end);
+                self.copy_sent = self.copy_sent.max(c.end);
+                if self.role == Role::Leader {
+                    // tutte le repliche devono sapere fin dove la copia è su S3 (non cancellano voci non copiate, e un
+                    // nuovo capo riparte da lì): voce di servizio nel registro
+                    let idx = self.last_index() + 1;
+                    let e = Entry::encode(self.term, idx, self.next_pos(), Body::Copied { upto: c.end, pos: c.end_pos });
+                    self.append_new(e);
                 }
             }
             Ev::Peer(m) => self.on_msg(m),
@@ -965,6 +1018,8 @@ impl Node {
         self.role = Role::Leader;
         self.publish_brake();
         self.leader = self.me() as i32;
+        self.copy_sent = self.copy_sent.max(self.copied);
+        self.copied_s3 = self.copied_s3.max(self.copied);
         self.leader_since = Instant::now();
         let last = self.last_index();
         let now = Instant::now();
@@ -1136,6 +1191,9 @@ impl Node {
                 if let Body::Flushed(items) = &e.body {
                     // applicati a passi dal tick (possono essere migliaia di database)
                     self.flush_q.extend(items.iter().cloned());
+                }
+                if let Body::Copied { upto, .. } = &e.body {
+                    self.copied = self.copied.max(*upto);
                 }
                 if !matches!(e.body, Body::Rec { .. }) {
                     let sub = self.submitted;
@@ -1437,6 +1495,11 @@ impl Node {
             self.last_sec = now;
             self.every_second();
         }
+        if self.copy_tx.is_some() && self.role == Role::Leader {
+            let t = Instant::now();
+            self.copy_step();
+            self.sw(16, t);
+        }
         if self.brake == 1 || !self.delayq.is_empty() {
             self.release_delayed();
         }
@@ -1509,7 +1572,9 @@ impl Node {
         let am = if self.role == Role::Leader { self.all_match } else { self.all_match.min(self.commit) };
         let mut k = 0;
         while let Some(s) = self.log.front() {
-            if !(s.done && self.front <= self.commit && self.front <= am && self.front <= self.durable && self.front <= self.indexed) {
+            // prova-zone: con la copia accesa, una voce lascia il registro solo dopo essere su S3
+            let copied_ok = self.cfg.copy.is_none() || self.front <= self.copied;
+            if !(s.done && copied_ok && self.front <= self.commit && self.front <= am && self.front <= self.durable && self.front <= self.indexed) {
                 break;
             }
             let s = self.log.pop_front().unwrap();
@@ -1542,7 +1607,7 @@ impl Node {
                 self.reader.forget(*s);
             }
             self.disk_bytes = self.disk_bytes.saturating_sub(dead.len() as u64 * self.cfg.seg_bytes);
-            let _ = self.disk_tx.send(DiskOp::CkptDelete { prev_index: self.front - 1, prev_term: self.prev_term, prev_pos: self.prev_pos, segs: dead });
+            let _ = self.disk_tx.send(DiskOp::CkptDelete { prev_index: self.front - 1, prev_term: self.prev_term, prev_pos: self.prev_pos, copied: self.copied, segs: dead });
         }
     }
 
@@ -1571,6 +1636,77 @@ impl Node {
             }
         }
         self.evict_cursor = i;
+    }
+
+    /// prova-zone: ritardo della copia (solo capo) = età della prima voce confermata non ancora su S3, 0 se tutto è
+    /// copiato. È la finestra di perdita se tutte le repliche muoiono adesso.
+    fn copy_lag_ms(&self) -> u64 {
+        if self.copy_tx.is_none() || self.role != Role::Leader || self.copied_s3 >= self.commit {
+            return 0;
+        }
+        let i = self.copied_s3 + 1;
+        if i < self.front {
+            return 0;
+        }
+        now_ms().saturating_sub(pos_ms(self.pos_at(i)))
+    }
+
+    /// prova-zone: passa al thread della copia il tratto confermato dopo l'ultimo copiato (uno alla volta, ogni
+    /// `interval_ms`, al più `max_bytes` per oggetto; se il tratto è più lungo il resto parte subito dopo).
+    fn copy_step(&mut self) {
+        let Some(cc) = self.cfg.copy.clone() else { return };
+        let now = Instant::now();
+        // allarme sul ritardo e cancellazione degli oggetti già interamente negli SST
+        let lag = self.copy_lag_ms();
+        self.copy_alarm = cc.alarm_ms > 0 && lag > cc.alarm_ms;
+        if self.copy_alarm && self.last_copy_alarm.elapsed() >= Duration::from_secs(10) {
+            self.last_copy_alarm = now;
+            eprintln!("ALLARME COPIA replica {}: la copia del registro su S3 è indietro di {lag} ms (soglia {} ms), copiato fino a {} su {}", self.me(), cc.alarm_ms, self.copied_s3, self.commit);
+        }
+        if now.duration_since(self.last_copy_del) >= Duration::from_secs(10) {
+            self.last_copy_del = now;
+            let pos = if self.oldest_unfl == Pos::MAX { self.commit_pos } else { self.oldest_unfl };
+            if let Some(tx) = &self.copy_tx {
+                let _ = tx.send(crate::copia::CopyJob::DeleteBelow { pos, idx: self.copied });
+            }
+        }
+        if self.copy_busy || self.commit <= self.copy_sent {
+            return;
+        }
+        if !self.copy_more && now.duration_since(self.last_copy_hand) < Duration::from_millis(cc.interval_ms) {
+            return;
+        }
+        let start = self.copy_sent + 1;
+        if start < self.front {
+            eprintln!("copia: ERRORE, la voce {start} non è più nel registro (fronte {}): la catena avrà un buco", self.front);
+            return;
+        }
+        let mut frames = vec![];
+        let mut bytes = 0u64;
+        let mut end = self.copy_sent;
+        while end < self.commit && (frames.is_empty() || bytes < cc.max_bytes) {
+            end += 1;
+            let r = self.raw_at(end);
+            bytes += r.len() as u64;
+            frames.push(r);
+        }
+        let head = crate::copia::Head {
+            start,
+            end,
+            prev_term: self.term_at(start - 1).unwrap_or(0),
+            prev_pos: self.pos_at(start - 1),
+            start_pos: self.pos_at(start),
+            end_pos: self.pos_at(end),
+            n: frames.len() as u32,
+        };
+        if let Some(tx) = &self.copy_tx {
+            if tx.send(crate::copia::CopyJob::Put { head, frames }).is_ok() {
+                self.copy_busy = true;
+                self.copy_sent = end;
+                self.last_copy_hand = now;
+                self.copy_more = end < self.commit;
+            }
+        }
     }
 
     /// Fotografia dello stato per `status` (servito dai thread di rete).
@@ -1612,6 +1748,19 @@ impl Node {
             repl_raw: self.repl_raw,
             repl_sent: self.repl_sent,
             delayed: self.delayed_n,
+            copia_attiva: self.copy_tx.is_some(),
+            copia_fino_a: self.copied,
+            copia_s3_fino_a: self.copied_s3,
+            copia_ritardo_ms: self.copy_lag_ms(),
+            copia_allarme: self.copy_alarm,
+            copia_put: self.copy_stats.puts.load(std::sync::atomic::Ordering::Relaxed),
+            copia_put_errori: self.copy_stats.put_errs.load(std::sync::atomic::Ordering::Relaxed),
+            copia_esistenti: self.copy_stats.existed.load(std::sync::atomic::Ordering::Relaxed),
+            copia_byte: self.copy_stats.bytes.load(std::sync::atomic::Ordering::Relaxed),
+            copia_cancellati: self.copy_stats.deleted.load(std::sync::atomic::Ordering::Relaxed),
+            copia_cpu_ms: self.copy_stats.cpu_us.load(std::sync::atomic::Ordering::Relaxed) / 1000,
+            copia_put_ms_ultimo: self.copy_stats.last_put_ms.load(std::sync::atomic::Ordering::Relaxed),
+            copia_put_ms_max: self.copy_stats.max_put_ms.load(std::sync::atomic::Ordering::Relaxed),
             diag: format!(
                 "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
                 self.h_durable.value_at_quantile(0.5),

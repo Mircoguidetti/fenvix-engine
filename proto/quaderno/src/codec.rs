@@ -254,6 +254,8 @@ pub enum Body {
     Rec { txn: TxnId, db: Db, session: Option<Session>, writes: Vec<Write> },
     /// conferma_scarico: questi database sono su S3 fino a questa posizione (applicato alla conferma)
     Flushed(Vec<(Db, Pos, Bytes)>),
+    /// prova-zone: il registro è copiato su S3 fino a questo indice (posizione dell'ultima voce copiata)
+    Copied { upto: u64, pos: Pos },
 }
 
 /// Una voce del registro. `raw` è il frame completo così come sta sul disco e viaggia in rete.
@@ -290,6 +292,11 @@ impl Entry {
                     put16(&mut b, etag);
                 }
             }
+            Body::Copied { upto, pos } => {
+                b.put_u8(3);
+                b.put_u64_le(*upto);
+                b.put_u64_le(*pos);
+            }
         }
         let raw = Bytes::from(frame(&b));
         // ri-decodifica dal frame: così i valori puntano dentro `raw` e la RAM non li tiene due volte
@@ -322,6 +329,7 @@ impl Entry {
                 }
                 Body::Flushed(v)
             }
+            3 => Body::Copied { upto: r.u64()?, pos: r.u64()? },
             _ => return Err(Short),
         };
         r.end()?;
@@ -559,6 +567,35 @@ pub struct Status {
     pub repl_raw: u64,
     #[serde(default)]
     pub repl_sent: u64,
+    /// prova-zone: copia del registro su S3. `copia_fino_a` = indice confermato nel registro (voce Copiato);
+    /// `copia_s3_fino_a` = fine dell'ultimo PUT riuscito visto dal capo; `copia_ritardo_ms` (solo capo) = età della
+    /// prima voce confermata non ancora su S3 (0 se tutto è copiato): è la perdita possibile se la cella muore ora
+    #[serde(default)]
+    pub copia_attiva: bool,
+    #[serde(default)]
+    pub copia_fino_a: u64,
+    #[serde(default)]
+    pub copia_s3_fino_a: u64,
+    #[serde(default)]
+    pub copia_ritardo_ms: u64,
+    #[serde(default)]
+    pub copia_allarme: bool,
+    #[serde(default)]
+    pub copia_put: u64,
+    #[serde(default)]
+    pub copia_put_errori: u64,
+    #[serde(default)]
+    pub copia_esistenti: u64,
+    #[serde(default)]
+    pub copia_byte: u64,
+    #[serde(default)]
+    pub copia_cancellati: u64,
+    #[serde(default)]
+    pub copia_cpu_ms: u64,
+    #[serde(default)]
+    pub copia_put_ms_ultimo: u64,
+    #[serde(default)]
+    pub copia_put_ms_max: u64,
 }
 
 #[derive(Clone, Debug)]

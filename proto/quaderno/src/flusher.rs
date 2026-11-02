@@ -47,6 +47,8 @@ struct Group {
     /// lo stato del manifest su S3 è noto (etag giusto, o manifest inesistente)
     known: bool,
     flushes: u32,
+    /// prova-zone: posizione su S3 per database, scritta nel manifest (il foglio indice dice fin dove è scaricato)
+    flushed: BTreeMap<Db, Pos>,
 }
 
 pub fn s3(endpoint: &str, bucket: &str) -> anyhow::Result<AmazonS3> {
@@ -86,7 +88,7 @@ fn sst_put(b: &mut BytesMut, db: &Db, key: &[u8], pos: Pos, val: Option<&Bytes>)
 
 pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
     let store = Arc::new(s3(&c.endpoint, &c.bucket)?);
-    let mut groups: HashMap<u64, Group> = HashMap::new();
+    let mut groups: HashMap<u64, Group> = load_groups(&*store, c.groups).await?;
     let mut tot_recs = 0u64;
     let mut tot_bytes = 0u64;
     let mut errors = 0u64;
@@ -195,6 +197,8 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
                     n += 1;
                 }
                 items.push((*db, maxp));
+                let f = gs.flushed.entry(*db).or_insert(0);
+                *f = (*f).max(maxp);
             }
             let sst = sst.freeze();
             let name = format!("g{g:03}/d-{:016x}-{:032x}.sst", items.iter().map(|x| x.1).max().unwrap(), rand::random::<u128>());
@@ -217,7 +221,8 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
                 }
             }
             // manifest del gruppo: PUT condizionale sull'etag precedente
-            let man = serde_json::to_vec(&json!({"group": g, "objects": gs.objects})).unwrap();
+            let fl: serde_json::Map<String, serde_json::Value> = gs.flushed.iter().map(|(d, p)| (crate::store::hex(d), json!(p))).collect();
+            let man = serde_json::to_vec(&json!({"group": g, "objects": gs.objects, "flushed": fl})).unwrap();
             // manifest SEMPRE con PUT condizionale: un PUT rimasto in coda in un magazzino bloccato e eseguito dopo non
             // deve poter riportare indietro il manifest (prima, dopo un errore, si scriveva senza condizione e una
             // richiesta vecchia poteva cancellare oggetti già confermati)
@@ -291,6 +296,89 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
     }
 }
 
+/// prova-zone: alla partenza lo scaricatore rilegge i manifest e gli SST dei gruppi (prima teneva lo stato solo in
+/// RAM: uno scaricatore nuovo, dopo il ripristino della cella, avrebbe riscritto i manifest senza gli oggetti vecchi).
+async fn load_groups(store: &dyn ObjectStore, groups: u64) -> anyhow::Result<HashMap<u64, Group>> {
+    use crate::codec::{read_frame, FrameRead, Rd};
+    let mut out = HashMap::new();
+    for g in 0..=groups {
+        let mp = Path::from(format!("g{g:03}/manifest.json"));
+        let r = match store.get(&mp).await {
+            Ok(r) => r,
+            Err(object_store::Error::NotFound { .. }) => continue,
+            Err(e) => return Err(e.into()),
+        };
+        let etag = r.meta.e_tag.clone();
+        let m: serde_json::Value = serde_json::from_slice(&r.bytes().await?)?;
+        let mut gs = Group { etag, known: true, ..Default::default() };
+        for o in m["objects"].as_array().cloned().unwrap_or_default() {
+            let name = o.as_str().unwrap_or_default().to_string();
+            let data = store.get(&Path::from(name.clone())).await?.bytes().await?;
+            let mut p = 0;
+            while let FrameRead::Ok(st, en) = read_frame(&data[p..]) {
+                let mut r = Rd::new(data.slice(p + st..p + en));
+                p += en;
+                let bad = || anyhow::anyhow!("sst {name}");
+                let d = r.a16().map_err(|_| bad())?;
+                let pos = r.u64().map_err(|_| bad())?;
+                let kind = r.u8().map_err(|_| bad())?;
+                let key = r.bytes16().map_err(|_| bad())?;
+                let val = r.bytes32().map_err(|_| bad())?;
+                let e = gs.merged.entry((d, key)).or_insert((0, None));
+                if pos >= e.0 {
+                    *e = (pos, if kind == 0 { Some(val) } else { None });
+                }
+            }
+            gs.objects.push(name);
+        }
+        if let Some(f) = m["flushed"].as_object() {
+            for (h, p) in f {
+                if let (Some(db), Some(p)) = (crate::store::unhex16(h), p.as_u64()) {
+                    gs.flushed.insert(db, p);
+                }
+            }
+        }
+        eprintln!("scaricatore: gruppo {g} riletto ({} oggetti, {} chiavi)", gs.objects.len(), gs.merged.len());
+        out.insert(g, gs);
+    }
+    Ok(out)
+}
+
+/// Mappa chiave → (posizione, valore) degli SST elencati dai manifest, per il database `db`.
+pub async fn sst_map(endpoint: &str, bucket: &str, groups: u64, db: Db) -> anyhow::Result<(HashMap<Bytes, (Pos, Bytes)>, u64)> {
+    use crate::codec::{read_frame, FrameRead, Rd};
+    let store = s3(endpoint, bucket)?;
+    let mut found: HashMap<Bytes, (Pos, Bytes)> = HashMap::new();
+    let mut objects = 0;
+    for g in 0..=groups {
+        let mp = Path::from(format!("g{g:03}/manifest.json"));
+        let Ok(m) = store.get(&mp).await else { continue };
+        let m: serde_json::Value = serde_json::from_slice(&m.bytes().await?)?;
+        for o in m["objects"].as_array().cloned().unwrap_or_default() {
+            let name = o.as_str().unwrap_or_default().to_string();
+            let data = store.get(&Path::from(name)).await?.bytes().await?;
+            objects += 1;
+            let mut p = 0;
+            while let FrameRead::Ok(st, en) = read_frame(&data[p..]) {
+                let mut r = Rd::new(data.slice(p + st..p + en));
+                p += en;
+                let d = r.a16().map_err(|_| anyhow::anyhow!("sst"))?;
+                let pos = r.u64().map_err(|_| anyhow::anyhow!("sst"))?;
+                let _kind = r.u8().map_err(|_| anyhow::anyhow!("sst"))?;
+                let key = r.bytes16().map_err(|_| anyhow::anyhow!("sst"))?;
+                let val = r.bytes32().map_err(|_| anyhow::anyhow!("sst"))?;
+                if d == db {
+                    let e = found.entry(key).or_insert((0, Bytes::new()));
+                    if pos >= e.0 {
+                        *e = (pos, val);
+                    }
+                }
+            }
+        }
+    }
+    Ok((found, objects))
+}
+
 /// Controllo di fine prova: ogni scrittura testimone confermata (file "n,posizione") deve stare negli SST elencati dai
 /// manifest, con il suo valore e la sua posizione.
 pub async fn check_sst(endpoint: &str, bucket: &str, groups: u64, db: Db, witness: &str) -> anyhow::Result<serde_json::Value> {
@@ -327,8 +415,11 @@ pub async fn check_sst(endpoint: &str, bucket: &str, groups: u64, db: Db, witnes
     let (mut n, mut missing, mut wrong) = (0u64, 0u64, 0u64);
     let mut examples = vec![];
     for l in std::fs::read_to_string(witness)?.lines() {
-        let Some((a, b)) = l.split_once(',') else { continue };
-        let (k, pos): (u64, u64) = (a.parse()?, b.parse()?);
+        let f: Vec<&str> = l.split(',').collect();
+        if f.len() < 2 {
+            continue;
+        }
+        let (k, pos): (u64, u64) = (f[0].parse()?, f[1].parse()?);
         n += 1;
         match found.get(&Bytes::from(format!("doc/w-{k}"))) {
             None => {

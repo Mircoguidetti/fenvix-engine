@@ -8,3 +8,4 @@ pub mod client;
 pub mod flusher;
 pub mod proxy;
 pub mod spill;
+pub mod copia;
