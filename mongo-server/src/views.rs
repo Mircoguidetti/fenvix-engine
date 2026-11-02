@@ -128,6 +128,13 @@ impl Server {
             }
             return Ok(None);
         };
+        // The commands on a view run in a future of their own, boxed: inline they made this function's future (and with it
+        // the future of every command, which awaits it) about 19 KB, copied several times per command.
+        Box::pin(self.view_command(db, name, cmd, coll, def, tx)).await
+    }
+
+    /// A command on the view `db.coll` (see `view_route`).
+    async fn view_command(&self, db: &str, name: &str, cmd: &Document, coll: &str, def: ViewDef, tx: &mut Option<Txn>) -> R<Option<Document>> {
         let ns = format!("{db}.{coll}");
         let explain_agg;
         let (name, cmd) = if name == "aggregate" && matches!(cmd.get("explain"), Some(Bson::Boolean(true))) {

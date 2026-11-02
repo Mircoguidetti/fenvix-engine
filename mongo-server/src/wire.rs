@@ -237,12 +237,26 @@ fn compress(id: u8, data: &[u8]) -> Result<Vec<u8>> {
 /// The compressors this server offers, by name.
 pub const COMPRESSORS: [&str; 3] = ["snappy", "zstd", "zlib"];
 
+/// What the reply to a request needs from it, kept when the command document is handed over to the command.
+pub struct ReplyTo {
+    pub request_id: i32,
+    pub legacy: bool,
+    /// The compressor of the reply: the request's, unless its command is one whose reply is never compressed.
+    pub compressor: Option<u8>,
+}
+
+impl Request {
+    pub fn reply_to(&self) -> ReplyTo {
+        ReplyTo { request_id: self.request_id, legacy: self.legacy, compressor: self.compressor.filter(|_| !self.legacy && !never_compressed(&self.command)) }
+    }
+}
+
 /// Commands whose reply is never compressed.
 fn never_compressed(cmd: &Document) -> bool {
     matches!(cmd.keys().next().map(|k| k.as_str()), Some("hello" | "isMaster" | "ismaster" | "saslStart" | "saslContinue" | "getnonce" | "authenticate" | "createUser" | "updateUser" | "copydbSaslStart" | "copydbgetnonce" | "copydb"))
 }
 
-pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &Request, reply: &Document, response_id: i32) -> Result<()> {
+pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &ReplyTo, reply: &Document, response_id: i32) -> Result<()> {
     let doc = reply.to_vec()?;
     let mut out = Vec::with_capacity(doc.len() + 36);
     if req.legacy {
@@ -265,7 +279,7 @@ pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &Request, reply:
         out.push(0); // section kind 0
     }
     out.extend(doc);
-    if let (Some(id), false, false) = (req.compressor, req.legacy, never_compressed(&req.command)) {
+    if let Some(id) = req.compressor {
         // OP_COMPRESSED: header, original opcode, size of the plain message body, compressor, compressed body
         let body = &out[16..];
         let packed = compress(id, body)?;

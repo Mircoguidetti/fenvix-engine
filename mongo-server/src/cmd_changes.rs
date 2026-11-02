@@ -84,7 +84,13 @@ impl Server {
         }
         let start = if let Some(Bson::Document(t)) = spec.get("resumeAfter").or_else(|| spec.get("startAfter")) {
             match t.get("_data") {
-                Some(Bson::String(d)) => log.parse_token(d)?,
+                Some(Bson::String(d)) => {
+                    let seq = log.parse_token(d)?;
+                    if let Some(d) = &scope.db {
+                        log.check_born(d, seq)?;
+                    }
+                    seq
+                }
                 _ => return Err(MongoError::new(40647, "Location40647", format!("Bad resume token: _data of missing or of wrong type. Expected string, got {}", crate::update::fmt_doc(t).replace("{ ", "{").replace(" }", "}")))),
             }
         } else if let Some(Bson::Timestamp(ts)) = spec.get("startAtOperationTime") {

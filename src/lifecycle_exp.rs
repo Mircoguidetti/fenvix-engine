@@ -686,7 +686,7 @@ pub async fn run(args: &Args, s3: Arc<dyn ObjectStore>) -> Result<()> {
     let sweep = sweep_log.lock().unwrap();
     let fgc = final_gc.iter().fold(Snapshot::default(), |a, g| super::add(&a, &g.requests));
     let _ = writeln!(r, "\nMaintenance errors: {}. Final sweep after quiesce: {} tenants still needed compaction; final GC (min_age 0) over {} tenants used {} PUT/LIST-tier + {} GET-tier + {} DELETE requests in total. Maximum L0 count across all tenants after the final sweep: {final_l0_max}; maximum checkpoints left in any manifest: {final_cp_max}.\n",
-        log.errors.len(), sweep.len(), all.len(), fgc.billed_put_tier(), fgc.billed_get_tier(), fgc.delete);
+        log.errors_total, sweep.len(), all.len(), fgc.billed_put_tier(), fgc.billed_get_tier(), fgc.delete);
     if !log.errors.is_empty() {
         for e in log.errors.iter().take(5) {
             let _ = writeln!(r, "- error: {e}");

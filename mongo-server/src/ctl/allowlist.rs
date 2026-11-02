@@ -1,7 +1,7 @@
 //! Admin-port routes of the per-database allow lists and of the network limits' state.
 //!
 //! The list is stored in the database's metadata record (`control/dbs/{db}/meta.json`, field `ip_allowlist`): it survives
-//! sleep, wake and restarts, an erase deletes it with the record, a fork starts with a new record (no list) and a restore
+//! sleep, wake and restarts, an erase deletes it with the record, a fork starts with a copy of its source's list and a restore
 //! does not touch the record. There is no data-port command for any of this.
 
 use super::rec;

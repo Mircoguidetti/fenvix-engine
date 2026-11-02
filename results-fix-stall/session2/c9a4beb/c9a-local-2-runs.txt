@@ -1,0 +1,5 @@
+run 1 ok 9.819519336 compactRuns=0 l0WatchRequests=None
+run 2 ok 9.540870425 compactRuns=0 l0WatchRequests=None
+run 3 ok 9.038841265 compactRuns=0 l0WatchRequests=None
+run 4 ok 8.942901863 compactRuns=0 l0WatchRequests=None
+run 5 ok 9.620282622 compactRuns=0 l0WatchRequests=None

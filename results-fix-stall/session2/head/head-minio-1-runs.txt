@@ -1,0 +1,5 @@
+run 1 ok 13.571520291 compactRuns=4 l0WatchRequests=4 slowestInsertMs=797
+run 2 ok 13.877011973 compactRuns=4 l0WatchRequests=4 slowestInsertMs=923
+run 3 ok 14.162220345 compactRuns=3 l0WatchRequests=4 slowestInsertMs=916
+run 4 ok 14.573740015 compactRuns=3 l0WatchRequests=4 slowestInsertMs=885
+run 5 ok 13.723129935 compactRuns=3 l0WatchRequests=4 slowestInsertMs=1017

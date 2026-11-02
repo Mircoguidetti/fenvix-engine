@@ -40,11 +40,12 @@ tokio::task_local! {
 static NEXT_SCOPE: AtomicU64 = AtomicU64::new(1);
 
 /// Run `fut` (a command) with a JS scope of its own.
-pub async fn scoped<F: std::future::Future>(db: &str, fut: F) -> F::Output {
+/// (A plain function, not an `async fn`: an async wrapper would copy the whole command future into a state of its own.)
+pub fn scoped<F: std::future::Future>(db: &str, fut: F) -> impl std::future::Future<Output = F::Output> {
     use std::hash::{Hash, Hasher};
     let mut h = std::collections::hash_map::DefaultHasher::new();
     db.hash(&mut h);
-    SCOPE.scope((NEXT_SCOPE.fetch_add(1, Relaxed), h.finish() | (1 << 63)), fut).await
+    SCOPE.scope((NEXT_SCOPE.fetch_add(1, Relaxed), h.finish() | (1 << 63)), fut)
 }
 
 fn scope_id(pooled: bool) -> u64 {

@@ -112,6 +112,14 @@ pub fn take_writes(tx: &mut Option<Txn>) -> Writes {
     }
 }
 
+/// Give the pending writes taken with [`take_writes`] back to the transaction, on a path that ends without
+/// [`Server::commit`] (which puts them back itself). Outside a transaction it does nothing.
+pub fn put_back(tx: &mut Option<Txn>, w: Writes) {
+    if let Some(t) = tx {
+        t.w = w;
+    }
+}
+
 pub fn tx_ov(tx: &Option<Txn>) -> Option<&Overlay> {
     tx.as_ref().map(|t| &t.w.ov)
 }
@@ -365,16 +373,27 @@ impl Server {
             return Err(MongoError::new(263, "OperationNotSupportedInTransaction", "Cannot use more than one database in a multi-document transaction on this server.".into()));
         }
         let mut tx = Some(txn);
-        let r = match name {
-            "insert" => self.insert(db, cmd, &mut tx).await,
-            "find" => self.find(db, cmd, &mut tx).await,
-            "getMore" => self.get_more(db, cmd).await,
-            "update" => self.update(db, cmd, &mut tx).await,
-            "delete" => self.delete(db, cmd, &mut tx).await,
-            "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd, &mut tx).await,
-            "count" => self.count(db, cmd, &mut tx).await,
-            "distinct" => self.distinct(db, cmd, &mut tx).await,
-            _ => self.aggregate(db, cmd, &mut tx).await,
+        // The same collation scope as outside a transaction (`cmd.rs`, before `route`): the command's own collation, or else
+        // the default of the collection it works on. Without it a transaction compared strings with the simple collation.
+        let col = if matches!(name, "find" | "aggregate" | "count" | "distinct" | "findAndModify" | "findandmodify") { crate::collation::of_command(name, cmd) } else { Ok(None) };
+        let r = match col {
+            Err(e) => Err(e),
+            Ok(col) => {
+                crate::collation::scope(col, async {
+                    match name {
+                        "insert" => self.insert(db, cmd, &mut tx).await,
+                        "find" => self.find(db, cmd, &mut tx).await,
+                        "getMore" => self.get_more(db, cmd).await,
+                        "update" => self.update(db, cmd, &mut tx).await,
+                        "delete" => self.delete(db, cmd, &mut tx).await,
+                        "findAndModify" | "findandmodify" => self.find_and_modify(db, cmd, &mut tx).await,
+                        "count" => self.count(db, cmd, &mut tx).await,
+                        "distinct" => self.distinct(db, cmd, &mut tx).await,
+                        _ => self.aggregate(db, cmd, &mut tx).await,
+                    }
+                })
+                .await
+            }
         };
         let failed = match &r {
             Ok(d) => d.get_array("writeErrors").map(|a| !a.is_empty()).unwrap_or(false),

@@ -1,0 +1,90 @@
+[
+ {
+  "case": "updateOne_no_sort",
+  "ms_median": 4.8,
+  "ms_min": 4.1,
+  "ms_max": 5.3,
+  "extra_mb_max": 0,
+  "rss_mb": 340
+ },
+ {
+  "case": "updateOne_sort_unindexed",
+  "ms_median": 1842.7,
+  "ms_min": 1757.5,
+  "ms_max": 1878.9,
+  "extra_mb_max": 79,
+  "rss_mb": 480
+ },
+ {
+  "case": "updateOne_sort_indexed",
+  "ms_median": 2.5,
+  "ms_min": 2.2,
+  "ms_max": 2.9,
+  "extra_mb_max": 0,
+  "rss_mb": 448
+ },
+ {
+  "case": "updateOne_sort_id",
+  "ms_median": 1529.9,
+  "ms_min": 1393.7,
+  "ms_max": 1789.1,
+  "extra_mb_max": 97,
+  "rss_mb": 495
+ },
+ {
+  "case": "updateOne_sort_id_desc",
+  "ms_median": 1542.1,
+  "ms_min": 1526.2,
+  "ms_max": 1660.3,
+  "extra_mb_max": 136,
+  "rss_mb": 521
+ },
+ {
+  "case": "find_sort_id_limit1",
+  "ms_median": 1418.8,
+  "ms_min": 1415.2,
+  "ms_max": 1541.2,
+  "extra_mb_max": 95,
+  "rss_mb": 522
+ },
+ {
+  "case": "find_sort_unindexed_limit10",
+  "ms_median": 1444.2,
+  "ms_min": 1375.4,
+  "ms_max": 1474.1,
+  "extra_mb_max": 2,
+  "rss_mb": 299
+ },
+ {
+  "case": "findOneAndUpdate_sort_unindexed",
+  "ms_median": 1851.7,
+  "ms_min": 1738.4,
+  "ms_max": 1967.1,
+  "extra_mb_max": 101,
+  "rss_mb": 519
+ },
+ {
+  "case": "txn_updateOne_sort_indexed",
+  "ms_median": 2076.4,
+  "ms_min": 1824.9,
+  "ms_max": 2117.1,
+  "extra_mb_max": 415,
+  "rss_mb": 887
+ },
+ {
+  "case": "txn_updateOne_sort_unindexed",
+  "ms_median": 1873.3,
+  "ms_min": 1757.4,
+  "ms_max": 2020.3,
+  "extra_mb_max": 96,
+  "rss_mb": 502
+ },
+ {
+  "case": "txn_findOneAndUpdate_sort_id",
+  "ms_median": 1609.3,
+  "ms_min": 1496.5,
+  "ms_max": 1698.4,
+  "extra_mb_max": 109,
+  "rss_mb": 505
+ }
+]

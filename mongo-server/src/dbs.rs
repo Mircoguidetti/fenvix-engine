@@ -63,6 +63,34 @@ tokio::task_local! {
 /// they need to decide (duplicate keys, unique indexes). False (`--durable-reads false`) lets reads see staged data.
 pub static DURABLE_READS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
+/// Metadata cache (perf-letture). Every command used to read the collection list, the index definitions and the collection
+/// options of its collection from SlateDB: three reads per find besides the document, 59% of the engine's CPU on point
+/// reads of one large database. The open tenant keeps the stored values of these keys (`meta/collections`,
+/// `meta/indexes/<coll>`, `meta/copt/<coll>`) in memory:
+/// - a value is valid only for the opening of the tenant it was read from (`wakes`, `closes`): a reopen, a close, a lost
+///   lease, a drop start from nothing (and every place that clears `copts` clears it too);
+/// - every write that touches a `meta/` key empties it, in `apply_mode`, under the exclusive lock: no read runs then;
+/// - a value is kept only when the latest state and the durable state of the key agree, so it is what a durable read and a
+///   read of the latest state would both return: a metadata write that is staged but not yet durable is never cached;
+/// - a transaction's reads go through its snapshot, never through the cache.
+/// `--metadata-cache false` turns it off.
+pub static META_CACHE: AtomicBool = AtomicBool::new(true);
+
+/// Keys of the metadata cache are at most this many per open tenant (values are copied, so a cached value does not keep a
+/// SlateDB block alive).
+const META_CACHE_MAX: usize = 4096;
+
+fn is_meta_key(key: &[u8]) -> bool {
+    key == layout::META_COLLECTIONS || key.starts_with(b"meta/indexes/") || key.starts_with(b"meta/copt/")
+}
+
+/// The metadata values of one opening of a tenant (see [`META_CACHE`]).
+#[derive(Default)]
+pub(crate) struct MetaCache {
+    epoch: (u64, u64),
+    vals: HashMap<Vec<u8>, Option<Bytes>>,
+}
+
 /// Reads of a database with relaxed durability see the writes acknowledged before they were durable (read-your-writes).
 fn durable_reads(db: &str) -> bool {
     DURABLE_READS.load(Relaxed) && crate::ctl::durability::relaxed_ms(db) == 0
@@ -119,12 +147,13 @@ pub struct Entry {
     /// Document keys written by open transactions -> transaction id (a second writer gets a write conflict at once).
     pub(crate) locks: HashMap<Vec<u8>, u64>,
     pub(crate) changes: Arc<crate::changes::ChangeLog>,
-    last_compaction_request: Option<Instant>,
     inflight: Arc<AtomicU64>,
     /// Natural order: per collection (next sequence number, reserved limit); see `natural.rs`. Cleared whenever the tenant is opened or closed.
     pub(crate) nat: HashMap<String, (u64, u64)>,
     /// Collection options (default collation) by collection; cleared with `nat`.
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
+    /// Stored metadata values of the open tenant (see [`META_CACHE`]); cleared with `copts`.
+    meta: Mutex<MetaCache>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -178,10 +207,10 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
-                    last_compaction_request: None,
                     inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    meta: Default::default(),
                 }))
             })
             .clone()
@@ -254,10 +283,10 @@ impl Dbs {
                     active_txns: 0,
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
-                        last_compaction_request: None,
                         inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    meta: Default::default(),
                     }))
                 })
                 .clone()
@@ -382,6 +411,44 @@ impl Dbs {
 }
 
 impl Entry {
+    /// Empty the metadata cache (and free its memory).
+    fn meta_clear(&self) {
+        let mut m = self.meta.lock().unwrap();
+        m.vals = HashMap::new();
+    }
+
+    /// The cached value of a metadata key of the open tenant, if there is one.
+    fn meta_lookup(&self, key: &[u8]) -> Option<Option<Bytes>> {
+        if !META_CACHE.load(Relaxed) || !is_meta_key(key) {
+            return None;
+        }
+        let m = self.meta.lock().unwrap();
+        if m.epoch != (self.wakes, self.closes) {
+            return None;
+        }
+        m.vals.get(key).cloned()
+    }
+
+    /// Read a metadata key from the open tenant `t`: the durable state when `durable`, the latest state otherwise. The
+    /// value is cached only if the two states agree (no write of the key is staged and still on its way to durability).
+    async fn meta_read(&self, t: &Tenant, key: &[u8], durable: bool) -> Result<Option<Bytes>> {
+        let latest = t.get(key).await?;
+        // A reader's data is all durable; a writer's latest state may hold staged writes.
+        let durable_v = if t.is_writer() { t.get_durable(key).await? } else { latest.clone() };
+        if latest == durable_v {
+            let epoch = (self.wakes, self.closes);
+            let mut m = self.meta.lock().unwrap();
+            if m.epoch != epoch {
+                m.vals = HashMap::new();
+                m.epoch = epoch;
+            }
+            if m.vals.len() < META_CACHE_MAX || m.vals.contains_key(key) {
+                m.vals.insert(key.to_vec(), latest.as_ref().map(|v| Bytes::copy_from_slice(v)));
+            }
+        }
+        Ok(if durable { durable_v } else { latest })
+    }
+
     pub fn touch(&self) {
         self.last_used_ms.store(now_ms(), Relaxed);
     }
@@ -441,25 +508,11 @@ impl Entry {
         }
     }
 
-    /// A writer has no compactor of its own (it would poll the manifest on every idle tenant), so ask the maintenance
-    /// queue for a compaction while the tenant is open once its L0 reaches the compaction threshold; without it a
-    /// tenant written for a few minutes fills its L0 and stalls (see `WRITER_POLL_SECS`). At most one request per
-    /// `COMPACTION_REQUEST_EVERY`.
-    fn request_compaction_if_needed(&mut self) {
-        const COMPACTION_REQUEST_EVERY: Duration = Duration::from_secs(10);
-        let (Some(t), Some(q)) = (self.tenant.as_ref(), self.lc.queue.as_ref()) else { return };
-        if t.writer_l0().map_or(false, |n| n >= tenant_bench::lifecycle::L0_COMPACT_THRESHOLD)
-            && self.last_compaction_request.map_or(true, |at| at.elapsed() >= COMPACTION_REQUEST_EVERY)
-        {
-            self.last_compaction_request = Some(Instant::now());
-            q.request(&self.name, None);
-        }
-    }
-
     /// Drop the tenant without clean-close bookkeeping (its lease was lost).
     pub async fn abandon(&mut self) {
         self.nat.clear();
         self.copts.clear();
+        self.meta_clear();
         if let Some(l) = crate::locallog::get() {
             // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
             // not apply those records over the new owner's writes.
@@ -517,6 +570,7 @@ impl Entry {
                 }
                 self.nat.clear();
         self.copts.clear();
+        self.meta_clear();
                 self.tenant = Some(t);
                 self.wakes += 1;
                 self.sync_gauges();
@@ -542,6 +596,7 @@ impl Entry {
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
+        self.meta_clear();
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
@@ -565,6 +620,12 @@ impl Entry {
         }
         if let Some(s) = &self.snap {
             return Ok(s.get(key).await?);
+        }
+        if META_CACHE.load(Relaxed) && is_meta_key(key) {
+            if let Some(v) = self.meta_lookup(key) {
+                return Ok(v);
+            }
+            return self.meta_read(self.tenant.as_ref().unwrap(), key, false).await;
         }
         self.tenant.as_ref().unwrap().get(key).await
     }
@@ -619,6 +680,7 @@ impl Entry {
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.nat.clear();
         self.copts.clear();
+        self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -636,6 +698,10 @@ impl Entry {
                 }
             }
         }
+        if ops.iter().any(|o| match o { Op::Put(k, _) | Op::Delete(k) => k.starts_with(b"meta/") }) {
+            // the metadata cache must not answer with the value this batch replaces (see `META_CACHE`)
+            self.meta_clear();
+        }
         crate::fair::note_written(&self.name, ops.iter().map(|o| match o { Op::Put(k, v) => k.len() + v.len(), Op::Delete(k) => k.len() } as u64).sum(), false);
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
         self.sync_gauges();
@@ -643,7 +709,6 @@ impl Entry {
         if let Some(t) = self.tenant.as_ref() {
             t.bind_inflight(Arc::clone(&self.inflight));
         }
-        self.request_compaction_if_needed();
         let Some(mut commit) = staged? else { return Ok(()) };
         if let (Some((log, rec_ops)), Some(seq)) = (record, local_seq) {
             let epoch = self.tenant.as_ref().and_then(|t| t.writer_epoch()).unwrap_or(0);
@@ -679,6 +744,7 @@ impl Entry {
         }
         self.nat.clear();
         self.copts.clear();
+        self.meta_clear();
         if let Some(t) = self.tenant.take() {
             t.close().await?;
             self.closes += 1;
@@ -931,6 +997,7 @@ impl Entry {
             self.leases.acquire(&self.name).await?;
             self.nat.clear();
         self.copts.clear();
+        self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
             self.wakes += 1;
@@ -1046,6 +1113,13 @@ impl ReadView {
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
         let t = g.tenant.as_ref().unwrap();
+        if META_CACHE.load(Relaxed) && is_meta_key(key) {
+            let r = match g.meta_lookup(key) {
+                Some(v) => v,
+                None => g.meta_read(t, key, durable_reads(&g.name)).await?,
+            };
+            return self.done(r);
+        }
         let r = if durable_reads(&g.name) { t.get_durable(key).await? } else { t.get(key).await? };
         self.done(r)
     }
