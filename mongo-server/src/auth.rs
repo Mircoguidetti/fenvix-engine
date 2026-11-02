@@ -40,6 +40,27 @@ struct Conn {
     conv: Option<ConvState>,
     next_conv: i32,
     privs: Option<(u64, Vec<Priv>)>,
+    /// The connection's place in the network limits (per address before authentication, per database after).
+    slot: Option<std::sync::Arc<crate::netguard::ConnSlot>>,
+}
+
+/// The connection's users no longer include one on `db`: give back its place on that database.
+fn left_db(c: &Conn, db: &str) {
+    if let Some(s) = &c.slot {
+        if !c.users.iter().any(|(_, d)| d == db) {
+            s.left(db);
+        }
+    }
+}
+
+/// An authentication on `db` succeeded: take the connection's place on the database first (refused when it is full).
+fn enter_db(c: &Conn, db: &str) -> R<()> {
+    match &c.slot {
+        Some(s) => s.authenticated_on(db).map_err(|limit| {
+            MongoError::new(13, "Unauthorized", format!("too many connections authenticated on database {db} at once (limit {limit}); close idle connections or lower the pool size"))
+        }),
+        None => Ok(()),
+    }
 }
 
 struct ConvState {
@@ -174,9 +195,9 @@ fn role_doc(r: &(String, String)) -> Bson {
 }
 
 impl Server {
-    pub fn auth_connection_opened(&self, conn_id: i64, peer: Option<std::net::IpAddr>, server: Option<std::net::IpAddr>, x509: Option<String>) {
+    pub fn auth_connection_opened(&self, conn_id: i64, peer: Option<std::net::IpAddr>, server: Option<std::net::IpAddr>, x509: Option<String>, slot: Option<std::sync::Arc<crate::netguard::ConnSlot>>) {
         let local = peer.map(|a| a.is_loopback()).unwrap_or(false);
-        self.auth.conns.lock().unwrap().insert(conn_id, Conn { local, peer, server, x509, next_conv: 1, ..Default::default() });
+        self.auth.conns.lock().unwrap().insert(conn_id, Conn { local, peer, server, x509, next_conv: 1, slot, ..Default::default() });
     }
 
     /// Has the connection authenticated as some user?
@@ -212,6 +233,7 @@ impl Server {
             }
             c.users.retain(|(_, d)| d != db);
             c.privs = None;
+            left_db(c, db);
             n += 1;
         }
         n
@@ -553,6 +575,7 @@ impl Server {
         self.with_conn(conn_id, |c| {
             c.users.retain(|(_, d)| d != db);
             c.privs = None;
+            left_db(c, db);
         });
         Ok(ok())
     }
@@ -625,7 +648,7 @@ impl Server {
         match next {
             Next::None => Err(MongoError::new(17, "ProtocolError", "sasl: no conversation in progress".into())),
             Next::Empty(cs) => {
-                self.sasl_success(conn_id, &cs);
+                self.sasl_success(conn_id, &cs)?;
                 Ok(doc! { "conversationId": cid, "done": true, "payload": bin(vec![]), "ok": 1.0 })
             }
             Next::Final(mut cs, msg) => {
@@ -644,7 +667,7 @@ impl Server {
                     return Err(self.auth_failure(conn_id, &cs.db));
                 };
                 if cs.skip_empty {
-                    self.sasl_success(conn_id, &cs);
+                    self.sasl_success(conn_id, &cs)?;
                     return Ok(doc! { "conversationId": cid, "done": true, "payload": bin(v.into_bytes()), "ok": 1.0 });
                 }
                 cs.stage = 2;
@@ -654,12 +677,14 @@ impl Server {
         }
     }
 
-    fn sasl_success(&self, conn_id: i64, cs: &ConvState) {
+    fn sasl_success(&self, conn_id: i64, cs: &ConvState) -> R<()> {
         self.with_conn(conn_id, |c| {
+            enter_db(c, &cs.db)?;
             c.users.retain(|(u, d)| !(d == &cs.db && u == &cs.conv.user));
             c.users.push((cs.conv.user.clone(), cs.db.clone()));
             c.privs = None;
-        });
+            Ok(())
+        })
     }
 
     /// `authenticationRestrictions` of the user (and of its roles): one of the entries must match the connection.
@@ -707,10 +732,12 @@ impl Server {
             return Err(MongoError::new(11, "UserNotFound", format!("Could not find user \"{subject}\" for db \"$external\"")));
         }
         self.with_conn(conn_id, |c| {
+            enter_db(c, "$external")?;
             c.users.retain(|(u, d)| !(d == "$external" && u == &subject));
             c.users.push((subject.clone(), "$external".to_string()));
             c.privs = None;
-        });
+            Ok::<(), MongoError>(())
+        })?;
         Ok(doc! { "dbname": "$external", "user": subject, "ok": 1.0 })
     }
 

@@ -1,0 +1,11 @@
+WARM 1000 databases in 21.8 s; first read with a new client (PBKDF2 in the client included) p50 419.20 ms
+== off cert=srv-ec.pem resumption=off pid=15383
+-- rate 10
+CHURN issued=301 in 30.0 s, done in 30.0 s; reads_ok=301 errors=0 created=301 (10/s) closed=396 checkout_failed=0 latency_ms p50=2.85 p99=7.07 max=35.18
+CPU server 1.19 s (3.953 ms per new connection, 4% of one core), generator 1.41 s (5% of one core); server_rss_kb=178412
+-- rate 800
+CHURN issued=24001 in 30.0 s, done in 30.0 s; reads_ok=24001 errors=0 created=24001 (800/s) closed=23802 checkout_failed=0 latency_ms p50=2.41 p99=12.89 max=69.79
+CPU server 20.47 s (0.853 ms per new connection, 68% of one core), generator 19.24 s (64% of one core); server_rss_kb=216472
+-- rate 800
+CHURN issued=24001 in 30.0 s, done in 30.0 s; reads_ok=24001 errors=0 created=24001 (800/s) closed=23802 checkout_failed=0 latency_ms p50=2.56 p99=19.43 max=68.80
+CPU server 20.57 s (0.857 ms per new connection, 69% of one core), generator 19.61 s (65% of one core); server_rss_kb=217924

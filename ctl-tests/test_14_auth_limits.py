@@ -3,7 +3,8 @@
 * after N failed authentications from one address within T seconds the address is blocked for D seconds (doubling on each new
   block, up to a maximum); failures are also counted per (address, database), with their own threshold, and that block only
   covers the database; a blocked address gets the generic authentication error and its password is not checked;
-* at most --max-conns-per-ip connections at once from one address;
+* at most --max-conns-per-ip connections at once from one address (off by default since P3: the default limits are per
+  address on connections not yet authenticated and per database on authenticated ones, see test_37);
 * --handshake-timeout-secs: TLS handshake and first message within the time, and every message before authentication must arrive
   whole within it once it started (slow senders are closed); --pre-auth-max-message-bytes caps messages before authentication;
 * GET /v1/network shows the state (no user names, no passwords); DELETE /v1/network/blocks/{ip} lifts a block;
@@ -219,25 +220,28 @@ def test_connection_limit_per_address():
             assert w.cmd({"hello": 1, "$db": "admin"})["ok"] == 1
         net = network(s)
         assert net["totals"]["rejected_connections"] >= 1, net["totals"]
-        assert {"ip": "127.0.0.13", "open": 5} in net["connections"], net["connections"]
+        assert {"ip": "127.0.0.13", "open": 5, "unauthenticated": 5} in net["connections"], net["connections"]
         for w in held + [again] + trusted:
             w.close()
     finally:
         s.term()
 
 
-def test_default_connection_limit_is_200():
-    s = start("limconn200", [])
+def test_default_connection_limits():
+    """Defaults since P3: no total per address, 4000 not authenticated per address (these never authenticate), 5000
+    authenticated per database (see test_37)."""
+    s = start("limconn200", ["--handshake-timeout-secs", "0"])   # 4000 silent sockets take longer than the 10 s timeout
     try:
         held = []
-        for i in range(200):
+        for i in range(4000):
             held.append(Wire(s.port, "127.0.0.15"))
         held[-1].cmd({"hello": 1, "$db": "admin"})
         extra = Wire(s.port, "127.0.0.15")
         with pytest.raises((ConnectionError, OSError)):
             extra.cmd({"hello": 1, "$db": "admin"})
         extra.close()
-        assert network(s)["config"]["max_conns_per_ip"] == 200
+        cfg = network(s)["config"]
+        assert (cfg["max_conns_per_ip"], cfg["max_unauth_conns_per_ip"], cfg["max_conns_per_db"]) == (0, 4000, 5000), cfg
         for w in held:
             w.close()
     finally:
