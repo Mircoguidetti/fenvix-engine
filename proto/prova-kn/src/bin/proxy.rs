@@ -119,10 +119,17 @@ async fn servi(st: Arc<Stato>, req: Request<Incoming>) -> anyhow::Result<Respons
         Some(r) => r,
         None => {
             st.get_da_moto.fetch_add(1, Relaxed);
-            let r = inoltra(&st, req).await?;
-            if r.stato == 200 || r.stato == 206 {
-                st.cache.lock().insert(chiave, r.clone());
-            }
+            // in un task a parte: se il cliente annulla, la risposta di moto entra comunque in memoria (altrimenti
+            // le fette più lente, quelle annullate, non entrerebbero mai e passerebbero sempre da moto)
+            let st2 = st.clone();
+            let r = tokio::spawn(async move {
+                let r = inoltra(&st2, req).await?;
+                if r.stato == 200 || r.stato == 206 {
+                    st2.cache.lock().insert(chiave, r.clone());
+                }
+                Ok::<_, anyhow::Error>(r)
+            })
+            .await??;
             r
         }
     };

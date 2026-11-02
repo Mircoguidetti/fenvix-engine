@@ -1,0 +1,1 @@
+proxy su 127.0.0.1:9100 -> http://127.0.0.1:9000, modello Modello { nome: "zero", mediana_ms: 0.0, sigma: 0.0, banda_mb_s: 0.0, sigma_banda: 0.0, lenti_frac: 0.0, lenti_ms: 0.0 }
