@@ -147,9 +147,15 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
     ctl.dbs.leases.acquire(target).await?;
     let r = fork_leased(ctl, g, src, target, mode, &list, std::time::Instant::now()).await;
     if ours {
-        // (After a rollback the lease object is gone with the rest of the branch: the release then finds nothing to free
-        // and only forgets it; it never frees a lease another process took since.)
-        ctl.dbs.leases.release(target).await;
+        // A fork that leaves no branch (refused, or rolled back) leaves no lease object either, like a database that turned
+        // out not to exist (dbs.rs): an erase finds nothing left under the name. Otherwise the lease is released. (After a
+        // rollback the object is already gone with the rest of the branch.)
+        let none = r.is_err() && !meta::exists(ctl, target).await.unwrap_or(true);
+        if none {
+            ctl.dbs.leases.discard(target).await;
+        } else {
+            ctl.dbs.leases.release(target).await;
+        }
     }
     // The branch's entry lock last: no command of this process opens the branch while the lease is being released.
     drop(gt);
