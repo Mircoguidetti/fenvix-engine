@@ -29,11 +29,11 @@ def carica(globs):
                 if k == "info":
                     info[d["trace"]] = d
                 elif k == "warm":
-                    warm[d["trace"]].append(d)
+                    warm[d["trace"]] = [x for x in warm[d["trace"]] if (x["combo"], x["b"]) != (d["combo"], d["b"])] + [d]
                 elif k == "verifica":
-                    ver.append(d)
+                    ver = [x for x in ver if (x["trace"], x["policy"], x["b"]) != (d["trace"], d["policy"], d["b"])] + [d]
                 elif k == "libcachesim":
-                    lcs.append(d)
+                    lcs = [x for x in lcs if (x.get("trace"), x["policy"], x["cap"]) != (d.get("trace"), d["policy"], d["cap"])] + [d]
                 elif k is None and "combo" in d:
                     rows[(d["trace"], d["combo"], d["b"])] = d   # l'ultima vince (la corsa piena dopo la verifica)
     return rows, info, warm, ver, lcs
@@ -42,7 +42,10 @@ def costo(d):
     """Costo al mese in più (STIMATO) degli attrezzi, e il costo base delle GET su S3 Standard."""
     md = d.get("medio_doppia", {})
     base_get = d["s3_gets_per_read"] * R * P_GET_S3
-    doppie = md.get("extra_gets_per_read", 0) * R * P_GET_S3     # tetto: tutte al prezzo Standard
+    # le GET doppie al prezzo del ripiano da cui partono (pesato con le letture che vanno su S3 o su Express)
+    tot = d["to_s3"] + d["to_ex"]
+    p_mix = (d["to_s3"] * P_GET_S3 + d["to_ex"] * P_GET_EX) / tot if tot > 0 else P_GET_S3
+    doppie = md.get("extra_gets_per_read", 0) * R * p_mix
     pf = d["pf_gets_s3_per_read"] * R * P_GET_S3 + d["pf_gets_ex_per_read"] * R * P_GET_EX
     e = 1.0 if d.get("full") else d["e"]
     ex_sto = e * TB_GB * P_EX_GB * BUCKETS if (e > 0) else 0
