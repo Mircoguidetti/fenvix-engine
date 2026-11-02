@@ -1,0 +1,14 @@
+{
+ "secondi_misurati": 235.070661293,
+ "commit_s": 20000.05828340059,
+ "record_scaricati_s": 20020.120648463675,
+ "mb_sst_s": 25.087760639977468,
+ "scarichi_s": 2.9608118519413282,
+ "core_worker": 0.10758467203390258,
+ "core_registro_e_generatore": 0.3942783075333506,
+ "ritardo_ms_max": 671,
+ "ritardo_ms_ultimo": 222,
+ "non_su_s3_mb_max": 12.651618,
+ "rss_worker_mb_max": 399.38048,
+ "errori_worker": 0
+}

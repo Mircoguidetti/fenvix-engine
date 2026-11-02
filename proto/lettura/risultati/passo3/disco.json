@@ -1,0 +1,112 @@
+{
+  "cache": "disco",
+  "conc": 8,
+  "db": 4,
+  "docs_per_db": 50000,
+  "errori": 0,
+  "lat_dagli_sst": {
+    "max_us": 8567,
+    "media_us": 149.10413568167044,
+    "n": 76650,
+    "p50_us": 113,
+    "p90_us": 191,
+    "p999_us": 3117,
+    "p99_us": 1171
+  },
+  "lat_dalla_finestra": {
+    "max_us": 8327,
+    "media_us": 104.57793271179582,
+    "n": 123350,
+    "p50_us": 85,
+    "p90_us": 150,
+    "p999_us": 1812,
+    "p99_us": 541
+  },
+  "lat_get_minio_cumulata": {
+    "max_us": 35839,
+    "media_us": 1841.8167315896847,
+    "n": 16173,
+    "p50_us": 1675,
+    "p90_us": 2279,
+    "p999_us": 14567,
+    "p99_us": 5383
+  },
+  "lat_tutte": {
+    "max_us": 8567,
+    "media_us": 121.64260000000026,
+    "n": 200000,
+    "p50_us": 95,
+    "p90_us": 169,
+    "p999_us": 2503,
+    "p99_us": 747
+  },
+  "lettore_dopo": {
+    "cache_hit": 1329184,
+    "cache_miss": 169770,
+    "cache_sfratti": 0,
+    "cache_usati": 283769181,
+    "da_finestra": 175237,
+    "da_sst": 224763,
+    "get_blocco": 16146,
+    "get_fetta": 0,
+    "get_intero": 3,
+    "get_manifest": 4,
+    "get_meta": 20,
+    "letture": 400000,
+    "run_sparite": 0
+  },
+  "lettore_prima": {
+    "cache_hit": 808747,
+    "cache_miss": 168922,
+    "cache_sfratti": 0,
+    "cache_usati": 276581903,
+    "da_finestra": 51887,
+    "da_sst": 148113,
+    "get_blocco": 15735,
+    "get_fetta": 0,
+    "get_intero": 3,
+    "get_manifest": 4,
+    "get_meta": 15,
+    "letture": 200000,
+    "run_sparite": 0
+  },
+  "letture": 200000,
+  "letture_s": 65114.30940733646,
+  "s3_durante_misura": {
+    "cas_304": 0,
+    "cas_412": 0,
+    "delete": 0,
+    "errori": 0,
+    "get": 0,
+    "get_byte": 7115158,
+    "get_range": 416,
+    "list": 0,
+    "put": 0,
+    "put_byte": 0,
+    "put_cond": 0
+  },
+  "scritture_s": 2000.0,
+  "secondi": 3.07152148,
+  "verifica": {
+    "chiavi_del_precarico_presenti": 10722,
+    "chiavi_scritte_giuste": 92425,
+    "sbagliate": 0
+  },
+  "vsize": 1024,
+  "worker": {
+    "byte_sst": 129487416,
+    "cancellati": 0,
+    "compatta_in": 187724480,
+    "compatta_out": 187695105,
+    "compatta_rifatte": 0,
+    "compattazioni": 30,
+    "conflitti": 0,
+    "conflitti_vinti_dopo": 0,
+    "errori": 0,
+    "incerti": 0,
+    "orfani": 0,
+    "record": 120286,
+    "riparazioni": 0,
+    "scarichi": 116
+  }
+}
