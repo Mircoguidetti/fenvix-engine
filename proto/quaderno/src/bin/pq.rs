@@ -137,6 +137,7 @@ fn main() -> anyhow::Result<()> {
                     read_lag_ms: a.u("read-lag-ms", 5),
                     witness_rate: a.f("witness-rate", 0.0),
                     witness_out: a.s("witness-out", ""),
+                    witness_start: a.u("witness-start", 0),
                 },
             ));
         }
@@ -207,7 +208,7 @@ fn main() -> anyhow::Result<()> {
         "check-zona" => {
             let r = rt(2);
             let v = r.block_on(quaderno::copia::check_zona(cluster(&a), &a.s("s3", "http://127.0.0.1:9000"), &a.s("bucket", "pq-sst"), a.u("groups", 16),
-                &a.s("witness", "witness.csv"), a.u("kill-ms", 0), a.u("window-ms", 1500)))?;
+                &a.s("witness", "witness.csv"), a.u("kill-ms", 0), a.u("window-ms", 1500), a.u("buco-pos", 0)))?;
             println!("{v}");
         }
         "status" => {

@@ -177,6 +177,8 @@ pub struct MixedCfg {
     /// ogni scrittura confermata sia arrivata su S3
     pub witness_rate: f64,
     pub witness_out: String,
+    /// primo numero dei testimoni (prova-zone: un secondo carico non deve riusare le chiavi del primo)
+    pub witness_start: u64,
 }
 
 pub const WITNESS_DB: u64 = 777_777_777;
@@ -473,7 +475,7 @@ pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     }
     {
         let st2 = st.clone();
-        let seq = Arc::new(AtomicU64::new(0));
+        let seq = Arc::new(AtomicU64::new(c.witness_start));
         hs.push(open_loop(c.witness_rate, stop.clone(), move |_sched| {
             let st = st2.clone();
             let n = seq.fetch_add(1, Relaxed);

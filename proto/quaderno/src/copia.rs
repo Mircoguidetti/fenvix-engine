@@ -427,7 +427,10 @@ pub async fn ripristina(c: RestoreCfg) -> anyhow::Result<serde_json::Value> {
 /// Controllo dopo il ripristino: ogni testimone confermato (file "n,posizione,ms della conferma") deve stare nella
 /// cella ripristinata, nel quaderno (lettura dal capo alla posizione confermata) o negli SST dei manifest. Le
 /// mancanti si dividono tra "nella finestra dichiarata" (confermate dopo `kill_ms - window_ms`) e "oltre" (violazione).
-pub async fn check_zona(cl: Arc<crate::client::Cluster>, endpoint: &str, bucket: &str, groups: u64, witness: &str, kill_ms: u64, window_ms: u64) -> anyhow::Result<serde_json::Value> {
+/// Con `gap_pos` > 0 (prova del buco) le scritture con posizione ≥ `gap_pos` che mancano, o che si leggono con una
+/// versione più vecchia, sono "perse per il buco" (attese: il ripristino si ferma prima); quelle prima del buco devono
+/// esserci tutte.
+pub async fn check_zona(cl: Arc<crate::client::Cluster>, endpoint: &str, bucket: &str, groups: u64, witness: &str, kill_ms: u64, window_ms: u64, gap_pos: Pos) -> anyhow::Result<serde_json::Value> {
     use crate::codec::{GetRes, Req, Resp};
     use futures::StreamExt;
     let db = crate::bench::db_id(crate::bench::WITNESS_DB);
@@ -480,7 +483,7 @@ pub async fn check_zona(cl: Arc<crate::client::Cluster>, endpoint: &str, bucket:
         .await;
     let lim = kill_ms.saturating_sub(window_ms);
     let (mut in_q, mut in_sst, mut wrong, mut err) = (0u64, 0u64, 0u64, 0u64);
-    let (mut lost_in, mut lost_beyond) = (0u64, 0u64);
+    let (mut lost_in, mut lost_beyond, mut lost_gap) = (0u64, 0u64, 0u64);
     let mut oldest_lost_ms_before_kill = 0u64;
     let mut newest_present_ms_before_kill = u64::MAX;
     let mut examples = vec![];
@@ -490,6 +493,7 @@ pub async fn check_zona(cl: Arc<crate::client::Cluster>, endpoint: &str, bucket:
                 if *st == 0 { in_q += 1 } else { in_sst += 1 }
                 newest_present_ms_before_kill = newest_present_ms_before_kill.min(kill_ms.saturating_sub(*t));
             }
+            2 | 3 if gap_pos > 0 && *pos >= gap_pos => lost_gap += 1,
             2 => {
                 oldest_lost_ms_before_kill = oldest_lost_ms_before_kill.max(kill_ms.saturating_sub(*t));
                 if *t <= lim {
@@ -514,7 +518,7 @@ pub async fn check_zona(cl: Arc<crate::client::Cluster>, endpoint: &str, bucket:
     Ok(serde_json::json!({
         "check": "zona-ripristinata", "testimoni_confermati": ws.len(), "confermati_dopo_la_morte": after_kill,
         "nel_quaderno": in_q, "negli_sst": in_sst, "persi_nella_finestra": lost_in, "persi_oltre_la_finestra": lost_beyond,
-        "doppi_o_spostati": wrong, "errori_di_lettura": err, "finestra_ms": window_ms,
+        "doppi_o_spostati": wrong, "persi_per_il_buco": lost_gap, "buco_pos": gap_pos, "errori_di_lettura": err, "finestra_ms": window_ms,
         "piu_vecchio_perso_ms_prima_della_morte": oldest_lost_ms_before_kill,
         "piu_recente_presente_ms_prima_della_morte": if newest_present_ms_before_kill == u64::MAX { serde_json::Value::Null } else { newest_present_ms_before_kill.into() },
         "oggetti_sst_letti": objects, "posizione_letta": s, "esempi": examples,
