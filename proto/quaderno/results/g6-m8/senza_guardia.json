@@ -1,0 +1,76 @@
+{
+ "prova": "senza_guardia",
+ "secondi": 20.2,
+ "esiti": {
+  "ok": 4349,
+  "dup": 7825
+ },
+ "per_server": {
+  "A": {
+   "ok": 2192,
+   "dup": 3908
+  },
+  "B": {
+   "dup": 3917,
+   "ok": 2157
+  }
+ },
+ "ops_confermate_al_secondo": 601.7,
+ "numeri": {
+  "valori_confermati": 3858,
+  "documenti": 4349,
+  "valori_con_ignoti": 0
+ },
+ "errori": [
+  "491 valori di email con più documenti (es. [('u358728498597@x', 2), ('u358728498604@x', 2), ('u358728498609@x', 2)])",
+  "491 valori di email confermati due volte (es. [('u358728498597@x', ['A-2-11', 'B-0-5']), ('u358728498604@x', ['B-0-7', 'A-3-8']), ('u358728498609@x', ['B-0-8', 'A-0-11'])])"
+ ],
+ "vince": false,
+ "stats": {
+  "A": {
+   "commits": 6105,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 3,
+   "guard": false,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642513, 18)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642513, 18)"
+  },
+  "B": {
+   "commits": 6077,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 3,
+   "guard": false,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642513, 19)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642513, 19)"
+  }
+ },
+ "codici": {
+  "dup:11000": 7825
+ },
+ "nota": "prova negativa: qui gli errori sono attesi (mostrano perché serve la guardia)",
+ "durata_s": 23.1
+}

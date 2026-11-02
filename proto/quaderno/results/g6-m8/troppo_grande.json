@@ -1,0 +1,56 @@
+{
+ "prova": "troppo_grande",
+ "numeri": {
+  "insert_many_s": 7.63,
+  "update_many_troppo_grande": "errore 257: comando troppo grande per un record del quaderno (40000 scritture e 40003 letture dichiarate, 82.1 MiB; limiti 65535 scritture, 65535 letture, 32 MiB); il comando non ha scritto niente: va diviso in c",
+  "update_many_s": 5.36,
+  "insert_40000_un_comando": "{'ok': 0.0, 'errmsg': 'comando troppo grande per un record del quaderno (80001 scritture e 40003 letture dichiarate, 4.9 MiB; limiti 65535 scritture, 65535 letture, 32 MiB); il comando non ha scritto niente: va diviso in comandi più piccoli', 'code': 257, 'codeName': 'TransactionTooLarge', '$cluster",
+  "insert_40000_un_comando_s": 3.55,
+  "insert_many_40000_driver_s": 3.99
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 542,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "tooLarge": 2,
+   "reservations": 120,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642681, 4000)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642681, 4000)"
+  },
+  "B": {
+   "commits": 0,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642659, 1)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642659, 1)"
+  }
+ },
+ "durata_s": 25.5
+}

@@ -1,0 +1,67 @@
+{
+ "prova": "upsert",
+ "secondi": 20.1,
+ "esiti": {
+  "ok": 10302
+ },
+ "per_server": {
+  "A": {
+   "ok": 5159
+  },
+  "B": {
+   "ok": 5143
+  }
+ },
+ "ops_confermate_al_secondo": 511.7,
+ "numeri": {
+  "upsert_confermati": 10302,
+  "somma_n": 10302,
+  "email": 808
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 5162,
+   "conflicts": 893,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 893,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 1,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642581, 145)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642581, 145)"
+  },
+  "B": {
+   "commits": 5144,
+   "conflicts": 905,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 905,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 1,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642581, 152)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642581, 152)"
+  }
+ },
+ "codici": {},
+ "durata_s": 22.8
+}

@@ -12,7 +12,7 @@ Uso: lotti.py OUT RATE "1,16,32" "64,256" REPS [KEYS] [VAL] [extra args per le r
 """
 import json, os, subprocess, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
-PQ = os.path.join(HERE, '..', 'target', 'release', 'pq')
+PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', 'pq')
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 hz = os.sysconf('SC_CLK_TCK')
 out, rate, batches, clients, reps = sys.argv[1], float(sys.argv[2]), [int(x) for x in sys.argv[3].split(',')], [int(x) for x in sys.argv[4].split(',')], int(sys.argv[5])
@@ -26,6 +26,17 @@ os.makedirs(out, exist_ok=True)
 def cpu(path):
     f = open(path).read().rsplit(')', 1)[1].split()
     return (int(f[11]) + int(f[12])) / hz
+
+
+def thr_cpu(pid, name):
+    # CPU di un thread per nome (giro 6: l'indicizzatore), None se non c'è
+    try:
+        for t in os.listdir(f'/proc/{pid}/task'):
+            if open(f'/proc/{pid}/task/{t}/comm').read().strip() == name:
+                return cpu(f'/proc/{pid}/task/{t}/stat')
+    except Exception:
+        pass
+    return None
 
 
 def status():
@@ -54,18 +65,22 @@ for rep in range(reps):
                 if k.startswith('r') or k in ('proxy', 'flusher', 'minio'):
                     pin(v, 0 if v == lp else 1)
             gen = subprocess.Popen(['nice', '-n', os.environ.get('PQ_GEN_NICE', '0'), 'taskset', '-c', '1', PQ, 'lotti', '--rate', str(rate), '--batch', str(b), '--clients', str(c), '--conns', str(min(c, 256)),
-                                    '--secs', str(SECS), '--warm', str(WARM), '--keys', str(keys), '--val', str(val), '--real', os.environ.get('PQ_REAL', '0')], stdout=subprocess.PIPE, text=True)
+                                    '--secs', str(SECS), '--warm', str(WARM), '--keys', str(keys), '--val', str(val), '--real', os.environ.get('PQ_REAL', '0'), '--dbs', os.environ.get('PQ_DBS', '100'), '--reads', os.environ.get('PQ_READS', '0')], stdout=subprocess.PIPE, text=True)
             time.sleep(WARM + 3)
             s0 = [s for s in status() if s.get('id') == lid][0]
             ci0 = s0['commit_index']
             p0, t0 = cpu(f'/proc/{lp}/stat'), cpu(f'/proc/{lp}/task/{lp}/stat')
             f0 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            fm0 = {k: cpu(f'/proc/{v}/task/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            ix0 = {k: thr_cpu(v, 'indicizzatore') for k, v in pids.items() if k.startswith('r')}
             w0 = time.time()
             time.sleep(SAMPLE)
             s1 = [s for s in status() if s.get('id') == lid][0]
             ci1 = s1['commit_index']
             p1, t1 = cpu(f'/proc/{lp}/stat'), cpu(f'/proc/{lp}/task/{lp}/stat')
             f1 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            fm1 = {k: cpu(f'/proc/{v}/task/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            ix1 = {k: thr_cpu(v, 'indicizzatore') for k, v in pids.items() if k.startswith('r')}
             el = time.time() - w0
             n = ci1 - ci0
             g = json.loads(gen.communicate()[0].strip().splitlines()[-1])
@@ -78,11 +93,12 @@ for rep in range(reps):
             ms = {s['id']: s.get('mem_used') for s in status() if 'id' in s}
             r = {'rep': rep, 'mem_used_bytes': ms, 'window_ms': os.environ.get('PQ_WINDOW_MS', '60000'), 'flusher': os.environ.get('PQ_FLUSHER', '0'), 'crono_us_per_rec': {k: round((c1[k] - c0.get(k, 0)) * 1000 / max(n, 1), 2) for k in c1 if c1[k] - c0.get(k, 0) > 0}, 'batch': b, 'clients': c, 'rate': rate, 'keys': keys, 'val': val, 'recs_sampled': n, 'recs_per_s_sampled': n / el,
                  'leader_proc_us_per_rec': (p1 - p0) * 1e6 / max(n, 1), 'leader_main_us_per_rec': (t1 - t0) * 1e6 / max(n, 1),
-                 'leader_cores': (p1 - p0) / el, 'leader_main_cores': (t1 - t0) / el, 'real': os.environ.get('PQ_REAL', '0'), 'zstd_main': os.environ.get('PQ_ZSTD_MAIN', '0'), 'follower_us_per_rec': {k: (f1[k] - f0[k]) * 1e6 / max(n, 1) for k in f0},
+                 'leader_cores': (p1 - p0) / el, 'leader_main_cores': (t1 - t0) / el, 'real': os.environ.get('PQ_REAL', '0'), 'zstd_main': os.environ.get('PQ_ZSTD_MAIN', '0'), 'follower_us_per_rec': {k: (f1[k] - f0[k]) * 1e6 / max(n, 1) for k in f0}, 'follower_main_us_per_rec': {k: (fm1[k] - fm0[k]) * 1e6 / max(n, 1) for k in fm0}, 'indexer_us_per_rec': {k: (ix1[k] - ix0[k]) * 1e6 / max(n, 1) for k in ix0 if ix1.get(k) is not None and ix0[k] is not None}, 'leader': f'r{lid}',
                  'zstd': os.environ.get('PQ_ZSTD', '0'),
                  'repl_raw_bytes_per_rec': (s1.get('repl_raw', 0) - s0.get('repl_raw', 0)) / max(n, 1),
                  'repl_sent_bytes_per_rec': (s1.get('repl_sent', 0) - s0.get('repl_sent', 0)) / max(n, 1),
-                 'gen': {k: g[k] for k in ('recs_per_s', 'unknown', 'rejected', 'conflicts')}, 'lat': g['latency']}
+                 'gen': {k: g[k] for k in ('recs_per_s', 'unknown', 'rejected', 'conflicts')}, 'lat': g['latency'],
+                 'dbs': os.environ.get('PQ_DBS', '100'), 'reads_per_s': g.get('reads_per_s'), 'read_latency': g.get('read_latency'), 'reads_out_of_window': g.get('reads_out_of_window'), 'bin': PQ}
             print(json.dumps(r), flush=True)
             res.append(r)
             with open(os.path.join(out, 'lotti.jsonl'), 'a') as f:

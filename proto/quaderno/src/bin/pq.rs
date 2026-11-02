@@ -132,7 +132,7 @@ fn main() -> anyhow::Result<()> {
         "lotti" => {
             let r = rt(a.u("threads", 2) as usize);
             r.block_on(bench::lotti(cluster(&a), a.f("rate", 4000.0), a.u("batch", 1) as usize, a.u("clients", 64) as usize, a.u("secs", 20), a.u("warm", 5),
-                a.u("keys", 1) as usize, a.u("val", 200) as usize, a.u("dbs", 100), a.u("real", 0) == 1));
+                a.u("keys", 1) as usize, a.u("val", 200) as usize, a.u("dbs", 100), a.u("real", 0), a.f("reads", 0.0)));
         }
         "hot" => {
             let r = rt(a.u("threads", 2) as usize);

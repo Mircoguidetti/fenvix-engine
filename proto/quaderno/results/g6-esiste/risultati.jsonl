@@ -1,0 +1,4 @@
+{"bench":"esiste-in-gara","conflicts_retried":2109,"deletes":880,"inc_nomatch":5922,"inc_ok":74415,"keys":8,"recreates":880,"secs":30}
+{"check": "porcupine-esiste", "ops": 133258, "counts": "map[del/ok:880 inc/nomatch:5922 inc/ok:74415 put/ok:888 read/absent:3190 read/ok:47963]", "result": "Ok", "seconds": 0.6}
+{"bench":"esiste-in-gara","conflicts_retried":0,"deletes":876,"inc_nomatch":2398,"inc_ok":73055,"keys":8,"recreates":876,"secs":30}
+{"check": "porcupine-esiste", "ops": 128593, "counts": "map[del/ok:876 inc/nomatch:2398 inc/ok:73055 put/ok:884 read/absent:1580 read/ok:49800]", "result": "Illegal", "seconds": 0.2}

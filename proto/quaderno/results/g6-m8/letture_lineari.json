@@ -1,0 +1,14 @@
+{
+ "prova": "letture_lineari",
+ "secondi": 20.0,
+ "capo_ucciso": 1,
+ "t_uccisione_s": 8.54,
+ "numeri": {
+  "letture_controllate": 13290,
+  "scritture_rilette": 2784
+ },
+ "violazioni": 0,
+ "errori": [],
+ "vince": true,
+ "durata_s": 22.5
+}

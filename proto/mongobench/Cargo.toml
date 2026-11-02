@@ -1,0 +1,18 @@
+[package]
+name = "mongobench"
+version = "0.1.0"
+edition = "2021"
+description = "M16: carico B1 su mongod (riferimento per il capo del quaderno)"
+
+[workspace]
+
+[dependencies]
+mongodb = "3.2"
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+rand = "0.8"
+hdrhistogram = "7"
+serde_json = "1"
+
+[profile.release]
+debug = 1

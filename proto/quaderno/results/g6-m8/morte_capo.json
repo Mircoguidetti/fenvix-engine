@@ -1,0 +1,149 @@
+{
+ "prova": "morte_capo",
+ "secondi": 25.1,
+ "esiti": {
+  "ok": 10258,
+  "dup": 3305
+ },
+ "per_server": {
+  "A": {
+   "ok": 5109,
+   "dup": 1691
+  },
+  "B": {
+   "ok": 5149,
+   "dup": 1614
+  }
+ },
+ "ops_confermate_al_secondo": 541.0,
+ "numeri": {
+  "stesso_id": {
+   "valori_confermati": 2844,
+   "documenti": 2844,
+   "valori_con_ignoti": 0
+  },
+  "stessa_email": {
+   "valori_confermati": 2813,
+   "documenti": 2813,
+   "valori_con_ignoti": 0
+  },
+  "incrementi": {
+   "incrementi_confermati": 4601,
+   "ignoti": 0,
+   "somma_finale": 4601
+  }
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 6806,
+   "conflicts": 172,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 172,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 3,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642488, 85)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642488, 85)"
+  },
+  "B": {
+   "commits": 6766,
+   "conflicts": 187,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 187,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 3,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793642488, 83)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793642488, 83)"
+  }
+ },
+ "codici": {
+  "dup:11000": 3305
+ },
+ "t_uccisione_s": 7.16,
+ "buco_massimo_dopo_uccisione_s": {
+  "A": 2.548,
+  "B": 2.538
+ },
+ "ops_al_secondo": {
+  "A": [
+   254,
+   299,
+   266,
+   229,
+   223,
+   228,
+   275,
+   64,
+   0,
+   78,
+   303,
+   276,
+   326,
+   303,
+   293,
+   363,
+   353,
+   294,
+   326,
+   292,
+   327,
+   341,
+   362,
+   364,
+   344,
+   17
+  ],
+  "B": [
+   235,
+   280,
+   253,
+   218,
+   223,
+   231,
+   287,
+   60,
+   0,
+   77,
+   335,
+   285,
+   325,
+   304,
+   284,
+   355,
+   395,
+   283,
+   311,
+   293,
+   296,
+   349,
+   367,
+   385,
+   316,
+   16
+  ]
+ },
+ "capo_ucciso": 2,
+ "capo_nuovo": 1,
+ "durata_s": 29.3
+}
