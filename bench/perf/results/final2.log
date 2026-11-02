@@ -1,0 +1,43 @@
+00:23:36 final2-new               fenvix L=  1 read c= 8 ops/s=  18673 ops/cpu_s=  18970 srv=0.98 gen=1.20 p50=0.41 p99=0.93 err=0 steal=0.9%
+00:25:39 final2-new               fenvix L=  1 read c= 8 ops/s=  19228 ops/cpu_s=  19521 srv=0.98 gen=1.18 p50=0.40 p99=0.89 err=0 steal=0.9%
+00:27:42 final2-new               fenvix L=  1 read c= 8 ops/s=  19727 ops/cpu_s=  20027 srv=0.98 gen=1.16 p50=0.40 p99=0.86 err=0 steal=1.0%
+00:27:49 mongod loaded layout 1 in 1 s
+00:29:49 final2-mongod            mongod L=  1 read c= 8 ops/s=  20692 ops/cpu_s=  20993 srv=0.99 gen=1.17 p50=0.36 p99=0.84 err=0 steal=1.0%
+00:31:49 final2-mongod            mongod L=  1 read c= 8 ops/s=  20904 ops/cpu_s=  21208 srv=0.99 gen=1.15 p50=0.36 p99=0.86 err=0 steal=0.9%
+00:33:49 final2-mongod            mongod L=  1 read c= 8 ops/s=  20500 ops/cpu_s=  20834 srv=0.98 gen=1.14 p50=0.36 p99=0.84 err=0 steal=1.0%
+00:35:51 final2-new               fenvix L=100 read c=16 ops/s=  21463 ops/cpu_s=  21787 srv=0.99 gen=1.14 p50=0.71 p99=1.63 err=0 steal=0.9%
+00:37:54 final2-new               fenvix L=100 read c=16 ops/s=  21794 ops/cpu_s=  22130 srv=0.98 gen=1.12 p50=0.69 p99=1.66 err=0 steal=1.0%
+00:39:57 final2-new               fenvix L=100 read c=16 ops/s=  22076 ops/cpu_s=  22341 srv=0.99 gen=1.12 p50=0.69 p99=1.54 err=0 steal=0.8%
+00:40:05 mongod loaded layout 100 in 3 s
+00:42:05 final2-mongod            mongod L=100 read c= 8 ops/s=  18832 ops/cpu_s=  19090 srv=0.99 gen=1.10 p50=0.40 p99=0.89 err=0 steal=0.9%
+00:44:05 final2-mongod            mongod L=100 read c= 8 ops/s=  19145 ops/cpu_s=  19421 srv=0.99 gen=1.10 p50=0.39 p99=0.91 err=0 steal=0.9%
+00:46:05 final2-mongod            mongod L=100 read c= 8 ops/s=  18140 ops/cpu_s=  18445 srv=0.98 gen=1.11 p50=0.41 p99=0.99 err=0 steal=1.0%
+00:48:07 final2-new               fenvix L=  1 rw   c= 2 ops/s=   2833 ops/cpu_s=   2908 srv=0.97 gen=0.36 p50=0.63 p99=2.12 err=0 steal=0.9%
+00:50:10 final2-new               fenvix L=  1 rw   c= 2 ops/s=   2681 ops/cpu_s=   2755 srv=0.97 gen=0.36 p50=0.65 p99=2.35 err=0 steal=0.9%
+00:52:14 final2-new               fenvix L=  1 rw   c= 2 ops/s=   2651 ops/cpu_s=   2722 srv=0.97 gen=0.35 p50=0.66 p99=2.35 err=0 steal=0.9%
+00:52:20 mongod loaded layout 1 in 1 s
+00:54:20 final2-mongod            mongod L=  1 rw   c=16 ops/s=   7053 ops/cpu_s=   7488 srv=0.94 gen=0.70 p50=2.10 p99=5.57 err=0 steal=0.9%
+00:56:20 final2-mongod            mongod L=  1 rw   c=16 ops/s=   7104 ops/cpu_s=   7541 srv=0.94 gen=0.68 p50=2.08 p99=5.81 err=0 steal=1.0%
+00:58:20 final2-mongod            mongod L=  1 rw   c=16 ops/s=   7321 ops/cpu_s=   7779 srv=0.94 gen=0.66 p50=2.04 p99=5.30 err=0 steal=0.9%
+01:00:24 final2-new               fenvix L=100 rw   c= 8 ops/s=   5685 ops/cpu_s=   5742 srv=0.99 gen=0.57 p50=1.28 p99=3.95 err=0 steal=0.8%
+01:02:55 final2-new               fenvix L=100 rw   c= 8 ops/s=   5615 ops/cpu_s=   5675 srv=0.99 gen=0.55 p50=1.29 p99=4.00 err=0 steal=0.9%
+01:05:23 final2-new               fenvix L=100 rw   c= 8 ops/s=   5686 ops/cpu_s=   5750 srv=0.99 gen=0.57 p50=1.27 p99=3.96 err=0 steal=1.0%
+01:05:32 mongod loaded layout 100 in 3 s
+01:07:32 final2-mongod            mongod L=100 rw   c=16 ops/s=   7042 ops/cpu_s=   7441 srv=0.95 gen=0.67 p50=2.12 p99=5.37 err=0 steal=0.8%
+01:09:32 final2-mongod            mongod L=100 rw   c=16 ops/s=   6970 ops/cpu_s=   7396 srv=0.94 gen=0.65 p50=2.12 p99=5.90 err=0 steal=0.8%
+01:11:32 final2-mongod            mongod L=100 rw   c=16 ops/s=   7000 ops/cpu_s=   7392 srv=0.95 gen=0.65 p50=2.14 p99=6.05 err=0 steal=0.9%
+01:14:01 final2-new               fenvix L=  1 insert c=32 ops/s=   4012 ops/cpu_s=   4051 srv=0.99 gen=0.35 p50=5.89 p99=37.10 err=0 steal=0.8%
+01:16:06 final2-new               fenvix L=  1 insert c=32 ops/s=   3984 ops/cpu_s=   4022 srv=0.99 gen=0.34 p50=6.05 p99=35.48 err=0 steal=0.9%
+01:18:12 final2-new               fenvix L=  1 insert c=32 ops/s=   3967 ops/cpu_s=   4003 srv=0.99 gen=0.34 p50=6.08 p99=35.62 err=0 steal=0.8%
+01:18:20 mongod loaded layout 1 in 1 s
+01:20:20 final2-mongod            mongod L=  1 insert c=256 ops/s=  10638 ops/cpu_s=  11030 srv=0.96 gen=0.74 p50=21.75 p99=45.61 err=0 steal=0.9%
+01:22:20 final2-mongod            mongod L=  1 insert c=256 ops/s=  11041 ops/cpu_s=  11451 srv=0.96 gen=0.79 p50=20.95 p99=46.94 err=0 steal=0.8%
+01:24:20 final2-mongod            mongod L=  1 insert c=256 ops/s=  11292 ops/cpu_s=  11814 srv=0.96 gen=0.81 p50=20.58 p99=44.03 err=0 steal=0.9%
+01:26:24 final2-new               fenvix L=100 insert c=32 ops/s=   4295 ops/cpu_s=   4347 srv=0.99 gen=0.49 p50=6.70 p99=18.54 err=0 steal=1.0%
+01:29:17 final2-new               fenvix L=100 insert c=32 ops/s=   3674 ops/cpu_s=   3715 srv=0.99 gen=0.47 p50=7.67 p99=24.01 err=0 steal=1.0%
+01:32:05 final2-new               fenvix L=100 insert c=32 ops/s=   3256 ops/cpu_s=   3288 srv=0.99 gen=0.41 p50=9.26 p99=19.82 err=0 steal=0.9%
+01:32:20 mongod loaded layout 100 in 4 s
+01:34:20 final2-mongod            mongod L=100 insert c=256 ops/s=   9408 ops/cpu_s=   9686 srv=0.97 gen=0.72 p50=23.93 p99=68.68 err=0 steal=0.8%
+01:36:20 final2-mongod            mongod L=100 insert c=256 ops/s=   6551 ops/cpu_s=   6706 srv=0.98 gen=0.53 p50=36.78 p99=121.35 err=0 steal=0.9%
+01:38:20 final2-mongod            mongod L=100 insert c=256 ops/s=   5171 ops/cpu_s=   5282 srv=0.98 gen=0.45 p50=46.77 p99=138.97 err=0 steal=1.1%
+FINAL-DONE

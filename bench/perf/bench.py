@@ -13,7 +13,7 @@ Usage:
   bench.py snapshot LAYOUT                      load the engine once, keep the store under $BENCH_DATA/snap-LAYOUT
   bench.py run SERVER LAYOUT WORKLOAD CLIENTS [--warmup S] [--duration S] [--reps N] [--label TEXT] [--bin PATH]
                                                 SERVER: fenvix | mongod. Appends to $BENCH_RESULTS/raw.jsonl.
-  bench.py sweep SERVER LAYOUT WORKLOAD         short runs over 1, 2, 4 ... 32 clients
+  bench.py sweep SERVER LAYOUT WORKLOAD [--clients 1,2,4]   short runs over 1, 2, 4 ... 32 clients
 """
 import argparse, json, os, shutil, signal, subprocess, sys, time
 
@@ -200,7 +200,9 @@ def one(server, layout, workload, clients, warmup, duration, label, binary, rep)
     pid = fresh(server, layout, binary)
     st0 = steal_cpu0()
     r = loadgen(["-mode", "run", "-workload", workload, "-dbs", str(dbs), "-docs", str(docs), "-clients",
-                 str(clients), "-warmup", str(warmup), "-duration", str(duration), "-pid", str(pid)])
+                 str(clients), "-warmup", str(warmup), "-duration", str(duration), "-pid", str(pid),
+                 # inserts: new _ids every run (mongod keeps its data across the runs of one invocation)
+                 "-insert-base", str(int(time.time() * 1000) * 1000)])
     r.update(server=server, layout=layout, label=label, rep=rep, warmup=warmup, ts=time.strftime("%Y-%m-%dT%H:%M:%S"),
              steal_cpu0_pct=(steal_cpu0() - st0) / (warmup + duration))
     os.makedirs(RES, exist_ok=True)
@@ -221,6 +223,7 @@ def main():
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--label", default="")
     ap.add_argument("--bin", default=os.path.join(BIN, "mongo-server"))
+    ap.add_argument("--clients", default="1,2,4,8,16,32", help="sweep: client counts")
     a = ap.parse_args()
     os.makedirs(DATA, exist_ok=True)
     try:
@@ -232,7 +235,7 @@ def main():
                 one(server, layout, workload, clients, a.warmup, a.duration, a.label, a.bin, rep)
         elif a.cmd == "sweep":
             server, layout, workload = a.rest[0], int(a.rest[1]), a.rest[2]
-            for c in [1, 2, 4, 8, 16, 32]:
+            for c in [int(x) for x in a.clients.split(",")]:
                 one(server, layout, workload, c, 10, 20, a.label or "sweep", a.bin, 0)
         else:
             ap.error("unknown command")

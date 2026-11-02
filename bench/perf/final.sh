@@ -8,9 +8,12 @@ HERE="$(cd "$(dirname "$0")" && pwd)"; BIN="${BENCH_BIN:-$HERE/.bin}"
 BASE=${BASE:-$BIN/mongo-server-base}; FINAL=${FINAL:-$BIN/mongo-server-final}
 B="python3 $HERE/bench.py run"; O="--warmup 60 --duration 60 --reps 3"
 # cell: workload layout engine-clients mongod-clients (saturation points of the sweeps, see docs/perf-letture.md)
-for cell in "read 1 8 8" "read 100 16 8" "rw 1 4 16" "rw 100 16 16"; do
-  set -- $cell
-  $B fenvix "$2" "$1" "$3" $O --label final-base --bin "$BASE"
-  $B fenvix "$2" "$1" "$3" $O --label final-new --bin "$FINAL"
-  $B mongod "$2" "$1" "$4" $O --label final-mongod
+# CELLS and LABEL can be given; NO_BASE=1 skips the base binary.
+CELLS=${CELLS:-"read:1:8:8 read:100:16:8 rw:1:4:16 rw:100:16:16"}
+LABEL=${LABEL:-final}
+for cell in $CELLS; do
+  IFS=: read -r w layout ec mc <<< "$cell"
+  [ -n "${NO_BASE:-}" ] || $B fenvix "$layout" "$w" "$ec" $O --label "$LABEL-base" --bin "$BASE"
+  $B fenvix "$layout" "$w" "$ec" $O --label "$LABEL-new" --bin "$FINAL"
+  $B mongod "$layout" "$w" "$mc" $O --label "$LABEL-mongod"
 done
