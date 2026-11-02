@@ -1,0 +1,14 @@
+[package]
+name = "bancone-sim"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# crate a parte: non fa parte del workspace del motore
+[workspace]
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+debug = false

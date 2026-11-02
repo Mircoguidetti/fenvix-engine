@@ -16,19 +16,20 @@ jobs:
   run:
     if: github.repository == 'Mircoguidetti/fenvix-engine'
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [a, b, c, d]
+    env:
+      PARTE: ${{ matrix.parte }}
     steps:
       - uses: actions/checkout@v4
-      - name: Cache delle tracce scaricate
-        uses: actions/cache@v4
-        with:
-          path: ~/tracce
-          key: tracce-${{ hashFiles('proto/bancone/ci/campione.txt') }}
-          restore-keys: tracce-
       - name: Strumenti
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y zstd >/dev/null
           pip install -q --break-system-packages numpy libcachesim==0.3.5 || pip install -q --break-system-packages numpy libcachesim
+          python3 -c "import libcachesim; print('libcachesim ok')"
       - name: Esegui
         run: bash proto/bancone/ci/run.sh
       - name: Commit dei risultati
@@ -37,5 +38,5 @@ jobs:
           git config user.name "bancone-piccolo-ci"
           git config user.email "actions@users.noreply.github.com"
           git add proto/bancone/risultati
-          git commit -q -m "bancone: risultati della corsa ${{ github.run_id }}" || exit 0
+          git commit -q -m "bancone: risultati della corsa ${{ github.run_id }} parte ${{ matrix.parte }}" || exit 0
           for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
