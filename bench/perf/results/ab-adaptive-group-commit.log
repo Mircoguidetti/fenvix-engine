@@ -1,0 +1,32 @@
+01:40:33 agc-A                    fenvix L=  1 insert c=32 ops/s=   4758 ops/cpu_s=   4806 srv=0.99 gen=0.38 p50=5.54 p99=25.27 err=0 steal=1.1%
+01:41:38 agc-B                    fenvix L=  1 insert c=32 ops/s=   6711 ops/cpu_s=   6839 srv=0.98 gen=0.40 p50=3.57 p99=22.02 err=0 steal=0.8%
+01:42:41 agc-A                    fenvix L=  1 insert c=32 ops/s=   4822 ops/cpu_s=   4876 srv=0.99 gen=0.38 p50=5.44 p99=23.20 err=0 steal=1.0%
+01:43:45 agc-B                    fenvix L=  1 insert c=32 ops/s=   6727 ops/cpu_s=   6862 srv=0.98 gen=0.40 p50=3.56 p99=22.15 err=0 steal=0.9%
+01:44:48 agc-A                    fenvix L=  1 insert c=32 ops/s=   4768 ops/cpu_s=   4808 srv=0.99 gen=0.38 p50=5.52 p99=24.73 err=0 steal=0.6%
+01:45:52 agc-B                    fenvix L=  1 insert c=32 ops/s=   6800 ops/cpu_s=   6941 srv=0.98 gen=0.41 p50=3.62 p99=20.99 err=0 steal=1.1%
+01:45:52 AB insert layout=1 clients=32: A ops/s=4768 ops/cpu_s=4808 B ops/s=6727 ops/cpu_s=6862 gain ops/s +41.1% ops/cpu_s +42.7%
+01:46:57 agc-A                    fenvix L=100 insert c=32 ops/s=   4483 ops/cpu_s=   4525 srv=0.99 gen=0.51 p50=6.62 p99=14.34 err=0 steal=1.0%
+01:48:19 agc-B                    fenvix L=100 insert c=32 ops/s=   4897 ops/cpu_s=   4936 srv=0.99 gen=0.54 p50=6.05 p99=13.43 err=0 steal=0.9%
+01:49:35 agc-A                    fenvix L=100 insert c=32 ops/s=   2912 ops/cpu_s=   2934 srv=0.99 gen=0.41 p50=10.17 p99=22.87 err=0 steal=0.9%
+01:50:47 agc-B                    fenvix L=100 insert c=32 ops/s=   2224 ops/cpu_s=   2249 srv=0.99 gen=0.34 p50=13.47 p99=30.61 err=0 steal=0.9%
+01:51:57 agc-A                    fenvix L=100 insert c=32 ops/s=   2006 ops/cpu_s=   2028 srv=0.99 gen=0.32 p50=14.64 p99=33.22 err=0 steal=0.8%
+01:53:09 agc-B                    fenvix L=100 insert c=32 ops/s=   1847 ops/cpu_s=   1865 srv=0.99 gen=0.31 p50=16.48 p99=38.38 err=0 steal=1.1%
+01:53:09 AB insert layout=100 clients=32: A ops/s=2912 ops/cpu_s=2934 B ops/s=2224 ops/cpu_s=2249 gain ops/s -23.6% ops/cpu_s -23.4%
+01:54:19 agc-A                    fenvix L=  1 rw   c= 2 ops/s=   2360 ops/cpu_s=   2440 srv=0.97 gen=0.36 p50=0.75 p99=2.56 err=0 steal=1.2%
+01:55:23 agc-B                    fenvix L=  1 rw   c= 2 ops/s=   2458 ops/cpu_s=   2529 srv=0.97 gen=0.36 p50=0.73 p99=2.46 err=0 steal=0.8%
+01:56:25 agc-A                    fenvix L=  1 rw   c= 2 ops/s=   2513 ops/cpu_s=   2583 srv=0.97 gen=0.35 p50=0.71 p99=2.40 err=0 steal=0.8%
+01:57:29 agc-B                    fenvix L=  1 rw   c= 2 ops/s=   2574 ops/cpu_s=   2649 srv=0.97 gen=0.36 p50=0.67 p99=2.72 err=0 steal=0.9%
+01:58:32 agc-A                    fenvix L=  1 rw   c= 2 ops/s=   2517 ops/cpu_s=   2597 srv=0.97 gen=0.34 p50=0.71 p99=2.58 err=0 steal=0.9%
+01:59:36 agc-B                    fenvix L=  1 rw   c= 2 ops/s=   2527 ops/cpu_s=   2593 srv=0.97 gen=0.35 p50=0.69 p99=2.47 err=0 steal=0.7%
+01:59:36 AB rw layout=1 clients=2: A ops/s=2513 ops/cpu_s=2583 B ops/s=2527 ops/cpu_s=2593 gain ops/s +0.6% ops/cpu_s +0.4%
+02:00:40 agc-A                    fenvix L=100 rw   c= 8 ops/s=   5414 ops/cpu_s=   5482 srv=0.99 gen=0.55 p50=1.34 p99=4.04 err=0 steal=1.0%
+02:01:52 agc-B                    fenvix L=100 rw   c= 8 ops/s=   5294 ops/cpu_s=   5324 srv=0.99 gen=0.52 p50=1.40 p99=3.81 err=0 steal=0.6%
+02:03:00 agc-A                    fenvix L=100 rw   c= 8 ops/s=   4255 ops/cpu_s=   4308 srv=0.99 gen=0.47 p50=1.74 p99=4.92 err=0 steal=0.9%
+02:04:08 agc-B                    fenvix L=100 rw   c= 8 ops/s=   4106 ops/cpu_s=   4148 srv=0.99 gen=0.45 p50=1.82 p99=5.02 err=0 steal=1.1%
+02:05:17 agc-A                    fenvix L=100 rw   c= 8 ops/s=   3793 ops/cpu_s=   3829 srv=0.99 gen=0.43 p50=1.97 p99=5.38 err=0 steal=0.9%
+02:06:25 agc-B                    fenvix L=100 rw   c= 8 ops/s=   3889 ops/cpu_s=   3934 srv=0.99 gen=0.45 p50=1.89 p99=5.65 err=0 steal=1.1%
+02:06:25 AB rw layout=100 clients=8: A ops/s=4255 ops/cpu_s=4308 B ops/s=4106 ops/cpu_s=4148 gain ops/s -3.5% ops/cpu_s -3.7%
+insert layout=1 clients=32: A ops/s=4768 ops/cpu_s=4808 B ops/s=6727 ops/cpu_s=6862 gain ops/s +41.1% ops/cpu_s +42.7%
+insert layout=100 clients=32: A ops/s=2912 ops/cpu_s=2934 B ops/s=2224 ops/cpu_s=2249 gain ops/s -23.6% ops/cpu_s -23.4%
+rw layout=1 clients=2: A ops/s=2513 ops/cpu_s=2583 B ops/s=2527 ops/cpu_s=2593 gain ops/s +0.6% ops/cpu_s +0.4%
+rw layout=100 clients=8: A ops/s=4255 ops/cpu_s=4308 B ops/s=4106 ops/cpu_s=4148 gain ops/s -3.5% ops/cpu_s -3.7%

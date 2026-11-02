@@ -284,6 +284,10 @@ struct Args {
     /// and waiting for their group flush (they can disappear if the process dies before the flush).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     durable_reads: bool,
+    /// Keep the collection list, index definitions and collection options of open databases in memory (default true; see
+    /// `dbs::META_CACHE`). `--metadata-cache false` reads them from storage on every command, as before.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    metadata_cache: bool,
     /// Test control: slatedb's `l0_max_ssts` for writers (default 8, 0 keeps it). Lowering it makes the stalled-flush
     /// shutdown fallback reachable with a modest number of writes.
     #[arg(long, default_value_t = 0)]
@@ -396,10 +400,13 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
         let max_len = if pre_auth { guard.pre_auth_max() } else { usize::MAX };
         first = false;
         match wire::read_request_bounded(&mut r, max_len, first_by, rest_within).await {
-            Ok(Some(req)) => {
+            Ok(Some(mut req)) => {
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
-                let reply = server.handle(&req.db, req.command.clone(), conn_id).await;
+                // the command document is handed over (not copied): the reply needs only `reply_to`
+                let reply_to = req.reply_to();
+                let command = std::mem::take(&mut req.command);
+                let reply = server.handle(&req.db, command, conn_id).await;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
                     // `shutdown`: no reply; the connection closes and the process stops
@@ -410,7 +417,7 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                     continue;
                 }
                 response_id += 1;
-                if let Err(e) = wire::write_reply(&mut w, &req, &reply, response_id).await {
+                if let Err(e) = wire::write_reply(&mut w, &reply_to, &reply, response_id).await {
                     eprintln!("conn {conn_id}: write failed: {e:#}");
                     break;
                 }
@@ -530,6 +537,7 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::HOT_GC_EVERY_SECS.store(args.wal_gc_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
     dbs::DURABLE_READS.store(args.durable_reads, std::sync::atomic::Ordering::Relaxed);
+    dbs::META_CACHE.store(args.metadata_cache, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::L0_MAX_SSTS_OVERRIDE.store(args.l0_max_ssts, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WAL_GC_MODE.store(
         match args.wal_gc_mode.as_str() { "slatedb" => 0, "list-only" => 1, "single" => 2, "bulk" => 3, other => anyhow::bail!("unknown --wal-gc-mode {other}") },

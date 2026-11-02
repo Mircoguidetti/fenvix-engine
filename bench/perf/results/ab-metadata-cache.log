@@ -1,0 +1,32 @@
+22:38:39 m1-metacache-A           fenvix L=  1 read c= 8 ops/s=   6749 ops/cpu_s=   6796 srv=0.99 gen=0.55 p50=1.14 p99=2.15 err=0 steal=0.5%
+22:39:43 m1-metacache-B           fenvix L=  1 read c= 8 ops/s=  20521 ops/cpu_s=  20750 srv=0.99 gen=1.16 p50=0.39 p99=0.81 err=0 steal=0.7%
+22:40:46 m1-metacache-A           fenvix L=  1 read c= 8 ops/s=   6559 ops/cpu_s=   6700 srv=0.98 gen=0.55 p50=1.15 p99=2.19 err=0 steal=0.8%
+22:41:48 m1-metacache-B           fenvix L=  1 read c= 8 ops/s=  20194 ops/cpu_s=  20433 srv=0.99 gen=1.16 p50=0.39 p99=0.83 err=0 steal=0.7%
+22:42:51 m1-metacache-A           fenvix L=  1 read c= 8 ops/s=   6656 ops/cpu_s=   6716 srv=0.99 gen=0.55 p50=1.15 p99=2.17 err=0 steal=0.8%
+22:43:54 m1-metacache-B           fenvix L=  1 read c= 8 ops/s=  20237 ops/cpu_s=  20442 srv=0.99 gen=1.18 p50=0.39 p99=0.80 err=0 steal=0.8%
+22:43:54 AB read layout=1 clients=8: A ops/s=6656 ops/cpu_s=6716 B ops/s=20237 ops/cpu_s=20442 gain ops/s +204.0% ops/cpu_s +204.4%
+22:45:23 m1-metacache-A           fenvix L=100 read c=16 ops/s=  13405 ops/cpu_s=  13568 srv=0.99 gen=0.78 p50=1.13 p99=2.44 err=0 steal=1.0%
+22:46:26 m1-metacache-B           fenvix L=100 read c=16 ops/s=  22811 ops/cpu_s=  23042 srv=0.99 gen=1.10 p50=0.67 p99=1.45 err=0 steal=0.8%
+22:47:29 m1-metacache-A           fenvix L=100 read c=16 ops/s=  13468 ops/cpu_s=  13631 srv=0.99 gen=0.79 p50=1.12 p99=2.67 err=0 steal=1.0%
+22:48:32 m1-metacache-B           fenvix L=100 read c=16 ops/s=  22155 ops/cpu_s=  22546 srv=0.98 gen=1.12 p50=0.68 p99=1.63 err=0 steal=1.1%
+22:49:35 m1-metacache-A           fenvix L=100 read c=16 ops/s=  13058 ops/cpu_s=  13217 srv=0.99 gen=0.78 p50=1.16 p99=2.51 err=0 steal=0.9%
+22:50:38 m1-metacache-B           fenvix L=100 read c=16 ops/s=  22378 ops/cpu_s=  22612 srv=0.99 gen=1.15 p50=0.68 p99=1.60 err=0 steal=0.7%
+22:50:38 AB read layout=100 clients=16: A ops/s=13405 ops/cpu_s=13568 B ops/s=22378 ops/cpu_s=22612 gain ops/s +66.9% ops/cpu_s +66.7%
+22:51:41 m1-metacache-A           fenvix L=  1 rw   c= 4 ops/s=   2093 ops/cpu_s=   2107 srv=0.99 gen=0.31 p50=1.59 p99=6.44 err=0 steal=0.6%
+22:52:45 m1-metacache-B           fenvix L=  1 rw   c= 4 ops/s=   2471 ops/cpu_s=   2505 srv=0.99 gen=0.34 p50=1.33 p99=5.57 err=0 steal=1.1%
+22:53:49 m1-metacache-A           fenvix L=  1 rw   c= 4 ops/s=   2050 ops/cpu_s=   2066 srv=0.99 gen=0.30 p50=1.68 p99=6.23 err=0 steal=0.7%
+22:54:53 m1-metacache-B           fenvix L=  1 rw   c= 4 ops/s=   2505 ops/cpu_s=   2523 srv=0.99 gen=0.35 p50=1.38 p99=4.78 err=0 steal=0.7%
+22:55:57 m1-metacache-A           fenvix L=  1 rw   c= 4 ops/s=   1974 ops/cpu_s=   1991 srv=0.99 gen=0.29 p50=1.75 p99=6.14 err=0 steal=0.6%
+22:57:01 m1-metacache-B           fenvix L=  1 rw   c= 4 ops/s=   2510 ops/cpu_s=   2539 srv=0.99 gen=0.34 p50=1.36 p99=5.07 err=0 steal=1.0%
+22:57:01 AB rw layout=1 clients=4: A ops/s=2050 ops/cpu_s=2066 B ops/s=2505 ops/cpu_s=2523 gain ops/s +22.2% ops/cpu_s +22.1%
+22:58:05 m1-metacache-A           fenvix L=100 rw   c=16 ops/s=   4088 ops/cpu_s=   4126 srv=0.99 gen=0.48 p50=3.59 p99=9.79 err=0 steal=0.8%
+22:59:15 m1-metacache-B           fenvix L=100 rw   c=16 ops/s=   5479 ops/cpu_s=   5522 srv=0.99 gen=0.55 p50=2.69 p99=7.66 err=0 steal=0.6%
+23:00:27 m1-metacache-A           fenvix L=100 rw   c=16 ops/s=   3729 ops/cpu_s=   3758 srv=0.99 gen=0.42 p50=3.96 p99=10.49 err=0 steal=0.8%
+23:01:35 m1-metacache-B           fenvix L=100 rw   c=16 ops/s=   4430 ops/cpu_s=   4474 srv=0.99 gen=0.47 p50=3.34 p99=9.65 err=0 steal=0.8%
+23:02:45 m1-metacache-A           fenvix L=100 rw   c=16 ops/s=   2941 ops/cpu_s=   2960 srv=0.99 gen=0.37 p50=4.88 p99=13.68 err=0 steal=0.6%
+23:03:53 m1-metacache-B           fenvix L=100 rw   c=16 ops/s=   3815 ops/cpu_s=   3851 srv=0.99 gen=0.43 p50=3.71 p99=11.63 err=0 steal=0.8%
+23:03:53 AB rw layout=100 clients=16: A ops/s=3729 ops/cpu_s=3758 B ops/s=4430 ops/cpu_s=4474 gain ops/s +18.8% ops/cpu_s +19.0%
+read layout=1 clients=8: A ops/s=6656 ops/cpu_s=6716 B ops/s=20237 ops/cpu_s=20442 gain ops/s +204.0% ops/cpu_s +204.4%
+read layout=100 clients=16: A ops/s=13405 ops/cpu_s=13568 B ops/s=22378 ops/cpu_s=22612 gain ops/s +66.9% ops/cpu_s +66.7%
+rw layout=1 clients=4: A ops/s=2050 ops/cpu_s=2066 B ops/s=2505 ops/cpu_s=2523 gain ops/s +22.2% ops/cpu_s +22.1%
+rw layout=100 clients=16: A ops/s=3729 ops/cpu_s=3758 B ops/s=4430 ops/cpu_s=4474 gain ops/s +18.8% ops/cpu_s +19.0%
