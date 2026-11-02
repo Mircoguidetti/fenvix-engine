@@ -62,10 +62,12 @@ empty `database` is a 400.
 | `--auth-block-secs` | 300 | first block; each new block of the same key doubles it |
 | `--auth-block-max-secs` | 3600 | longest block |
 | `--auth-block-forget-secs` | 86400 | without a block for this long, the doubling starts again |
+| `--max-conns` | open-files limit − 1000 (half of it under 4000) | all connections at once in the process, from every address (like mongod's `net.maxIncomingConnections`); beyond it a new connection is closed at once, before TLS; trusted addresses are counted but never refused (0: no limit) |
 | `--max-conns-per-ip` | 0 | all connections at once per address, authenticated or not (0: no limit) |
 | `--max-unauth-conns-per-ip` | 4000 | connections at once per address that have not authenticated (0: no limit); a connection leaves the count when it authenticates and re-enters it when it logs out of every database |
 | `--max-conns-per-db` | 5000 | authenticated connections at once per database, from any address (0: no limit); the authentication beyond it gets code 13 and the connection stays open |
 | `--handshake-timeout-secs` | 10 | TLS handshake and first message; before authentication, each message once started (0: off) |
+| `--unauth-idle-timeout-secs` | 120 | with `--auth`, a connection that has not authenticated (or logged out of every database) and sends nothing for this long is closed (0: off); drivers' monitoring connections send a hello at least every ~10 s |
 | `--pre-auth-max-message-bytes` | 65536 | largest message before authentication |
 | `--ip-allowlist-refresh-secs` | 5 | re-reading of a database's allow list |
 | `--ipv6-group-prefix` | 64 | IPv6 addresses are counted per prefix |
@@ -77,6 +79,18 @@ leave through a few shared NAT addresses, so one address carries thousands of le
 one address must not do is hold many connections that never authenticate; drivers keep two such connections per client
 (monitoring and round-trip time), and every new connection counts until it authenticates: 4000 leaves room for about
 1,900 clients behind one address (measured: with 1000, 1000 clients behind one address do not start).
+
+What an application sees when a database is full (`--max-conns-per-db`), measured with pymongo by the review of P3: the
+authentication gets a clear error (`OperationFailure`, code 13, "too many connections authenticated on database …"), but
+the driver then marks the server unknown and clears its pool; once a place is free again, the next read took 9.5 s (the
+driver waits for its next periodic check). So going over the limit stops the application for about 10 s, not for one
+refused request (mongod beyond its own connection limit closes the connection, and drivers react the same way). Keep the
+limit well above what a database really uses.
+
+Why `--max-conns`: without a total, connections below every per-address and per-database limit can still use all the open
+files of the process (5 addresses at 4000 unauthenticated connections, or one client with a password and a few databases);
+`accept` then fails. A failed `accept` no longer stops the process (one log line a minute, a pause of 100 ms, then it goes
+on), but no one can connect until files are free: the total keeps a margin for the process's own files and sockets.
 
 Why 100 per address: a platform with one database per customer connects from few addresses; after a wrong password
 rotation, 10 failures would block every database of the platform for up to an hour. The per-database threshold (5) still
