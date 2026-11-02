@@ -410,7 +410,9 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 // the command document is handed over (not copied): the reply needs only `reply_to`
                 let reply_to = req.reply_to();
                 let command = std::mem::take(&mut req.command);
-                let reply = server.handle(&req.db, command, conn_id).await;
+                // boxed: the command's future is large (about 22 KB); kept inline it would be part of every connection's
+                // task, idle or not
+                let reply = Box::pin(server.handle(&req.db, command, conn_id)).await;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
                     // `shutdown`: no reply; the connection closes and the process stops
