@@ -345,6 +345,10 @@ struct Args {
     /// With --tls-ca-file: accept clients that present no certificate (net.tls.allowConnectionsWithoutCertificates).
     #[arg(long)]
     tls_allow_connections_without_certificates: bool,
+    /// TLS session resumption: cache (rustls's default: 256 sessions kept in memory), tickets (stateless TLS 1.3 tickets,
+    /// nothing kept) or off.
+    #[arg(long, default_value = "cache")]
+    tls_session_resumption: String,
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
@@ -484,6 +488,8 @@ async fn run() -> Result<()> {
         "--unsafe-skip-ownership-checks is a test control that lets two processes serve one database; it needs MONGO_ALLOW_UNSAFE_TEST_FLAGS=1"
     );
     netguard::install(&args.net)?;
+    tls::check_resumption(&args.tls_session_resumption)?;
+    let _ = tls::RESUMPTION.set(args.tls_session_resumption.clone());
     let grantable = authz::parse_grantable(&args.grantable_roles).map_err(|e| anyhow::anyhow!(e))?;
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
         "s3" => {
