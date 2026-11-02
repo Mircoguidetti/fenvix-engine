@@ -351,7 +351,7 @@ async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: T
     // The client address is the TCP peer: nothing in front of the engine rewrites it, and nothing the client sends changes it.
     let guard = netguard::get();
     let peer = tcp.peer_addr().ok().map(|a| netguard::canonical_ip(a.ip()));
-    let Some(_slot) = guard.open_connection(peer) else {
+    let Some(slot) = guard.open_connection(peer) else {
         return; // over the per-address limit: closed at once
     };
     let deadline = guard.handshake_timeout().map(|t| tokio::time::Instant::now() + t);
@@ -375,7 +375,7 @@ async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: T
     };
     stream.set_nodelay(true);
     server.diag.conn_opened(conn_id, stream.peer_addr().ok().map(|a| std::net::SocketAddr::new(a.ip(), a.port())));
-    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject());
+    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject(), Some(slot));
     handle_connection_inner(&server, stream, conn_id, deadline, peer).await;
     server.auth_connection_closed(conn_id);
     server.diag.conn_closed(conn_id);
