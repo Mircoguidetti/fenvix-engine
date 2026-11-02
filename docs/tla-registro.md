@@ -335,11 +335,56 @@ Bollettino (i sei del revisore di letture e affinità, più tre del revisore del
   violazioni (885.336 stati distinti, 7 min 56 s; output non conservato, sovrascritto dalla corsa
   successiva): l'errore vero è mescolare fatti nuovi con un `sapereFinoA` vecchio.
 - `SMinoreDiM` (correzione 7): `ReadsCorrect` violata in 6 s, 9.455 stati distinti.
-- `CapoNuovoSenzaAnnunci`: RISULTATO_CAPONUOVO
+- `CapoNuovoSenzaAnnunci` (le voci scritte da un capo nuovo al posto di voci troncate non vengono
+  riannunciate): non trovato in 15 minuti con 1 transazione (`Bollettino-caponuovosenzaannunci`,
+  interrotto al tetto, 5.972.904 stati distinti, nessuna violazione): con un solo tentativo la voce
+  troncata è sostituita solo da una barriera, che non tocca chiavi. Con 2 transazioni e 2 tentativi
+  (`Bollettino-caponuovo-mirato`): `ChiaviVere` violata in 4 min, 1.788.505 stati distinti, traccia di
+  15 stati. r1 capo (epoca 1) scrive `t1` e `t2` solo su sé, il cameriere si iscrive a r1 e ne riceve
+  la fotografia; r2 capo (epoca 2) riscrive `t1` alla posizione 3, dove r1 aveva `t2`; r1 tronca e
+  copia, ma non riannuncia la posizione 3; la confermata arriva fino a 3 e il cameriere crede che `k1`
+  non sia stata toccata alla posizione 3.
 
 ### 5.3 Modelli completi e limitati
 
-RISULTATI_POSITIVI
+Completi, senza violazioni (tutti i controlli negativi spenti):
+
+- `ValidatingLog-ridotto4`: **4 epoche (tre cambi di capo)**, 1 transazione, 1 tentativo, nessuna
+  replica persa, finestre dei seguaci che avanzano. 47.209.435 stati generati, 7.022.114 distinti,
+  profondità 38, 26 min 25 s. Invarianti: le 8 di `ValidatingLog` e `CommitMonotonic`.
+- `ValidatingLog-ridotto3`: 3 epoche con APPEND da `posPrecedente` vecchio (`OldPrev`) e finestre dei
+  seguaci: 5.973.821 generati, 539.265 distinti, profondità 30, 2 min 23 s.
+- `LettureScarico-preparato`: la `S` di ogni scrittura viene da una lettura composta servita davvero; 2
+  transazioni in conflitto (`t1` delta su `k1`, `t3` che legge `k1`), nessun cambio di capo, 1 worker,
+  disco che si svuota, finestre dei seguaci, ricarica da S3, 1 lettura e 1 lettura lineare. 7.128.678
+  generati, 804.042 distinti, profondità 36, 6 min 51 s. Invarianti: `TypeOK`, `ReadsCorrect`,
+  `MonotonicReads`, `UploadExact`, `NothingLost`, `NoConflictingCommits`, `StableOrder`, `DurableOrS3`,
+  `ReadServable`, `TokenConfirmed`, `LeaderCompleteness`, `ManifestMonotonic`.
+- `Bollettino-base1`: 2 database, 1 transazione, nessun cambio di capo, 1 scarico, 1 lettura senza
+  domanda, riavvii, iscrizioni e distacchi, disco che si svuota, ricarica. 16.216.395 generati,
+  1.317.406 distinti, profondità 26, 5 min 32 s. Invarianti: `TypeOK`, `ReadsCorrect`,
+  `BollettinoVero`, `ChiaviVere`, `SapereConfermato`, `NothingLost`, `StableOrder`.
+
+- `LettureScarico-sessioni`: sessioni con la **lettura vera** della chiave di sessione (scatole più
+  quaderno), `S` di ogni scrittura dalla lettura, ritentativi anche oltre la finestra (2 tentativi),
+  **un cambio di capo**, 1 worker, disco che si svuota, finestre dei seguaci, ricarica da S3. 40.150.727
+  generati, 4.702.304 distinti, profondità 37, 33 min 07 s (un primo tentativo con tetto di 25 minuti si
+  era fermato a 3.860.110 distinti). Invarianti: `TypeOK`, `NoDuplicateIds`, `OneOutcome`,
+  `ReadsCorrect`, `UploadExact`, `DurableOrS3`, `StableOrder`. È anche la prova completa di
+  `DurableOrS3` e della ricarica con un cambio di capo.
+
+NON completati (fermati al tetto di tempo, nessuna violazione negli stati esplorati; evidenza limitata):
+
+- `ValidatingLog-ridotto4-oldprev` (4 epoche con APPEND da `posPrecedente` vecchio): fermato a mano
+  dopo circa 21 minuti, 4.584.927 distinti, coda in crescita.
+- `LettureScarico-disco1` (1 transazione, **un cambio di capo**, disco che si svuota, ricarica,
+  lettura e lettura lineare): fermato al tetto di 30 minuti, 76.929.133 generati, 5.768.500 distinti,
+  1.552.772 in coda, profondità 22.
+- `Bollettino-base2` (2 transazioni, un cambio di capo con troncamento): fermato al tetto di 30 minuti,
+  90.465.759 generati, 15.061.906 distinti, 9.563.750 in coda, profondità 15.
+
+Per finire i modelli non completati serve una macchina più grande o qualche ora (STIMATO: 4–8 core e
+2–4 ore ciascuno, dall'andamento delle code).
 
 ### 5.4 Che cosa resta non coperto
 

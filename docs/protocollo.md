@@ -399,9 +399,13 @@ Raft:
    S3 e la replica non li serve mai (§6.2 punto 3 chiede `M >= potatoFinoA`). Fino a che non ha di
    nuovo `M[db]` per un database risponde `FUORI_FINESTRA` con `P`.
 
-Verificato con TLC nel modello `LettureScarico-disco1` (azione `Reload`), con il disco che si svuota
-(`TrimR`), un cambio di leader e l'invariante `DurableOrS3`: ogni voce confermata è in S3 o sul disco,
-sopra `inizioDisco`, di una replica viva.
+Nel modello: azione `Reload` di `LettureScarico.tla` e `Bollettino.tla`, con il disco che si svuota
+(`TrimR`) e l'invariante `DurableOrS3` (ogni voce confermata è in S3 o sul disco, sopra `inizioDisco`, di
+una replica viva). Esplorazione completa con un cambio di leader nel modello delle sessioni
+(`LettureScarico-sessioni`, 4,7 milioni di stati) e senza cambio di leader con letture e scritture in
+conflitto (`LettureScarico-preparato`, `Bollettino-base1`); il modello più largo con letture lineari e un
+cambio di leader (`LettureScarico-disco1`) è solo limitato (5,8 milioni di stati senza violazioni, non
+completato). Dettagli in `docs/tla-registro.md` sezione 5.
 
 ## 6. Letture
 
