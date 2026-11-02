@@ -20,7 +20,7 @@
 //! cronometro per tipo di lavoro registra il blocco più lungo di ciascuno.
 
 use crate::codec::*;
-use crate::net::{spawn_out_link, FrameReader};
+use crate::net::{spawn_out_link, FrameReader, Out, ZJob};
 use crate::store::{self, Ckpt, DiskOp, RaftState};
 use crate::window::{Loc, Window};
 use parking_lot::Mutex;
@@ -53,6 +53,8 @@ pub struct Config {
     pub max_inflight: u64,
     /// compressione zstd dei messaggi di replica (livello; 0 = spenta). Giro 4
     pub zstd: i32,
+    /// giro 5: `true` = compressione sul thread principale come nel giro 4 (`PQ_ZSTD_MAIN=1`, per il confronto)
+    pub zstd_main: bool,
     /// soglie del freno sul disco (registro + dispensa), byte: rallenta, rifiuta, sola lettura (0 = disattivo)
     pub disk_soft: u64,
     pub disk_hard: u64,
@@ -87,6 +89,8 @@ pub struct SpillReq {
 /// Stato condiviso tra il thread principale e i thread di rete.
 pub struct Shared {
     pub win: Window,
+    /// byte di replica sul filo contati dai thread di rete di uscita (giro 5, compressione fuori dal thread principale)
+    pub repl_sent_off: Arc<std::sync::atomic::AtomicU64>,
     /// posizione fino alla quale la replica sa rispondere: confermata E già indicizzata nella finestra
     pub readable: watch::Sender<Pos>,
     /// fotografia dello stato aggiornata dal thread principale ogni 100 ms
@@ -168,7 +172,7 @@ struct Slot {
 
 struct Peer {
     id: u8,
-    tx: UnboundedSender<Vec<u8>>,
+    tx: UnboundedSender<Out>,
     next: u64,
     matched: u64,
     acked_seq: u64,
@@ -308,7 +312,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
     let io_threads = std::env::var("PQ_IO_THREADS").ok().and_then(|x| x.parse().ok()).unwrap_or(2);
     let io_nice: i32 = std::env::var("PQ_IO_NICE").ok().and_then(|x| x.parse().ok()).unwrap_or(-10);
     let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(io_threads).on_thread_start(move || set_thread_nice(io_nice)).enable_all().build()?;
-    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default() });
+    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default(), repl_sent_off: Default::default() });
     let mut peers = vec![];
     {
         let _g = rt.enter();
@@ -480,7 +484,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
 }
 
 impl Node {
-    fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Vec<u8>>)>, sh: Arc<Shared>, spill_tx: Sender<SpillReq>) -> anyhow::Result<Node> {
+    fn recover(cfg: Config, rx: Receiver<Ev>, disk_tx: Sender<DiskOp>, peers: Vec<(u8, UnboundedSender<Out>)>, sh: Arc<Shared>, spill_tx: Sender<SpillReq>) -> anyhow::Result<Node> {
         let st: RaftState = std::fs::read(cfg.dir.join("state")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(RaftState { term: 0, voted: -1 });
         let ck: Option<Ckpt> = std::fs::read(cfg.dir.join("ckpt")).ok().and_then(|b| serde_json::from_slice(&b).ok());
         let (recs, last_seg, last_len) = store::recover(&cfg.dir)?;
@@ -929,7 +933,7 @@ impl Node {
         let mut b = BytesMut::with_capacity(64);
         enc_msg(&mut b, m);
         if let Some(p) = self.peers.iter().find(|p| p.id == to) {
-            let _ = p.tx.send(frame(&b));
+            let _ = p.tx.send(Out::Raw(frame(&b)));
         }
     }
 
@@ -1284,7 +1288,7 @@ impl Node {
         let last = self.last_index();
         let hb = Duration::from_millis(self.cfg.hb_ms);
         // stesso messaggio per le due repliche (caso normale): si comprime una volta sola
-        let mut zcache: Option<((u64, u64, bool), Vec<u8>)> = None;
+        let mut zcache: Option<((u64, u64, bool), Out)> = None;
         for k in 0..self.peers.len() {
             let (next, matched, probing, last_sent, sent_commit) = {
                 let p = &self.peers[k];
@@ -1334,13 +1338,22 @@ impl Node {
 
     /// Compressione dei messaggi di replica (giro 4, `PQ_ZSTD=livello`, 0 = spenta). Solo i messaggi con voci sopra
     /// 512 byte; se compresso non conviene, si manda in chiaro. Conta i byte prima e dopo.
-    fn maybe_compress(&mut self, b: &[u8], cache: &mut Option<((u64, u64, bool), Vec<u8>)>, key: (u64, u64, bool)) -> Vec<u8> {
+    /// Giro 5: con `zstd_main = false` (predefinito) incorniciatura e compressione si fanno nel thread di rete di uscita
+    /// (`net::ZJob`): il thread principale paga solo la codifica del messaggio.
+    fn maybe_compress(&mut self, b: &[u8], cache: &mut Option<((u64, u64, bool), Out)>, key: (u64, u64, bool)) -> Out {
         self.repl_raw += b.len() as u64 + 8;
         let lvl = self.cfg.zstd;
+        if lvl != 0 && !self.cfg.zstd_main {
+            if let Some((_, Out::Z(j))) = cache.as_ref().filter(|(k, _)| *k == key) {
+                return Out::Z(j.clone());
+            }
+            let j = Arc::new(ZJob { body: b.to_vec(), lvl, out: std::sync::OnceLock::new(), sent: self.sh.repl_sent_off.clone() });
+            *cache = Some((key, Out::Z(j.clone())));
+            return Out::Z(j);
+        }
         let out = if lvl == 0 || b.len() < 512 {
             frame(b)
-        } else if let Some((k, f)) = cache.as_ref().filter(|(k, _)| *k == key) {
-            let _ = k;
+        } else if let Some((_, Out::Raw(f))) = cache.as_ref().filter(|(k, _)| *k == key) {
             f.clone()
         } else {
             let c = zstd::bulk::compress(b, lvl).unwrap_or_default();
@@ -1353,11 +1366,11 @@ impl Node {
             } else {
                 frame(b)
             };
-            *cache = Some((key, f.clone()));
+            *cache = Some((key, Out::Raw(f.clone())));
             f
         };
         self.repl_sent += out.len() as u64;
-        out
+        Out::Raw(out)
     }
 
     // -------------------------------------------------------------------------------------------- tempo
@@ -1610,7 +1623,7 @@ impl Node {
             brake: self.brake,
             busy: self.busy_n + self.sh.fast_busy.load(std::sync::atomic::Ordering::Relaxed),
             repl_raw: self.repl_raw,
-            repl_sent: self.repl_sent,
+            repl_sent: self.repl_sent + self.sh.repl_sent_off.load(std::sync::atomic::Ordering::Relaxed),
             delayed: self.delayed_n,
             diag: format!(
                 "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
