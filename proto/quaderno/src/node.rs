@@ -481,14 +481,18 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
     {
         let sh = sh.clone();
         let every = Duration::from_micros(std::env::var("PQ_INDICIZZATORE_US").ok().and_then(|x| x.parse().ok()).unwrap_or(1000));
-        std::thread::Builder::new()
-            .name("indicizzatore".into())
-            .spawn(move || loop {
-                if sh.win.index_pending() == 0 {
-                    std::thread::sleep(every);
-                }
-            })
-            .unwrap();
+        // un thread per parte dell'insieme ordinato (window::ORD_P)
+        for p in 0..crate::window::ORD_P {
+            let sh = sh.clone();
+            std::thread::Builder::new()
+                .name("indicizzatore".into())
+                .spawn(move || loop {
+                    if sh.win.index_pending_part(p) == 0 {
+                        std::thread::sleep(every);
+                    }
+                })
+                .unwrap();
+        }
     }
     // restituzione periodica al sistema della memoria liberata (l'allocatore di glibc la tratterrebbe)
     std::thread::Builder::new()

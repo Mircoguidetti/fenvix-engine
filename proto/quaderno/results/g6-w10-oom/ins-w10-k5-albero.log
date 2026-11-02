@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/claude/fenvix-engine/proto/quaderno/scripts/lotti.py", line 71, in <module>
+    g = json.loads(gen.communicate()[0].strip().splitlines()[-1])
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
+IndexError: list index out of range

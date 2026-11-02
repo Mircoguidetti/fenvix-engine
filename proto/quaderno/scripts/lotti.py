@@ -28,6 +28,17 @@ def cpu(path):
     return (int(f[11]) + int(f[12])) / hz
 
 
+def thr_cpu(pid, name):
+    # CPU di un thread per nome (giro 6: l'indicizzatore), None se non c'è
+    try:
+        for t in os.listdir(f'/proc/{pid}/task'):
+            if open(f'/proc/{pid}/task/{t}/comm').read().strip() == name:
+                return cpu(f'/proc/{pid}/task/{t}/stat')
+    except Exception:
+        pass
+    return None
+
+
 def status():
     o = subprocess.run([PQ, 'status'], capture_output=True, text=True, timeout=20).stdout
     return [json.loads(l) for l in o.splitlines() if l.strip()]
@@ -60,12 +71,16 @@ for rep in range(reps):
             ci0 = s0['commit_index']
             p0, t0 = cpu(f'/proc/{lp}/stat'), cpu(f'/proc/{lp}/task/{lp}/stat')
             f0 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            fm0 = {k: cpu(f'/proc/{v}/task/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            ix0 = {k: thr_cpu(v, 'indicizzatore') for k, v in pids.items() if k.startswith('r')}
             w0 = time.time()
             time.sleep(SAMPLE)
             s1 = [s for s in status() if s.get('id') == lid][0]
             ci1 = s1['commit_index']
             p1, t1 = cpu(f'/proc/{lp}/stat'), cpu(f'/proc/{lp}/task/{lp}/stat')
             f1 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            fm1 = {k: cpu(f'/proc/{v}/task/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+            ix1 = {k: thr_cpu(v, 'indicizzatore') for k, v in pids.items() if k.startswith('r')}
             el = time.time() - w0
             n = ci1 - ci0
             g = json.loads(gen.communicate()[0].strip().splitlines()[-1])
@@ -78,7 +93,7 @@ for rep in range(reps):
             ms = {s['id']: s.get('mem_used') for s in status() if 'id' in s}
             r = {'rep': rep, 'mem_used_bytes': ms, 'window_ms': os.environ.get('PQ_WINDOW_MS', '60000'), 'flusher': os.environ.get('PQ_FLUSHER', '0'), 'crono_us_per_rec': {k: round((c1[k] - c0.get(k, 0)) * 1000 / max(n, 1), 2) for k in c1 if c1[k] - c0.get(k, 0) > 0}, 'batch': b, 'clients': c, 'rate': rate, 'keys': keys, 'val': val, 'recs_sampled': n, 'recs_per_s_sampled': n / el,
                  'leader_proc_us_per_rec': (p1 - p0) * 1e6 / max(n, 1), 'leader_main_us_per_rec': (t1 - t0) * 1e6 / max(n, 1),
-                 'leader_cores': (p1 - p0) / el, 'leader_main_cores': (t1 - t0) / el, 'real': os.environ.get('PQ_REAL', '0'), 'zstd_main': os.environ.get('PQ_ZSTD_MAIN', '0'), 'follower_us_per_rec': {k: (f1[k] - f0[k]) * 1e6 / max(n, 1) for k in f0},
+                 'leader_cores': (p1 - p0) / el, 'leader_main_cores': (t1 - t0) / el, 'real': os.environ.get('PQ_REAL', '0'), 'zstd_main': os.environ.get('PQ_ZSTD_MAIN', '0'), 'follower_us_per_rec': {k: (f1[k] - f0[k]) * 1e6 / max(n, 1) for k in f0}, 'follower_main_us_per_rec': {k: (fm1[k] - fm0[k]) * 1e6 / max(n, 1) for k in fm0}, 'indexer_us_per_rec': {k: (ix1[k] - ix0[k]) * 1e6 / max(n, 1) for k in ix0 if ix1.get(k) is not None and ix0[k] is not None}, 'leader': f'r{lid}',
                  'zstd': os.environ.get('PQ_ZSTD', '0'),
                  'repl_raw_bytes_per_rec': (s1.get('repl_raw', 0) - s0.get('repl_raw', 0)) / max(n, 1),
                  'repl_sent_bytes_per_rec': (s1.get('repl_sent', 0) - s0.get('repl_sent', 0)) / max(n, 1),

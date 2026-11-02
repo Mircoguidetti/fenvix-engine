@@ -1,0 +1,47 @@
+Traceback (most recent call last):
+  File "/home/claude/fenvix-engine/proto/quaderno/scripts/lotti.py", line 68, in <module>
+    f1 = {k: cpu(f'/proc/{v}/stat') for k, v in pids.items() if k.startswith('r') and v != lp}
+             ~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/claude/fenvix-engine/proto/quaderno/scripts/lotti.py", line 27, in cpu
+    f = open(path).read().rsplit(')', 1)[1].split()
+        ~~~~^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/proc/14838/stat'
+
+thread 'main' (14918) panicked at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/io/stdio.rs:1166:9:
+failed printing to stdout: Broken pipe (os error 32)
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: std::io::stdio::print_to::<std::io::stdio::Stdout>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/io/stdio.rs:1166:9
+   3: std::io::stdio::_print
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/io/stdio.rs:1276:5
+   4: quaderno::bench::lotti::{closure#0}
+             at ./src/bench.rs:1325:5
+   5: <tokio::runtime::park::CachedParkThread>::block_on::<quaderno::bench::lotti::{closure#0}>::{closure#0}
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/park.rs:376:71
+   6: tokio::task::coop::with_budget::<core::task::poll::Poll<()>, <tokio::runtime::park::CachedParkThread>::block_on<quaderno::bench::lotti::{closure#0}>::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/task/coop/mod.rs:167:5
+   7: tokio::task::coop::budget::<core::task::poll::Poll<()>, <tokio::runtime::park::CachedParkThread>::block_on<quaderno::bench::lotti::{closure#0}>::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/task/coop/mod.rs:133:5
+   8: <tokio::runtime::park::CachedParkThread>::block_on::<quaderno::bench::lotti::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/park.rs:376:31
+   9: <tokio::runtime::context::blocking::BlockingRegionGuard>::block_on::<quaderno::bench::lotti::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/context/blocking.rs:66:14
+  10: <tokio::runtime::scheduler::multi_thread::MultiThread>::block_on::<quaderno::bench::lotti::{closure#0}>::{closure#0}
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/scheduler/multi_thread/mod.rs:90:22
+  11: tokio::runtime::context::runtime::enter_runtime::<<tokio::runtime::scheduler::multi_thread::MultiThread>::block_on<quaderno::bench::lotti::{closure#0}>::{closure#0}, ()>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/context/runtime.rs:65:16
+  12: <tokio::runtime::scheduler::multi_thread::MultiThread>::block_on::<quaderno::bench::lotti::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/scheduler/multi_thread/mod.rs:89:9
+  13: <tokio::runtime::runtime::Runtime>::block_on_inner::<quaderno::bench::lotti::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/runtime.rs:381:50
+  14: <tokio::runtime::runtime::Runtime>::block_on::<quaderno::bench::lotti::{closure#0}>
+             at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/runtime.rs:348:18
+  15: pq::main
+             at ./src/bin/pq.rs:134:15
+  16: <fn() -> core::result::Result<(), anyhow::Error> as core::ops::function::FnOnce<()>>::call_once
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
