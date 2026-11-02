@@ -168,9 +168,14 @@ def scala(curva, profilo):
 
 
 def bolletta(curva, profilo, avvio_s=60, margine=0.25, w_rapporto=0.36, tipo="c7g.large", tmin=2,
-             fatt_ora=False, portiere=False, quaderno_tetto=QUADERNO_TETTO):
+             fatt_ora=False, portiere=False, quaderno_tetto=QUADERNO_TETTO, parita=False):
     r, w = scala(curva, profilo)
     L = r * MONGO_R_US + w * MONGO_W_US
+    tolte = 0.0
+    if parita:  # a parità di servizio: si toglie il carico che nemmeno la M60 Gen2 serve (CPU oltre il 100%)
+        k = np.minimum(1.0, TAGLIE[-1][1] / np.maximum(L, 1e-12))
+        tolte = float(1 - (r * k + w * k).sum() / (r + w).sum())
+        r, w, L = r * k, w * k, L * k
     ip = infinite(L, True, tmin, fatt_ora)
     ir = infinite(L, False, tmin, fatt_ora)
     F = r * (MONGO_R_US / 0.93) + w * (MONGO_W_US / w_rapporto)
@@ -191,7 +196,7 @@ def bolletta(curva, profilo, avvio_s=60, margine=0.25, w_rapporto=0.36, tipo="c7
     ideale_fe = F.mean() * prezzo / vcpu * H_MESE
     ideale_inf_primario = L.mean() * (TAGLIE[-1][2] / 2 / TAGLIE[-1][1]) * H_MESE
     return dict(
-        profilo=profilo, picco_su_media=float(curva.max() / curva.mean()),
+        profilo=profilo, picco_su_media=float(curva.max() / curva.mean()), quota_tolta=tolte,
         inf_pred=ip, inf_reat=ir, fen=fe, fisse=fisse, fisse_tot=fis, quaderni=nq, quaderno_over_min=q_over,
         tot_inf_pred=ip["costo"] + SPAZIO_INF, tot_inf_reat=ir["costo"] + SPAZIO_INF,
         tot_fen=fe["costo"] + fis, flotta_picco=flotta_picco, ideale_fe=ideale_fe,

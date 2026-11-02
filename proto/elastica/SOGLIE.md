@@ -58,3 +58,13 @@ se i due danno verdetti diversi lo scrivo.
   Il quaderno però va dimensionato sul picco di scritture: un quaderno regge circa 20.000 record al secondo
   (STIMATO da B1/revisore 18.000–28.000); se il picco lo supera, un quaderno in più ($451) e lo scrivo.
 - Sensibilità: avvio 10/60/300 s; margine 10/25/50%; scrittura 0,36/0,81; portiere come B1 ($500 a, $970 b).
+
+## Cambi fatti DOPO il giro di prova (dichiarati, con il verso)
+
+1. Predittiva perfetta: prima "taglia con CPU ≤ 75% minuto per minuto"; ora "sale prima che scatti una delle due
+   regole reattive" (media dei prossimi 10 minuti ≤ 90% e dei prossimi 60 ≤ 75%). Motivo: la prima versione
+   costava più della reattiva, quindi non era "favorevole a Infinite". Verso: abbassa la bolletta di Infinite.
+2. Quaderno: dimensionato sul minuto di scritture al 99,9 percentile invece che sul minuto massimo (un minuto di
+   punta su 5 giorni non deve comprare un quaderno per un mese; i minuti oltre si contano). Verso: favorevole a noi.
+3. Aggiunte varianti: Infinite con minimo M50 (RAM per la parte calda, ragionamento di B1); "a parità di
+   servizio" (si toglie, per tutti e due, il carico che nemmeno una M60 Gen2 serve); quaderno da 28.000 al secondo.

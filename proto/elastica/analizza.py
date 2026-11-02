@@ -89,6 +89,8 @@ VARIANTI = [
     ("inf_min_M10", dict(tmin=0)),
     ("inf_min_M50", dict(tmin=4)),
     ("quaderno28k", dict(quaderno_tetto=28000)),
+    ("parita", dict(parita=True)),
+    ("parita_q28k", dict(parita=True, quaderno_tetto=28000)),
 ]
 
 
@@ -141,10 +143,20 @@ def main():
             sens = []
             for nv, _ in VARIANTI[1:]:
                 b = js[k][f"{prof}/{nv}"]
-                sens.append(f"{nv}: Fen ${r0(b['tot_fen'])} (camerieri ${r0(b['fen']['costo'])}, sovracc. "
+                sens.append(f"{nv}: Fen ${r0(b['tot_fen'])} (camerieri ${r0(b['fen']['costo'])}, quaderni {b['quaderni']}, tolto {b['quota_tolta'] * 100:.2f}%, sovracc. "
                             f"{b['fen']['over_min']:.1f} min) Inf pred ${r0(b['tot_inf_pred'])} rapporto "
                             f"{b['tot_inf_pred'] / b['tot_fen']:.2f}")
             righe.append("  sensibilità: " + "\n               ".join(sens))
+    righe.append("\nPER FAMIGLIA (mediana [min–max] del rapporto Infinite predittiva / Fenvix):")
+    for prof in "ab":
+        for nv, _ in VARIANTI:
+            parti = []
+            for fam in ("me", "tw", "al", "te"):
+                v = sorted(js[k][f"{prof}/{nv}"]["tot_inf_pred"] / js[k][f"{prof}/{nv}"]["tot_fen"]
+                           for k in js if k.startswith(fam))
+                if v:
+                    parti.append(f"{fam} {np.median(v):.2f} [{v[0]:.2f}–{v[-1]:.2f}] n={len(v)}")
+            righe.append(f"  {prof}/{nv}: " + "; ".join(parti))
     txt = "\n".join(righe)
     open(f"{QUI}/risultati/riassunto.txt", "w").write(txt + "\n")
     json.dump(js, open(f"{QUI}/risultati/risultati.json", "w"), indent=1, default=float)
