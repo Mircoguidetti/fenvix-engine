@@ -96,7 +96,45 @@ pub const CLOSE_FLUSH_TIMEOUT: Duration = Duration::from_secs(20);
 /// How long `Tenant::abandon` waits for slatedb's close before leaving the tenant behind (its background tasks stop on their
 /// own once fenced or once the store answers). Abandons that hit it are counted in [`ABANDON_CLOSE_TIMEOUTS`].
 pub const ABANDON_CLOSE_TIMEOUT: Duration = Duration::from_secs(10);
+/// After its deadline a compaction pass stops its compactor in rounds of about 1 s (`compact_tenant_within`) for at most this
+/// long, then gives up (the pass fails; slatedb's compactor tasks are left to their store request).
+const COMPACTOR_STOP_LIMIT: Duration = Duration::from_secs(120);
 pub static ABANDON_CLOSE_TIMEOUTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Closes of abandoned tenants still running, per tenant id ([`Tenant::abandon`] left them behind or is still waiting for them).
+static PENDING_CLOSES: std::sync::LazyLock<Mutex<HashMap<String, usize>>> = std::sync::LazyLock::new(Default::default);
+
+/// Whether a close of an abandoned tenant `id` is still running: its slatedb tasks may still write under the tenant's prefix.
+pub fn close_pending(id: &str) -> bool {
+    PENDING_CLOSES.lock().unwrap().get(id).is_some_and(|n| *n > 0)
+}
+
+/// Abandoned closes still running, all tenants (tenantStats).
+pub fn pending_closes() -> usize {
+    PENDING_CLOSES.lock().unwrap().values().sum()
+}
+
+/// `close`, counted in [`PENDING_CLOSES`] from now until it ends (or its task is dropped).
+fn pending_close(id: &str, close: impl std::future::Future<Output = ()> + Send + 'static) -> impl std::future::Future<Output = ()> + Send + 'static {
+    struct Pending(String);
+    impl Drop for Pending {
+        fn drop(&mut self) {
+            let mut m = PENDING_CLOSES.lock().unwrap();
+            if let Some(n) = m.get_mut(&self.0) {
+                *n -= 1;
+                if *n == 0 {
+                    m.remove(&self.0);
+                }
+            }
+        }
+    }
+    *PENDING_CLOSES.lock().unwrap().entry(id.to_string()).or_default() += 1;
+    let pending = Pending(id.to_string());
+    async move {
+        close.await;
+        drop(pending);
+    }
+}
 
 /// Writers a process has open right now (garbage collection of a whole tenant is left to its close).
 static OPEN_WRITERS: std::sync::LazyLock<Mutex<std::collections::HashSet<String>>> = std::sync::LazyLock::new(Default::default);
@@ -943,25 +981,33 @@ impl Tenant {
     /// flush needs no room in L0 and still uploads what was acknowledged before the WAL write (local log, relaxed
     /// durability) as the memtable flush did; a fenced WAL write fails, as it should. Without a clean marker the next owner
     /// replays the WAL.
-    pub async fn abandon(mut self) {
-        let done = match self.mode.take() {
-            Some(Mode::Reader(r)) => tokio::time::timeout(ABANDON_CLOSE_TIMEOUT, r.close()).await.is_ok(),
+    ///
+    /// Returns whether the close finished within [`ABANDON_CLOSE_TIMEOUT`]. When it did not, the close goes on in its own task
+    /// (so slatedb's background tasks still stop once the store answers again) and [`close_pending`] says so until it ends:
+    /// slatedb 0.17 has no `Drop` for `Db`, so a tenant left behind keeps tasks that can still write a WAL object or an SST.
+    /// The lost-lease callers can ignore that (the next owner fences them); a caller about to delete the tenant's objects
+    /// (erase) must not.
+    pub async fn abandon(mut self) -> bool {
+        let close = match self.mode.take() {
+            Some(Mode::Reader(r)) => tokio::spawn(pending_close(&self.id, async move {
+                let _ = r.close().await;
+            })),
             Some(Mode::Writer(db)) => {
                 writer_closed(&self.id);
-                tokio::time::timeout(ABANDON_CLOSE_TIMEOUT, async {
+                tokio::spawn(pending_close(&self.id, async move {
                     let wal = slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::Wal };
                     let _ = db.flush_with_options(wal).await;
-                    db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await
-                })
-                .await
-                .is_ok()
+                    let _ = db.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await;
+                }))
             }
-            None => true,
+            None => return true,
         };
+        let done = tokio::time::timeout(ABANDON_CLOSE_TIMEOUT, close).await.is_ok();
         if !done {
             ABANDON_CLOSE_TIMEOUTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            eprintln!("abandon of tenant {}: close did not finish in {:?}; left behind", self.id, ABANDON_CLOSE_TIMEOUT);
+            eprintln!("abandon of tenant {}: close did not finish in {:?}; left behind (it goes on in the background)", self.id, ABANDON_CLOSE_TIMEOUT);
         }
+        done
     }
 
     /// Close. A writer flushes its memtable, then the marker is written, and the tenant is
@@ -1049,10 +1095,10 @@ pub async fn l0_count(raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) ->
 /// compactor (`CompactorBuilder::run`) with its own request counter. The harness
 /// polls the manifest through `raw` (not counted) to know when to stop it.
 pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) -> Result<Option<CompactionRecord>> {
-    compact_tenant_within(s3, raw, id, Duration::from_secs(30)).await
+    compact_tenant_within(s3, raw, id, Duration::from_secs(30), COMPACTOR_STOP_LIMIT).await
 }
 
-async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, pass: Duration) -> Result<Option<CompactionRecord>> {
+async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, pass: Duration, stop_limit: Duration) -> Result<Option<CompactionRecord>> {
     let id = id.to_string();
     let id = id.as_str();
     let l0_before = l0_count(raw, id).await?;
@@ -1085,9 +1131,20 @@ async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectSt
     };
     let deadline = Instant::now() + pass;
     let mut l0_after = l0_before;
+    // Each poll is bounded by what is left of the pass, and a failed poll ends the polling, not the function: returning
+    // early here would leave the compactor running with nobody to stop it.
+    let mut poll_err = None;
     while Instant::now() < deadline {
         tokio::time::sleep(Duration::from_millis(25)).await;
-        l0_after = l0_count(raw, id).await?;
+        let left = deadline.saturating_duration_since(Instant::now()).max(Duration::from_millis(100));
+        match tokio::time::timeout(left, l0_count(raw, id)).await {
+            Ok(Ok(n)) => l0_after = n,
+            Ok(Err(e)) => {
+                poll_err = Some(e);
+                break;
+            }
+            Err(_) => break,
+        }
         if l0_after < L0_COMPACT_THRESHOLD {
             break;
         }
@@ -1096,17 +1153,31 @@ async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectSt
     // reads of the manifest hang or retry while the store does not answer), it returns at once; `run` then registers its
     // tasks and waits for them forever, and this pass, its maintenance worker and the tenant's maintenance lock never end
     // (maintenance shutdown, and so SIGTERM, then waited forever). Stop again until `run` has returned.
-    let mut stopped = compactor.stop().await;
-    let mut rounds = 0;
-    while tokio::time::timeout(Duration::from_secs(1), &mut runner).await.is_err() {
-        rounds += 1;
-        if rounds >= 120 {
-            runner.abort();
-            anyhow::bail!("compactor of tenant {id} did not stop in 120 s");
+    // Once `run` has registered its tasks, `stop` cancels them and waits for them to end, which lasts as long as the store
+    // request in flight (object_store's 30 s timeout and its retries): every `stop` is bounded to 1 s too, so the whole wait
+    // after the deadline is at most `stop_limit` (`COMPACTOR_STOP_LIMIT`, plus at most 2 s for the round in progress). A `stop` that hits
+    // its bound is not an error: the next round stops again, and `run` returning is what ends the wait.
+    let stop_once = || async {
+        match tokio::time::timeout(Duration::from_secs(1), compactor.stop()).await {
+            Ok(r) => r.map_err(anyhow::Error::from),
+            Err(_) => Ok(()),
         }
-        stopped = compactor.stop().await;
+    };
+    let stop_until = Instant::now() + stop_limit;
+    let mut stopped = stop_once().await;
+    while tokio::time::timeout(Duration::from_secs(1), &mut runner).await.is_err() {
+        if Instant::now() >= stop_until {
+            // This ends the pass (its worker and the maintenance lock come back), not slatedb: the tasks `run` registered
+            // run on their own tokio tasks and stay alive until their store request ends, as `stop` left them.
+            runner.abort();
+            anyhow::bail!("compactor of tenant {id} did not stop in {stop_limit:?}");
+        }
+        stopped = stop_once().await;
     }
     stopped?;
+    if let Some(e) = poll_err {
+        return Err(e);
+    }
     // A standalone compactor leaves one checkpoint (15 min lifetime) per compaction. Each pins the
     // manifest version it was taken at, and through it old SSTs and WALs, so GC cannot reclaim them
     // until they expire. Nothing else takes checkpoints in this lifecycle (FollowLatest readers
@@ -1898,9 +1969,19 @@ mod tests {
     struct Frozen {
         inner: Arc<dyn ObjectStore>,
         frozen: Arc<std::sync::atomic::AtomicBool>,
+        /// Freeze at the first put whose path contains this (then that put waits too).
+        freeze_on_put: Option<&'static str>,
     }
 
     impl Frozen {
+        fn new(inner: &Arc<dyn ObjectStore>, frozen: &Arc<std::sync::atomic::AtomicBool>) -> Self {
+            Self { inner: Arc::clone(inner), frozen: Arc::clone(frozen), freeze_on_put: None }
+        }
+        fn put_gate(&self, l: &Path) {
+            if self.freeze_on_put.is_some_and(|f| l.as_ref().contains(f)) {
+                self.frozen.store(true, Relaxed);
+            }
+        }
         async fn gate(&self) {
             while self.frozen.load(Relaxed) {
                 tokio::time::sleep(Duration::from_millis(20)).await;
@@ -1917,10 +1998,12 @@ mod tests {
     #[async_trait::async_trait]
     impl ObjectStore for Frozen {
         async fn put_opts(&self, l: &Path, p: PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+            self.put_gate(l);
             self.gate().await;
             self.inner.put_opts(l, p, o).await
         }
         async fn put_multipart_opts(&self, l: &Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+            self.put_gate(l);
             self.gate().await;
             self.inner.put_multipart_opts(l, o).await
         }
@@ -1988,15 +2071,77 @@ mod tests {
         }
         db.close().await.unwrap();
         let frozen = Arc::new(std::sync::atomic::AtomicBool::new(true));
-        let s3: Arc<dyn ObjectStore> = Arc::new(Frozen { inner: Arc::clone(&raw), frozen: Arc::clone(&frozen) });
+        let s3: Arc<dyn ObjectStore> = Arc::new(Frozen::new(&raw, &frozen));
         let pass = {
             let (s3, raw) = (Arc::clone(&s3), Arc::clone(&raw));
-            tokio::spawn(async move { compact_tenant_within(&s3, &raw, id, Duration::from_millis(500)).await })
+            tokio::spawn(async move { compact_tenant_within(&s3, &raw, id, Duration::from_millis(500), COMPACTOR_STOP_LIMIT).await })
         };
         tokio::time::sleep(Duration::from_secs(2)).await;
         frozen.store(false, Relaxed);
         let r = tokio::time::timeout(Duration::from_secs(20), pass).await.expect("compaction pass did not end after the store came back");
         let _ = r.unwrap();
+    }
+
+    /// The store stops answering after a compaction pass has started writing its output: `run` has registered its tasks, so
+    /// `Compactor::stop` cancels them and waits for their store request, which does not end. The pass must still end, at
+    /// its stop limit, with the store still down. Before, every `stop` was awaited without a bound.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn compaction_pass_ends_when_stop_hangs() {
+        let id = "test-compact-stop-hangs";
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let db = Db::builder(tenant_path(id), Arc::clone(&raw)).with_settings(writer_settings()).build().await.unwrap();
+        for i in 0..L0_COMPACT_THRESHOLD {
+            db.put(format!("k{i}").as_bytes(), b"v").await.unwrap();
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+        }
+        db.close().await.unwrap();
+        let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s3: Arc<dyn ObjectStore> = Arc::new(Frozen { freeze_on_put: Some("compacted/"), ..Frozen::new(&raw, &frozen) });
+        let stop_limit = Duration::from_secs(3);
+        let t0 = Instant::now();
+        let pass = {
+            let (s3, raw) = (Arc::clone(&s3), Arc::clone(&raw));
+            tokio::spawn(async move { compact_tenant_within(&s3, &raw, id, Duration::from_secs(1), stop_limit).await })
+        };
+        let r = tokio::time::timeout(Duration::from_secs(15), pass).await;
+        let was_frozen = frozen.load(Relaxed);
+        frozen.store(false, Relaxed);
+        assert!(was_frozen, "the compactor never wrote its output (the test did not reach the case)");
+        let r = r.expect("compaction pass did not end with the store down");
+        assert!(r.unwrap().is_err(), "the pass must fail: its compactor did not stop");
+        assert!(t0.elapsed() < Duration::from_secs(1) + stop_limit + Duration::from_secs(4), "pass took {:?}", t0.elapsed());
+    }
+
+    /// `abandon` says whether the close finished. With the store down it returns false after `ABANDON_CLOSE_TIMEOUT` and
+    /// `close_pending` stays true (slatedb's tasks of the tenant are still alive) until the store answers and the close ends.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn abandon_reports_an_unfinished_close() {
+        let id = "test-abandon-store-down";
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let store: Arc<dyn ObjectStore> = Arc::new(Frozen::new(&raw, &frozen));
+        let lc = Lifecycle::new(Arc::new(CountingStore::new(Arc::clone(&store))), None);
+        // store up: the close finishes
+        let t = lc.create(id).await.unwrap();
+        let Some(Mode::Writer(db)) = &t.mode else { panic!("not a writer") };
+        db.put(b"a", b"v").await.unwrap();
+        assert!(t.abandon().await, "close with the store up");
+        assert!(!close_pending(id));
+        // store down: left behind, and reported
+        let t = lc.wake(id).await.unwrap();
+        let mut t = t;
+        t.put("b", b"v").await.unwrap();
+        frozen.store(true, Relaxed);
+        let t0 = Instant::now();
+        assert!(!t.abandon().await, "close with the store down");
+        assert!(t0.elapsed() < ABANDON_CLOSE_TIMEOUT + Duration::from_secs(2), "abandon took {:?}", t0.elapsed());
+        assert!(close_pending(id));
+        frozen.store(false, Relaxed);
+        let t0 = Instant::now();
+        while close_pending(id) {
+            assert!(t0.elapsed() < Duration::from_secs(30), "the close left behind did not end once the store was back");
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
     }
 
     #[test]
