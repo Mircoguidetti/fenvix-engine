@@ -1,5 +1,20 @@
 # Riassunto M15 (generato da analisi.py)
 
+## alibaba-751
+richieste 30,000,000, letture 13,380,839, durata 17.2 h; al database: letture 13,380,839, scritture 16,619,161; dati toccati 83.02 GB (letti 54.78 GB)
+  [0]
+    b=0.02 mancate 1.0000 S3 1.0000 Express 0.0000 | medio p50 25.05 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.57 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1039/mese (GET base S3 $20735)
+    b=0.05 mancate 1.0000 S3 1.0000 Express 0.0000 | medio p50 25.05 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.57 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1039/mese (GET base S3 $20736)
+    b=0.1  mancate 0.9996 S3 0.9996 Express 0.0000 | medio p50 25.04 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.56 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1038/mese (GET base S3 $20728)
+    b=0.2  mancate 0.9996 S3 0.9996 Express 0.0000 | medio p50 25.04 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.56 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1038/mese (GET base S3 $20728)
+    b=0.5  mancate 0.9992 S3 0.9992 Express 0.0000 | medio p50 25.03 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.56 p999 111.5, pess p99 151.50; GET in più 0.0500/lettura | gp3 p99 88.52 | costo in più $1038/mese (GET base S3 $20720)
+  [0-lru]
+    b=0.02 mancate 1.0000 S3 1.0000 Express 0.0000 | medio p50 25.05 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.57 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1039/mese (GET base S3 $20736)
+    b=0.05 mancate 1.0000 S3 1.0000 Express 0.0000 | medio p50 25.05 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.57 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1039/mese (GET base S3 $20736)
+    b=0.1  mancate 1.0000 S3 1.0000 Express 0.0000 | medio p50 25.05 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.57 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1039/mese (GET base S3 $20736)
+    b=0.2  mancate 0.9993 S3 0.9993 Express 0.0000 | medio p50 25.03 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.56 p999 111.5, pess p99 151.50; GET in più 0.0501/lettura | gp3 p99 88.53 | costo in più $1038/mese (GET base S3 $20721)
+    b=0.5  mancate 0.9992 S3 0.9992 Express 0.0000 | medio p50 25.03 p99 100.50 p999 157.5 | doppia: ott p99 49.53, medio p99 88.56 p999 111.5, pess p99 151.50; GET in più 0.0500/lettura | gp3 p99 88.52 | costo in più $1038/mese (GET base S3 $20720)
+
 ## tencentBlock-1548
 richieste 30,000,000, letture 16,909,498, durata 3.7 h; al database: letture 16,909,498, scritture 13,090,502; dati toccati 3.96 GB (letti 3.90 GB)
   [0]
@@ -793,6 +808,8 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
     b=0.5  mancate 0.5141 S3 0.5141 Express 0.0000 | medio p50 7.98 p99 85.51 p999 139.5 | doppia: ott p99 45.03, medio p99 81.45 p999 105.5, pess p99 138.50; GET in più 0.0256/lettura | gp3 p99 81.49 | costo in più $532/mese (GET base S3 $10660)
 
 # Taglia minima del bancone per p99 <= 10 ms (con richiesta doppia)
+  alibaba-751 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  alibaba-751 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
   tencentBlock-1548 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
   tencentBlock-1548 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
   tencentBlock-1548 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
@@ -957,6 +974,12 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
   twitter-c11 [0] b=0.02: stabile 0.7609, prima finestra 0.9156, raggiunto dopo 0.37 h
   twitter-c11 [0-lru] b=0.1: stabile 0.6237, prima finestra 0.7793, raggiunto dopo 0.60 h
   twitter-c11 [0] b=0.1: stabile 0.5490, prima finestra 0.7845, raggiunto dopo 0.60 h
+  alibaba-751 [0-lru] b=0.02: stabile 1.0000, prima finestra 1.0000, raggiunto dopo 0.04 h
+  alibaba-751 [0] b=0.02: stabile 0.8437, prima finestra 1.0000, raggiunto dopo 8.79 h
+  alibaba-751 [0-lru] b=0.1: stabile 0.9924, prima finestra 1.0000, raggiunto dopo 0.04 h
+  alibaba-751 [0] b=0.1: stabile 0.7915, prima finestra 1.0000, raggiunto dopo 8.79 h
+  alibaba-751 [0-lru] b=0.5: stabile 0.7387, prima finestra 1.0000, raggiunto dopo 9.34 h
+  alibaba-751 [0] b=0.5: stabile 0.6524, prima finestra 1.0000, raggiunto dopo 8.79 h
   tw-campione-011 [0-lru] b=0.02: stabile 0.9890, prima finestra 0.9913, raggiunto dopo 0.00 h
   tw-campione-011 [0] b=0.02: stabile 0.9889, prima finestra 0.9913, raggiunto dopo 0.00 h
   tw-campione-011 [0-lru] b=0.1: stabile 0.9890, prima finestra 0.9913, raggiunto dopo 0.00 h
@@ -1005,6 +1028,16 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
   tencentBlock-3580 s3fifo b=0.2: nostro 0.6096, libCacheSim 0.6096
   tencentBlock-3580 lru b=0.5: nostro 0.0386, libCacheSim 0.0386
   tencentBlock-3580 s3fifo b=0.5: nostro 0.0312, libCacheSim 0.0307
+  alibaba-751 lru b=0.02: nostro 0.9994, libCacheSim nan
+  alibaba-751 s3fifo b=0.02: nostro 0.9994, libCacheSim nan
+  alibaba-751 lru b=0.05: nostro 0.9994, libCacheSim nan
+  alibaba-751 s3fifo b=0.05: nostro 0.9994, libCacheSim nan
+  alibaba-751 lru b=0.1: nostro 0.9906, libCacheSim nan
+  alibaba-751 s3fifo b=0.1: nostro 0.9905, libCacheSim nan
+  alibaba-751 lru b=0.2: nostro 0.9904, libCacheSim nan
+  alibaba-751 s3fifo b=0.2: nostro 0.9905, libCacheSim nan
+  alibaba-751 lru b=0.5: nostro 0.9336, libCacheSim nan
+  alibaba-751 s3fifo b=0.5: nostro 0.9283, libCacheSim nan
   twitter-c24 lru b=0.02: nostro 0.8646, libCacheSim 0.8646
   twitter-c24 s3fifo b=0.02: nostro 0.5383, libCacheSim 0.5379
   twitter-c24 lru b=0.05: nostro 0.4182, libCacheSim 0.4182
