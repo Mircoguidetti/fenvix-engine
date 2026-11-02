@@ -1,15 +1,15 @@
-Sun Nov  1 23:26:50 UTC 2026
+Mon Nov  2 00:00:39 UTC 2026
 TLC2 Version 2026.10.30.154139 (rev: 090e85c)
-Running breadth-first search Model-Checking with fp 56 and seed 7605534201883575938 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 2635] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 3 and seed 5098392359684675737 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 4738] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/claude/w/fenvix-engine/tla-rami/MCFamiglia.tla
 Parsing file /home/claude/w/fenvix-engine/tla-rami/Famiglia.tla
-Parsing file /tmp/tlc-1812823131889668500/TLC.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-1812823131889668500/_TLCTrace.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-1812823131889668500/Naturals.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-1812823131889668500/FiniteSets.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-1812823131889668500/Sequences.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-1812823131889668500/TLCExt.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
-Parsing file /tmp/tlc-1812823131889668500/Integers.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-9259159066744332936/TLC.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-9259159066744332936/_TLCTrace.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-9259159066744332936/Naturals.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-9259159066744332936/FiniteSets.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-9259159066744332936/Sequences.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-9259159066744332936/TLCExt.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-9259159066744332936/Integers.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
 Semantic processing of module Naturals
 Semantic processing of module Sequences
 Semantic processing of module FiniteSets
@@ -23,12 +23,13 @@ Linting of module Famiglia
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MCFamiglia
-Starting... (2026-11-01 23:26:51)
+Starting... (2026-11-02 00:00:39)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-01 23:26:51.
+Finished computing initial states: 1 distinct state generated at 2026-11-02 00:00:40.
 Error: Invariant ReadersOK is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
 /\ nextBox = 2
@@ -59,7 +60,8 @@ State 1: <Initial predicate>
 /\ seen = {}
 /\ owner = <<d1, "nessuno", "nessuno">>
 
-State 2: <CompactWrite(d1) line 180, col 3 to line 187, col 19 of module Famiglia>
+State 2: <CompactWrite(d1) line 191, col 3 to line 198, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
 /\ nextBox = 3
@@ -90,7 +92,8 @@ State 2: <CompactWrite(d1) line 180, col 3 to line 187, col 19 of module Famigli
 /\ seen = {}
 /\ owner = <<d1, d1, "nessuno">>
 
-State 3: <RTake(r1) line 365, col 3 to line 372, col 19 of module Famiglia>
+State 3: <RTake(r1) line 387, col 3 to line 394, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
 /\ nextBox = 3
@@ -121,7 +124,8 @@ State 3: <RTake(r1) line 365, col 3 to line 372, col 19 of module Famiglia>
 /\ seen = {}
 /\ owner = <<d1, d1, "nessuno">>
 
-State 4: <WriteCommit(d1) line 191, col 3 to line 203, col 19 of module Famiglia>
+State 4: <WriteCommit(d1) line 202, col 3 to line 215, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
 /\ nextBox = 3
@@ -152,7 +156,8 @@ State 4: <WriteCommit(d1) line 191, col 3 to line 203, col 19 of module Famiglia
 /\ seen = {}
 /\ owner = <<d1, d1, "nessuno">>
 
-State 5: <RRead(r1) line 377, col 3 to line 398, col 100 of module Famiglia>
+State 5: <RRead(r1) line 399, col 3 to line 420, col 100 of module Famiglia>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
 /\ nextBox = 3
@@ -183,9 +188,9 @@ State 5: <RRead(r1) line 377, col 3 to line 398, col 100 of module Famiglia>
 /\ seen = {}
 /\ owner = <<d1, d1, "nessuno">>
 
-669 states generated, 348 distinct states found, 248 states left on queue.
-The depth of the complete state graph search is 5.
-Finished in 01s at (2026-11-01 23:26:52)
-Trace exploration spec path: ./MCFamiglia_TTrace_1793575610.tla
+1658 states generated, 790 distinct states found, 550 states left on queue.
+The depth of the complete state graph search is 7.
+Finished in 00s at (2026-11-02 00:00:40)
+Trace exploration spec path: ./MCFamiglia_TTrace_1793577639.tla
 EXIT=12
-Sun Nov  1 23:26:52 UTC 2026
+Mon Nov  2 00:00:40 UTC 2026

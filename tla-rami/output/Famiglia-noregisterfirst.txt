@@ -1,15 +1,15 @@
-Sun Nov  1 23:23:38 UTC 2026
+Mon Nov  2 00:00:31 UTC 2026
 TLC2 Version 2026.10.30.154139 (rev: 090e85c)
-Running breadth-first search Model-Checking with fp 65 and seed 2791819274984882652 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 2049] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 35 and seed -365523674334100669 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 4672] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/claude/w/fenvix-engine/tla-rami/MCFamiglia.tla
 Parsing file /home/claude/w/fenvix-engine/tla-rami/Famiglia.tla
-Parsing file /tmp/tlc-6943933734854196383/TLC.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-6943933734854196383/_TLCTrace.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-6943933734854196383/Naturals.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-6943933734854196383/FiniteSets.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-6943933734854196383/Sequences.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-6943933734854196383/TLCExt.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
-Parsing file /tmp/tlc-6943933734854196383/Integers.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-3298071965448638880/TLC.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-3298071965448638880/_TLCTrace.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-3298071965448638880/Naturals.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-3298071965448638880/FiniteSets.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-3298071965448638880/Sequences.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-3298071965448638880/TLCExt.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-3298071965448638880/Integers.tla (jar:file:/home/claude/w/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
 Semantic processing of module Naturals
 Semantic processing of module Sequences
 Semantic processing of module FiniteSets
@@ -23,12 +23,13 @@ Linting of module Famiglia
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module MCFamiglia
-Starting... (2026-11-01 23:23:39)
+Starting... (2026-11-02 00:00:32)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-01 23:23:39.
+Finished computing initial states: 1 distinct state generated at 2026-11-02 00:00:32.
 Error: Invariant NoDangling is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
 /\ nextBox = 2
@@ -59,53 +60,23 @@ State 1: <Initial predicate>
 /\ seen = {}
 /\ owner = <<d1, "nessuno", "nessuno">>
 
-State 2: <FlushWrite(d1) line 171, col 3 to line 176, col 19 of module Famiglia>
+State 2: <ForkStart(d2) line 233, col 3 to line 246, col 89 of module Famiglia>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
 /\ mf = (d1 :> {1} @@ d2 :> {})
 /\ nPoints = 0
 /\ cycle = 0
-/\ wst = (d1 :> "flush" @@ d2 :> "idle")
+/\ wst = (d1 :> "idle" @@ d2 :> "idle")
 /\ rfail = FALSE
 /\ bcyc = <<0, 0, 0>>
 /\ cpins = (c1 :> {})
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
-/\ marked = (c1 :> <<0, 0, 0>>)
-/\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "none")
-/\ cused = (c1 :> {})
-/\ used = {d1}
-/\ rst = (r1 :> "idle")
-/\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
-/\ fpin = (d1 :> {} @@ d2 :> {})
-/\ cread = (c1 :> {})
-/\ rcyc = (r1 :> 0)
-/\ members = {d1}
-/\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
-
-State 3: <ForkStart(d2) line 221, col 3 to line 234, col 89 of module Famiglia>
-/\ ccand = (c1 :> {})
-/\ cst = (c1 :> "idle")
-/\ nextBox = 3
-/\ rheld = (r1 :> {})
-/\ mf = (d1 :> {1} @@ d2 :> {})
-/\ nPoints = 0
-/\ cycle = 0
-/\ wst = (d1 :> "flush" @@ d2 :> "idle")
-/\ rfail = FALSE
-/\ bcyc = <<0, 0, 0>>
-/\ cpins = (c1 :> {})
-/\ win = (d1 :> {} @@ d2 :> {})
-/\ pins = {}
-/\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
 /\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
 /\ fst = (d1 :> "none" @@ d2 :> "pinned")
@@ -113,18 +84,19 @@ State 3: <ForkStart(d2) line 221, col 3 to line 234, col 89 of module Famiglia>
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
+/\ boxSt = <<"live", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {d1}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-State 4: <Drop(d1) line 286, col 3 to line 295, col 19 of module Famiglia>
+State 3: <Drop(d1) line 300, col 3 to line 310, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
 /\ ccand = (c1 :> {})
 /\ cst = (c1 :> "idle")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
 /\ mf = (d1 :> {} @@ d2 :> {})
 /\ nPoints = 0
@@ -136,7 +108,7 @@ State 4: <Drop(d1) line 286, col 3 to line 295, col 19 of module Famiglia>
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
 /\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
 /\ fst = (d1 :> "none" @@ d2 :> "pinned")
@@ -144,20 +116,53 @@ State 4: <Drop(d1) line 286, col 3 to line 295, col 19 of module Famiglia>
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
+/\ boxSt = <<"live", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-State 5: <CList(c1) line 307, col 3 to line 312, col 19 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
+State 4: <ForkWrite(d2) line 257, col 3 to line 261, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {})
+/\ cst = (c1 :> "idle")
+/\ nextBox = 2
+/\ rheld = (r1 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {1})
+/\ nPoints = 0
+/\ cycle = 0
+/\ wst = (d1 :> "idle" @@ d2 :> "idle")
+/\ rfail = FALSE
+/\ bcyc = <<0, 0, 0>>
+/\ cpins = (c1 :> {})
+/\ win = (d1 :> {} @@ d2 :> {})
+/\ pins = {}
+/\ rdb = (r1 :> d1)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
+/\ cmem = (c1 :> {})
+/\ fst = (d1 :> "none" @@ d2 :> "written")
+/\ cused = (c1 :> {})
+/\ used = {d1, d2}
+/\ rst = (r1 :> "idle")
+/\ wcyc = (d1 :> 0 @@ d2 :> 0)
+/\ boxSt = <<"live", "none", "none">>
+/\ fpin = (d1 :> {} @@ d2 :> {1})
+/\ cread = (c1 :> {})
+/\ rcyc = (r1 :> 0)
+/\ members = {}
+/\ seen = {}
+/\ owner = <<d1, "nessuno", "nessuno">>
+
+State 5: <CList(c1) line 323, col 3 to line 329, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {1})
 /\ cst = (c1 :> "listed")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
-/\ mf = (d1 :> {} @@ d2 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {1})
 /\ nPoints = 0
 /\ cycle = 0
 /\ wst = (d1 :> "idle" @@ d2 :> "idle")
@@ -167,28 +172,29 @@ State 5: <CList(c1) line 307, col 3 to line 312, col 19 of module Famiglia>
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
 /\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "pinned")
+/\ fst = (d1 :> "none" @@ d2 :> "written")
 /\ cused = (c1 :> {})
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
+/\ boxSt = <<"live", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-State 6: <CReadReg(c1) line 315, col 3 to line 323, col 19 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
+State 6: <CReadReg(c1) line 332, col 3 to line 340, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {1})
 /\ cst = (c1 :> "reg")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
-/\ mf = (d1 :> {} @@ d2 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {1})
 /\ nPoints = 0
 /\ cycle = 0
 /\ wst = (d1 :> "idle" @@ d2 :> "idle")
@@ -198,28 +204,29 @@ State 6: <CReadReg(c1) line 315, col 3 to line 323, col 19 of module Famiglia>
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
 /\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "pinned")
+/\ fst = (d1 :> "none" @@ d2 :> "written")
 /\ cused = (c1 :> {})
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
+/\ boxSt = <<"live", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-State 7: <CSweep(c1) line 344, col 3 to line 359, col 58 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
+State 7: <CSweep(c1) line 362, col 3 to line 381, col 64 of module Famiglia>
+/\ ccyc = (c1 :> 0)
+/\ ccand = (c1 :> {1})
 /\ cst = (c1 :> "idle")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
-/\ mf = (d1 :> {} @@ d2 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {1})
 /\ nPoints = 0
 /\ cycle = 1
 /\ wst = (d1 :> "idle" @@ d2 :> "idle")
@@ -229,28 +236,29 @@ State 7: <CSweep(c1) line 344, col 3 to line 359, col 58 of module Famiglia>
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
-/\ marked = (c1 :> <<1, 1, 0>>)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "pinned")
+/\ fst = (d1 :> "none" @@ d2 :> "written")
 /\ cused = (c1 :> {})
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
+/\ boxSt = <<"live", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-State 8: <CList(c1) line 307, col 3 to line 312, col 19 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
+State 8: <CList(c1) line 323, col 3 to line 329, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 1)
+/\ ccand = (c1 :> {1})
 /\ cst = (c1 :> "listed")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
-/\ mf = (d1 :> {} @@ d2 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {1})
 /\ nPoints = 0
 /\ cycle = 1
 /\ wst = (d1 :> "idle" @@ d2 :> "idle")
@@ -260,88 +268,59 @@ State 8: <CList(c1) line 307, col 3 to line 312, col 19 of module Famiglia>
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
-/\ marked = (c1 :> <<1, 1, 0>>)
-/\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "pinned")
-/\ cused = (c1 :> {})
-/\ used = {d1, d2}
-/\ rst = (r1 :> "idle")
-/\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
-/\ fpin = (d1 :> {} @@ d2 :> {1})
-/\ cread = (c1 :> {})
-/\ rcyc = (r1 :> 0)
-/\ members = {}
-/\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
-
-State 9: <CReadReg(c1) line 315, col 3 to line 323, col 19 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
-/\ cst = (c1 :> "reg")
-/\ nextBox = 3
-/\ rheld = (r1 :> {})
-/\ mf = (d1 :> {} @@ d2 :> {})
-/\ nPoints = 0
-/\ cycle = 1
-/\ wst = (d1 :> "idle" @@ d2 :> "idle")
-/\ rfail = FALSE
-/\ bcyc = <<0, 0, 0>>
-/\ cpins = (c1 :> {})
-/\ win = (d1 :> {} @@ d2 :> {})
-/\ pins = {}
-/\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
-/\ marked = (c1 :> <<1, 1, 0>>)
-/\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "pinned")
-/\ cused = (c1 :> {})
-/\ used = {d1, d2}
-/\ rst = (r1 :> "idle")
-/\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"live", "live", "none">>
-/\ fpin = (d1 :> {} @@ d2 :> {1})
-/\ cread = (c1 :> {})
-/\ rcyc = (r1 :> 0)
-/\ members = {}
-/\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
-
-State 10: <CSweep(c1) line 344, col 3 to line 359, col 58 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
-/\ cst = (c1 :> "idle")
-/\ nextBox = 3
-/\ rheld = (r1 :> {})
-/\ mf = (d1 :> {} @@ d2 :> {})
-/\ nPoints = 0
-/\ cycle = 2
-/\ wst = (d1 :> "idle" @@ d2 :> "idle")
-/\ rfail = FALSE
-/\ bcyc = <<0, 0, 0>>
-/\ cpins = (c1 :> {})
-/\ win = (d1 :> {} @@ d2 :> {})
-/\ pins = {}
-/\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
 /\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
-/\ fst = (d1 :> "none" @@ d2 :> "pinned")
+/\ fst = (d1 :> "none" @@ d2 :> "written")
 /\ cused = (c1 :> {})
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"gone", "gone", "none">>
+/\ boxSt = <<"live", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-State 11: <ForkWrite(d2) line 245, col 3 to line 249, col 19 of module Famiglia>
-/\ ccand = (c1 :> {1, 2})
+State 9: <CReadReg(c1) line 332, col 3 to line 340, col 19 of module Famiglia>
+/\ ccyc = (c1 :> 1)
+/\ ccand = (c1 :> {1})
+/\ cst = (c1 :> "reg")
+/\ nextBox = 2
+/\ rheld = (r1 :> {})
+/\ mf = (d1 :> {} @@ d2 :> {1})
+/\ nPoints = 0
+/\ cycle = 1
+/\ wst = (d1 :> "idle" @@ d2 :> "idle")
+/\ rfail = FALSE
+/\ bcyc = <<0, 0, 0>>
+/\ cpins = (c1 :> {})
+/\ win = (d1 :> {} @@ d2 :> {})
+/\ pins = {}
+/\ rdb = (r1 :> d1)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
+/\ marked = (c1 :> <<0, 0, 0>>)
+/\ cmem = (c1 :> {})
+/\ fst = (d1 :> "none" @@ d2 :> "written")
+/\ cused = (c1 :> {})
+/\ used = {d1, d2}
+/\ rst = (r1 :> "idle")
+/\ wcyc = (d1 :> 0 @@ d2 :> 0)
+/\ boxSt = <<"live", "none", "none">>
+/\ fpin = (d1 :> {} @@ d2 :> {1})
+/\ cread = (c1 :> {})
+/\ rcyc = (r1 :> 0)
+/\ members = {}
+/\ seen = {}
+/\ owner = <<d1, "nessuno", "nessuno">>
+
+State 10: <CSweep(c1) line 362, col 3 to line 381, col 64 of module Famiglia>
+/\ ccyc = (c1 :> 1)
+/\ ccand = (c1 :> {1})
 /\ cst = (c1 :> "idle")
-/\ nextBox = 3
+/\ nextBox = 2
 /\ rheld = (r1 :> {})
 /\ mf = (d1 :> {} @@ d2 :> {1})
 /\ nPoints = 0
@@ -353,7 +332,7 @@ State 11: <ForkWrite(d2) line 245, col 3 to line 249, col 19 of module Famiglia>
 /\ win = (d1 :> {} @@ d2 :> {})
 /\ pins = {}
 /\ rdb = (r1 :> d1)
-/\ wbox = (d1 :> 2 @@ d2 :> 0)
+/\ wbox = (d1 :> 0 @@ d2 :> 0)
 /\ marked = (c1 :> <<0, 0, 0>>)
 /\ cmem = (c1 :> {})
 /\ fst = (d1 :> "none" @@ d2 :> "written")
@@ -361,17 +340,17 @@ State 11: <ForkWrite(d2) line 245, col 3 to line 249, col 19 of module Famiglia>
 /\ used = {d1, d2}
 /\ rst = (r1 :> "idle")
 /\ wcyc = (d1 :> 0 @@ d2 :> 0)
-/\ boxSt = <<"gone", "gone", "none">>
+/\ boxSt = <<"gone", "none", "none">>
 /\ fpin = (d1 :> {} @@ d2 :> {1})
 /\ cread = (c1 :> {})
 /\ rcyc = (r1 :> 0)
 /\ members = {}
 /\ seen = {}
-/\ owner = <<d1, d1, "nessuno">>
+/\ owner = <<d1, "nessuno", "nessuno">>
 
-165370 states generated, 49147 distinct states found, 25545 states left on queue.
+152745 states generated, 45082 distinct states found, 23315 states left on queue.
 The depth of the complete state graph search is 11.
-Finished in 03s at (2026-11-01 23:23:42)
-Trace exploration spec path: ./MCFamiglia_TTrace_1793575418.tla
+Finished in 03s at (2026-11-02 00:00:35)
+Trace exploration spec path: ./MCFamiglia_TTrace_1793577631.tla
 EXIT=12
-Sun Nov  1 23:23:42 UTC 2026
+Mon Nov  2 00:00:35 UTC 2026

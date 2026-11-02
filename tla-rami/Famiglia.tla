@@ -16,12 +16,13 @@
 (*  2. prima si registra, poi si condivide: il fork scrive la spilla nel    *)
 (*     registro (atomica con la lettura del foglio sorgente) prima di       *)
 (*     scrivere il foglio del ramo;                                         *)
-(*  3. eta' minima: una scatola si cancella solo se il raccoglitore l'ha    *)
-(*     vista inutilizzata in Grace giri consecutivi; ogni operazione che    *)
-(*     tiene una vista vecchia (lettore, scrittura in volo) dura al massimo *)
-(*     Hold giri (scritture) o RHold giri (lettori), con Hold e RHold al    *)
-(*     massimo Grace - 2;                                                   *)
-(*     in piu' "su 404 rileggi il foglio" per i lettori;                    *)
+(*  3. eta' minima: una scatola si cancella solo se da almeno Grace giri   *)
+(*     non e' in nessun foglio e in nessuna spilla (l'eta' riparte quando   *)
+(*     esce dall'ultimo foglio, non dalla nascita); una scrittura in volo   *)
+(*     dura al massimo Hold <= Grace - 1 giri, un lettore senza la regola   *)
+(*     del 404 tiene un foglio di al massimo RHold <= Grace giri; con la    *)
+(*     regola "su 404 rileggi il foglio" il lettore puo' tenerlo quanto     *)
+(*     vuole;                                                               *)
 (*  4. cancellare un database lo fa uscire dalla famiglia: le sue scatole   *)
 (*     restano finche' qualcuno le usa.                                     *)
 (*                                                                          *)
@@ -39,11 +40,15 @@
 (*                   (come Admin::delete_db di SlateDB)                     *)
 (*  NoRegCheck       il raccoglitore non ricontrolla il registro prima di   *)
 (*                   cancellare                                             *)
-(*  Grace = 1        nessuna eta' minima: cancella al primo giro            *)
+(*  Grace = 0        nessuna eta' minima                                    *)
 (*  AgeByCreation    eta' minima misurata dalla nascita della scatola, non  *)
 (*                   da quando e' uscita dall'ultimo foglio                 *)
-(*  Hold = Grace - 1 una scrittura in volo dura un giro di troppo           *)
-(*  RHold = Grace - 1 un lettore tiene il foglio un giro di troppo          *)
+(*  CountSweeps      eta' minima come "vista inutilizzata in Grace giri di  *)
+(*                   fila dal raccoglitore" (sembra giusta, non lo e')      *)
+(*  Hold = Grace     una scrittura in volo dura un giro di troppo           *)
+(*  RHold = Grace+1  un lettore tiene il foglio un giro di troppo           *)
+(*  NoSlowCheck      il raccoglitore cancella anche se il suo giro e' durato*)
+(*                   piu' di un giro (con due raccoglitori)                 *)
 (***************************************************************************)
 EXTENDS Naturals, FiniteSets
 
@@ -51,9 +56,9 @@ CONSTANTS DBs, Root, Collectors, Readers,
           MaxBoxes, MaxCycles, MaxPoints,
           Hold,     \* giri completi al massimo durante una scrittura in volo
           RHold,    \* eta' massima (in giri) del foglio tenuto da un lettore, senza la regola del 404
-          Grace,    \* giri consecutivi in cui una scatola deve risultare inutilizzata (1 = nessuna eta' minima)
+          Grace,    \* eta' minima in giri dall'ultima uscita da un foglio o da una spilla (0 = nessuna)
           Reread,
-          NoRegisterFirst, SplitPin, OwnerDeletes, DropDeletesPrefix, NoRegCheck, AgeByCreation,
+          NoRegisterFirst, SplitPin, OwnerDeletes, DropDeletesPrefix, NoRegCheck, AgeByCreation, CountSweeps, NoSlowCheck,
           Track   \* TRUE solo nei modelli di controllo: tiene la variabile fantasma `seen`
 
 Boxes == 1..MaxBoxes
@@ -62,7 +67,8 @@ NoDB  == "nessuno"
 VARIABLES
   boxSt,    \* scatola -> "none" (mai scritta) | "live" | "gone" (cancellata)
   owner,    \* scatola -> database proprietario (prefisso)
-  bcyc,     \* scatola -> giro in cui e' nata
+  bcyc,     \* scatola -> giro dell'ultimo "contatto": nascita, o uscita da un foglio o da una spilla
+            \* (con AgeByCreation solo la nascita)
   nextBox,  \* prossima scatola libera
   mf,       \* database -> insieme di scatole del suo foglio ({} se il foglio non esiste)
   members,  \* registro: membri della famiglia
@@ -82,7 +88,8 @@ VARIABLES
   cpins,    \* raccoglitore -> spille lette dal registro
   cread,    \* raccoglitore -> membri di cui ha letto il foglio
   cused,    \* raccoglitore -> scatole viste nei fogli letti
-  marked,   \* raccoglitore -> scatola -> giri consecutivi in cui l'ha vista inutilizzata
+  ccyc,     \* raccoglitore -> valore di `cycle` al suo LIST
+  marked,   \* raccoglitore -> scatola -> giri consecutivi in cui l'ha vista inutilizzata (solo CountSweeps)
   cycle,    \* giri completati (tempo del modello)
   rst,      \* lettore -> "idle" | "hold"
   rdb,      \* lettore -> database letto
@@ -92,15 +99,18 @@ VARIABLES
   seen      \* fantasma, solo con Track: eventi rari gia' accaduti (controllo che il modello non sia vuoto)
 
 vars == <<boxSt, owner, bcyc, nextBox, mf, members, pins, used, nPoints, fst, fpin,
-          wst, wbox, win, wcyc, cst, ccand, cmem, cpins, cread, cused, marked, cycle,
+          wst, wbox, win, wcyc, cst, ccand, cmem, cpins, cread, cused, ccyc, marked, cycle,
           rst, rdb, rheld, rcyc, rfail, seen>>
 wvars == <<wst, wbox, win, wcyc>>
-cvars == <<cst, ccand, cmem, cpins, cread, cused, marked, cycle>>
+cvars == <<cst, ccand, cmem, cpins, cread, cused, ccyc, marked, cycle>>
 rvars == <<rst, rdb, rheld, rcyc, rfail>>
 Mark(ev) == IF Track THEN seen' = seen \cup {ev} ELSE UNCHANGED seen
 fvars == <<fst, fpin, used>>
 
 Live == {b \in Boxes : boxSt[b] = "live"}
+\* le scatole in S escono da un foglio o da una spilla adesso: l'eta' minima riparte da qui
+Touch(S) == IF AgeByCreation THEN UNCHANGED bcyc
+            ELSE bcyc' = [b \in Boxes |-> IF b \in S THEN cycle ELSE bcyc[b]]
 PinBoxes(P) == UNION {e.pin : e \in P}
 
 TypeOK ==
@@ -117,7 +127,7 @@ TypeOK ==
   /\ wst \in [DBs -> {"idle", "flush", "compact"}]
   /\ cst \in [Collectors -> {"idle", "listed", "reg"}]
   /\ cycle \in 0..MaxCycles
-  /\ marked \in [Collectors -> [Boxes -> 0..Grace]]
+  /\ marked \in [Collectors -> [Boxes -> 0..MaxCycles]]
   /\ rst \in [Readers -> {"idle", "hold"}]
   /\ rfail \in BOOLEAN
   /\ seen \subseteq {"reread", "forkFromPoint", "reclaimDropped", "deleted"}
@@ -144,6 +154,7 @@ Init ==
   /\ cpins = [c \in Collectors |-> {}]
   /\ cread = [c \in Collectors |-> {}]
   /\ cused = [c \in Collectors |-> {}]
+  /\ ccyc = [c \in Collectors |-> 0]
   /\ marked = [c \in Collectors |-> [b \in Boxes |-> 0]]
   /\ cycle = 0
   /\ rst = [r \in Readers |-> "idle"]
@@ -199,7 +210,8 @@ WriteCommit(d) ==
                 del   == {b \in win[d] : owner[b] = d /\ b \notin inUse}
             IN boxSt' = [b \in Boxes |-> IF b \in del THEN "gone" ELSE boxSt[b]]
        ELSE UNCHANGED boxSt
-  /\ UNCHANGED <<owner, bcyc, nextBox, wbox, win, wcyc, members, pins, nPoints, fvars, cvars, rvars>>
+  /\ Touch(win[d])
+  /\ UNCHANGED <<owner, nextBox, wbox, win, wcyc, members, pins, nPoints, fvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 \* lo scrittore rinuncia (crash, tempo scaduto): la scatola resta orfana su S3
@@ -263,7 +275,8 @@ ForkAbort(dst) ==
   /\ mf' = [mf EXCEPT ![dst] = {}]
   /\ pins' = {e \in pins : ~(e.k = "fork" /\ e.db = dst)}
   /\ fst' = [fst EXCEPT ![dst] = "aborted"]
-  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, members, nPoints, fpin, used, wvars, cvars, rvars>>
+  /\ Touch(mf[dst] \cup fpin[dst])
+  /\ UNCHANGED <<boxSt, owner, nextBox, members, nPoints, fpin, used, wvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 \* punto di ripristino: spilla del foglio attuale, atomica (PUT condizionale)
@@ -278,7 +291,8 @@ PointExpire ==
   /\ \E e \in pins :
        /\ e.k = "point"
        /\ pins' = pins \ {e}
-  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, nPoints, fvars, wvars, cvars, rvars>>
+       /\ Touch(e.pin)
+  /\ UNCHANGED <<boxSt, owner, nextBox, mf, members, nPoints, fvars, wvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 \* il database esce dalla famiglia (regola 4): via dal registro con i suoi punti, foglio cancellato
@@ -291,7 +305,8 @@ Drop(d) ==
   /\ IF DropDeletesPrefix
        THEN boxSt' = [b \in Boxes |-> IF owner[b] = d /\ boxSt[b] = "live" THEN "gone" ELSE boxSt[b]]
        ELSE UNCHANGED boxSt
-  /\ UNCHANGED <<owner, bcyc, nextBox, wbox, win, wcyc, nPoints, fvars, cvars, rvars>>
+  /\ Touch(mf[d] \cup PinBoxes({e \in pins : e.k = "point" /\ e.db = d}))
+  /\ UNCHANGED <<owner, nextBox, wbox, win, wcyc, nPoints, fvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 -----------------------------------------------------------------------------
@@ -299,14 +314,16 @@ Drop(d) ==
 (*  1. LIST delle scatole (candidati);                                      *)
 (*  2. lettura del registro (membri e spille);                              *)
 (*  3. lettura del foglio di ogni membro, uno alla volta;                   *)
-(*  4. nuova lettura del registro: se e' cambiato rinuncia al giro;         *)
+(*  4. nuova lettura del registro: se e' cambiato, o se dal LIST e' gia'   *)
+(*     passato un giro intero, rinuncia al giro;                            *)
 (*     altrimenti cancella i candidati che nessun foglio letto e nessuna    *)
-(*     spilla usa e che erano inutilizzati negli ultimi Grace giri.         *)
+(*     spilla usa e che hanno l'eta' minima.                                *)
 
 CList(c) ==
   /\ cst[c] = "idle" /\ cycle < MaxCycles
   /\ cst' = [cst EXCEPT ![c] = "listed"]
   /\ ccand' = [ccand EXCEPT ![c] = Live]
+  /\ ccyc' = [ccyc EXCEPT ![c] = cycle]
   /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, pins, nPoints, fvars, wvars,
                  cmem, cpins, cread, cused, marked, cycle, rvars>>
   /\ UNCHANGED seen
@@ -319,7 +336,7 @@ CReadReg(c) ==
   /\ cread' = [cread EXCEPT ![c] = {}]
   /\ cused' = [cused EXCEPT ![c] = {}]
   /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, pins, nPoints, fvars, wvars,
-                 ccand, marked, cycle, rvars>>
+                 ccand, ccyc, marked, cycle, rvars>>
   /\ UNCHANGED seen
 
 CReadMf(c) ==
@@ -328,26 +345,31 @@ CReadMf(c) ==
        /\ cread' = [cread EXCEPT ![c] = @ \cup {d}]
        /\ cused' = [cused EXCEPT ![c] = @ \cup mf[d]]
   /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, pins, nPoints, fvars, wvars,
-                 cst, ccand, cmem, cpins, marked, cycle, rvars>>
+                 cst, ccand, cmem, cpins, ccyc, marked, cycle, rvars>>
   /\ UNCHANGED seen
 
 CAbort(c) ==
   /\ cst[c] = "reg" /\ cread[c] = cmem[c]
-  /\ ~NoRegCheck
-  /\ (members # cmem[c] \/ pins # cpins[c])
+  /\ \/ ~NoRegCheck /\ (members # cmem[c] \/ pins # cpins[c])
+     \* giro troppo lento: dal suo LIST e' passato un giro intero (di un altro raccoglitore)
+     \/ ~NoSlowCheck /\ cycle # ccyc[c]
   /\ cst' = [cst EXCEPT ![c] = "idle"]
   /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, pins, nPoints, fvars, wvars,
-                 ccand, cmem, cpins, cread, cused, marked, cycle, rvars>>
+                 ccand, cmem, cpins, cread, cused, ccyc, marked, cycle, rvars>>
   /\ UNCHANGED seen
 
 CSweep(c) ==
   /\ cst[c] = "reg" /\ cread[c] = cmem[c]
+  /\ cycle < MaxCycles   \* limite del modello (con due raccoglitori serve anche qui)
   /\ (NoRegCheck \/ (members = cmem[c] /\ pins = cpins[c]))
+  /\ (NoSlowCheck \/ cycle = ccyc[c])
   /\ LET unused == ccand[c] \ (cused[c] \cup PinBoxes(cpins[c]))
-         del    == {b \in unused : IF AgeByCreation THEN cycle - bcyc[b] >= Grace - 1
-                                    ELSE marked[c][b] + 1 >= Grace}
+         del    == {b \in unused : IF CountSweeps THEN marked[c][b] + 1 >= Grace
+                                    ELSE cycle - bcyc[b] >= Grace}
      IN /\ boxSt' = [b \in Boxes |-> IF b \in del THEN "gone" ELSE boxSt[b]]
-        /\ marked' = [marked EXCEPT ![c] = [b \in Boxes |-> IF b \in unused \ del THEN marked[c][b] + 1 ELSE 0]]
+        /\ IF CountSweeps
+             THEN marked' = [marked EXCEPT ![c] = [b \in Boxes |-> IF b \in unused \ del THEN marked[c][b] + 1 ELSE 0]]
+             ELSE UNCHANGED marked
         /\ IF Track THEN seen' = seen \cup (IF del # {} THEN {"deleted"} ELSE {})
                                      \cup (IF \E b \in del : owner[b] \in used \ members
                                                            /\ owner[b] # NoDB /\ fst[owner[b]] # "aborted"
@@ -356,7 +378,7 @@ CSweep(c) ==
   /\ cst' = [cst EXCEPT ![c] = "idle"]
   /\ cycle' = cycle + 1
   /\ UNCHANGED <<owner, bcyc, nextBox, mf, members, pins, nPoints, fvars, wvars,
-                 ccand, cmem, cpins, cread, cused, rvars>>
+                 ccand, cmem, cpins, cread, cused, ccyc, rvars>>
 
 -----------------------------------------------------------------------------
 (* Lettori (camerieri) che tengono un foglio anche vecchio.                 *)
@@ -419,12 +441,12 @@ Spec == Init /\ [][Next]_vars
 (* Vista per TLC (VIEW): due stati che differiscono solo in valori che non verranno mai piu' letti *)
 (* (campi di un'operazione finita, che la prossima sovrascrive prima di leggerli) sono lo stesso   *)
 (* stato. Riduce lo spazio senza togliere comportamenti.                                          *)
-View == << boxSt, owner, IF AgeByCreation THEN bcyc ELSE 0, nextBox, mf, members, pins, used, nPoints, fst,
+View == << boxSt, owner, bcyc, nextBox, mf, members, pins, used, nPoints, fst,
            [d \in DBs |-> IF fst[d] \in {"read", "pinned"} THEN fpin[d] ELSE {}],
            [d \in DBs |-> IF wst[d] = "idle" THEN <<"idle">> ELSE <<wst[d], wbox[d], win[d], wcyc[d]>>],
            [c \in Collectors |-> IF cst[c] = "idle" THEN <<"idle">>
-                                 ELSE <<cst[c], ccand[c], cmem[c], cpins[c], cread[c], cused[c]>>],
-           marked, cycle,
+                                 ELSE <<cst[c], ccand[c], cmem[c], cpins[c], cread[c], cused[c], ccyc[c]>>],
+           IF CountSweeps THEN marked ELSE 0, cycle,
            [r \in Readers |-> IF rst[r] = "idle" THEN <<"idle">> ELSE <<rdb[r], rheld[r], rcyc[r]>>],
            rfail, seen >>
 

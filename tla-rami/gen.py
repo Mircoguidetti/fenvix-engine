@@ -1,25 +1,29 @@
 # genera i file Famiglia-*.cfg
-base=dict(DBs="{d1, d2}",Readers="{r1}",MaxBoxes=3,MaxCycles=3,MaxPoints=1,Hold=0,RHold=0,Grace=2,Reread="FALSE",
+base=dict(DBs="{d1, d2}",Readers="{r1}",MaxBoxes=3,MaxCycles=3,MaxPoints=1,Hold=0,RHold=1,Grace=1,Reread="FALSE",
  NoRegisterFirst="FALSE",SplitPin="FALSE",OwnerDeletes="FALSE",DropDeletesPrefix="FALSE",
- NoRegCheck="FALSE",AgeByCreation="FALSE",Track="FALSE",Collectors="{c1}")
+ NoRegCheck="FALSE",AgeByCreation="FALSE",CountSweeps="FALSE",NoSlowCheck="FALSE",Track="FALSE",Collectors="{c1}")
 inv="TypeOK NoDangling PinsLive ReadersOK InFlightLive"
 cfgs={
  "base":{},
  "reread":dict(Reread="TRUE"),
  "due-raccoglitori":dict(Collectors="{c1, c2}"),
  "catena":dict(DBs="{d1, d2, d3}",Readers="{}"),
- "grande":dict(Grace=3,Hold=1,RHold=1,MaxCycles=4),
+ "grande":dict(Grace=2,Hold=1,RHold=2,MaxCycles=4),
  # negativi
  "noregisterfirst":dict(NoRegisterFirst="TRUE"),
  "splitpin":dict(SplitPin="TRUE"),
  "ownerdeletes":dict(OwnerDeletes="TRUE"),
  "dropdeletesprefix":dict(DropDeletesPrefix="TRUE"),
  "noregcheck":dict(NoRegCheck="TRUE"),
- "nograce":dict(Grace=1),
- "nograce-reread":dict(Grace=1,Reread="TRUE"),
+ "nograce":dict(Grace=0),
+ "nograce-reread":dict(Grace=0,Reread="TRUE"),
  "hold-troppo":dict(Hold=1),
- "lettore-vecchio":dict(RHold=1),
- "agebycreation":dict(Grace=3,Hold=1,RHold=1,MaxCycles=4,AgeByCreation="TRUE"),
+ "lettore-vecchio":dict(RHold=2),
+ "agebycreation":dict(AgeByCreation="TRUE"),
+ "due-raccoglitori-lenti":dict(Collectors="{c1, c2}",NoSlowCheck="TRUE"),
+ "contagiri-piccolo":dict(CountSweeps="TRUE",Grace=2,RHold=0),
+ "noregcheck-contagiri":dict(NoRegCheck="TRUE",CountSweeps="TRUE",Grace=2,RHold=0),
+ "contagiri":dict(CountSweeps="TRUE",Grace=3,Hold=1,RHold=1,MaxCycles=4),
  # controlli che il modello non sia vuoto (devono essere violati)
  "sanity-delete":dict(Track="TRUE",_inv="SanityNoDelete"),
  "sanity-orfano":dict(Track="TRUE",_inv="SanityNoOrphanParent"),
