@@ -104,10 +104,23 @@ pub struct Shared {
 }
 
 /// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
-pub const SW_NAMES: [&str; 16] = [
+pub const SW_NAMES: [&str; 19] = [
     "commit", "lettura_spec", "append_follower", "risposte_append", "voti", "disco_fatto", "indice_follower", "potatura",
     "scarichi_applicati", "sfratto", "fronte_e_segmenti", "invio_repliche", "invio_disco", "conferma", "fotografia", "altre_richieste",
+    // giro 5, solo con PQ_SW_FINE=1: pezzi di "commit" (controllo dei conflitti, codifica della voce, aggiunta e finestra)
+    "commit_valida", "commit_codifica", "commit_aggiunta",
 ];
+
+fn valida_solo_prima() -> bool {
+    static F: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *F.get_or_init(|| std::env::var("PQ_VALIDA_SOLO_PRIMA").map(|x| x == "1").unwrap_or(false))
+}
+
+/// giro 5: cronometri fini dentro il commit (costano qualche decina di ns per record: spenti di base)
+fn sw_fine() -> bool {
+    static F: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *F.get_or_init(|| std::env::var("PQ_SW_FINE").map(|x| x == "1").unwrap_or(false))
+}
 #[derive(Clone, Copy, Default)]
 pub struct Sw {
     pub n: u64,
@@ -215,7 +228,7 @@ pub struct Node {
     trim_list: Vec<Db>,
     trim_cursor: usize,
     trim_next: Instant,
-    sw: [Sw; 16],
+    sw: [Sw; 19],
     last_snap: Instant,
     rounds: u64,
     rounds_over: u64,
@@ -523,7 +536,7 @@ impl Node {
             trim_list: vec![],
             trim_cursor: 0,
             trim_next: now,
-            sw: [Sw::default(); 16],
+            sw: [Sw::default(); 19],
             last_snap: now,
             rounds: 0,
             rounds_over: 0,
@@ -1880,14 +1893,30 @@ impl Node {
             reply.send(&Resp::NotLeader(-1));
             return;
         }
-        if let Err(k) = self.sh.win.validate(&c.db, c.read_pos, &c.writes, c.mode == Mode::Validated, &c.reads) {
+        let fine = sw_fine();
+        let t = Instant::now();
+        // giro 5, solo misura (PQ_VALIDA_SOLO_PRIMA=1): controllo dei conflitti solo sulla prima scrittura del record
+        // (nel record "vero" è il documento; le voci d'indice non uniche derivano dal documento). NON è il protocollo.
+        let vw = if valida_solo_prima() { &c.writes[..c.writes.len().min(1)] } else { &c.writes[..] };
+        if let Err(k) = self.sh.win.validate(&c.db, c.read_pos, vw, c.mode == Mode::Validated, &c.reads) {
             reply.send(&Resp::Conflict(k));
             return;
         }
+        if fine {
+            self.sw(16, t);
+        }
+        let t = Instant::now();
         let idx = self.last_index() + 1;
         let pos = self.next_pos();
         let e = Entry::encode(self.term, idx, pos, Body::Rec { txn: c.txn, db: c.db, session: c.session, writes: c.writes });
+        if fine {
+            self.sw(17, t);
+        }
+        let t = Instant::now();
         self.append_new(e);
+        if fine {
+            self.sw(18, t);
+        }
         self.pending.entry(idx).or_default().push(reply);
     }
 }
