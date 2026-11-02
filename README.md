@@ -63,7 +63,7 @@ empty `database` is a 400.
 | `--auth-block-max-secs` | 3600 | longest block |
 | `--auth-block-forget-secs` | 86400 | without a block for this long, the doubling starts again |
 | `--max-conns-per-ip` | 0 | all connections at once per address, authenticated or not (0: no limit) |
-| `--max-unauth-conns-per-ip` | 1000 | connections at once per address that have not authenticated (0: no limit); a connection leaves the count when it authenticates and re-enters it when it logs out of every database |
+| `--max-unauth-conns-per-ip` | 4000 | connections at once per address that have not authenticated (0: no limit); a connection leaves the count when it authenticates and re-enters it when it logs out of every database |
 | `--max-conns-per-db` | 5000 | authenticated connections at once per database, from any address (0: no limit); the authentication beyond it gets code 13 and the connection stays open |
 | `--handshake-timeout-secs` | 10 | TLS handshake and first message; before authentication, each message once started (0: off) |
 | `--pre-auth-max-message-bytes` | 65536 | largest message before authentication |
@@ -75,7 +75,8 @@ empty `database` is a 400.
 Why the connection limits are per database and not per address: the functions of a serverless platform (Vercel, Lambda)
 leave through a few shared NAT addresses, so one address carries thousands of legitimate authenticated connections. What
 one address must not do is hold many connections that never authenticate; drivers keep two such connections per client
-(monitoring and round-trip time), so 1000 leaves room for 500 clients behind one address.
+(monitoring and round-trip time), and every new connection counts until it authenticates: 4000 leaves room for about
+1,900 clients behind one address (measured: with 1000, 1000 clients behind one address do not start).
 
 Why 100 per address: a platform with one database per customer connects from few addresses; after a wrong password
 rotation, 10 failures would block every database of the platform for up to an hour. The per-database threshold (5) still

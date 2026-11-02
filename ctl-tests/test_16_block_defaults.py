@@ -20,7 +20,7 @@ DBS = [f"d{i:02d}" for i in range(26)]
 
 DEFAULTS = {
     "auth_fail_max": 100, "auth_fail_max_per_db": 5, "auth_fail_window_secs": 60, "auth_block_secs": 300,
-    "auth_block_max_secs": 3600, "auth_block_forget_secs": 86400, "max_conns_per_ip": 0, "max_unauth_conns_per_ip": 1000, "max_conns_per_db": 5000, "handshake_timeout_secs": 10,
+    "auth_block_max_secs": 3600, "auth_block_forget_secs": 86400, "max_conns_per_ip": 0, "max_unauth_conns_per_ip": 4000, "max_conns_per_db": 5000, "handshake_timeout_secs": 10,
     "pre_auth_max_message_bytes": 65536, "ip_allowlist_refresh_secs": 5, "ipv6_group_prefix": 64, "netguard_max_tracked": 100000,
     "netguard_max_dbs_per_ip": 1000,
 }

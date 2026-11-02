@@ -1,7 +1,8 @@
 """Connection limits for serverless platforms (P3, "the front door"), on a server with --auth.
 
 The functions of a platform such as Vercel or Lambda reach the engine from a few shared NAT addresses, so the limits are:
-* --max-unauth-conns-per-ip: connections from one address that have NOT authenticated (default 1000). A connection stops
+* --max-unauth-conns-per-ip: connections from one address that have NOT authenticated (default 4000: a driver keeps two
+  per client, monitoring and round-trip time, that never authenticate). A connection stops
   counting when it authenticates and counts again when it logs out of every database;
 * --max-conns-per-db: authenticated connections on one database, from any address (default 5000); an authentication beyond it
   is refused with a clear error (code 13), is not counted as a failed authentication, and the connection stays open;
@@ -152,11 +153,13 @@ def test_logout_counts_again_as_unauthenticated():
 
 
 def test_defaults():
-    s = start("fd-def")
+    # the handshake timeout is off here only: opening 4000 sockets takes longer than its 10 s, and the first ones, which
+    # send nothing, would be closed meanwhile (and free their places)
+    s = start("fd-def", ["--handshake-timeout-secs", "0"])
     try:
         cfg = network(s)["config"]
-        assert (cfg["max_conns_per_ip"], cfg["max_unauth_conns_per_ip"], cfg["max_conns_per_db"]) == (0, 1000, 5000), cfg
-        held = [Wire(s.port, "127.0.0.70") for _ in range(1000)]
+        assert (cfg["max_conns_per_ip"], cfg["max_unauth_conns_per_ip"], cfg["max_conns_per_db"]) == (0, 4000, 5000), cfg
+        held = [Wire(s.port, "127.0.0.70") for _ in range(4000)]
         held[-1].cmd({"hello": 1, "$db": "admin"})
         assert refused_at_open(s.port, "127.0.0.70")
         for w in held:

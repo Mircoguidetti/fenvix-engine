@@ -228,12 +228,12 @@ def test_connection_limit_per_address():
 
 
 def test_default_connection_limits():
-    """Defaults since P3: no total per address, 1000 not authenticated per address (these never authenticate), 5000
+    """Defaults since P3: no total per address, 4000 not authenticated per address (these never authenticate), 5000
     authenticated per database (see test_37)."""
-    s = start("limconn200", [])
+    s = start("limconn200", ["--handshake-timeout-secs", "0"])   # 4000 silent sockets take longer than the 10 s timeout
     try:
         held = []
-        for i in range(1000):
+        for i in range(4000):
             held.append(Wire(s.port, "127.0.0.15"))
         held[-1].cmd({"hello": 1, "$db": "admin"})
         extra = Wire(s.port, "127.0.0.15")
@@ -241,7 +241,7 @@ def test_default_connection_limits():
             extra.cmd({"hello": 1, "$db": "admin"})
         extra.close()
         cfg = network(s)["config"]
-        assert (cfg["max_conns_per_ip"], cfg["max_unauth_conns_per_ip"], cfg["max_conns_per_db"]) == (0, 1000, 5000), cfg
+        assert (cfg["max_conns_per_ip"], cfg["max_unauth_conns_per_ip"], cfg["max_conns_per_db"]) == (0, 4000, 5000), cfg
         for w in held:
             w.close()
     finally:

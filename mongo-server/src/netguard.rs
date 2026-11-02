@@ -56,9 +56,10 @@ pub struct NetArgs {
     pub max_conns_per_ip: u32,
     /// Connections at once from one address that have not authenticated (0: no limit). Further connections are closed at
     /// once. A connection stops counting when it authenticates, and counts again if it logs out of every database. A
-    /// driver keeps two such connections per client (monitoring and round-trip time), which never authenticate: the default
-    /// leaves room for 500 clients behind one address.
-    #[arg(long, default_value_t = 1000)]
+    /// driver keeps two such connections per client (monitoring and round-trip time), which never authenticate, and every
+    /// new connection counts here until its authentication: the default leaves room for about 1,900 clients (for example
+    /// warm serverless functions) behind one address. Measured: with 1000, 1000 clients behind one address do not start.
+    #[arg(long, default_value_t = 4000)]
     pub max_unauth_conns_per_ip: u32,
     /// Authenticated connections at once on one database, from every address (0: no limit). An authentication that would go
     /// beyond it is refused (the connection stays open, not authenticated). A connection authenticated on a database
@@ -98,7 +99,7 @@ impl Default for NetArgs {
             auth_block_max_secs: 3600,
             auth_block_forget_secs: 86400,
             max_conns_per_ip: 0,
-            max_unauth_conns_per_ip: 1000,
+            max_unauth_conns_per_ip: 4000,
             max_conns_per_db: 5000,
             handshake_timeout_secs: 10,
             pre_auth_max_message_bytes: 65536,
@@ -976,11 +977,11 @@ mod tests {
 
     #[test]
     fn connection_slots() {
-        // the process guard (defaults: 1000 not authenticated per address, 5000 authenticated per database, no total per
+        // the process guard (defaults: 4000 not authenticated per address, 5000 authenticated per database, no total per
         // address, loopback trusted)
         let g = get();
         let a = Some(ip("192.0.2.77"));
-        let slots: Vec<_> = (0..1000).map(|_| g.open_connection(a).expect("slot")).collect();
+        let slots: Vec<_> = (0..4000).map(|_| g.open_connection(a).expect("slot")).collect();
         assert!(g.open_connection(a).is_none());
         assert!(g.open_connection(Some(ip("192.0.2.78"))).is_some());
         // one of them authenticates: its place among the not authenticated is free again
@@ -994,19 +995,19 @@ mod tests {
         drop(slots);
         assert!(g.open_connection(a).is_some());
         assert_eq!(g.db_connections("cs_db"), 0);
-        let local: Vec<_> = (0..1500).map(|_| g.open_connection(Some(ip("127.0.0.1"))).expect("trusted")).collect();
+        let local: Vec<_> = (0..4500).map(|_| g.open_connection(Some(ip("127.0.0.1"))).expect("trusted")).collect();
         drop(local);
     }
 
     #[test]
     fn many_authenticated_connections_from_one_address() {
-        // a NAT address of a serverless platform: 4000 connections, all authenticated, on 40 databases
+        // a NAT address of a serverless platform: 6000 connections, all authenticated, on 60 databases
         let g = get();
         let a = Some(ip("192.0.2.90"));
         let mut held = Vec::new();
-        for i in 0..4000 {
+        for i in 0..6000 {
             let s = g.open_connection(a).expect("authenticated connections do not count toward the per-address limit");
-            s.authenticated_on(&format!("nat_db{}", i % 40)).unwrap();
+            s.authenticated_on(&format!("nat_db{}", i % 60)).unwrap();
             held.push(s);
         }
         assert_eq!(g.db_connections("nat_db7"), 100);
