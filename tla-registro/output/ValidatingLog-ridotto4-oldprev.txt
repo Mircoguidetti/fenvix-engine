@@ -1,0 +1,54 @@
+Sun Nov  1 23:04:15 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35151 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 83 and seed 2113438838444581828 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 1714] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-registro/MCValidatingLog.tla
+Parsing file /home/claude/fenvix-engine/tla-registro/ValidatingLog.tla
+Parsing file /tmp/tlc-4659822642551791566/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-4659822642551791566/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-4659822642551791566/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-4659822642551791566/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-4659822642551791566/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-4659822642551791566/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-4659822642551791566/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ValidatingLog
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCValidatingLog
+Linting of module ValidatingLog
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCValidatingLog
+Starting... (2026-11-01 23:04:15)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 23:04:16.
+Progress(11) at 2026-11-01 23:04:19: 55,986 states generated (55,986 s/min), 12,957 distinct states found (12,957 ds/min), 8,340 states left on queue.
+Progress(15) at 2026-11-01 23:05:19: 2,762,236 states generated (2,706,250 s/min), 380,137 distinct states found (367,180 ds/min), 177,807 states left on queue.
+Progress(16) at 2026-11-01 23:06:19: 5,537,630 states generated (2,775,394 s/min), 696,398 distinct states found (316,261 ds/min), 291,435 states left on queue.
+Progress(17) at 2026-11-01 23:07:19: 8,413,724 states generated (2,876,094 s/min), 1,000,640 distinct states found (304,242 ds/min), 391,476 states left on queue.
+Progress(18) at 2026-11-01 23:08:19: 11,202,793 states generated (2,789,069 s/min), 1,286,264 distinct states found (285,624 ds/min), 470,288 states left on queue.
+Progress(18) at 2026-11-01 23:09:19: 13,808,584 states generated (2,605,791 s/min), 1,535,765 distinct states found (249,501 ds/min), 531,590 states left on queue.
+Progress(18) at 2026-11-01 23:10:19: 16,479,540 states generated (2,670,956 s/min), 1,787,165 distinct states found (251,400 ds/min), 584,996 states left on queue.
+Progress(19) at 2026-11-01 23:11:19: 19,000,904 states generated (2,521,364 s/min), 2,019,388 distinct states found (232,223 ds/min), 628,818 states left on queue.
+Progress(19) at 2026-11-01 23:12:19: 21,499,197 states generated (2,498,293 s/min), 2,248,507 distinct states found (229,119 ds/min), 669,335 states left on queue.
+Progress(19) at 2026-11-01 23:13:19: 24,018,613 states generated (2,519,416 s/min), 2,464,107 distinct states found (215,600 ds/min), 698,308 states left on queue.
+Progress(20) at 2026-11-01 23:14:19: 26,272,191 states generated (2,253,578 s/min), 2,675,814 distinct states found (211,707 ds/min), 733,293 states left on queue.
+Progress(20) at 2026-11-01 23:15:19: 28,459,940 states generated (2,187,749 s/min), 2,870,972 distinct states found (195,158 ds/min), 768,219 states left on queue.
+Progress(20) at 2026-11-01 23:16:19: 30,796,239 states generated (2,336,299 s/min), 3,068,968 distinct states found (197,996 ds/min), 780,065 states left on queue.
+Progress(20) at 2026-11-01 23:17:19: 33,365,916 states generated (2,569,677 s/min), 3,275,825 distinct states found (206,857 ds/min), 799,027 states left on queue.
+Progress(21) at 2026-11-01 23:18:19: 35,666,925 states generated (2,301,009 s/min), 3,485,673 distinct states found (209,848 ds/min), 824,063 states left on queue.
+Progress(21) at 2026-11-01 23:19:19: 37,942,016 states generated (2,275,091 s/min), 3,671,811 distinct states found (186,138 ds/min), 841,728 states left on queue.
+Progress(21) at 2026-11-01 23:20:19: 40,039,033 states generated (2,097,017 s/min), 3,848,891 distinct states found (177,080 ds/min), 855,929 states left on queue.
+Progress(21) at 2026-11-01 23:21:19: 42,435,428 states generated (2,396,395 s/min), 4,028,321 distinct states found (179,430 ds/min), 845,237 states left on queue.
+Progress(21) at 2026-11-01 23:22:19: 44,623,384 states generated (2,187,956 s/min), 4,219,648 distinct states found (191,327 ds/min), 870,158 states left on queue.
+Progress(22) at 2026-11-01 23:23:19: 46,921,886 states generated (2,298,502 s/min), 4,405,198 distinct states found (185,550 ds/min), 870,550 states left on queue.
+Progress(22) at 2026-11-01 23:24:19: 49,073,429 states generated (2,151,543 s/min), 4,584,927 distinct states found (179,729 ds/min), 880,222 states left on queue.
+Progress(22) at 2026-11-01 23:25:19: 51,201,457 states generated (2,128,028 s/min), 4,751,607 distinct states found (166,680 ds/min), 875,833 states left on queue.
+EXIT=143
+Sun Nov  1 23:25:20 UTC 2026
+INTERROTTO A MANO dopo circa 21 minuti per far posto agli altri modelli (coda in crescita)

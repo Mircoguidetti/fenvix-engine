@@ -1,0 +1,659 @@
+Mon Nov  2 02:12:24 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35151 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 50 and seed 4423230962671443725 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 5382] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-registro/MCBollettino.tla
+Parsing file /home/claude/fenvix-engine/tla-registro/Bollettino.tla
+Parsing file /tmp/tlc-18122297932256915451/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /home/claude/fenvix-engine/tla-registro/ValidatingLog.tla
+Parsing file /tmp/tlc-18122297932256915451/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-18122297932256915451/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-18122297932256915451/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-18122297932256915451/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-18122297932256915451/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-18122297932256915451/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ValidatingLog
+Semantic processing of module Bollettino
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCBollettino
+Linting of module ValidatingLog
+Linting of module Bollettino
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCBollettino
+Starting... (2026-11-02 02:12:25)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-02 02:12:25.
+Progress(9) at 2026-11-02 02:12:28: 34,567 states generated (34,567 s/min), 10,988 distinct states found (10,988 ds/min), 7,516 states left on queue.
+Progress(13) at 2026-11-02 02:13:28: 2,367,019 states generated (2,332,452 s/min), 532,692 distinct states found (521,704 ds/min), 326,430 states left on queue.
+Progress(14) at 2026-11-02 02:14:28: 4,788,013 states generated (2,420,994 s/min), 996,172 distinct states found (463,480 ds/min), 587,166 states left on queue.
+Progress(14) at 2026-11-02 02:15:28: 6,989,227 states generated (2,201,214 s/min), 1,433,203 distinct states found (437,031 ds/min), 833,399 states left on queue.
+Error: Invariant ChiaviVere is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 0 @@ t2 :> 0)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = (r1 :> <<>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "follower" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 2: <BElect(r1,{r1, r2}) line 104, col 17 to line 104, col 128 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 0 @@ t2 :> 0)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = (r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@ r2 :> <<>> @@ r3 :> <<>>)
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 3: <BNext line 223, col 6 to line 223, col 79 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0)
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 0 @@ t2 :> 0)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r2 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r3 :> <<>> )
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "leader" @@ r2 :> "follower" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 4: <BElect(r2,{r2, r3}) line 104, col 17 to line 104, col 128 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = <<>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 0 @@ t2 :> 0)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "leader" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 5: <BAdvanceCommit(r1) line 108, col 22 to line 108, col 56 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 1 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 0 @@ t2 :> 0)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :> <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "leader" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 0 @@ t2 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 6: <BSubmit(r1,t1) line 105, col 18 to line 105, col 48 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 0) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 2 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 1 @@ t2 :> 0)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "leader" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 0) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 7: <BSubmit(r1,t2) line 105, col 18 to line 105, col 48 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 1 @@ t2 :> 1)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1],
+         [s |-> 1, ep |-> 1, tx |-> t2] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = "nessuna"
+/\ sapere = 0
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 0 @@ k2 :> 0)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 0
+/\ readOk = TRUE
+/\ ultima = (d1 :> 0 @@ d2 :> 0)
+/\ role = (r1 :> "leader" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 8: <Subscribe(r1) line 159, col 3 to line 168, col 50 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 0 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 1 @@ t2 :> 1)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 1, ep |-> 1, tx |-> t1],
+         [s |-> 1, ep |-> 1, tx |-> t2] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "leader" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 9: <BNext line 223, col 6 to line 223, col 79 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = <<[s |-> 0, ep |-> 1, tx |-> "barriera"]>>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 1 @@ t2 :> 1)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 1 @@ r2 :> 0 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 10: <BAdvanceCommit(r2) line 108, col 22 to line 108, col 56 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+   [s |-> 0, ep |-> 2, tx |-> "barriera"] >>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 1 @@ t2 :> 1)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 0 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 11: <BSubmit(r2,t1) line 105, col 18 to line 105, col 48 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 3 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+   [s |-> 0, ep |-> 2, tx |-> "barriera"] >>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 2 @@ r2 :> 3 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 2 @@ t2 :> 1)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 1 @@ r2 :> 2 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 3 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 12: <BNext line 223, col 6 to line 223, col 79 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 3 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+   [s |-> 0, ep |-> 2, tx |-> "barriera"] >>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 2 @@ t2 :> 1)
+/\ outcome = (t1 :> {} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 3 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 13: <BAdvanceCommit(r2) line 108, col 22 to line 108, col 56 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 3 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+   [s |-> 0, ep |-> 2, tx |-> "barriera"],
+   [s |-> 1, ep |-> 2, tx |-> t1] >>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 2 @@ t2 :> 1)
+/\ outcome = (t1 :> {3} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 2 @@ r2 :> 3 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 3 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 14: <BNext line 223, col 6 to line 223, col 79 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 3 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+   [s |-> 0, ep |-> 2, tx |-> "barriera"],
+   [s |-> 1, ep |-> 2, tx |-> t1] >>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 2 @@ t2 :> 1)
+/\ outcome = (t1 :> {3} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 1
+/\ commit = (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 3 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+State 15: <AnnounceCommit line 191, col 3 to line 196, col 77 of module Bollettino>
+/\ mapA = ( r1 :> (k1 :> 2 @@ k2 :> 3) @@
+  r2 :> (k1 :> 3 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ epoch = (r1 :> 2 @@ r2 :> 2 @@ r3 :> 2)
+/\ cmtLog = << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+   [s |-> 0, ep |-> 2, tx |-> "barriera"],
+   [s |-> 1, ep |-> 2, tx |-> t1] >>
+/\ mapS = ( r1 :> (k1 :> 0 @@ k2 :> 3) @@
+  r2 :> (k1 :> 0 @@ k2 :> 0) @@
+  r3 :> (k1 :> 0 @@ k2 :> 0) )
+/\ match = ( r1 :> (r1 :> 3 @@ r2 :> 1 @@ r3 :> 0) @@
+  r2 :> (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0) @@
+  r3 :> (r1 :> 0 @@ r2 :> 0 @@ r3 :> 0) )
+/\ skips = 0
+/\ diskStart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ attempts = (t1 :> 2 @@ t2 :> 1)
+/\ outcome = (t1 :> {3} @@ t2 :> {})
+/\ alive = (r1 :> TRUE @@ r2 :> TRUE @@ r3 :> TRUE)
+/\ log = ( r1 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r2 :>
+      << [s |-> 0, ep |-> 1, tx |-> "barriera"],
+         [s |-> 0, ep |-> 2, tx |-> "barriera"],
+         [s |-> 1, ep |-> 2, tx |-> t1] >> @@
+  r3 :> <<>> )
+/\ sub = r1
+/\ sapere = 3
+/\ commit = (r1 :> 3 @@ r2 :> 3 @@ r3 :> 0)
+/\ toccate = (k1 :> 2 @@ k2 :> 3)
+/\ wstart = (r1 :> 1 @@ r2 :> 1 @@ r3 :> 1)
+/\ Mv = (d1 :> 0 @@ d2 :> 0)
+/\ Mdb = (d1 :> 0 @@ d2 :> 0)
+/\ losses = 0
+/\ ann = 3
+/\ readOk = TRUE
+/\ ultima = (d1 :> 2 @@ d2 :> 3)
+/\ role = (r1 :> "follower" @@ r2 :> "leader" @@ r3 :> "follower")
+/\ ids = ( r1 :> (t1 :> 2 @@ t2 :> 3) @@
+  r2 :> (t1 :> 3 @@ t2 :> 0) @@
+  r3 :> (t1 :> 0 @@ t2 :> 0) )
+/\ flushes = 0
+
+9112858 states generated, 1788505 distinct states found, 1004801 states left on queue.
+The depth of the complete state graph search is 15.
+Finished in 04min 00s at (2026-11-02 02:16:24)
+Trace exploration spec path: ./MCBollettino_TTrace_1793585544.tla
+EXIT=12
+Mon Nov  2 02:16:24 UTC 2026

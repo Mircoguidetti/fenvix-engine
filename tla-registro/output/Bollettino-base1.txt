@@ -1,0 +1,49 @@
+Mon Nov  2 00:34:56 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35151 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 25 and seed 5359586838086640177 with 2 workers on 2 cores with 4551MB heap and 64MB offheap memory [pid: 3998] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-registro/MCBollettino.tla
+Parsing file /home/claude/fenvix-engine/tla-registro/Bollettino.tla
+Parsing file /tmp/tlc-10351364185435510357/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /home/claude/fenvix-engine/tla-registro/ValidatingLog.tla
+Parsing file /tmp/tlc-10351364185435510357/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-10351364185435510357/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-10351364185435510357/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-10351364185435510357/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-10351364185435510357/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-10351364185435510357/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module ValidatingLog
+Semantic processing of module Bollettino
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCBollettino
+Linting of module ValidatingLog
+Linting of module Bollettino
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCBollettino
+Starting... (2026-11-02 00:34:57)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-02 00:34:57.
+Progress(10) at 2026-11-02 00:35:00: 43,247 states generated (43,247 s/min), 8,918 distinct states found (8,918 ds/min), 5,575 states left on queue.
+Progress(16) at 2026-11-02 00:36:00: 3,137,631 states generated (3,094,384 s/min), 385,367 distinct states found (376,449 ds/min), 145,957 states left on queue.
+Progress(17) at 2026-11-02 00:37:00: 6,315,136 states generated (3,177,505 s/min), 681,602 distinct states found (296,235 ds/min), 198,550 states left on queue.
+Progress(18) at 2026-11-02 00:38:00: 9,385,164 states generated (3,070,028 s/min), 924,315 distinct states found (242,713 ds/min), 196,575 states left on queue.
+Progress(20) at 2026-11-02 00:39:00: 12,310,154 states generated (2,924,990 s/min), 1,122,884 distinct states found (198,569 ds/min), 152,143 states left on queue.
+Progress(21) at 2026-11-02 00:40:00: 15,022,109 states generated (2,711,955 s/min), 1,271,786 distinct states found (148,902 ds/min), 65,514 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.1E-6
+  based on the actual fingerprints:  val = 1.0E-8
+16216395 states generated, 1317406 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 26.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 14 and the 95th percentile is 4).
+Finished in 05min 32s at (2026-11-02 00:40:28)
+EXIT=0
+Mon Nov  2 00:40:28 UTC 2026

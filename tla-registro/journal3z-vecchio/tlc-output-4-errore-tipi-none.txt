@@ -1,0 +1,312 @@
+Sun Nov  1 11:45:45 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=35037 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 0 and seed -756473089321443580 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 803] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run-old/MC.tla
+Parsing file /tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/run-old/Journal3Z.tla
+Parsing file /tmp/tlc-8430083259424429573/_TLCTrace.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-8430083259424429573/Naturals.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-8430083259424429573/Sequences.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-8430083259424429573/FiniteSets.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-8430083259424429573/TLC.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-8430083259424429573/TLCExt.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-8430083259424429573/Integers.tla (jar:file:/tmp/claude-0/-home-user-fenvix-engine/45dd57a8-8297-5089-a647-0de9cb806197/scratchpad/dl/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Journal3Z
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MC
+Linting of module Journal3Z
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MC
+Starting... (2026-11-01 11:45:46)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 11:45:46.
+Error: TLC threw an unexpected exception.
+This was probably caused by an error in the spec or model.
+See the User Output or TLC Console for clues to what happened.
+The exception was a java.lang.RuntimeException
+: Attempted to check equality of record:
+[e |-> 2, b |-> TRUE]
+with non-record
+"none"
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = <<"idle", "idle">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ promises = <<{}, {}>>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 0>>
+/\ msgs = {}
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 0
+
+State 2: <Open(2) line 81, col 3 to line 87, col 101 of module Journal3Z>
+/\ phase = <<"idle", "fencing">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ promises = <<{}, {}>>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 0>>
+/\ msgs = {[applied |-> 0, e |-> 2, t |-> "fence"]}
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 3: <RecvFence(n1) line 92, col 3 to line 102, col 111 of module Journal3Z>
+/\ phase = <<"idle", "fencing">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 0 @@ n3 :> 0)
+/\ promises = <<{}, {}>>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 0>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 4: <RecvPromise(2) line 105, col 3 to line 108, col 128 of module Journal3Z>
+/\ phase = <<"idle", "fencing">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 0 @@ n3 :> 0)
+/\ promises = <<{}, {[n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>]}>>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 0>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 5: <RecvFence(n2) line 92, col 3 to line 102, col 111 of module Journal3Z>
+/\ phase = <<"idle", "fencing">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = <<{}, {[n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>]}>>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 0>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 6: <RecvPromise(2) line 105, col 3 to line 108, col 128 of module Journal3Z>
+/\ phase = <<"idle", "fencing">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = << {},
+   { [n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>],
+     [n |-> n2, last |-> 0, le |-> 0, suffix |-> <<>>] } >>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 0>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 7: <Choose(2) line 113, col 3 to line 124, col 114 of module Journal3Z>
+/\ phase = <<"idle", "active">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = << {},
+   { [n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>],
+     [n |-> n2, last |-> 0, le |-> 0, suffix |-> <<>>] } >>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<[e |-> 2, b |-> TRUE]>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 1>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 8: <SendAppend(2) line 134, col 3 to line 139, col 130 of module Journal3Z>
+/\ phase = <<"idle", "active">>
+/\ log = (n1 :> <<>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = << {},
+   { [n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>],
+     [n |-> n2, last |-> 0, le |-> 0, suffix |-> <<>>] } >>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<[e |-> 2, b |-> TRUE]>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 1>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [ applied |-> 0,
+    e |-> 2,
+    t |-> "append",
+    prev |-> 0,
+    pe |-> 0,
+    ents |-> <<[e |-> 2, b |-> TRUE]>> ],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 9: <RecvAppend(n1) line 143, col 3 to line 161, col 111 of module Journal3Z>
+/\ phase = <<"idle", "active">>
+/\ log = (n1 :> <<[e |-> 2, b |-> TRUE]>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = << {},
+   { [n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>],
+     [n |-> n2, last |-> 0, le |-> 0, suffix |-> <<>>] } >>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<[e |-> 2, b |-> TRUE]>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 1>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "ack", matched |-> 1],
+  [ applied |-> 0,
+    e |-> 2,
+    t |-> "append",
+    prev |-> 0,
+    pe |-> 0,
+    ents |-> <<[e |-> 2, b |-> TRUE]>> ],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 10: <RecvAck(2) line 164, col 3 to line 175, col 113 of module Journal3Z>
+/\ phase = <<"idle", "active">>
+/\ log = (n1 :> <<[e |-> 2, b |-> TRUE]>> @@ n2 :> <<>> @@ n3 :> <<>>)
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = << {},
+   { [n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>],
+     [n |-> n2, last |-> 0, le |-> 0, suffix |-> <<>>] } >>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<[e |-> 2, b |-> TRUE]>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 1 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 1>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "ack", matched |-> 1],
+  [ applied |-> 0,
+    e |-> 2,
+    t |-> "append",
+    prev |-> 0,
+    pe |-> 0,
+    ents |-> <<[e |-> 2, b |-> TRUE]>> ],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+State 11: <RecvAppend(n2) line 143, col 3 to line 161, col 111 of module Journal3Z>
+/\ phase = <<"idle", "active">>
+/\ log = ( n1 :> <<[e |-> 2, b |-> TRUE]>> @@
+  n2 :> <<[e |-> 2, b |-> TRUE]>> @@
+  n3 :> <<>> )
+/\ promised = (n1 :> 2 @@ n2 :> 2 @@ n3 :> 0)
+/\ promises = << {},
+   { [n |-> n1, last |-> 0, le |-> 0, suffix |-> <<>>],
+     [n |-> n2, last |-> 0, le |-> 0, suffix |-> <<>>] } >>
+/\ applied = 0
+/\ s3 = <<>>
+/\ wlog = <<<<>>, <<[e |-> 2, b |-> TRUE]>>>>
+/\ commit = <<0, 0>>
+/\ matchIdx = <<(n1 :> 0 @@ n2 :> 0 @@ n3 :> 0), (n1 :> 1 @@ n2 :> 0 @@ n3 :> 0)>>
+/\ barrier = <<0, 1>>
+/\ msgs = { [applied |-> 0, e |-> 2, t |-> "fence"],
+  [e |-> 2, n |-> n1, t |-> "ack", matched |-> 1],
+  [e |-> 2, n |-> n2, t |-> "ack", matched |-> 1],
+  [ applied |-> 0,
+    e |-> 2,
+    t |-> "append",
+    prev |-> 0,
+    pe |-> 0,
+    ents |-> <<[e |-> 2, b |-> TRUE]>> ],
+  [e |-> 2, n |-> n1, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>],
+  [e |-> 2, n |-> n2, t |-> "promise", last |-> 0, le |-> 0, suffix |-> <<>>] }
+/\ wapplied = <<0, 0>>
+/\ trim = (n1 :> 0 @@ n2 :> 0 @@ n3 :> 0)
+/\ acked = {}
+/\ storeEpoch = 2
+
+Error: The error occurred when TLC was evaluating the nested
+expressions at the following positions:
+0. Line 164, column 3 to line 175, column 113 in Journal3Z
+1. Line 165, column 5 to line 175, column 113 in Journal3Z
+2. Line 165, column 8 to line 165, column 52 in Journal3Z
+3. Line 165, column 8 to line 165, column 29 in Journal3Z
+4. Line 165, column 8 to line 165, column 18 in Journal3Z
+5. Line 165, column 23 to line 165, column 29 in Journal3Z
+6. Line 165, column 34 to line 165, column 52 in Journal3Z
+7. Line 166, column 8 to line 166, column 35 in Journal3Z
+8. Line 167, column 8 to line 174, column 157 in Journal3Z
+9. Line 172, column 11 to line 174, column 157 in Journal3Z
+10. Line 172, column 14 to line 172, column 52 in Journal3Z
+11. Line 173, column 14 to line 173, column 48 in Journal3Z
+12. Line 174, column 14 to line 174, column 157 in Journal3Z
+13. Line 174, column 23 to line 174, column 157 in Journal3Z
+14. Line 174, column 34 to line 174, column 157 in Journal3Z
+15. Line 174, column 62 to line 174, column 156 in Journal3Z
+16. Line 174, column 93 to line 174, column 155 in Journal3Z
+17. Line 174, column 93 to line 174, column 136 in Journal3Z
+18. Line 174, column 93 to line 174, column 114 in Journal3Z
+
+
+5473 states generated, 1475 distinct states found, 893 states left on queue.
+The depth of the complete state graph search is 12.
+Finished in 01s at (2026-11-01 11:45:47)
+Trace exploration spec path: ./MC_TTrace_1793533545.tla
+EXIT=75
+Sun Nov  1 11:45:47 UTC 2026
