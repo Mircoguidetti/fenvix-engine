@@ -1,0 +1,13 @@
+3474588	/home/claude/pq-work
+base_ctl.json
+ctl.json
+flusher.log
+minio
+minio.log
+pids.json
+proxy.log
+r0.log
+r1.log
+r2.log
+routes.json
+witness.csv

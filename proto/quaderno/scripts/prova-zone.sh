@@ -83,6 +83,8 @@ s3)
   start_all --copy
   SP=$(probe "$OUT/sonda.jsonl")
   TOT=$((30 + 60 + 120 + 90))
+  # con la morte il carico finisce 5 s dopo (il file dei testimoni si scrive alla fine del carico)
+  [ "$DIE" = "1" ] && TOT=$((30 + 60 + 115 + 5))
   $PQ mixed --secs "$TOT" $LOAD --witness-out "$OUT/testimoni.csv" --report-every 10 > "$OUT/carico.jsonl" &
   LP=$!
   sleep 30
@@ -96,7 +98,7 @@ s3)
     echo "{\"morte_ms\": $K}" | tee -a "$OUT/eventi.jsonl"
     sleep 5
     echo "{\"s3_ripreso_ms\": $(date +%s%3N)}" | tee -a "$OUT/eventi.jsonl"; $S minio-cont
-    kill $LP 2>/dev/null; wait $LP
+    wait $LP
     LAG=$(last_lag_before "$OUT/sonda.jsonl" "$K")
     echo "{\"ritardo_copia_ms_ultima_lettura_prima_della_morte\": $LAG}" | tee -a "$OUT/eventi.jsonl"
     $S restore | tee "$OUT/ripristino.jsonl"
@@ -112,6 +114,22 @@ s3)
   kill $SP
   grep -h "ALLARME COPIA" "$W"/r?.log | head -40 > "$OUT/allarmi.txt"
   grep -h "copia:" "$W"/r?.log | head -40 > "$OUT/copia-log.txt"
+  $S flusher-down; $S down
+  ;;
+lento)
+  # S3 lento senza fermarsi: ritardo per pezzo sulla rotta s3 del proxy (pezzi fino a 256 KB), 60 s per livello
+  start_all --copy
+  SP=$(probe "$OUT/sonda.jsonl")
+  $PQ mixed --secs 220 $LOAD --witness-out "$OUT/testimoni.csv" --report-every 10 > "$OUT/carico.jsonl" &
+  LP=$!
+  sleep 20
+  for D in 20 100 200; do
+    echo "{\"s3_ritardo_ms\": $D, \"da_ms\": $(date +%s%3N)}" | tee -a "$OUT/eventi.jsonl"; $S s3 delay $D
+    sleep 60
+  done
+  $S s3 pass; echo "{\"s3_normale_ms\": $(date +%s%3N)}" | tee -a "$OUT/eventi.jsonl"
+  wait $LP
+  kill $SP
   $S flusher-down; $S down
   ;;
 ab)
