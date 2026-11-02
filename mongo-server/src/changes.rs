@@ -101,6 +101,17 @@ impl Default for ChangeLog {
     }
 }
 
+/// The database a resume token belongs to.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum TokenDb {
+    /// A token of the old layout: no database in it.
+    Unknown,
+    /// A stream of the whole cluster (`allChangesForCluster`).
+    Cluster,
+    /// The fingerprint of a database and branch ([`ChangeLog::fingerprint`]).
+    Db(u64),
+}
+
 #[derive(Clone, Debug)]
 pub struct Scope {
     pub db: Option<String>,
@@ -173,18 +184,58 @@ impl ChangeLog {
         }
     }
 
-    pub fn token(&self, seq: u64) -> String {
-        format!("82{:08X}{:016X}", self.nonce, seq)
+    /// Resume token of position `seq` on a stream of database `db` (`None`: a stream of the whole cluster). Layout (hex):
+    /// `82`, the process nonce (8), the position (16), then the identity of the database: `01` and a 64-bit fingerprint
+    /// of its name and of its branch (16), or `00` and zeros for the whole cluster. Tokens sort by position, as before.
+    /// Tokens of the old layout (`82`, nonce, position: 26 characters, no database) are still read.
+    pub fn token(&self, seq: u64, db: Option<&str>) -> String {
+        match db {
+            Some(d) => format!("82{:08X}{:016X}01{:016X}", self.nonce, seq, self.fingerprint(d)),
+            None => format!("82{:08X}{:016X}00{:016X}", self.nonce, seq, 0u64),
+        }
     }
 
-    /// Sequence number encoded in a resume token of this process.
-    pub fn parse_token(&self, data: &str) -> Result<u64, MongoError> {
+    /// Fingerprint of a database: its name and, for a fork made in this process, the position where it was born (a
+    /// fork reusing a name, or a fork of a fork, is another branch). FNV-1a, 64 bits: stable across builds and processes.
+    pub fn fingerprint(&self, db: &str) -> u64 {
+        let born = self.born.lock().unwrap().get(db).copied();
+        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+        let mut eat = |b: u8| {
+            h ^= b as u64;
+            h = h.wrapping_mul(0x0000_0100_0000_01b3);
+        };
+        for b in db.bytes() {
+            eat(b);
+        }
+        eat(0);
+        if let Some(at) = born {
+            eat(1);
+            for b in at.to_le_bytes() {
+                eat(b);
+            }
+        }
+        h
+    }
+
+    /// Position and database identity encoded in a resume token of this process.
+    pub fn parse_token(&self, data: &str) -> Result<(u64, TokenDb), MongoError> {
         let lost = || MongoError::new(286, "ChangeStreamHistoryLost", "Resume of change stream was not possible, as the resume point may no longer be in the oplog.".into());
-        if data.len() != 26 || !data.starts_with("82") {
-            return Err(MongoError::new(260, "InvalidResumeToken", "Attempting to resume a change stream using 'resumeAfter' is not allowed from an invalid resume token.".into()));
+        let invalid = || MongoError::new(260, "InvalidResumeToken", "Attempting to resume a change stream using 'resumeAfter' is not allowed from an invalid resume token.".into());
+        if !(data.len() == 26 || data.len() == 44) || !data.starts_with("82") || !data.is_ascii() {
+            return Err(invalid());
         }
         let nonce = u32::from_str_radix(&data[2..10], 16).map_err(|_| lost())?;
-        let seq = u64::from_str_radix(&data[10..], 16).map_err(|_| lost())?;
+        let seq = u64::from_str_radix(&data[10..26], 16).map_err(|_| lost())?;
+        let who = if data.len() == 26 {
+            TokenDb::Unknown
+        } else {
+            let fp = u64::from_str_radix(&data[28..44], 16).map_err(|_| invalid())?;
+            match &data[26..28] {
+                "00" if fp == 0 => TokenDb::Cluster,
+                "01" => TokenDb::Db(fp),
+                _ => return Err(invalid()),
+            }
+        };
         if nonce != self.nonce {
             return Err(lost());
         }
@@ -193,7 +244,18 @@ impl ChangeLog {
         if seq + 1 < oldest && seq != 0 {
             return Err(lost());
         }
-        Ok(seq)
+        Ok((seq, who))
+    }
+
+    /// A stream on `db` resuming from a token that says `who`: a token of another database (or of another branch with
+    /// the same name) is not a point of this stream. MongoDB answers such a token with ChangeStreamFatalError (280):
+    /// the resumed event is not in the stream. Tokens of the whole cluster (a position in every database's history)
+    /// and tokens of the old layout pass, as before.
+    pub fn check_same_db(&self, db: &str, who: TokenDb, data: &str) -> Result<(), MongoError> {
+        match who {
+            TokenDb::Db(fp) if fp != self.fingerprint(db) => Err(MongoError::new(280, "ChangeStreamFatalError", format!("cannot resume stream; the resume token was not found. {{_data: \"{data}\"}} (the token is from another database or branch than '{db}')"))),
+            _ => Ok(()),
+        }
     }
 
     /// A fork of another database was just made under this name.
