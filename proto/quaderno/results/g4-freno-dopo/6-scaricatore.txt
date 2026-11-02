@@ -1,0 +1,20 @@
+put g001/d-01a1995dd2c60028-f834ac5ddafc36b95f30e1160bb12161.sst: Generic S3 error: Error after 0 retries in 10.000986553s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g001/d-01a1995dd2c60028-f834ac5ddafc36b95f30e1160bb12161.sst)
+put g002/d-01a1995dd2a4000b-e31490918aa04bfa4f1304c637257e8a.sst: Generic S3 error: Error after 0 retries in 10.001355089s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g002/d-01a1995dd2a4000b-e31490918aa04bfa4f1304c637257e8a.sst)
+put g003/d-01a1995dd2c6002b-522f998cb431688b475dc677ab34878c.sst: Generic S3 error: Error after 0 retries in 10.002310836s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g003/d-01a1995dd2c6002b-522f998cb431688b475dc677ab34878c.sst)
+put g004/d-01a1995dd2900012-25325a57847fb57a31bb4c15e5fdb860.sst: Generic S3 error: Error after 0 retries in 10.001609125s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g004/d-01a1995dd2900012-25325a57847fb57a31bb4c15e5fdb860.sst)
+put g005/d-01a1995dd2c60025-ebd3f8c458cefc0711a64b9e356ec58c.sst: Generic S3 error: Error after 0 retries in 10.001432906s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g005/d-01a1995dd2c60025-ebd3f8c458cefc0711a64b9e356ec58c.sst)
+put g006/d-01a1995dd2c70000-359574d09df966029e599cba6c0d0bbb.sst: Generic S3 error: Error after 0 retries in 10.00174765s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g006/d-01a1995dd2c70000-359574d09df966029e599cba6c0d0bbb.sst)
+scaricatore t=281s record 646935 MB 158.9 errori 23 gruppi 17
+scaricatore t=291s record 821484 MB 197.2 errori 23 gruppi 17
+scaricatore t=301s record 897565 MB 214.5 errori 23 gruppi 17
+scaricatore t=312s record 952179 MB 227.6 errori 23 gruppi 17
+scaricatore t=322s record 1007681 MB 240.9 errori 23 gruppi 17
+scaricatore t=333s record 1060654 MB 253.5 errori 23 gruppi 17
+scaricatore t=343s record 1116651 MB 266.8 errori 23 gruppi 17
+scaricatore t=353s record 1166164 MB 278.6 errori 23 gruppi 17
+scaricatore t=364s record 1224035 MB 292.5 errori 23 gruppi 17
+scaricatore t=374s record 1275203 MB 304.6 errori 23 gruppi 17
+scaricatore t=385s record 1328594 MB 317.8 errori 23 gruppi 17
+scaricatore t=395s record 1378330 MB 329.6 errori 23 gruppi 17
+scaricatore t=405s record 1394579 MB 333.3 errori 23 gruppi 17
+scaricatore t=415s record 1394579 MB 333.3 errori 23 gruppi 17

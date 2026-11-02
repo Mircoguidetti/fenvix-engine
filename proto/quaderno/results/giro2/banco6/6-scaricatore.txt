@@ -1,0 +1,20 @@
+put g010/d-01a197e2e3640016-05ee57ab75e49073169b366a47de37f0.sst: Generic S3 error: Error after 0 retries in 10.000640094s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g010/d-01a197e2e3640016-05ee57ab75e49073169b366a47de37f0.sst)
+put g011/d-01a197e310a8001c-7f0459bc7508e481b0bb44d885501a7b.sst: Generic S3 error: Error after 0 retries in 10.000970173s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g011/d-01a197e310a8001c-7f0459bc7508e481b0bb44d885501a7b.sst)
+put g012/d-01a197e33d66000c-0076ba9e6b972d36f4e1e924b3b5a76c.sst: Generic S3 error: Error after 0 retries in 10.001730734s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g012/d-01a197e33d66000c-0076ba9e6b972d36f4e1e924b3b5a76c.sst)
+put g013/d-01a197e36ad20011-40a884931afe3c859e5ea7dfcfbb6a81.sst: Generic S3 error: Error after 0 retries in 10.005505884s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g013/d-01a197e36ad20011-40a884931afe3c859e5ea7dfcfbb6a81.sst)
+put g014/d-01a197e3970c0001-98993e2f0463e23fbe96e961d2944489.sst: Generic S3 error: Error after 0 retries in 10.002209874s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g014/d-01a197e3970c0001-98993e2f0463e23fbe96e961d2944489.sst)
+put g015/d-01a197e3c27f0007-d4eefcba6bfd1736bc5c8d6a2903d347.sst: Generic S3 error: Error after 0 retries in 10.002036527s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g015/d-01a197e3c27f0007-d4eefcba6bfd1736bc5c8d6a2903d347.sst)
+put g016/d-01a197dc05e70011-84fbd2c631368739d00039094bea191a.sst: Generic S3 error: Error after 0 retries in 10.00093639s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g016/d-01a197dc05e70011-84fbd2c631368739d00039094bea191a.sst)
+scaricatore t=651s record 2071489 MB 511.6 errori 50 gruppi 17
+put g000/d-01a197e415470008-4d5917c272eeeb0bfb71d54e4096dc71.sst: Generic S3 error: Error after 0 retries in 10.000674625s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g000/d-01a197e415470008-4d5917c272eeeb0bfb71d54e4096dc71.sst)
+put g001/d-01a197e440d30007-40d46d19e52d859504fcd2712c36aa42.sst: Generic S3 error: Error after 0 retries in 10.001252039s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g001/d-01a197e440d30007-40d46d19e52d859504fcd2712c36aa42.sst)
+put g002/d-01a197e46c13000b-3b2971022a865d1de8c5ead908c7eb1c.sst: Generic S3 error: Error after 0 retries in 10.001424128s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g002/d-01a197e46c13000b-3b2971022a865d1de8c5ead908c7eb1c.sst)
+put g003/d-01a197e497fe0007-18ab0a857e68316ff2cea247fb0bb6f9.sst: Generic S3 error: Error after 0 retries in 10.001264124s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g003/d-01a197e497fe0007-18ab0a857e68316ff2cea247fb0bb6f9.sst)
+put g004/d-01a197e4c32c000d-9d418a80406e16f7b15d0a7d8ec766d7.sst: Generic S3 error: Error after 0 retries in 10.001505922s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g004/d-01a197e4c32c000d-9d418a80406e16f7b15d0a7d8ec766d7.sst)
+put g005/d-01a197e4eed80008-8975b7094dd75e1ced21af8e7c4ab14a.sst: Generic S3 error: Error after 0 retries in 10.000983649s, max_retries:1, retry_timeout:10s, source:error sending request for url (http://127.0.0.1:9000/pq-sst/g005/d-01a197e4eed80008-8975b7094dd75e1ced21af8e7c4ab14a.sst)
+scaricatore t=800s record 5097800 MB 1254.7 errori 56 gruppi 17
+scaricatore t=885s record 7798846 MB 1918.3 errori 56 gruppi 17
+scaricatore t=898s record 8898297 MB 2190.3 errori 56 gruppi 17
+scaricatore t=909s record 9897550 MB 2437.9 errori 56 gruppi 17
+scaricabili: Err(Closed)
+scaricatore t=951s record 9998421 MB 2462.7 errori 58 gruppi 17
