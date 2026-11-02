@@ -767,6 +767,7 @@ impl Server {
                 "gcDeletes": tenant_bench::lifecycle::MAINT.gc_deletes.load(Relaxed) as i64, "gcLists": tenant_bench::lifecycle::MAINT.gc_lists.load(Relaxed) as i64,
                 "gcGets": tenant_bench::lifecycle::MAINT.gc_gets.load(Relaxed) as i64,
                 "l0WatchRequests": tenant_bench::lifecycle::L0_WATCH_REQUESTS.load(Relaxed) as i64,
+                "abandonCloseTimeouts": tenant_bench::lifecycle::ABANDON_CLOSE_TIMEOUTS.load(Relaxed) as i64,
                 "l0WatchDeferred": tenant_bench::lifecycle::L0_WATCH_DEFERRED.load(Relaxed) as i64,
             },
             "wakeQueue": { "queued": crate::dbs::WAKE_QUEUED.load(Relaxed), "maxQueued": crate::dbs::WAKE_MAX_QUEUED.load(Relaxed), "waits": crate::dbs::WAKE_WAITS.load(Relaxed) as i64, "waitMs": crate::dbs::WAKE_WAIT_MS.load(Relaxed) as i64 },
