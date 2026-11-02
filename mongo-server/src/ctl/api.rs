@@ -96,6 +96,21 @@ async fn dispatch(ctl: &Arc<Ctl>, req: &Request) -> ApiResult<Response> {
         ("PUT", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::set(ctl, db, &body_json(req)?).await?)),
         ("GET", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::get(ctl, db).await?)),
         ("DELETE", ["v1", "databases", db, "ip-allowlist"]) => Ok(Response::json(200, &super::allowlist::clear(ctl, db).await?)),
+        ("GET", ["v1", "databases", db, "quota"]) => {
+            meta::check_name(db)?;
+            Ok(Response::json(200, &crate::fair::quota_json(db)))
+        }
+        ("PUT", ["v1", "databases", db, "quota"]) => {
+            meta::check_name(db)?;
+            let b = body_json(req)?;
+            let r = b["pts_per_sec"].as_f64().filter(|x| x.is_finite() && *x >= 0.0).ok_or_else(|| ApiError::bad("body needs a number pts_per_sec >= 0 (0 = no quota) and optionally burst_pts"))?;
+            let burst = b["burst_pts"].as_f64().filter(|x| x.is_finite() && *x >= 0.0).unwrap_or(0.0);
+            Ok(Response::json(200, &crate::fair::set_quota(db, Some((r, burst)))))
+        }
+        ("DELETE", ["v1", "databases", db, "quota"]) => {
+            meta::check_name(db)?;
+            Ok(Response::json(200, &crate::fair::set_quota(db, None)))
+        }
         ("GET", ["v1", "metrics", "databases"]) => {
             let dbs = Arc::clone(&ctl.dbs);
             Ok(Response::json(200, &crate::fair::metrics(move |d| dbs.state_hint(d))))

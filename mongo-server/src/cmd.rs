@@ -172,7 +172,7 @@ impl Server {
         // fair queue between databases under saturation, safety limits, per-database metrics (fair.rs)
         // Only commands that pass authentication and authorization take a place (and touch per-database counters); the
         // others go straight to `run_command`, which answers with the same error.
-        let _permit = if crate::fair::exempt(&name) || self.authorize_if_on(conn_id, db, &name, &cmd).await.is_err() {
+        let mut permit = if crate::fair::exempt(&name) || self.authorize_if_on(conn_id, db, &name, &cmd).await.is_err() {
             None
         } else {
             match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {
@@ -189,7 +189,7 @@ impl Server {
                 self.dbs.changes.advance(*ts);
             }
         }
-        let (r, op_time) = crate::fair::timed(db, crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
+        let (r, op_time) = crate::fair::timed(db, permit.as_mut(), crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
         let r: R<Document> = r;
         let micros = t0.elapsed().as_micros() as i64;
         self.diag.end(opid, db, &name, &cmd, &r, micros);
@@ -233,7 +233,7 @@ impl Server {
             // a command that runs JavaScript blocks its thread: all of them run on one thread of their own (the engines and their
             // per-database scopes are per thread), the connections that run no JavaScript go on
             let (me, db2, name2, cmd2) = (Arc::clone(self), db.to_string(), name.clone(), cmd.clone());
-            crate::diag::run_js(async move { crate::diag::as_op(opid, me.diag.guarded(kill, killable, me.dispatch_durable(&db2, &name2, &cmd2, conn_id))).await }).await
+            crate::diag::run_js(crate::fair::carry(async move { crate::diag::as_op(opid, me.diag.guarded(kill, killable, me.dispatch_durable(&db2, &name2, &cmd2, conn_id))).await })).await
         } else {
             crate::diag::as_op(opid, self.diag.guarded(kill, killable, self.dispatch_durable(db, &name, &cmd, conn_id))).await
         };
@@ -260,6 +260,7 @@ impl Server {
                         last.push(c);
                     }
                 }
+                let _flushing = if last.is_empty() { None } else { crate::fair::io_wait().await };
                 for c in last {
                     if relax && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none() {
                         c.relax();
