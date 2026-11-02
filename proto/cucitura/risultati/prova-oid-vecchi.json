@@ -1,0 +1,338 @@
+{
+  "scatole": 8,
+  "mb": 128,
+  "id": "Oid",
+  "canc": "Vecchi",
+  "blocco_kb": 16,
+  "recenti": 50000,
+  "vivo_min": 0.7,
+  "operazioni": 1129314,
+  "ms_generazione": 11484,
+  "byte_scatole": 1082269713,
+  "riscrittura": {
+    "ingressi": 8,
+    "byte_ingressi": 1082269713,
+    "byte_dati_ingressi": 1074000675,
+    "blocchi_ingressi": 63222,
+    "coppie_sovrapposte": 0,
+    "blocchi_scaricati_1": 0,
+    "blocchi_intrusi": 0,
+    "blocchi_puliti": 0,
+    "blocchi_puliti_riscritti": 0,
+    "byte_copiati": 0,
+    "byte_copiati_morti": 0,
+    "byte_scaricati_dati": 1082269713,
+    "byte_scaricati_meta": 0,
+    "byte_caricati": 1051399178,
+    "parti_copiate": 0,
+    "parti_caricate": 65,
+    "byte_uscita": 1051399178,
+    "byte_morti_uscita": 0,
+    "blocchi_uscita": 61408,
+    "voci_uscita": 993370,
+    "frazione_copiata": 0.0,
+    "ms_meta": 0,
+    "ms_scarico": 122376,
+    "ms_fusione": 1967,
+    "ms_carico": 7996,
+    "cpu_ms_piano": 0,
+    "cpu_ms_scarico": 1846,
+    "cpu_ms_fusione": 1929,
+    "cpu_ms_carico": 6154,
+    "ms_totale": 132339,
+    "cpu_ms": 9929,
+    "s3": {
+      "get": 72,
+      "get_byte": 1082269713,
+      "put": 65,
+      "put_byte": 1051399178,
+      "copia": 0,
+      "copia_byte": 0,
+      "altre": 8
+    }
+  },
+  "cuciture": [
+    [
+      "Coda",
+      {
+        "ingressi": 8,
+        "byte_ingressi": 1082269713,
+        "byte_dati_ingressi": 1074000675,
+        "blocchi_ingressi": 63222,
+        "coppie_sovrapposte": 219363,
+        "blocchi_scaricati_1": 1196,
+        "blocchi_intrusi": 12215,
+        "blocchi_puliti": 49811,
+        "blocchi_puliti_riscritti": 1184,
+        "byte_copiati": 954541103,
+        "byte_copiati_morti": 128457341,
+        "byte_scaricati_dati": 247916913,
+        "byte_scaricati_meta": 8792814,
+        "byte_caricati": 225530941,
+        "parti_copiate": 8,
+        "parti_caricate": 13,
+        "byte_uscita": 1180072044,
+        "byte_morti_uscita": 128457341,
+        "blocchi_uscita": 62644,
+        "voci_uscita": 994682,
+        "frazione_copiata": 0.7916841908862261,
+        "ms_meta": 18,
+        "ms_scarico": 3283,
+        "ms_fusione": 378,
+        "ms_carico": 4527,
+        "cpu_ms_piano": 45,
+        "cpu_ms_scarico": 2490,
+        "cpu_ms_fusione": 369,
+        "cpu_ms_carico": 1582,
+        "ms_totale": 8247,
+        "cpu_ms": 4491,
+        "s3": {
+          "get": 5163,
+          "get_byte": 256709727,
+          "put": 15,
+          "put_byte": 225530941,
+          "copia": 8,
+          "copia_byte": 954541103,
+          "altre": 0
+        }
+      },
+      {
+        "documenti_vivi": 993370,
+        "uguali": true,
+        "cancellazioni_rimaste": 1312,
+        "versioni_vecchie_rimaste": 0,
+        "letture_giuste": 222222,
+        "letture_sbagliate": 0
+      },
+      128457341
+    ],
+    [
+      "Ordine",
+      {
+        "ingressi": 8,
+        "byte_ingressi": 1082269713,
+        "byte_dati_ingressi": 1074000675,
+        "blocchi_ingressi": 63222,
+        "coppie_sovrapposte": 219363,
+        "blocchi_scaricati_1": 1196,
+        "blocchi_intrusi": 12215,
+        "blocchi_puliti": 49811,
+        "blocchi_puliti_riscritti": 10090,
+        "byte_copiati": 674844451,
+        "byte_copiati_morti": 0,
+        "byte_scaricati_dati": 399156224,
+        "byte_scaricati_meta": 8792814,
+        "byte_caricati": 376770252,
+        "parti_copiate": 8,
+        "parti_caricate": 23,
+        "byte_uscita": 1051614703,
+        "byte_morti_uscita": 0,
+        "blocchi_uscita": 62644,
+        "voci_uscita": 994682,
+        "frazione_copiata": 0.6467427490288745,
+        "ms_meta": 23,
+        "ms_scarico": 3229,
+        "ms_fusione": 427,
+        "ms_carico": 4845,
+        "cpu_ms_piano": 65,
+        "cpu_ms_scarico": 3033,
+        "cpu_ms_fusione": 424,
+        "cpu_ms_carico": 2624,
+        "ms_totale": 8571,
+        "cpu_ms": 6151,
+        "s3": {
+          "get": 8459,
+          "get_byte": 407949038,
+          "put": 25,
+          "put_byte": 376770252,
+          "copia": 8,
+          "copia_byte": 674844451,
+          "altre": 0
+        }
+      },
+      {
+        "documenti_vivi": 993370,
+        "uguali": true,
+        "cancellazioni_rimaste": 1312,
+        "versioni_vecchie_rimaste": 0,
+        "letture_giuste": 222222,
+        "letture_sbagliate": 0
+      },
+      0
+    ]
+  ],
+  "letture_riscritta": [
+    {
+      "n": 222222,
+      "p50_ns": 5063,
+      "p99_ns": 11031,
+      "p999_ns": 81919,
+      "media_ns": 5224.8183078182965,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 5343,
+      "p99_ns": 15055,
+      "p999_ns": 62655,
+      "media_ns": 5620.469719469718,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 5531,
+      "p99_ns": 15799,
+      "p999_ns": 60351,
+      "media_ns": 5839.09414909416,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 5239,
+      "p99_ns": 14599,
+      "p999_ns": 65983,
+      "media_ns": 5587.289156789156,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 4947,
+      "p99_ns": 13239,
+      "p999_ns": 63743,
+      "media_ns": 5210.635346635349,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 5231,
+      "p99_ns": 17071,
+      "p999_ns": 81407,
+      "media_ns": 5641.907065907092,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 5599,
+      "p99_ns": 15031,
+      "p999_ns": 63903,
+      "media_ns": 5797.023175023176,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 5131,
+      "p99_ns": 13759,
+      "p999_ns": 62079,
+      "media_ns": 5550.23774873775,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 4739,
+      "p99_ns": 12447,
+      "p999_ns": 61183,
+      "media_ns": 4941.332266832281,
+      "blocchi_aperti": 200269
+    },
+    {
+      "n": 222222,
+      "p50_ns": 4819,
+      "p99_ns": 14479,
+      "p999_ns": 70591,
+      "media_ns": 5301.10435060436,
+      "blocchi_aperti": 200269
+    }
+  ],
+  "letture_cucite": [
+    [
+      "Coda",
+      [
+        {
+          "n": 222222,
+          "p50_ns": 5311,
+          "p99_ns": 13967,
+          "p999_ns": 86975,
+          "media_ns": 5571.692532692516,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5147,
+          "p99_ns": 14151,
+          "p999_ns": 59359,
+          "media_ns": 5417.237645237648,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5355,
+          "p99_ns": 14911,
+          "p999_ns": 62271,
+          "media_ns": 5650.607023607023,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 4847,
+          "p99_ns": 12207,
+          "p999_ns": 49247,
+          "media_ns": 4955.710055710054,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5175,
+          "p99_ns": 13711,
+          "p999_ns": 58495,
+          "media_ns": 5332.891657891653,
+          "blocchi_aperti": 200278
+        }
+      ]
+    ],
+    [
+      "Ordine",
+      [
+        {
+          "n": 222222,
+          "p50_ns": 5211,
+          "p99_ns": 16975,
+          "p999_ns": 72127,
+          "media_ns": 5704.679581679581,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5427,
+          "p99_ns": 15279,
+          "p999_ns": 65791,
+          "media_ns": 5756.158314658314,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5467,
+          "p99_ns": 14415,
+          "p999_ns": 62463,
+          "media_ns": 5642.604305604296,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5499,
+          "p99_ns": 14559,
+          "p999_ns": 73599,
+          "media_ns": 5700.111235611242,
+          "blocchi_aperti": 200278
+        },
+        {
+          "n": 222222,
+          "p50_ns": 5255,
+          "p99_ns": 14839,
+          "p999_ns": 70271,
+          "media_ns": 5584.589001088996,
+          "blocchi_aperti": 200278
+        }
+      ]
+    ]
+  ]
+}

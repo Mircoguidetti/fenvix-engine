@@ -1,0 +1,14 @@
+== prova-oid-uniforme 10:04:32
+   exit 0 10:08:51
+== prova-uuid-uniforme 10:08:51
+   exit 0 10:10:36
+== prova-oid-uniforme-4k 10:10:36
+   exit 0 10:15:02
+== prova-oid-recenti 10:15:02
+   exit 0 10:16:24
+== prova-oid-vecchi 10:16:24
+   exit 0 10:19:50
+== prova-oid-uniforme-fin5k 10:19:50
+   exit 0 10:21:21
+== prova-oid-uniforme-fin1m 10:21:21
+   exit 0 10:23:19

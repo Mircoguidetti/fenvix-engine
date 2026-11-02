@@ -50,6 +50,10 @@ enum Cmd {
         recenti: usize,
         #[arg(long, default_value_t = 0.7)]
         vivo_min: f64,
+        #[arg(long, default_value_t = 64)]
+        buco_get_kb: u64,
+        #[arg(long, default_value_t = 0.5)]
+        ripiego: f64,
     },
     Giri {
         #[arg(long, default_value_t = 8)]
@@ -162,6 +166,8 @@ struct UscitaProva {
     blocco_kb: usize,
     recenti: usize,
     vivo_min: f64,
+    buco_get_kb: u64,
+    ripiego: f64,
     operazioni: u64,
     ms_generazione: u128,
     byte_scatole: u64,
@@ -195,7 +201,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let s3 = S3::new(&cli.endpoint, &cli.bucket).await?;
     match cli.cmd {
-        Cmd::Prova { scatole, mb, id, canc, modi, blocco_kb, letture, seme, recenti, vivo_min } => {
+        Cmd::Prova { scatole, mb, id, canc, modi, blocco_kb, letture, seme, recenti, vivo_min, buco_get_kb, ripiego } => {
             let blocco = blocco_kb << 10;
             let pref = format!("prova-{:?}-{:?}-{}", id, canc, seme).to_lowercase();
             let mut g = Gen::new(id, canc, seme);
@@ -215,7 +221,7 @@ async fn main() -> anyhow::Result<()> {
             let mut letture_cucite = Vec::new();
             let mut letture_riscritta = Vec::new();
             for modo in modi {
-                let cfg = Cfg { modo, block_size: blocco, vivo_min, ..Default::default() };
+                let cfg = Cfg { modo, block_size: blocco, vivo_min, buco_get: buco_get_kb << 10, ripiego, ..Default::default() };
                 let k = format!("{pref}/cucita-{:?}.sst", modo).to_lowercase();
                 let es = cuci(&s3, &ingressi, &k, &cfg).await?;
                 eprintln!("cucitura {:?}: {:?}", modo, es);
@@ -239,7 +245,7 @@ async fn main() -> anyhow::Result<()> {
             for k in &ingressi {
                 s3.delete(k).await?;
             }
-            let u = UscitaProva { scatole, mb, id, canc, blocco_kb, recenti, vivo_min, operazioni: g.ops, ms_generazione, byte_scatole, riscrittura: risc, cuciture, letture_riscritta, letture_cucite };
+            let u = UscitaProva { scatole, mb, id, canc, blocco_kb, recenti, vivo_min, buco_get_kb, ripiego, operazioni: g.ops, ms_generazione, byte_scatole, riscrittura: risc, cuciture, letture_riscritta, letture_cucite };
             scrivi(&cli.out, &u)?;
         }
         Cmd::Giri { scatole, mb, mb_giro, giri, ogni, id, canc, vivo_min, blocco_kb, letture, seme, recenti } => {

@@ -48,16 +48,22 @@ pub struct Cfg {
     /// lavaggio dell'ultimo livello: le cancellazioni fuse si tolgono
     pub fondo: bool,
     pub par: usize,
+    /// due blocchi da scaricare dello stesso ingresso vanno nello stesso GET se tra loro ci sono al più questi byte
+    pub buco_get: u64,
+    /// se i blocchi da scaricare comunque (copertura) superano questa frazione dei byte, si riscrive tutto
+    pub ripiego: f64,
 }
 
 impl Default for Cfg {
     fn default() -> Self {
-        Cfg { modo: Modo::Coda, block_size: 16 << 10, buco_max: 256 << 10, vivo_min: 0.7, fondo: true, par: 16 }
+        Cfg { modo: Modo::Coda, block_size: 16 << 10, buco_max: 256 << 10, vivo_min: 0.7, fondo: true, par: 16, buco_get: 64 << 10, ripiego: 0.5 }
     }
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct Esito {
+    /// la cucitura ha rinunciato (troppi blocchi sovrapposti) e ha riscritto tutto
+    pub ripiego: bool,
     pub ingressi: usize,
     pub byte_ingressi: u64,
     pub byte_dati_ingressi: u64,
@@ -113,7 +119,7 @@ struct Ingr {
 }
 
 /// Scarica i blocchi indicati (per ingresso), raggruppando quelli contigui in un GET (al più 16 MB).
-async fn scarica_blocchi(s3: &S3, ingr: &[Ingr], quali: &[G], par: usize) -> anyhow::Result<HashMap<(u32, u32), Bytes>> {
+async fn scarica_blocchi(s3: &S3, ingr: &[Ingr], quali: &[G], par: usize, buco: u64) -> anyhow::Result<HashMap<(u32, u32), Bytes>> {
     let mut per: HashMap<u32, Vec<u32>> = HashMap::new();
     for g in quali {
         per.entry(g.inp).or_default().push(g.j);
@@ -128,7 +134,7 @@ async fn scarica_blocchi(s3: &S3, ingr: &[Ingr], quali: &[G], par: usize) -> any
             if let Some(&p) = cur.last() {
                 let (pb, b) = (&bl[p as usize], &bl[j as usize]);
                 let tot = b.end() - bl[cur[0] as usize].off;
-                if pb.end() != b.off || tot > 16 << 20 {
+                if b.off - pb.end() > buco || tot > 16 << 20 {
                     gruppi.push((inp, std::mem::take(&mut cur)));
                 }
             }
@@ -239,11 +245,26 @@ pub async fn cuci(s3: &S3, chiavi_in: &[String], uscita: &str, cfg: &Cfg) -> any
     let d = copertura(&pesi, &adj);
     let primo: Vec<G> = tutti.iter().filter(|g| d[gid(**g)]).cloned().collect();
     es.blocchi_scaricati_1 = primo.len();
+    let byte_d: u64 = primo.iter().map(|g| bm(*g).len as u64).sum();
+    if byte_d as f64 > cfg.ripiego * es.byte_dati_ingressi as f64 {
+        let mut r = riscrivi(s3, chiavi_in, uscita, cfg).await?;
+        r.ripiego = true;
+        r.blocchi_scaricati_1 = es.blocchi_scaricati_1;
+        r.coppie_sovrapposte = es.coppie_sovrapposte;
+        r.byte_scaricati_meta = es.byte_scaricati_meta;
+        r.ms_meta = es.ms_meta;
+        let s = s3.conti().meno(s0);
+        r.byte_scaricati_dati = s.get_byte - es.byte_scaricati_meta;
+        r.s3 = s;
+        r.ms_totale = t0.elapsed().as_millis();
+        r.cpu_ms = cpu_ms() - c0;
+        return Ok(r);
+    }
 
     es.cpu_ms_piano = cpu_ms() - c0;
     let t1 = Instant::now();
     let c1 = cpu_ms();
-    let mut scaricati = scarica_blocchi(s3, &ingr, &primo, cfg.par).await?;
+    let mut scaricati = scarica_blocchi(s3, &ingr, &primo, cfg.par, cfg.buco_get).await?;
     // 4. chiavi vere: quali blocchi non scaricati sono davvero toccati
     let mut voci: Vec<Entry> = Vec::new();
     for b in scaricati.values() {
@@ -263,7 +284,7 @@ pub async fn cuci(s3: &S3, chiavi_in: &[String], uscita: &str, cfg: &Cfg) -> any
         .collect();
     drop(ks);
     es.blocchi_intrusi = intrusi.len();
-    let secondo = scarica_blocchi(s3, &ingr, &intrusi, cfg.par).await?;
+    let secondo = scarica_blocchi(s3, &ingr, &intrusi, cfg.par, cfg.buco_get).await?;
     for (k, b) in secondo {
         lettura::sst::block_entries(&b, &mut voci)?;
         scaricati.insert(k, b);
@@ -448,7 +469,7 @@ pub async fn cuci(s3: &S3, chiavi_in: &[String], uscita: &str, cfg: &Cfg) -> any
     es.cpu_ms_fusione = cpu_ms() - c2;
     let t3 = Instant::now();
     let c3 = cpu_ms();
-    let grezzi = scarica_blocchi(s3, &ingr, &da_riscrivere, cfg.par).await?;
+    let grezzi = scarica_blocchi(s3, &ingr, &da_riscrivere, cfg.par, cfg.buco_get).await?;
     es.ms_scarico += t3.elapsed().as_millis();
 
     // offset finali e parti
