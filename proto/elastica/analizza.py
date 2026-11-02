@@ -54,7 +54,9 @@ def curve(serie):
     c = {}
     for k, s in serie.items():
         if k.startswith("tw") or k.startswith("me"):
-            c[k] = taglia(s["tot"].astype(float))
+            x = taglia(s["tot"].astype(float))
+            if len(x) >= 1440:
+                c[k] = x
     for fam in ("al", "te"):
         x, n = somma(serie, fam)
         if x is not None:
@@ -85,6 +87,8 @@ VARIANTI = [
     ("portiereB1", dict(portiere=True)),
     ("inf_fatt_ora", dict(fatt_ora=True)),
     ("inf_min_M10", dict(tmin=0)),
+    ("inf_min_M50", dict(tmin=4)),
+    ("quaderno28k", dict(quaderno_tetto=28000)),
 ]
 
 
@@ -125,7 +129,7 @@ def main():
                         f"  Infinite reattiva: calcolo ${r0(ir['costo'])}, totale ${r0(b['tot_inf_reat'])}; taglie "
                         f"{ir['taglie']}; minuti in sovraccarico {ir['over_min']}\n"
                         f"  Fenvix: camerieri ${r0(fe['costo'])} (medi {fe['camerieri_medi']:.1f}, max "
-                        f"{fe['camerieri_max']}), fisse ${r0(b['fisse_tot'])} {b['fisse']} (quaderni {b['quaderni']}), "
+                        f"{fe['camerieri_max']}), fisse ${r0(b['fisse_tot'])} {b['fisse']} (quaderni {b['quaderni']}, minuti oltre il quaderno {b['quaderno_over_min']}), "
                         f"totale ${r0(b['tot_fen'])}; minuti in sovraccarico {fe['over_min']:.1f}, CPU oltre "
                         f"{fe['quota_cpu_oltre'] * 100:.3f}%\n"
                         f"  flotta di camerieri pagata sul picco ${r0(b['flotta_picco'])}; CPU usata ideale Fenvix "

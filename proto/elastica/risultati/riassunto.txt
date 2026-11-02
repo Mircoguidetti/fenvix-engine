@@ -1,0 +1,231 @@
+Curve (MISURATO sulle tracce):
+  me202210: 5.0 giorni, picco/media al minuto 8.22, all'ora 1.38, minimo/media all'ora 0.76, p99/media al minuto 1.48
+  me202401: 5.0 giorni, picco/media al minuto 2.23, all'ora 1.49, minimo/media all'ora 0.77, p99/media al minuto 2.00
+  tw10: 7.1 giorni, picco/media al minuto 14.43, all'ora 1.88, minimo/media all'ora 0.37, p99/media al minuto 1.91
+  tw26: 7.4 giorni, picco/media al minuto 3.61, all'ora 1.23, minimo/media all'ora 0.93, p99/media al minuto 1.35
+  al-somma6: 31.0 giorni, picco/media al minuto 80.72, all'ora 2.79, minimo/media all'ora 0.81, p99/media al minuto 2.36
+  te-somma7: 9.0 giorni, picco/media al minuto 14.84, all'ora 8.68, minimo/media all'ora 0.07, p99/media al minuto 8.63
+  sorgente me202206: n=16486948 t_first=0 minuti=70 scritture=0.13
+  sorgente me202210: n=13458455 t_first=0 minuti=7202 scritture=0.14
+  sorgente me202312: n=83052784 t_first=0 minuti=70 scritture=0.08
+  sorgente me202401: n=12164677 t_first=0 minuti=7202 scritture=0.17
+  sorgente tw10: n=13916365 t_first=0 minuti=10285 scritture=0.00
+  sorgente tw26: n=15519097 t_first=0 minuti=10637 scritture=0.00
+  al: 6 dischi, t_first min 1577808000 mediana 1577808001 max 1577808014, quota scritture 0.99
+  te: 7 dischi, t_first min 1538323200 mediana 1538323200 max 1538323202, quota scritture 0.93
+
+[me202210 profilo a] picco/media 8.22
+  Infinite predittiva: calcolo $994 (standby $497), totale $1339; taglie {'M30': 0.002, 'M40': 0.991, 'M50': 0.006}; minuti in sovraccarico 6, oltre M60 1
+  Infinite reattiva: calcolo $978, totale $1323; taglie {'M30': 0.021, 'M40': 0.979}; minuti in sovraccarico 15
+  Fenvix: camerieri $202 (medi 3.6, max 22), fisse $901 {'quaderno': 226, 'dispensa': 317, 's3': 82, 'lavaggio': 56, 'tra_zone': 155, 'portiere': 0, 'resto': 65} (quaderni 1, minuti oltre il quaderno 1), totale $1103; minuti in sovraccarico 8.3, CPU oltre 0.120%
+  flotta di camerieri pagata sul picco $1245; CPU usata ideale Fenvix $121; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $257
+  RAPPORTO Infinite pred / Fenvix = 1.21; reattiva / Fenvix = 1.20; calcolo Infinite pred / camerieri = 4.92
+  sensibilità: avvio10: Fen $1103 (camerieri $202, sovracc. 4.7 min) Inf pred $1339 rapporto 1.21
+               avvio300: Fen $1103 (camerieri $202, sovracc. 12.0 min) Inf pred $1339 rapporto 1.21
+               margine10: Fen $1087 (camerieri $186, sovracc. 16.7 min) Inf pred $1339 rapporto 1.23
+               margine50: Fen $1143 (camerieri $242, sovracc. 3.2 min) Inf pred $1339 rapporto 1.17
+               scrittura081: Fen $1072 (camerieri $171, sovracc. 2.3 min) Inf pred $1339 rapporto 1.25
+               xlarge: Fen $1242 (camerieri $341, sovracc. 1.2 min) Inf pred $1339 rapporto 1.08
+               portiereB1: Fen $1603 (camerieri $202, sovracc. 8.3 min) Inf pred $1339 rapporto 0.84
+               inf_fatt_ora: Fen $1103 (camerieri $202, sovracc. 8.3 min) Inf pred $1350 rapporto 1.22
+               inf_min_M10: Fen $1103 (camerieri $202, sovracc. 8.3 min) Inf pred $1339 rapporto 1.21
+               inf_min_M50: Fen $1103 (camerieri $202, sovracc. 8.3 min) Inf pred $2323 rapporto 2.11
+               quaderno28k: Fen $1103 (camerieri $202, sovracc. 8.3 min) Inf pred $1339 rapporto 1.21
+
+[me202210 profilo b] picco/media 8.22
+  Infinite predittiva: calcolo $3954 (standby $1977), totale $4299; taglie {'M60': 1.0}; minuti in sovraccarico 8, oltre M60 8
+  Infinite reattiva: calcolo $3937, totale $4282; taglie {'M50': 0.009, 'M60': 0.991}; minuti in sovraccarico 13
+  Fenvix: camerieri $945 (medi 16.7, max 115), fisse $3153 {'quaderno': 1353, 'dispensa': 317, 's3': 336, 'lavaggio': 112, 'tra_zone': 970, 'portiere': 0, 'resto': 65} (quaderni 3, minuti oltre il quaderno 3), totale $4098; minuti in sovraccarico 17.5, CPU oltre 0.153%
+  flotta di camerieri pagata sul picco $6506; CPU usata ideale Fenvix $631; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $1097
+  RAPPORTO Infinite pred / Fenvix = 1.05; reattiva / Fenvix = 1.04; calcolo Infinite pred / camerieri = 4.19
+  sensibilità: avvio10: Fen $4098 (camerieri $945, sovracc. 8.7 min) Inf pred $4299 rapporto 1.05
+               avvio300: Fen $4098 (camerieri $945, sovracc. 28.0 min) Inf pred $4299 rapporto 1.05
+               margine10: Fen $3987 (camerieri $834, sovracc. 67.2 min) Inf pred $4299 rapporto 1.08
+               margine50: Fen $4280 (camerieri $1127, sovracc. 5.7 min) Inf pred $4299 rapporto 1.00
+               scrittura081: Fen $3621 (camerieri $468, sovracc. 14.2 min) Inf pred $4299 rapporto 1.19
+               xlarge: Fen $4125 (camerieri $972, sovracc. 14.3 min) Inf pred $4299 rapporto 1.04
+               portiereB1: Fen $5068 (camerieri $945, sovracc. 17.5 min) Inf pred $4299 rapporto 0.85
+               inf_fatt_ora: Fen $4098 (camerieri $945, sovracc. 17.5 min) Inf pred $4299 rapporto 1.05
+               inf_min_M10: Fen $4098 (camerieri $945, sovracc. 17.5 min) Inf pred $4299 rapporto 1.05
+               inf_min_M50: Fen $4098 (camerieri $945, sovracc. 17.5 min) Inf pred $4299 rapporto 1.05
+               quaderno28k: Fen $3647 (camerieri $945, sovracc. 17.5 min) Inf pred $4299 rapporto 1.18
+
+[me202401 profilo a] picco/media 2.23
+  Infinite predittiva: calcolo $1039 (standby $520), totale $1384; taglie {'M40': 0.949, 'M50': 0.051}; minuti in sovraccarico 11, oltre M60 0
+  Infinite reattiva: calcolo $1009, totale $1354; taglie {'M30': 0.013, 'M40': 0.96, 'M50': 0.027}; minuti in sovraccarico 67
+  Fenvix: camerieri $207 (medi 3.7, max 6), fisse $901 {'quaderno': 226, 'dispensa': 317, 's3': 82, 'lavaggio': 56, 'tra_zone': 155, 'portiere': 0, 'resto': 65} (quaderni 1, minuti oltre il quaderno 0), totale $1108; minuti in sovraccarico 3.0, CPU oltre 0.005%
+  flotta di camerieri pagata sul picco $339; CPU usata ideale Fenvix $121; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $257
+  RAPPORTO Infinite pred / Fenvix = 1.25; reattiva / Fenvix = 1.22; calcolo Infinite pred / camerieri = 5.03
+  sensibilità: avvio10: Fen $1108 (camerieri $207, sovracc. 1.8 min) Inf pred $1384 rapporto 1.25
+               avvio300: Fen $1108 (camerieri $207, sovracc. 5.0 min) Inf pred $1384 rapporto 1.25
+               margine10: Fen $1092 (camerieri $191, sovracc. 8.0 min) Inf pred $1384 rapporto 1.27
+               margine50: Fen $1149 (camerieri $248, sovracc. 0.0 min) Inf pred $1384 rapporto 1.20
+               scrittura081: Fen $1073 (camerieri $172, sovracc. 0.0 min) Inf pred $1384 rapporto 1.29
+               xlarge: Fen $1240 (camerieri $339, sovracc. 0.0 min) Inf pred $1384 rapporto 1.12
+               portiereB1: Fen $1608 (camerieri $207, sovracc. 3.0 min) Inf pred $1384 rapporto 0.86
+               inf_fatt_ora: Fen $1108 (camerieri $207, sovracc. 3.0 min) Inf pred $1399 rapporto 1.26
+               inf_min_M10: Fen $1108 (camerieri $207, sovracc. 3.0 min) Inf pred $1384 rapporto 1.25
+               inf_min_M50: Fen $1108 (camerieri $207, sovracc. 3.0 min) Inf pred $2323 rapporto 2.10
+               quaderno28k: Fen $1108 (camerieri $207, sovracc. 3.0 min) Inf pred $1384 rapporto 1.25
+
+[me202401 profilo b] picco/media 2.23
+  Infinite predittiva: calcolo $3954 (standby $1977), totale $4299; taglie {'M60': 1.0}; minuti in sovraccarico 208, oltre M60 208
+  Infinite reattiva: calcolo $3952, totale $4297; taglie {'M50': 0.001, 'M60': 0.999}; minuti in sovraccarico 210
+  Fenvix: camerieri $974 (medi 17.2, max 32), fisse $3153 {'quaderno': 1353, 'dispensa': 317, 's3': 336, 'lavaggio': 112, 'tra_zone': 970, 'portiere': 0, 'resto': 65} (quaderni 3, minuti oltre il quaderno 0), totale $4127; minuti in sovraccarico 5.5, CPU oltre 0.018%
+  flotta di camerieri pagata sul picco $1810; CPU usata ideale Fenvix $631; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $1097
+  RAPPORTO Infinite pred / Fenvix = 1.04; reattiva / Fenvix = 1.04; calcolo Infinite pred / camerieri = 4.06
+  sensibilità: avvio10: Fen $4127 (camerieri $974, sovracc. 2.8 min) Inf pred $4299 rapporto 1.04
+               avvio300: Fen $4127 (camerieri $974, sovracc. 15.0 min) Inf pred $4299 rapporto 1.04
+               margine10: Fen $4014 (camerieri $861, sovracc. 51.3 min) Inf pred $4299 rapporto 1.07
+               margine50: Fen $4317 (camerieri $1164, sovracc. 2.0 min) Inf pred $4299 rapporto 1.00
+               scrittura081: Fen $3636 (camerieri $483, sovracc. 5.3 min) Inf pred $4299 rapporto 1.18
+               xlarge: Fen $4155 (camerieri $1002, sovracc. 5.2 min) Inf pred $4299 rapporto 1.03
+               portiereB1: Fen $5097 (camerieri $974, sovracc. 5.5 min) Inf pred $4299 rapporto 0.84
+               inf_fatt_ora: Fen $4127 (camerieri $974, sovracc. 5.5 min) Inf pred $4299 rapporto 1.04
+               inf_min_M10: Fen $4127 (camerieri $974, sovracc. 5.5 min) Inf pred $4299 rapporto 1.04
+               inf_min_M50: Fen $4127 (camerieri $974, sovracc. 5.5 min) Inf pred $4299 rapporto 1.04
+               quaderno28k: Fen $3676 (camerieri $974, sovracc. 5.5 min) Inf pred $4299 rapporto 1.17
+
+[tw10 profilo a] picco/media 14.43
+  Infinite predittiva: calcolo $1366 (standby $683), totale $1711; taglie {'M30': 0.026, 'M40': 0.579, 'M50': 0.395}; minuti in sovraccarico 2, oltre M60 2
+  Infinite reattiva: calcolo $1332, totale $1677; taglie {'M30': 0.032, 'M40': 0.605, 'M50': 0.363}; minuti in sovraccarico 4
+  Fenvix: camerieri $206 (medi 3.6, max 39), fisse $901 {'quaderno': 226, 'dispensa': 317, 's3': 82, 'lavaggio': 56, 'tra_zone': 155, 'portiere': 0, 'resto': 65} (quaderni 1, minuti oltre il quaderno 2), totale $1107; minuti in sovraccarico 3.8, CPU oltre 0.157%
+  flotta di camerieri pagata sul picco $2206; CPU usata ideale Fenvix $121; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $257
+  RAPPORTO Infinite pred / Fenvix = 1.54; reattiva / Fenvix = 1.51; calcolo Infinite pred / camerieri = 6.62
+  sensibilità: avvio10: Fen $1107 (camerieri $206, sovracc. 2.5 min) Inf pred $1711 rapporto 1.54
+               avvio300: Fen $1107 (camerieri $206, sovracc. 13.2 min) Inf pred $1711 rapporto 1.54
+               margine10: Fen $1094 (camerieri $193, sovracc. 8.2 min) Inf pred $1711 rapporto 1.56
+               margine50: Fen $1136 (camerieri $235, sovracc. 3.0 min) Inf pred $1711 rapporto 1.51
+               scrittura081: Fen $1073 (camerieri $172, sovracc. 2.0 min) Inf pred $1711 rapporto 1.60
+               xlarge: Fen $1243 (camerieri $342, sovracc. 2.0 min) Inf pred $1711 rapporto 1.38
+               portiereB1: Fen $1607 (camerieri $206, sovracc. 3.8 min) Inf pred $1711 rapporto 1.06
+               inf_fatt_ora: Fen $1107 (camerieri $206, sovracc. 3.8 min) Inf pred $1730 rapporto 1.56
+               inf_min_M10: Fen $1107 (camerieri $206, sovracc. 3.8 min) Inf pred $1711 rapporto 1.54
+               inf_min_M50: Fen $1107 (camerieri $206, sovracc. 3.8 min) Inf pred $2323 rapporto 2.10
+               quaderno28k: Fen $1107 (camerieri $206, sovracc. 3.8 min) Inf pred $1711 rapporto 1.54
+
+[tw10 profilo b] picco/media 14.43
+  Infinite predittiva: calcolo $3756 (standby $1878), totale $4101; taglie {'M50': 0.101, 'M60': 0.899}; minuti in sovraccarico 217, oltre M60 216
+  Infinite reattiva: calcolo $3678, totale $4023; taglie {'M50': 0.14, 'M60': 0.86}; minuti in sovraccarico 220
+  Fenvix: camerieri $891 (medi 15.8, max 202), fisse $3153 {'quaderno': 1353, 'dispensa': 317, 's3': 336, 'lavaggio': 112, 'tra_zone': 970, 'portiere': 0, 'resto': 65} (quaderni 3, minuti oltre il quaderno 3), totale $4044; minuti in sovraccarico 9.3, CPU oltre 0.182%
+  flotta di camerieri pagata sul picco $11428; CPU usata ideale Fenvix $631; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $1097
+  RAPPORTO Infinite pred / Fenvix = 1.01; reattiva / Fenvix = 0.99; calcolo Infinite pred / camerieri = 4.21
+  sensibilità: avvio10: Fen $4044 (camerieri $891, sovracc. 4.7 min) Inf pred $4101 rapporto 1.01
+               avvio300: Fen $4044 (camerieri $891, sovracc. 26.7 min) Inf pred $4101 rapporto 1.01
+               margine10: Fen $3941 (camerieri $788, sovracc. 59.5 min) Inf pred $4101 rapporto 1.04
+               margine50: Fen $4218 (camerieri $1065, sovracc. 4.8 min) Inf pred $4101 rapporto 0.97
+               scrittura081: Fen $3597 (camerieri $444, sovracc. 8.3 min) Inf pred $4101 rapporto 1.14
+               xlarge: Fen $4072 (camerieri $919, sovracc. 7.8 min) Inf pred $4101 rapporto 1.01
+               portiereB1: Fen $5014 (camerieri $891, sovracc. 9.3 min) Inf pred $4101 rapporto 0.82
+               inf_fatt_ora: Fen $4044 (camerieri $891, sovracc. 9.3 min) Inf pred $4150 rapporto 1.03
+               inf_min_M10: Fen $4044 (camerieri $891, sovracc. 9.3 min) Inf pred $4101 rapporto 1.01
+               inf_min_M50: Fen $4044 (camerieri $891, sovracc. 9.3 min) Inf pred $4101 rapporto 1.01
+               quaderno28k: Fen $3593 (camerieri $891, sovracc. 9.3 min) Inf pred $4101 rapporto 1.14
+
+[tw26 profilo a] picco/media 3.61
+  Infinite predittiva: calcolo $1120 (standby $560), totale $1465; taglie {'M40': 0.867, 'M50': 0.133}; minuti in sovraccarico 3, oltre M60 0
+  Infinite reattiva: calcolo $988, totale $1333; taglie {'M40': 1.0}; minuti in sovraccarico 15
+  Fenvix: camerieri $199 (medi 3.5, max 10), fisse $901 {'quaderno': 226, 'dispensa': 317, 's3': 82, 'lavaggio': 56, 'tra_zone': 155, 'portiere': 0, 'resto': 65} (quaderni 1, minuti oltre il quaderno 0), totale $1100; minuti in sovraccarico 10.5, CPU oltre 0.063%
+  flotta di camerieri pagata sul picco $566; CPU usata ideale Fenvix $121; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $257
+  RAPPORTO Infinite pred / Fenvix = 1.33; reattiva / Fenvix = 1.21; calcolo Infinite pred / camerieri = 5.63
+  sensibilità: avvio10: Fen $1100 (camerieri $199, sovracc. 4.0 min) Inf pred $1465 rapporto 1.33
+               avvio300: Fen $1100 (camerieri $199, sovracc. 30.8 min) Inf pred $1465 rapporto 1.33
+               margine10: Fen $1078 (camerieri $177, sovracc. 21.5 min) Inf pred $1465 rapporto 1.36
+               margine50: Fen $1136 (camerieri $235, sovracc. 6.8 min) Inf pred $1465 rapporto 1.29
+               scrittura081: Fen $1071 (camerieri $170, sovracc. 4.3 min) Inf pred $1465 rapporto 1.37
+               xlarge: Fen $1241 (camerieri $340, sovracc. 2.7 min) Inf pred $1465 rapporto 1.18
+               portiereB1: Fen $1600 (camerieri $199, sovracc. 10.5 min) Inf pred $1465 rapporto 0.92
+               inf_fatt_ora: Fen $1100 (camerieri $199, sovracc. 10.5 min) Inf pred $1472 rapporto 1.34
+               inf_min_M10: Fen $1100 (camerieri $199, sovracc. 10.5 min) Inf pred $1465 rapporto 1.33
+               inf_min_M50: Fen $1100 (camerieri $199, sovracc. 10.5 min) Inf pred $2323 rapporto 2.11
+               quaderno28k: Fen $1100 (camerieri $199, sovracc. 10.5 min) Inf pred $1465 rapporto 1.33
+
+[tw26 profilo b] picco/media 3.61
+  Infinite predittiva: calcolo $3954 (standby $1977), totale $4299; taglie {'M60': 1.0}; minuti in sovraccarico 17, oltre M60 17
+  Infinite reattiva: calcolo $3954, totale $4299; taglie {'M60': 1.0}; minuti in sovraccarico 17
+  Fenvix: camerieri $936 (medi 16.5, max 51), fisse $3604 {'quaderno': 1804, 'dispensa': 317, 's3': 336, 'lavaggio': 112, 'tra_zone': 970, 'portiere': 0, 'resto': 65} (quaderni 4, minuti oltre il quaderno 6), totale $4540; minuti in sovraccarico 18.7, CPU oltre 0.096%
+  flotta di camerieri pagata sul picco $2885; CPU usata ideale Fenvix $631; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $1097
+  RAPPORTO Infinite pred / Fenvix = 0.95; reattiva / Fenvix = 0.95; calcolo Infinite pred / camerieri = 4.22
+  sensibilità: avvio10: Fen $4540 (camerieri $936, sovracc. 8.5 min) Inf pred $4299 rapporto 0.95
+               avvio300: Fen $4540 (camerieri $936, sovracc. 51.7 min) Inf pred $4299 rapporto 0.95
+               margine10: Fen $4432 (camerieri $828, sovracc. 60.0 min) Inf pred $4299 rapporto 0.97
+               margine50: Fen $4722 (camerieri $1118, sovracc. 9.0 min) Inf pred $4299 rapporto 0.91
+               scrittura081: Fen $4071 (camerieri $467, sovracc. 13.0 min) Inf pred $4299 rapporto 1.06
+               xlarge: Fen $4569 (camerieri $965, sovracc. 15.7 min) Inf pred $4299 rapporto 0.94
+               portiereB1: Fen $5510 (camerieri $936, sovracc. 18.7 min) Inf pred $4299 rapporto 0.78
+               inf_fatt_ora: Fen $4540 (camerieri $936, sovracc. 18.7 min) Inf pred $4299 rapporto 0.95
+               inf_min_M10: Fen $4540 (camerieri $936, sovracc. 18.7 min) Inf pred $4299 rapporto 0.95
+               inf_min_M50: Fen $4540 (camerieri $936, sovracc. 18.7 min) Inf pred $4299 rapporto 0.95
+               quaderno28k: Fen $4089 (camerieri $936, sovracc. 18.7 min) Inf pred $4299 rapporto 1.05
+
+[al-somma6 profilo a] picco/media 80.72
+  Infinite predittiva: calcolo $3207 (standby $1604), totale $3552; taglie {'M40': 0.011, 'M50': 0.362, 'M60': 0.628}; minuti in sovraccarico 172, oltre M60 94
+  Infinite reattiva: calcolo $987, totale $1332; taglie {'M30': 0.009, 'M40': 0.988, 'M50': 0.003}; minuti in sovraccarico 654
+  Fenvix: camerieri $371 (medi 6.6, max 216), fisse $1352 {'quaderno': 677, 'dispensa': 317, 's3': 82, 'lavaggio': 56, 'tra_zone': 155, 'portiere': 0, 'resto': 65} (quaderni 2, minuti oltre il quaderno 43), totale $1723; minuti in sovraccarico 500.0, CPU oltre 7.013%
+  flotta di camerieri pagata sul picco $12220; CPU usata ideale Fenvix $121; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $257
+  RAPPORTO Infinite pred / Fenvix = 2.06; reattiva / Fenvix = 0.77; calcolo Infinite pred / camerieri = 8.65
+  sensibilità: avvio10: Fen $1723 (camerieri $371, sovracc. 438.2 min) Inf pred $3552 rapporto 2.06
+               avvio300: Fen $1723 (camerieri $371, sovracc. 561.2 min) Inf pred $3552 rapporto 2.06
+               margine10: Fen $1668 (camerieri $316, sovracc. 1023.0 min) Inf pred $3552 rapporto 2.13
+               margine50: Fen $1779 (camerieri $427, sovracc. 419.3 min) Inf pred $3552 rapporto 2.00
+               scrittura081: Fen $1596 (camerieri $244, sovracc. 341.5 min) Inf pred $3552 rapporto 2.23
+               xlarge: Fen $1818 (camerieri $466, sovracc. 318.3 min) Inf pred $3552 rapporto 1.95
+               portiereB1: Fen $2223 (camerieri $371, sovracc. 500.0 min) Inf pred $3552 rapporto 1.60
+               inf_fatt_ora: Fen $1723 (camerieri $371, sovracc. 500.0 min) Inf pred $3630 rapporto 2.11
+               inf_min_M10: Fen $1723 (camerieri $371, sovracc. 500.0 min) Inf pred $3552 rapporto 2.06
+               inf_min_M50: Fen $1723 (camerieri $371, sovracc. 500.0 min) Inf pred $3563 rapporto 2.07
+               quaderno28k: Fen $1723 (camerieri $371, sovracc. 500.0 min) Inf pred $3552 rapporto 2.06
+
+[al-somma6 profilo b] picco/media 80.72
+  Infinite predittiva: calcolo $3954 (standby $1977), totale $4299; taglie {'M60': 1.0}; minuti in sovraccarico 689, oltre M60 689
+  Infinite reattiva: calcolo $3954, totale $4299; taglie {'M60': 1.0}; minuti in sovraccarico 689
+  Fenvix: camerieri $1774 (medi 31.4, max 1126), fisse $6761 {'quaderno': 4961, 'dispensa': 317, 's3': 336, 'lavaggio': 112, 'tra_zone': 970, 'portiere': 0, 'resto': 65} (quaderni 11, minuti oltre il quaderno 43), totale $8535; minuti in sovraccarico 865.2, CPU oltre 7.351%
+  flotta di camerieri pagata sul picco $63703; CPU usata ideale Fenvix $631; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $1097
+  RAPPORTO Infinite pred / Fenvix = 0.50; reattiva / Fenvix = 0.50; calcolo Infinite pred / camerieri = 2.23
+  sensibilità: avvio10: Fen $8535 (camerieri $1774, sovracc. 729.8 min) Inf pred $4299 rapporto 0.50
+               avvio300: Fen $8535 (camerieri $1774, sovracc. 992.3 min) Inf pred $4299 rapporto 0.50
+               margine10: Fen $8326 (camerieri $1565, sovracc. 1311.0 min) Inf pred $4299 rapporto 0.52
+               margine50: Fen $8885 (camerieri $2124, sovracc. 461.8 min) Inf pred $4299 rapporto 0.48
+               scrittura081: Fen $7630 (camerieri $869, sovracc. 760.7 min) Inf pred $4299 rapporto 0.56
+               xlarge: Fen $8565 (camerieri $1804, sovracc. 703.7 min) Inf pred $4299 rapporto 0.50
+               portiereB1: Fen $9505 (camerieri $1774, sovracc. 865.2 min) Inf pred $4299 rapporto 0.45
+               inf_fatt_ora: Fen $8535 (camerieri $1774, sovracc. 865.2 min) Inf pred $4299 rapporto 0.50
+               inf_min_M10: Fen $8535 (camerieri $1774, sovracc. 865.2 min) Inf pred $4299 rapporto 0.50
+               inf_min_M50: Fen $8535 (camerieri $1774, sovracc. 865.2 min) Inf pred $4299 rapporto 0.50
+               quaderno28k: Fen $7182 (camerieri $1774, sovracc. 865.2 min) Inf pred $4299 rapporto 0.60
+
+[te-somma7 profilo a] picco/media 14.84
+  Infinite predittiva: calcolo $2308 (standby $1154), totale $2653; taglie {'M30': 0.11, 'M40': 0.213, 'M50': 0.321, 'M60': 0.357}; minuti in sovraccarico 745, oltre M60 709
+  Infinite reattiva: calcolo $1911, totale $2256; taglie {'M30': 0.276, 'M40': 0.179, 'M50': 0.281, 'M60': 0.263}; minuti in sovraccarico 856
+  Fenvix: camerieri $286 (medi 5.1, max 40), fisse $1352 {'quaderno': 677, 'dispensa': 317, 's3': 82, 'lavaggio': 56, 'tra_zone': 155, 'portiere': 0, 'resto': 65} (quaderni 2, minuti oltre il quaderno 3), totale $1638; minuti in sovraccarico 82.8, CPU oltre 1.401%
+  flotta di camerieri pagata sul picco $2263; CPU usata ideale Fenvix $121; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $257
+  RAPPORTO Infinite pred / Fenvix = 1.62; reattiva / Fenvix = 1.38; calcolo Infinite pred / camerieri = 8.07
+  sensibilità: avvio10: Fen $1638 (camerieri $286, sovracc. 63.5 min) Inf pred $2653 rapporto 1.62
+               avvio300: Fen $1638 (camerieri $286, sovracc. 120.5 min) Inf pred $2653 rapporto 1.62
+               margine10: Fen $1622 (camerieri $270, sovracc. 87.3 min) Inf pred $2653 rapporto 1.64
+               margine50: Fen $1666 (camerieri $314, sovracc. 76.3 min) Inf pred $2653 rapporto 1.59
+               scrittura081: Fen $1579 (camerieri $227, sovracc. 69.7 min) Inf pred $2653 rapporto 1.68
+               xlarge: Fen $1789 (camerieri $437, sovracc. 57.7 min) Inf pred $2653 rapporto 1.48
+               portiereB1: Fen $2138 (camerieri $286, sovracc. 82.8 min) Inf pred $2653 rapporto 1.24
+               inf_fatt_ora: Fen $1638 (camerieri $286, sovracc. 82.8 min) Inf pred $2694 rapporto 1.64
+               inf_min_M10: Fen $1638 (camerieri $286, sovracc. 82.8 min) Inf pred $2647 rapporto 1.62
+               inf_min_M50: Fen $1638 (camerieri $286, sovracc. 82.8 min) Inf pred $3013 rapporto 1.84
+               quaderno28k: Fen $1638 (camerieri $286, sovracc. 82.8 min) Inf pred $2653 rapporto 1.62
+
+[te-somma7 profilo b] picco/media 14.84
+  Infinite predittiva: calcolo $3653 (standby $1826), totale $3998; taglie {'M50': 0.153, 'M60': 0.847}; minuti in sovraccarico 1181, oltre M60 1173
+  Infinite reattiva: calcolo $2633, totale $2978; taglie {'M40': 0.025, 'M50': 0.631, 'M60': 0.344}; minuti in sovraccarico 1222
+  Fenvix: camerieri $1053 (medi 18.6, max 207), fisse $7212 {'quaderno': 5412, 'dispensa': 317, 's3': 336, 'lavaggio': 112, 'tra_zone': 970, 'portiere': 0, 'resto': 65} (quaderni 12, minuti oltre il quaderno 6), totale $8265; minuti in sovraccarico 257.3, CPU oltre 1.934%
+  flotta di camerieri pagata sul picco $11711; CPU usata ideale Fenvix $631; CPU usata ideale Infinite (solo primario, prezzo per vCPU di M60) $1097
+  RAPPORTO Infinite pred / Fenvix = 0.48; reattiva / Fenvix = 0.36; calcolo Infinite pred / camerieri = 3.47
+  sensibilità: avvio10: Fen $8265 (camerieri $1053, sovracc. 182.3 min) Inf pred $3998 rapporto 0.48
+               avvio300: Fen $8265 (camerieri $1053, sovracc. 364.7 min) Inf pred $3998 rapporto 0.48
+               margine10: Fen $8143 (camerieri $931, sovracc. 362.3 min) Inf pred $3998 rapporto 0.49
+               margine50: Fen $8470 (camerieri $1258, sovracc. 136.7 min) Inf pred $3998 rapporto 0.47
+               scrittura081: Fen $7733 (camerieri $521, sovracc. 189.3 min) Inf pred $3998 rapporto 0.52
+               xlarge: Fen $8291 (camerieri $1079, sovracc. 211.3 min) Inf pred $3998 rapporto 0.48
+               portiereB1: Fen $9235 (camerieri $1053, sovracc. 257.3 min) Inf pred $3998 rapporto 0.43
+               inf_fatt_ora: Fen $8265 (camerieri $1053, sovracc. 257.3 min) Inf pred $4063 rapporto 0.49
+               inf_min_M10: Fen $8265 (camerieri $1053, sovracc. 257.3 min) Inf pred $3998 rapporto 0.48
+               inf_min_M50: Fen $8265 (camerieri $1053, sovracc. 257.3 min) Inf pred $3998 rapporto 0.48
+               quaderno28k: Fen $6912 (camerieri $1053, sovracc. 257.3 min) Inf pred $3998 rapporto 0.58

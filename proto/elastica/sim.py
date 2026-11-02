@@ -32,16 +32,20 @@ def infinite(L, predittiva, tmin=2, fatt_ora=False):
     n = len(L)
     vc = np.array([t[1] for t in TAGLIE], float)
     pr = np.array([t[2] for t in TAGLIE], float)
-    # taglia minima con CPU <= 75% per ogni minuto
+    # Predittiva perfetta: conosce il futuro e sale PRIMA che scatti una regola reattiva. Per ogni minuto t, la
+    # taglia necessaria è la più piccola per cui la media dei prossimi 10 minuti sta sotto il 90% e la media dei
+    # prossimi 60 sotto il 75% (le stesse soglie della reattiva, guardate in avanti invece che indietro).
+    p = _prefix(np.concatenate([L, np.full(60, L[-1])]))
+    f10 = (p[10:10 + n] - p[:n]) / 10
+    f60 = (p[60:60 + n] - p[:n]) / 60
     need = np.full(n, len(TAGLIE) - 1)
     for i in range(len(TAGLIE) - 1, tmin - 1, -1):
-        need[L <= 0.75 * vc[i]] = i
+        need[(f10 <= 0.90 * vc[i]) & (f60 <= 0.75 * vc[i])] = i
     need = np.maximum(need, tmin)
-    # massimo dei prossimi 60 minuti (per la predittiva)
     if predittiva:
         from numpy.lib.stride_tricks import sliding_window_view
         pad = np.concatenate([need, np.full(60, need[-1])])
-        need60 = sliding_window_view(pad, 61).max(axis=1)[:n]
+        need60 = sliding_window_view(pad, 61).max(axis=1)[:n]  # serve entro un'ora: niente discesa
     tier = int(need[0]) if predittiva else max(tmin, int(need[0]))
     util = np.zeros(n)
     tiers = np.zeros(n, int)
@@ -51,8 +55,8 @@ def infinite(L, predittiva, tmin=2, fatt_ora=False):
     over_m60 = 0
     pu = np.zeros(n + 1)
     for t in range(n):
-        if predittiva and need60[t] > tier:
-            tier = int(need60[t])
+        if predittiva and need[t] > tier:
+            tier = int(need[t])
             last_up10 = last_up60 = t
         # regole reattive guardano il passato (fino al minuto t-1)
         if t >= 10:
@@ -164,7 +168,7 @@ def scala(curva, profilo):
 
 
 def bolletta(curva, profilo, avvio_s=60, margine=0.25, w_rapporto=0.36, tipo="c7g.large", tmin=2,
-             fatt_ora=False, portiere=False):
+             fatt_ora=False, portiere=False, quaderno_tetto=QUADERNO_TETTO):
     r, w = scala(curva, profilo)
     L = r * MONGO_R_US + w * MONGO_W_US
     ip = infinite(L, True, tmin, fatt_ora)
@@ -172,8 +176,9 @@ def bolletta(curva, profilo, avvio_s=60, margine=0.25, w_rapporto=0.36, tipo="c7
     F = r * (MONGO_R_US / 0.93) + w * (MONGO_W_US / w_rapporto)
     fe = fenvix(F, avvio_s, margine, tipo)
     fisse = dict(FISSE[profilo])
-    picco_w = float(w.max())
-    nq = math.ceil(picco_w / QUADERNO_TETTO)
+    picco_w = float(np.percentile(w, 99.9))  # il minuto al 99,9 percentile: le punte di un minuto si mettono in coda
+    nq = math.ceil(picco_w / quaderno_tetto)
+    q_over = int((w > nq * quaderno_tetto).sum())
     if nq > 1:
         fisse["quaderno"] += (nq - 1) * QUADERNO_EXTRA
     if portiere:
@@ -187,7 +192,7 @@ def bolletta(curva, profilo, avvio_s=60, margine=0.25, w_rapporto=0.36, tipo="c7
     ideale_inf_primario = L.mean() * (TAGLIE[-1][2] / 2 / TAGLIE[-1][1]) * H_MESE
     return dict(
         profilo=profilo, picco_su_media=float(curva.max() / curva.mean()),
-        inf_pred=ip, inf_reat=ir, fen=fe, fisse=fisse, fisse_tot=fis, quaderni=nq,
+        inf_pred=ip, inf_reat=ir, fen=fe, fisse=fisse, fisse_tot=fis, quaderni=nq, quaderno_over_min=q_over,
         tot_inf_pred=ip["costo"] + SPAZIO_INF, tot_inf_reat=ir["costo"] + SPAZIO_INF,
         tot_fen=fe["costo"] + fis, flotta_picco=flotta_picco, ideale_fe=ideale_fe,
         ideale_inf_primario=ideale_inf_primario,
