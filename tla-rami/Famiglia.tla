@@ -49,6 +49,14 @@
 (*  RHold = Grace+1  un lettore tiene il foglio un giro di troppo           *)
 (*  NoSlowCheck      il raccoglitore cancella anche se il suo giro e' durato*)
 (*                   piu' di un giro (con due raccoglitori)                 *)
+(*                                                                          *)
+(* Giro 2 (revisore notturno N6, correzione 1): terza strada per la spilla. *)
+(*  PinCap           con SplitPin: spilla in due passi, ma il fork la scrive*)
+(*                   solo se dalla lettura della sorgente sono passati al   *)
+(*                   massimo FHold giri; altrimenti puo' solo annullare     *)
+(*                   (ForkAbort) e ricominciare. Come Hold per lo scrittore.*)
+(*  FHold            giri massimi tra lettura della sorgente e spilla       *)
+(*                   (FHold <= Grace - 1; FHold = Grace e' il negativo)     *)
 (***************************************************************************)
 EXTENDS Naturals, FiniteSets
 
@@ -59,6 +67,7 @@ CONSTANTS DBs, Root, Collectors, Readers,
           Grace,    \* eta' minima in giri dall'ultima uscita da un foglio o da una spilla (0 = nessuna)
           Reread,
           NoRegisterFirst, SplitPin, OwnerDeletes, DropDeletesPrefix, NoRegCheck, AgeByCreation, CountSweeps, NoSlowCheck,
+          PinCap, FHold,
           Track   \* TRUE solo nei modelli di controllo: tiene la variabile fantasma `seen`
 
 Boxes == 1..MaxBoxes
@@ -78,6 +87,7 @@ VARIABLES
   fst,      \* database -> stato del fork che lo crea:
             \*   "none" | "read" | "pinned" | "written" | "done" | "aborted"
   fpin,     \* database -> scatole prese dalla sorgente
+  fcyc,     \* database -> giro in cui il fork ha letto la sorgente (conta solo con PinCap)
   wst,      \* database -> "idle" | "flush" | "compact" (scrittura in volo)
   wbox,     \* database -> scatola scritta e non ancora nel foglio
   win,      \* database -> scatole sostituite dalla compattazione in volo
@@ -98,14 +108,14 @@ VARIABLES
   rfail,    \* TRUE appena un lettore riceve "scatola non trovata" e non puo' rimediare
   seen      \* fantasma, solo con Track: eventi rari gia' accaduti (controllo che il modello non sia vuoto)
 
-vars == <<boxSt, owner, bcyc, nextBox, mf, members, pins, used, nPoints, fst, fpin,
+vars == <<boxSt, owner, bcyc, nextBox, mf, members, pins, used, nPoints, fst, fpin, fcyc,
           wst, wbox, win, wcyc, cst, ccand, cmem, cpins, cread, cused, ccyc, marked, cycle,
           rst, rdb, rheld, rcyc, rfail, seen>>
 wvars == <<wst, wbox, win, wcyc>>
 cvars == <<cst, ccand, cmem, cpins, cread, cused, ccyc, marked, cycle>>
 rvars == <<rst, rdb, rheld, rcyc, rfail>>
 Mark(ev) == IF Track THEN seen' = seen \cup {ev} ELSE UNCHANGED seen
-fvars == <<fst, fpin, used>>
+fvars == <<fst, fpin, fcyc, used>>
 
 Live == {b \in Boxes : boxSt[b] = "live"}
 \* le scatole in S escono da un foglio o da una spilla adesso: l'eta' minima riparte da qui
@@ -123,6 +133,7 @@ TypeOK ==
   /\ used \subseteq DBs
   /\ nPoints \in 0..MaxPoints
   /\ fst \in [DBs -> {"none", "read", "pinned", "written", "done", "aborted"}]
+  /\ fcyc \in [DBs -> 0..MaxCycles]
   /\ fpin \in [DBs -> SUBSET Boxes]
   /\ wst \in [DBs -> {"idle", "flush", "compact"}]
   /\ cst \in [Collectors -> {"idle", "listed", "reg"}]
@@ -144,6 +155,7 @@ Init ==
   /\ nPoints = 0
   /\ fst = [d \in DBs |-> "none"]
   /\ fpin = [d \in DBs |-> {}]
+  /\ fcyc = [d \in DBs |-> 0]
   /\ wst = [d \in DBs |-> "idle"]
   /\ wbox = [d \in DBs |-> 0]
   /\ win = [d \in DBs |-> {}]
@@ -234,6 +246,7 @@ ForkStart(dst) ==
   /\ \E P \in Sources :
        /\ IF P \notin {mf[s] : s \in members} THEN Mark("forkFromPoint") ELSE UNCHANGED seen
        /\ fpin' = [fpin EXCEPT ![dst] = P]
+       /\ fcyc' = [fcyc EXCEPT ![dst] = cycle]
        /\ used' = used \cup {dst}
        /\ IF SplitPin \/ NoRegisterFirst
             THEN /\ fst' = [fst EXCEPT ![dst] = IF SplitPin THEN "read" ELSE "pinned"]
@@ -245,19 +258,22 @@ ForkStart(dst) ==
                  /\ pins' = pins \cup {ForkEntry(dst, P)}
   /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, nPoints, wvars, cvars, rvars>>
 
-\* solo con SplitPin: la spilla con le scatole lette prima, in un passo successivo
+\* solo con SplitPin: la spilla con le scatole lette prima, in un passo successivo.
+\* Con PinCap: solo se dalla lettura sono passati al massimo FHold giri (ipotesi di tempo,
+\* come Hold per lo scrittore); altrimenti resta solo ForkAbort.
 ForkRegister(dst) ==
   /\ fst[dst] = "read"
+  /\ ~PinCap \/ cycle - fcyc[dst] <= FHold
   /\ pins' = pins \cup {ForkEntry(dst, fpin[dst])}
   /\ fst' = [fst EXCEPT ![dst] = "pinned"]
-  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, nPoints, fpin, used, wvars, cvars, rvars>>
+  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, members, nPoints, fpin, fcyc, used, wvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 ForkWrite(dst) ==
   /\ fst[dst] = "pinned"
   /\ mf' = [mf EXCEPT ![dst] = fpin[dst]]
   /\ fst' = [fst EXCEPT ![dst] = "written"]
-  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, members, pins, nPoints, fpin, used, wvars, cvars, rvars>>
+  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, members, pins, nPoints, fpin, fcyc, used, wvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 \* un solo PUT del registro: il ramo diventa membro e la sua spilla di fork si toglie
@@ -266,7 +282,7 @@ ForkJoin(dst) ==
   /\ members' = members \cup {dst}
   /\ pins' = {e \in pins : ~(e.k = "fork" /\ e.db = dst)}
   /\ fst' = [fst EXCEPT ![dst] = "done"]
-  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, nPoints, fpin, used, wvars, cvars, rvars>>
+  /\ UNCHANGED <<boxSt, owner, bcyc, nextBox, mf, nPoints, fpin, fcyc, used, wvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 \* fork annullato (errore o crash): si cancella il foglio del ramo e poi la spilla
@@ -276,7 +292,7 @@ ForkAbort(dst) ==
   /\ pins' = {e \in pins : ~(e.k = "fork" /\ e.db = dst)}
   /\ fst' = [fst EXCEPT ![dst] = "aborted"]
   /\ Touch(mf[dst] \cup fpin[dst])
-  /\ UNCHANGED <<boxSt, owner, nextBox, members, nPoints, fpin, used, wvars, cvars, rvars>>
+  /\ UNCHANGED <<boxSt, owner, nextBox, members, nPoints, fpin, fcyc, used, wvars, cvars, rvars>>
   /\ UNCHANGED seen
 
 \* punto di ripristino: spilla del foglio attuale, atomica (PUT condizionale)
@@ -443,6 +459,7 @@ Spec == Init /\ [][Next]_vars
 (* stato. Riduce lo spazio senza togliere comportamenti.                                          *)
 View == << boxSt, owner, bcyc, nextBox, mf, members, pins, used, nPoints, fst,
            [d \in DBs |-> IF fst[d] \in {"read", "pinned"} THEN fpin[d] ELSE {}],
+           [d \in DBs |-> IF PinCap /\ fst[d] = "read" THEN fcyc[d] ELSE 0],
            [d \in DBs |-> IF wst[d] = "idle" THEN <<"idle">> ELSE <<wst[d], wbox[d], win[d], wcyc[d]>>],
            [c \in Collectors |-> IF cst[c] = "idle" THEN <<"idle">>
                                  ELSE <<cst[c], ccand[c], cmem[c], cpins[c], cread[c], cused[c], ccyc[c]>>],

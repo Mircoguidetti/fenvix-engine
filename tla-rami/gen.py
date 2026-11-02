@@ -1,7 +1,7 @@
 # genera i file Famiglia-*.cfg
 base=dict(DBs="{d1, d2}",Readers="{r1}",MaxBoxes=3,MaxCycles=3,MaxPoints=1,Hold=0,RHold=1,Grace=1,Reread="FALSE",
  NoRegisterFirst="FALSE",SplitPin="FALSE",OwnerDeletes="FALSE",DropDeletesPrefix="FALSE",
- NoRegCheck="FALSE",AgeByCreation="FALSE",CountSweeps="FALSE",NoSlowCheck="FALSE",Track="FALSE",Collectors="{c1}")
+ NoRegCheck="FALSE",AgeByCreation="FALSE",CountSweeps="FALSE",NoSlowCheck="FALSE",PinCap="FALSE",FHold=0,Track="FALSE",Collectors="{c1}")
 inv="TypeOK NoDangling PinsLive ReadersOK InFlightLive"
 cfgs={
  "base":{},
@@ -12,6 +12,10 @@ cfgs={
  # negativi
  "noregisterfirst":dict(NoRegisterFirst="TRUE"),
  "splitpin":dict(SplitPin="TRUE"),
+ # giro 2: spilla in due passi con tetto di tempo (revisore notturno N6, correzione 1)
+ "spilla-tetto":dict(SplitPin="TRUE",PinCap="TRUE",FHold=1),
+ "spilla-tetto-grande":dict(SplitPin="TRUE",PinCap="TRUE",Grace=2,Hold=1,RHold=2,FHold=2,MaxCycles=4),
+ "spilla-tetto-troppo":dict(SplitPin="TRUE",PinCap="TRUE",FHold=2),
  "ownerdeletes":dict(OwnerDeletes="TRUE"),
  "dropdeletesprefix":dict(DropDeletesPrefix="TRUE"),
  "noregcheck":dict(NoRegCheck="TRUE"),

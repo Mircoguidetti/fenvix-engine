@@ -118,8 +118,11 @@ Ognuno è la traccia più corta trovata da TLC (ricerca in ampiezza), letta pass
    cancella la scatola 1. d2 entra nella famiglia con un foglio che punta al vuoto. È la regola 2.
 2. **`splitpin`, spilla non atomica.** Il fork legge le scatole di d1, poi si ferma (pausa, rete);
    intanto d1 viene cancellato e il raccoglitore, dopo l'età minima, cancella le scatole; poi il fork
-   scrive la spilla con scatole già sparite. Quindi "prima si registra" non basta: la spilla deve
-   essere scritta **nello stesso passo** in cui si legge la versione della sorgente.
+   scrive la spilla con scatole già sparite. Quindi "prima si registra" non basta: **la spilla va
+   scritta prima che la sorgente possa perdere le scatole lette: in un passo solo, oppure entro un
+   tempo T più piccolo dell'età minima** (correzione del revisore notturno; la seconda strada è
+   provata nel giro 2, §6). Il controesempio funziona solo perché il fork resta fermo tra la lettura e
+   la spilla più a lungo dell'età minima.
 3. **`ownerdeletes`, il lavaggio cancella.** Il lavaggio di d1 fonde la scatola 1 nella 2 e cancella
    subito la 1, che in quel momento non è in nessun foglio e in nessuna spilla. Un cameriere aveva
    preso il foglio vecchio un attimo prima: legge la 1 e trova "scatola non trovata". Anche con una
@@ -173,13 +176,21 @@ la 3b e la 3c sono nuove rispetto al rapporto del revisore).
    di un database toglie il database dal registro e basta (controesempi 3 e 4).
 2. **Prima la spilla, poi il foglio del ramo**, e il ramo entra nella famiglia con lo stesso PUT del
    registro che toglie la spilla (controesempio 1).
-   - **2b. La spilla va scritta nello stesso passo in cui si legge la versione della sorgente**
-     (controesempio 2). Due modi che danno questa garanzia: la spilla dentro il foglio della sorgente
-     con PUT condizionale (come il checkpoint di SlateDB, che oggi usa `fork.rs`), oppure la sorgente
-     ferma durante il fork (come fa oggi `fork.rs` con `quiesce`). Il secondo ferma il padre ed è da
-     evitare per i database grandi (il revisore propone il segno di taglio nel quaderno). Un terzo
-     modo, per esempio "scrivo la spilla e poi ricontrollo il foglio della sorgente", va aggiunto al
-     modello prima di usarlo: non è verificato.
+   - **2b. La spilla va scritta prima che la sorgente possa perdere le scatole lette: in un passo
+     solo, oppure entro un tempo T più piccolo dell'età minima** (controesempio 2). Tre strade, non
+     due (giro 2):
+     1. la spilla dentro il foglio della sorgente con PUT condizionale (come il checkpoint di SlateDB,
+        che oggi usa `fork.rs`). **Non modellata**: nel modello la spilla sta nel registro; se si
+        sceglie questa strada la spilla vive nel foglio del padre e il raccoglitore deve leggerla da
+        lì, e serve un modello in più prima del codice;
+     2. la sorgente ferma durante il fork (come fa oggi `fork.rs` con `quiesce`): ferma il padre ed è
+        da evitare per i database grandi molto scritti (il revisore propone il segno di taglio nel
+        quaderno);
+     3. **spilla in due passi con un tetto di tempo** (giro 2, `spilla-tetto`): il fork legge il
+        foglio della sorgente, poi scrive la spilla nel registro solo se dalla lettura è passato al
+        più T; altrimenti annulla e ricomincia. È la stessa regola dello scrittore lento. Nel modello
+        regge (§6); la spilla resta nel registro, quindi il modello è più vicino al vero.
+     La scelta tra le tre è di disegno: decide il fondatore.
 3. **Età minima prima di cancellare.**
    - **3a.** Serve per le scritture in volo anche con la regola del 404 (controesempio 5): una scatola
      appena scritta e non ancora nel foglio sembra orfana.
@@ -197,8 +208,13 @@ la 3b e la 3c sono nuove rispetto al rapporto del revisore).
      rispettare da entrambe le parti con l'orologio: lo scrittore rinuncia a pubblicare il foglio se
      la sua scatola è più vecchia di una soglia T (e la riscrive), il raccoglitore
      rinuncia al giro se dal suo LIST è passata più di una soglia G; poi età minima > T + G con
-     margine. Con l'età di 24 ore proposta dal revisore e soglie T e G di qualche minuto il margine è
-     enorme (STIMATO).
+     margine. **T comprende anche la durata del PUT del foglio** (lo scrittore controlla l'orologio
+     prima del PUT, ma il foglio diventa visibile solo alla fine del PUT); **G comprende tutta la fase
+     delle cancellazioni del giro**, non solo la lettura (il raccoglitore controlla l'orologio prima di
+     ogni gruppo di DELETE, non una volta sola all'inizio: un giro con migliaia di DELETE dura minuti).
+     Nel modello "controllo il tempo, poi agisco" è un passo solo (`WriteCommit`, `CSweep`); nel vero
+     sono due, ed è per questo che la regola va scritta così. Con l'età di 24 ore proposta dal
+     revisore e soglie T e G di qualche minuto il margine è enorme (STIMATO).
    - **3d. I camerieri:** o tengono un foglio più giovane dell'età minima (controesempio 7), o
      applicano "su 404 rileggi il foglio" (modello `reread`: nessuna violazione con fogli vecchi quanto
      si vuole). Meglio tutte e due: la prima rende il 404 raro, la seconda lo rende innocuo.
@@ -228,7 +244,16 @@ regola 3c. Con il foglio a livelli chiesto dal revisore di S1 il giro si accorci
 - Il contenuto delle scatole non c'è: il modello guarda solo se una scatola usata esiste. Che il ramo
   veda esattamente lo stato del padre alla posizione P (il "segno di taglio" nel quaderno) non è
   modellato qui; serve un modello a parte sopra `ValidatingLog.tla`.
-- Il tempo vero è sostituito dai giri del raccoglitore. In produzione l'età minima si misura in ore: la
+- La spilla del fork e quella del punto di ripristino (`PointCreate`) sono scritte "insieme" alla
+  lettura del foglio sorgente in un passo solo; su S3 registro e foglio sono due oggetti e non c'è
+  una scrittura atomica su due oggetti. La strada 3 di 2b (tetto di tempo) toglie questa ipotesi per
+  il fork; per il punto di ripristino serve la stessa regola (STIMATO, non modellato). La strada 1
+  (spilla dentro il foglio del padre, checkpoint di SlateDB) non è modellata.
+- "Controllo l'orologio, poi agisco" è un passo solo (vedi 3c).
+- Il tempo vero è sostituito dai giri del raccoglitore, e avanza solo quando un raccoglitore finisce
+  un giro: un raccoglitore fermo a metà giro ferma anche l'orologio. Il caso "raccoglitore bloccato
+  per ore" è coperto solo con due raccoglitori. Un'azione `Tick` separata per l'orologio sarebbe più
+  pulita (correzione facoltativa 5 del revisore, non fatta in questo giro: cambia tutti i conteggi). In produzione l'età minima si misura in ore: la
   regola che il modello dice in giri va tradotta (sezione 5).
 - Un solo scrittore per database (lo garantisce il PUT condizionale del foglio): due scrittori sullo
   stesso foglio non ci sono.
@@ -237,3 +262,68 @@ regola 3c. Con il foglio a livelli chiesto dal revisore di S1 il giro si accorci
 - La cancellazione per GDPR ("cancella in tutta la famiglia") e la cifratura per famiglia non ci sono.
 - Vivacità (che il raccoglitore prima o poi recuperi lo spazio) non è verificata: solo sicurezza. Il
   controllo `sanity-raccolta` mostra però che il recupero delle scatole di un padre uscito succede.
+
+## 6. Giro 2 (2 novembre 2026): correzioni del revisore notturno
+
+Correzioni 1–4 e 6 di `fenvix-brain/sessions/2026-11-02-revisore-tla-rami/RAPPORTO.md`. La 5
+(`Tick` separato) non è fatta: è facoltativa e cambierebbe tutti i conteggi; il limite è scritto in §5.
+
+### 6.1 Spilla in due passi con tetto di tempo (correzione 1)
+
+Nuove costanti in `Famiglia.tla`: `PinCap` e `FHold`, e la variabile `fcyc` (giro in cui il fork ha
+letto la sorgente). Con `SplitPin = TRUE` e `PinCap = TRUE` il fork legge il foglio sorgente, e scrive
+la spilla nel registro in un passo successivo **solo se** dalla lettura sono passati al più `FHold`
+giri; altrimenti l'unica mossa è `ForkAbort` (annulla e ricomincia). Con `PinCap = FALSE` tutto è come
+prima (la `VIEW` aggiunge `fcyc` solo con `PinCap` e fork nello stato "read").
+
+Esiti (MISURATI con la traduzione in Python, vedi 6.3; **non con TLC**):
+
+- `spilla-tetto` (età minima 1 giro, tetto `FHold` = 1): nessuna violazione, modello completo,
+  4.596.830 stati distinti.
+- `spilla-tetto-grande` (età minima 2, `Hold` 1, `RHold` 2, `FHold` = 2, 4 giri): nessuna violazione,
+  modello completo, 11.579.144 stati distinti.
+- `spilla-tetto-troppo` (età minima 1, `FHold` = 2): `PinsLive` violata, traccia di 10 stati. Il fork
+  legge la scatola 1 del padre al giro 0; il padre viene cancellato (età della scatola riparte da 0);
+  il raccoglitore fa un giro vuoto (giro 0 → 1), poi un secondo giro in cui la scatola ha età 1 e la
+  cancella (giro 1 → 2); al giro 2 il fork scrive la spilla su una scatola sparita.
+
+Quindi **la strada 3 regge, con la regola: tetto del fork ≤ età minima** (nel modello `FHold ≤
+Grace`). È un giro più largo della regola dello scrittore (`Hold ≤ Grace − 1`): il raccoglitore
+ricontrolla il registro prima di cancellare, quindi una spilla scritta durante il suo giro lo fa
+rinunciare; resta pericolosa solo una spilla scritta **dopo** una cancellazione, e questa arriva al
+più presto dopo l'età minima. Nel vero si scrive con margine, come in 3c: **T del fork + durata del PUT
+del registro < età minima**. Con 24 ore di età minima e un tetto di qualche minuto il margine è enorme
+(STIMATO). La regola vale per qualunque taglia del padre: il fork copia solo il foglio.
+
+### 6.2 Frasi corrette (correzioni 2, 3, 4)
+
+- 2: "la spilla va scritta prima che la sorgente possa perdere le scatole lette: in un passo solo,
+  oppure entro un tempo T più piccolo dell'età minima" (§3 punto 2 e §4 punto 2b, con le tre strade).
+- 3: nella regola 3c, T comprende il PUT del foglio e G tutte le cancellazioni del giro.
+- 4: la spilla dentro il foglio del padre (checkpoint di SlateDB) non è modellata; serve un modello
+  in più se si sceglie quella strada (§4 punto 2b e §5).
+
+### 6.3 Come sono stati misurati
+
+L'ambiente di questa sessione ha bloccato l'esecuzione di `tla2tools.jar` scaricato (come per il
+revisore notturno). Ho tradotto `Famiglia.tla` a mano in Python (`verifica-python/famiglia.py`,
+ricerca in ampiezza con la stessa `VIEW` e impronte a 64 bit; un solo raccoglitore, senza simmetria).
+Controllo della traduzione contro TLC:
+
+- gli 8 controlli negativi con un raccoglitore (`splitpin`, `noregisterfirst`, `ownerdeletes`,
+  `dropdeletesprefix`, `nograce`, `hold-troppo`, `lettore-vecchio`, `agebycreation`) sono trovati
+  con **la stessa invariante** di TLC (MISURATO, `verifica-python/output/`);
+- i modelli completi senza violazioni restano senza violazioni: `base` 4.124.169 stati distinti contro
+  4.118.114 di TLC, `contagiri-piccolo` 7.215.670 contro 7.226.247 (MISURATO).
+
+Le differenze nei conteggi (0,15%) **non** sono un errore di traduzione: la `VIEW` non è canonica.
+Nello stato "listed" il raccoglitore porta ancora `cmem`, `cpins`, `cread`, `cused` del giro prima, che
+nello stato "idle" erano nascosti: due stati uguali per la vista possono dare successori diversi per la
+vista, e il conteggio dipende dall'ordine di esplorazione. Prova: la stessa traduzione con i successori
+in ordine inverso conta 3.900.833 stati distinti su `base` (MISURATO, `base-ordine-inverso.txt`).
+Nessun comportamento si perde (quei campi si riscrivono prima di essere letti), quindi le conclusioni
+restano valide. Proposta, non fatta per non cambiare i conteggi: nascondere quei quattro campi anche
+nello stato "listed", così la vista diventa canonica e il conteggio non dipende dall'ordine.
+
+Da rifare con TLC appena si può: `./run.sh Famiglia-spilla-tetto Famiglia-spilla-tetto-troppo
+Famiglia-spilla-tetto-grande` (le configurazioni sono generate da `gen.py`).
