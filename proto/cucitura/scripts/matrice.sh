@@ -3,7 +3,7 @@
 cd "$(dirname "$0")/.."
 B=./target/release/cu-prova
 EP=${EP:-http://127.0.0.1:9100}
-run() { n=$1; shift; echo "== $n $(date +%T)"; $B --endpoint $EP --out risultati/$n.json prova "$@" > risultati/$n.log 2>&1; echo "   exit $? $(date +%T)"; }
+run() { n=$1; shift; echo "== $n $(date +%T)"; $B --endpoint $EP --out risultati/$n.json prova --buco-get-kb 0 --ripiego 1 "$@" > risultati/$n.log 2>&1; echo "   exit $? $(date +%T)"; }
 run prova-oid-uniforme --id oid --canc uniforme
 run prova-uuid-uniforme --id uuid --canc uniforme
 run prova-oid-uniforme-4k --id oid --canc uniforme --blocco-kb 4
