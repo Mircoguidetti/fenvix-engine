@@ -1,0 +1,259 @@
+== lcs radice
+                           PRE 2026-alibaba-ebs/
+                           PRE alibaba/
+                           PRE cloudphysics/
+                           PRE metaKV/
+                           PRE msr/
+                           PRE tencentBlock/
+2025-07-15 19:05:00       2461 .gitattributes
+== parquet radice
+                           PRE .cache/
+                           PRE 2017_docker/
+                           PRE 2020_twr_cdn/
+                           PRE 2024_google/
+2025-07-14 04:16:54       2461 .gitattributes
+== twitter memcache
+2025-07-20 23:24:04       2461 cache_trace_twitter_memcache/.gitattributes
+2025-07-20 23:24:04 27591968094 cache_trace_twitter_memcache/oracleGeneral/cluster1.oracleGeneral.zst
+2025-07-20 23:24:04  861235477 cache_trace_twitter_memcache/oracleGeneral/cluster10.oracleGeneral.zst
+2025-07-20 23:24:04 24516847990 cache_trace_twitter_memcache/oracleGeneral/cluster11.oracleGeneral.zst
+2025-07-20 23:24:04 24183523760 cache_trace_twitter_memcache/oracleGeneral/cluster12.oracleGeneral.zst
+2025-07-20 23:24:04 6698342184 cache_trace_twitter_memcache/oracleGeneral/cluster13.oracleGeneral.zst
+2025-07-20 23:24:04 22737103391 cache_trace_twitter_memcache/oracleGeneral/cluster14.oracleGeneral.zst
+2025-07-20 23:24:04 47592864011 cache_trace_twitter_memcache/oracleGeneral/cluster15.oracleGeneral.zst
+2025-07-20 23:24:05 73812190575 cache_trace_twitter_memcache/oracleGeneral/cluster16.oracleGeneral.zst
+2025-07-20 23:24:05 52317261512 cache_trace_twitter_memcache/oracleGeneral/cluster17.oracleGeneral.zst
+2025-07-20 23:24:04 82070498489 cache_trace_twitter_memcache/oracleGeneral/cluster18.oracleGeneral.zst
+2025-07-20 23:24:05 20390041687 cache_trace_twitter_memcache/oracleGeneral/cluster19.oracleGeneral.zst
+2025-07-20 23:24:04 25397048531 cache_trace_twitter_memcache/oracleGeneral/cluster2.oracleGeneral.zst
+2025-07-20 23:24:05 17674312740 cache_trace_twitter_memcache/oracleGeneral/cluster20.oracleGeneral.zst
+2025-07-20 23:24:05 14125669039 cache_trace_twitter_memcache/oracleGeneral/cluster21.oracleGeneral.zst
+2025-07-20 23:24:06 16326148665 cache_trace_twitter_memcache/oracleGeneral/cluster22.oracleGeneral.zst
+2025-07-20 23:24:05 37447173219 cache_trace_twitter_memcache/oracleGeneral/cluster23.oracleGeneral.zst
+2025-07-20 23:24:05 20028454202 cache_trace_twitter_memcache/oracleGeneral/cluster24.oracleGeneral.zst
+2025-07-20 23:24:05 28518907904 cache_trace_twitter_memcache/oracleGeneral/cluster25.oracleGeneral.zst
+2025-07-20 23:24:05  822265463 cache_trace_twitter_memcache/oracleGeneral/cluster26.oracleGeneral.zst
+2025-07-20 23:24:05 140178909105 cache_trace_twitter_memcache/oracleGeneral/cluster27.oracleGeneral.zst
+2025-07-20 23:24:05 32508339214 cache_trace_twitter_memcache/oracleGeneral/cluster28.oracleGeneral.zst
+2025-07-20 23:24:05 50106358505 cache_trace_twitter_memcache/oracleGeneral/cluster29.oracleGeneral.zst
+2025-07-20 23:24:05 4616921578 cache_trace_twitter_memcache/oracleGeneral/cluster3.oracleGeneral.zst
+2025-07-20 23:24:05 15146899890 cache_trace_twitter_memcache/oracleGeneral/cluster30.oracleGeneral.zst
+2025-07-20 23:24:05 10922150028 cache_trace_twitter_memcache/oracleGeneral/cluster31.oracleGeneral.zst
+2025-07-20 23:24:05 33247794552 cache_trace_twitter_memcache/oracleGeneral/cluster32.oracleGeneral.zst
+2025-07-20 23:24:04 37651685564 cache_trace_twitter_memcache/oracleGeneral/cluster33.oracleGeneral.zst
+2025-07-20 23:24:04 20124251449 cache_trace_twitter_memcache/oracleGeneral/cluster34.oracleGeneral.zst
+2025-07-20 23:24:05 5649063065 cache_trace_twitter_memcache/oracleGeneral/cluster35.oracleGeneral.zst
+2025-07-20 23:24:04 39059886522 cache_trace_twitter_memcache/oracleGeneral/cluster36.oracleGeneral.zst
+2025-07-20 23:24:04 21126626738 cache_trace_twitter_memcache/oracleGeneral/cluster37.oracleGeneral.zst
+2025-07-20 23:24:04 12848828452 cache_trace_twitter_memcache/oracleGeneral/cluster38.oracleGeneral.zst
+2025-07-20 23:24:04 12198399353 cache_trace_twitter_memcache/oracleGeneral/cluster39.oracleGeneral.zst
+2025-07-20 23:24:05 22707828097 cache_trace_twitter_memcache/oracleGeneral/cluster4.oracleGeneral.zst
+2025-07-20 23:24:04 27106507411 cache_trace_twitter_memcache/oracleGeneral/cluster40.oracleGeneral.zst
+2025-07-20 23:24:05 22597236874 cache_trace_twitter_memcache/oracleGeneral/cluster41.oracleGeneral.zst
+2025-07-20 23:24:05 21784244259 cache_trace_twitter_memcache/oracleGeneral/cluster42.oracleGeneral.zst
+2025-07-20 23:24:04 75286877559 cache_trace_twitter_memcache/oracleGeneral/cluster43.oracleGeneral.zst
+2025-07-20 23:24:05 40878534642 cache_trace_twitter_memcache/oracleGeneral/cluster44.oracleGeneral.zst
+2025-07-20 23:24:05 1782789537 cache_trace_twitter_memcache/oracleGeneral/cluster45.oracleGeneral.zst
+2025-07-20 23:24:04 43702868765 cache_trace_twitter_memcache/oracleGeneral/cluster46.oracleGeneral.zst
+2025-07-20 23:24:05 35555495287 cache_trace_twitter_memcache/oracleGeneral/cluster47.oracleGeneral.zst
+2025-07-20 23:24:04 11959750072 cache_trace_twitter_memcache/oracleGeneral/cluster48.oracleGeneral.zst
+2025-07-20 23:24:05 5381753726 cache_trace_twitter_memcache/oracleGeneral/cluster49.oracleGeneral.zst
+2025-07-20 23:24:05 80617141848 cache_trace_twitter_memcache/oracleGeneral/cluster5.oracleGeneral.zst
+2025-07-20 23:24:05 1095556692 cache_trace_twitter_memcache/oracleGeneral/cluster50.oracleGeneral.zst
+2025-07-20 23:24:05 36192888892 cache_trace_twitter_memcache/oracleGeneral/cluster51.oracleGeneral.zst
+2025-07-20 23:24:06 99262173095 cache_trace_twitter_memcache/oracleGeneral/cluster52.oracleGeneral.zst
+2025-07-20 23:24:05 1680303310 cache_trace_twitter_memcache/oracleGeneral/cluster53.oracleGeneral.zst
+2025-07-20 23:24:05 104296015288 cache_trace_twitter_memcache/oracleGeneral/cluster54.oracleGeneral.zst
+2025-07-20 23:24:05 52265107324 cache_trace_twitter_memcache/oracleGeneral/cluster6.oracleGeneral.zst
+2025-07-20 23:24:05 6255489819 cache_trace_twitter_memcache/oracleGeneral/cluster7.oracleGeneral.zst
+2025-07-20 23:24:05 7897572227 cache_trace_twitter_memcache/oracleGeneral/cluster8.oracleGeneral.zst
+2025-07-20 23:24:05 58807326832 cache_trace_twitter_memcache/oracleGeneral/cluster9.oracleGeneral.zst
+2025-07-20 23:24:05 2886682136 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster1.oracleGeneral.sample10.zst
+2025-07-20 23:24:05   80873159 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster10.oracleGeneral.sample10.zst
+2025-07-20 23:24:05 2183006331 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster11.oracleGeneral.sample10.zst
+2025-07-20 23:24:06 2349706038 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster12.oracleGeneral.sample10.zst
+2025-07-20 23:24:05  643630230 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster13.oracleGeneral.sample10.zst
+2025-07-20 23:24:05 1930814382 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster14.oracleGeneral.sample10.zst
+2025-07-20 23:24:05 4746238848 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster15.oracleGeneral.sample10.zst
+2025-07-20 23:24:06 6281984752 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster16.oracleGeneral.sample10.zst
+2025-07-20 23:24:05 4071855793 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster17.oracleGeneral.sample10.zst
+2025-07-20 23:24:07 6948656970 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster18.oracleGeneral.sample10.zst
+2025-07-20 23:24:10 1907763186 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster19.oracleGeneral.sample10.zst
+2025-07-20 23:24:26 1854161619 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster2.oracleGeneral.sample10.zst
+2025-07-20 23:24:30 1398820931 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster20.oracleGeneral.sample10.zst
+2025-07-20 23:24:33 1398371541 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster21.oracleGeneral.sample10.zst
+2025-07-20 23:24:40 1518655779 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster22.oracleGeneral.sample10.zst
+2025-07-20 23:24:59 2787242553 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster23.oracleGeneral.sample10.zst
+2025-07-20 23:25:00 1696628791 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster24.oracleGeneral.sample10.zst
+2025-07-20 23:25:03 1838842513 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster25.oracleGeneral.sample10.zst
+2025-07-20 23:25:12   75039259 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster26.oracleGeneral.sample10.zst
+2025-07-20 23:25:13 13420340969 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster27.oracleGeneral.sample10.zst
+2025-07-20 23:25:16 2874032498 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster28.oracleGeneral.sample10.zst
+2025-07-20 23:25:18 4346670139 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster29.oracleGeneral.sample10.zst
+2025-07-20 23:25:19  411665480 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster3.oracleGeneral.sample10.zst
+2025-07-20 23:25:19 1243459987 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster30.oracleGeneral.sample10.zst
+2025-07-20 23:25:25 1087685375 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster31.oracleGeneral.sample10.zst
+2025-07-20 23:25:29 3307194306 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster32.oracleGeneral.sample10.zst
+2025-07-20 23:25:33 3257485907 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster33.oracleGeneral.sample10.zst
+2025-07-20 23:25:33 1883906491 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster34.oracleGeneral.sample10.zst
+2025-07-20 23:25:52  441331388 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster35.oracleGeneral.sample10.zst
+2025-07-20 23:25:58 3225770418 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster36.oracleGeneral.sample10.zst
+2025-07-20 23:26:00 1897113337 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster37.oracleGeneral.sample10.zst
+2025-07-20 23:26:01 1264232177 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster38.oracleGeneral.sample10.zst
+2025-07-20 23:26:08 1195008870 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster39.oracleGeneral.sample10.zst
+2025-07-20 23:26:11 1969137293 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster4.oracleGeneral.sample10.zst
+2025-07-20 23:26:21 2423512043 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster40.oracleGeneral.sample10.zst
+2025-07-20 23:26:26 2039747026 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster41.oracleGeneral.sample10.zst
+2025-07-20 23:26:28 1694452248 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster42.oracleGeneral.sample10.zst
+2025-07-20 23:26:30 6287240738 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster43.oracleGeneral.sample10.zst
+2025-07-20 23:26:44 3405669965 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster44.oracleGeneral.sample10.zst
+2025-07-20 23:26:45  164910258 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster45.oracleGeneral.sample10.zst
+2025-07-20 23:26:47 4073423318 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster46.oracleGeneral.sample10.zst
+2025-07-20 23:26:47 3103009969 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster47.oracleGeneral.sample10.zst
+2025-07-20 23:26:52 1112598068 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster48.oracleGeneral.sample10.zst
+2025-07-20 23:27:00  465507766 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster49.oracleGeneral.sample10.zst
+2025-07-20 23:27:00 6784701648 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster5.oracleGeneral.sample10.zst
+2025-07-20 23:27:09   96373354 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster50.oracleGeneral.sample10.zst
+2025-07-20 23:27:11 2975859064 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster51.oracleGeneral.sample10.zst
+2025-07-20 23:27:12 8698312069 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster52.oracleGeneral.sample10.zst
+2025-07-20 23:27:12  153002950 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster53.oracleGeneral.sample10.zst
+2025-07-20 23:27:14 9392559177 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster54.oracleGeneral.sample10.zst
+2025-07-20 23:27:16 4658974486 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster6.oracleGeneral.sample10.zst
+2025-07-20 23:27:18  529895388 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster7.oracleGeneral.sample10.zst
+2025-07-20 23:27:20  671006611 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster8.oracleGeneral.sample10.zst
+2025-07-20 23:27:21 5093635637 cache_trace_twitter_memcache/oracleGeneral/sample10/cluster9.oracleGeneral.sample10.zst
+2025-07-20 23:27:24  265193735 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster1.oracleGeneral.sample100.zst
+2025-07-20 23:27:29    9649241 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster10.oracleGeneral.sample100.zst
+2025-07-20 23:27:29  181559066 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster11.oracleGeneral.sample100.zst
+2025-07-20 23:27:31  239006128 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster12.oracleGeneral.sample100.zst
+2025-07-20 23:27:31   68011961 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster13.oracleGeneral.sample100.zst
+2025-07-20 23:27:34  152436723 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster14.oracleGeneral.sample100.zst
+2025-07-20 23:27:35  479806610 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster15.oracleGeneral.sample100.zst
+2025-07-20 23:27:36  621828192 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster16.oracleGeneral.sample100.zst
+2025-07-20 23:27:36  406922107 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster17.oracleGeneral.sample100.zst
+2025-07-20 23:27:36  636244487 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster18.oracleGeneral.sample100.zst
+2025-07-20 23:27:37  172533432 cache_trace_twitter_memcache/oracleGeneral/sample100/cluster19.oracleGeneral.sample100.zst
+== lcs 2020_alibabaBlock
+== parquet 2020_alibabaBlock
+== lcs 2020_tencentBlock
+== parquet 2020_tencentBlock
+== lcs 2020_twitter
+== parquet 2020_twitter
+== lcs 2022_metaKV
+== parquet 2022_metaKV
+== alibaba oracleGeneral 1M e 10K
+2025-07-21 04:55:24   14882125 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_101.oracleGeneral.zst
+2025-07-21 04:55:23    5359079 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_102.oracleGeneral.zst
+2025-07-21 04:55:26   13271820 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_104.oracleGeneral.zst
+2025-07-21 04:55:29   24568518 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_105.oracleGeneral.zst
+2025-07-21 04:55:27   15382801 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_108.oracleGeneral.zst
+2025-07-21 04:55:20   16825373 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_114.oracleGeneral.zst
+2025-07-21 04:55:24   23186582 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_118.oracleGeneral.zst
+2025-07-21 04:55:26   16775472 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_120.oracleGeneral.zst
+2025-07-21 04:55:26   46411476 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_125.oracleGeneral.zst
+2025-07-21 04:55:23   19472156 cache_dataset_oracleGeneral/2020_alibabaBlock/1M/alibabaBlock_127.oracleGeneral.zst
+2025-07-21 04:55:19      52450 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_297.oracleGeneral.zst
+2025-07-21 04:55:19      86238 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_300.oracleGeneral.zst
+2025-07-21 04:55:19      78762 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_353.oracleGeneral.zst
+2025-07-21 04:55:19      75570 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_419.oracleGeneral.zst
+2025-07-21 04:55:19      51255 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_448.oracleGeneral.zst
+2025-07-21 04:55:19      87557 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_526.oracleGeneral.zst
+2025-07-21 04:55:19      78706 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_684.oracleGeneral.zst
+2025-07-21 04:55:19      20091 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_802.oracleGeneral.zst
+2025-07-21 04:55:19      11461 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_805.oracleGeneral.zst
+2025-07-21 04:55:19      12871 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_812.oracleGeneral.zst
+2025-07-21 04:55:19      32147 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_821.oracleGeneral.zst
+2025-07-21 04:55:19      17568 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_822.oracleGeneral.zst
+2025-07-21 04:55:19      18627 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_832.oracleGeneral.zst
+2025-07-21 04:55:19      18165 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_834.oracleGeneral.zst
+2025-07-21 04:55:19      18573 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_835.oracleGeneral.zst
+2025-07-21 04:55:19      19169 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_836.oracleGeneral.zst
+2025-07-21 04:55:19      18293 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_837.oracleGeneral.zst
+2025-07-21 04:55:19      18256 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_840.oracleGeneral.zst
+2025-07-21 04:55:19      18717 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_842.oracleGeneral.zst
+2025-07-21 04:55:19      18914 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_844.oracleGeneral.zst
+2025-07-21 04:55:19      19407 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_848.oracleGeneral.zst
+2025-07-21 04:55:19      18408 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_849.oracleGeneral.zst
+2025-07-21 04:55:19      18640 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_850.oracleGeneral.zst
+2025-07-21 04:55:19      18406 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_853.oracleGeneral.zst
+2025-07-21 04:55:19      18792 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_859.oracleGeneral.zst
+2025-07-21 04:55:19      18476 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_860.oracleGeneral.zst
+2025-07-21 04:55:19      18688 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_863.oracleGeneral.zst
+2025-07-21 04:55:19      18729 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_868.oracleGeneral.zst
+2025-07-21 04:55:19      18462 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_869.oracleGeneral.zst
+2025-07-21 04:55:19      18390 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_870.oracleGeneral.zst
+2025-07-21 04:55:19      18753 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_871.oracleGeneral.zst
+2025-07-21 04:55:19      18523 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_872.oracleGeneral.zst
+2025-07-21 04:55:19      18616 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_874.oracleGeneral.zst
+2025-07-21 04:55:19      18758 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_876.oracleGeneral.zst
+2025-07-21 04:55:19      18301 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_877.oracleGeneral.zst
+2025-07-21 04:55:19      18559 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_879.oracleGeneral.zst
+2025-07-21 04:55:19      18563 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_883.oracleGeneral.zst
+2025-07-21 04:55:19      50695 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_89.oracleGeneral.zst
+2025-07-21 04:55:19      18084 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_914.oracleGeneral.zst
+2025-07-21 04:55:19       2176 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_979.oracleGeneral.zst
+2025-07-21 04:55:19       2171 cache_dataset_oracleGeneral/2020_alibabaBlock/10K/alibabaBlock_980.oracleGeneral.zst
+2025-07-21 04:55:19       3369 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_758.oracleGeneral.zst
+2025-07-21 04:55:19       5736 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_803.oracleGeneral.zst
+2025-07-21 04:55:20        292 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_809.oracleGeneral.zst
+2025-07-21 04:55:19        996 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_811.oracleGeneral.zst
+2025-07-21 04:55:19       1585 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_816.oracleGeneral.zst
+2025-07-21 04:55:19        407 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_818.oracleGeneral.zst
+2025-07-21 04:55:19        590 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_819.oracleGeneral.zst
+2025-07-21 04:55:20      10431 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_820.oracleGeneral.zst
+2025-07-21 04:55:19       4276 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_890.oracleGeneral.zst
+2025-07-21 04:55:20       4022 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_892.oracleGeneral.zst
+2025-07-21 04:55:19         73 cache_dataset_oracleGeneral/2020_alibabaBlock/1K/alibabaBlock_893.oracleGeneral.zst
+== tencent oracleGeneral tutto (conteggio per cartella)
+    378 cache_dataset_oracleGeneral/2020_tencentBlock
+   1192 cache_dataset_oracleGeneral/2020_tencentBlock/100K
+     64 cache_dataset_oracleGeneral/2020_tencentBlock/10K
+    128 cache_dataset_oracleGeneral/2020_tencentBlock/1K
+   3234 cache_dataset_oracleGeneral/2020_tencentBlock/1M
+alibaba og file 1001 byte 100786284127
+tencent og file 4996 byte 163244704568
+1. Files
+This distribution contains the following files:
+     a) README.txt: this file
+     b) *.tgz: I/O trace files, described below
+     c) md5_check.md5: output of md5sum for tgz files
+
+2. I/O trace files
+There are 216 I/O traces from a warehouse (also called a failure domain) of a production cloud block storage system (CBS). The traces are I/O requests from 5584 cloud virtual volumes (CVVs) for ten days (from Oct. 1st to Oct. 10th, 2018). The I/O requests from the CVVs are mapped and redirected to a storage cluster consists of 40 storage nodes (i.e., disks). 
+
+More information about the CBS architecture is available from the ATC '20 paper titled "OSCA: An Online-Model Based Cache Allocation Scheme in Cloud Block Storage Systems". 
+
+Each trace file is named as <date>.tgz.
+
+The date format consists of year(4 char.), month(2 char.), day(2 char.), and hour(2 char.).
+
+Here is an example file name.
+2018-10-01-01.tgz
+  - year : 2018
+  - month : 10 (Oct.)
+  - day : 1st
+  - hour : 1 AM
+
+3. I/O trace file format
+The files are compressed comma-separated text files leveraging "tar" command. The fields in the files are:
+
+Timestamp,Offset,Size,IOType,VolumeID
+
+  - Timestamp is the time the I/O was issued.
+    The timestamp is given as a Unix time (seconds since 1/1/1970).       
+  - Offset is the starting offset of the I/O in sectors from the start of the logical virtual volume.
+    1 sector = 512 bytes
+  - Size is the transfer size of the I/O request in sectors.
+  - IOType is "Read(0)", "Write(1)".
+  - VolumeID is the ID number of a CVV.
+
+4. Some suggestions on the use of the traces
+In addition to using these traces to examine the issues discussed in the ATC '20 paper, they can be used to analyze:
+
+	(1) the CBS access patterns of CVVs by dividing traces for each CVV using the VolumeID.
+	(2) the architecture optimization of CBS by simulating the mapping of I/O requests to storage nodes.
+
+
+5. Attribution.
+Please cite the publication of the ATC '20 paper mentioned above as a reference in any published work using these traces.
+
