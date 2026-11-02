@@ -1,0 +1,194 @@
+{"label": "main-2m-warm", "case": "ix_nonorder_limit1", "ms": 16961, "rss_before_mb": 363, "peak_mb": 920, "extra_peak_mb": 557, "docs": 1}
+{"label": "main-2m-warm", "case": "or_limit10", "ms": 16451, "rss_before_mb": 361, "peak_mb": 839, "extra_peak_mb": 478, "docs": 10}
+{"label": "main-2m-warm", "case": "ix_nonorder_nolimit", "ms": 22547, "rss_before_mb": 379, "peak_mb": null, "extra_peak_mb": null, "error": "killed by the watchdog at 5008 MB (guard 5000 MB)"}
+Traceback (most recent call last):
+  File "/home/claude/fenvix-engine/tools/fix-piccoli/sortmem.py", line 127, in <module>
+    run(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5] if len(sys.argv) > 5 else None)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/claude/fenvix-engine/tools/fix-piccoli/sortmem.py", line 79, in run
+    c.find_one({"_id": 0})          # opens the tenant
+    ~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/collection.py", line 1728, in find_one
+    for result in cursor.limit(-1):
+                  ~~~~~~~~~~~~^^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 404, in __next__
+    return self.next()
+           ~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 383, in next
+    if len(self._data) or self._refresh():
+                          ~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 334, in _refresh
+    self._send_message(q)
+    ~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 237, in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 1994, in _run_operation
+    return self._retryable_read(
+           ~~~~~~~~~~~~~~~~~~~~^
+        _cmd,
+        ^^^^^
+    ...<4 lines>...
+        operation=operation.name,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+    return self._retry_internal(
+           ~~~~~~~~~~~~~~~~~~~~^
+        func,
+        ^^^^^
+    ...<9 lines>...
+        is_aggregate_write=is_aggregate_write,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+          ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 1992, in _cmd
+    return run_with_conn(conn, operation, read_preference)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor_base.py", line 120, in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+                            ~~~~~~~~~~~~~~~~~~^
+        conn,
+        ^^^^^
+    ...<14 lines>...
+        cursor_id=operation.cursor_id,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py", line 329, in run_cursor_command
+    docs, reply, duration_s = _run_command(
+                              ~~~~~~~~~~~~^
+        conn,
+        ^^^^^
+    ...<16 lines>...
+        cursor_id=cursor_id,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py", line 214, in _run_command
+    helpers_shared._check_command_response(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        response_doc,
+        ^^^^^^^^^^^^^
+    ...<3 lines>...
+        pool_opts=pool_opts,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+pymongo.errors.OperationFailure: tenant bench is owned by server process 15789-d9a96d45 (lease valid for another 28448 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant bench is owned by server process 15789-d9a96d45 (lease valid for another 28448 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWriteError']}
+Traceback (most recent call last):
+  File "/home/claude/fenvix-engine/tools/fix-piccoli/sortmem.py", line 127, in <module>
+    run(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5] if len(sys.argv) > 5 else None)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/claude/fenvix-engine/tools/fix-piccoli/sortmem.py", line 79, in run
+    c.find_one({"_id": 0})          # opens the tenant
+    ~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/collection.py", line 1728, in find_one
+    for result in cursor.limit(-1):
+                  ~~~~~~~~~~~~^^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 404, in __next__
+    return self.next()
+           ~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 383, in next
+    if len(self._data) or self._refresh():
+                          ~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 334, in _refresh
+    self._send_message(q)
+    ~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor.py", line 237, in _send_message
+    response = client._run_operation(operation, self._run_with_conn, address=self._address)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 1994, in _run_operation
+    return self._retryable_read(
+           ~~~~~~~~~~~~~~~~~~~~^
+        _cmd,
+        ^^^^^
+    ...<4 lines>...
+        operation=operation.name,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 2116, in _retryable_read
+    return self._retry_internal(
+           ~~~~~~~~~~~~~~~~~~~~^
+        func,
+        ^^^^^
+    ...<9 lines>...
+        is_aggregate_write=is_aggregate_write,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/_csot.py", line 126, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 2077, in _retry_internal
+    ).run()
+      ~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 2947, in run
+    res = self._read() if self._is_read else self._write()
+          ~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 3187, in _read
+    return self._func(self._session, self._server, conn, read_pref)  # type: ignore
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/mongo_client.py", line 1992, in _cmd
+    return run_with_conn(conn, operation, read_preference)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/helpers.py", line 50, in inner
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/cursor_base.py", line 120, in _run_with_conn
+    docs, reply, duration = run_cursor_command(
+                            ~~~~~~~~~~~~~~~~~~^
+        conn,
+        ^^^^^
+    ...<14 lines>...
+        cursor_id=operation.cursor_id,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py", line 329, in run_cursor_command
+    docs, reply, duration_s = _run_command(
+                              ~~~~~~~~~~~~^
+        conn,
+        ^^^^^
+    ...<16 lines>...
+        cursor_id=cursor_id,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/synchronous/command_runner.py", line 214, in _run_command
+    helpers_shared._check_command_response(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        response_doc,
+        ^^^^^^^^^^^^^
+    ...<3 lines>...
+        pool_opts=pool_opts,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pymongo/helpers_shared.py", line 327, in _check_command_response
+    raise OperationFailure(errmsg, code, response, max_wire_version)
+pymongo.errors.OperationFailure: tenant bench is owned by server process 15789-d9a96d45 (lease valid for another 26714 ms); retry, full error: {'ok': 0.0, 'errmsg': 'tenant bench is owned by server process 15789-d9a96d45 (lease valid for another 26714 ms); retry', 'code': 134, 'codeName': 'TenantLeaseHeld', 'errorLabels': ['RetryableWriteError']}
+{"label": "main-2m-warm", "case": "ix_order_nolimit", "ms": 27108, "rss_before_mb": 362, "peak_mb": 3594, "extra_peak_mb": 3232, "error": "connection lost (process died?)", "exit": null}
+{"label": "main-2m-warm", "case": "ix_nonorder_limit1000", "ms": 16733, "rss_before_mb": 356, "peak_mb": 898, "extra_peak_mb": 542, "docs": 1000}
+{"label": "new-2m-warm", "case": "ix_nonorder_limit1", "ms": 13930, "rss_before_mb": 359, "peak_mb": 402, "extra_peak_mb": 43, "docs": 1}
+{"label": "new-2m-warm", "case": "or_limit10", "ms": 14886, "rss_before_mb": 353, "peak_mb": 407, "extra_peak_mb": 54, "docs": 10}
+{"label": "new-2m-warm", "case": "ix_nonorder_nolimit", "ms": 9608, "rss_before_mb": 352, "peak_mb": 1705, "extra_peak_mb": 1353, "error": 292}
+{"label": "new-2m-warm", "case": "coll_nolimit", "ms": 9391, "rss_before_mb": 357, "peak_mb": 1581, "extra_peak_mb": 1224, "error": 292}
+{"label": "new-2m-warm", "case": "ix_order_nolimit", "ms": 34072, "rss_before_mb": 357, "peak_mb": null, "extra_peak_mb": null, "error": "killed by the watchdog at 5051 MB (guard 5000 MB)"}
+{"label": "new-2m-warm", "case": "ix_nonorder_limit1000", "ms": 13440, "rss_before_mb": 359, "peak_mb": 405, "extra_peak_mb": 46, "docs": 1000}
+{"label": "main-2m-warm", "case": "coll_nolimit", "ms": 26756, "rss_before_mb": 352, "peak_mb": 3601, "extra_peak_mb": 3249, "error": "client: ProtocolError: Message length (236876966) is larger than server max message size (48000000)", "exit": null}
