@@ -1,0 +1,8 @@
+{"codice":"4+1","taglia":4096,"codifica_us":0.7,"codifica_mb_s":6049,"decodifica_us":336.5,"decodifica_mb_s":12,"solo_dati_us":0.2}
+{"codice":"4+1","taglia":65536,"codifica_us":8.3,"codifica_mb_s":7915,"decodifica_us":449.8,"decodifica_mb_s":146,"solo_dati_us":2.0}
+{"codice":"4+1","taglia":1048576,"codifica_us":311.8,"codifica_mb_s":3363,"decodifica_us":1175.3,"decodifica_mb_s":892,"solo_dati_us":78.9}
+{"codice":"4+1","taglia":16777216,"codifica_us":14823.6,"codifica_mb_s":1132,"decodifica_us":48854.3,"decodifica_mb_s":343,"solo_dati_us":3281.9}
+{"codice":"8+2","taglia":4096,"codifica_us":1.0,"codifica_mb_s":4306,"decodifica_us":359.6,"decodifica_mb_s":11,"solo_dati_us":0.3}
+{"codice":"8+2","taglia":65536,"codifica_us":14.6,"codifica_mb_s":4503,"decodifica_us":493.3,"decodifica_mb_s":133,"solo_dati_us":1.9}
+{"codice":"8+2","taglia":1048576,"codifica_us":371.8,"codifica_mb_s":2820,"decodifica_us":1778.1,"decodifica_mb_s":590,"solo_dati_us":81.3}
+{"codice":"8+2","taglia":16777216,"codifica_us":15726.5,"codifica_mb_s":1067,"decodifica_us":50404.1,"decodifica_mb_s":333,"solo_dati_us":3294.1}
