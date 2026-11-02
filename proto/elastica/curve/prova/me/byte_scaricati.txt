@@ -1,0 +1,4 @@
+cache_dataset_lcs/metaKV/202401_kv_traces_all_sort.csv.lcs.sample0.01.zst 69150661
+cache_dataset_lcs/metaKV/202206_kv_traces_all.csv.lcs.sample0.01.zst 69945776
+cache_dataset_lcs/metaKV/202210_kv_traces_all_sort.csv.lcs.sample0.01.zst 63070835
+cache_dataset_lcs/metaKV/202312_kv_traces_all.csv.lcs.sample0.01.zst 365065453
