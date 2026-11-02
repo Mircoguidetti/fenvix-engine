@@ -1,0 +1,7 @@
+te6025 fmt=lcs v2 n=8815667 minuti=13020 t_first=1538323200 t_last=1539104399 letture=1459619 scritture=7356048
+te7994 fmt=lcs v2 n=6132806 minuti=13020 t_first=1538323200 t_last=1539104396 letture=87292 scritture=6045514
+te17755 fmt=lcs v2 n=8803090 minuti=13020 t_first=1538323201 t_last=1539104398 letture=2846590 scritture=5956500
+te13709 fmt=lcs v2 n=3533151 minuti=13020 t_first=1538323201 t_last=1539104397 letture=3433 scritture=3529718
+te21691 fmt=lcs v2 n=5914499 minuti=13020 t_first=1538323202 t_last=1539104398 letture=1629377 scritture=4285122
+te10268 fmt=lcs v2 n=64553890 minuti=13020 t_first=1538323200 t_last=1539104399 letture=143820 scritture=64410070
+te2303 fmt=lcs v2 n=7562539 minuti=13020 t_first=1538323200 t_last=1539104398 letture=1097580 scritture=6464959

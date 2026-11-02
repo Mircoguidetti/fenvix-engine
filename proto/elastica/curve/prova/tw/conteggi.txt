@@ -1,0 +1,2 @@
+tw26 fmt=og v0 n=15519097 minuti=10637 t_first=0 t_last=638178 letture=15519097 scritture=0
+tw10 fmt=og v0 n=13916365 minuti=10285 t_first=0 t_last=617069 letture=13916365 scritture=0

@@ -1,0 +1,12 @@
+tw26 fmt=og v0 n=15519097 minuti=10637 t_first=0 t_last=638178 letture=15519097 scritture=0
+tw10 fmt=og v0 n=13916365 minuti=10285 t_first=0 t_last=617069 letture=13916365 scritture=0
+tw50 fmt=og v0 n=13983364 minuti=9885 t_first=0 t_last=593071 letture=13983364 scritture=0
+tw53 fmt=og v0 n=26142189 minuti=3085 t_first=0 t_last=185078 letture=26142189 scritture=0
+tw45 fmt=og v0 n=22288116 minuti=10476 t_first=0 t_last=628520 letture=22288116 scritture=0
+tw3 fmt=og v0 n=86950524 minuti=10507 t_first=0 t_last=630361 letture=86950524 scritture=0
+tw35 fmt=og v0 n=182860375 minuti=10409 t_first=0 t_last=624521 letture=182860375 scritture=0
+tw49 fmt=og v0 n=80629860 minuti=10455 t_first=0 t_last=627256 letture=80629860 scritture=0
+tw7 fmt=og v0 n=102714196 minuti=10420 t_first=0 t_last=625171 letture=102714196 scritture=0
+tw13 fmt=og v0 n=82546107 minuti=10420 t_first=0 t_last=625199 letture=82546107 scritture=0
+tw8 fmt=og v0 n=130366285 minuti=10479 t_first=0 t_last=628689 letture=130366285 scritture=0
+tw24 fmt=og v0 n=328062779 minuti=10386 t_first=0 t_last=623154 letture=328062779 scritture=0

@@ -1,0 +1,4 @@
+me202401 fmt=lcs v4 n=12164677 minuti=7202 t_first=0 t_last=432118 letture=10117232 scritture=2047445
+me202206 fmt=lcs v3 n=16486948 minuti=70 t_first=0 t_last=4179 letture=14392856 scritture=2094092
+me202210 fmt=lcs v3 n=13458455 minuti=7202 t_first=0 t_last=432114 letture=11602319 scritture=1856136
+me202312 fmt=lcs v3 n=83052784 minuti=70 t_first=0 t_last=4165 letture=76084045 scritture=6968739

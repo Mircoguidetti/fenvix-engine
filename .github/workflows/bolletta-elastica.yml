@@ -1,0 +1,46 @@
+# M17 bolletta elastica: conteggi per minuto da tracce pubbliche (cacheMon, CC BY 4.0). Solo letture anonime dal
+# bucket pubblico cache-datasets (--no-sign-request): nessun segreto AWS, nessuna risorsa AWS, nessun costo per noi.
+# Un solo innesco: push sul branch proto-bolletta-elastica che cambia proto/elastica/run.json.
+# Tetto di download per parte in proto/elastica/ci/passo.sh (somma 26 GB, limite del prompt 30 GB).
+name: bolletta-elastica
+on:
+  push:
+    branches: [proto-bolletta-elastica]
+    paths: ['proto/elastica/run.json']
+permissions:
+  contents: write
+concurrency:
+  group: fenvix-bolletta-elastica
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [tw, al, te, me]
+    env:
+      PARTE: ${{ matrix.parte }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strumenti
+        run: sudo apt-get -qq update && sudo apt-get -qq install -y zstd >/dev/null && python3 -c "import numpy" || pip install -q --break-system-packages numpy
+      - name: Esegui
+        run: |
+          P=$(python3 -c 'import json;print(json.load(open("proto/elastica/run.json"))["giro"])')
+          PARTI=$(python3 -c 'import json;print(" ".join(json.load(open("proto/elastica/run.json"))["parti"]))')
+          case " $PARTI " in *" $PARTE "*) ;; *) echo "parte $PARTE non richiesta"; exit 0;; esac
+          export GIRO=$P OUT=proto/elastica/curve/$P/$PARTE; mkdir -p $OUT
+          start=$(date +%s)
+          bash proto/elastica/ci/passo.sh 2>&1 | tail -c 100000 > $OUT/log.txt
+          echo "durata_s $(( $(date +%s) - start ))" >> $OUT/log.txt
+      - name: Commit dei risultati
+        if: always()
+        run: |
+          git config user.name "bolletta-elastica-ci"
+          git config user.email "actions@users.noreply.github.com"
+          git add proto/elastica/curve
+          git commit -q -m "elastica: curve della corsa ${{ github.run_id }} parte ${{ matrix.parte }}" || exit 0
+          for i in 1 2 3 4 5; do git pull -q --rebase && git push -q && break; sleep $((RANDOM % 10 + 3)); done
