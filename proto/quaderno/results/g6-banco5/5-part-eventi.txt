@@ -1,0 +1,3 @@
+partizione del leader 2 a 1793641499893
+partizione tolta a 1793641530358
+nuovo leader 0

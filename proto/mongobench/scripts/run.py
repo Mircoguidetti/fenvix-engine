@@ -11,6 +11,9 @@ warm = int(sys.argv[10]) if len(sys.argv) > 10 else 10
 pre = int(sys.argv[11]) if len(sys.argv) > 11 else 100000
 gen_core = os.environ.get('MB_GEN_CORE', '1' if os.environ.get('MB_PIN', '1') == '1' else '0-%d' % (os.cpu_count() - 1))
 uri = subprocess.run(['python3', os.path.join(HERE, 'mongo.py'), mode], capture_output=True, text=True, check=True).stdout.strip().splitlines()[-1]
+# MB_URI_EXTRA: opzioni in più per il driver (per esempio retryWrites=false), solo per le prove di sensibilità
+if os.environ.get('MB_URI_EXTRA'):
+    uri += ('&' if '?' in uri else '/?') + os.environ['MB_URI_EXTRA']
 def mpids():
     o = subprocess.run(['pgrep', '-a', '-x', 'mongod'], capture_output=True, text=True).stdout
     return {l.split('--port ')[1].split()[0]: l.split()[0] for l in o.splitlines()}
@@ -25,7 +28,7 @@ time.sleep(secs - 1)
 c1 = {k: cpu(v) for k, v in ps.items()}; g1 = cpu(g.pid); el = time.time() - t
 o, e = g.communicate()
 r = json.loads(o.strip().splitlines()[-1])
-r.update({'pin': os.environ.get('MB_PIN', '1'), 'cache_gb': os.environ.get('MB_CACHE_GB', '2'), 'mode': mode, 'cpu_core': {k: round((c1[k] - c0[k]) / el, 3) for k in ps}, 'gen_core': round((g1 - g0) / el, 3)})
+r.update({'uri_extra': os.environ.get('MB_URI_EXTRA', ''), 'pin': os.environ.get('MB_PIN', '1'), 'cache_gb': os.environ.get('MB_CACHE_GB', '2'), 'mode': mode, 'cpu_core': {k: round((c1[k] - c0[k]) / el, 3) for k in ps}, 'gen_core': round((g1 - g0) / el, 3)})
 ops = r['ops_per_s'] or 1
 r['us_cpu_per_op'] = {k: round(v * 1e6 / ops, 1) for k, v in r['cpu_core'].items()}
 print(json.dumps(r)); open(out, 'a').write(json.dumps(r) + '\n')

@@ -1,0 +1,6 @@
+{"id": 0, "role": "Leader", "term": 1, "leader": 0, "last_index": 139474, "commit_index": 139471, "commit_pos": 117548066545467393, "durable": 139471, "log_front": 2, "dbs": 1, "keys": 1000, "versions
+{"id": 1, "role": "Follower", "term": 1, "leader": 0, "last_index": 45023, "commit_index": 45015, "commit_pos": 117548062604460039, "durable": 45023, "log_front": 2, "dbs": 1, "keys": 1000, "versions"
+{"id": 2, "role": "Follower", "term": 1, "leader": 0, "last_index": 139561, "commit_index": 139560, "commit_pos": 117548066550054912, "durable": 139560, "log_front": 2, "dbs": 1, "keys": 1000, "versio
+{"id": 0, "role": "Leader", "term": 1, "leader": 0, "last_index": 235563, "commit_index": 235563, "commit_pos": 117548070489292802, "durable": 235563, "log_front": 2, "dbs": 1, "keys": 1000, "versions
+{"id": 1, "role": "Follower", "term": 1, "leader": 0, "last_index": 45023, "commit_index": 45015, "commit_pos": 117548062604460039, "durable": 45023, "log_front": 2, "dbs": 1, "keys": 1000, "versions"
+{"id": 2, "role": "Follower", "term": 1, "leader": 0, "last_index": 235604, "commit_index": 235603, "commit_pos": 117548070491127815, "durable": 235603, "log_front": 2, "dbs": 1, "keys": 1000, "versio

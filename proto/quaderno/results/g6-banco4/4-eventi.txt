@@ -1,0 +1,3 @@
+leader 0, isolata 1
+isolata 1 a 1793641091884
+ricongiunta a 1793641212351
