@@ -85,9 +85,10 @@ impl Server {
         let start = if let Some(Bson::Document(t)) = spec.get("resumeAfter").or_else(|| spec.get("startAfter")) {
             match t.get("_data") {
                 Some(Bson::String(d)) => {
-                    let seq = log.parse_token(d)?;
-                    if let Some(d) = &scope.db {
-                        log.check_born(d, seq)?;
+                    let (seq, who) = log.parse_token(d)?;
+                    if let Some(db) = &scope.db {
+                        log.check_born(db, seq)?;
+                        log.check_same_db(db, who, d)?;
                     }
                     seq
                 }
@@ -116,10 +117,12 @@ impl Server {
                 rest_stages.pop();
             }
         }
+        let scope_db = scope.db.as_deref();
+        let token = log.token(start, scope_db);
         let cur = ChangeCursor { used: Instant::now(), scope, last: start, rest: rest_stages, full, before, expanded, ns: ns.clone(), closed: false };
         let id = self.store_change_cursor(cur);
         let _ = batch;
-        Ok(doc! { "cursor": { "firstBatch": Vec::<Bson>::new(), "postBatchResumeToken": { "_data": log.token(start) }, "id": id, "ns": ns }, "ok": 1.0 })
+        Ok(doc! { "cursor": { "firstBatch": Vec::<Bson>::new(), "postBatchResumeToken": { "_data": token }, "id": id, "ns": ns }, "ok": 1.0 })
     }
 
     pub(crate) fn store_change_cursor(&self, c: ChangeCursor) -> i64 {
@@ -165,7 +168,7 @@ impl Server {
             d.insert("txnNumber", Bson::Int64(*n));
             d.insert("lsid", lsid.clone());
         }
-        d.insert("_id", doc! { "_data": self.dbs.changes.token(e.seq) });
+        d.insert("_id", doc! { "_data": self.dbs.changes.token(e.seq, Some(&s.db)) });
         d.insert("operationType", s.op);
         d.insert("clusterTime", Bson::Timestamp(e.time));
         if cur.expanded {
@@ -276,8 +279,7 @@ impl Server {
             let invalidates = (matches!(e.spec.op, "drop" | "rename") && same_coll)
                 || (e.spec.op == "dropDatabase" && cur.scope.db.as_deref() == Some(e.spec.db.as_str()));
             if invalidates {
-                let mut inv = doc! { "_id": { "_data": log.token(e.seq) }, "operationType": "invalidate", "clusterTime": Bson::Timestamp(e.time), "wallTime": e.wall };
-                inv.insert("_id", doc! { "_data": log.token(e.seq) });
+                let inv = doc! { "_id": { "_data": log.token(e.seq, Some(&e.spec.db)) }, "operationType": "invalidate", "clusterTime": Bson::Timestamp(e.time), "wallTime": e.wall };
                 docs.push(inv);
                 closing = true;
                 break;
@@ -290,7 +292,7 @@ impl Server {
             crate::agg::run_pipeline(docs, &cur.rest, &crate::agg::Foreign::new())?
         };
         cur.last = n_scanned;
-        let token = log.token(n_scanned);
+        let token = log.token(n_scanned, cur.scope.db.as_deref());
         let ns = cur.ns.clone();
         let next_id = if closing { 0 } else { id };
         if !closing {
