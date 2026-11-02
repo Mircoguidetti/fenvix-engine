@@ -9,6 +9,20 @@
 //! The record of a session lives in memory (authoritative while the process runs, kept 30 minutes after the last
 //! use) and, written in the same atomic batch as the statements it describes, in the tenant of the command's
 //! database under `meta/rw/{session}`; after a restart the record is read back from the database of the command.
+//!
+//! The same record holds the outcome of the session's latest multi-document transaction, as mongod's
+//! `config.transactions` does: a commit that writes puts `{number, txn: true, committed: true}` into the batch of the
+//! transaction itself, so the outcome is durable exactly when the transaction is. A `commitTransaction` repeated for a
+//! committed transaction that this process does not remember (a restart, another process) answers ok instead of
+//! `NoSuchTransaction` (whose `TransientTransactionError` label makes the drivers run the whole transaction again). A
+//! commit names no database (it runs on `admin`), so the session's database is found through a small object
+//! `txn-hints/{session}` = `{db}`, written before the first commit with writes of the session (and again after
+//! [`hint_refresh_ms()`] or when the session moves to another database), and always before the batch.
+//!
+//! Cleanup, the logical-session rule (`session_ttl_ms()`, 30 minutes, mongod's `localLogicalSessionTimeoutMinutes`): a
+//! record or a hint idle longer than that counts as absent; a write of a session record deletes, in its own batch, the
+//! expired records of its database (at most every [`sweep_every_ms()`] per database, [`SWEEP_SCAN`] records looked at per
+//! pass, resuming where the last pass stopped); a background pass deletes the expired hints every [`sweep_every_ms()`].
 
 use crate::cmd::Server;
 use crate::coll::Writes;
@@ -17,13 +31,40 @@ use bson::{doc, Bson, Document};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
+use object_store::{ObjectStore, ObjectStoreExt};
 use tenant_bench::lifecycle::Op;
 use tokio::sync::{Mutex as AMutex, OwnedMutexGuard};
 
 type R<T> = Result<T, MongoError>;
 
 /// Idle time after which a logical session (and with it the record of its writes) expires.
-const SESSION_TTL_MS: i64 = 30 * 60 * 1000;
+const SESSION_TTL_DEFAULT_MS: i64 = 30 * 60 * 1000;
+
+/// The session TTL: 30 minutes, or for the tests only `MONGO_TEST_SESSION_TTL_MS` (honoured only with
+/// `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`). The hint refresh and the cleanup period scale with it (a third of it).
+fn session_ttl_ms() -> i64 {
+    static TTL: std::sync::OnceLock<i64> = std::sync::OnceLock::new();
+    *TTL.get_or_init(|| {
+        if std::env::var("MONGO_ALLOW_UNSAFE_TEST_FLAGS").as_deref() == Ok("1") {
+            if let Some(ms) = std::env::var("MONGO_TEST_SESSION_TTL_MS").ok().and_then(|v| v.parse::<i64>().ok()).filter(|v| *v > 0) {
+                return ms;
+            }
+        }
+        SESSION_TTL_DEFAULT_MS
+    })
+}
+/// A session's hint is written again after this time (10 minutes), so a live session's hint is never older than the TTL.
+fn hint_refresh_ms() -> i64 {
+    session_ttl_ms() / 3
+}
+/// Expired session records of a database, and expired hints, are removed at most this often (10 minutes).
+fn sweep_every_ms() -> i64 {
+    session_ttl_ms() / 3
+}
+/// Session records looked at by one cleanup pass of a database.
+pub const SWEEP_SCAN: usize = 10_000;
+const SESSION_PREFIX: &[u8] = b"meta/rw/";
+const HINTS: &str = "txn-hints";
 /// `uid` of a session created without authentication: the SHA-256 of the empty string.
 const EMPTY_UID_B64: &str = "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=";
 
@@ -31,6 +72,10 @@ const EMPTY_UID_B64: &str = "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=";
 pub struct Registry {
     m: Mutex<HashMap<String, Arc<AMutex<Sess>>>>,
     calls: AtomicU64,
+    /// Hints written by this process: session -> (database, when).
+    hinted: Mutex<HashMap<String, (String, i64)>>,
+    /// Cleanup of each database's session records: (last pass, key to resume from).
+    swept: Mutex<HashMap<String, (i64, Vec<u8>)>>,
 }
 
 pub struct Sess {
@@ -129,6 +174,16 @@ fn too_old(number: i64, lsid: &Document, cur: i64, txn: bool) -> MongoError {
 
 fn session_key(key: &str) -> Vec<u8> {
     format!("meta/rw/{key}").into_bytes()
+}
+
+fn hint_path(key: &str) -> object_store::path::Path {
+    object_store::path::Path::from(format!("{HINTS}/{key}"))
+}
+
+/// The record of a committed transaction, written in the transaction's own batch (see the module comment).
+pub fn txn_outcome_op(key: &str, number: i64) -> Op {
+    let rec = doc! { "number": number, "txn": true, "committed": true, "last": now_ms(), "ins": [], "stmts": [] };
+    Op::Put(session_key(key), rec.to_vec().unwrap_or_default())
 }
 
 /// Statement ids of a batch of `n` statements: `stmtIds`, or `stmtId` (default 0) plus the position.
@@ -277,7 +332,7 @@ impl Server {
     fn session_entry(&self, key: &str) -> Arc<AMutex<Sess>> {
         let mut m = self.retry.m.lock().unwrap();
         if self.retry.calls.fetch_add(1, Relaxed) % 512 == 511 {
-            let cutoff = now_ms() - SESSION_TTL_MS;
+            let cutoff = now_ms() - session_ttl_ms();
             m.retain(|_, v| Arc::strong_count(v) > 1 || v.try_lock().map(|s| s.last >= cutoff || s.txn).unwrap_or(true));
         }
         Arc::clone(m.entry(key.to_string()).or_insert_with(|| Arc::new(AMutex::new(Sess::new()))))
@@ -291,6 +346,7 @@ impl Server {
             if let Some(bytes) = g.get_live(&session_key(key)).await? {
                 if let Ok(d) = Document::from_reader(&bytes[..]) {
                     s.number = d.get_i64("number").unwrap_or(-1);
+                    s.txn = d.get_bool("txn").unwrap_or(false);
                     s.last = d.get_i64("last").unwrap_or(0);
                     s.ins = d.get_array("ins").map(|a| a.iter().filter_map(|x| if let Bson::Int32(i) = x { Some(*i) } else { None }).collect()).unwrap_or_default();
                     for e in d.get_array("stmts").into_iter().flatten() {
@@ -305,7 +361,7 @@ impl Server {
                 }
             }
         }
-        if s.number >= 0 && s.last < now_ms() - SESSION_TTL_MS {
+        if s.number >= 0 && s.last < now_ms() - session_ttl_ms() {
             s.reset(-1, false);
         }
         Ok(())
@@ -342,5 +398,116 @@ impl Server {
         s.loaded = true;
         s.last = now_ms();
         Ok(())
+    }
+}
+
+impl Server {
+    /// Before the batch of a commit with writes: make sure `txn-hints/{session}` names the transaction's database.
+    pub(crate) async fn txn_hint(&self, key: &str, db: &str) -> R<()> {
+        let now = now_ms();
+        if let Some((d, at)) = self.retry.hinted.lock().unwrap().get(key) {
+            if d == db && now - at < hint_refresh_ms() {
+                return Ok(());
+            }
+        }
+        let body = doc! { "db": db, "last": now }.to_vec().unwrap_or_default();
+        self.dbs.store().put(&hint_path(key), bytes::Bytes::from(body).into()).await.map_err(|e| MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}")))?;
+        let mut h = self.retry.hinted.lock().unwrap();
+        if h.len() > 100_000 {
+            h.retain(|_, (_, at)| now - *at < hint_refresh_ms());
+        }
+        h.insert(key.to_string(), (db.to_string(), now));
+        Ok(())
+    }
+
+    /// The latest transaction of a session as stored by its commit: `(number, committed)`, found through the session's
+    /// hint, or `None` (no hint, no record, or expired). Used when this process does not remember the transaction.
+    pub(crate) async fn txn_stored_outcome(&self, key: &str) -> R<Option<(i64, bool)>> {
+
+        let now = now_ms();
+        let db = match self.dbs.store().get(&hint_path(key)).await {
+            Ok(r) => {
+                let bytes = r.bytes().await.map_err(|e| MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}")))?;
+                match Document::from_reader(&bytes[..]) {
+                    Ok(d) if d.get_i64("last").map(|l| l >= now - session_ttl_ms()).unwrap_or(false) => d.get_str("db").unwrap_or("").to_string(),
+                    _ => return Ok(None),
+                }
+            }
+            Err(object_store::Error::NotFound { .. }) => return Ok(None),
+            Err(e) => return Err(MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}"))),
+        };
+        if !crate::dbs::valid_db_name(&db) {
+            return Ok(None);
+        }
+        let mut g = self.dbs.lock(&db).await;
+        let Some(bytes) = g.get_live(&session_key(key)).await? else { return Ok(None) };
+        let Ok(d) = Document::from_reader(&bytes[..]) else { return Ok(None) };
+        if d.get_i64("last").unwrap_or(0) < now - session_ttl_ms() || !d.get_bool("txn").unwrap_or(false) {
+            return Ok(None);
+        }
+        Ok(Some((d.get_i64("number").unwrap_or(-1), d.get_bool("committed").unwrap_or(false))))
+    }
+
+    /// Deletes of the expired session records of `db`, for the batch that writes the record of `keep` (see the module
+    /// comment). Empty unless a pass is due.
+    pub(crate) async fn session_sweep_ops(&self, g: &mut crate::dbs::Entry, db: &str, keep: &str) -> Vec<Op> {
+        let now = now_ms();
+        let from = {
+            let sw = self.retry.swept.lock().unwrap();
+            match sw.get(db) {
+                Some((at, _)) if now - at < sweep_every_ms() => return Vec::new(),
+                Some((_, k)) => k.clone(),
+                None => SESSION_PREFIX.to_vec(),
+            }
+        };
+        let end = crate::keyenc::prefix_end(SESSION_PREFIX);
+        let rows = match g.scan_range_live(&from, end.as_deref(), Some(SWEEP_SCAN)).await {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("session records of {db}: cleanup skipped: {e:#}");
+                return Vec::new();
+            }
+        };
+        // a full page: the next pass resumes after it; a short one reached the end: the next starts over
+        let next = if rows.len() >= SWEEP_SCAN { rows.last().map(|(k, _)| { let mut k = k.to_vec(); k.push(0); k }).unwrap_or_else(|| SESSION_PREFIX.to_vec()) } else { SESSION_PREFIX.to_vec() };
+        self.retry.swept.lock().unwrap().insert(db.to_string(), (now, next));
+        let keep = session_key(keep);
+        rows.into_iter()
+            .filter(|(k, v)| k.as_ref() != keep.as_slice() && Document::from_reader(&v[..]).map(|d| d.get_i64("last").unwrap_or(0) < now - session_ttl_ms()).unwrap_or(true))
+            .map(|(k, _)| Op::Delete(k.to_vec()))
+            .collect()
+    }
+
+    /// Every [`sweep_every_ms()`]: delete the hints not written for longer than the session TTL.
+    pub fn spawn_txn_hint_sweeper(self: &Arc<Self>) {
+        let me = Arc::clone(self);
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(std::time::Duration::from_millis(sweep_every_ms() as u64)).await;
+                if let Err(e) = me.sweep_txn_hints().await {
+                    eprintln!("transaction hints: cleanup failed: {e:#}");
+                }
+            }
+        });
+    }
+
+    /// One pass of the hint cleanup; returns the number of hints deleted.
+    pub async fn sweep_txn_hints(&self) -> anyhow::Result<usize> {
+        use futures::TryStreamExt;
+        let store = self.dbs.store();
+        let cutoff = now_ms() - session_ttl_ms();
+        let old: Vec<object_store::path::Path> = store
+            .list(Some(&object_store::path::Path::from(HINTS)))
+            .try_filter(|m| futures::future::ready(m.last_modified.timestamp_millis() < cutoff))
+            .map_ok(|m| m.location)
+            .try_collect()
+            .await?;
+        let mut n = 0;
+        for p in old {
+            if store.delete(&p).await.is_ok() {
+                n += 1;
+            }
+        }
+        Ok(n)
     }
 }

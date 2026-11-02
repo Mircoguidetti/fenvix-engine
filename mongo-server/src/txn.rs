@@ -225,13 +225,28 @@ impl Server {
         };
         let txn = {
             let retry_n = self.retry_session_number(&tc.lsid).await;
+            let unknown = {
+                let mut m = self.sessions.m.lock().unwrap();
+                match m.get_mut(&tc.lsid) {
+                    None => Some(retry_n),
+                    Some(s) if s.number > tc.number => return Err(too_old(&tc, s.number)),
+                    Some(s) if s.number != tc.number => Some(s.number.max(retry_n)),
+                    Some(_) => None,
+                }
+            };
+            // this process does not remember the transaction (a restart, or it ran on another process): its commit may
+            // still be stored; a repeated commit of a committed transaction answers ok, as on mongod
+            if let Some(active) = unknown {
+                return match self.txn_stored_outcome(&tc.lsid).await? {
+                    Some((n, true)) if n == tc.number => Ok(ok()),
+                    Some((n, _)) if n > tc.number => Err(too_old(&tc, n)),
+                    _ => Err(no_such(given_msg(&tc, active))),
+                };
+            }
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
                 return Err(no_such(given_msg(&tc, retry_n)));
             };
-            if s.number > tc.number {
-                return Err(too_old(&tc, s.number));
-            }
             if s.number != tc.number {
                 return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
             }
@@ -258,13 +273,25 @@ impl Server {
         for e in events.iter_mut() {
             e.txn = Some((txn.number, lsid.clone()));
         }
-        let mut g = self.dbs.lock(&txn.db).await;
+        // a commit that writes stores its outcome in its own batch (retry.rs); the session's hint goes first
+        let writes = txn.w.has_writes();
+        let hinted = if writes { self.txn_hint(&tc.lsid, &txn.db).await } else { Ok(()) };
+        let db = txn.db.clone();
+        let mut g = self.dbs.lock(&db).await;
         let conflict = txn.w.ov.keys().any(|k| g.modified_after(k, txn.seq));
-        let result = if conflict {
+        let result = if let Err(e) = hinted {
+            Err(e)
+        } else if conflict {
             Err(MongoError::write_conflict())
         } else {
             match txn.w.final_ops() {
-                Ok(ops) => g.apply(ops).await.map_err(MongoError::from).map(|_| self.dbs.changes.publish(events)),
+                Ok(mut ops) => {
+                    if writes {
+                        ops.push(crate::retry::txn_outcome_op(&tc.lsid, txn.number));
+                        ops.extend(self.session_sweep_ops(&mut g, &db, &tc.lsid).await);
+                    }
+                    g.apply(ops).await.map_err(MongoError::from).map(|_| self.dbs.changes.publish(events))
+                }
                 Err(e) => Err(e),
             }
         };
@@ -284,6 +311,15 @@ impl Server {
         };
         let taken = {
             let retry_n = self.retry_session_number(&tc.lsid).await;
+            let known = self.sessions.m.lock().unwrap().get(&tc.lsid).map(|s| s.number);
+            if known.map_or(true, |n| n < tc.number) {
+                // not remembered here: an abort of a transaction whose commit is stored is refused, as on mongod
+                if let Some((n, true)) = self.txn_stored_outcome(&tc.lsid).await? {
+                    if n == tc.number {
+                        return Err(MongoError::new(256, "TransactionCommitted", format!("Transaction {} has been committed.", tc.number)));
+                    }
+                }
+            }
             let mut m = self.sessions.m.lock().unwrap();
             let Some(s) = m.get_mut(&tc.lsid) else {
                 return Err(no_such(given_msg(&tc, retry_n)));
