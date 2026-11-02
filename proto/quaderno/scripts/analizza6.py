@@ -9,7 +9,8 @@ ev = open(sys.argv[2]).read()
 ts = [int(x) for x in re.findall(r'(\d{12,})', ev)]
 t_stop, t_cont = ts[0], ts[1]
 soglia = float(sys.argv[3]) if len(sys.argv) > 3 else 30.0
-start = t_stop - 120_000
+import os
+start = t_stop - int(os.environ.get("PRE", "120")) * 1000  # giro 4: PRE come in banco6.sh
 print(f"sospensione a t={(t_stop-start)/1000:.0f}s, ripresa a t={(t_cont-start)/1000:.0f}s, blocco {(t_cont-t_stop)/1000:.0f}s")
 rec_t = None
 mx = {'rss': 0, 'mem': 0, 'disk': 0}

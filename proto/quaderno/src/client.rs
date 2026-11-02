@@ -276,6 +276,108 @@ impl Cluster {
         }
     }
 
+    /// Lotto di commit in un messaggio solo (giro 4). Stessa logica di `commit` per ogni commit del lotto: quelli
+    /// rifiutati dal freno si ritentano insieme dopo l'attesa; NotLeader, ambiguo, tempo scaduto valgono per tutto il
+    /// lotto. Con un solo commit usa la richiesta normale.
+    pub async fn commit_batch(&self, cs: &[CommitReq], deadline: Duration) -> Vec<Outcome> {
+        if cs.len() == 1 {
+            return vec![self.commit(&cs[0], deadline).await];
+        }
+        let start = Instant::now();
+        let n = cs.len();
+        let mut out: Vec<Option<Outcome>> = vec![None; n];
+        // per commit: tentativi, ambiguo, rifiuti del freno, ultimo motivo di rifiuto
+        let mut st: Vec<(u32, bool, u32, Option<u8>)> = vec![(0, false, 0, None); n];
+        let mut target = self.leader_guess();
+        let mut rounds_busy = 0u32;
+        loop {
+            let todo: Vec<usize> = (0..n).filter(|i| out[*i].is_none()).collect();
+            if todo.is_empty() {
+                break;
+            }
+            let left = deadline.saturating_sub(start.elapsed());
+            if left.is_zero() {
+                for i in todo {
+                    out[i] = Some(self.give_up(st[i].3, st[i].1, st[i].2));
+                }
+                break;
+            }
+            let budget = left.min(ATTEMPT);
+            let q = Req::CommitBatch(todo.iter().map(|i| cs[*i].clone()).collect());
+            for i in &todo {
+                st[*i].0 += 1;
+            }
+            let r = self.call(target, &q, budget).await;
+            let per: Vec<Result<Resp, CallErr>> = match r {
+                Ok(Resp::Batch(v)) if v.len() == todo.len() => v.into_iter().map(Ok).collect(),
+                Ok(Resp::Batch(v)) => panic!("lotto di {} commit, {} esiti", todo.len(), v.len()),
+                Ok(x) => vec![Ok(x); todo.len()],
+                Err(e) => vec![Err(e); todo.len()],
+            };
+            let mut switch: Option<i32> = None;
+            let mut retry: Option<u32> = None;
+            for (j, i) in todo.iter().enumerate() {
+                let s = &mut st[*i];
+                match &per[j] {
+                    Ok(Resp::Committed(p)) => {
+                        self.leader.store(target as i32, Relaxed);
+                        self.note_pos(*p);
+                        out[*i] = Some(Outcome::Committed { pos: *p, attempts: s.0, ambiguous: s.1, busy: s.2 });
+                    }
+                    Ok(Resp::Conflict(k)) => out[*i] = Some(Outcome::Conflict(k.clone())),
+                    Ok(Resp::Busy { retry_ms, reason }) => {
+                        s.2 += 1;
+                        s.3 = Some(*reason);
+                        retry = Some(retry.unwrap_or(0).max(*retry_ms));
+                    }
+                    Ok(Resp::NotLeader(h)) => switch = Some(*h),
+                    Ok(Resp::Ambiguous) | Err(_) => {
+                        let d = &self.diag;
+                        match &per[j] {
+                            Ok(_) => d.amb_resp.fetch_add(1, Relaxed),
+                            Err(CallErr::Closed) => d.closed.fetch_add(1, Relaxed),
+                            Err(_) if budget < ATTEMPT => d.to_short.fetch_add(1, Relaxed),
+                            Err(_) => d.to_full.fetch_add(1, Relaxed),
+                        };
+                        s.1 = true;
+                        switch = Some(-1);
+                    }
+                    Ok(other) => panic!("risposta inattesa nel lotto: {other:?}"),
+                }
+            }
+            if let Some(h) = switch {
+                if h >= 0 && h as usize != target {
+                    target = h as usize;
+                    self.leader.store(h, Relaxed);
+                } else {
+                    self.leader.store(-1, Relaxed);
+                    target = (target + 1) % self.n();
+                    tokio::time::sleep(Duration::from_millis(20)).await;
+                }
+                continue;
+            }
+            if let Some(retry_ms) = retry {
+                rounds_busy += 1;
+                let base = ((retry_ms as u64) << (rounds_busy - 1).min(5)).min(2000);
+                let ms = base / 2 + rand::random::<u64>() % (base / 2 + 1);
+                if start.elapsed() + Duration::from_millis(ms) + ATTEMPT > deadline {
+                    for i in 0..n {
+                        if out[i].is_none() {
+                            let o = self.give_up(st[i].3, st[i].1, st[i].2);
+                            if matches!(o, Outcome::Rejected(_)) {
+                                self.diag.rejected_early.fetch_add(1, Relaxed);
+                            }
+                            out[i] = Some(o);
+                        }
+                    }
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(ms)).await;
+            }
+        }
+        out.into_iter().map(|o| o.unwrap()).collect()
+    }
+
     fn give_up(&self, last_busy: Option<u8>, ambiguous: bool, busy: u32) -> Outcome {
         match last_busy {
             Some(r) if !ambiguous => Outcome::Rejected(r),

@@ -51,6 +51,8 @@ pub struct Config {
     pub hb_ms: u64,
     pub seg_bytes: u64,
     pub max_inflight: u64,
+    /// compressione zstd dei messaggi di replica (livello; 0 = spenta). Giro 4
+    pub zstd: i32,
     /// soglie del freno sul disco (registro + dispensa), byte: rallenta, rifiuta, sola lettura (0 = disattivo)
     pub disk_soft: u64,
     pub disk_hard: u64,
@@ -110,13 +112,37 @@ pub struct Sw {
     pub over_1ms: u64,
 }
 
-struct Reply {
+/// Destinatario di una risposta: una richiesta sola, oppure un posto in un lotto (`CommitBatch`). Il lotto parte con
+/// un solo messaggio quando tutti i suoi commit hanno un esito.
+enum Reply {
+    One { conn: UnboundedSender<Vec<u8>>, id: u64 },
+    Part { agg: std::rc::Rc<std::cell::RefCell<Agg>>, k: usize },
+}
+struct Agg {
     conn: UnboundedSender<Vec<u8>>,
     id: u64,
+    res: Vec<Option<Resp>>,
+    left: usize,
 }
 impl Reply {
     fn send(&self, r: &Resp) {
-        let _ = self.conn.send(enc_resp(self.id, r));
+        match self {
+            Reply::One { conn, id } => {
+                let _ = conn.send(enc_resp(*id, r));
+            }
+            Reply::Part { agg, k } => {
+                let mut a = agg.borrow_mut();
+                if a.res[*k].is_some() {
+                    return;
+                }
+                a.res[*k] = Some(r.clone());
+                a.left -= 1;
+                if a.left == 0 {
+                    let v: Vec<Resp> = a.res.drain(..).map(|x| x.unwrap()).collect();
+                    let _ = a.conn.send(enc_resp(a.id, &Resp::Batch(v)));
+                }
+            }
+        }
     }
 }
 
@@ -215,6 +241,9 @@ pub struct Node {
     brake: u8,
     busy_n: u64,
     delayed_n: u64,
+    /// byte dei messaggi di replica prima e dopo la compressione (giro 4)
+    repl_raw: u64,
+    repl_sent: u64,
     txns: HashMap<TxnId, (u64, Pos)>,
     sessions: HashMap<(Bytes, u64), (u64, Pos)>,
     peers: Vec<Peer>,
@@ -517,6 +546,8 @@ impl Node {
             delayq: VecDeque::new(),
             brake: 0,
             busy_n: 0,
+            repl_raw: 0,
+            repl_sent: 0,
             delayed_n: 0,
             txns: HashMap::with_capacity(1 << 21),
             sessions: HashMap::new(),
@@ -847,7 +878,7 @@ impl Node {
             Ev::Peer(Msg::Append { .. }) => 2,
             Ev::Peer(Msg::AppendResp { .. }) => 3,
             Ev::Peer(_) => 4,
-            Ev::Client(_, _, Req::Commit(_)) => 0,
+            Ev::Client(_, _, Req::Commit(_) | Req::CommitBatch(_)) => 0,
             Ev::Client(_, _, Req::Get { .. }) => 1,
             Ev::Client(..) => 15,
             Ev::Disk(..) => 5,
@@ -866,7 +897,17 @@ impl Node {
                 }
             }
             Ev::Peer(m) => self.on_msg(m),
-            Ev::Client(conn, id, q) => self.on_req(Reply { conn, id }, q),
+            Ev::Client(conn, id, Req::CommitBatch(v)) => {
+                if self.role != Role::Leader {
+                    Reply::One { conn, id }.send(&Resp::NotLeader(self.leader));
+                    return;
+                }
+                let agg = std::rc::Rc::new(std::cell::RefCell::new(Agg { conn, id, res: vec![None; v.len()], left: v.len() }));
+                for (k, c) in v.into_iter().enumerate() {
+                    self.on_commit(Reply::Part { agg: agg.clone(), k }, c);
+                }
+            }
+            Ev::Client(conn, id, q) => self.on_req(Reply::One { conn, id }, q),
             Ev::Disk(gen, last) => {
                 if gen == self.gen {
                     let nd = last.min(self.last_index());
@@ -1242,6 +1283,8 @@ impl Node {
         let now = Instant::now();
         let last = self.last_index();
         let hb = Duration::from_millis(self.cfg.hb_ms);
+        // stesso messaggio per le due repliche (caso normale): si comprime una volta sola
+        let mut zcache: Option<((u64, u64, bool), Vec<u8>)> = None;
         for k in 0..self.peers.len() {
             let (next, matched, probing, last_sent, sent_commit) = {
                 let p = &self.peers[k];
@@ -1277,8 +1320,9 @@ impl Node {
             };
             let mut b = BytesMut::with_capacity(256);
             enc_msg(&mut b, &m);
+            let f = self.maybe_compress(&b, &mut zcache, (prev_index, next, probing));
             let p = &mut self.peers[k];
-            let _ = p.tx.send(frame(&b));
+            let _ = p.tx.send(f);
             if !probing {
                 p.next = next;
             }
@@ -1286,6 +1330,34 @@ impl Node {
             p.sent_commit = self.commit;
         }
         self.need_hb = false;
+    }
+
+    /// Compressione dei messaggi di replica (giro 4, `PQ_ZSTD=livello`, 0 = spenta). Solo i messaggi con voci sopra
+    /// 512 byte; se compresso non conviene, si manda in chiaro. Conta i byte prima e dopo.
+    fn maybe_compress(&mut self, b: &[u8], cache: &mut Option<((u64, u64, bool), Vec<u8>)>, key: (u64, u64, bool)) -> Vec<u8> {
+        self.repl_raw += b.len() as u64 + 8;
+        let lvl = self.cfg.zstd;
+        let out = if lvl == 0 || b.len() < 512 {
+            frame(b)
+        } else if let Some((k, f)) = cache.as_ref().filter(|(k, _)| *k == key) {
+            let _ = k;
+            f.clone()
+        } else {
+            let c = zstd::bulk::compress(b, lvl).unwrap_or_default();
+            let f = if !c.is_empty() && c.len() + 5 < b.len() {
+                let mut z = Vec::with_capacity(c.len() + 5);
+                z.push(MSG_ZSTD);
+                z.extend_from_slice(&(b.len() as u32).to_le_bytes());
+                z.extend_from_slice(&c);
+                frame(&z)
+            } else {
+                frame(b)
+            };
+            *cache = Some((key, f.clone()));
+            f
+        };
+        self.repl_sent += out.len() as u64;
+        out
     }
 
     // -------------------------------------------------------------------------------------------- tempo
@@ -1537,6 +1609,8 @@ impl Node {
             alarm: self.alarm,
             brake: self.brake,
             busy: self.busy_n + self.sh.fast_busy.load(std::sync::atomic::Ordering::Relaxed),
+            repl_raw: self.repl_raw,
+            repl_sent: self.repl_sent,
             delayed: self.delayed_n,
             diag: format!(
                 "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
@@ -1589,7 +1663,7 @@ impl Node {
                 self.pending.entry(idx).or_default().push(reply);
             }
             // servite dai thread di rete (serve_local): qui non arrivano
-            Req::Get { .. } | Req::Scan { .. } | Req::Wait { .. } | Req::Flushable { .. } | Req::Pending { .. } | Req::FlushState { .. } | Req::Status => {
+            Req::CommitBatch(_) | Req::Get { .. } | Req::Scan { .. } | Req::Wait { .. } | Req::Flushable { .. } | Req::Pending { .. } | Req::FlushState { .. } | Req::Status => {
                 reply.send(&Resp::Err("richiesta servita dai thread di rete".into()));
             }
             Req::Dump { from_index, max } => {
@@ -1880,7 +1954,7 @@ fn serve_local(sh: &Arc<Shared>, conn: &UnboundedSender<Vec<u8>>, id: u64, q: Re
             send(Resp::FlushState(v));
             None
         }
-        Req::Commit(_) if sh.brake.load(std::sync::atomic::Ordering::Relaxed) >= 2 => {
+        Req::Commit(_) | Req::CommitBatch(_) if sh.brake.load(std::sync::atomic::Ordering::Relaxed) >= 2 => {
             // freno che rifiuta: risposta subito, dal thread di rete. Il commit non entra nel registro: errore
             // ritentabile pulito, come il rifiuto del thread principale (stessi tempi di attesa suggeriti)
             let b = sh.brake.load(std::sync::atomic::Ordering::Relaxed);

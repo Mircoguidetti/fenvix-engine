@@ -385,7 +385,18 @@ pub fn enc_msg(b: &mut BytesMut, m: &Msg) {
     }
 }
 
+/// Primo byte di un messaggio tra repliche compresso con zstd (giro 4): poi lunghezza originale u32 e dati compressi.
+pub const MSG_ZSTD: u8 = 0x5a;
+
 pub fn dec_msg(body: Bytes) -> R<Msg> {
+    if body.first() == Some(&MSG_ZSTD) {
+        if body.len() < 5 {
+            return Err(Short);
+        }
+        let n = u32::from_le_bytes(body[1..5].try_into().unwrap()) as usize;
+        let raw = zstd::bulk::decompress(&body[5..], n).map_err(|_| Short)?;
+        return dec_msg(Bytes::from(raw));
+    }
     let mut r = Rd::new(body.clone());
     Ok(match r.u8()? {
         1 => {
@@ -425,6 +436,9 @@ pub fn dec_msg(body: Bytes) -> R<Msg> {
 #[derive(Clone, Debug)]
 pub enum Req {
     Commit(CommitReq),
+    /// giro 4, lotti: più commit in un messaggio dal cameriere al capo. Risposta: `Resp::Batch` con un esito per
+    /// commit, nello stesso ordine; oppure una risposta sola (NotLeader, Busy) che vale per tutti
+    CommitBatch(Vec<CommitReq>),
     /// get(db, chiave, S). `spec` = lettura speculativa dal leader (ultima versione accettata, anche non ancora
     /// confermata): aggiunta del prototipo per la modalità validata sulla chiave calda, vedi INTERFACCIA.md
     /// `dal` (facoltativo, 0 = assente): posizione `scaricato` del manifest che chi legge userà; serve a non contare
@@ -540,6 +554,11 @@ pub struct Status {
     pub busy: u64,
     #[serde(default)]
     pub delayed: u64,
+    /// byte dei messaggi di replica mandati dal leader, prima e dopo la compressione (giro 4)
+    #[serde(default)]
+    pub repl_raw: u64,
+    #[serde(default)]
+    pub repl_sent: u64,
 }
 
 #[derive(Clone, Debug)]
@@ -563,6 +582,8 @@ pub enum Resp {
     /// `reason`: 1 rallentato (coda piena), 2 disco, 3 sola lettura, 4 memoria. Equivale a un errore MongoDB con
     /// etichetta RetryableWriteError
     Busy { retry_ms: u32, reason: u8 },
+    /// esiti di un `CommitBatch`, uno per commit
+    Batch(Vec<Resp>),
 }
 
 fn enc_getres(b: &mut BytesMut, g: &GetRes) {
@@ -599,6 +620,37 @@ fn dec_getres(r: &mut Rd) -> R<GetRes> {
     })
 }
 
+fn enc_commit(b: &mut BytesMut, c: &CommitReq) {
+    b.put_slice(&c.txn);
+    b.put_slice(&c.db);
+    b.put_u64_le(c.read_pos);
+    b.put_u8(c.mode as u8);
+    enc_writes(b, &c.writes);
+    b.put_u16_le(c.reads.len() as u16);
+    for (k, d) in &c.reads {
+        put16(b, k);
+        b.put_u8(*d as u8);
+    }
+    enc_session(b, &c.session);
+}
+
+fn dec_commit(r: &mut Rd) -> R<CommitReq> {
+    let txn = r.a16()?;
+    let db = r.a16()?;
+    let read_pos = r.u64()?;
+    let mode = if r.u8()? == 0 { Mode::Validated } else { Mode::Blind };
+    let writes = dec_writes(r)?;
+    let n = r.u16()? as usize;
+    let mut reads = Vec::with_capacity(n);
+    for _ in 0..n {
+        let k = r.bytes16()?;
+        let d = if r.u8()? == 0 { Dep::Esiste } else { Dep::Valore };
+        reads.push((k, d));
+    }
+    let session = dec_session(r)?;
+    Ok(CommitReq { txn, db, read_pos, mode, writes, reads, session })
+}
+
 /// corpo della richiesta: id u64 | tag | campi
 pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
     let mut b = BytesMut::with_capacity(64);
@@ -606,17 +658,14 @@ pub fn enc_req(id: u64, q: &Req) -> Vec<u8> {
     match q {
         Req::Commit(c) => {
             b.put_u8(1);
-            b.put_slice(&c.txn);
-            b.put_slice(&c.db);
-            b.put_u64_le(c.read_pos);
-            b.put_u8(c.mode as u8);
-            enc_writes(&mut b, &c.writes);
-            b.put_u16_le(c.reads.len() as u16);
-            for (k, d) in &c.reads {
-                put16(&mut b, k);
-                b.put_u8(*d as u8);
+            enc_commit(&mut b, c);
+        }
+        Req::CommitBatch(v) => {
+            b.put_u8(12);
+            b.put_u32_le(v.len() as u32);
+            for c in v {
+                enc_commit(&mut b, c);
             }
-            enc_session(&mut b, &c.session);
         }
         Req::Get { db, key, at, wait_ms, spec, dal } => {
             b.put_u8(2);
@@ -685,21 +734,14 @@ pub fn dec_req(body: Bytes) -> R<(u64, Req)> {
     let mut r = Rd::new(body);
     let id = r.u64()?;
     let q = match r.u8()? {
-        1 => {
-            let txn = r.a16()?;
-            let db = r.a16()?;
-            let read_pos = r.u64()?;
-            let mode = if r.u8()? == 0 { Mode::Validated } else { Mode::Blind };
-            let writes = dec_writes(&mut r)?;
-            let n = r.u16()? as usize;
-            let mut reads = Vec::with_capacity(n);
+        1 => Req::Commit(dec_commit(&mut r)?),
+        12 => {
+            let n = r.u32()? as usize;
+            let mut v = Vec::with_capacity(n.min(1 << 12));
             for _ in 0..n {
-                let k = r.bytes16()?;
-                let d = if r.u8()? == 0 { Dep::Esiste } else { Dep::Valore };
-                reads.push((k, d));
+                v.push(dec_commit(&mut r)?);
             }
-            let session = dec_session(&mut r)?;
-            Req::Commit(CommitReq { txn, db, read_pos, mode, writes, reads, session })
+            Req::CommitBatch(v)
         }
         2 => Req::Get { db: r.a16()?, key: r.bytes16()?, at: r.u64()?, wait_ms: r.u32()?, spec: r.u8()? != 0, dal: r.u64()? },
         3 => Req::Scan { db: r.a16()?, from: r.bytes16()?, to: r.bytes16()?, at: r.u64()?, limit: r.u32()?, wait_ms: r.u32()?, dal: r.u64()? },
@@ -832,6 +874,15 @@ pub fn enc_resp(id: u64, s: &Resp) -> Vec<u8> {
             b.put_u32_le(*retry_ms);
             b.put_u8(*reason);
         }
+        Resp::Batch(v) => {
+            b.put_u8(16);
+            b.put_u32_le(v.len() as u32);
+            for x in v {
+                // ogni esito come una risposta intera (senza intestazione del frame)
+                let f = enc_resp(0, x);
+                put32(&mut b, &f[8..]);
+            }
+        }
     }
     frame(&b)
 }
@@ -899,6 +950,14 @@ pub fn dec_resp(body: Bytes) -> R<(u64, Resp)> {
         }
         13 => Resp::Err(String::from_utf8_lossy(&r.bytes16()?).into_owned()),
         15 => Resp::Busy { retry_ms: r.u32()?, reason: r.u8()? },
+        16 => {
+            let n = r.u32()? as usize;
+            let mut v = Vec::with_capacity(n.min(1 << 12));
+            for _ in 0..n {
+                v.push(dec_resp(r.bytes32()?)?.1);
+            }
+            Resp::Batch(v)
+        }
         _ => return Err(Short),
     };
     Ok((id, s))
@@ -916,6 +975,47 @@ mod tests {
         assert_eq!((d.term, d.index, d.pos), (3, 9, pos_make(1000, 5)));
         match d.body {
             Body::Rec { writes, .. } => assert_eq!(writes[0].val.len(), 200),
+            _ => panic!(),
+        }
+    }
+    #[test]
+    fn batch_roundtrip() {
+        let c = |n: u8| CommitReq { txn: [n; 16], db: [2; 16], read_pos: 7, mode: Mode::Validated, writes: vec![Write { key: Bytes::from_static(b"k"), kind: Kind::Put, val: Bytes::from(vec![n; 30]) }], reads: vec![], session: None };
+        let f = enc_req(5, &Req::CommitBatch(vec![c(1), c(2), c(3)]));
+        let (id, q) = dec_req(Bytes::from(f[8..].to_vec())).unwrap();
+        assert_eq!(id, 5);
+        match q {
+            Req::CommitBatch(v) => assert_eq!(v.iter().map(|x| x.txn[0]).collect::<Vec<_>>(), vec![1, 2, 3]),
+            _ => panic!(),
+        }
+        let f = enc_resp(9, &Resp::Batch(vec![Resp::Committed(4), Resp::Busy { retry_ms: 500, reason: 2 }, Resp::Conflict(Bytes::from_static(b"x"))]));
+        let (id, r) = dec_resp(Bytes::from(f[8..].to_vec())).unwrap();
+        assert_eq!(id, 9);
+        match r {
+            Resp::Batch(v) => {
+                assert!(matches!(v[0], Resp::Committed(4)));
+                assert!(matches!(v[1], Resp::Busy { retry_ms: 500, reason: 2 }));
+                assert!(matches!(&v[2], Resp::Conflict(k) if &k[..] == b"x"));
+            }
+            _ => panic!(),
+        }
+    }
+    #[test]
+    fn zstd_msg_roundtrip() {
+        let e = Entry::encode(3, 9, pos_make(1000, 5), Body::Rec { txn: [1; 16], db: [2; 16], session: None, writes: vec![Write { key: Bytes::from_static(b"doc/a"), kind: Kind::Put, val: Bytes::from(vec![7u8; 2000]) }] });
+        let m = Msg::Append { term: 3, leader: 1, prev_index: 8, prev_term: 3, commit: 8, all_match: 8, seq: 4, entries: vec![e.raw.clone()] };
+        let mut b = BytesMut::new();
+        enc_msg(&mut b, &m);
+        let c = zstd::bulk::compress(&b, 1).unwrap();
+        let mut z = vec![MSG_ZSTD];
+        z.extend_from_slice(&(b.len() as u32).to_le_bytes());
+        z.extend_from_slice(&c);
+        assert!(z.len() < b.len() / 4);
+        match dec_msg(Bytes::from(z)).unwrap() {
+            Msg::Append { entries, seq, .. } => {
+                assert_eq!(seq, 4);
+                assert_eq!(entries[0], e.raw);
+            }
             _ => panic!(),
         }
     }

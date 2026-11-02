@@ -95,3 +95,15 @@ valore)], reads: [chiave] (opzionale, vuoto = nessuna), session: (lsid, txnNumbe
   database chiesto.
 - **[proposta di proto-lettura, già compatibile]** un manifest può coprire più database: `conferma_scarico` riceve lo
   stesso etag per tutti (lo scaricatore del prototipo fa già così, 16 gruppi più il database caldo da solo).
+
+## Giro 4 (S16): lotti, freno, compressione
+
+- `CommitBatch(Vec<CommitReq>)`: più commit in un messaggio dal cameriere al capo. Risposta `Batch(Vec<Resp>)` con un
+  esito per commit nello stesso ordine, oppure una risposta sola (`NotLeader`, `Busy`) che vale per tutto il lotto. I
+  commit di un lotto passano dal thread principale in un evento solo, quindi vanno nello stesso giro di disco
+  (fdatasync) e nello stesso messaggio di replica. Nel registro restano una voce per commit.
+- Freno: con il livello 2 o più i commit (anche in lotto) si rifiutano già nel thread di rete con `Busy`.
+- Client: dopo un `Busy`, se l'attesa suggerita più un tentativo intero (1,5 s) non sta prima della scadenza, il
+  commit finisce subito come rifiutato (errore ritentabile), mai con un ultimo tentativo di pochi ms.
+- Replica compressa (facoltativa, `PQ_ZSTD=livello`): un messaggio tra repliche che inizia con il byte 0x5a è
+  `0x5a | lunghezza originale u32 | zstd(messaggio)`.

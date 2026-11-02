@@ -1071,3 +1071,117 @@ pub async fn esiste_race(cl: Arc<Cluster>, secs: u64, keys: u64, incs: usize, re
                "conflicts_retried": cnt[2].load(Relaxed), "deletes": cnt[3].load(Relaxed), "recreates": cnt[4].load(Relaxed)})
     );
 }
+
+// ================================================================================================ giro 4: lotti
+
+/// Prova dei lotti (metodo del revisore delle idee pazze 3): carico fisso `rate` record/s a ciclo aperto, lotti da
+/// `batch` commit per messaggio (1 = richiesta normale), al più `clients` richieste del cliente in volo (un lotto ne
+/// tiene `batch`). La latenza di un record parte dall'istante pianificato. La CPU del capo la misura lo script, da fuori.
+const WORDS: [&str; 64] = [
+    "alpha", "bravo", "rosso", "verde", "milano", "roma", "torino", "napoli", "ordine", "spedito", "pagato", "annullato",
+    "premium", "base", "pro", "gratis", "mario", "luca", "giulia", "anna", "marco", "sara", "paolo", "elena", "scarpe",
+    "maglia", "zaino", "libro", "tazza", "lampada", "sedia", "tavolo", "nuovo", "usato", "offerta", "saldi", "carta",
+    "bonifico", "paypal", "contanti", "nord", "sud", "est", "ovest", "piccolo", "medio", "grande", "extra", "blu",
+    "nero", "bianco", "giallo", "app", "web", "ios", "android", "admin", "utente", "ospite", "attivo", "sospeso",
+    "chiuso", "aperto", "bozza",
+];
+
+/// Documento JSON "da applicazione" di circa `target` byte (giro 4, prova della compressione): id esadecimali casuali,
+/// date, numeri, parole da un vocabolario piccolo, nomi di campo ripetuti come in una collezione vera (STIMATO
+/// realistico: non è un campione di clienti veri).
+pub fn json_doc(target: usize) -> Bytes {
+    use rand::Rng;
+    let mut g = rand::thread_rng();
+    let w = |g: &mut rand::rngs::ThreadRng| WORDS[g.gen_range(0..WORDS.len())];
+    let mut s = format!(
+        "{{\"_id\":\"{:024x}\",\"userId\":\"{:024x}\",\"createdAt\":\"2026-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z\",\"status\":\"{}\",\"plan\":\"{}\",\"customer\":{{\"name\":\"{} {}\",\"email\":\"{}.{}{}@example.com\",\"city\":\"{}\",\"zip\":\"{:05}\"}},\"payment\":{{\"method\":\"{}\",\"amount\":{}.{:02},\"currency\":\"EUR\"}},\"items\":[",
+        g.gen::<u128>() & ((1u128 << 96) - 1), g.gen::<u128>() & ((1u128 << 96) - 1),
+        g.gen_range(1..13), g.gen_range(1..29), g.gen_range(0..24), g.gen_range(0..60), g.gen_range(0..60), g.gen_range(0..1000),
+        w(&mut g), w(&mut g), w(&mut g), w(&mut g), w(&mut g), w(&mut g), g.gen_range(1..999), w(&mut g), g.gen_range(0..99999),
+        w(&mut g), g.gen_range(1..2000), g.gen_range(0..100)
+    );
+    let mut i = 0;
+    while s.len() < target.saturating_sub(120) {
+        if i > 0 {
+            s.push(',');
+        }
+        s.push_str(&format!(
+            "{{\"sku\":\"{}-{:06}\",\"name\":\"{} {}\",\"qty\":{},\"price\":{}.{:02},\"tags\":[\"{}\",\"{}\"]}}",
+            w(&mut g), g.gen_range(0..1_000_000), w(&mut g), w(&mut g), g.gen_range(1..10), g.gen_range(1..500), g.gen_range(0..100), w(&mut g), w(&mut g)
+        ));
+        i += 1;
+    }
+    s.push_str(&format!("],\"notes\":\"{} {} {}\",\"version\":{}}}", w(&mut g), w(&mut g), w(&mut g), g.gen_range(1..20)));
+    Bytes::from(s)
+}
+
+pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, secs: u64, warm: u64, keys: usize, val: usize, dbs: u64) {
+    // val = 0: documenti JSON da circa 1 KB invece di un valore fisso (prova della compressione)
+    let json = val == 0;
+    let stop = Arc::new(AtomicBool::new(false));
+    let measuring = Arc::new(AtomicBool::new(false));
+    let h = Arc::new(Mutex::new(hist()));
+    let ok = Arc::new(AtomicU64::new(0));
+    let conf = Arc::new(AtomicU64::new(0));
+    let unk = Arc::new(AtomicU64::new(0));
+    let rej = Arc::new(AtomicU64::new(0));
+    let sem = Arc::new(tokio::sync::Semaphore::new(clients.max(batch)));
+    let value = Bytes::from(vec![9u8; val]);
+    let gen = {
+        let (cl, h, ok, conf, unk, rej, sem, measuring, value) = (cl.clone(), h.clone(), ok.clone(), conf.clone(), unk.clone(), rej.clone(), sem.clone(), measuring.clone(), value.clone());
+        open_loop(rate / batch as f64, stop.clone(), move |sched| {
+            let (cl, h, ok, conf, unk, rej, sem, measuring, value) = (cl.clone(), h.clone(), ok.clone(), conf.clone(), unk.clone(), rej.clone(), sem.clone(), measuring.clone(), value.clone());
+            async move {
+                let _permit = sem.acquire_many(batch as u32).await.unwrap();
+                let rp = cl.seen.load(Relaxed);
+                let cs: Vec<CommitReq> = (0..batch)
+                    .map(|_| {
+                        let db = db_id(rand::random::<u64>() % dbs);
+                        let writes = (0..keys)
+                            .map(|_| Write { key: doc_key(&format!("{:016x}", rand::random::<u64>())), kind: Kind::Put, val: if json { json_doc(1024) } else { value.clone() } })
+                            .collect();
+                        CommitReq { txn: txn_id(), db, read_pos: rp, mode: Mode::Validated, writes, reads: vec![], session: None }
+                    })
+                    .collect();
+                let rs = cl.commit_batch(&cs, Duration::from_secs(10)).await;
+                let us = sched.elapsed().as_micros() as u64;
+                if !measuring.load(Relaxed) {
+                    return;
+                }
+                for r in rs {
+                    match r {
+                        Outcome::Committed { .. } => {
+                            ok.fetch_add(1, Relaxed);
+                            h.lock().record(us.max(1)).ok();
+                        }
+                        Outcome::Conflict(_) => {
+                            conf.fetch_add(1, Relaxed);
+                        }
+                        Outcome::Unknown => {
+                            unk.fetch_add(1, Relaxed);
+                        }
+                        Outcome::Rejected(_) => {
+                            rej.fetch_add(1, Relaxed);
+                        }
+                    }
+                }
+            }
+        })
+    };
+    tokio::time::sleep(Duration::from_secs(warm)).await;
+    measuring.store(true, Relaxed);
+    let t0 = Instant::now();
+    tokio::time::sleep(Duration::from_secs(secs)).await;
+    measuring.store(false, Relaxed);
+    let el = t0.elapsed().as_secs_f64();
+    stop.store(true, Relaxed);
+    let _ = gen.await;
+    tokio::time::sleep(Duration::from_secs(1)).await;
+    let n = ok.load(Relaxed) as f64;
+    println!(
+        "{}",
+        json!({"bench": "lotti", "rate": rate, "batch": batch, "clients": clients, "keys_per_rec": keys, "val_bytes": val, "dbs": dbs,
+               "secs": el, "recs_per_s": n / el, "latency": hj(&h.lock()), "conflicts": conf.load(Relaxed),
+               "unknown": unk.load(Relaxed), "rejected": rej.load(Relaxed), "diag": cl.diag.json()})
+    );
+}
