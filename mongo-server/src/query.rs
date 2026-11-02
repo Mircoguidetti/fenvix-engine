@@ -863,6 +863,45 @@ pub fn sort_docs(docs: &mut Vec<Document>, spec: &[(String, bool)]) {
     docs.extend(keyed.into_iter().map(|(_, d)| d));
 }
 
+/// `internalQueryMaxBlockingSortMemoryUsageBytes`: what a sort the plan does not give (a blocking sort) may hold, as in
+/// mongod (100 MB by default; set with `setParameter`).
+pub static SORT_MEM_LIMIT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(100 * 1024 * 1024);
+
+/// Error 292 of mongod for a blocking sort over [`SORT_MEM_LIMIT`]. mongod 6.0+ would spill to disk (allowDiskUse,
+/// on by default); this engine does not, so the error says it, whatever allowDiskUse says.
+pub fn sort_mem_error() -> MongoError {
+    let limit = SORT_MEM_LIMIT.load(std::sync::atomic::Ordering::Relaxed);
+    MongoError::new(
+        292,
+        "QueryExceededMemoryLimitNoDiskUseAllowed",
+        format!("Sort exceeded memory limit of {limit} bytes, but did not opt in to external sorting. This server does not sort on disk (allowDiskUse is not supported): add a limit, an index that gives the order, or a narrower filter."),
+    )
+}
+
+/// The memory a blocking sort counts for a document: its BSON size, as mongod counts it (not this process's own,
+/// larger, in-memory form). Computed without encoding the document.
+pub fn bson_size(d: &Document) -> usize {
+    5 + d.iter().map(|(k, v)| 2 + k.len() + value_size(v)).sum::<usize>()
+}
+
+fn value_size(v: &Bson) -> usize {
+    match v {
+        Bson::Double(_) | Bson::Int64(_) | Bson::DateTime(_) | Bson::Timestamp(_) => 8,
+        Bson::Int32(_) => 4,
+        Bson::Boolean(_) => 1,
+        Bson::Null | Bson::Undefined | Bson::MinKey | Bson::MaxKey => 0,
+        Bson::String(s) | Bson::JavaScriptCode(s) | Bson::Symbol(s) => 5 + s.len(),
+        Bson::Document(d) => bson_size(d),
+        Bson::Array(a) => 5 + a.iter().enumerate().map(|(i, x)| 2 + if i < 10 { 1 } else if i < 100 { 2 } else { 6 } + value_size(x)).sum::<usize>(),
+        Bson::Binary(b) => 5 + b.bytes.len(),
+        Bson::ObjectId(_) => 12,
+        Bson::Decimal128(_) => 16,
+        Bson::RegularExpression(r) => 2 + r.pattern.len() + r.options.len(),
+        Bson::JavaScriptCodeWithScope(c) => 14 + c.code.len() + bson_size(&c.scope),
+        Bson::DbPointer(_) => 24,
+    }
+}
+
 /// The first `k` documents in the order of a sort specification, kept while the documents stream by: memory for `k`
 /// documents, not for every candidate. Same result as [`sort_docs`] on every pushed document followed by a truncation to
 /// `k`: equal sort keys keep their push order (the sort is stable).
@@ -872,12 +911,18 @@ pub struct TopK<'a> {
     seq: u64,
     /// Max-heap on (sort keys, push order): the top is the worst document kept.
     heap: std::collections::BinaryHeap<TopItem<'a>>,
+    /// [`bson_size`] of the documents kept.
+    bytes: usize,
+    /// The `_id` keys of the documents kept, for [`TopK::push_once`].
+    ids: std::collections::HashSet<Vec<u8>>,
 }
 
 struct TopItem<'a> {
     keys: Vec<Bson>,
     seq: u64,
     doc: Document,
+    size: usize,
+    id: Option<Vec<u8>>,
     spec: &'a [(String, bool)],
 }
 
@@ -913,27 +958,56 @@ impl Ord for TopItem<'_> {
 
 impl<'a> TopK<'a> {
     pub fn new(k: usize, spec: &'a [(String, bool)]) -> Self {
-        TopK { k, spec, seq: 0, heap: std::collections::BinaryHeap::with_capacity(k.min(4096) + 1) }
+        TopK { k, spec, seq: 0, heap: std::collections::BinaryHeap::with_capacity(k.min(4096) + 1), bytes: 0, ids: Default::default() }
     }
 
     /// Push the next document (push order breaks ties).
     pub fn push(&mut self, doc: Document) {
         let seq = self.seq;
-        self.push_at(seq, doc);
+        self.push_item(seq, None, doc);
     }
 
     /// Push a document with an explicit position: equal sort keys are ordered by `seq` (a later [`TopK::push`] comes
     /// after every position given so far).
     pub fn push_at(&mut self, seq: u64, doc: Document) {
+        self.push_item(seq, None, doc);
+    }
+
+    /// [`TopK::push_at`] for candidates that may come more than once (a multikey index, the branches of an `$or`), with
+    /// `id` the document's key: the same result as pushing only the first time each document comes, as long as every
+    /// later time comes with a larger `seq` and the same document. Then it is skipped while the first time is kept, and
+    /// otherwise the first time was worse than the `k` kept (same sort keys, smaller `seq`), so the later one is too.
+    /// No list of every candidate seen is needed: memory for `k` documents and their keys.
+    pub fn push_once(&mut self, seq: u64, id: Vec<u8>, doc: Document) {
+        if self.ids.contains(&id) {
+            self.seq = self.seq.max(seq + 1);
+            return;
+        }
+        self.push_item(seq, Some(id), doc);
+    }
+
+    fn push_item(&mut self, seq: u64, id: Option<Vec<u8>>, doc: Document) {
         self.seq = self.seq.max(seq + 1);
         if self.k == 0 {
             return;
         }
-        let item = TopItem { keys: self.spec.iter().map(|(p, asc)| sort_key(&doc, p, *asc)).collect(), seq, doc, spec: self.spec };
+        let size = bson_size(&doc);
+        let item = TopItem { keys: self.spec.iter().map(|(p, asc)| sort_key(&doc, p, *asc)).collect(), seq, doc, size, id, spec: self.spec };
         if self.heap.len() < self.k {
+            self.bytes += item.size;
+            if let Some(id) = &item.id {
+                self.ids.insert(id.clone());
+            }
             self.heap.push(item);
         } else if let Some(mut worst) = self.heap.peek_mut() {
             if item < *worst {
+                self.bytes = self.bytes + item.size - worst.size;
+                if let Some(old) = worst.id.take() {
+                    self.ids.remove(&old);
+                }
+                if let Some(id) = &item.id {
+                    self.ids.insert(id.clone());
+                }
                 *worst = item;
             }
         }
@@ -941,6 +1015,11 @@ impl<'a> TopK<'a> {
 
     pub fn is_full(&self) -> bool {
         self.heap.len() >= self.k
+    }
+
+    /// [`bson_size`] of the documents kept: what mongod's limit on a blocking sort counts.
+    pub fn bytes(&self) -> usize {
+        self.bytes
     }
 
     /// The first sort key of the worst document kept (none while empty).

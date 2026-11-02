@@ -1,0 +1,12 @@
+{"label": "main-2m-warm", "case": "ix_nonorder_limit1", "ms": 16961, "rss_before_mb": 363, "peak_mb": 920, "extra_peak_mb": 557, "docs": 1}
+{"label": "main-2m-warm", "case": "or_limit10", "ms": 16451, "rss_before_mb": 361, "peak_mb": 839, "extra_peak_mb": 478, "docs": 10}
+{"label": "main-2m-warm", "case": "ix_nonorder_nolimit", "ms": 22547, "rss_before_mb": 379, "peak_mb": null, "extra_peak_mb": null, "error": "killed by the watchdog at 5008 MB (guard 5000 MB)"}
+{"label": "main-2m-warm", "case": "ix_order_nolimit", "ms": 27108, "rss_before_mb": 362, "peak_mb": 3594, "extra_peak_mb": 3232, "error": "client error (the process stayed up; same run as coll_nolimit: most likely the same reply over the message size)", "exit": null}
+{"label": "main-2m-warm", "case": "ix_nonorder_limit1000", "ms": 16733, "rss_before_mb": 356, "peak_mb": 898, "extra_peak_mb": 542, "docs": 1000}
+{"label": "new-2m-warm", "case": "ix_nonorder_limit1", "ms": 13930, "rss_before_mb": 359, "peak_mb": 402, "extra_peak_mb": 43, "docs": 1}
+{"label": "new-2m-warm", "case": "or_limit10", "ms": 14886, "rss_before_mb": 353, "peak_mb": 407, "extra_peak_mb": 54, "docs": 10}
+{"label": "new-2m-warm", "case": "ix_nonorder_nolimit", "ms": 9608, "rss_before_mb": 352, "peak_mb": 1705, "extra_peak_mb": 1353, "error": 292}
+{"label": "new-2m-warm", "case": "coll_nolimit", "ms": 9391, "rss_before_mb": 357, "peak_mb": 1581, "extra_peak_mb": 1224, "error": 292}
+{"label": "new-2m-warm", "case": "ix_order_nolimit", "ms": 34072, "rss_before_mb": 357, "peak_mb": null, "extra_peak_mb": null, "error": "killed by the watchdog at 5051 MB (guard 5000 MB)"}
+{"label": "new-2m-warm", "case": "ix_nonorder_limit1000", "ms": 13440, "rss_before_mb": 359, "peak_mb": 405, "extra_peak_mb": 46, "docs": 1000}
+{"label": "main-2m-warm", "case": "coll_nolimit", "ms": 26756, "rss_before_mb": 352, "peak_mb": 3601, "extra_peak_mb": 3249, "error": "client: ProtocolError: Message length (236876966) is larger than server max message size (48000000)", "exit": null}

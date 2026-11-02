@@ -556,6 +556,10 @@ impl NetGuard {
         if crate::ctl::meta::check_name(db).is_err() {
             return Ok(None); // admin, local, config, $external: no tenant, no list
         }
+        // A fork in progress: the branch has no record yet, its source's list applies until the fork ends (ctl/fork.rs).
+        if let Some(l) = crate::ctl::fork::list_while_forking(db) {
+            return Ok(l);
+        }
         let Some(ctl) = crate::ctl::get() else { return Ok(None) };
         let now = Instant::now();
         let cached = self.lists.lock().unwrap().get(db).cloned();
