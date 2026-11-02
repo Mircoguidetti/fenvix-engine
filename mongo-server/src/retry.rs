@@ -18,7 +18,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex};
 use tenant_bench::lifecycle::Op;
-use tokio::sync::{Mutex as AMutex, OwnedMutexGuard};
+use crate::dbs::Entry;
+use tokio::sync::{Mutex as AMutex, OwnedMutexGuard, OwnedRwLockWriteGuard};
 
 type R<T> = Result<T, MongoError>;
 
@@ -236,6 +237,22 @@ impl Run {
 pub struct Begun {
     pub run: Run,
     pub key: String,
+    /// Modo quaderno: il database già preso per leggere il registro della sessione. Il comando continua su questo
+    /// (`take_db`): stessa posizione S, e il registro resta tra le letture dichiarate del commit.
+    held: Option<OwnedRwLockWriteGuard<Entry>>,
+}
+
+impl Server {
+    /// Il database del comando di scrittura. Nel modo quaderno, per una scrittura ritentabile, è quello già preso da
+    /// `retry_begin`: il comando legge alla posizione a cui ha letto il registro della sessione, e il registro è
+    /// dichiarato nel suo commit. Così il capo del quaderno rifiuta il commit se un altro cameriere ha scritto la
+    /// stessa sessione nel frattempo, e il comando rifatto trova la scrittura già fatta (errore 1 del revisore).
+    pub(crate) async fn write_db(&self, db: &str, rr: &mut Option<Begun>) -> OwnedRwLockWriteGuard<Entry> {
+        match rr.as_mut().and_then(|b| b.held.take()) {
+            Some(g) => g,
+            None => self.dbs.lock(db).await,
+        }
+    }
 }
 
 impl Server {
@@ -258,7 +275,7 @@ impl Server {
         let lsid = cmd.get_document("lsid").cloned().unwrap_or_default();
         let sess = self.session_entry(&key);
         let mut guard = sess.lock_owned().await;
-        self.session_load(&mut guard, db, &key).await?;
+        let held = self.session_load(&mut guard, db, &key).await?;
         let mut dirty = false;
         if number < guard.number {
             return Err(too_old(number, &lsid, guard.number, guard.txn));
@@ -271,7 +288,7 @@ impl Server {
             dirty = true;
         }
         guard.last = now_ms();
-        Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty }, key }))
+        Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty }, key, held }))
     }
 
     fn session_entry(&self, key: &str) -> Arc<AMutex<Sess>> {
@@ -284,11 +301,24 @@ impl Server {
     }
 
     /// Read the session's record back from the database on first use after a restart; forget an expired one.
-    async fn session_load(&self, s: &mut Sess, db: &str, key: &str) -> R<()> {
+    ///
+    /// Modo quaderno (prova M8): un altro cameriere può aver scritto la sessione, quindi la memoria non vale niente. Il
+    /// registro si rilegge dal quaderno a ogni comando, e il database preso per leggerlo torna al comando (vedi
+    /// `write_db`), con la lettura dichiarata.
+    async fn session_load(&self, s: &mut Sess, db: &str, key: &str) -> R<Option<OwnedRwLockWriteGuard<Entry>>> {
+        let q = crate::qmode::on();
+        if q {
+            *s = Sess::new();
+        }
+        let mut held = None;
         if !s.loaded {
             s.loaded = true;
             let mut g = self.dbs.lock(db).await;
-            if let Some(bytes) = g.get_live(&session_key(key)).await? {
+            let rec = g.get_live(&session_key(key)).await?;
+            if q {
+                held = Some(g);
+            }
+            if let Some(bytes) = rec {
                 if let Ok(d) = Document::from_reader(&bytes[..]) {
                     s.number = d.get_i64("number").unwrap_or(-1);
                     s.last = d.get_i64("last").unwrap_or(0);
@@ -308,7 +338,7 @@ impl Server {
         if s.number >= 0 && s.last < now_ms() - SESSION_TTL_MS {
             s.reset(-1, false);
         }
-        Ok(())
+        Ok(held)
     }
 
     /// A statement of a transaction (not its start) at a number below the session's latest retryable write.

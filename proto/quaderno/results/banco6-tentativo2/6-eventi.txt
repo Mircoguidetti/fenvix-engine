@@ -1,0 +1,2 @@
+minio sospeso a 1793558091744
+interrotto a mano a t≈600 s: freno di memoria acceso, dispensa ferma (scelta dei candidati sbagliata)

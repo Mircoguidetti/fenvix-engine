@@ -1,0 +1,58 @@
+{
+ "prova": "troppo_grande",
+ "numeri": {
+  "insert_many_s": 8.67,
+  "update_many_troppo_grande": "errore 6: quaderno: esito ignoto del commit, full error: {'ok': 0.0, 'errmsg': 'quaderno: esito ignoto del commit', 'code': 6, 'codeName': 'HostUnreachable', '$clusterTime': {'clusterTime': Timestamp(1793615240",
+  "update_many_s": 26.3,
+  "insert_20000_un_comando": "{'ok': 0.0, 'errmsg': 'Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.', 'code': 112, 'codeName': 'WriteConflict', 'errorLabels': ['TransientTransactionError'], '$clusterTime': {'clusterTime': Timestamp(1793615",
+  "insert_20000_un_comando_s": 23.69,
+  "insert_many_20000_driver_s": 22.32
+ },
+ "errori": [
+  "updateMany troppo grande: codice 6 invece di 257 (quaderno: esito ignoto del commit, full error: {'ok': 0.0, 'errmsg': 'quaderno: esito ignoto del commit', 'code': 6, 'co)",
+  "updateMany troppo grande: risposta dopo 26.3 s",
+  "insert di 20.000 in un comando: {'ok': 0.0, 'errmsg': 'Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.', 'code': 112, 'codeName': 'WriteConfli",
+  "insert_many di 20.000 dal driver: OperationFailure Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-docu",
+  "insert_many di 20.000 dal driver: 0 documenti"
+ ],
+ "vince": false,
+ "stats": {
+  "A": {
+   "commits": 841,
+   "conflicts": 400,
+   "unknown": 1,
+   "rejected": 0,
+   "commandRetries": 398,
+   "giveups": 2,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793615289, 1)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793615289, 1)"
+  },
+  "B": {
+   "commits": 0,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793615202, 1)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793615202, 1)"
+  }
+ },
+ "durata_s": 89.4
+}

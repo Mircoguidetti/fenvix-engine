@@ -1250,7 +1250,12 @@ impl Writes {
                 self.claims.remove(&(i, c.clone()));
                 self.released.insert((i, c, id_enc.clone()));
             }
+            let guard = (idx.unique || idx.prepare_unique) && crate::qmode::on() && crate::qmode::GUARD.load(std::sync::atomic::Ordering::Relaxed);
             for c in add {
+                if guard {
+                    // prova M8: due insert con lo stesso valore scrivono la stessa chiave di guardia (vedi qmode.rs)
+                    self.ops.push(Op::Put(crate::qmode::guard_key(&prefix, &c), id_enc.clone()));
+                }
                 self.ops.push(Op::Put(entry_key(&prefix, &c, &id_enc), crate::natural::entry_value(seq)));
                 self.released.remove(&(i, c.clone(), id_enc.clone()));
                 self.claims.insert((i, c), id_enc.clone());

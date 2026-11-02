@@ -1,0 +1,20 @@
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1854s record 32484023 MB 7854.2 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1865s record 32662622 MB 7897.3 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1875s record 32844136 MB 7941.1 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1886s record 33005009 MB 7979.8 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1896s record 33165312 MB 8018.4 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1907s record 33344878 MB 8061.7 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1918s record 33523824 MB 8104.9 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1928s record 33694022 MB 8145.9 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1938s record 33719618 MB 8151.9 errori 57 gruppi 17
+scaricatore: pressione di memoria 84% del tetto, scarico anticipato
+scaricatore t=1948s record 33719618 MB 8151.9 errori 57 gruppi 17

@@ -1,0 +1,58 @@
+{
+ "prova": "insert_mille",
+ "secondi_per_comando": {
+  "500": 0.12,
+  "999": 0.06,
+  "1001": 21.64,
+  "1500": 22.16,
+  "2500": 19.96
+ },
+ "errori": [
+  "1001 documenti: risposta {'ok': 0.0, 'errmsg': 'Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.', 'code': 112, 'codeName': 'WriteConfli",
+  "1001 documenti: contati 0, scansione 0",
+  "1500 documenti: risposta {'ok': 0.0, 'errmsg': 'Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.', 'code': 112, 'codeName': 'WriteConfli",
+  "1500 documenti: contati 0, scansione 0",
+  "2500 documenti: risposta {'ok': 0.0, 'errmsg': 'Caused by :: Write conflict during plan execution and yielding is disabled. :: Please retry your operation or multi-document transaction.', 'code': 112, 'codeName': 'WriteConfli",
+  "2500 documenti: contati 0, scansione 0"
+ ],
+ "vince": false,
+ "stats": {
+  "A": {
+   "commits": 606,
+   "conflicts": 600,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 597,
+   "giveups": 3,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793614922, 1)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793614922, 1)"
+  },
+  "B": {
+   "commits": 0,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793614858, 1)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793614858, 1)"
+  }
+ },
+ "durata_s": 66.7
+}

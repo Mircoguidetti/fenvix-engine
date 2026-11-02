@@ -1,0 +1,72 @@
+{
+ "prova": "cancella_reinserisci",
+ "secondi": 20.1,
+ "esiti": {
+  "ok": 8407,
+  "dup": 2928
+ },
+ "per_server": {
+  "A": {
+   "ok": 4288,
+   "dup": 1487
+  },
+  "B": {
+   "ok": 4119,
+   "dup": 1441
+  }
+ },
+ "ops_confermate_al_secondo": 564.6,
+ "numeri": {
+  "inserimenti_confermati": 2720,
+  "cancellazioni_con_documento": 2715,
+  "documenti_finali": 5
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 4281,
+   "conflicts": 178,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 178,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 2,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617146, 22)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617146, 22)"
+  },
+  "B": {
+   "commits": 4088,
+   "conflicts": 157,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 157,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 2,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617146, 19)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617146, 19)"
+  }
+ },
+ "codici": {
+  "dup:11000": 2928
+ },
+ "durata_s": 22.7
+}

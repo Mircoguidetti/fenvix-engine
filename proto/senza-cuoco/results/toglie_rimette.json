@@ -1,0 +1,70 @@
+{
+ "prova": "toglie_rimette",
+ "secondi": 20.1,
+ "esiti": {
+  "ok": 5253,
+  "dup": 4763
+ },
+ "per_server": {
+  "A": {
+   "ok": 2653,
+   "dup": 2344
+  },
+  "B": {
+   "ok": 2600,
+   "dup": 2419
+  }
+ },
+ "ops_confermate_al_secondo": 498.2,
+ "numeri": {
+  "documenti_finali": 20
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 5001,
+   "conflicts": 73,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 73,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 1,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617168, 134)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617168, 134)"
+  },
+  "B": {
+   "commits": 5020,
+   "conflicts": 72,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 72,
+   "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 1,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617168, 136)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617168, 136)"
+  }
+ },
+ "codici": {
+  "dup:11000": 4763
+ },
+ "durata_s": 22.5
+}

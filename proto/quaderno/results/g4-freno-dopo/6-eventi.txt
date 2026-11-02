@@ -1,0 +1,5 @@
+minio sospeso a 1793574314590
+minio ripreso a 1793574554725
+carico finito a 1793574677310
+non scaricati a fine attesa: 0 (1793574687435)
+repliche vive: 3 su 3

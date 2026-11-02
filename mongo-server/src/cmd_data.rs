@@ -624,7 +624,7 @@ impl Server {
         let ordered = bool_arg(cmd.get("ordered"), true) || tx.is_some();
         let ns = format!("{db}.{coll}");
         let mut rr = self.retry_begin(db, cmd, docs.len(), "insert").await?;
-        let mut g = self.dbs.lock(db).await;
+        let mut g = self.write_db(db, &mut rr).await;
         attach(&mut g, tx);
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
@@ -752,7 +752,7 @@ impl Server {
         }
         let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("update", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
         let mut rr = self.retry_begin(db, cmd, specs.len(), "update").await?;
-        let mut g = self.dbs.lock(db).await;
+        let mut g = self.write_db(db, &mut rr).await;
         attach(&mut g, tx);
         let names = g.collections().await?;
         let mut indexes = self.load_indexes(&mut g, db, coll).await?;
@@ -918,7 +918,7 @@ impl Server {
                 return Ok(doc! { "lastErrorObject": lo, "value": image.map(Bson::Document).unwrap_or(Bson::Null), "retriedStmtId": id, "ok": 1.0 });
             }
         }
-        let mut g = self.dbs.lock(db).await;
+        let mut g = self.write_db(db, &mut rr).await;
         attach(&mut g, tx);
         if g.coll_opts(coll).await?.map(|k| k.series.is_some()).unwrap_or(false) {
             return Err(MongoError::new(166, "CommandNotSupportedOnView", format!("Taking {ns} lock for timeseries is not allowed")));
@@ -1018,7 +1018,7 @@ impl Server {
         let specs = cmd.get_array("deletes").map_err(|_| MongoError::new(40414, "IDLFailedToParse", "BSON field 'delete.deletes' is missing but a required field".into()))?;
         let cols = specs.iter().map(|s| match s.as_document() { Some(d) => crate::collation::of_statement("delete", d), None => Ok(Ok(None)) }).collect::<R<Vec<_>>>()?;
         let mut rr = self.retry_begin(db, cmd, specs.len(), "delete").await?;
-        let mut g = self.dbs.lock(db).await;
+        let mut g = self.write_db(db, &mut rr).await;
         attach(&mut g, tx);
         let indexes = self.load_indexes(&mut g, db, coll).await?;
         self.presweep(&mut g, coll, &indexes).await?;

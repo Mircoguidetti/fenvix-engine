@@ -1,0 +1,3 @@
+scaricatore: pressione di memoria 70% del tetto, scarico anticipato
+scaricatore: pressione di memoria 72% del tetto, scarico anticipato
+scaricatore: pressione di memoria 73% del tetto, scarico anticipato

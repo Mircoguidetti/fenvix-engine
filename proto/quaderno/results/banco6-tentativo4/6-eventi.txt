@@ -1,0 +1,6 @@
+minio sospeso a 1793562391184
+minio ripreso a 1793562991301
+carico finito a 1793564195436
+non scaricati a fine attesa: 0 (1793564195489)
+repliche vive: 3 su 3
+[ 1747.725422] Memory cgroup out of memory: Killed process 8817 (pq-lincheck) total-vm:14191004kB, anon-rss:12975396kB, file-rss:196kB, shmem-rss:0kB, UID:0 pgtables:25488kB oom_score_adj:0

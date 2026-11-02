@@ -1,0 +1,5 @@
+{"bench":"esiste-in-gara","conflicts_retried":2054,"deletes":853,"inc_nomatch":7363,"inc_ok":93130,"keys":8,"recreates":853,"secs":30}
+{"check": "porcupine-esiste", "ops": 187134, "counts": "map[del/ok:853 inc/nomatch:7363 inc/ok:93130 put/ok:861 read/absent:5343 read/ok:79584]", "result": "Ok", "seconds": 0.7}
+{"controllo_negativo": "senza dipendenza esiste", "bench":"esiste-in-gara","conflicts_retried":0,"deletes":878,"inc_nomatch":3350,"inc_ok":93038,"keys":8,"recreates":878,"secs":30}
+{"controllo_negativo": "senza dipendenza esiste", "check": "porcupine-esiste", "ops": 180567, "counts": "map[del/ok:878 inc/nomatch:3350 inc/ok:93038 put/ok:886 read/absent:2599 read/ok:79816]", "result": "Illegal", "seconds": 0.2}
+{"tentativo_scartato": "4 documenti, 16 client $inc, 4 lettori, 60 s: 365.267 $inc; porcupine esaurisce la memoria (troppe operazioni sovrapposte per documento)"}

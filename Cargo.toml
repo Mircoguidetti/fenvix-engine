@@ -5,6 +5,7 @@ edition = "2021"
 
 [workspace]
 members = ["mongo-server", "loadgen"]
+exclude = ["proto"]
 
 [dependencies]
 slatedb = "=0.17.0"

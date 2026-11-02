@@ -1,0 +1,40 @@
+ALLARME replica 0: il record non su S3 più vecchio ha 61 s (soglia 60 s); memoria 1157 MB su 1536 MB, disco 320 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 91 s (soglia 60 s); memoria 1223 MB su 1536 MB, disco 470 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 121 s (soglia 60 s); memoria 1242 MB su 1536 MB, disco 624 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 152 s (soglia 60 s); memoria 1265 MB su 1536 MB, disco 776 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 182 s (soglia 60 s); memoria 1294 MB su 1536 MB, disco 928 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 212 s (soglia 60 s); memoria 1326 MB su 1536 MB, disco 1080 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 242 s (soglia 60 s); memoria 1335 MB su 1536 MB, disco 1231 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 272 s (soglia 60 s); memoria 1353 MB su 1536 MB, disco 1383 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 302 s (soglia 60 s); memoria 1383 MB su 1536 MB, disco 1535 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 332 s (soglia 60 s); memoria 1394 MB su 1536 MB, disco 1623 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 362 s (soglia 60 s); memoria 1396 MB su 1536 MB, disco 1775 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 392 s (soglia 60 s); memoria 1404 MB su 1536 MB, disco 1927 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 422 s (soglia 60 s); memoria 1415 MB su 1536 MB, disco 2079 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 452 s (soglia 60 s); memoria 1426 MB su 1536 MB, disco 2231 MB
+ALLARME replica 0: il record non su S3 più vecchio ha 482 s (soglia 60 s); memoria 1460 MB su 1536 MB, disco 2382 MB
+replica 0: freno 0 -> 1 (disco 2528 MB, memoria 1471 MB su 1536 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 512 s (soglia 60 s); memoria 1487 MB su 1536 MB, disco 2534 MB
+replica 0: freno 1 -> 4 (disco 2616 MB, memoria 1543 MB su 1536 MB)
+replica 0: freno 4 -> 1 (disco 2617 MB, memoria 1506 MB su 1536 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 542 s (soglia 60 s); memoria 1511 MB su 1536 MB, disco 2686 MB
+replica 0: freno 1 -> 4 (disco 2768 MB, memoria 1536 MB su 1536 MB)
+replica 0: freno 4 -> 1 (disco 2769 MB, memoria 1520 MB su 1536 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 572 s (soglia 60 s); memoria 1527 MB su 1536 MB, disco 2838 MB
+replica 0: freno 1 -> 4 (disco 2840 MB, memoria 1538 MB su 1536 MB)
+replica 0: freno 4 -> 1 (disco 2841 MB, memoria 1524 MB su 1536 MB)
+replica 0: freno 1 -> 4 (disco 2848 MB, memoria 1538 MB su 1536 MB)
+replica 0: freno 4 -> 1 (disco 2913 MB, memoria 1525 MB su 1536 MB)
+replica 0: freno 1 -> 4 (disco 2919 MB, memoria 1538 MB su 1536 MB)
+replica 0: freno 4 -> 1 (disco 2921 MB, memoria 1527 MB su 1536 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 602 s (soglia 60 s); memoria 1532 MB su 1536 MB, disco 2990 MB
+replica 0: freno 1 -> 4 (disco 2991 MB, memoria 1546 MB su 1536 MB)
+replica 0: freno 4 -> 2 (disco 3000 MB, memoria 1534 MB su 1536 MB)
+replica 0: freno 2 -> 4 (disco 3008 MB, memoria 1551 MB su 1536 MB)
+replica 0: freno 4 -> 2 (disco 3011 MB, memoria 1527 MB su 1536 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 632 s (soglia 60 s); memoria 1540 MB su 1536 MB, disco 3011 MB
+replica 0: freno 2 -> 4 (disco 3011 MB, memoria 1540 MB su 1536 MB)
+replica 0: freno 4 -> 2 (disco 3013 MB, memoria 1509 MB su 1536 MB)
+replica 0: freno 2 -> 1 (disco 2927 MB, memoria 1373 MB su 1536 MB)
+ALLARME replica 0: il record non su S3 più vecchio ha 533 s (soglia 60 s); memoria 1378 MB su 1536 MB, disco 2414 MB
+replica 0: freno 1 -> 0 (disco 2414 MB, memoria 1378 MB su 1536 MB)

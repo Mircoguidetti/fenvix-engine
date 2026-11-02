@@ -1,0 +1,104 @@
+{
+ "prova": "ritentativo",
+ "numeri": {
+  "caso1_n": 1,
+  "caso2_n": 3,
+  "caso3_n": 3
+ },
+ "risposte": {
+  "caso1": [
+   {
+    "n": 1,
+    "nModified": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1793614855, 5)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1793614855, 5)"
+   },
+   {
+    "n": 1,
+    "retriedStmtIds": [
+     0
+    ],
+    "nModified": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1793614855, 1)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1793614855, 1)"
+   }
+  ],
+  "caso2": [
+   {
+    "n": 1,
+    "nModified": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1793614855, 2)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1793614855, 2)"
+   },
+   {
+    "n": 1,
+    "nModified": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1793614855, 6)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1793614855, 6)"
+   },
+   {
+    "n": 1,
+    "nModified": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1793614855, 3)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1793614855, 3)"
+   }
+  ],
+  "caso3": [
+   {
+    "ok": 0.0,
+    "errmsg": "Retryable write with txnNumber 1 is prohibited on session 41eec318-68ef-475d-95db-32c34c1ef90b - 47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU= -  -  because a newer retryable write with txnNumber 2 has already started on this session.",
+    "code": 225,
+    "codeName": "TransactionTooOld",
+    "$clusterTime": {
+     "clusterTime": "Timestamp(1793614855, 4)",
+     "signature": {
+      "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+      "keyId": 0
+     }
+    },
+    "operationTime": "Timestamp(1793614855, 4)"
+   }
+  ]
+ },
+ "errori": [
+  "caso 2: n = 3 invece di 2",
+  "caso 3: n = 3 invece di 2"
+ ],
+ "vince": false,
+ "durata_s": 2.6
+}
