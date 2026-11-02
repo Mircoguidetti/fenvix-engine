@@ -92,7 +92,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tenant_bench::counting::CountingStore;
 use tenant_bench::lifecycle::{CompactionQueue, Lifecycle, Maintenance};
-use tokio::io::BufReader;
+use bson::Bson;
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::net::{TcpListener, TcpStream};
 
 #[derive(Parser, Debug)]
@@ -150,6 +151,12 @@ struct Args {
     /// (default `localhost:<listen port>`).
     #[arg(long)]
     advertise: Option<String>,
+    /// Answer `hello` as a mongos router (`msg: "isdbgrid"`) instead of a standalone or a replica set. With several
+    /// processes behind one seed list or `mongodb+srv` record, the official drivers then see a sharded topology: they
+    /// spread operations over every process and move away from one that dies, with no load balancer in front.
+    /// Transactions, retryable writes and change streams stay allowed (as through mongos). `--replica-set` is ignored.
+    #[arg(long)]
+    router: bool,
     /// Do not run the TTL sweeps (expired documents stay hidden but are not removed).
     #[arg(long)]
     no_ttl: bool,
@@ -404,8 +411,10 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
                 // the command document is handed over (not copied): the reply needs only `reply_to`
-                let reply_to = req.reply_to();
+                let mut reply_to = req.reply_to();
                 let command = std::mem::take(&mut req.command);
+                // an awaitable `hello` the driver allows to stream (its monitoring connection): keep the command to answer it again
+                let exhaust = (req.exhaust_allowed && cmd::awaitable_hello(&command)).then(|| command.clone());
                 let reply = server.handle(&req.db, command, conn_id).await;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
@@ -417,8 +426,29 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                     continue;
                 }
                 response_id += 1;
+                let streaming = exhaust.is_some() && matches!(reply.get("ok"), Some(Bson::Double(x)) if *x == 1.0);
+                reply_to.more_to_come = streaming;
                 if let Err(e) = wire::write_reply(&mut w, &reply_to, &reply, response_id).await {
                     eprintln!("conn {conn_id}: write failed: {e:#}");
+                    break;
+                }
+                if streaming {
+                    // exhaust, as mongod: every maxAwaitTimeMS (or at a topology change) another reply flagged moreToCome,
+                    // each answering the previous reply, with no request in between; it ends when the driver closes the
+                    // connection (the write fails or the read side sees the end).
+                    let cmd = exhaust.unwrap();
+                    loop {
+                        let next = tokio::select! {
+                            r = server.handle(&req.db, cmd.clone(), conn_id) => r,
+                            _ = r.fill_buf() => break,
+                        };
+                        reply_to.request_id = response_id;
+                        response_id += 1;
+                        reply_to.more_to_come = matches!(next.get("ok"), Some(Bson::Double(x)) if *x == 1.0);
+                        if wire::write_reply(&mut w, &reply_to, &next, response_id).await.is_err() || !reply_to.more_to_come {
+                            break;
+                        }
+                    }
                     break;
                 }
             }
@@ -595,7 +625,11 @@ async fn run() -> Result<()> {
         eprintln!("grantable roles (callers without root or clusterAdmin): {}", g.join(","));
         let _ = server.auth.grantable.set(g);
     }
-    if !args.replica_set.is_empty() {
+    if args.router {
+        let port = args.listen.rsplit(':').next().unwrap_or("27017");
+        cmd::ROUTER.store(true, std::sync::atomic::Ordering::Relaxed);
+        *server.rs.lock().unwrap() = Some((String::new(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
+    } else if !args.replica_set.is_empty() {
         let port = args.listen.rsplit(':').next().unwrap_or("27017");
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
     }
