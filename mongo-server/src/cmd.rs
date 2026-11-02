@@ -34,6 +34,15 @@ pub struct Server {
     pub(crate) diag: crate::diag::Diag,
 }
 
+/// `--router`: `hello` answers as a mongos (`msg: "isdbgrid"`, no set name, no host list), so a driver given several
+/// processes (a seed list or a `mongodb+srv` record) sees a sharded topology and spreads operations over all of them.
+pub static ROUTER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// An awaitable `hello` (`topologyVersion` and `maxAwaitTimeMS`): the one a driver may let the server stream (exhaust).
+pub(crate) fn awaitable_hello(cmd: &Document) -> bool {
+    matches!(cmd.keys().next().map(|k| k.as_str()), Some("hello" | "isMaster" | "ismaster")) && cmd.get_document("topologyVersion").is_ok() && int_arg(cmd.get("maxAwaitTimeMS")).is_some()
+}
+
 /// Idle time after which a cursor is closed (`--cursor-timeout-secs`, mongod's `cursorTimeoutMillis`; 0 = never).
 pub static CURSOR_TIMEOUT_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(600);
 /// Cursors closed because they were idle (serverStatus `metrics.cursor.timedOut`).
@@ -518,6 +527,12 @@ impl Server {
         let primary_flag = if name == "hello" { "isWritablePrimary" } else { "ismaster" };
         let topology = doc! { "processId": pid, "counter": 0_i64 };
         match &rs {
+            // a mongos: no set name, no hosts, no primary; drivers recognise it by `msg: "isdbgrid"`
+            Some(_) if ROUTER.load(std::sync::atomic::Ordering::Relaxed) => {
+                d.insert(primary_flag, true);
+                d.insert("msg", "isdbgrid");
+                d.insert("topologyVersion", topology);
+            }
             Some((set, addr)) => {
                 d.insert("topologyVersion", topology);
                 d.insert("hosts", vec![Bson::String(addr.clone())]);

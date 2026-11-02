@@ -1,0 +1,272 @@
+{
+ "driver": "pymongo",
+ "version": "4.19.0",
+ "ops": 29157,
+ "per_server": {
+  "a.db.fenvix.test:27017": 14387,
+  "b.db.fenvix.test:27017": 7387,
+  "c.db.fenvix.test:27017": 7383
+ },
+ "per_sec": {
+  "0": {
+   "a.db.fenvix.test:27017": 698,
+   "b.db.fenvix.test:27017": 335,
+   "c.db.fenvix.test:27017": 326
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 685,
+   "c.db.fenvix.test:27017": 350,
+   "b.db.fenvix.test:27017": 362
+  },
+  "2": {
+   "b.db.fenvix.test:27017": 363,
+   "a.db.fenvix.test:27017": 656,
+   "c.db.fenvix.test:27017": 366
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 709,
+   "b.db.fenvix.test:27017": 381,
+   "c.db.fenvix.test:27017": 373
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 713,
+   "c.db.fenvix.test:27017": 375,
+   "b.db.fenvix.test:27017": 374
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 723,
+   "c.db.fenvix.test:27017": 357,
+   "b.db.fenvix.test:27017": 367
+  },
+  "6": {
+   "c.db.fenvix.test:27017": 383,
+   "a.db.fenvix.test:27017": 761,
+   "b.db.fenvix.test:27017": 382
+  },
+  "7": {
+   "b.db.fenvix.test:27017": 368,
+   "c.db.fenvix.test:27017": 382,
+   "a.db.fenvix.test:27017": 723
+  },
+  "8": {
+   "c.db.fenvix.test:27017": 379,
+   "b.db.fenvix.test:27017": 380,
+   "a.db.fenvix.test:27017": 768
+  },
+  "9": {
+   "b.db.fenvix.test:27017": 360,
+   "c.db.fenvix.test:27017": 372,
+   "a.db.fenvix.test:27017": 737
+  },
+  "10": {
+   "b.db.fenvix.test:27017": 372,
+   "c.db.fenvix.test:27017": 374,
+   "a.db.fenvix.test:27017": 710
+  },
+  "11": {
+   "c.db.fenvix.test:27017": 350,
+   "a.db.fenvix.test:27017": 653,
+   "b.db.fenvix.test:27017": 361
+  },
+  "12": {
+   "a.db.fenvix.test:27017": 697,
+   "b.db.fenvix.test:27017": 365,
+   "c.db.fenvix.test:27017": 370
+  },
+  "13": {
+   "b.db.fenvix.test:27017": 338,
+   "c.db.fenvix.test:27017": 349,
+   "a.db.fenvix.test:27017": 651
+  },
+  "14": {
+   "a.db.fenvix.test:27017": 711,
+   "b.db.fenvix.test:27017": 361,
+   "c.db.fenvix.test:27017": 365
+  },
+  "15": {
+   "c.db.fenvix.test:27017": 376,
+   "a.db.fenvix.test:27017": 726,
+   "b.db.fenvix.test:27017": 386
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 800,
+   "c.db.fenvix.test:27017": 397,
+   "b.db.fenvix.test:27017": 384
+  },
+  "17": {
+   "c.db.fenvix.test:27017": 387,
+   "a.db.fenvix.test:27017": 795,
+   "b.db.fenvix.test:27017": 392
+  },
+  "18": {
+   "c.db.fenvix.test:27017": 375,
+   "a.db.fenvix.test:27017": 753,
+   "b.db.fenvix.test:27017": 382
+  },
+  "19": {
+   "a.db.fenvix.test:27017": 687,
+   "c.db.fenvix.test:27017": 359,
+   "b.db.fenvix.test:27017": 359
+  },
+  "20": {
+   "a.db.fenvix.test:27017": 31,
+   "c.db.fenvix.test:27017": 18,
+   "b.db.fenvix.test:27017": 15
+  }
+ },
+ "per_sec_max_ms": {
+  "0": {
+   "a.db.fenvix.test:27017": 12.8,
+   "b.db.fenvix.test:27017": 10.0,
+   "c.db.fenvix.test:27017": 15.9
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 11.8,
+   "c.db.fenvix.test:27017": 14.3,
+   "b.db.fenvix.test:27017": 16.3
+  },
+  "2": {
+   "b.db.fenvix.test:27017": 26.1,
+   "a.db.fenvix.test:27017": 22.1,
+   "c.db.fenvix.test:27017": 12.4
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 4.4,
+   "b.db.fenvix.test:27017": 7.3,
+   "c.db.fenvix.test:27017": 7.1
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 6.0,
+   "c.db.fenvix.test:27017": 7.9,
+   "b.db.fenvix.test:27017": 13.2
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 4.3,
+   "c.db.fenvix.test:27017": 7.5,
+   "b.db.fenvix.test:27017": 9.3
+  },
+  "6": {
+   "c.db.fenvix.test:27017": 8.4,
+   "a.db.fenvix.test:27017": 2.8,
+   "b.db.fenvix.test:27017": 7.4
+  },
+  "7": {
+   "b.db.fenvix.test:27017": 8.9,
+   "c.db.fenvix.test:27017": 8.7,
+   "a.db.fenvix.test:27017": 4.6
+  },
+  "8": {
+   "c.db.fenvix.test:27017": 6.8,
+   "b.db.fenvix.test:27017": 7.9,
+   "a.db.fenvix.test:27017": 3.5
+  },
+  "9": {
+   "b.db.fenvix.test:27017": 8.4,
+   "c.db.fenvix.test:27017": 6.5,
+   "a.db.fenvix.test:27017": 4.4
+  },
+  "10": {
+   "b.db.fenvix.test:27017": 7.5,
+   "c.db.fenvix.test:27017": 8.1,
+   "a.db.fenvix.test:27017": 7.5
+  },
+  "11": {
+   "c.db.fenvix.test:27017": 8.3,
+   "a.db.fenvix.test:27017": 4.7,
+   "b.db.fenvix.test:27017": 8.4
+  },
+  "12": {
+   "a.db.fenvix.test:27017": 14.9,
+   "b.db.fenvix.test:27017": 13.7,
+   "c.db.fenvix.test:27017": 15.2
+  },
+  "13": {
+   "b.db.fenvix.test:27017": 42.1,
+   "c.db.fenvix.test:27017": 40.4,
+   "a.db.fenvix.test:27017": 38.7
+  },
+  "14": {
+   "a.db.fenvix.test:27017": 28.1,
+   "b.db.fenvix.test:27017": 22.9,
+   "c.db.fenvix.test:27017": 26.1
+  },
+  "15": {
+   "c.db.fenvix.test:27017": 23.8,
+   "a.db.fenvix.test:27017": 22.7,
+   "b.db.fenvix.test:27017": 7.7
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 5.8,
+   "c.db.fenvix.test:27017": 7.8,
+   "b.db.fenvix.test:27017": 7.8
+  },
+  "17": {
+   "c.db.fenvix.test:27017": 10.8,
+   "a.db.fenvix.test:27017": 3.9,
+   "b.db.fenvix.test:27017": 6.1
+  },
+  "18": {
+   "c.db.fenvix.test:27017": 27.2,
+   "a.db.fenvix.test:27017": 3.1,
+   "b.db.fenvix.test:27017": 26.9
+  },
+  "19": {
+   "a.db.fenvix.test:27017": 22.4,
+   "c.db.fenvix.test:27017": 29.0,
+   "b.db.fenvix.test:27017": 32.2
+  },
+  "20": {
+   "a.db.fenvix.test:27017": 2.2,
+   "c.db.fenvix.test:27017": 4.8,
+   "b.db.fenvix.test:27017": 5.3
+  }
+ },
+ "cmd_fail": {},
+ "app_errors": [],
+ "topology": "Sharded",
+ "servers": [],
+ "topo_history": [
+  [
+   0.04,
+   "Unknown",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   20.07,
+   "Unknown",
+   []
+  ]
+ ],
+ "events": []
+}

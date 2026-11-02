@@ -31,6 +31,10 @@ impl Server {
         if db != "admin" {
             return Err(MongoError::new(13, "Unauthorized", format!("{name} may only be run against the admin database.")));
         }
+        if crate::cmd::ROUTER.load(std::sync::atomic::Ordering::Relaxed) {
+            // what mongos answers: these commands do not exist there
+            return Err(MongoError::command_not_found(name));
+        }
         let Some((set, addr)) = self.rs.lock().unwrap().clone() else {
             return Err(MongoError::new(76, "NoReplicationEnabled", "not running with --replSet".into()));
         };

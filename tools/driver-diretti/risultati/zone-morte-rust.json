@@ -1,0 +1,194 @@
+{
+ "driver": "rust",
+ "version": "3",
+ "ops": 67328,
+ "per_server": {
+  "a.db.fenvix.test:27017": 45717,
+  "b.db.fenvix.test:27017": 21611
+ },
+ "per_sec": {
+  "0": {
+   "a.db.fenvix.test:27017": 5192
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 4747
+  },
+  "2": {
+   "a.db.fenvix.test:27017": 5440
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 4816
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 4127
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 4330
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 4321
+  },
+  "7": {
+   "a.db.fenvix.test:27017": 4300
+  },
+  "8": {
+   "a.db.fenvix.test:27017": 4076
+  },
+  "9": {
+   "a.db.fenvix.test:27017": 4368
+  },
+  "10": {
+   "b.db.fenvix.test:27017": 1058
+  },
+  "11": {
+   "b.db.fenvix.test:27017": 1092
+  },
+  "12": {
+   "b.db.fenvix.test:27017": 1117
+  },
+  "13": {
+   "b.db.fenvix.test:27017": 1107
+  },
+  "14": {
+   "b.db.fenvix.test:27017": 1070
+  },
+  "15": {
+   "b.db.fenvix.test:27017": 1070
+  },
+  "16": {
+   "b.db.fenvix.test:27017": 1091
+  },
+  "17": {
+   "b.db.fenvix.test:27017": 1108
+  },
+  "18": {
+   "b.db.fenvix.test:27017": 1102
+  },
+  "19": {
+   "b.db.fenvix.test:27017": 1127
+  },
+  "20": {
+   "b.db.fenvix.test:27017": 1073
+  },
+  "21": {
+   "b.db.fenvix.test:27017": 1073
+  },
+  "22": {
+   "b.db.fenvix.test:27017": 1080
+  },
+  "23": {
+   "b.db.fenvix.test:27017": 1083
+  },
+  "24": {
+   "b.db.fenvix.test:27017": 1071
+  },
+  "25": {
+   "b.db.fenvix.test:27017": 1066
+  },
+  "26": {
+   "b.db.fenvix.test:27017": 1077
+  },
+  "27": {
+   "b.db.fenvix.test:27017": 1045
+  },
+  "28": {
+   "b.db.fenvix.test:27017": 1079
+  },
+  "29": {
+   "b.db.fenvix.test:27017": 1014
+  },
+  "30": {
+   "b.db.fenvix.test:27017": 8
+  }
+ },
+ "cmd_fail": {
+  "a.db.fenvix.test:27017": 4
+ },
+ "heartbeats": {
+  "ok": 7,
+  "fail": {
+   "Kind: I/O error: unexpected end of file, labels: {\"RetryableError\", \"SystemOverloadedError\"}, source": 1,
+   "Kind: I/O error: unexpected end of file, labels: {\"SystemOverloadedError\", \"RetryableError\"}, source": 1,
+   "Kind: Internal error: server closed, labels: {}, source: None, server response: None": 3
+  }
+ },
+ "app_errors": [],
+ "topology": "Sharded",
+ "servers": [],
+ "topo_history": [
+  [
+   0.003889066,
+   "Unknown",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.0113166,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.01284592,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.018375527,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   10.002870473,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   10.003291768,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   20.008340881,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   30.009241526,
+   "Unknown",
+   []
+  ]
+ ],
+ "events": [
+  [
+   10.0,
+   "uccidi_a"
+  ]
+ ]
+}

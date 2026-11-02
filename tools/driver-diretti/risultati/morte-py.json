@@ -1,0 +1,477 @@
+{
+ "driver": "pymongo",
+ "version": "4.19.0",
+ "ops": 81390,
+ "per_server": {
+  "c.db.fenvix.test:27017": 34512,
+  "b.db.fenvix.test:27017": 12721,
+  "a.db.fenvix.test:27017": 34157
+ },
+ "per_sec": {
+  "0": {
+   "c.db.fenvix.test:27017": 698,
+   "b.db.fenvix.test:27017": 675,
+   "a.db.fenvix.test:27017": 646
+  },
+  "1": {
+   "c.db.fenvix.test:27017": 691,
+   "b.db.fenvix.test:27017": 661,
+   "a.db.fenvix.test:27017": 616
+  },
+  "2": {
+   "b.db.fenvix.test:27017": 682,
+   "c.db.fenvix.test:27017": 699,
+   "a.db.fenvix.test:27017": 698
+  },
+  "3": {
+   "b.db.fenvix.test:27017": 591,
+   "c.db.fenvix.test:27017": 630,
+   "a.db.fenvix.test:27017": 629
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 616,
+   "c.db.fenvix.test:27017": 643,
+   "b.db.fenvix.test:27017": 608
+  },
+  "5": {
+   "c.db.fenvix.test:27017": 637,
+   "b.db.fenvix.test:27017": 628,
+   "a.db.fenvix.test:27017": 642
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 670,
+   "b.db.fenvix.test:27017": 647,
+   "c.db.fenvix.test:27017": 641
+  },
+  "7": {
+   "b.db.fenvix.test:27017": 710,
+   "c.db.fenvix.test:27017": 618,
+   "a.db.fenvix.test:27017": 658
+  },
+  "8": {
+   "b.db.fenvix.test:27017": 579,
+   "a.db.fenvix.test:27017": 557,
+   "c.db.fenvix.test:27017": 589
+  },
+  "9": {
+   "b.db.fenvix.test:27017": 593,
+   "c.db.fenvix.test:27017": 678,
+   "a.db.fenvix.test:27017": 710
+  },
+  "10": {
+   "a.db.fenvix.test:27017": 1082,
+   "c.db.fenvix.test:27017": 1081
+  },
+  "11": {
+   "c.db.fenvix.test:27017": 1048,
+   "a.db.fenvix.test:27017": 1009
+  },
+  "12": {
+   "c.db.fenvix.test:27017": 1328,
+   "a.db.fenvix.test:27017": 1302
+  },
+  "13": {
+   "c.db.fenvix.test:27017": 1017,
+   "a.db.fenvix.test:27017": 1012
+  },
+  "14": {
+   "c.db.fenvix.test:27017": 993,
+   "a.db.fenvix.test:27017": 1025
+  },
+  "15": {
+   "c.db.fenvix.test:27017": 1047,
+   "a.db.fenvix.test:27017": 1017
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 1017,
+   "c.db.fenvix.test:27017": 1019
+  },
+  "17": {
+   "c.db.fenvix.test:27017": 1059,
+   "a.db.fenvix.test:27017": 1028
+  },
+  "18": {
+   "a.db.fenvix.test:27017": 927,
+   "c.db.fenvix.test:27017": 919
+  },
+  "19": {
+   "c.db.fenvix.test:27017": 994,
+   "a.db.fenvix.test:27017": 970
+  },
+  "20": {
+   "c.db.fenvix.test:27017": 1083,
+   "a.db.fenvix.test:27017": 1010
+  },
+  "21": {
+   "c.db.fenvix.test:27017": 1354,
+   "a.db.fenvix.test:27017": 1240
+  },
+  "22": {
+   "a.db.fenvix.test:27017": 1033,
+   "c.db.fenvix.test:27017": 1001
+  },
+  "23": {
+   "a.db.fenvix.test:27017": 1199,
+   "c.db.fenvix.test:27017": 1237
+  },
+  "24": {
+   "a.db.fenvix.test:27017": 1033,
+   "c.db.fenvix.test:27017": 1064
+  },
+  "25": {
+   "c.db.fenvix.test:27017": 944,
+   "a.db.fenvix.test:27017": 1022
+  },
+  "26": {
+   "c.db.fenvix.test:27017": 1039,
+   "a.db.fenvix.test:27017": 1023
+  },
+  "27": {
+   "a.db.fenvix.test:27017": 945,
+   "c.db.fenvix.test:27017": 969
+  },
+  "28": {
+   "c.db.fenvix.test:27017": 983,
+   "a.db.fenvix.test:27017": 962
+  },
+  "29": {
+   "c.db.fenvix.test:27017": 928,
+   "a.db.fenvix.test:27017": 925
+  },
+  "30": {
+   "c.db.fenvix.test:27017": 889,
+   "a.db.fenvix.test:27017": 899,
+   "b.db.fenvix.test:27017": 282
+  },
+  "31": {
+   "c.db.fenvix.test:27017": 694,
+   "a.db.fenvix.test:27017": 686,
+   "b.db.fenvix.test:27017": 704
+  },
+  "32": {
+   "b.db.fenvix.test:27017": 675,
+   "c.db.fenvix.test:27017": 655,
+   "a.db.fenvix.test:27017": 701
+  },
+  "33": {
+   "a.db.fenvix.test:27017": 616,
+   "b.db.fenvix.test:27017": 620,
+   "c.db.fenvix.test:27017": 627
+  },
+  "34": {
+   "c.db.fenvix.test:27017": 672,
+   "a.db.fenvix.test:27017": 648,
+   "b.db.fenvix.test:27017": 644
+  },
+  "35": {
+   "c.db.fenvix.test:27017": 699,
+   "a.db.fenvix.test:27017": 716,
+   "b.db.fenvix.test:27017": 746
+  },
+  "36": {
+   "a.db.fenvix.test:27017": 697,
+   "c.db.fenvix.test:27017": 717,
+   "b.db.fenvix.test:27017": 688
+  },
+  "37": {
+   "b.db.fenvix.test:27017": 657,
+   "a.db.fenvix.test:27017": 625,
+   "c.db.fenvix.test:27017": 580
+  },
+  "38": {
+   "a.db.fenvix.test:27017": 679,
+   "c.db.fenvix.test:27017": 683,
+   "b.db.fenvix.test:27017": 671
+  },
+  "39": {
+   "c.db.fenvix.test:27017": 641,
+   "b.db.fenvix.test:27017": 633,
+   "a.db.fenvix.test:27017": 637
+  },
+  "40": {
+   "b.db.fenvix.test:27017": 27,
+   "c.db.fenvix.test:27017": 24,
+   "a.db.fenvix.test:27017": 30
+  }
+ },
+ "per_sec_max_ms": {
+  "0": {
+   "c.db.fenvix.test:27017": 33.3,
+   "b.db.fenvix.test:27017": 61.5,
+   "a.db.fenvix.test:27017": 60.4
+  },
+  "1": {
+   "c.db.fenvix.test:27017": 41.3,
+   "b.db.fenvix.test:27017": 50.9,
+   "a.db.fenvix.test:27017": 59.3
+  },
+  "2": {
+   "b.db.fenvix.test:27017": 43.4,
+   "c.db.fenvix.test:27017": 37.6,
+   "a.db.fenvix.test:27017": 48.2
+  },
+  "3": {
+   "b.db.fenvix.test:27017": 31.3,
+   "c.db.fenvix.test:27017": 46.8,
+   "a.db.fenvix.test:27017": 30.8
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 64.0,
+   "c.db.fenvix.test:27017": 54.4,
+   "b.db.fenvix.test:27017": 90.8
+  },
+  "5": {
+   "c.db.fenvix.test:27017": 39.9,
+   "b.db.fenvix.test:27017": 35.4,
+   "a.db.fenvix.test:27017": 40.7
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 50.5,
+   "b.db.fenvix.test:27017": 62.8,
+   "c.db.fenvix.test:27017": 54.3
+  },
+  "7": {
+   "b.db.fenvix.test:27017": 35.0,
+   "c.db.fenvix.test:27017": 37.4,
+   "a.db.fenvix.test:27017": 39.9
+  },
+  "8": {
+   "b.db.fenvix.test:27017": 55.0,
+   "a.db.fenvix.test:27017": 42.9,
+   "c.db.fenvix.test:27017": 36.5
+  },
+  "9": {
+   "b.db.fenvix.test:27017": 45.5,
+   "c.db.fenvix.test:27017": 38.8,
+   "a.db.fenvix.test:27017": 35.7
+  },
+  "10": {
+   "a.db.fenvix.test:27017": 32.0,
+   "c.db.fenvix.test:27017": 38.9
+  },
+  "11": {
+   "c.db.fenvix.test:27017": 39.2,
+   "a.db.fenvix.test:27017": 36.1
+  },
+  "12": {
+   "c.db.fenvix.test:27017": 32.9,
+   "a.db.fenvix.test:27017": 34.4
+  },
+  "13": {
+   "c.db.fenvix.test:27017": 41.5,
+   "a.db.fenvix.test:27017": 39.9
+  },
+  "14": {
+   "c.db.fenvix.test:27017": 40.2,
+   "a.db.fenvix.test:27017": 46.8
+  },
+  "15": {
+   "c.db.fenvix.test:27017": 42.2,
+   "a.db.fenvix.test:27017": 37.7
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 37.1,
+   "c.db.fenvix.test:27017": 45.9
+  },
+  "17": {
+   "c.db.fenvix.test:27017": 60.3,
+   "a.db.fenvix.test:27017": 39.1
+  },
+  "18": {
+   "a.db.fenvix.test:27017": 38.7,
+   "c.db.fenvix.test:27017": 36.1
+  },
+  "19": {
+   "c.db.fenvix.test:27017": 37.3,
+   "a.db.fenvix.test:27017": 43.1
+  },
+  "20": {
+   "c.db.fenvix.test:27017": 53.3,
+   "a.db.fenvix.test:27017": 45.6
+  },
+  "21": {
+   "c.db.fenvix.test:27017": 41.9,
+   "a.db.fenvix.test:27017": 38.4
+  },
+  "22": {
+   "a.db.fenvix.test:27017": 42.1,
+   "c.db.fenvix.test:27017": 40.0
+  },
+  "23": {
+   "a.db.fenvix.test:27017": 34.5,
+   "c.db.fenvix.test:27017": 33.8
+  },
+  "24": {
+   "a.db.fenvix.test:27017": 51.1,
+   "c.db.fenvix.test:27017": 36.3
+  },
+  "25": {
+   "c.db.fenvix.test:27017": 49.3,
+   "a.db.fenvix.test:27017": 38.6
+  },
+  "26": {
+   "c.db.fenvix.test:27017": 42.3,
+   "a.db.fenvix.test:27017": 33.5
+  },
+  "27": {
+   "a.db.fenvix.test:27017": 39.2,
+   "c.db.fenvix.test:27017": 44.4
+  },
+  "28": {
+   "c.db.fenvix.test:27017": 42.5,
+   "a.db.fenvix.test:27017": 39.4
+  },
+  "29": {
+   "c.db.fenvix.test:27017": 38.7,
+   "a.db.fenvix.test:27017": 50.7
+  },
+  "30": {
+   "c.db.fenvix.test:27017": 39.7,
+   "a.db.fenvix.test:27017": 33.1,
+   "b.db.fenvix.test:27017": 448.0
+  },
+  "31": {
+   "c.db.fenvix.test:27017": 49.3,
+   "a.db.fenvix.test:27017": 45.7,
+   "b.db.fenvix.test:27017": 37.8
+  },
+  "32": {
+   "b.db.fenvix.test:27017": 40.8,
+   "c.db.fenvix.test:27017": 39.2,
+   "a.db.fenvix.test:27017": 44.4
+  },
+  "33": {
+   "a.db.fenvix.test:27017": 53.9,
+   "b.db.fenvix.test:27017": 41.9,
+   "c.db.fenvix.test:27017": 53.1
+  },
+  "34": {
+   "c.db.fenvix.test:27017": 37.5,
+   "a.db.fenvix.test:27017": 35.1,
+   "b.db.fenvix.test:27017": 43.7
+  },
+  "35": {
+   "c.db.fenvix.test:27017": 42.9,
+   "a.db.fenvix.test:27017": 34.0,
+   "b.db.fenvix.test:27017": 38.6
+  },
+  "36": {
+   "a.db.fenvix.test:27017": 46.2,
+   "c.db.fenvix.test:27017": 34.2,
+   "b.db.fenvix.test:27017": 37.1
+  },
+  "37": {
+   "b.db.fenvix.test:27017": 39.6,
+   "a.db.fenvix.test:27017": 53.2,
+   "c.db.fenvix.test:27017": 41.4
+  },
+  "38": {
+   "a.db.fenvix.test:27017": 36.8,
+   "c.db.fenvix.test:27017": 33.9,
+   "b.db.fenvix.test:27017": 40.2
+  },
+  "39": {
+   "c.db.fenvix.test:27017": 33.6,
+   "b.db.fenvix.test:27017": 49.4,
+   "a.db.fenvix.test:27017": 33.8
+  },
+  "40": {
+   "b.db.fenvix.test:27017": 26.7,
+   "c.db.fenvix.test:27017": 26.7,
+   "a.db.fenvix.test:27017": 25.0
+  }
+ },
+ "cmd_fail": {
+  "b.db.fenvix.test:27017": 7
+ },
+ "heartbeats": {
+  "ok": 13,
+  "fail": {
+   "AutoReconnect: b.db.fenvix.test:27017: connection closed (configured timeouts: socketTimeoutMS: 20000.0ms, connectT": 1,
+   "AutoReconnect: b.db.fenvix.test:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.": 2
+  }
+ },
+ "app_errors": [],
+ "topology": "Sharded",
+ "servers": [],
+ "topo_history": [
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   10.12,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   10.12,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   10.12,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   20.19,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   30.24,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   40.34,
+   "Unknown",
+   []
+  ]
+ ],
+ "events": [
+  [
+   10.0,
+   "uccidi_b"
+  ],
+  [
+   22.0,
+   "riavvia_b"
+  ]
+ ]
+}

@@ -1,0 +1,186 @@
+{
+ "driver": "pymongo",
+ "version": "4.19.0",
+ "ops": 57380,
+ "per_server": {
+  "a.db.fenvix.test:27017": 57380
+ },
+ "per_sec": {
+  "0": {
+   "a.db.fenvix.test:27017": 2761
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 3167
+  },
+  "2": {
+   "a.db.fenvix.test:27017": 3303
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 2835
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 3064
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 2881
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 2880
+  },
+  "7": {
+   "a.db.fenvix.test:27017": 3073
+  },
+  "8": {
+   "a.db.fenvix.test:27017": 2844
+  },
+  "9": {
+   "a.db.fenvix.test:27017": 3308
+  },
+  "10": {
+   "a.db.fenvix.test:27017": 2648
+  },
+  "11": {
+   "a.db.fenvix.test:27017": 2603
+  },
+  "12": {
+   "a.db.fenvix.test:27017": 2697
+  },
+  "13": {
+   "a.db.fenvix.test:27017": 2492
+  },
+  "14": {
+   "a.db.fenvix.test:27017": 2683
+  },
+  "15": {
+   "a.db.fenvix.test:27017": 2585
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 2931
+  },
+  "17": {
+   "a.db.fenvix.test:27017": 2907
+  },
+  "18": {
+   "a.db.fenvix.test:27017": 3413
+  },
+  "19": {
+   "a.db.fenvix.test:27017": 2202
+  },
+  "20": {
+   "a.db.fenvix.test:27017": 103
+  }
+ },
+ "per_sec_max_ms": {
+  "0": {
+   "a.db.fenvix.test:27017": 6.7
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 6.5
+  },
+  "2": {
+   "a.db.fenvix.test:27017": 5.8
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 11.4
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 7.9
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 6.7
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 5.4
+  },
+  "7": {
+   "a.db.fenvix.test:27017": 6.0
+  },
+  "8": {
+   "a.db.fenvix.test:27017": 9.8
+  },
+  "9": {
+   "a.db.fenvix.test:27017": 30.6
+  },
+  "10": {
+   "a.db.fenvix.test:27017": 31.9
+  },
+  "11": {
+   "a.db.fenvix.test:27017": 39.7
+  },
+  "12": {
+   "a.db.fenvix.test:27017": 9.6
+  },
+  "13": {
+   "a.db.fenvix.test:27017": 50.8
+  },
+  "14": {
+   "a.db.fenvix.test:27017": 29.7
+  },
+  "15": {
+   "a.db.fenvix.test:27017": 55.6
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 5.8
+  },
+  "17": {
+   "a.db.fenvix.test:27017": 29.1
+  },
+  "18": {
+   "a.db.fenvix.test:27017": 5.8
+  },
+  "19": {
+   "a.db.fenvix.test:27017": 15.3
+  },
+  "20": {
+   "a.db.fenvix.test:27017": 4.8
+  }
+ },
+ "cmd_fail": {},
+ "app_errors": [],
+ "topology": "Sharded",
+ "servers": [],
+ "topo_history": [
+  [
+   0.04,
+   "Unknown",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   1.04,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   20.06,
+   "Unknown",
+   []
+  ]
+ ],
+ "events": []
+}

@@ -1,0 +1,121 @@
+{
+ "driver": "rust",
+ "version": "3",
+ "ops": 79190,
+ "per_server": {
+  "a.db.fenvix.test:27017": 79190
+ },
+ "per_sec": {
+  "0": {
+   "a.db.fenvix.test:27017": 4510
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 3806
+  },
+  "2": {
+   "a.db.fenvix.test:27017": 3593
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 3448
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 4189
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 3752
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 4837
+  },
+  "7": {
+   "a.db.fenvix.test:27017": 4815
+  },
+  "8": {
+   "a.db.fenvix.test:27017": 3883
+  },
+  "9": {
+   "a.db.fenvix.test:27017": 4652
+  },
+  "10": {
+   "a.db.fenvix.test:27017": 4111
+  },
+  "11": {
+   "a.db.fenvix.test:27017": 3651
+  },
+  "12": {
+   "a.db.fenvix.test:27017": 3919
+  },
+  "13": {
+   "a.db.fenvix.test:27017": 3290
+  },
+  "14": {
+   "a.db.fenvix.test:27017": 3350
+  },
+  "15": {
+   "a.db.fenvix.test:27017": 4286
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 3470
+  },
+  "17": {
+   "a.db.fenvix.test:27017": 3940
+  },
+  "18": {
+   "a.db.fenvix.test:27017": 3648
+  },
+  "19": {
+   "a.db.fenvix.test:27017": 4026
+  },
+  "20": {
+   "a.db.fenvix.test:27017": 14
+  }
+ },
+ "cmd_fail": {},
+ "app_errors": [],
+ "topology": "Sharded",
+ "servers": [],
+ "topo_history": [
+  [
+   0.003329742,
+   "Unknown",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.00865342,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.014797662,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.02424161,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   20.00426839,
+   "Unknown",
+   []
+  ]
+ ],
+ "events": []
+}
