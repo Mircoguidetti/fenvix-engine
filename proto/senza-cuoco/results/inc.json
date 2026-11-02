@@ -1,0 +1,47 @@
+{
+ "prova": "inc",
+ "secondi": 20.2,
+ "esiti": {
+  "ok": 11534
+ },
+ "per_server": {
+  "A": {
+   "ok": 5748
+  },
+  "B": {
+   "ok": 5786
+  }
+ },
+ "ops_confermate_al_secondo": 571.0,
+ "numeri": {
+  "incrementi_confermati": 11534,
+  "ignoti": 0,
+  "somma_finale": 11534
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 5752,
+   "conflicts": 383,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 383,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  },
+  "B": {
+   "commits": 5786,
+   "conflicts": 339,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 339,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  }
+ },
+ "codici": {},
+ "durata_s": 23.3
+}

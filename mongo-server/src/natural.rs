@@ -79,7 +79,14 @@ pub async fn alloc(g: &mut Entry, coll: &str) -> anyhow::Result<u64> {
         };
         g.nat.insert(coll.to_string(), (next, next));
     }
-    let (next, limit) = g.nat[coll];
+    let (mut next, limit) = g.nat[coll];
+    if next >= limit && crate::qmode::on() {
+        // prova M8: un altro processo può aver prenotato il blocco successivo; si riparte dal limite salvato (letto a S
+        // e dichiarato: se cambia prima del commit della prenotazione, il capo del quaderno la rifiuta)
+        if let Some(v) = g.get_live(&meta_key(coll)).await? {
+            next = next.max(u64::from_be_bytes(v[..8].try_into()?));
+        }
+    }
     let limit = if next >= limit {
         let l = next + BLOCK;
         g.apply(vec![Op::Put(meta_key(coll), l.to_be_bytes().to_vec())]).await?;

@@ -1,0 +1,133 @@
+{
+ "prova": "morte_server",
+ "secondi": 25.1,
+ "esiti": {
+  "ok": 10406,
+  "dup": 2949,
+  "ignoto": 16
+ },
+ "per_server": {
+  "A": {
+   "ok": 4294,
+   "dup": 1308,
+   "ignoto": 16
+  },
+  "B": {
+   "ok": 6112,
+   "dup": 1641
+  }
+ },
+ "ops_confermate_al_secondo": 531.9,
+ "numeri": {
+  "stesso_id": {
+   "valori_confermati": 2949,
+   "documenti": 2950,
+   "valori_con_ignoti": 7
+  },
+  "stessa_email": {
+   "valori_confermati": 2930,
+   "documenti": 2930,
+   "valori_con_ignoti": 3
+  },
+  "incrementi": {
+   "incrementi_confermati": 4527,
+   "ignoti": 4,
+   "somma_finale": 4527
+  }
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 2642,
+   "conflicts": 79,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 79,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  },
+  "B": {
+   "commits": 6116,
+   "conflicts": 143,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 143,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  }
+ },
+ "codici": {
+  "dup:11000": 2949,
+  "ignoto:AutoReconnect": 8,
+  "ignoto:ServerSelectionTimeoutError": 8
+ },
+ "t_uccisione_s": 7.11,
+ "buco_massimo_dopo_uccisione_s": {
+  "A": 6.054,
+  "B": 0.028
+ },
+ "ops_al_secondo": {
+  "A": [
+   288,
+   318,
+   295,
+   255,
+   292,
+   320,
+   354,
+   32,
+   0,
+   0,
+   0,
+   0,
+   0,
+   247,
+   302,
+   302,
+   301,
+   300,
+   316,
+   233,
+   267,
+   296,
+   277,
+   290,
+   288,
+   29
+  ],
+  "B": [
+   247,
+   295,
+   292,
+   262,
+   288,
+   299,
+   326,
+   371,
+   360,
+   379,
+   379,
+   293,
+   391,
+   345,
+   304,
+   296,
+   265,
+   290,
+   330,
+   245,
+   261,
+   290,
+   292,
+   311,
+   304,
+   38
+  ]
+ },
+ "restart_s": 0.05244135856628418,
+ "prima_op_di_A_dopo_ripartenza_s": 0.009,
+ "durata_s": 30.5
+}

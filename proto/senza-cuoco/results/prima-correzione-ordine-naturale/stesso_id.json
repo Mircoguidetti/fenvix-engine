@@ -1,0 +1,54 @@
+{
+ "prova": "stesso_id",
+ "secondi": 20.2,
+ "esiti": {
+  "ok": 4009,
+  "dup": 16362
+ },
+ "per_server": {
+  "A": {
+   "ok": 1964,
+   "dup": 8120
+  },
+  "B": {
+   "dup": 8242,
+   "ok": 2045
+  }
+ },
+ "ops_confermate_al_secondo": 1008.0,
+ "numeri": {
+  "valori_confermati": 4009,
+  "documenti": 3071,
+  "valori_con_ignoti": 0
+ },
+ "errori": [
+  "938 inserimenti confermati e assenti (es. [358721537302, 358721537295, 358721537305])"
+ ],
+ "vince": false,
+ "stats": {
+  "A": {
+   "commits": 1969,
+   "conflicts": 356,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 356,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  },
+  "B": {
+   "commits": 2048,
+   "conflicts": 344,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 344,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  }
+ },
+ "codici": {
+  "dup:11000": 16362
+ },
+ "durata_s": 24.1
+}

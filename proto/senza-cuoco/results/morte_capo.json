@@ -1,0 +1,129 @@
+{
+ "prova": "morte_capo",
+ "secondi": 25.2,
+ "esiti": {
+  "ok": 10774,
+  "dup": 3882
+ },
+ "per_server": {
+  "A": {
+   "ok": 5433,
+   "dup": 1969
+  },
+  "B": {
+   "ok": 5341,
+   "dup": 1913
+  }
+ },
+ "ops_confermate_al_secondo": 582.7,
+ "numeri": {
+  "stesso_id": {
+   "valori_confermati": 2998,
+   "documenti": 2998,
+   "valori_con_ignoti": 0
+  },
+  "stessa_email": {
+   "valori_confermati": 2978,
+   "documenti": 2978,
+   "valori_con_ignoti": 0
+  },
+  "incrementi": {
+   "incrementi_confermati": 4798,
+   "ignoti": 0,
+   "somma_finale": 4798
+  }
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 5440,
+   "conflicts": 174,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 174,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  },
+  "B": {
+   "commits": 5345,
+   "conflicts": 172,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 172,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  }
+ },
+ "codici": {
+  "dup:11000": 3882
+ },
+ "t_uccisione_s": 7.15,
+ "buco_massimo_dopo_uccisione_s": {
+  "A": 2.638,
+  "B": 2.645
+ },
+ "ops_al_secondo": {
+  "A": [
+   298,
+   280,
+   265,
+   278,
+   263,
+   297,
+   261,
+   72,
+   0,
+   40,
+   411,
+   340,
+   387,
+   349,
+   342,
+   321,
+   362,
+   307,
+   354,
+   346,
+   358,
+   360,
+   378,
+   318,
+   364,
+   51
+  ],
+  "B": [
+   272,
+   278,
+   288,
+   273,
+   260,
+   316,
+   259,
+   81,
+   0,
+   40,
+   349,
+   340,
+   396,
+   339,
+   341,
+   315,
+   335,
+   317,
+   330,
+   331,
+   327,
+   348,
+   390,
+   336,
+   335,
+   58
+  ]
+ },
+ "capo_ucciso": 0,
+ "capo_nuovo": 1,
+ "durata_s": 30.5
+}

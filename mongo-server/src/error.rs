@@ -128,6 +128,19 @@ impl From<anyhow::Error> for MongoError {
             m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
             return m;
         }
+        if let Some(q) = e.downcast_ref::<crate::qmode::QErr>() {
+            // prova M8: il conflitto rifà il comando (`Server::route`); gli altri esiti arrivano al client
+            return match q {
+                crate::qmode::QErr::Conflict(_) => MongoError::write_conflict(),
+                crate::qmode::QErr::Unknown => MongoError::new(6, "HostUnreachable", q.to_string()),
+                crate::qmode::QErr::Rejected(_) => {
+                    let mut m = MongoError::new(91, "ShutdownInProgress", q.to_string());
+                    m.extra = Some(doc! { "errorLabels": ["RetryableWriteError"] });
+                    m
+                }
+                crate::qmode::QErr::Unavailable(_) => MongoError::new(6, "HostUnreachable", q.to_string()),
+            };
+        }
         MongoError::internal(format!("{e:#}"))
     }
 }

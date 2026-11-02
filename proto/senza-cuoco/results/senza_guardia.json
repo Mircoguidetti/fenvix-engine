@@ -1,0 +1,56 @@
+{
+ "prova": "senza_guardia",
+ "secondi": 20.1,
+ "esiti": {
+  "ok": 4501,
+  "dup": 11072
+ },
+ "per_server": {
+  "A": {
+   "ok": 2278,
+   "dup": 5578
+  },
+  "B": {
+   "dup": 5494,
+   "ok": 2223
+  }
+ },
+ "ops_confermate_al_secondo": 775.5,
+ "numeri": {
+  "valori_confermati": 3914,
+  "documenti": 4501,
+  "valori_con_ignoti": 0
+ },
+ "errori": [
+  "587 valori di email con più documenti (es. [('u358721713451@x', 2), ('u358721713449@x', 2), ('u358721713455@x', 2)])",
+  "587 valori di email confermati due volte (es. [('u358721713451@x', ['A-4-6', 'B-7-2']), ('u358721713449@x', ['A-7-5', 'B-0-3']), ('u358721713455@x', ['B-3-4', 'A-4-7'])])"
+ ],
+ "vince": false,
+ "stats": {
+  "A": {
+   "commits": 2283,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "guard": false,
+   "ok": 1.0
+  },
+  "B": {
+   "commits": 2226,
+   "conflicts": 0,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 0,
+   "giveups": 0,
+   "guard": false,
+   "ok": 1.0
+  }
+ },
+ "codici": {
+  "dup:11000": 11072
+ },
+ "nota": "prova negativa: qui gli errori sono attesi (mostrano perché serve la guardia)",
+ "durata_s": 23.1
+}

@@ -38,6 +38,7 @@ mod cmd_mapreduce;
 mod ctl;
 mod cs_events;
 mod dbs;
+mod qmode;
 mod diag;
 mod fields;
 mod find_ext;
@@ -256,6 +257,10 @@ struct Args {
     /// Do not use leases (single process only; for stores without conditional update, e.g. --store local).
     #[arg(long)]
     no_leases: bool,
+    /// Prova M8 "senza cuoco fisso": repliche del quaderno (proto/quaderno) a cui vanno scritture e letture, al posto
+    /// del proprietario unico con lease e di SlateDB. Vuoto = spento.
+    #[arg(long, default_value = "")]
+    quaderno: String,
     /// Wait for each write's own flush while holding the tenant lock (the behaviour before group commit: one WAL
     /// object per write). By default writes arriving while a flush is in flight share the next WAL object.
     #[arg(long)]
@@ -538,6 +543,11 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::GROUP_WINDOW_US.store((args.group_commit_window_ms * 1000.0) as u64, std::sync::atomic::Ordering::Relaxed);
     dbs::DURABLE_READS.store(args.durable_reads, std::sync::atomic::Ordering::Relaxed);
     dbs::META_CACHE.store(args.metadata_cache, std::sync::atomic::Ordering::Relaxed);
+    if !args.quaderno.is_empty() {
+        qmode::init(&args.quaderno);
+        // ogni processo può scrivere il database: niente metadati tenuti da un comando all'altro
+        dbs::META_CACHE.store(false, std::sync::atomic::Ordering::Relaxed);
+    }
     tenant_bench::lifecycle::L0_MAX_SSTS_OVERRIDE.store(args.l0_max_ssts, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::WAL_GC_MODE.store(
         match args.wal_gc_mode.as_str() { "slatedb" => 0, "list-only" => 1, "single" => 2, "bulk" => 3, other => anyhow::bail!("unknown --wal-gc-mode {other}") },

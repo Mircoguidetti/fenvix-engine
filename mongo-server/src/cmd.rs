@@ -449,6 +449,34 @@ impl Server {
     /// Every command's future is boxed: inline, the largest of them made this future (and the futures that await it) about
     /// 21 KB, copied several times per command whatever the command.
     async fn route(&self, db: &str, name: &str, cmd: &Document) -> R<Document> {
+        if !crate::qmode::on() {
+            return self.route_once(db, name, cmd).await;
+        }
+        if name == "qstats" {
+            let mut d = crate::qmode::stats();
+            d.insert("ok", 1.0);
+            return Ok(d);
+        }
+        // prova M8: un conflitto trovato dal capo del quaderno rifà il comando intero, con una nuova posizione di lettura
+        let mut attempt = 0u32;
+        loop {
+            match Box::pin(self.route_once(db, name, cmd)).await {
+                Err(e) if e.code == 112 && attempt + 1 < crate::qmode::MAX_ATTEMPTS => {
+                    attempt += 1;
+                    crate::qmode::RETRIES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    let ms = (1u64 << attempt.min(6)).min(50);
+                    tokio::time::sleep(std::time::Duration::from_micros(rand::random::<u64>() % (ms * 1000 + 1))).await;
+                }
+                Err(e) if e.code == 112 => {
+                    crate::qmode::GIVEUPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    return Err(e);
+                }
+                r => return r,
+            }
+        }
+    }
+
+    async fn route_once(&self, db: &str, name: &str, cmd: &Document) -> R<Document> {
         let mut no_tx: Option<crate::txn::Txn> = None;
         let tx = &mut no_tx;
         if let Some(d) = Box::pin(self.view_route(db, name, cmd, tx)).await? {

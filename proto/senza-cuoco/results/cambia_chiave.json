@@ -1,0 +1,50 @@
+{
+ "prova": "cambia_chiave",
+ "secondi": 20.1,
+ "esiti": {
+  "ok": 7033,
+  "dup": 6800
+ },
+ "per_server": {
+  "A": {
+   "ok": 3530,
+   "dup": 3433
+  },
+  "B": {
+   "dup": 3367,
+   "ok": 3503
+  }
+ },
+ "ops_confermate_al_secondo": 689.5,
+ "numeri": {
+  "documenti": 300
+ },
+ "errori": [],
+ "vince": true,
+ "stats": {
+  "A": {
+   "commits": 3534,
+   "conflicts": 12,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 12,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  },
+  "B": {
+   "commits": 3503,
+   "conflicts": 10,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 10,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0
+  }
+ },
+ "codici": {
+  "dup:11000": 6800
+ },
+ "durata_s": 23.7
+}

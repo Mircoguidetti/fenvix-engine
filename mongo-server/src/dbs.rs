@@ -154,6 +154,9 @@ pub struct Entry {
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
     /// Stored metadata values of the open tenant (see [`META_CACHE`]); cleared with `copts`.
     meta: Mutex<MetaCache>,
+    /// Prova M8 (`qmode.rs`): posizione di lettura del comando in corso e chiavi lette da dichiarare nel commit.
+    pub(crate) qpos: Option<u64>,
+    pub(crate) qreads: Vec<Vec<u8>>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -211,6 +214,8 @@ impl Dbs {
                     nat: HashMap::new(),
                     copts: HashMap::new(),
                     meta: Default::default(),
+                    qpos: None,
+                    qreads: Vec::new(),
                 }))
             })
             .clone()
@@ -287,6 +292,8 @@ impl Dbs {
                     nat: HashMap::new(),
                     copts: HashMap::new(),
                     meta: Default::default(),
+                    qpos: None,
+                    qreads: Vec::new(),
                     }))
                 })
                 .clone()
@@ -308,6 +315,12 @@ impl Dbs {
         let mut g = self.entry(name).write_owned().await;
         g.snap = None;
         g.absent = false;
+        if crate::qmode::on() {
+            // senza cuoco fisso: niente stato del database tenuto da un comando all'altro (tranne i blocchi dell'ordine naturale)
+            g.qpos = None;
+            g.qreads.clear();
+            g.copts.clear();
+        }
         g
     }
 
@@ -316,6 +329,14 @@ impl Dbs {
     /// exclusive lock first when needed. `ReadView` re-checks ownership after every read.
     pub async fn read(&self, name: &str) -> Result<ReadView> {
         let e = self.entry(name);
+        if crate::qmode::on() {
+            let mut w = Arc::clone(&e).write_owned().await;
+            w.absent = false;
+            w.copts.clear();
+            w.qreads.clear();
+            w.qpos = Some(crate::qmode::read_pos().await?);
+            return Ok(ReadView { g: Some(Guard::Write(w)), copts: Default::default() });
+        }
         if !SHARED_READS.load(Relaxed) {
             let mut w = Arc::clone(&e).write_owned().await;
             w.absent = false;
@@ -533,6 +554,9 @@ impl Entry {
     /// The tenant's lease is taken first: a process that does not own the tenant gets [`lease::LeaseHeld`].
     pub async fn ensure_open(&mut self) -> Result<bool> {
         self.touch();
+        if crate::qmode::on() {
+            return Ok(true);
+        }
         // local log: a database whose kept records are not applied yet is refused (its last acknowledged writes are missing)
         crate::locallog::check_open(&self.name)?;
         if self.tenant.is_none() && self.absent {
@@ -615,6 +639,9 @@ impl Entry {
     }
 
     pub async fn get(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
+        if crate::qmode::on() {
+            return self.qget(key).await;
+        }
         if !self.ensure_open().await? {
             return Ok(None);
         }
@@ -632,6 +659,9 @@ impl Entry {
 
     /// Like [`Entry::get`] but always reads the latest committed state, not the command's snapshot.
     pub async fn get_live(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
+        if crate::qmode::on() {
+            return self.qget(key).await;
+        }
         if !self.ensure_open().await? {
             return Ok(None);
         }
@@ -639,6 +669,10 @@ impl Entry {
     }
 
     pub async fn scan(&mut self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        if crate::qmode::on() {
+            let end = crate::keyenc::prefix_end(prefix);
+            return self.qscan(prefix, end.as_deref(), false, None).await;
+        }
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
@@ -663,6 +697,9 @@ impl Entry {
     async fn apply_mode(&mut self, mut ops: Vec<Op>, use_local_log: bool) -> Result<()> {
         if ops.is_empty() {
             return Ok(());
+        }
+        if crate::qmode::on() {
+            return self.qapply(ops).await;
         }
         // Local log (prototype): the batch carries its record's marker, and is durable once the record is on the local disk.
         let local = if use_local_log { crate::locallog::get() } else { None };
@@ -954,6 +991,9 @@ impl Entry {
     }
 
     pub async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        if crate::qmode::on() {
+            return self.qscan(start, end, reverse, limit).await;
+        }
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
@@ -984,6 +1024,9 @@ impl Entry {
 
     /// [`Entry::scan_range`] on the latest committed state.
     pub async fn scan_range_live(&mut self, start: &[u8], end: Option<&[u8]>, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        if crate::qmode::on() {
+            return self.qscan(start, end, false, limit).await;
+        }
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
@@ -1035,6 +1078,13 @@ impl Entry {
 
     /// Point reads in parallel, in key order.
     pub async fn get_many(&mut self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
+        if crate::qmode::on() {
+            let mut out = Vec::with_capacity(keys.len());
+            for k in keys {
+                out.push(self.qget(k).await?);
+            }
+            return Ok(out);
+        }
         if keys.is_empty() || !self.ensure_open().await? {
             return Ok(vec![None; keys.len()]);
         }
@@ -1097,6 +1147,9 @@ impl std::ops::Deref for Guard {
 
 impl ReadView {
     fn done<T>(&self, v: T) -> Result<T> {
+        if crate::qmode::on() {
+            return Ok(v);
+        }
         if let Some(g) = &self.g {
             g.leases.check_owner(&g.name)?;
         }
@@ -1105,6 +1158,10 @@ impl ReadView {
 
     pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
+        if crate::qmode::on() {
+            let end = crate::keyenc::prefix_end(prefix);
+            return crate::qmode::scan(&crate::qmode::db_id(&g.name), prefix, end.as_deref(), false, None, g.qpos.unwrap_or(0)).await;
+        }
         let t = g.tenant.as_ref().unwrap();
         let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
         self.done(r)
@@ -1112,6 +1169,9 @@ impl ReadView {
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
+        if crate::qmode::on() {
+            return crate::qmode::get(&crate::qmode::db_id(&g.name), key, g.qpos.unwrap_or(0)).await;
+        }
         let t = g.tenant.as_ref().unwrap();
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
             let r = match g.meta_lookup(key) {
@@ -1129,6 +1189,14 @@ impl ReadView {
         if keys.is_empty() {
             return Ok(vec![]);
         }
+        if crate::qmode::on() {
+            let id = crate::qmode::db_id(&g.name);
+            let mut out = Vec::with_capacity(keys.len());
+            for k in keys {
+                out.push(crate::qmode::get(&id, k, g.qpos.unwrap_or(0)).await?);
+            }
+            return Ok(out);
+        }
         let t = g.tenant.as_ref().unwrap();
         let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
         let r = futures::stream::iter(futs).buffered(32).try_collect::<Vec<_>>().await?;
@@ -1137,6 +1205,9 @@ impl ReadView {
 
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
+        if crate::qmode::on() {
+            return crate::qmode::scan(&crate::qmode::db_id(&g.name), start, end, reverse, limit, g.qpos.unwrap_or(0)).await;
+        }
         let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
         self.done(r)
     }
@@ -1187,5 +1258,47 @@ impl ReadView {
             Some(v) => Ok(Some(Document::from_reader(&v[..])?)),
             None => Ok(None),
         }
+    }
+}
+
+/// Prova M8 "senza cuoco fisso" (`qmode.rs`): letture a S dal quaderno, scritture come commit validati.
+impl Entry {
+    async fn qpos(&mut self) -> Result<u64> {
+        if let Some(p) = self.qpos {
+            return Ok(p);
+        }
+        let p = crate::qmode::read_pos().await?;
+        self.qpos = Some(p);
+        Ok(p)
+    }
+
+    async fn qget(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
+        self.touch();
+        let at = self.qpos().await?;
+        if !self.qreads.iter().any(|k| k.as_slice() == key) {
+            self.qreads.push(key.to_vec());
+        }
+        crate::qmode::get(&crate::qmode::db_id(&self.name), key, at).await
+    }
+
+    async fn qscan(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        self.touch();
+        let at = self.qpos().await?;
+        crate::qmode::scan(&crate::qmode::db_id(&self.name), start, end, reverse, limit, at).await
+    }
+
+    /// Un commit validato a S con le chiavi lette. La posizione di lettura del comando resta S anche dopo un commit
+    /// in mezzo al comando (la prenotazione dei numeri dell'ordine naturale): il commit finale si valida contro S, così
+    /// copre anche le letture per intervallo (le guardie degli indici unici); le chiavi appena scritte qui escono dalle
+    /// letture dichiarate, se no il commit finale troverebbe in conflitto la nostra stessa scrittura.
+    async fn qapply(&mut self, ops: Vec<Op>) -> Result<()> {
+        self.touch();
+        let at = self.qpos().await?;
+        if ops.iter().any(|o| match o { Op::Put(k, _) | Op::Delete(k) => k.starts_with(b"meta/") }) {
+            self.meta_clear();
+        }
+        crate::qmode::commit(&crate::qmode::db_id(&self.name), at, &ops, &self.qreads).await?;
+        self.qreads.retain(|k| !ops.iter().any(|o| match o { Op::Put(w, _) | Op::Delete(w) => w == k }));
+        Ok(())
     }
 }
