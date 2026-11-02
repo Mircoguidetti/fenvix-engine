@@ -394,12 +394,15 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
     loop {
         // The first message must arrive whole before the handshake deadline. With --auth, until the connection has
         // authenticated, a message must arrive whole within the handshake timeout once it started, and may not be larger than
-        // the pre-authentication limit. Idle time between messages is not limited (a driver's monitoring connection never
-        // authenticates and waits between its hello commands).
+        // the pre-authentication limit, and the next one must start within --unauth-idle-timeout-secs (a driver's
+        // monitoring connection never authenticates but sends a hello at least every ~10 s). Idle time between the messages
+        // of an authenticated connection is not limited.
         let pre_auth = server.auth.enabled.load(std::sync::atomic::Ordering::Relaxed) && !server.conn_authenticated(conn_id);
-        let (first_by, rest_within) = match (first, first_deadline) {
-            (true, Some(d)) => (Some(d), Some(d.saturating_duration_since(tokio::time::Instant::now()))),
-            _ => (None, if pre_auth { guard.handshake_timeout() } else { None }),
+        // `idle_wait`: the wait for the first byte is the silence limit (not the handshake deadline)
+        let (first_by, rest_within, idle_wait) = match (first, first_deadline) {
+            (true, Some(d)) => (Some(d), Some(d.saturating_duration_since(tokio::time::Instant::now())), false),
+            _ if pre_auth => (guard.unauth_idle_timeout().map(|t| tokio::time::Instant::now() + t), guard.handshake_timeout(), true),
+            _ => (None, None, false),
         };
         let max_len = if pre_auth { guard.pre_auth_max() } else { usize::MAX };
         first = false;
@@ -431,9 +434,14 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
             Ok(None) => break,
             Err(e) => {
                 let shown = peer.map(|p| p.to_string()).unwrap_or_default();
-                if e.downcast_ref::<wire::ReadTimeout>().is_some() {
-                    guard.totals.handshake_timeouts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    eprintln!("conn {conn_id}: closed: message not received within the handshake timeout (peer {shown})");
+                if let Some(t) = e.downcast_ref::<wire::ReadTimeout>() {
+                    if t.first_byte && idle_wait {
+                        guard.totals.idle_unauthenticated_closed.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        guard.note_idle_close(conn_id, &shown);
+                    } else {
+                        guard.totals.handshake_timeouts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        eprintln!("conn {conn_id}: closed: message not received within the handshake timeout (peer {shown})");
+                    }
                 } else if let Some(t) = e.downcast_ref::<wire::TooLarge>() {
                     guard.totals.oversized_before_auth.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     eprintln!("conn {conn_id}: closed: {t} before authentication (peer {shown})");
@@ -622,10 +630,26 @@ async fn run() -> Result<()> {
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+    let mut last_accept_log: Option<std::time::Instant> = None;
     loop {
         tokio::select! {
             accepted = listener.accept() => {
-                let (stream, _) = accepted?;
+                let stream = match accepted {
+                    Ok((stream, _)) => stream,
+                    Err(e) => {
+                        // Out of open files (EMFILE, ENFILE), memory (ENOBUFS, ENOMEM) or a connection reset before it was
+                        // taken: never a reason to stop the process. The pending connections stay in the kernel's queue;
+                        // wait a little (no busy loop while the files are out) and go on. One log line a minute at most.
+                        netguard::get().totals.accept_errors.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        let now = std::time::Instant::now();
+                        if last_accept_log.map(|t| now.duration_since(t) >= Duration::from_secs(60)).unwrap_or(true) {
+                            last_accept_log = Some(now);
+                            eprintln!("accept failed: {e} (open connections {}; the server goes on, next message at most in 60 s)", netguard::get().open_connections());
+                        }
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        continue;
+                    }
+                };
                 let server = Arc::clone(&server);
                 let id = server.new_connection_id();
                 tokio::spawn(handle_connection(server, Arc::clone(&tls_cfg), stream, id));

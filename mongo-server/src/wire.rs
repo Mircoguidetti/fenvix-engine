@@ -54,9 +54,12 @@ pub async fn read_request<R: AsyncRead + Unpin>(r: &mut R) -> Result<Option<Requ
     read_request_bounded(r, MAX_MESSAGE, None, None).await
 }
 
-/// A message did not arrive in time (handshake timeout, or a slow sender before authentication).
+/// A message did not arrive in time (handshake timeout, a slow sender before authentication, or a connection that has
+/// not authenticated and stayed silent too long). `first_byte`: no byte of the message had arrived.
 #[derive(Debug)]
-pub struct ReadTimeout;
+pub struct ReadTimeout {
+    pub first_byte: bool,
+}
 
 impl std::fmt::Display for ReadTimeout {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -83,7 +86,7 @@ impl std::error::Error for TooLarge {}
 pub async fn read_request_bounded<R: AsyncRead + Unpin>(r: &mut R, max_len: usize, first_byte_by: Option<tokio::time::Instant>, rest_within: Option<std::time::Duration>) -> Result<Option<Request>> {
     let mut header = [0u8; 16];
     let first = match first_byte_by {
-        Some(d) => tokio::time::timeout_at(d, r.read(&mut header[..1])).await.map_err(|_| anyhow::Error::new(ReadTimeout))?,
+        Some(d) => tokio::time::timeout_at(d, r.read(&mut header[..1])).await.map_err(|_| anyhow::Error::new(ReadTimeout { first_byte: true }))?,
         None => r.read(&mut header[..1]).await,
     };
     match first {
@@ -108,7 +111,7 @@ pub async fn read_request_bounded<R: AsyncRead + Unpin>(r: &mut R, max_len: usiz
         parse_body(request_id, opcode, &body, max_len)
     };
     match rest_within {
-        Some(t) => tokio::time::timeout(t, rest).await.map_err(|_| anyhow::Error::new(ReadTimeout))?,
+        Some(t) => tokio::time::timeout(t, rest).await.map_err(|_| anyhow::Error::new(ReadTimeout { first_byte: false }))?,
         None => rest.await,
     }
 }

@@ -1,7 +1,7 @@
 //! Network limits of the data port: per-database lists of allowed client networks, limits on failed authentications
-//! (temporary blocks per address and per address and database), connections at once (not yet authenticated per address,
-//! authenticated per database, and optionally all of them per address), the handshake timeout and the size of messages
-//! before authentication.
+//! (temporary blocks per address and per address and database), connections at once (all of them in the process, not yet
+//! authenticated per address, authenticated per database, and optionally all of them per address), the handshake timeout,
+//! the silence allowed to a connection that has not authenticated and the size of messages before authentication.
 //!
 //! Why the connection limits are split: the functions of a serverless platform (Vercel, Lambda) leave through a few shared
 //! NAT addresses, so one address can carry thousands of legitimate, authenticated connections to many databases. What one
@@ -54,6 +54,14 @@ pub struct NetArgs {
     /// at once. Off by default: serverless platforms reach the engine from a few shared addresses (see the module doc).
     #[arg(long, default_value_t = 0)]
     pub max_conns_per_ip: u32,
+    /// Connections at once in this process, from every address (like mongod's net.maxIncomingConnections). Further
+    /// connections are closed at once, before TLS; trusted addresses are counted but never refused. 0: no limit. Default:
+    /// below the open-files limit read at start (RLIMIT_NOFILE), with room for the process's own files and sockets (S3,
+    /// databases, admin port): the limit minus 1000, or half of it when it is under 4000. Without it, a client that holds
+    /// enough connections (5 addresses at the per-address limit, or one with a password and a few databases) runs the
+    /// process out of open files.
+    #[arg(long)]
+    pub max_conns: Option<u32>,
     /// Connections at once from one address that have not authenticated (0: no limit). Further connections are closed at
     /// once. A connection stops counting when it authenticates, and counts again if it logs out of every database. A
     /// driver keeps two such connections per client (monitoring and round-trip time), which never authenticate, and every
@@ -70,6 +78,11 @@ pub struct NetArgs {
     /// authentication (with --auth) every message must arrive whole within it once its first byte has (0: off).
     #[arg(long, default_value_t = 10)]
     pub handshake_timeout_secs: u64,
+    /// With --auth, a connection that has not authenticated (or has logged out of every database) and sends nothing for
+    /// this many seconds is closed (0: off). A driver's monitoring connections, which never authenticate, send a hello at
+    /// least every ~10 s (heartbeatFrequencyMS) and are not touched.
+    #[arg(long, default_value_t = 120)]
+    pub unauth_idle_timeout_secs: u64,
     /// Largest message (bytes, also after decompression) accepted before a connection has authenticated (with --auth).
     #[arg(long, default_value_t = 65536)]
     pub pre_auth_max_message_bytes: usize,
@@ -99,9 +112,11 @@ impl Default for NetArgs {
             auth_block_max_secs: 3600,
             auth_block_forget_secs: 86400,
             max_conns_per_ip: 0,
+            max_conns: None,
             max_unauth_conns_per_ip: 4000,
             max_conns_per_db: 5000,
             handshake_timeout_secs: 10,
+            unauth_idle_timeout_secs: 120,
             pre_auth_max_message_bytes: 65536,
             ip_allowlist_refresh_secs: 5,
             ipv6_group_prefix: 64,
@@ -307,7 +322,10 @@ struct Cfg {
     max_conns: u32,
     max_unauth: u32,
     max_db: u32,
+    /// All connections of the process (0: no limit).
+    max_total: u32,
     handshake: Option<Duration>,
+    unauth_idle: Option<Duration>,
     pre_auth_max: usize,
     refresh: Duration,
     v6_prefix: u8,
@@ -326,6 +344,9 @@ pub struct Totals {
     pub refused_db_full: AtomicU64,
     pub handshake_timeouts: AtomicU64,
     pub oversized_before_auth: AtomicU64,
+    pub rejected_total_limit: AtomicU64,
+    pub accept_errors: AtomicU64,
+    pub idle_unauthenticated_closed: AtomicU64,
 }
 
 type ListCache = HashMap<String, (Instant, Option<Arc<Vec<Net>>>)>;
@@ -337,7 +358,30 @@ pub struct NetGuard {
     per_db: Mutex<HashMap<String, u32>>,
     db_reject_log: Mutex<HashMap<String, Instant>>,
     lists: Mutex<ListCache>,
+    /// Connections open in the process (every one holding a `ConnSlot`).
+    open_total: AtomicU64,
+    total_reject_log: Mutex<Option<Instant>>,
+    idle_log: Mutex<Option<Instant>>,
     pub totals: Totals,
+}
+
+/// The open-files limit of the process (soft), if it can be read and is finite.
+fn open_files_limit() -> Option<u64> {
+    let mut r = libc::rlimit { rlim_cur: 0, rlim_max: 0 };
+    if unsafe { libc::getrlimit(libc::RLIMIT_NOFILE, &mut r) } != 0 || r.rlim_cur == libc::RLIM_INFINITY {
+        return None;
+    }
+    Some(r.rlim_cur as u64)
+}
+
+/// The default total of connections for an open-files limit: the limit minus 1000, or half of it under 4000 (the process
+/// itself keeps tens to hundreds of files and sockets open). Without a readable limit: 1,000,000.
+pub fn default_max_conns(nofile: Option<u64>) -> u32 {
+    match nofile {
+        None => 1_000_000,
+        Some(n) if n >= 4000 => (n - 1000).min(1_000_000) as u32,
+        Some(n) => (n / 2).max(1) as u32,
+    }
 }
 
 /// Why an authentication is refused before its password is looked at.
@@ -352,7 +396,14 @@ static GUARD: OnceLock<NetGuard> = OnceLock::new();
 
 /// The process's guard (the defaults if `install` was not called).
 pub fn get() -> &'static NetGuard {
-    GUARD.get_or_init(|| NetGuard::new(&NetArgs::default()).expect("default network settings"))
+    GUARD.get_or_init(|| {
+        let mut a = NetArgs::default();
+        if cfg!(test) {
+            // the unit tests share this guard and run at once (thousands of slots each): no total limit for them
+            a.max_conns = Some(0);
+        }
+        NetGuard::new(&a).expect("default network settings")
+    })
 }
 
 pub fn install(args: &NetArgs) -> anyhow::Result<()> {
@@ -385,7 +436,9 @@ impl NetGuard {
                 max_conns: a.max_conns_per_ip,
                 max_unauth: a.max_unauth_conns_per_ip,
                 max_db: a.max_conns_per_db,
+                max_total: a.max_conns.unwrap_or_else(|| default_max_conns(open_files_limit())),
                 handshake: (a.handshake_timeout_secs > 0).then(|| Duration::from_secs(a.handshake_timeout_secs)),
+                unauth_idle: (a.unauth_idle_timeout_secs > 0).then(|| Duration::from_secs(a.unauth_idle_timeout_secs)),
                 pre_auth_max: a.pre_auth_max_message_bytes.max(1024),
                 refresh: Duration::from_secs(a.ip_allowlist_refresh_secs),
                 v6_prefix: a.ipv6_group_prefix,
@@ -396,6 +449,9 @@ impl NetGuard {
             per_db: Mutex::new(HashMap::new()),
             db_reject_log: Mutex::new(HashMap::new()),
             lists: Mutex::new(HashMap::new()),
+            open_total: AtomicU64::new(0),
+            total_reject_log: Mutex::new(None),
+            idle_log: Mutex::new(None),
             totals: Totals::default(),
         })
     }
@@ -406,6 +462,27 @@ impl NetGuard {
 
     pub fn pre_auth_max(&self) -> usize {
         self.cfg.pre_auth_max
+    }
+
+    pub fn unauth_idle_timeout(&self) -> Option<Duration> {
+        self.cfg.unauth_idle
+    }
+
+    /// Connections open in the process now.
+    pub fn open_connections(&self) -> u64 {
+        self.open_total.load(Relaxed)
+    }
+
+    /// A connection that had not authenticated was closed for its silence (one log line a minute at most: an attacker
+    /// can make thousands of them).
+    pub fn note_idle_close(&self, conn_id: i64, peer: &str) {
+        let now = Instant::now();
+        let mut l = self.idle_log.lock().unwrap();
+        if l.map(|t| now.duration_since(t) >= Duration::from_secs(60)).unwrap_or(true) {
+            *l = Some(now);
+            eprintln!("conn {conn_id}: closed: not authenticated and silent for {} s (peer {peer}; {} such closes so far, next message at most in 60 s)",
+                self.cfg.unauth_idle.map(|d| d.as_secs()).unwrap_or(0), self.totals.idle_unauthenticated_closed.load(Relaxed));
+        }
     }
 
     pub fn is_trusted(&self, ip: IpAddr) -> bool {
@@ -431,9 +508,24 @@ impl NetGuard {
 
     /// A connection from `ip` is opening (not authenticated yet). `None`: over a per-address limit, close it.
     pub fn open_connection(&'static self, ip: Option<IpAddr>) -> Option<Arc<ConnSlot>> {
+        // the total of the process first: it is what keeps the open files from running out
+        let trusted = ip.map(|i| self.is_trusted(i)).unwrap_or(false);
+        let open = self.open_total.fetch_add(1, Relaxed) + 1;
+        if self.cfg.max_total > 0 && open > self.cfg.max_total as u64 && !trusted {
+            self.open_total.fetch_sub(1, Relaxed);
+            self.totals.rejected_total_limit.fetch_add(1, Relaxed);
+            self.totals.rejected_connections.fetch_add(1, Relaxed);
+            let now = Instant::now();
+            let mut l = self.total_reject_log.lock().unwrap();
+            if l.map(|t| now.duration_since(t) >= Duration::from_secs(60)).unwrap_or(true) {
+                *l = Some(now);
+                let who = ip.map(|i| self.show_key(self.key(i))).unwrap_or_else(|| "(unknown)".into());
+                eprintln!("netguard: connection from {who} refused: {} connections open in this process (limit {}, --max-conns)", open - 1, self.cfg.max_total);
+            }
+            return None;
+        }
         let Some(ip) = ip else { return Some(Arc::new(ConnSlot::new(None, true))) };
         let k = self.key(ip);
-        let trusted = self.is_trusted(ip);
         let mut m = self.clients.lock().unwrap();
         let c = m.entry(k).or_default();
         let over_all = !trusted && self.cfg.max_conns > 0 && c.conns >= self.cfg.max_conns;
@@ -452,6 +544,8 @@ impl NetGuard {
                     eprintln!("netguard: connection from {} refused: {} connections from that address have not authenticated (limit {})", self.show_key(k), c.unauth, self.cfg.max_unauth);
                 }
             }
+            drop(m);
+            self.open_total.fetch_sub(1, Relaxed);
             return None;
         }
         c.conns += 1;
@@ -736,7 +830,8 @@ impl NetGuard {
                 "trusted_networks": self.cfg.trusted.iter().map(|n| n.to_string()).collect::<Vec<_>>(),
                 "auth_fail_max": self.cfg.fail_max, "auth_fail_max_per_db": self.cfg.fail_max_db, "auth_fail_window_secs": self.cfg.window.as_secs(),
                 "auth_block_secs": self.cfg.block.as_secs(), "auth_block_max_secs": self.cfg.block_max.as_secs(), "auth_block_forget_secs": self.cfg.forget.as_secs(),
-                "max_conns_per_ip": self.cfg.max_conns, "max_unauth_conns_per_ip": self.cfg.max_unauth, "max_conns_per_db": self.cfg.max_db, "handshake_timeout_secs": self.cfg.handshake.map(|d| d.as_secs()).unwrap_or(0),
+                "max_conns": self.cfg.max_total, "max_conns_per_ip": self.cfg.max_conns, "max_unauth_conns_per_ip": self.cfg.max_unauth, "max_conns_per_db": self.cfg.max_db, "handshake_timeout_secs": self.cfg.handshake.map(|d| d.as_secs()).unwrap_or(0),
+                "unauth_idle_timeout_secs": self.cfg.unauth_idle.map(|d| d.as_secs()).unwrap_or(0),
                 "pre_auth_max_message_bytes": self.cfg.pre_auth_max, "ip_allowlist_refresh_secs": self.cfg.refresh.as_secs(), "ipv6_group_prefix": self.cfg.v6_prefix,
                 "netguard_max_tracked": self.cfg.max_tracked, "netguard_max_dbs_per_ip": self.cfg.max_dbs,
             },
@@ -744,12 +839,15 @@ impl NetGuard {
             "failing": failing,
             "connections": conns,
             "databases": per_db,
+            "open_connections": self.open_total.load(Relaxed),
             "tracked_addresses": tracked,
             "totals": {
                 "auth_failures": t.auth_failures.load(Relaxed), "refused_while_blocked": t.refused_while_blocked.load(Relaxed),
                 "refused_not_in_list": t.refused_not_in_list.load(Relaxed), "blocks": t.blocks.load(Relaxed),
                 "rejected_connections": t.rejected_connections.load(Relaxed), "rejected_unauthenticated": t.rejected_unauthenticated.load(Relaxed), "refused_db_full": t.refused_db_full.load(Relaxed), "handshake_timeouts": t.handshake_timeouts.load(Relaxed),
                 "oversized_before_auth": t.oversized_before_auth.load(Relaxed),
+                "rejected_total_limit": t.rejected_total_limit.load(Relaxed), "accept_errors": t.accept_errors.load(Relaxed),
+                "idle_unauthenticated_closed": t.idle_unauthenticated_closed.load(Relaxed),
             },
         })
     }
@@ -829,6 +927,7 @@ impl Drop for ConnSlot {
         if let Some(k) = self.key {
             g.close_connection(k, st.unauth);
         }
+        g.open_total.fetch_sub(1, Relaxed);
     }
 }
 
@@ -1044,6 +1143,52 @@ mod tests {
         drop(extra);
         assert_eq!(g.db_connections("full_db"), 0);
         assert_eq!(g.db_connections("other_db"), 0);
+    }
+
+    #[test]
+    fn total_limit_of_the_process() {
+        let g = guard(|a| {
+            a.max_conns = Some(3);
+            a.max_unauth_conns_per_ip = 2;
+        });
+        let g: &'static NetGuard = Box::leak(Box::new(g));
+        let mut held: Vec<_> = ["203.0.113.60", "203.0.113.61", "203.0.113.62"].iter().map(|a| std::mem::ManuallyDrop::new(g.open_connection(Some(ip(a))).unwrap())).collect();
+        assert_eq!(g.open_connections(), 3);
+        // full: refused from any outside address, before any per-address count
+        assert!(g.open_connection(Some(ip("203.0.113.63"))).is_none());
+        assert!(g.open_connection(None).is_none());
+        assert_eq!(g.totals.rejected_total_limit.load(Relaxed), 2);
+        assert_eq!(g.open_connections(), 3);
+        // a trusted address is counted but never refused
+        held.push(std::mem::ManuallyDrop::new(g.open_connection(Some(ip("127.0.0.1"))).unwrap()));
+        assert_eq!(g.open_connections(), 4);
+        // a refusal by the per-address limit gives its place back
+        let g2: &'static NetGuard = Box::leak(Box::new(guard(|a| {
+            a.max_conns = Some(10);
+            a.max_unauth_conns_per_ip = 2;
+        })));
+        let a = Some(ip("203.0.113.70"));
+        let h2: Vec<_> = (0..2).map(|_| std::mem::ManuallyDrop::new(g2.open_connection(a).unwrap())).collect();
+        assert!(g2.open_connection(a).is_none());
+        assert_eq!(g2.open_connections(), 2);
+        assert_eq!(g2.totals.rejected_total_limit.load(Relaxed), 0);
+        drop((held, h2));
+    }
+
+    #[test]
+    fn total_limit_default_follows_the_open_files() {
+        assert_eq!(default_max_conns(Some(20_000)), 19_000);
+        assert_eq!(default_max_conns(Some(4000)), 3000);
+        assert_eq!(default_max_conns(Some(3999)), 1999);
+        assert_eq!(default_max_conns(Some(300)), 150);
+        assert_eq!(default_max_conns(Some(1_048_576)), 1_000_000);
+        assert_eq!(default_max_conns(None), 1_000_000);
+        // the process guard of the unit tests has none (see `get`); a guard built from the defaults reads the limit
+        let g = guard(|_| {});
+        assert_eq!(g.cfg.max_total, default_max_conns(open_files_limit()));
+        assert!(g.cfg.max_total > 0);
+        assert_eq!(g.cfg.unauth_idle, Some(Duration::from_secs(120)));
+        assert_eq!(guard(|a| a.max_conns = Some(0)).cfg.max_total, 0);
     }
 
     #[test]
