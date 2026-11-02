@@ -1,0 +1,8 @@
+
+thread 'main' (2416) panicked at src/trace.rs:86:29:
+index out of bounds: the len is 1 but the index is 118
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'main' (2456) panicked at src/trace.rs:86:29:
+index out of bounds: the len is 1 but the index is 118
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
