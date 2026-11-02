@@ -95,7 +95,16 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     // The pin goes first so the keep-awake agent stops reopening the database.
     rec::delete(&ctl.store, &rec::path(&["control", "pins", db])).await?;
     let mut g = ctl.dbs.lock(db).await;
-    g.abandon().await;
+    // A close that did not finish (store slow or down) leaves slatedb's tasks of the tenant alive, and they can still write
+    // a WAL object or an SST under tenants/{db}/ after the purge below (no fencing: this process holds the lease). Stop
+    // before any object is touched; the client retries once the store answers again (the close goes on in the background).
+    let closed = g.abandon().await;
+    if !closed || tenant_bench::lifecycle::close_pending(db) {
+        if fresh {
+            ops::finish(ctl, db).await?;
+        }
+        return Err(close_pending_error(db));
+    }
     let lock = maint_lock(&ctl.lc.maint_locks, db);
     let _maint = lock.lock().await;
     // Ownership: no other process may write while the objects go (nothing to own when no data is left).
@@ -150,6 +159,11 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     Ok(report)
 }
 
+/// The erase stopped before deleting anything because the database's close has not finished: retry later.
+fn close_pending_error(db: &str) -> ApiError {
+    ApiError::new(503, "close_pending", format!("database {db} is still closing (its storage is not answering); nothing was deleted, retry the erase"))
+}
+
 /// Finish an erase that a crash interrupted.
 pub async fn resume(ctl: &Arc<Ctl>, db: &str, op: &Value) -> ApiResult<()> {
     let ancestors: Vec<String> = op["ancestors"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect()).unwrap_or_default();
@@ -157,7 +171,7 @@ pub async fn resume(ctl: &Arc<Ctl>, db: &str, op: &Value) -> ApiResult<()> {
     for attempt in 0..40 {
         match run(ctl, db, &ancestors, false).await {
             Ok(_) => return Ok(()),
-            Err(e) if e.code == "owned_elsewhere" && attempt < 39 => tokio::time::sleep(std::time::Duration::from_millis(1000)).await,
+            Err(e) if (e.code == "owned_elsewhere" || e.code == "close_pending") && attempt < 39 => tokio::time::sleep(std::time::Duration::from_millis(1000)).await,
             Err(e) => return Err(e),
         }
     }
