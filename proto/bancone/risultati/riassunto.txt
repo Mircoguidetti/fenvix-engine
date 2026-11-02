@@ -1,5 +1,644 @@
 # Riassunto M15 (generato da analisi.py)
 
+## tencentBlock-1548
+richieste 30,000,000, letture 16,909,498, durata 3.7 h; al database: letture 16,909,498, scritture 13,090,502; dati toccati 3.96 GB (letti 3.90 GB)
+  [0]
+    b=0.02 mancate 0.8767 S3 0.8767 Express 0.0000 | medio p50 22.54 p99 97.14 p999 153.5 | doppia: ott p99 48.72, medio p99 87.21 p999 110.5, pess p99 148.50; GET in più 0.0439/lettura | gp3 p99 87.15 | costo in più $910/mese (GET base S3 $18179)
+    b=0.05 mancate 0.8575 S3 0.8575 Express 0.0000 | medio p50 22.10 p99 96.67 p999 153.5 | doppia: ott p99 48.58, medio p99 86.98 p999 109.5, pess p99 148.50; GET in più 0.0429/lettura | gp3 p99 86.93 | costo in più $890/mese (GET base S3 $17780)
+    b=0.1  mancate 0.8219 S3 0.8219 Express 0.0000 | medio p50 21.26 p99 95.76 p999 152.5 | doppia: ott p99 48.32, medio p99 86.53 p999 109.5, pess p99 147.50; GET in più 0.0412/lettura | gp3 p99 86.48 | costo in più $854/mese (GET base S3 $17043)
+    b=0.2  mancate 0.7135 S3 0.7135 Express 0.0000 | medio p50 18.31 p99 92.64 p999 148.5 | doppia: ott p99 47.40, medio p99 85.05 p999 108.5, pess p99 144.50; GET in più 0.0357/lettura | gp3 p99 84.98 | costo in più $741/mese (GET base S3 $14796)
+    b=0.5  mancate 0.3601 S3 0.3601 Express 0.0000 | medio p50 0.05 p99 78.33 p999 130.5 | doppia: ott p99 42.57, medio p99 76.98 p999 101.5, pess p99 131.50; GET in più 0.0181/lettura | gp3 p99 76.91 | costo in più $375/mese (GET base S3 $7467)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.8767 S3 0.0000 Express 0.8767 | medio p50 3.78 p99 9.86 p999 13.3 | doppia: ott p99 4.92, medio p99 9.79 p999 12.0, pess p99 21.71; GET in più 0.0439/lettura | gp3 p99 9.78 | costo in più $2946/mese (GET base S3 $0)
+    b=0.05 mancate 0.8575 S3 0.0000 Express 0.8575 | medio p50 3.73 p99 9.82 p999 13.3 | doppia: ott p99 4.91, medio p99 9.76 p999 12.0, pess p99 21.65; GET in più 0.0429/lettura | gp3 p99 9.76 | costo in più $2912/mese (GET base S3 $0)
+    b=0.1  mancate 0.8219 S3 0.0000 Express 0.8219 | medio p50 3.64 p99 9.76 p999 13.2 | doppia: ott p99 4.88, medio p99 9.71 p999 12.0, pess p99 21.54; GET in più 0.0412/lettura | gp3 p99 9.70 | costo in più $2849/mese (GET base S3 $0)
+    b=0.2  mancate 0.7135 S3 0.0000 Express 0.7135 | medio p50 3.30 p99 9.55 p999 13.0 | doppia: ott p99 4.79, medio p99 9.52 p999 11.9, pess p99 21.17; GET in più 0.0357/lettura | gp3 p99 9.52 | costo in più $2659/mese (GET base S3 $0)
+    b=0.5  mancate 0.3601 S3 0.0000 Express 0.3601 | medio p50 0.05 p99 8.55 p999 12.0 | doppia: ott p99 4.30, medio p99 8.56 p999 11.3, pess p99 19.17; GET in più 0.0181/lettura | gp3 p99 8.55 | costo in più $2036/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.8767 S3 0.6671 Express 0.2096 | medio p50 16.79 p99 91.15 p999 146.5 | doppia: ott p99 46.96, medio p99 84.33 p999 107.5, pess p99 143.50; GET in più 0.0439/lettura | gp3 p99 84.27 | costo in più $80173/mese (GET base S3 $13834)
+    b=0.05 mancate 0.8575 S3 0.6604 Express 0.1971 | medio p50 16.55 p99 90.98 p999 146.5 | doppia: ott p99 46.88, medio p99 84.23 p999 107.5, pess p99 143.50; GET in più 0.0429/lettura | gp3 p99 84.16 | costo in più $79344/mese (GET base S3 $13694)
+    b=0.1  mancate 0.8219 S3 0.6134 Express 0.2085 | medio p50 14.70 p99 89.41 p999 144.5 | doppia: ott p99 46.38, medio p99 83.41 p999 106.5, pess p99 141.50; GET in più 0.0412/lettura | gp3 p99 83.37 | costo in più $73751/mese (GET base S3 $12720)
+    b=0.2  mancate 0.7135 S3 0.5397 Express 0.1739 | medio p50 10.68 p99 86.61 p999 141.5 | doppia: ott p99 45.48, medio p99 81.96 p999 105.5, pess p99 139.50; GET in più 0.0357/lettura | gp3 p99 81.90 | costo in più $64872/mese (GET base S3 $11191)
+    b=0.5  mancate 0.3601 S3 0.2662 Express 0.0939 | medio p50 0.05 p99 72.31 p999 123.5 | doppia: ott p99 40.38, medio p99 72.19 p999 98.4, pess p99 124.50; GET in più 0.0181/lettura | gp3 p99 72.13 | costo in più $32037/mese (GET base S3 $5520)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.8767 S3 0.3789 Express 0.4978 | medio p50 5.29 p99 79.32 p999 131.5 | doppia: ott p99 42.95, medio p99 77.64 p999 101.5, pess p99 132.50; GET in più 0.0439/lettura | gp3 p99 77.62 | costo in più $46293/mese (GET base S3 $7858)
+    b=0.05 mancate 0.8575 S3 0.3786 Express 0.4788 | medio p50 5.22 p99 79.29 p999 131.5 | doppia: ott p99 42.93, medio p99 77.65 p999 101.5, pess p99 132.50; GET in più 0.0429/lettura | gp3 p99 77.62 | costo in più $46223/mese (GET base S3 $7851)
+    b=0.1  mancate 0.8219 S3 0.3705 Express 0.4514 | medio p50 5.02 p99 78.87 p999 131.5 | doppia: ott p99 42.78, medio p99 77.32 p999 101.5, pess p99 131.50; GET in più 0.0412/lettura | gp3 p99 77.32 | costo in più $45208/mese (GET base S3 $7684)
+    b=0.2  mancate 0.7135 S3 0.2746 Express 0.4389 | medio p50 3.99 p99 72.93 p999 124.5 | doppia: ott p99 40.59, medio p99 72.81 p999 98.7, pess p99 125.50; GET in più 0.0357/lettura | gp3 p99 72.65 | costo in più $33718/mese (GET base S3 $5695)
+    b=0.5  mancate 0.3601 S3 0.1257 Express 0.2344 | medio p50 0.05 p99 57.90 p999 104.5 | doppia: ott p99 34.86, medio p99 57.90 p999 90.9, pess p99 95.18; GET in più 0.0181/lettura | gp3 p99 57.88 | costo in più $15549/mese (GET base S3 $2606)
+  [0+1+2 e1]
+    b=0.02 mancate 0.8767 S3 0.0031 Express 0.8736 | medio p50 3.78 p99 10.36 p999 33.0 | doppia: ott p99 5.15, medio p99 10.20 p999 33.1, pess p99 22.29; GET in più 0.0439/lettura | gp3 p99 10.19 | costo in più $2138/mese (GET base S3 $65)
+    b=0.05 mancate 0.8575 S3 0.0031 Express 0.8543 | medio p50 3.74 p99 10.33 p999 33.2 | doppia: ott p99 5.13, medio p99 10.17 p999 33.2, pess p99 22.23; GET in più 0.0429/lettura | gp3 p99 10.17 | costo in più $2104/mese (GET base S3 $65)
+    b=0.1  mancate 0.8219 S3 0.0031 Express 0.8188 | medio p50 3.64 p99 10.27 p999 33.0 | doppia: ott p99 5.11, medio p99 10.12 p999 33.3, pess p99 22.13; GET in più 0.0412/lettura | gp3 p99 10.12 | costo in più $2042/mese (GET base S3 $65)
+    b=0.2  mancate 0.7135 S3 0.0038 Express 0.7098 | medio p50 3.30 p99 10.19 p999 36.4 | doppia: ott p99 5.08, medio p99 10.06 p999 36.4, pess p99 21.90; GET in più 0.0357/lettura | gp3 p99 10.05 | costo in più $1925/mese (GET base S3 $78)
+    b=0.5  mancate 0.3601 S3 0.0054 Express 0.3547 | medio p50 0.05 p99 9.57 p999 42.5 | doppia: ott p99 4.84, medio p99 9.54 p999 42.7, pess p99 20.50; GET in più 0.0181/lettura | gp3 p99 9.54 | costo in più $1491/mese (GET base S3 $111)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.8784 S3 0.2459 Express 0.3447 | medio p50 5.17 p99 79.04 p999 131.5 | doppia: ott p99 58.92, medio p99 77.86 p999 111.5, pess p99 124.50; GET in più 0.0296/lettura | gp3 p99 77.85 | costo in più $57102/mese (GET base S3 $5099) anticipo: precisione 0.56, sprecati 0.42, in ritardo 3846182, byte anticipati per lettura 2122
+    b=0.05 mancate 0.8584 S3 0.2469 Express 0.3310 | medio p50 5.10 p99 79.16 p999 131.5 | doppia: ott p99 58.80, medio p99 77.90 p999 112.5, pess p99 124.50; GET in più 0.0290/lettura | gp3 p99 77.82 | costo in più $56930/mese (GET base S3 $5119) anticipo: precisione 0.59, sprecati 0.38, in ritardo 3748551, byte anticipati per lettura 2019
+    b=0.1  mancate 0.8193 S3 0.2470 Express 0.3058 | medio p50 4.93 p99 78.89 p999 131.5 | doppia: ott p99 58.35, medio p99 77.74 p999 111.5, pess p99 124.50; GET in più 0.0277/lettura | gp3 p99 77.67 | costo in più $56129/mese (GET base S3 $5122) anticipo: precisione 0.62, sprecati 0.33, in ritardo 3560144, byte anticipati per lettura 1862
+    b=0.2  mancate 0.7292 S3 0.2264 Express 0.2704 | medio p50 4.25 p99 76.57 p999 128.5 | doppia: ott p99 55.68, medio p99 75.90 p999 108.5, pess p99 121.50; GET in più 0.0249/lettura | gp3 p99 75.91 | costo in più $49599/mese (GET base S3 $4694) anticipo: precisione 0.68, sprecati 0.27, in ritardo 3106345, byte anticipati per lettura 1571
+    b=0.5  mancate 0.3510 S3 0.0963 Express 0.1584 | medio p50 0.05 p99 58.31 p999 105.5 | doppia: ott p99 40.78, medio p99 58.32 p999 93.9, pess p99 86.46; GET in più 0.0128/lettura | gp3 p99 58.29 | costo in più $18620/mese (GET base S3 $1997) anticipo: precisione 0.82, sprecati 0.14, in ritardo 1286163, byte anticipati per lettura 617
+  [0+1+2+3 seq e0.5]
+    b=0.02 mancate 0.8619 S3 0.1050 Express 0.1607 | medio p50 4.86 p99 78.46 p999 131.5 | doppia: ott p99 71.67, medio p99 77.90 p999 123.5, pess p99 100.50; GET in più 0.0133/lettura | gp3 p99 77.92 | costo in più $93830/mese (GET base S3 $2178) anticipo: precisione 0.41, sprecati 0.57, in ritardo 7967016, byte anticipati per lettura 6196
+    b=0.05 mancate 0.8289 S3 0.1052 Express 0.1437 | medio p50 4.76 p99 78.66 p999 131.5 | doppia: ott p99 71.96, medio p99 78.12 p999 123.5, pess p99 100.50; GET in più 0.0125/lettura | gp3 p99 78.14 | costo in più $93977/mese (GET base S3 $2181) anticipo: precisione 0.44, sprecati 0.52, in ritardo 7751805, byte anticipati per lettura 5862
+    b=0.1  mancate 0.7789 S3 0.1049 Express 0.1226 | medio p50 4.58 p99 78.91 p999 131.5 | doppia: ott p99 72.27, medio p99 78.36 p999 124.5, pess p99 100.50; GET in più 0.0114/lettura | gp3 p99 78.37 | costo in più $94062/mese (GET base S3 $2174) anticipo: precisione 0.48, sprecati 0.46, in ritardo 7369737, byte anticipati per lettura 5409
+    b=0.2  mancate 0.6932 S3 0.1022 Express 0.0956 | medio p50 4.11 p99 78.79 p999 131.5 | doppia: ott p99 72.37, medio p99 78.25 p999 124.5, pess p99 99.79; GET in più 0.0099/lettura | gp3 p99 78.28 | costo in più $91645/mese (GET base S3 $2120) anticipo: precisione 0.52, sprecati 0.41, in ritardo 6620544, byte anticipati per lettura 4730
+    b=0.5  mancate 0.3500 S3 0.0506 Express 0.0487 | medio p50 0.05 p99 63.63 p999 112.5 | doppia: ott p99 57.22, medio p99 63.59 p999 106.5, pess p99 76.67; GET in più 0.0050/lettura | gp3 p99 63.60 | costo in più $42478/mese (GET base S3 $1050) anticipo: precisione 0.56, sprecati 0.39, in ritardo 3349865, byte anticipati per lettura 2556
+  [0+1+2+3 seq+corr e0.5]
+    b=0.02 mancate 0.8605 S3 0.0783 Express 0.1502 | medio p50 4.70 p99 77.65 p999 129.5 | doppia: ott p99 72.42, medio p99 77.31 p999 124.5, pess p99 93.94; GET in più 0.0114/lettura | gp3 p99 77.31 | costo in più $99133/mese (GET base S3 $1624) anticipo: precisione 0.39, sprecati 0.59, in ritardo 8445557, byte anticipati per lettura 6905
+    b=0.05 mancate 0.8276 S3 0.0787 Express 0.1354 | medio p50 4.58 p99 77.67 p999 130.5 | doppia: ott p99 72.54, medio p99 77.30 p999 124.5, pess p99 94.16; GET in più 0.0107/lettura | gp3 p99 77.30 | costo in più $98935/mese (GET base S3 $1633) anticipo: precisione 0.42, sprecati 0.54, in ritardo 8197722, byte anticipati per lettura 6500
+    b=0.1  mancate 0.7754 S3 0.0795 Express 0.1153 | medio p50 4.41 p99 77.99 p999 130.5 | doppia: ott p99 72.86, medio p99 77.60 p999 124.5, pess p99 94.34; GET in più 0.0097/lettura | gp3 p99 77.58 | costo in più $98829/mese (GET base S3 $1648) anticipo: precisione 0.46, sprecati 0.49, in ritardo 7758715, byte anticipati per lettura 5934
+    b=0.2  mancate 0.6903 S3 0.0801 Express 0.0891 | medio p50 4.00 p99 78.12 p999 130.5 | doppia: ott p99 73.06, medio p99 77.75 p999 125.5, pess p99 94.66; GET in più 0.0084/lettura | gp3 p99 77.75 | costo in più $96421/mese (GET base S3 $1661) anticipo: precisione 0.51, sprecati 0.43, in ritardo 6964754, byte anticipati per lettura 5134
+    b=0.5  mancate 0.3472 S3 0.0435 Express 0.0424 | medio p50 0.05 p99 63.45 p999 112.5 | doppia: ott p99 58.15, medio p99 63.45 p999 107.5, pess p99 74.48; GET in più 0.0043/lettura | gp3 p99 63.49 | costo in più $44288/mese (GET base S3 $901) anticipo: precisione 0.56, sprecati 0.39, in ritardo 3493510, byte anticipati per lettura 2687
+  [0+1+2+3+4 w1048576 e0.5]
+    b=0.02 mancate 0.5638 S3 0.0506 Express 0.0756 | medio p50 12.46 p99 149.50 p999 197.5 | doppia: ott p99 149.50, medio p99 149.50 p999 196.5, pess p99 152.50; GET in più 0.0063/lettura | gp3 p99 149.50 | costo in più $284447/mese (GET base S3 $1049) anticipo: precisione 0.07, sprecati 0.92, in ritardo 5846968, byte anticipati per lettura 1007055
+    b=0.05 mancate 0.5260 S3 0.0516 Express 0.0248 | medio p50 13.98 p99 159.50 p999 207.5 | doppia: ott p99 159.50, medio p99 159.50 p999 206.5, pess p99 160.50; GET in più 0.0038/lettura | gp3 p99 159.50 | costo in più $268107/mese (GET base S3 $1069) anticipo: precisione 0.09, sprecati 0.90, in ritardo 6009310, byte anticipati per lettura 807226
+    b=0.1  mancate 0.5047 S3 0.0508 Express 0.0205 | medio p50 5.54 p99 158.50 p999 207.5 | doppia: ott p99 158.50, medio p99 158.50 p999 206.5, pess p99 160.50; GET in più 0.0036/lettura | gp3 p99 158.50 | costo in più $263254/mese (GET base S3 $1054) anticipo: precisione 0.09, sprecati 0.90, in ritardo 5791799, byte anticipati per lettura 784398
+    b=0.2  mancate 0.3785 S3 0.0435 Express 0.0130 | medio p50 0.05 p99 148.50 p999 197.5 | doppia: ott p99 148.50, medio p99 148.50 p999 197.5, pess p99 151.50; GET in più 0.0028/lettura | gp3 p99 148.50 | costo in più $232765/mese (GET base S3 $901) anticipo: precisione 0.07, sprecati 0.92, in ritardo 4304144, byte anticipati per lettura 705758
+    b=0.5  mancate 0.2717 S3 0.0381 Express 0.0057 | medio p50 0.05 p99 140.50 p999 187.5 | doppia: ott p99 140.50, medio p99 140.50 p999 186.5, pess p99 143.50; GET in più 0.0022/lettura | gp3 p99 140.50 | costo in più $216456/mese (GET base S3 $791) anticipo: precisione 0.08, sprecati 0.91, in ritardo 3044916, byte anticipati per lettura 564248
+  [0+1+2+3+4 w262144 e0.5]
+    b=0.02 mancate 0.3945 S3 0.0537 Express 0.0607 | medio p50 0.05 p99 79.39 p999 127.5 | doppia: ott p99 76.10, medio p99 79.37 p999 123.5, pess p99 89.92; GET in più 0.0057/lettura | gp3 p99 79.36 | costo in più $112512/mese (GET base S3 $1113) anticipo: precisione 0.05, sprecati 0.95, in ritardo 3743612, byte anticipati per lettura 253714
+    b=0.05 mancate 0.3283 S3 0.0535 Express 0.0458 | medio p50 0.05 p99 78.14 p999 127.5 | doppia: ott p99 74.68, medio p99 78.09 p999 122.5, pess p99 89.00; GET in più 0.0049/lettura | gp3 p99 78.11 | costo in più $109894/mese (GET base S3 $1110) anticipo: precisione 0.04, sprecati 0.95, in ritardo 3060637, byte anticipati per lettura 241685
+    b=0.1  mancate 0.2803 S3 0.0499 Express 0.0356 | medio p50 0.05 p99 76.13 p999 124.5 | doppia: ott p99 72.50, medio p99 76.11 p999 120.5, pess p99 86.62; GET in più 0.0043/lettura | gp3 p99 76.11 | costo in più $103888/mese (GET base S3 $1035) anticipo: precisione 0.04, sprecati 0.96, in ritardo 2602857, byte anticipati per lettura 229019
+    b=0.2  mancate 0.2413 S3 0.0484 Express 0.0271 | medio p50 0.05 p99 74.44 p999 121.5 | doppia: ott p99 70.56, medio p99 74.44 p999 117.5, pess p99 85.02; GET in più 0.0038/lettura | gp3 p99 74.44 | costo in più $99585/mese (GET base S3 $1004) anticipo: precisione 0.04, sprecati 0.96, in ritardo 2215166, byte anticipati per lettura 202014
+    b=0.5  mancate 0.1454 S3 0.0344 Express 0.0121 | medio p50 0.05 p99 66.02 p999 111.5 | doppia: ott p99 61.89, medio p99 66.01 p999 107.5, pess p99 74.29; GET in più 0.0023/lettura | gp3 p99 66.05 | costo in più $76577/mese (GET base S3 $713) anticipo: precisione 0.05, sprecati 0.94, in ritardo 1322614, byte anticipati per lettura 137175
+  [0+1+2+3+4 w65536 e0.5]
+    b=0.02 mancate 0.4590 S3 0.0497 Express 0.0791 | medio p50 0.05 p99 68.80 p999 118.5 | doppia: ott p99 63.74, medio p99 68.78 p999 113.5, pess p99 80.65; GET in più 0.0064/lettura | gp3 p99 68.80 | costo in più $63734/mese (GET base S3 $1031) anticipo: precisione 0.06, sprecati 0.94, in ritardo 4413092, byte anticipati per lettura 68413
+    b=0.05 mancate 0.4222 S3 0.0493 Express 0.0675 | medio p50 0.05 p99 68.63 p999 117.5 | doppia: ott p99 63.55, medio p99 68.65 p999 111.5, pess p99 80.16; GET in più 0.0058/lettura | gp3 p99 68.68 | costo in più $63133/mese (GET base S3 $1023) anticipo: precisione 0.06, sprecati 0.94, in ritardo 4080883, byte anticipati per lettura 63733
+    b=0.1  mancate 0.3779 S3 0.0482 Express 0.0546 | medio p50 0.05 p99 67.61 p999 117.5 | doppia: ott p99 62.59, medio p99 67.62 p999 112.5, pess p99 79.14; GET in più 0.0051/lettura | gp3 p99 67.67 | costo in più $61849/mese (GET base S3 $1000) anticipo: precisione 0.06, sprecati 0.93, in ritardo 3675671, byte anticipati per lettura 56808
+    b=0.2  mancate 0.3146 S3 0.0452 Express 0.0375 | medio p50 0.05 p99 66.11 p999 114.5 | doppia: ott p99 61.10, medio p99 66.11 p999 110.5, pess p99 77.29; GET in più 0.0041/lettura | gp3 p99 66.15 | costo in più $57939/mese (GET base S3 $937) anticipo: precisione 0.07, sprecati 0.92, in ritardo 3099332, byte anticipati per lettura 46735
+    b=0.5  mancate 0.2064 S3 0.0361 Express 0.0150 | medio p50 0.05 p99 62.23 p999 109.5 | doppia: ott p99 57.36, medio p99 62.21 p999 105.5, pess p99 71.73; GET in più 0.0025/lettura | gp3 p99 62.24 | costo in più $44300/mese (GET base S3 $749) anticipo: precisione 0.12, sprecati 0.87, in ritardo 2075255, byte anticipati per lettura 26606
+  [0+3 corr]
+    b=0.02 mancate 0.8803 S3 0.5906 Express 0.0000 | medio p50 22.46 p99 97.04 p999 153.5 | doppia: ott p99 73.38, medio p99 89.46 p999 127.5, pess p99 141.50; GET in più 0.0296/lettura | gp3 p99 89.39 | costo in più $11358/mese (GET base S3 $12246) anticipo: precisione 0.56, sprecati 0.42, in ritardo 3871093, byte anticipati per lettura 2122
+    b=0.05 mancate 0.8602 S3 0.5779 Express 0.0000 | medio p50 22.01 p99 96.57 p999 153.5 | doppia: ott p99 72.99, medio p99 89.17 p999 127.5, pess p99 141.50; GET in più 0.0290/lettura | gp3 p99 89.12 | costo in più $10822/mese (GET base S3 $11983) anticipo: precisione 0.59, sprecati 0.38, in ritardo 3772619, byte anticipati per lettura 2019
+    b=0.1  mancate 0.8210 S3 0.5529 Express 0.0000 | medio p50 21.08 p99 95.57 p999 151.5 | doppia: ott p99 71.92, medio p99 88.53 p999 125.5, pess p99 140.50; GET in più 0.0277/lettura | gp3 p99 88.48 | costo in più $9999/mese (GET base S3 $11464) anticipo: precisione 0.62, sprecati 0.33, in ritardo 3583304, byte anticipati per lettura 1862
+    b=0.2  mancate 0.7309 S3 0.4968 Express 0.0000 | medio p50 18.67 p99 92.98 p999 148.5 | doppia: ott p99 69.21, medio p99 86.92 p999 123.5, pess p99 138.50; GET in più 0.0249/lettura | gp3 p99 86.88 | costo in più $8471/mese (GET base S3 $10301) anticipo: precisione 0.68, sprecati 0.27, in ritardo 3128509, byte anticipati per lettura 1571
+    b=0.5  mancate 0.3525 S3 0.2547 Express 0.0000 | medio p50 0.05 p99 77.66 p999 129.5 | doppia: ott p99 54.57, medio p99 76.76 p999 108.5, pess p99 124.50; GET in più 0.0128/lettura | gp3 p99 76.74 | costo in più $3390/mese (GET base S3 $5282) anticipo: precisione 0.82, sprecati 0.14, in ritardo 1306936, byte anticipati per lettura 617
+  [0+3 seq]
+    b=0.02 mancate 0.8728 S3 0.2657 Express 0.0000 | medio p50 21.78 p99 96.39 p999 153.5 | doppia: ott p99 88.09, medio p99 92.49 p999 143.5, pess p99 129.50; GET in più 0.0133/lettura | gp3 p99 92.51 | costo in più $15047/mese (GET base S3 $5510) anticipo: precisione 0.41, sprecati 0.57, in ritardo 8112621, byte anticipati per lettura 6196
+    b=0.05 mancate 0.8391 S3 0.2489 Express 0.0000 | medio p50 20.99 p99 95.50 p999 152.5 | doppia: ott p99 87.62, medio p99 91.87 p999 143.5, pess p99 127.50; GET in più 0.0125/lettura | gp3 p99 91.82 | costo in più $14494/mese (GET base S3 $5160) anticipo: precisione 0.44, sprecati 0.52, in ritardo 7887613, byte anticipati per lettura 5862
+    b=0.1  mancate 0.7883 S3 0.2274 Express 0.0000 | medio p50 19.70 p99 94.17 p999 150.5 | doppia: ott p99 86.54, medio p99 90.85 p999 141.5, pess p99 125.50; GET in più 0.0114/lettura | gp3 p99 90.79 | costo in più $13668/mese (GET base S3 $4716) anticipo: precisione 0.48, sprecati 0.46, in ritardo 7495016, byte anticipati per lettura 5409
+    b=0.2  mancate 0.7028 S3 0.1978 Express 0.0000 | medio p50 17.22 p99 91.53 p999 147.5 | doppia: ott p99 84.24, medio p99 88.75 p999 138.5, pess p99 122.50; GET in più 0.0099/lettura | gp3 p99 88.75 | costo in più $12302/mese (GET base S3 $4102) anticipo: precisione 0.52, sprecati 0.41, in ritardo 6748019, byte anticipati per lettura 4730
+    b=0.5  mancate 0.3563 S3 0.0993 Express 0.0000 | medio p50 0.05 p99 77.16 p999 129.5 | doppia: ott p99 70.33, medio p99 76.80 p999 121.5, pess p99 98.14; GET in più 0.0050/lettura | gp3 p99 76.77 | costo in più $7492/mese (GET base S3 $2060) anticipo: precisione 0.56, sprecati 0.39, in ritardo 3433408, byte anticipati per lettura 2556
+  [0+3 seq+corr]
+    b=0.02 mancate 0.8723 S3 0.2285 Express 0.0000 | medio p50 21.73 p99 96.39 p999 153.5 | doppia: ott p99 89.59, medio p99 93.05 p999 144.5, pess p99 126.50; GET in più 0.0114/lettura | gp3 p99 93.04 | costo in più $18689/mese (GET base S3 $4738) anticipo: precisione 0.39, sprecati 0.59, in ritardo 8603134, byte anticipati per lettura 6905
+    b=0.05 mancate 0.8386 S3 0.2141 Express 0.0000 | medio p50 20.95 p99 95.56 p999 152.5 | doppia: ott p99 88.91, medio p99 92.39 p999 144.5, pess p99 125.50; GET in più 0.0107/lettura | gp3 p99 92.39 | costo in più $17750/mese (GET base S3 $4440) anticipo: precisione 0.42, sprecati 0.54, in ritardo 8345630, byte anticipati per lettura 6500
+    b=0.1  mancate 0.7852 S3 0.1948 Express 0.0000 | medio p50 19.59 p99 93.95 p999 150.5 | doppia: ott p99 87.63, medio p99 91.13 p999 143.5, pess p99 123.50; GET in più 0.0097/lettura | gp3 p99 91.12 | costo in più $16389/mese (GET base S3 $4039) anticipo: precisione 0.46, sprecati 0.49, in ritardo 7890445, byte anticipati per lettura 5934
+    b=0.2  mancate 0.7004 S3 0.1691 Express 0.0000 | medio p50 17.11 p99 91.55 p999 147.5 | doppia: ott p99 85.30, medio p99 89.14 p999 139.5, pess p99 119.50; GET in più 0.0084/lettura | gp3 p99 89.16 | costo in più $14382/mese (GET base S3 $3507) anticipo: precisione 0.51, sprecati 0.43, in ritardo 7098952, byte anticipati per lettura 5134
+    b=0.5  mancate 0.3538 S3 0.0858 Express 0.0000 | medio p50 0.05 p99 76.90 p999 129.5 | doppia: ott p99 71.10, medio p99 76.61 p999 122.5, pess p99 95.18; GET in più 0.0043/lettura | gp3 p99 76.59 | costo in più $8155/mese (GET base S3 $1780) anticipo: precisione 0.56, sprecati 0.39, in ritardo 3581461, byte anticipati per lettura 2687
+  [0-lru]
+    b=0.02 mancate 0.8830 S3 0.8830 Express 0.0000 | medio p50 22.68 p99 97.29 p999 154.5 | doppia: ott p99 48.77, medio p99 87.28 p999 110.5, pess p99 148.50; GET in più 0.0442/lettura | gp3 p99 87.23 | costo in più $917/mese (GET base S3 $18311)
+    b=0.05 mancate 0.8675 S3 0.8675 Express 0.0000 | medio p50 22.33 p99 96.91 p999 153.5 | doppia: ott p99 48.66, medio p99 87.10 p999 110.5, pess p99 148.50; GET in più 0.0434/lettura | gp3 p99 87.05 | costo in più $901/mese (GET base S3 $17988)
+    b=0.1  mancate 0.8522 S3 0.8522 Express 0.0000 | medio p50 21.98 p99 96.55 p999 153.5 | doppia: ott p99 48.55, medio p99 86.91 p999 109.5, pess p99 148.50; GET in più 0.0427/lettura | gp3 p99 86.86 | costo in più $885/mese (GET base S3 $17672)
+    b=0.2  mancate 0.8321 S3 0.8321 Express 0.0000 | medio p50 21.51 p99 96.02 p999 152.5 | doppia: ott p99 48.40, medio p99 86.66 p999 109.5, pess p99 147.50; GET in più 0.0417/lettura | gp3 p99 86.62 | costo in più $864/mese (GET base S3 $17255)
+    b=0.5  mancate 0.6695 S3 0.6695 Express 0.0000 | medio p50 16.87 p99 91.28 p999 146.5 | doppia: ott p99 46.97, medio p99 84.35 p999 107.5, pess p99 143.50; GET in più 0.0335/lettura | gp3 p99 84.31 | costo in più $695/mese (GET base S3 $13882)
+  [4 w1048576]
+    b=0.02 mancate 0.1451 S3 0.1451 Express 0.0000 | medio p50 0.05 p99 72.89 p999 120.5 | doppia: ott p99 48.19, medio p99 72.91 p999 111.5, pess p99 113.50; GET in più 0.0073/lettura | gp3 p99 72.85 | costo in più $151/mese (GET base S3 $3008)
+    b=0.05 mancate 0.1419 S3 0.1419 Express 0.0000 | medio p50 0.05 p99 72.47 p999 120.5 | doppia: ott p99 48.03, medio p99 72.49 p999 110.5, pess p99 112.50; GET in più 0.0071/lettura | gp3 p99 72.43 | costo in più $147/mese (GET base S3 $2942)
+    b=0.1  mancate 0.1309 S3 0.1309 Express 0.0000 | medio p50 0.05 p99 70.95 p999 118.5 | doppia: ott p99 47.43, medio p99 70.96 p999 109.5, pess p99 109.50; GET in più 0.0065/lettura | gp3 p99 70.98 | costo in più $136/mese (GET base S3 $2714)
+    b=0.2  mancate 0.1010 S3 0.1010 Express 0.0000 | medio p50 0.05 p99 66.18 p999 112.5 | doppia: ott p99 45.53, medio p99 66.16 p999 107.5, pess p99 98.37; GET in più 0.0050/lettura | gp3 p99 66.20 | costo in più $104/mese (GET base S3 $2094)
+    b=0.5  mancate 0.0548 S3 0.0548 Express 0.0000 | medio p50 0.05 p99 55.21 p999 99.2 | doppia: ott p99 40.89, medio p99 55.21 p999 98.8, pess p99 75.21; GET in più 0.0027/lettura | gp3 p99 55.24 | costo in più $56/mese (GET base S3 $1136)
+  [4 w262144]
+    b=0.02 mancate 0.1581 S3 0.1581 Express 0.0000 | medio p50 0.05 p99 65.26 p999 113.5 | doppia: ott p99 39.57, medio p99 65.24 p999 97.8, pess p99 107.50; GET in più 0.0079/lettura | gp3 p99 65.25 | costo in più $164/mese (GET base S3 $3278)
+    b=0.05 mancate 0.1343 S3 0.1343 Express 0.0000 | medio p50 0.05 p99 62.20 p999 109.5 | doppia: ott p99 38.38, medio p99 62.21 p999 96.2, pess p99 100.50; GET in più 0.0067/lettura | gp3 p99 62.21 | costo in più $139/mese (GET base S3 $2786)
+    b=0.1  mancate 0.1105 S3 0.1105 Express 0.0000 | medio p50 0.05 p99 58.56 p999 105.5 | doppia: ott p99 36.95, medio p99 58.57 p999 94.2, pess p99 92.75; GET in più 0.0055/lettura | gp3 p99 58.58 | costo in più $114/mese (GET base S3 $2292)
+    b=0.2  mancate 0.0822 S3 0.0822 Express 0.0000 | medio p50 0.05 p99 53.15 p999 98.7 | doppia: ott p99 34.74, medio p99 53.15 p999 91.0, pess p99 80.99; GET in più 0.0041/lettura | gp3 p99 53.23 | costo in più $85/mese (GET base S3 $1705)
+    b=0.5  mancate 0.0503 S3 0.0503 Express 0.0000 | medio p50 0.05 p99 44.49 p999 88.3 | doppia: ott p99 30.99, medio p99 44.49 p999 85.4, pess p99 63.01; GET in più 0.0025/lettura | gp3 p99 44.45 | costo in più $52/mese (GET base S3 $1044)
+  [4 w65536]
+    b=0.02 mancate 0.1847 S3 0.1847 Express 0.0000 | medio p50 0.05 p99 65.90 p999 114.5 | doppia: ott p99 38.42, medio p99 65.92 p999 95.8, pess p99 112.50; GET in più 0.0092/lettura | gp3 p99 65.91 | costo in più $191/mese (GET base S3 $3831)
+    b=0.05 mancate 0.1608 S3 0.1608 Express 0.0000 | medio p50 0.05 p99 63.27 p999 111.5 | doppia: ott p99 37.38, medio p99 63.26 p999 94.5, pess p99 106.50; GET in più 0.0080/lettura | gp3 p99 63.25 | costo in più $167/mese (GET base S3 $3335)
+    b=0.1  mancate 0.1365 S3 0.1365 Express 0.0000 | medio p50 0.05 p99 60.18 p999 107.5 | doppia: ott p99 36.19, medio p99 60.20 p999 92.9, pess p99 99.29; GET in più 0.0068/lettura | gp3 p99 60.19 | costo in più $142/mese (GET base S3 $2831)
+    b=0.2  mancate 0.1139 S3 0.1139 Express 0.0000 | medio p50 0.05 p99 56.79 p999 103.5 | doppia: ott p99 34.85, medio p99 56.81 p999 91.0, pess p99 91.66; GET in più 0.0057/lettura | gp3 p99 56.82 | costo in più $118/mese (GET base S3 $2361)
+    b=0.5  mancate 0.0753 S3 0.0753 Express 0.0000 | medio p50 0.05 p99 49.27 p999 94.5 | doppia: ott p99 31.76, medio p99 49.27 p999 86.7, pess p99 75.38; GET in più 0.0038/lettura | gp3 p99 49.33 | costo in più $78/mese (GET base S3 $1561)
+
+## tencentBlock-2982
+richieste 30,000,000, letture 80,820, durata 1.6 h; al database: letture 80,820, scritture 29,919,180; dati toccati 38.27 GB (letti 0.28 GB)
+  [0]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.98 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0486/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.98 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0486/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9993 S3 0.9993 Express 0.0000 | medio p50 24.97 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0485/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20721)
+    b=0.2  mancate 0.9331 S3 0.9331 Express 0.0000 | medio p50 23.64 p99 96.33 p999 151.5 | doppia: ott p99 48.64, medio p99 87.37 p999 110.5, pess p99 150.50; GET in più 0.0456/lettura | gp3 p99 88.09 | costo in più $947/mese (GET base S3 $19348)
+    b=0.5  mancate 0.8687 S3 0.8687 Express 0.0000 | medio p50 22.26 p99 95.17 p999 150.5 | doppia: ott p99 48.37, medio p99 86.53 p999 109.5, pess p99 149.50; GET in più 0.0425/lettura | gp3 p99 87.48 | costo in più $882/mese (GET base S3 $18014)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.04 p99 9.93 p999 13.4 | doppia: ott p99 4.96, medio p99 9.82 p999 12.1, pess p99 22.05; GET in più 0.0486/lettura | gp3 p99 9.90 | costo in più $658328/mese (GET base S3 $0)
+    b=0.05 mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.04 p99 9.93 p999 13.4 | doppia: ott p99 4.96, medio p99 9.82 p999 12.1, pess p99 22.05; GET in più 0.0486/lettura | gp3 p99 9.89 | costo in più $658328/mese (GET base S3 $0)
+    b=0.1  mancate 0.9993 S3 0.0000 Express 0.9993 | medio p50 4.04 p99 9.93 p999 13.4 | doppia: ott p99 4.96, medio p99 9.82 p999 12.1, pess p99 22.05; GET in più 0.0485/lettura | gp3 p99 9.89 | costo in più $658327/mese (GET base S3 $0)
+    b=0.2  mancate 0.9331 S3 0.0000 Express 0.9331 | medio p50 3.90 p99 9.80 p999 13.2 | doppia: ott p99 4.92, medio p99 9.75 p999 12.1, pess p99 21.85; GET in più 0.0456/lettura | gp3 p99 9.83 | costo in più $658211/mese (GET base S3 $0)
+    b=0.5  mancate 0.8687 S3 0.0000 Express 0.8687 | medio p50 3.75 p99 9.72 p999 13.1 | doppia: ott p99 4.88, medio p99 9.69 p999 12.0, pess p99 21.70; GET in più 0.0425/lettura | gp3 p99 9.73 | costo in più $658098/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.9999 S3 0.7919 Express 0.2079 | medio p50 20.53 p99 93.16 p999 148.5 | doppia: ott p99 47.81, medio p99 85.68 p999 108.5, pess p99 146.50; GET in più 0.0486/lettura | gp3 p99 86.29 | costo in più $95068/mese (GET base S3 $16422)
+    b=0.05 mancate 0.9999 S3 0.7919 Express 0.2079 | medio p50 20.52 p99 93.19 p999 148.5 | doppia: ott p99 47.80, medio p99 85.69 p999 108.5, pess p99 146.50; GET in più 0.0486/lettura | gp3 p99 86.23 | costo in più $95066/mese (GET base S3 $16421)
+    b=0.1  mancate 0.9993 S3 0.7919 Express 0.2074 | medio p50 20.53 p99 93.53 p999 149.5 | doppia: ott p99 47.85, medio p99 85.83 p999 109.5, pess p99 146.50; GET in più 0.0485/lettura | gp3 p99 86.21 | costo in più $95066/mese (GET base S3 $16422)
+    b=0.2  mancate 0.9331 S3 0.7918 Express 0.1413 | medio p50 20.51 p99 93.48 p999 147.5 | doppia: ott p99 47.55, medio p99 85.83 p999 107.5, pess p99 146.50; GET in più 0.0456/lettura | gp3 p99 86.19 | costo in più $94934/mese (GET base S3 $16418)
+    b=0.5  mancate 0.8687 S3 0.7909 Express 0.0779 | medio p50 20.46 p99 93.52 p999 148.5 | doppia: ott p99 47.87, medio p99 85.57 p999 107.5, pess p99 147.50; GET in più 0.0425/lettura | gp3 p99 86.29 | costo in più $94715/mese (GET base S3 $16399)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.9999 S3 0.7919 Express 0.2079 | medio p50 20.53 p99 93.16 p999 148.5 | doppia: ott p99 47.81, medio p99 85.68 p999 108.5, pess p99 146.50; GET in più 0.0486/lettura | gp3 p99 86.29 | costo in più $95135/mese (GET base S3 $16422)
+    b=0.05 mancate 0.9999 S3 0.7919 Express 0.2079 | medio p50 20.52 p99 93.19 p999 148.5 | doppia: ott p99 47.80, medio p99 85.69 p999 108.5, pess p99 146.50; GET in più 0.0486/lettura | gp3 p99 86.23 | costo in più $95133/mese (GET base S3 $16421)
+    b=0.1  mancate 0.9993 S3 0.7919 Express 0.2074 | medio p50 20.53 p99 93.53 p999 149.5 | doppia: ott p99 47.85, medio p99 85.83 p999 109.5, pess p99 146.50; GET in più 0.0485/lettura | gp3 p99 86.21 | costo in più $95134/mese (GET base S3 $16422)
+    b=0.2  mancate 0.9331 S3 0.7918 Express 0.1413 | medio p50 20.51 p99 93.48 p999 147.5 | doppia: ott p99 47.55, medio p99 85.83 p999 107.5, pess p99 146.50; GET in più 0.0456/lettura | gp3 p99 86.19 | costo in più $95002/mese (GET base S3 $16418)
+    b=0.5  mancate 0.8687 S3 0.7909 Express 0.0779 | medio p50 20.46 p99 93.52 p999 148.5 | doppia: ott p99 47.87, medio p99 85.57 p999 107.5, pess p99 147.50; GET in più 0.0425/lettura | gp3 p99 86.29 | costo in più $94782/mese (GET base S3 $16399)
+  [0+1+2 e1]
+    b=0.02 mancate 0.9999 S3 0.7919 Express 0.2079 | medio p50 20.53 p99 93.16 p999 148.5 | doppia: ott p99 47.81, medio p99 85.68 p999 108.5, pess p99 146.50; GET in più 0.0486/lettura | gp3 p99 86.29 | costo in più $95248/mese (GET base S3 $16422)
+    b=0.05 mancate 0.9999 S3 0.7919 Express 0.2079 | medio p50 20.52 p99 93.19 p999 148.5 | doppia: ott p99 47.80, medio p99 85.69 p999 108.5, pess p99 146.50; GET in più 0.0486/lettura | gp3 p99 86.23 | costo in più $95246/mese (GET base S3 $16421)
+    b=0.1  mancate 0.9993 S3 0.7919 Express 0.2074 | medio p50 20.53 p99 93.53 p999 149.5 | doppia: ott p99 47.85, medio p99 85.83 p999 109.5, pess p99 146.50; GET in più 0.0485/lettura | gp3 p99 86.21 | costo in più $95247/mese (GET base S3 $16422)
+    b=0.2  mancate 0.9331 S3 0.7918 Express 0.1413 | medio p50 20.51 p99 93.48 p999 147.5 | doppia: ott p99 47.55, medio p99 85.83 p999 107.5, pess p99 146.50; GET in più 0.0456/lettura | gp3 p99 86.19 | costo in più $95114/mese (GET base S3 $16418)
+    b=0.5  mancate 0.8687 S3 0.7909 Express 0.0779 | medio p50 20.46 p99 93.52 p999 148.5 | doppia: ott p99 47.87, medio p99 85.57 p999 107.5, pess p99 147.50; GET in più 0.0425/lettura | gp3 p99 86.29 | costo in più $94895/mese (GET base S3 $16399)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9996 S3 0.7919 Express 0.1103 | medio p50 20.47 p99 93.72 p999 148.5 | doppia: ott p99 47.86, medio p99 85.58 p999 107.5, pess p99 146.50; GET in più 0.0441/lettura | gp3 p99 86.18 | costo in più $95132/mese (GET base S3 $16422) anticipo: precisione 0.93, sprecati 0.07, in ritardo 5254, byte anticipati per lettura 430
+    b=0.05 mancate 0.9996 S3 0.7919 Express 0.1103 | medio p50 20.46 p99 93.72 p999 148.5 | doppia: ott p99 47.86, medio p99 85.58 p999 107.5, pess p99 146.50; GET in più 0.0441/lettura | gp3 p99 86.03 | costo in più $95130/mese (GET base S3 $16421) anticipo: precisione 0.93, sprecati 0.07, in ritardo 5253, byte anticipati per lettura 430
+    b=0.1  mancate 0.9990 S3 0.7919 Express 0.1100 | medio p50 20.46 p99 93.68 p999 147.5 | doppia: ott p99 47.81, medio p99 85.65 p999 108.5, pess p99 146.50; GET in più 0.0441/lettura | gp3 p99 86.21 | costo in più $95131/mese (GET base S3 $16422) anticipo: precisione 0.93, sprecati 0.07, in ritardo 5238, byte anticipati per lettura 429
+    b=0.2  mancate 0.9329 S3 0.7918 Express 0.0720 | medio p50 20.47 p99 93.25 p999 148.5 | doppia: ott p99 47.80, medio p99 85.65 p999 107.5, pess p99 147.50; GET in più 0.0424/lettura | gp3 p99 86.38 | costo in più $94995/mese (GET base S3 $16418) anticipo: precisione 0.97, sprecati 0.00, in ritardo 3727, byte anticipati per lettura 294
+    b=0.5  mancate 0.8687 S3 0.7909 Express 0.0394 | medio p50 20.46 p99 93.36 p999 148.5 | doppia: ott p99 47.80, medio p99 85.65 p999 107.5, pess p99 147.50; GET in più 0.0408/lettura | gp3 p99 86.21 | costo in più $94779/mese (GET base S3 $16399) anticipo: precisione 0.98, sprecati 0.00, in ritardo 2073, byte anticipati per lettura 161
+  [0+1+2+3 seq e0.5]
+    b=0.02 mancate 0.9977 S3 0.1656 Express 0.0261 | medio p50 19.89 p99 93.91 p999 145.5 | doppia: ott p99 89.20, medio p99 90.77 p999 140.5, pess p99 120.50; GET in più 0.0093/lettura | gp3 p99 91.73 | costo in più $177044/mese (GET base S3 $3435) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43488, byte anticipati per lettura 6143
+    b=0.05 mancate 0.9980 S3 0.1656 Express 0.0261 | medio p50 19.72 p99 94.22 p999 148.5 | doppia: ott p99 90.33, medio p99 91.94 p999 143.5, pess p99 122.50; GET in più 0.0093/lettura | gp3 p99 92.75 | costo in più $177015/mese (GET base S3 $3435) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43502, byte anticipati per lettura 6141
+    b=0.1  mancate 0.9973 S3 0.1656 Express 0.0260 | medio p50 19.84 p99 92.30 p999 150.5 | doppia: ott p99 87.21, medio p99 89.83 p999 144.5, pess p99 120.50; GET in più 0.0093/lettura | gp3 p99 90.79 | costo in più $177034/mese (GET base S3 $3435) anticipo: precisione 0.54, sprecati 0.45, in ritardo 43473, byte anticipati per lettura 6134
+    b=0.2  mancate 0.9302 S3 0.1655 Express 0.0166 | medio p50 19.70 p99 94.29 p999 154.5 | doppia: ott p99 89.62, medio p99 91.49 p999 147.5, pess p99 122.50; GET in più 0.0088/lettura | gp3 p99 92.67 | costo in più $176678/mese (GET base S3 $3431) anticipo: precisione 0.54, sprecati 0.43, in ritardo 40364, byte anticipati per lettura 5724
+    b=0.5  mancate 0.8049 S3 0.1647 Express 0.0051 | medio p50 19.75 p99 92.87 p999 147.5 | doppia: ott p99 88.26, medio p99 90.44 p999 140.5, pess p99 120.50; GET in più 0.0082/lettura | gp3 p99 90.56 | costo in più $176384/mese (GET base S3 $3415) anticipo: precisione 0.51, sprecati 0.63, in ritardo 34269, byte anticipati per lettura 5158
+  [0+1+2+3 seq+corr e0.5]
+    b=0.02 mancate 0.9971 S3 0.1656 Express 0.0178 | medio p50 19.78 p99 94.42 p999 152.5 | doppia: ott p99 89.06, medio p99 91.38 p999 147.5, pess p99 122.50; GET in più 0.0088/lettura | gp3 p99 91.88 | costo in più $177045/mese (GET base S3 $3435) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43902, byte anticipati per lettura 6188
+    b=0.05 mancate 0.9973 S3 0.1656 Express 0.0178 | medio p50 19.84 p99 95.77 p999 146.5 | doppia: ott p99 91.07, medio p99 92.72 p999 144.5, pess p99 122.50; GET in più 0.0088/lettura | gp3 p99 93.57 | costo in più $177017/mese (GET base S3 $3435) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43917, byte anticipati per lettura 6186
+    b=0.1  mancate 0.9969 S3 0.1656 Express 0.0177 | medio p50 19.81 p99 95.51 p999 148.5 | doppia: ott p99 90.80, medio p99 92.36 p999 145.5, pess p99 122.50; GET in più 0.0088/lettura | gp3 p99 93.40 | costo in più $177035/mese (GET base S3 $3435) anticipo: precisione 0.54, sprecati 0.45, in ritardo 43897, byte anticipati per lettura 6177
+    b=0.2  mancate 0.9301 S3 0.1655 Express 0.0124 | medio p50 19.75 p99 94.21 p999 147.5 | doppia: ott p99 89.39, medio p99 91.01 p999 139.5, pess p99 121.50; GET in più 0.0086/lettura | gp3 p99 91.46 | costo in più $176681/mese (GET base S3 $3431) anticipo: precisione 0.54, sprecati 0.43, in ritardo 40590, byte anticipati per lettura 5749
+    b=0.5  mancate 0.8048 S3 0.1647 Express 0.0030 | medio p50 19.75 p99 93.53 p999 147.5 | doppia: ott p99 89.18, medio p99 90.85 p999 141.5, pess p99 121.50; GET in più 0.0081/lettura | gp3 p99 91.48 | costo in più $176385/mese (GET base S3 $3415) anticipo: precisione 0.51, sprecati 0.63, in ritardo 34375, byte anticipati per lettura 5169
+  [0+1+2+3+4 w1048576 e0.5]
+    b=0.02 mancate 0.6433 S3 0.0227 Express 0.0104 | medio p50 38.22 p99 146.50 p999 186.5 | doppia: ott p99 146.50, medio p99 146.50 p999 186.5, pess p99 147.50; GET in più 0.0016/lettura | gp3 p99 146.50 | costo in più $49431/mese (GET base S3 $471) anticipo: precisione 0.20, sprecati 0.80, in ritardo 32926, byte anticipati per lettura 225157
+    b=0.05 mancate 0.5731 S3 0.0224 Express 0.0073 | medio p50 22.99 p99 146.50 p999 194.5 | doppia: ott p99 146.50, medio p99 146.50 p999 194.5, pess p99 148.50; GET in più 0.0015/lettura | gp3 p99 146.50 | costo in più $48522/mese (GET base S3 $465) anticipo: precisione 0.22, sprecati 0.78, in ritardo 29321, byte anticipati per lettura 197056
+    b=0.1  mancate 0.3867 S3 0.0216 Express 0.0045 | medio p50 0.05 p99 129.50 p999 155.5 | doppia: ott p99 128.50, medio p99 128.50 p999 155.5, pess p99 129.50; GET in più 0.0013/lettura | gp3 p99 128.50 | costo in più $44309/mese (GET base S3 $449) anticipo: precisione 0.23, sprecati 0.77, in ritardo 19457, byte anticipati per lettura 163145
+    b=0.2  mancate 0.3405 S3 0.0213 Express 0.0039 | medio p50 0.05 p99 140.50 p999 203.5 | doppia: ott p99 140.50, medio p99 140.50 p999 203.5, pess p99 141.50; GET in più 0.0013/lettura | gp3 p99 140.50 | costo in più $43833/mese (GET base S3 $442) anticipo: precisione 0.24, sprecati 0.75, in ritardo 17014, byte anticipati per lettura 148997
+    b=0.5  mancate 0.2855 S3 0.0207 Express 0.0026 | medio p50 0.05 p99 140.50 p999 160.5 | doppia: ott p99 140.50, medio p99 140.50 p999 159.5, pess p99 141.50; GET in più 0.0012/lettura | gp3 p99 140.50 | costo in più $42459/mese (GET base S3 $430) anticipo: precisione 0.26, sprecati 1.24, in ritardo 14149, byte anticipati per lettura 130477
+  [0+1+2+3+4 w262144 e0.5]
+    b=0.02 mancate 0.6418 S3 0.0355 Express 0.0105 | medio p50 19.17 p99 92.83 p999 140.5 | doppia: ott p99 91.72, medio p99 92.34 p999 139.5, pess p99 102.50; GET in più 0.0024/lettura | gp3 p99 92.64 | costo in più $54663/mese (GET base S3 $735) anticipo: precisione 0.18, sprecati 0.82, in ritardo 32151, byte anticipati per lettura 90876
+    b=0.05 mancate 0.5480 S3 0.0334 Express 0.0077 | medio p50 8.73 p99 90.73 p999 136.5 | doppia: ott p99 90.13, medio p99 90.62 p999 135.5, pess p99 96.81; GET in più 0.0021/lettura | gp3 p99 90.55 | costo in più $51466/mese (GET base S3 $693) anticipo: precisione 0.20, sprecati 0.80, in ritardo 27347, byte anticipati per lettura 81344
+    b=0.1  mancate 0.5408 S3 0.0332 Express 0.0066 | medio p50 8.34 p99 95.19 p999 135.5 | doppia: ott p99 94.77, medio p99 94.94 p999 134.5, pess p99 100.50; GET in più 0.0020/lettura | gp3 p99 95.31 | costo in più $51160/mese (GET base S3 $689) anticipo: precisione 0.20, sprecati 0.80, in ritardo 27032, byte anticipati per lettura 78788
+    b=0.2  mancate 0.5201 S3 0.0328 Express 0.0058 | medio p50 5.39 p99 93.71 p999 135.5 | doppia: ott p99 92.92, medio p99 93.22 p999 134.5, pess p99 100.50; GET in più 0.0019/lettura | gp3 p99 93.35 | costo in più $50875/mese (GET base S3 $680) anticipo: precisione 0.21, sprecati 0.79, in ritardo 25980, byte anticipati per lettura 76554
+    b=0.5  mancate 0.4213 S3 0.0324 Express 0.0019 | medio p50 0.05 p99 92.29 p999 200.5 | doppia: ott p99 91.37, medio p99 91.99 p999 200.5, pess p99 100.50; GET in più 0.0017/lettura | gp3 p99 92.10 | costo in più $50384/mese (GET base S3 $672) anticipo: precisione 0.25, sprecati 1.37, in ritardo 20880, byte anticipati per lettura 61225
+  [0+1+2+3+4 w65536 e0.5]
+    b=0.02 mancate 0.6825 S3 0.0583 Express 0.0092 | medio p50 13.28 p99 98.39 p999 149.5 | doppia: ott p99 97.88, medio p99 97.97 p999 148.5, pess p99 102.50; GET in più 0.0035/lettura | gp3 p99 98.18 | costo in più $77564/mese (GET base S3 $1209) anticipo: precisione 0.16, sprecati 0.84, in ritardo 33182, byte anticipati per lettura 38178
+    b=0.05 mancate 0.6739 S3 0.0553 Express 0.0085 | medio p50 12.14 p99 85.94 p999 120.5 | doppia: ott p99 80.24, medio p99 84.69 p999 114.5, pess p99 97.41; GET in più 0.0033/lettura | gp3 p99 84.46 | costo in più $76024/mese (GET base S3 $1146) anticipo: precisione 0.16, sprecati 0.84, in ritardo 32923, byte anticipati per lettura 37249
+    b=0.1  mancate 0.6717 S3 0.0549 Express 0.0080 | medio p50 12.20 p99 96.40 p999 127.5 | doppia: ott p99 94.00, medio p99 95.26 p999 126.5, pess p99 101.50; GET in più 0.0033/lettura | gp3 p99 95.61 | costo in più $75907/mese (GET base S3 $1139) anticipo: precisione 0.16, sprecati 0.83, in ritardo 32850, byte anticipati per lettura 36948
+    b=0.2  mancate 0.6654 S3 0.0545 Express 0.0069 | medio p50 12.32 p99 97.75 p999 123.5 | doppia: ott p99 96.86, medio p99 97.06 p999 122.5, pess p99 104.50; GET in più 0.0032/lettura | gp3 p99 97.08 | costo in più $75620/mese (GET base S3 $1131) anticipo: precisione 0.17, sprecati 0.83, in ritardo 32589, byte anticipati per lettura 36216
+    b=0.5  mancate 0.6037 S3 0.0542 Express 0.0023 | medio p50 11.93 p99 95.53 p999 134.5 | doppia: ott p99 94.21, medio p99 94.72 p999 126.5, pess p99 102.50; GET in più 0.0030/lettura | gp3 p99 95.04 | costo in più $75394/mese (GET base S3 $1124) anticipo: precisione 0.17, sprecati 1.19, in ritardo 29525, byte anticipati per lettura 33161
+  [0+3 corr]
+    b=0.02 mancate 0.9997 S3 0.9023 Express 0.0000 | medio p50 24.94 p99 97.69 p999 152.5 | doppia: ott p99 57.36, medio p99 88.36 p999 114.5, pess p99 150.50; GET in più 0.0441/lettura | gp3 p99 89.19 | costo in più $3092/mese (GET base S3 $18709) anticipo: precisione 0.93, sprecati 0.07, in ritardo 5256, byte anticipati per lettura 430
+    b=0.05 mancate 0.9996 S3 0.9022 Express 0.0000 | medio p50 24.93 p99 97.69 p999 152.5 | doppia: ott p99 57.42, medio p99 88.36 p999 114.5, pess p99 150.50; GET in più 0.0441/lettura | gp3 p99 89.21 | costo in più $3092/mese (GET base S3 $18709) anticipo: precisione 0.93, sprecati 0.07, in ritardo 5255, byte anticipati per lettura 430
+    b=0.1  mancate 0.9991 S3 0.9019 Express 0.0000 | medio p50 24.92 p99 97.77 p999 152.5 | doppia: ott p99 57.68, medio p99 88.52 p999 115.5, pess p99 150.50; GET in più 0.0441/lettura | gp3 p99 89.13 | costo in più $3084/mese (GET base S3 $18703) anticipo: precisione 0.93, sprecati 0.07, in ritardo 5241, byte anticipati per lettura 429
+    b=0.2  mancate 0.9329 S3 0.8638 Express 0.0000 | medio p50 23.62 p99 96.05 p999 150.5 | doppia: ott p99 54.00, medio p99 87.58 p999 113.5, pess p99 149.50; GET in più 0.0424/lettura | gp3 p99 88.49 | costo in più $2368/mese (GET base S3 $17911) anticipo: precisione 0.97, sprecati 0.00, in ritardo 3730, byte anticipati per lettura 294
+    b=0.5  mancate 0.8687 S3 0.8303 Express 0.0000 | medio p50 22.21 p99 95.00 p999 150.5 | doppia: ott p99 51.10, medio p99 86.56 p999 111.5, pess p99 148.50; GET in più 0.0408/lettura | gp3 p99 87.31 | costo in più $1662/mese (GET base S3 $17216) anticipo: precisione 0.98, sprecati 0.00, in ritardo 2073, byte anticipati per lettura 161
+  [0+3 seq]
+    b=0.02 mancate 0.9980 S3 0.1917 Express 0.0000 | medio p50 24.39 p99 100.50 p999 155.5 | doppia: ott p99 95.70, medio p99 96.79 p999 149.5, pess p99 126.50; GET in più 0.0093/lettura | gp3 p99 98.00 | costo in più $18042/mese (GET base S3 $3976) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43502, byte anticipati per lettura 6143
+    b=0.05 mancate 0.9983 S3 0.1917 Express 0.0000 | medio p50 24.26 p99 100.50 p999 155.5 | doppia: ott p99 95.55, medio p99 97.03 p999 151.5, pess p99 127.50; GET in più 0.0093/lettura | gp3 p99 97.94 | costo in più $18042/mese (GET base S3 $3976) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43518, byte anticipati per lettura 6141
+    b=0.1  mancate 0.9976 S3 0.1916 Express 0.0000 | medio p50 24.38 p99 97.60 p999 155.5 | doppia: ott p99 92.40, medio p99 94.27 p999 152.5, pess p99 125.50; GET in più 0.0093/lettura | gp3 p99 95.21 | costo in più $18024/mese (GET base S3 $3973) anticipo: precisione 0.54, sprecati 0.45, in ritardo 43490, byte anticipati per lettura 6134
+    b=0.2  mancate 0.9304 S3 0.1821 Express 0.0000 | medio p50 23.05 p99 97.98 p999 174.5 | doppia: ott p99 93.16, medio p99 95.17 p999 160.5, pess p99 125.50; GET in più 0.0088/lettura | gp3 p99 95.74 | costo in più $16783/mese (GET base S3 $3776) anticipo: precisione 0.54, sprecati 0.43, in ritardo 40377, byte anticipati per lettura 5724
+    b=0.5  mancate 0.8050 S3 0.1698 Express 0.0000 | medio p50 20.24 p99 93.45 p999 148.5 | doppia: ott p99 89.15, medio p99 90.78 p999 143.5, pess p99 121.50; GET in più 0.0082/lettura | gp3 p99 90.78 | costo in più $14987/mese (GET base S3 $3521) anticipo: precisione 0.51, sprecati 0.63, in ritardo 34271, byte anticipati per lettura 5158
+  [0+3 seq+corr]
+    b=0.02 mancate 0.9978 S3 0.1834 Express 0.0000 | medio p50 24.28 p99 100.50 p999 159.5 | doppia: ott p99 95.70, medio p99 97.50 p999 155.5, pess p99 125.50; GET in più 0.0088/lettura | gp3 p99 98.18 | costo in più $18257/mese (GET base S3 $3803) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43943, byte anticipati per lettura 6188
+    b=0.05 mancate 0.9981 S3 0.1834 Express 0.0000 | medio p50 24.34 p99 100.50 p999 154.5 | doppia: ott p99 96.96, medio p99 98.16 p999 150.5, pess p99 126.50; GET in più 0.0088/lettura | gp3 p99 98.80 | costo in più $18258/mese (GET base S3 $3803) anticipo: precisione 0.54, sprecati 0.46, in ritardo 43959, byte anticipati per lettura 6186
+    b=0.1  mancate 0.9974 S3 0.1833 Express 0.0000 | medio p50 24.18 p99 99.55 p999 158.5 | doppia: ott p99 96.55, medio p99 97.55 p999 153.5, pess p99 126.50; GET in più 0.0088/lettura | gp3 p99 97.77 | costo in più $18237/mese (GET base S3 $3802) anticipo: precisione 0.54, sprecati 0.45, in ritardo 43927, byte anticipati per lettura 6177
+    b=0.2  mancate 0.9304 S3 0.1778 Express 0.0000 | medio p50 23.04 p99 97.38 p999 155.5 | doppia: ott p99 92.89, medio p99 95.17 p999 152.5, pess p99 123.50; GET in più 0.0086/lettura | gp3 p99 95.55 | costo in più $16908/mese (GET base S3 $3687) anticipo: precisione 0.54, sprecati 0.43, in ritardo 40604, byte anticipati per lettura 5749
+    b=0.5  mancate 0.8049 S3 0.1677 Express 0.0000 | medio p50 20.24 p99 93.91 p999 147.5 | doppia: ott p99 89.91, medio p99 91.38 p999 142.5, pess p99 121.50; GET in più 0.0081/lettura | gp3 p99 91.36 | costo in più $15037/mese (GET base S3 $3477) anticipo: precisione 0.51, sprecati 0.63, in ritardo 34383, byte anticipati per lettura 5169
+  [0-lru]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.99 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0486/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20734)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.99 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0486/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20734)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.99 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0486/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20734)
+    b=0.2  mancate 0.9988 S3 0.9988 Express 0.0000 | medio p50 24.96 p99 98.26 p999 155.5 | doppia: ott p99 49.14, medio p99 87.84 p999 111.5, pess p99 152.50; GET in più 0.0485/lettura | gp3 p99 88.81 | costo in più $1007/mese (GET base S3 $20711)
+    b=0.5  mancate 0.8661 S3 0.8661 Express 0.0000 | medio p50 22.20 p99 95.16 p999 150.5 | doppia: ott p99 48.36, medio p99 86.52 p999 109.5, pess p99 149.50; GET in più 0.0425/lettura | gp3 p99 87.42 | costo in più $881/mese (GET base S3 $17960)
+  [4 w1048576]
+    b=0.02 mancate 0.0743 S3 0.0743 Express 0.0000 | medio p50 0.05 p99 60.56 p999 103.5 | doppia: ott p99 42.85, medio p99 60.27 p999 100.5, pess p99 88.00; GET in più 0.0038/lettura | gp3 p99 59.83 | costo in più $78/mese (GET base S3 $1541)
+    b=0.05 mancate 0.0692 S3 0.0692 Express 0.0000 | medio p50 0.05 p99 59.44 p999 100.5 | doppia: ott p99 42.35, medio p99 59.20 p999 100.5, pess p99 84.27; GET in più 0.0036/lettura | gp3 p99 58.72 | costo in più $74/mese (GET base S3 $1435)
+    b=0.1  mancate 0.0611 S3 0.0611 Express 0.0000 | medio p50 0.05 p99 56.95 p999 99.5 | doppia: ott p99 41.29, medio p99 56.92 p999 99.4, pess p99 80.18; GET in più 0.0032/lettura | gp3 p99 56.65 | costo in più $66/mese (GET base S3 $1268)
+    b=0.2  mancate 0.0596 S3 0.0596 Express 0.0000 | medio p50 0.05 p99 56.73 p999 99.1 | doppia: ott p99 41.13, medio p99 56.54 p999 99.1, pess p99 79.24; GET in più 0.0031/lettura | gp3 p99 55.95 | costo in più $64/mese (GET base S3 $1236)
+    b=0.5  mancate 0.0553 S3 0.0553 Express 0.0000 | medio p50 0.05 p99 55.02 p999 97.7 | doppia: ott p99 40.63, medio p99 55.33 p999 97.7, pess p99 76.77; GET in più 0.0029/lettura | gp3 p99 54.86 | costo in più $61/mese (GET base S3 $1146)
+  [4 w262144]
+    b=0.02 mancate 0.1080 S3 0.1080 Express 0.0000 | medio p50 0.05 p99 57.80 p999 101.5 | doppia: ott p99 36.60, medio p99 57.80 p999 91.6, pess p99 92.79; GET in più 0.0053/lettura | gp3 p99 57.47 | costo in più $111/mese (GET base S3 $2239)
+    b=0.05 mancate 0.1016 S3 0.1016 Express 0.0000 | medio p50 0.05 p99 56.83 p999 99.6 | doppia: ott p99 36.32, medio p99 56.94 p999 91.0, pess p99 90.82; GET in più 0.0051/lettura | gp3 p99 56.13 | costo in più $105/mese (GET base S3 $2107)
+    b=0.1  mancate 0.1007 S3 0.1007 Express 0.0000 | medio p50 0.05 p99 56.78 p999 99.6 | doppia: ott p99 36.17, medio p99 56.89 p999 91.0, pess p99 90.57; GET in più 0.0051/lettura | gp3 p99 56.09 | costo in più $105/mese (GET base S3 $2088)
+    b=0.2  mancate 0.0993 S3 0.0993 Express 0.0000 | medio p50 0.05 p99 56.33 p999 99.5 | doppia: ott p99 35.99, medio p99 56.46 p999 90.8, pess p99 90.40; GET in più 0.0050/lettura | gp3 p99 55.92 | costo in più $103/mese (GET base S3 $2058)
+    b=0.5  mancate 0.0917 S3 0.0917 Express 0.0000 | medio p50 0.05 p99 54.57 p999 96.9 | doppia: ott p99 35.33, medio p99 54.83 p999 90.3, pess p99 86.04; GET in più 0.0045/lettura | gp3 p99 54.36 | costo in più $94/mese (GET base S3 $1902)
+  [4 w65536]
+    b=0.02 mancate 0.1592 S3 0.1592 Express 0.0000 | medio p50 0.05 p99 62.77 p999 107.5 | doppia: ott p99 37.14, medio p99 62.66 p999 90.9, pess p99 107.50; GET in più 0.0077/lettura | gp3 p99 62.29 | costo in più $160/mese (GET base S3 $3300)
+    b=0.05 mancate 0.1554 S3 0.1554 Express 0.0000 | medio p50 0.05 p99 62.07 p999 107.5 | doppia: ott p99 36.91, medio p99 62.24 p999 90.9, pess p99 106.50; GET in più 0.0076/lettura | gp3 p99 61.81 | costo in più $158/mese (GET base S3 $3222)
+    b=0.1  mancate 0.1546 S3 0.1546 Express 0.0000 | medio p50 0.05 p99 62.07 p999 107.5 | doppia: ott p99 36.89, medio p99 62.07 p999 90.8, pess p99 106.50; GET in più 0.0075/lettura | gp3 p99 61.66 | costo in più $156/mese (GET base S3 $3206)
+    b=0.2  mancate 0.1534 S3 0.1534 Express 0.0000 | medio p50 0.05 p99 61.81 p999 105.5 | doppia: ott p99 36.74, medio p99 62.04 p999 90.8, pess p99 105.50; GET in più 0.0075/lettura | gp3 p99 61.50 | costo in più $156/mese (GET base S3 $3181)
+    b=0.5  mancate 0.1404 S3 0.1404 Express 0.0000 | medio p50 0.05 p99 60.07 p999 104.5 | doppia: ott p99 36.33, medio p99 60.17 p999 90.0, pess p99 101.50; GET in più 0.0068/lettura | gp3 p99 59.72 | costo in più $141/mese (GET base S3 $2911)
+
+## tencentBlock-3580
+richieste 30,000,000, letture 29,963,089, durata 0.8 h; al database: letture 29,963,089, scritture 36,911; dati toccati 0.39 GB (letti 0.32 GB)
+  [0]
+    b=0.02 mancate 0.8731 S3 0.8731 Express 0.0000 | medio p50 22.46 p99 97.05 p999 154.5 | doppia: ott p99 48.70, medio p99 87.14 p999 110.5, pess p99 148.50; GET in più 0.0437/lettura | gp3 p99 87.13 | costo in più $906/mese (GET base S3 $18104)
+    b=0.05 mancate 0.8076 S3 0.8076 Express 0.0000 | medio p50 20.91 p99 95.35 p999 151.5 | doppia: ott p99 48.21, medio p99 86.33 p999 109.5, pess p99 147.50; GET in più 0.0404/lettura | gp3 p99 86.31 | costo in più $838/mese (GET base S3 $16747)
+    b=0.1  mancate 0.7131 S3 0.7131 Express 0.0000 | medio p50 18.30 p99 92.60 p999 148.5 | doppia: ott p99 47.40, medio p99 85.02 p999 108.5, pess p99 144.50; GET in più 0.0357/lettura | gp3 p99 84.98 | costo in più $740/mese (GET base S3 $14786)
+    b=0.2  mancate 0.6095 S3 0.6095 Express 0.0000 | medio p50 14.53 p99 89.21 p999 144.5 | doppia: ott p99 46.35, medio p99 83.32 p999 106.5, pess p99 141.50; GET in più 0.0305/lettura | gp3 p99 83.30 | costo in più $632/mese (GET base S3 $12639)
+    b=0.5  mancate 0.0308 S3 0.0308 Express 0.0000 | medio p50 0.05 p99 32.84 p999 75.2 | doppia: ott p99 23.98, medio p99 32.84 p999 74.7, pess p99 43.60; GET in più 0.0015/lettura | gp3 p99 32.87 | costo in più $32/mese (GET base S3 $640)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.8731 S3 0.0000 Express 0.8731 | medio p50 3.77 p99 9.85 p999 13.4 | doppia: ott p99 4.92, medio p99 9.78 p999 12.0, pess p99 21.71; GET in più 0.0437/lettura | gp3 p99 9.78 | costo in più $1764/mese (GET base S3 $0)
+    b=0.05 mancate 0.8076 S3 0.0000 Express 0.8076 | medio p50 3.60 p99 9.73 p999 13.2 | doppia: ott p99 4.87, medio p99 9.69 p999 12.0, pess p99 21.51; GET in più 0.0404/lettura | gp3 p99 9.68 | costo in più $1649/mese (GET base S3 $0)
+    b=0.1  mancate 0.7131 S3 0.0000 Express 0.7131 | medio p50 3.30 p99 9.55 p999 13.0 | doppia: ott p99 4.79, medio p99 9.52 p999 11.9, pess p99 21.17; GET in più 0.0357/lettura | gp3 p99 9.52 | costo in più $1482/mese (GET base S3 $0)
+    b=0.2  mancate 0.6095 S3 0.0000 Express 0.6095 | medio p50 2.84 p99 9.32 p999 12.8 | doppia: ott p99 4.68, medio p99 9.31 p999 11.7, pess p99 20.74; GET in più 0.0305/lettura | gp3 p99 9.31 | costo in più $1300/mese (GET base S3 $0)
+    b=0.5  mancate 0.0308 S3 0.0000 Express 0.0308 | medio p50 0.05 p99 4.83 p999 8.3 | doppia: ott p99 2.44, medio p99 4.83 p999 8.3, pess p99 7.99; GET in più 0.0015/lettura | gp3 p99 4.84 | costo in più $281/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.8731 S3 0.5619 Express 0.3112 | medio p50 12.14 p99 87.52 p999 142.5 | doppia: ott p99 45.78, medio p99 82.43 p999 105.5, pess p99 140.50; GET in più 0.0437/lettura | gp3 p99 82.38 | costo in più $67772/mese (GET base S3 $11652)
+    b=0.05 mancate 0.8076 S3 0.4858 Express 0.3218 | medio p50 7.19 p99 84.45 p999 138.5 | doppia: ott p99 44.73, medio p99 80.73 p999 104.5, pess p99 137.50; GET in più 0.0404/lettura | gp3 p99 80.72 | costo in più $58696/mese (GET base S3 $10074)
+    b=0.1  mancate 0.7131 S3 0.3902 Express 0.3228 | medio p50 4.74 p99 79.86 p999 132.5 | doppia: ott p99 43.16, medio p99 78.02 p999 102.5, pess p99 132.50; GET in più 0.0357/lettura | gp3 p99 77.97 | costo in più $47266/mese (GET base S3 $8092)
+    b=0.2  mancate 0.6095 S3 0.4248 Express 0.1847 | medio p50 4.42 p99 81.66 p999 134.5 | doppia: ott p99 43.76, medio p99 79.10 p999 102.5, pess p99 134.50; GET in più 0.0305/lettura | gp3 p99 79.11 | costo in più $51159/mese (GET base S3 $8809)
+    b=0.5  mancate 0.0308 S3 0.0064 Express 0.0245 | medio p50 0.05 p99 6.07 p999 45.6 | doppia: ott p99 3.07, medio p99 6.07 p999 45.6, pess p99 10.72; GET in più 0.0015/lettura | gp3 p99 6.08 | costo in più $853/mese (GET base S3 $133)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.8731 S3 0.0250 Express 0.8481 | medio p50 3.82 p99 29.12 p999 71.0 | doppia: ott p99 22.18, medio p99 29.14 p999 71.2, pess p99 37.15; GET in più 0.0437/lettura | gp3 p99 29.14 | costo in più $4597/mese (GET base S3 $519)
+    b=0.05 mancate 0.8076 S3 0.0205 Express 0.7872 | medio p50 3.63 p99 25.47 p999 67.2 | doppia: ott p99 20.30, medio p99 25.53 p999 67.1, pess p99 31.54; GET in più 0.0404/lettura | gp3 p99 25.50 | costo in più $3945/mese (GET base S3 $424)
+    b=0.1  mancate 0.7131 S3 0.0240 Express 0.6890 | medio p50 3.34 p99 28.41 p999 70.2 | doppia: ott p99 21.79, medio p99 28.39 p999 70.3, pess p99 35.94; GET in più 0.0357/lettura | gp3 p99 28.39 | costo in più $4200/mese (GET base S3 $499)
+    b=0.2  mancate 0.6095 S3 0.0293 Express 0.5802 | medio p50 2.87 p99 31.92 p999 74.0 | doppia: ott p99 23.54, medio p99 31.92 p999 73.9, pess p99 41.97; GET in più 0.0305/lettura | gp3 p99 31.96 | costo in più $4633/mese (GET base S3 $607)
+    b=0.5  mancate 0.0308 S3 0.0010 Express 0.0299 | medio p50 0.05 p99 4.95 p999 11.3 | doppia: ott p99 2.50, medio p99 4.95 p999 10.9, pess p99 8.27; GET in più 0.0015/lettura | gp3 p99 4.95 | costo in più $279/mese (GET base S3 $20)
+  [0+1+2 e1]
+    b=0.02 mancate 0.8731 S3 0.0007 Express 0.8724 | medio p50 3.77 p99 9.95 p999 14.6 | doppia: ott p99 4.96, medio p99 9.86 p999 12.8, pess p99 21.83; GET in più 0.0437/lettura | gp3 p99 9.86 | costo in più $1841/mese (GET base S3 $14)
+    b=0.05 mancate 0.8076 S3 0.0007 Express 0.8070 | medio p50 3.60 p99 9.83 p999 14.5 | doppia: ott p99 4.91, medio p99 9.77 p999 12.7, pess p99 21.62; GET in più 0.0404/lettura | gp3 p99 9.76 | costo in più $1726/mese (GET base S3 $14)
+    b=0.1  mancate 0.7131 S3 0.0007 Express 0.7124 | medio p50 3.30 p99 9.65 p999 14.3 | doppia: ott p99 4.83, medio p99 9.61 p999 12.6, pess p99 21.29; GET in più 0.0357/lettura | gp3 p99 9.60 | costo in più $1560/mese (GET base S3 $14)
+    b=0.2  mancate 0.6095 S3 0.0007 Express 0.6088 | medio p50 2.84 p99 9.41 p999 14.1 | doppia: ott p99 4.73, medio p99 9.40 p999 12.5, pess p99 20.87; GET in più 0.0305/lettura | gp3 p99 9.40 | costo in più $1377/mese (GET base S3 $14)
+    b=0.5  mancate 0.0308 S3 0.0007 Express 0.0302 | medio p50 0.05 p99 4.91 p999 9.7 | doppia: ott p99 2.48, medio p99 4.91 p999 9.7, pess p99 8.18; GET in più 0.0015/lettura | gp3 p99 4.92 | costo in più $357/mese (GET base S3 $14)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9197 S3 0.0162 Express 0.4859 | medio p50 3.83 p99 32.11 p999 74.4 | doppia: ott p99 26.54, medio p99 32.12 p999 74.2, pess p99 36.82; GET in più 0.0252/lettura | gp3 p99 32.07 | costo in più $5373/mese (GET base S3 $337) anticipo: precisione 0.96, sprecati 0.04, in ritardo 10008140, byte anticipati per lettura 1664
+    b=0.05 mancate 0.8413 S3 0.0132 Express 0.4464 | medio p50 3.62 p99 28.25 p999 70.2 | doppia: ott p99 23.84, medio p99 28.25 p999 70.2, pess p99 31.82; GET in più 0.0230/lettura | gp3 p99 28.23 | costo in più $4506/mese (GET base S3 $274) anticipo: precisione 0.96, sprecati 0.04, in ritardo 9149416, byte anticipati per lettura 1528
+    b=0.1  mancate 0.7405 S3 0.0150 Express 0.3898 | medio p50 3.31 p99 30.17 p999 72.3 | doppia: ott p99 25.12, medio p99 30.22 p999 72.3, pess p99 34.36; GET in più 0.0203/lettura | gp3 p99 30.19 | costo in più $4671/mese (GET base S3 $310) anticipo: precisione 0.96, sprecati 0.04, in ritardo 8047826, byte anticipati per lettura 1349
+    b=0.2  mancate 0.6384 S3 0.0174 Express 0.3383 | medio p50 2.89 p99 33.08 p999 75.4 | doppia: ott p99 27.13, medio p99 33.08 p999 74.9, pess p99 38.27; GET in più 0.0178/lettura | gp3 p99 33.06 | costo in più $5120/mese (GET base S3 $361) anticipo: precisione 0.97, sprecati 0.03, in ritardo 6774024, byte anticipati per lettura 1124
+    b=0.5  mancate 0.0329 S3 0.0009 Express 0.0176 | medio p50 0.05 p99 4.94 p999 12.0 | doppia: ott p99 3.58, medio p99 4.94 p999 11.7, pess p99 6.61; GET in più 0.0009/lettura | gp3 p99 4.94 | costo in più $293/mese (GET base S3 $18) anticipo: precisione 0.98, sprecati 0.02, in ritardo 347001, byte anticipati per lettura 60
+  [0+1+2+3 seq e0.5]
+    b=0.02 mancate 0.9506 S3 0.0124 Express 0.0688 | medio p50 3.86 p99 59.05 p999 106.5 | doppia: ott p99 57.28, medio p99 59.04 p999 105.5, pess p99 62.20; GET in più 0.0041/lettura | gp3 p99 59.06 | costo in più $24721/mese (GET base S3 $257) anticipo: precisione 0.74, sprecati 0.26, in ritardo 20841086, byte anticipati per lettura 4547
+    b=0.05 mancate 0.8905 S3 0.0106 Express 0.0696 | medio p50 3.66 p99 56.81 p999 104.5 | doppia: ott p99 55.17, medio p99 56.80 p999 102.5, pess p99 59.48; GET in più 0.0040/lettura | gp3 p99 56.81 | costo in più $21682/mese (GET base S3 $220) anticipo: precisione 0.73, sprecati 0.27, in ritardo 19423515, byte anticipati per lettura 4306
+    b=0.1  mancate 0.7614 S3 0.0076 Express 0.0698 | medio p50 3.20 p99 51.42 p999 97.3 | doppia: ott p99 49.90, medio p99 51.42 p999 96.3, pess p99 53.44; GET in più 0.0039/lettura | gp3 p99 51.41 | costo in più $16387/mese (GET base S3 $158) anticipo: precisione 0.70, sprecati 0.30, in ritardo 16395323, byte anticipati per lettura 3807
+    b=0.2  mancate 0.7049 S3 0.0096 Express 0.0628 | medio p50 3.10 p99 60.37 p999 108.5 | doppia: ott p99 59.10, medio p99 60.37 p999 107.5, pess p99 62.72; GET in più 0.0036/lettura | gp3 p99 60.36 | costo in più $24154/mese (GET base S3 $198) anticipo: precisione 0.69, sprecati 0.31, in ritardo 15160251, byte anticipati per lettura 3513
+    b=0.5  mancate 0.0842 S3 0.0011 Express 0.0094 | medio p50 0.05 p99 12.82 p999 55.9 | doppia: ott p99 12.80, medio p99 12.79 p999 55.9, pess p99 14.63; GET in più 0.0005/lettura | gp3 p99 12.80 | costo in più $2336/mese (GET base S3 $24) anticipo: precisione 0.34, sprecati 0.66, in ritardo 1765501, byte anticipati per lettura 898
+  [0+1+2+3 seq+corr e0.5]
+    b=0.02 mancate 0.9502 S3 0.0066 Express 0.0440 | medio p50 3.83 p99 59.04 p999 106.5 | doppia: ott p99 58.14, medio p99 59.04 p999 105.5, pess p99 60.66; GET in più 0.0025/lettura | gp3 p99 59.05 | costo in più $25062/mese (GET base S3 $136) anticipo: precisione 0.74, sprecati 0.26, in ritardo 21565473, byte anticipati per lettura 4720
+    b=0.05 mancate 0.8907 S3 0.0058 Express 0.0431 | medio p50 3.64 p99 56.85 p999 103.5 | doppia: ott p99 55.95, medio p99 56.85 p999 103.5, pess p99 58.32; GET in più 0.0024/lettura | gp3 p99 56.85 | costo in più $22119/mese (GET base S3 $120) anticipo: precisione 0.73, sprecati 0.27, in ritardo 20177344, byte anticipati per lettura 4483
+    b=0.1  mancate 0.7618 S3 0.0045 Express 0.0406 | medio p50 3.17 p99 51.60 p999 97.6 | doppia: ott p99 50.74, medio p99 51.62 p999 97.0, pess p99 52.76; GET in più 0.0022/lettura | gp3 p99 51.61 | costo in più $16706/mese (GET base S3 $92) anticipo: precisione 0.70, sprecati 0.30, in ritardo 17180236, byte anticipati per lettura 3986
+    b=0.2  mancate 0.7064 S3 0.0059 Express 0.0362 | medio p50 3.08 p99 60.48 p999 108.5 | doppia: ott p99 59.71, medio p99 60.48 p999 108.5, pess p99 61.91; GET in più 0.0021/lettura | gp3 p99 60.48 | costo in più $24589/mese (GET base S3 $123) anticipo: precisione 0.70, sprecati 0.30, in ritardo 15923244, byte anticipati per lettura 3682
+    b=0.5  mancate 0.0838 S3 0.0008 Express 0.0055 | medio p50 0.05 p99 13.60 p999 56.3 | doppia: ott p99 13.56, medio p99 13.58 p999 56.3, pess p99 14.64; GET in più 0.0003/lettura | gp3 p99 13.58 | costo in più $2433/mese (GET base S3 $16) anticipo: precisione 0.35, sprecati 0.65, in ritardo 1857994, byte anticipati per lettura 925
+  [0+1+2+3+4 w1048576 e0.5]
+    b=0.02 mancate 1.0000 S3 0.0113 Express 0.9887 | medio p50 16.36 p99 26.57 p999 68.3 | doppia: ott p99 24.88, medio p99 26.57 p999 68.2, pess p99 43.28; GET in più 0.0500/lettura | gp3 p99 26.59 | costo in più $109464/mese (GET base S3 $235) anticipo: precisione 0.00, sprecati 0.00, in ritardo 0, byte anticipati per lettura 8632081
+    b=0.05 mancate 0.7110 S3 0.0098 Express 0.0117 | medio p50 46.75 p99 103.50 p999 149.5 | doppia: ott p99 102.50, medio p99 103.50 p999 148.5, pess p99 105.50; GET in più 0.0011/lettura | gp3 p99 103.50 | costo in più $69728/mese (GET base S3 $203) anticipo: precisione 0.07, sprecati 0.93, in ritardo 16526578, byte anticipati per lettura 279065
+    b=0.1  mancate 0.7195 S3 0.0087 Express 0.0115 | medio p50 39.33 p99 115.50 p999 157.5 | doppia: ott p99 114.50, medio p99 115.50 p999 157.5, pess p99 116.50; GET in più 0.0010/lettura | gp3 p99 115.50 | costo in più $68240/mese (GET base S3 $180) anticipo: precisione 0.08, sprecati 0.92, in ritardo 16763836, byte anticipati per lettura 256947
+    b=0.2  mancate 0.6136 S3 0.0084 Express 0.0113 | medio p50 8.21 p99 142.50 p999 188.5 | doppia: ott p99 142.50, medio p99 142.50 p999 188.5, pess p99 142.50; GET in più 0.0010/lettura | gp3 p99 142.50 | costo in più $67819/mese (GET base S3 $174) anticipo: precisione 0.11, sprecati 0.89, in ritardo 14235386, byte anticipati per lettura 195873
+    b=0.5  mancate 0.7192 S3 0.0094 Express 0.0021 | medio p50 83.36 p99 174.50 p999 233.5 | doppia: ott p99 173.50, medio p99 173.50 p999 233.5, pess p99 174.50; GET in più 0.0006/lettura | gp3 p99 173.50 | costo in più $68326/mese (GET base S3 $194) anticipo: precisione 0.14, sprecati 0.86, in ritardo 16963318, byte anticipati per lettura 147573
+  [0+1+2+3+4 w262144 e0.5]
+    b=0.02 mancate 0.6169 S3 0.0085 Express 0.0188 | medio p50 5.91 p99 44.15 p999 86.3 | doppia: ott p99 41.21, medio p99 44.16 p999 85.7, pess p99 46.62; GET in più 0.0014/lettura | gp3 p99 44.14 | costo in più $39111/mese (GET base S3 $177) anticipo: precisione 0.09, sprecati 0.91, in ritardo 14131263, byte anticipati per lettura 90550
+    b=0.05 mancate 0.6011 S3 0.0090 Express 0.0175 | medio p50 2.35 p99 65.65 p999 110.5 | doppia: ott p99 64.71, medio p99 65.65 p999 109.5, pess p99 67.65; GET in più 0.0013/lettura | gp3 p99 65.63 | costo in più $39126/mese (GET base S3 $186) anticipo: precisione 0.13, sprecati 0.87, in ritardo 13771545, byte anticipati per lettura 69236
+    b=0.1  mancate 0.7049 S3 0.0092 Express 0.0070 | medio p50 24.06 p99 102.50 p999 157.5 | doppia: ott p99 102.50, medio p99 102.50 p999 157.5, pess p99 103.50; GET in più 0.0008/lettura | gp3 p99 102.50 | costo in più $38886/mese (GET base S3 $192) anticipo: precisione 0.16, sprecati 0.84, in ritardo 16506979, byte anticipati per lettura 52182
+    b=0.2  mancate 0.7217 S3 0.0100 Express 0.0044 | medio p50 26.10 p99 103.50 p999 157.5 | doppia: ott p99 103.50, medio p99 103.50 p999 157.5, pess p99 105.50; GET in più 0.0007/lettura | gp3 p99 103.50 | costo in più $38644/mese (GET base S3 $207) anticipo: precisione 0.17, sprecati 0.83, in ritardo 16953743, byte anticipati per lettura 51232
+    b=0.5  mancate 0.6742 S3 0.0111 Express 0.0018 | medio p50 25.11 p99 103.50 p999 162.5 | doppia: ott p99 103.50, medio p99 103.50 p999 162.5, pess p99 105.50; GET in più 0.0006/lettura | gp3 p99 103.50 | costo in più $37953/mese (GET base S3 $231) anticipo: precisione 0.16, sprecati 0.84, in ritardo 15850334, byte anticipati per lettura 49851
+  [0+1+2+3+4 w65536 e0.5]
+    b=0.02 mancate 0.7082 S3 0.0106 Express 0.0160 | medio p50 9.61 p99 86.48 p999 140.5 | doppia: ott p99 86.06, medio p99 86.35 p999 140.5, pess p99 88.29; GET in più 0.0013/lettura | gp3 p99 86.36 | costo in più $34399/mese (GET base S3 $220) anticipo: precisione 0.25, sprecati 0.75, in ritardo 16337814, byte anticipati per lettura 19548
+    b=0.05 mancate 0.7631 S3 0.0116 Express 0.0089 | medio p50 12.90 p99 88.87 p999 144.5 | doppia: ott p99 88.44, medio p99 88.72 p999 143.5, pess p99 90.82; GET in più 0.0010/lettura | gp3 p99 88.72 | costo in più $34215/mese (GET base S3 $240) anticipo: precisione 0.26, sprecati 0.74, in ritardo 17801524, byte anticipati per lettura 19211
+    b=0.1  mancate 0.7593 S3 0.0120 Express 0.0072 | medio p50 13.32 p99 89.24 p999 143.5 | doppia: ott p99 88.81, medio p99 89.08 p999 142.5, pess p99 91.27; GET in più 0.0010/lettura | gp3 p99 89.08 | costo in più $34269/mese (GET base S3 $248) anticipo: precisione 0.27, sprecati 0.73, in ritardo 17741617, byte anticipati per lettura 19055
+    b=0.2  mancate 0.7690 S3 0.0128 Express 0.0057 | medio p50 14.86 p99 90.27 p999 145.5 | doppia: ott p99 89.81, medio p99 90.09 p999 144.5, pess p99 92.32; GET in più 0.0009/lettura | gp3 p99 90.08 | costo in più $33988/mese (GET base S3 $266) anticipo: precisione 0.27, sprecati 0.73, in ritardo 17988676, byte anticipati per lettura 18843
+    b=0.5  mancate 0.3433 S3 0.0091 Express 0.0016 | medio p50 0.05 p99 76.09 p999 126.5 | doppia: ott p99 75.50, medio p99 76.07 p999 125.5, pess p99 77.92; GET in più 0.0005/lettura | gp3 p99 76.05 | costo in più $27155/mese (GET base S3 $188) anticipo: precisione 0.15, sprecati 0.85, in ritardo 7972151, byte anticipati per lettura 15416
+  [0+3 corr]
+    b=0.02 mancate 0.9288 S3 0.5022 Express 0.0000 | medio p50 23.47 p99 98.26 p999 155.5 | doppia: ott p99 81.38, medio p99 91.44 p999 135.5, pess p99 139.50; GET in più 0.0252/lettura | gp3 p99 91.43 | costo in più $8947/mese (GET base S3 $10413) anticipo: precisione 0.96, sprecati 0.04, in ritardo 10226945, byte anticipati per lettura 1664
+    b=0.05 mancate 0.8496 S3 0.4596 Express 0.0000 | medio p50 21.74 p99 96.28 p999 152.5 | doppia: ott p99 79.45, medio p99 90.07 p999 133.5, pess p99 137.50; GET in più 0.0230/lettura | gp3 p99 90.01 | costo in più $8213/mese (GET base S3 $9531) anticipo: precisione 0.96, sprecati 0.04, in ritardo 9348078, byte anticipati per lettura 1528
+    b=0.1  mancate 0.7479 S3 0.4047 Express 0.0000 | medio p50 19.13 p99 93.48 p999 149.5 | doppia: ott p99 76.86, medio p99 88.19 p999 130.5, pess p99 135.50; GET in più 0.0203/lettura | gp3 p99 88.15 | costo in più $7252/mese (GET base S3 $8393) anticipo: precisione 0.96, sprecati 0.04, in ritardo 8226377, byte anticipati per lettura 1349
+    b=0.2  mancate 0.6454 S3 0.3558 Express 0.0000 | medio p50 15.78 p99 90.28 p999 145.5 | doppia: ott p99 73.45, medio p99 85.96 p999 126.5, pess p99 132.50; GET in più 0.0178/lettura | gp3 p99 85.91 | costo in più $6058/mese (GET base S3 $7377) anticipo: precisione 0.97, sprecati 0.03, in ritardo 6942719, byte anticipati per lettura 1124
+    b=0.5  mancate 0.0332 S3 0.0184 Express 0.0000 | medio p50 0.05 p99 33.94 p999 76.7 | doppia: ott p99 27.74, medio p99 33.94 p999 76.2, pess p99 39.50; GET in più 0.0009/lettura | gp3 p99 33.95 | costo in più $325/mese (GET base S3 $382) anticipo: precisione 0.98, sprecati 0.02, in ritardo 354819, byte anticipati per lettura 60
+  [0+3 seq]
+    b=0.02 mancate 0.9799 S3 0.0812 Express 0.0000 | medio p50 24.01 p99 98.94 p999 156.5 | doppia: ott p99 96.96, medio p99 97.69 p999 154.5, pess p99 110.50; GET in più 0.0041/lettura | gp3 p99 97.68 | costo in più $17638/mese (GET base S3 $1683) anticipo: precisione 0.74, sprecati 0.26, in ritardo 21542809, byte anticipati per lettura 4547
+    b=0.05 mancate 0.9183 S3 0.0802 Express 0.0000 | medio p50 22.78 p99 97.59 p999 155.5 | doppia: ott p99 95.52, medio p99 96.35 p999 152.5, pess p99 109.50; GET in più 0.0040/lettura | gp3 p99 96.35 | costo in più $16680/mese (GET base S3 $1663) anticipo: precisione 0.73, sprecati 0.27, in ritardo 20088298, byte anticipati per lettura 4306
+    b=0.1  mancate 0.7831 S3 0.0774 Express 0.0000 | medio p50 19.64 p99 93.95 p999 150.5 | doppia: ott p99 91.63, medio p99 92.76 p999 147.5, pess p99 106.50; GET in più 0.0039/lettura | gp3 p99 92.76 | costo in più $14705/mese (GET base S3 $1606) anticipo: precisione 0.70, sprecati 0.30, in ritardo 16914177, byte anticipati per lettura 3807
+    b=0.2  mancate 0.7247 S3 0.0724 Express 0.0000 | medio p50 17.97 p99 92.31 p999 148.5 | doppia: ott p99 89.97, medio p99 91.21 p999 146.5, pess p99 104.50; GET in più 0.0036/lettura | gp3 p99 91.20 | costo in più $13711/mese (GET base S3 $1501) anticipo: precisione 0.69, sprecati 0.31, in ritardo 15634744, byte anticipati per lettura 3513
+    b=0.5  mancate 0.0878 S3 0.0106 Express 0.0000 | medio p50 0.05 p99 50.61 p999 96.2 | doppia: ott p99 48.42, medio p99 50.61 p999 94.7, pess p99 53.45; GET in più 0.0005/lettura | gp3 p99 50.61 | costo in più $3631/mese (GET base S3 $219) anticipo: precisione 0.34, sprecati 0.66, in ritardo 1850161, byte anticipati per lettura 898
+  [0+3 seq+corr]
+    b=0.02 mancate 0.9819 S3 0.0505 Express 0.0000 | medio p50 24.00 p99 98.98 p999 156.5 | doppia: ott p99 97.75, medio p99 98.20 p999 155.5, pess p99 106.50; GET in più 0.0025/lettura | gp3 p99 98.19 | costo in più $18492/mese (GET base S3 $1047) anticipo: precisione 0.74, sprecati 0.26, in ritardo 22325851, byte anticipati per lettura 4720
+    b=0.05 mancate 0.9216 S3 0.0489 Express 0.0000 | medio p50 22.79 p99 97.44 p999 154.5 | doppia: ott p99 96.17, medio p99 96.66 p999 152.5, pess p99 104.50; GET in più 0.0024/lettura | gp3 p99 96.66 | costo in più $17543/mese (GET base S3 $1014) anticipo: precisione 0.73, sprecati 0.27, in ritardo 20917843, byte anticipati per lettura 4483
+    b=0.1  mancate 0.7867 S3 0.0450 Express 0.0000 | medio p50 19.67 p99 93.95 p999 150.5 | doppia: ott p99 92.63, medio p99 93.26 p999 149.5, pess p99 100.50; GET in più 0.0022/lettura | gp3 p99 93.25 | costo in più $15555/mese (GET base S3 $934) anticipo: precisione 0.70, sprecati 0.30, in ritardo 17777013, byte anticipati per lettura 3986
+    b=0.2  mancate 0.7293 S3 0.0421 Express 0.0000 | medio p50 18.04 p99 92.47 p999 148.5 | doppia: ott p99 91.15, medio p99 91.84 p999 146.5, pess p99 99.18; GET in più 0.0021/lettura | gp3 p99 91.82 | costo in più $14498/mese (GET base S3 $874) anticipo: precisione 0.70, sprecati 0.30, in ritardo 16470476, byte anticipati per lettura 3682
+    b=0.5  mancate 0.0879 S3 0.0063 Express 0.0000 | medio p50 0.05 p99 50.48 p999 96.3 | doppia: ott p99 49.24, medio p99 50.48 p999 95.4, pess p99 52.19; GET in più 0.0003/lettura | gp3 p99 50.50 | costo in più $3751/mese (GET base S3 $130) anticipo: precisione 0.35, sprecati 0.65, in ritardo 1956906, byte anticipati per lettura 925
+  [0-lru]
+    b=0.02 mancate 0.9174 S3 0.9174 Express 0.0000 | medio p50 23.42 p99 98.15 p999 155.5 | doppia: ott p99 49.00, medio p99 87.66 p999 110.5, pess p99 149.50; GET in più 0.0459/lettura | gp3 p99 87.65 | costo in più $952/mese (GET base S3 $19024)
+    b=0.05 mancate 0.9166 S3 0.9166 Express 0.0000 | medio p50 23.40 p99 98.13 p999 155.5 | doppia: ott p99 49.00, medio p99 87.65 p999 110.5, pess p99 149.50; GET in più 0.0459/lettura | gp3 p99 87.64 | costo in più $951/mese (GET base S3 $19007)
+    b=0.1  mancate 0.9084 S3 0.9084 Express 0.0000 | medio p50 23.23 p99 97.93 p999 155.5 | doppia: ott p99 48.95, medio p99 87.55 p999 110.5, pess p99 149.50; GET in più 0.0454/lettura | gp3 p99 87.55 | costo in più $942/mese (GET base S3 $18837)
+    b=0.2  mancate 0.6474 S3 0.6474 Express 0.0000 | medio p50 16.07 p99 90.51 p999 145.5 | doppia: ott p99 46.75, medio p99 83.98 p999 107.5, pess p99 142.50; GET in più 0.0324/lettura | gp3 p99 83.96 | costo in più $672/mese (GET base S3 $13424)
+    b=0.5  mancate 0.0386 S3 0.0386 Express 0.0000 | medio p50 0.05 p99 36.81 p999 79.7 | doppia: ott p99 25.84, medio p99 36.81 p999 77.9, pess p99 50.92; GET in più 0.0019/lettura | gp3 p99 36.81 | costo in più $40/mese (GET base S3 $801)
+  [4 w1048576]
+    b=0.02 mancate 1.0000 S3 1.0000 Express 0.0000 | medio p50 37.33 p99 112.50 p999 169.5 | doppia: ott p99 62.35, medio p99 106.50 p999 130.5, pess p99 171.50; GET in più 0.0500/lettura | gp3 p99 106.50 | costo in più $1037/mese (GET base S3 $20736)
+    b=0.05 mancate 0.0310 S3 0.0310 Express 0.0000 | medio p50 0.05 p99 45.24 p999 87.6 | doppia: ott p99 36.32, medio p99 45.23 p999 87.6, pess p99 56.09; GET in più 0.0015/lettura | gp3 p99 45.26 | costo in più $32/mese (GET base S3 $644)
+    b=0.1  mancate 0.0310 S3 0.0310 Express 0.0000 | medio p50 0.05 p99 45.23 p999 87.6 | doppia: ott p99 36.32, medio p99 45.22 p999 87.6, pess p99 56.07; GET in più 0.0015/lettura | gp3 p99 45.25 | costo in più $32/mese (GET base S3 $643)
+    b=0.2  mancate 0.0310 S3 0.0310 Express 0.0000 | medio p50 0.05 p99 45.20 p999 87.6 | doppia: ott p99 36.31, medio p99 45.20 p999 87.6, pess p99 56.03; GET in più 0.0015/lettura | gp3 p99 45.23 | costo in più $32/mese (GET base S3 $642)
+    b=0.5  mancate 0.0304 S3 0.0304 Express 0.0000 | medio p50 0.05 p99 44.86 p999 87.2 | doppia: ott p99 36.14, medio p99 44.87 p999 87.2, pess p99 55.39; GET in più 0.0015/lettura | gp3 p99 44.89 | costo in più $31/mese (GET base S3 $630)
+  [4 w262144]
+    b=0.02 mancate 0.0485 S3 0.0485 Express 0.0000 | medio p50 0.05 p99 43.81 p999 87.4 | doppia: ott p99 30.68, medio p99 43.84 p999 85.0, pess p99 61.73; GET in più 0.0024/lettura | gp3 p99 43.82 | costo in più $50/mese (GET base S3 $1006)
+    b=0.05 mancate 0.0485 S3 0.0485 Express 0.0000 | medio p50 0.05 p99 43.80 p999 87.4 | doppia: ott p99 30.67, medio p99 43.83 p999 85.0, pess p99 61.71; GET in più 0.0024/lettura | gp3 p99 43.81 | costo in più $50/mese (GET base S3 $1005)
+    b=0.1  mancate 0.0484 S3 0.0484 Express 0.0000 | medio p50 0.05 p99 43.78 p999 87.4 | doppia: ott p99 30.66, medio p99 43.80 p999 85.0, pess p99 61.66; GET in più 0.0024/lettura | gp3 p99 43.79 | costo in più $50/mese (GET base S3 $1004)
+    b=0.2  mancate 0.0477 S3 0.0477 Express 0.0000 | medio p50 0.05 p99 43.51 p999 87.1 | doppia: ott p99 30.55, medio p99 43.54 p999 84.8, pess p99 61.15; GET in più 0.0024/lettura | gp3 p99 43.52 | costo in più $49/mese (GET base S3 $989)
+    b=0.5  mancate 0.0425 S3 0.0425 Express 0.0000 | medio p50 0.05 p99 41.51 p999 84.7 | doppia: ott p99 29.65, medio p99 41.52 p999 83.3, pess p99 57.21; GET in più 0.0021/lettura | gp3 p99 41.52 | costo in più $44/mese (GET base S3 $882)
+  [4 w65536]
+    b=0.02 mancate 0.0976 S3 0.0976 Express 0.0000 | medio p50 0.05 p99 53.99 p999 100.5 | doppia: ott p99 33.72, medio p99 54.00 p999 89.4, pess p99 85.38; GET in più 0.0049/lettura | gp3 p99 53.99 | costo in più $101/mese (GET base S3 $2024)
+    b=0.05 mancate 0.0975 S3 0.0975 Express 0.0000 | medio p50 0.05 p99 53.98 p999 100.5 | doppia: ott p99 33.71, medio p99 53.99 p999 89.4, pess p99 85.34; GET in più 0.0049/lettura | gp3 p99 53.97 | costo in più $101/mese (GET base S3 $2022)
+    b=0.1  mancate 0.0965 S3 0.0965 Express 0.0000 | medio p50 0.05 p99 53.78 p999 100.0 | doppia: ott p99 33.63, medio p99 53.79 p999 89.2, pess p99 84.89; GET in più 0.0048/lettura | gp3 p99 53.77 | costo in più $100/mese (GET base S3 $2000)
+    b=0.2  mancate 0.0921 S3 0.0921 Express 0.0000 | medio p50 0.05 p99 52.96 p999 98.9 | doppia: ott p99 33.29, medio p99 52.95 p999 88.7, pess p99 83.09; GET in più 0.0046/lettura | gp3 p99 52.94 | costo in più $95/mese (GET base S3 $1911)
+    b=0.5  mancate 0.0369 S3 0.0369 Express 0.0000 | medio p50 0.05 p99 36.72 p999 79.5 | doppia: ott p99 26.19, medio p99 36.74 p999 78.3, pess p99 50.13; GET in più 0.0018/lettura | gp3 p99 36.73 | costo in più $38/mese (GET base S3 $765)
+
+## tw-campione-011
+richieste 1,000,000, letture 980,073, durata 0.0 h; al database: letture 531,709, scritture 19,927, assorbite dalla cache app 448,364 su 980,073; dati toccati 0.19 GB (letti 0.19 GB)
+  [0]
+    b=0.02 mancate 0.9846 S3 0.9846 Express 0.0000 | medio p50 24.70 p99 99.83 p999 156.5 | doppia: ott p99 49.33, medio p99 88.47 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.50 | costo in più $1024/mese (GET base S3 $20416)
+    b=0.05 mancate 0.9845 S3 0.9845 Express 0.0000 | medio p50 24.70 p99 99.83 p999 156.5 | doppia: ott p99 49.33, medio p99 88.47 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.50 | costo in più $1024/mese (GET base S3 $20416)
+    b=0.1  mancate 0.9845 S3 0.9845 Express 0.0000 | medio p50 24.70 p99 99.84 p999 156.5 | doppia: ott p99 49.33, medio p99 88.46 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.51 | costo in più $1024/mese (GET base S3 $20415)
+    b=0.2  mancate 0.9708 S3 0.9708 Express 0.0000 | medio p50 24.45 p99 99.50 p999 156.5 | doppia: ott p99 49.24, medio p99 88.31 p999 111.5, pess p99 150.50; GET in più 0.0488/lettura | gp3 p99 88.39 | costo in più $1011/mese (GET base S3 $20131)
+    b=0.5  mancate 0.9020 S3 0.9020 Express 0.0000 | medio p50 23.04 p99 97.52 p999 153.5 | doppia: ott p99 48.83, medio p99 87.54 p999 110.5, pess p99 149.50; GET in più 0.0453/lettura | gp3 p99 87.57 | costo in più $939/mese (GET base S3 $18703)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.9846 S3 0.0000 Express 0.9846 | medio p50 3.97 p99 9.99 p999 13.5 | doppia: ott p99 4.94, medio p99 9.89 p999 12.1, pess p99 21.98; GET in più 0.0494/lettura | gp3 p99 9.89 | costo in più $1848/mese (GET base S3 $0)
+    b=0.05 mancate 0.9845 S3 0.0000 Express 0.9845 | medio p50 3.97 p99 9.99 p999 13.5 | doppia: ott p99 4.94, medio p99 9.89 p999 12.1, pess p99 21.98; GET in più 0.0494/lettura | gp3 p99 9.89 | costo in più $1848/mese (GET base S3 $0)
+    b=0.1  mancate 0.9845 S3 0.0000 Express 0.9845 | medio p50 3.97 p99 9.99 p999 13.5 | doppia: ott p99 4.94, medio p99 9.89 p999 12.1, pess p99 21.99; GET in più 0.0494/lettura | gp3 p99 9.89 | costo in più $1848/mese (GET base S3 $0)
+    b=0.2  mancate 0.9708 S3 0.0000 Express 0.9708 | medio p50 3.95 p99 9.97 p999 13.5 | doppia: ott p99 4.93, medio p99 9.87 p999 12.1, pess p99 21.94; GET in più 0.0488/lettura | gp3 p99 9.87 | costo in più $1826/mese (GET base S3 $0)
+    b=0.5  mancate 0.9020 S3 0.0000 Express 0.9020 | medio p50 3.79 p99 9.84 p999 13.3 | doppia: ott p99 4.89, medio p99 9.77 p999 12.0, pess p99 21.76; GET in più 0.0453/lettura | gp3 p99 9.77 | costo in più $1712/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.9846 S3 0.9708 Express 0.0137 | medio p50 24.45 p99 99.58 p999 156.5 | doppia: ott p99 49.25, medio p99 88.32 p999 111.5, pess p99 150.50; GET in più 0.0494/lettura | gp3 p99 88.37 | costo in più $114950/mese (GET base S3 $20131)
+    b=0.05 mancate 0.9845 S3 0.9708 Express 0.0137 | medio p50 24.45 p99 99.49 p999 156.5 | doppia: ott p99 49.22, medio p99 88.32 p999 111.5, pess p99 150.50; GET in più 0.0494/lettura | gp3 p99 88.32 | costo in più $114947/mese (GET base S3 $20131)
+    b=0.1  mancate 0.9845 S3 0.9708 Express 0.0137 | medio p50 24.45 p99 99.49 p999 156.5 | doppia: ott p99 49.21, medio p99 88.32 p999 111.5, pess p99 150.50; GET in più 0.0494/lettura | gp3 p99 88.39 | costo in più $114945/mese (GET base S3 $20130)
+    b=0.2  mancate 0.9708 S3 0.9708 Express 0.0001 | medio p50 24.45 p99 99.50 p999 156.5 | doppia: ott p99 49.24, medio p99 88.31 p999 111.5, pess p99 150.50; GET in più 0.0488/lettura | gp3 p99 88.39 | costo in più $114922/mese (GET base S3 $20130)
+    b=0.5  mancate 0.9020 S3 0.9020 Express 0.0000 | medio p50 23.04 p99 97.52 p999 153.5 | doppia: ott p99 48.83, medio p99 87.54 p999 110.5, pess p99 149.50; GET in più 0.0453/lettura | gp3 p99 87.57 | costo in più $106780/mese (GET base S3 $18703)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.9846 S3 0.9005 Express 0.0841 | medio p50 22.98 p99 97.45 p999 154.5 | doppia: ott p99 48.79, medio p99 87.53 p999 110.5, pess p99 149.50; GET in più 0.0494/lettura | gp3 p99 87.58 | costo in più $106810/mese (GET base S3 $18672)
+    b=0.05 mancate 0.9845 S3 0.9005 Express 0.0841 | medio p50 22.99 p99 97.44 p999 154.5 | doppia: ott p99 48.78, medio p99 87.43 p999 110.5, pess p99 149.50; GET in più 0.0494/lettura | gp3 p99 87.55 | costo in più $106808/mese (GET base S3 $18672)
+    b=0.1  mancate 0.9845 S3 0.9004 Express 0.0841 | medio p50 22.99 p99 97.56 p999 153.5 | doppia: ott p99 48.85, medio p99 87.59 p999 110.5, pess p99 149.50; GET in più 0.0494/lettura | gp3 p99 87.57 | costo in più $106806/mese (GET base S3 $18672)
+    b=0.2  mancate 0.9708 S3 0.8874 Express 0.0834 | medio p50 22.72 p99 97.43 p999 153.5 | doppia: ott p99 48.69, medio p99 87.37 p999 110.5, pess p99 148.50; GET in più 0.0488/lettura | gp3 p99 87.52 | costo in più $105264/mese (GET base S3 $18402)
+    b=0.5  mancate 0.9020 S3 0.9002 Express 0.0018 | medio p50 23.00 p99 97.45 p999 153.5 | doppia: ott p99 48.81, medio p99 87.53 p999 110.5, pess p99 149.50; GET in più 0.0453/lettura | gp3 p99 87.57 | costo in più $106643/mese (GET base S3 $18667)
+  [0+1+2 e1]
+    b=0.02 mancate 0.9846 S3 0.8664 Express 0.1181 | medio p50 22.24 p99 96.62 p999 153.5 | doppia: ott p99 48.58, medio p99 87.14 p999 110.5, pess p99 148.50; GET in più 0.0494/lettura | gp3 p99 87.15 | costo in più $102948/mese (GET base S3 $17966)
+    b=0.05 mancate 0.9845 S3 0.8664 Express 0.1181 | medio p50 22.24 p99 96.46 p999 153.5 | doppia: ott p99 48.55, medio p99 87.00 p999 110.5, pess p99 148.50; GET in più 0.0494/lettura | gp3 p99 87.04 | costo in più $102947/mese (GET base S3 $17966)
+    b=0.1  mancate 0.9845 S3 0.8664 Express 0.1181 | medio p50 22.23 p99 96.47 p999 152.5 | doppia: ott p99 48.56, medio p99 87.13 p999 110.5, pess p99 148.50; GET in più 0.0494/lettura | gp3 p99 87.11 | costo in più $102945/mese (GET base S3 $17966)
+    b=0.2  mancate 0.9708 S3 0.8664 Express 0.1044 | medio p50 22.25 p99 96.77 p999 153.5 | doppia: ott p99 48.55, medio p99 87.09 p999 110.5, pess p99 148.50; GET in più 0.0488/lettura | gp3 p99 87.25 | costo in più $102922/mese (GET base S3 $17966)
+    b=0.5  mancate 0.9020 S3 0.8663 Express 0.0356 | medio p50 22.25 p99 96.62 p999 152.5 | doppia: ott p99 48.59, medio p99 87.10 p999 110.5, pess p99 148.50; GET in più 0.0453/lettura | gp3 p99 87.07 | costo in più $102802/mese (GET base S3 $17964)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9824 S3 0.8977 Express 0.0841 | medio p50 22.95 p99 97.56 p999 154.5 | doppia: ott p99 48.77, medio p99 87.46 p999 110.5, pess p99 149.50; GET in più 0.0493/lettura | gp3 p99 87.61 | costo in più $110025/mese (GET base S3 $18614) anticipo: precisione 0.02, sprecati 0.96, in ritardo 266, byte anticipati per lettura 48
+    b=0.05 mancate 0.9800 S3 0.8982 Express 0.0812 | medio p50 22.95 p99 97.51 p999 153.5 | doppia: ott p99 48.74, medio p99 87.50 p999 110.5, pess p99 149.50; GET in più 0.0491/lettura | gp3 p99 87.57 | costo in più $110078/mese (GET base S3 $18626) anticipo: precisione 0.05, sprecati 0.92, in ritardo 260, byte anticipati per lettura 47
+    b=0.1  mancate 0.9775 S3 0.8986 Express 0.0783 | medio p50 22.96 p99 97.53 p999 154.5 | doppia: ott p99 48.77, medio p99 87.52 p999 110.5, pess p99 149.50; GET in più 0.0490/lettura | gp3 p99 87.60 | costo in più $110064/mese (GET base S3 $18634) anticipo: precisione 0.07, sprecati 0.85, in ritardo 246, byte anticipati per lettura 45
+    b=0.2  mancate 0.9601 S3 0.8851 Express 0.0745 | medio p50 22.67 p99 97.26 p999 153.5 | doppia: ott p99 48.67, medio p99 87.32 p999 110.5, pess p99 148.50; GET in più 0.0482/lettura | gp3 p99 87.39 | costo in più $107283/mese (GET base S3 $18353) anticipo: precisione 0.14, sprecati 0.43, in ritardo 231, byte anticipati per lettura 35
+    b=0.5  mancate 0.9015 S3 0.8993 Express 0.0020 | medio p50 22.98 p99 97.44 p999 153.5 | doppia: ott p99 48.82, medio p99 87.52 p999 110.5, pess p99 149.50; GET in più 0.0452/lettura | gp3 p99 87.50 | costo in più $110785/mese (GET base S3 $18648) anticipo: precisione 0.07, sprecati 0.00, in ritardo 81, byte anticipati per lettura 16
+  [0+3 corr]
+    b=0.02 mancate 0.9825 S3 0.9818 Express 0.0000 | medio p50 24.66 p99 99.80 p999 156.5 | doppia: ott p99 49.36, medio p99 88.45 p999 111.5, pess p99 151.50; GET in più 0.0493/lettura | gp3 p99 88.49 | costo in più $3376/mese (GET base S3 $20358) anticipo: precisione 0.02, sprecati 0.96, in ritardo 313, byte anticipati per lettura 48
+    b=0.05 mancate 0.9801 S3 0.9794 Express 0.0000 | medio p50 24.62 p99 99.75 p999 156.5 | doppia: ott p99 49.35, medio p99 88.42 p999 111.5, pess p99 151.50; GET in più 0.0491/lettura | gp3 p99 88.46 | costo in più $3282/mese (GET base S3 $20309) anticipo: precisione 0.05, sprecati 0.92, in ritardo 304, byte anticipati per lettura 47
+    b=0.1  mancate 0.9776 S3 0.9769 Express 0.0000 | medio p50 24.57 p99 99.69 p999 156.5 | doppia: ott p99 49.32, medio p99 88.39 p999 111.5, pess p99 150.50; GET in più 0.0490/lettura | gp3 p99 88.42 | costo in più $3179/mese (GET base S3 $20257) anticipo: precisione 0.07, sprecati 0.85, in ritardo 293, byte anticipati per lettura 45
+    b=0.2  mancate 0.9602 S3 0.9596 Express 0.0000 | medio p50 24.24 p99 99.19 p999 155.5 | doppia: ott p99 49.22, medio p99 88.20 p999 111.5, pess p99 150.50; GET in più 0.0482/lettura | gp3 p99 88.32 | costo in più $2695/mese (GET base S3 $19898) anticipo: precisione 0.14, sprecati 0.43, in ritardo 273, byte anticipati per lettura 35
+    b=0.5  mancate 0.9015 S3 0.9013 Express 0.0000 | medio p50 23.02 p99 97.47 p999 153.5 | doppia: ott p99 48.83, medio p99 87.53 p999 110.5, pess p99 149.50; GET in più 0.0452/lettura | gp3 p99 87.56 | costo in più $1617/mese (GET base S3 $18689) anticipo: precisione 0.07, sprecati 0.00, in ritardo 84, byte anticipati per lettura 16
+  [0-lru]
+    b=0.02 mancate 0.9847 S3 0.9847 Express 0.0000 | medio p50 24.70 p99 99.83 p999 156.5 | doppia: ott p99 49.33, medio p99 88.47 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.50 | costo in più $1024/mese (GET base S3 $20418)
+    b=0.05 mancate 0.9847 S3 0.9847 Express 0.0000 | medio p50 24.70 p99 99.84 p999 156.5 | doppia: ott p99 49.33, medio p99 88.47 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.51 | costo in più $1024/mese (GET base S3 $20418)
+    b=0.1  mancate 0.9847 S3 0.9847 Express 0.0000 | medio p50 24.70 p99 99.83 p999 156.5 | doppia: ott p99 49.33, medio p99 88.47 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.50 | costo in più $1024/mese (GET base S3 $20418)
+    b=0.2  mancate 0.9846 S3 0.9846 Express 0.0000 | medio p50 24.70 p99 99.83 p999 156.5 | doppia: ott p99 49.33, medio p99 88.46 p999 111.5, pess p99 151.50; GET in più 0.0494/lettura | gp3 p99 88.50 | costo in più $1024/mese (GET base S3 $20417)
+    b=0.5  mancate 0.8950 S3 0.8950 Express 0.0000 | medio p50 22.89 p99 97.39 p999 153.5 | doppia: ott p99 48.79, medio p99 87.43 p999 110.5, pess p99 149.50; GET in più 0.0449/lettura | gp3 p99 87.47 | costo in più $931/mese (GET base S3 $18560)
+
+## tw-campione-017
+richieste 1,000,000, letture 996,770, durata 0.4 h; al database: letture 287,513, scritture 3,230, assorbite dalla cache app 709,257 su 996,770; dati toccati 0.05 GB (letti 0.05 GB)
+  [0]
+    b=0.02 mancate 0.9996 S3 0.9996 Express 0.0000 | medio p50 24.98 p99 99.88 p999 154.5 | doppia: ott p99 49.31, medio p99 88.58 p999 112.5, pess p99 151.50; GET in più 0.0495/lettura | gp3 p99 88.75 | costo in più $1027/mese (GET base S3 $20729)
+    b=0.05 mancate 0.9994 S3 0.9994 Express 0.0000 | medio p50 24.98 p99 99.87 p999 154.5 | doppia: ott p99 49.30, medio p99 88.58 p999 112.5, pess p99 151.50; GET in più 0.0495/lettura | gp3 p99 88.75 | costo in più $1027/mese (GET base S3 $20724)
+    b=0.1  mancate 0.6668 S3 0.6668 Express 0.0000 | medio p50 16.70 p99 90.46 p999 144.5 | doppia: ott p99 46.96, medio p99 84.18 p999 107.5, pess p99 143.50; GET in più 0.0324/lettura | gp3 p99 84.44 | costo in più $673/mese (GET base S3 $13828)
+    b=0.2  mancate 0.5316 S3 0.5316 Express 0.0000 | medio p50 9.88 p99 85.73 p999 138.5 | doppia: ott p99 45.32, medio p99 81.58 p999 104.5, pess p99 139.50; GET in più 0.0259/lettura | gp3 p99 82.03 | costo in più $537/mese (GET base S3 $11024)
+    b=0.5  mancate 0.3531 S3 0.3531 Express 0.0000 | medio p50 0.05 p99 77.10 p999 126.5 | doppia: ott p99 42.41, medio p99 76.22 p999 100.5, pess p99 131.50; GET in più 0.0172/lettura | gp3 p99 76.26 | costo in più $357/mese (GET base S3 $7322)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.9996 S3 0.0000 Express 0.9996 | medio p50 4.00 p99 10.00 p999 13.3 | doppia: ott p99 4.94, medio p99 9.91 p999 12.1, pess p99 22.01; GET in più 0.0495/lettura | gp3 p99 9.91 | costo in più $1874/mese (GET base S3 $0)
+    b=0.05 mancate 0.9994 S3 0.0000 Express 0.9994 | medio p50 4.00 p99 10.00 p999 13.3 | doppia: ott p99 4.94, medio p99 9.91 p999 12.1, pess p99 22.01; GET in più 0.0495/lettura | gp3 p99 9.91 | costo in più $1874/mese (GET base S3 $0)
+    b=0.1  mancate 0.6668 S3 0.0000 Express 0.6668 | medio p50 3.07 p99 9.36 p999 12.8 | doppia: ott p99 4.70, medio p99 9.35 p999 11.7, pess p99 20.99; GET in più 0.0324/lettura | gp3 p99 9.41 | costo in più $1324/mese (GET base S3 $0)
+    b=0.2  mancate 0.5316 S3 0.0000 Express 0.5316 | medio p50 2.17 p99 9.04 p999 12.4 | doppia: ott p99 4.54, medio p99 9.03 p999 11.5, pess p99 20.29; GET in più 0.0259/lettura | gp3 p99 9.09 | costo in più $1101/mese (GET base S3 $0)
+    b=0.5  mancate 0.3531 S3 0.0000 Express 0.3531 | medio p50 0.05 p99 8.42 p999 11.7 | doppia: ott p99 4.25, medio p99 8.42 p999 11.1, pess p99 19.06; GET in più 0.0172/lettura | gp3 p99 8.46 | costo in più $807/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.9996 S3 0.5319 Express 0.4677 | medio p50 10.27 p99 85.85 p999 138.5 | doppia: ott p99 45.32, medio p99 81.71 p999 105.5, pess p99 139.50; GET in più 0.0495/lettura | gp3 p99 81.87 | costo in più $63769/mese (GET base S3 $11030)
+    b=0.05 mancate 0.9994 S3 0.5318 Express 0.4676 | medio p50 10.25 p99 86.33 p999 139.5 | doppia: ott p99 45.12, medio p99 81.99 p999 106.5, pess p99 139.50; GET in più 0.0495/lettura | gp3 p99 82.04 | costo in più $63758/mese (GET base S3 $11028)
+    b=0.1  mancate 0.6668 S3 0.4780 Express 0.1889 | medio p50 6.10 p99 83.86 p999 138.5 | doppia: ott p99 44.57, medio p99 80.34 p999 103.5, pess p99 137.50; GET in più 0.0324/lettura | gp3 p99 80.63 | costo in più $56915/mese (GET base S3 $9911)
+    b=0.2  mancate 0.5316 S3 0.4786 Express 0.0531 | medio p50 4.35 p99 83.15 p999 135.5 | doppia: ott p99 44.51, medio p99 80.35 p999 103.5, pess p99 137.50; GET in più 0.0259/lettura | gp3 p99 80.63 | costo in più $56762/mese (GET base S3 $9923)
+    b=0.5  mancate 0.3531 S3 0.3531 Express 0.0000 | medio p50 0.05 p99 77.10 p999 126.5 | doppia: ott p99 42.41, medio p99 76.22 p999 100.5, pess p99 131.50; GET in più 0.0172/lettura | gp3 p99 76.26 | costo in più $41829/mese (GET base S3 $7322)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.9996 S3 0.3526 Express 0.6470 | medio p50 5.35 p99 77.38 p999 127.5 | doppia: ott p99 42.35, medio p99 76.97 p999 102.5, pess p99 131.50; GET in più 0.0495/lettura | gp3 p99 76.59 | costo in più $42911/mese (GET base S3 $7312)
+    b=0.05 mancate 0.9994 S3 0.3526 Express 0.6469 | medio p50 5.35 p99 78.09 p999 128.5 | doppia: ott p99 42.26, medio p99 76.48 p999 101.5, pess p99 131.50; GET in più 0.0495/lettura | gp3 p99 76.64 | costo in più $42906/mese (GET base S3 $7311)
+    b=0.1  mancate 0.6668 S3 0.3413 Express 0.3255 | medio p50 4.04 p99 76.84 p999 127.5 | doppia: ott p99 42.29, medio p99 76.19 p999 100.5, pess p99 131.50; GET in più 0.0324/lettura | gp3 p99 76.22 | costo in più $41034/mese (GET base S3 $7077)
+    b=0.2  mancate 0.5316 S3 0.3343 Express 0.1973 | medio p50 2.72 p99 75.61 p999 127.5 | doppia: ott p99 41.84, medio p99 75.16 p999 100.5, pess p99 130.50; GET in più 0.0259/lettura | gp3 p99 75.61 | costo in più $39999/mese (GET base S3 $6933)
+    b=0.5  mancate 0.3531 S3 0.3063 Express 0.0469 | medio p50 0.05 p99 74.22 p999 123.5 | doppia: ott p99 41.32, medio p99 73.90 p999 98.6, pess p99 128.50; GET in più 0.0172/lettura | gp3 p99 74.00 | costo in più $36429/mese (GET base S3 $6350)
+  [0+1+2 e1]
+    b=0.02 mancate 0.9996 S3 0.2730 Express 0.7266 | medio p50 4.85 p99 72.26 p999 121.5 | doppia: ott p99 40.59, medio p99 72.83 p999 98.8, pess p99 125.50; GET in più 0.0495/lettura | gp3 p99 72.61 | costo in più $33733/mese (GET base S3 $5661)
+    b=0.05 mancate 0.9994 S3 0.2730 Express 0.7264 | medio p50 4.85 p99 72.76 p999 121.5 | doppia: ott p99 40.51, medio p99 72.23 p999 98.3, pess p99 125.50; GET in più 0.0495/lettura | gp3 p99 72.94 | costo in più $33731/mese (GET base S3 $5661)
+    b=0.1  mancate 0.6668 S3 0.2730 Express 0.3938 | medio p50 3.70 p99 72.47 p999 121.5 | doppia: ott p99 40.60, medio p99 72.27 p999 98.5, pess p99 126.50; GET in più 0.0324/lettura | gp3 p99 72.52 | costo in più $33178/mese (GET base S3 $5661)
+    b=0.2  mancate 0.5316 S3 0.2730 Express 0.2586 | medio p50 2.54 p99 71.62 p999 122.5 | doppia: ott p99 40.32, medio p99 71.83 p999 98.4, pess p99 125.50; GET in più 0.0259/lettura | gp3 p99 71.93 | costo in più $32954/mese (GET base S3 $5661)
+    b=0.5  mancate 0.3531 S3 0.2727 Express 0.0804 | medio p50 0.05 p99 71.83 p999 120.5 | doppia: ott p99 40.61, medio p99 71.96 p999 97.2, pess p99 125.50; GET in più 0.0172/lettura | gp3 p99 71.90 | costo in più $32628/mese (GET base S3 $5655)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9266 S3 0.3401 Express 0.5864 | medio p50 5.07 p99 76.88 p999 127.5 | doppia: ott p99 42.05, medio p99 76.25 p999 101.5, pess p99 130.50; GET in più 0.0458/lettura | gp3 p99 75.75 | costo in più $48667/mese (GET base S3 $7053) anticipo: precisione 0.02, sprecati 0.98, in ritardo 0, byte anticipati per lettura 338
+    b=0.05 mancate 0.8250 S3 0.3412 Express 0.4838 | medio p50 4.76 p99 76.99 p999 125.5 | doppia: ott p99 42.12, medio p99 76.21 p999 101.5, pess p99 130.50; GET in più 0.0408/lettura | gp3 p99 75.99 | costo in più $48776/mese (GET base S3 $7075) anticipo: precisione 0.04, sprecati 0.96, in ritardo 3, byte anticipati per lettura 266
+    b=0.1  mancate 0.6896 S3 0.3355 Express 0.3541 | medio p50 4.13 p99 76.41 p999 123.5 | doppia: ott p99 41.77, medio p99 75.50 p999 99.9, pess p99 129.50; GET in più 0.0336/lettura | gp3 p99 75.66 | costo in più $46529/mese (GET base S3 $6957) anticipo: precisione 0.09, sprecati 0.92, in ritardo 0, byte anticipati per lettura 184
+    b=0.2  mancate 0.5515 S3 0.3364 Express 0.2151 | medio p50 3.03 p99 76.73 p999 126.5 | doppia: ott p99 42.09, medio p99 75.89 p999 101.5, pess p99 130.50; GET in più 0.0269/lettura | gp3 p99 75.70 | costo in più $44583/mese (GET base S3 $6976) anticipo: precisione 0.13, sprecati 0.85, in ritardo 0, byte anticipati per lettura 96
+    b=0.5  mancate 0.3540 S3 0.3027 Express 0.0513 | medio p50 0.05 p99 74.36 p999 123.5 | doppia: ott p99 41.27, medio p99 74.00 p999 98.5, pess p99 128.50; GET in più 0.0172/lettura | gp3 p99 74.04 | costo in più $37327/mese (GET base S3 $6276) anticipo: precisione 0.19, sprecati 0.00, in ritardo 0, byte anticipati per lettura 19
+  [0+3 corr]
+    b=0.02 mancate 0.9266 S3 0.9266 Express 0.0000 | medio p50 23.54 p99 97.91 p999 151.5 | doppia: ott p99 48.89, medio p99 87.78 p999 111.5, pess p99 150.50; GET in più 0.0458/lettura | gp3 p99 88.04 | costo in più $13800/mese (GET base S3 $19214) anticipo: precisione 0.02, sprecati 0.98, in ritardo 14, byte anticipati per lettura 338
+    b=0.05 mancate 0.8250 S3 0.8250 Express 0.0000 | medio p50 21.28 p99 95.22 p999 149.5 | doppia: ott p99 48.23, medio p99 86.49 p999 109.5, pess p99 147.50; GET in più 0.0408/lettura | gp3 p99 86.78 | costo in più $11070/mese (GET base S3 $17107) anticipo: precisione 0.04, sprecati 0.96, in ritardo 12, byte anticipati per lettura 266
+    b=0.1  mancate 0.6897 S3 0.6896 Express 0.0000 | medio p50 17.47 p99 91.21 p999 145.5 | doppia: ott p99 47.25, medio p99 84.49 p999 107.5, pess p99 144.50; GET in più 0.0336/lettura | gp3 p99 84.83 | costo in più $7918/mese (GET base S3 $14300) anticipo: precisione 0.09, sprecati 0.92, in ritardo 6, byte anticipati per lettura 184
+    b=0.2  mancate 0.5516 S3 0.5515 Express 0.0000 | medio p50 11.41 p99 86.42 p999 139.5 | doppia: ott p99 45.61, medio p99 82.04 p999 105.5, pess p99 140.50; GET in più 0.0269/lettura | gp3 p99 82.48 | costo in più $4369/mese (GET base S3 $11437) anticipo: precisione 0.13, sprecati 0.85, in ritardo 2, byte anticipati per lettura 96
+    b=0.5  mancate 0.3540 S3 0.3540 Express 0.0000 | medio p50 0.05 p99 77.14 p999 126.5 | doppia: ott p99 42.42, medio p99 76.25 p999 100.5, pess p99 131.50; GET in più 0.0172/lettura | gp3 p99 76.30 | costo in più $1132/mese (GET base S3 $7341) anticipo: precisione 0.19, sprecati 0.00, in ritardo 0, byte anticipati per lettura 19
+  [0-lru]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.99 p99 99.87 p999 154.5 | doppia: ott p99 49.31, medio p99 88.58 p999 112.5, pess p99 151.50; GET in più 0.0495/lettura | gp3 p99 88.74 | costo in più $1027/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9998 S3 0.9998 Express 0.0000 | medio p50 24.98 p99 99.87 p999 154.5 | doppia: ott p99 49.31, medio p99 88.59 p999 112.5, pess p99 151.50; GET in più 0.0495/lettura | gp3 p99 88.74 | costo in più $1027/mese (GET base S3 $20731)
+    b=0.1  mancate 0.9997 S3 0.9997 Express 0.0000 | medio p50 24.98 p99 99.87 p999 154.5 | doppia: ott p99 49.31, medio p99 88.59 p999 112.5, pess p99 151.50; GET in più 0.0495/lettura | gp3 p99 88.75 | costo in più $1027/mese (GET base S3 $20729)
+    b=0.2  mancate 0.6749 S3 0.6749 Express 0.0000 | medio p50 16.99 p99 90.76 p999 145.5 | doppia: ott p99 47.07, medio p99 84.35 p999 107.5, pess p99 143.50; GET in più 0.0328/lettura | gp3 p99 84.55 | costo in più $681/mese (GET base S3 $13995)
+    b=0.5  mancate 0.3516 S3 0.3516 Express 0.0000 | medio p50 0.05 p99 76.99 p999 126.5 | doppia: ott p99 42.37, medio p99 76.14 p999 100.5, pess p99 131.50; GET in più 0.0171/lettura | gp3 p99 76.20 | costo in più $355/mese (GET base S3 $7290)
+
+## tw-campione-018
+richieste 1,000,000, letture 971,166, durata 0.0 h; al database: letture 155,712, scritture 28,813, assorbite dalla cache app 815,454 su 971,166; dati toccati 0.01 GB (letti 0.01 GB)
+  [0]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.00 p99 9.91 p999 13.2 | doppia: ott p99 4.93, medio p99 9.83 p999 12.0, pess p99 22.03; GET in più 0.0487/lettura | gp3 p99 9.85 | costo in più $1862/mese (GET base S3 $0)
+    b=0.05 mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.00 p99 9.91 p999 13.2 | doppia: ott p99 4.93, medio p99 9.83 p999 12.0, pess p99 22.03; GET in più 0.0487/lettura | gp3 p99 9.85 | costo in più $1862/mese (GET base S3 $0)
+    b=0.1  mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.00 p99 9.91 p999 13.2 | doppia: ott p99 4.93, medio p99 9.83 p999 12.0, pess p99 22.03; GET in più 0.0487/lettura | gp3 p99 9.85 | costo in più $1862/mese (GET base S3 $0)
+    b=0.2  mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.00 p99 9.91 p999 13.2 | doppia: ott p99 4.93, medio p99 9.83 p999 12.0, pess p99 22.03; GET in più 0.0487/lettura | gp3 p99 9.85 | costo in più $1862/mese (GET base S3 $0)
+    b=0.5  mancate 0.9999 S3 0.0000 Express 0.9999 | medio p50 4.00 p99 9.91 p999 13.2 | doppia: ott p99 4.93, medio p99 9.83 p999 12.0, pess p99 22.03; GET in più 0.0487/lettura | gp3 p99 9.85 | costo in più $1862/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118216/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118216/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118216/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118216/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118216/mese (GET base S3 $20733)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+  [0+1+2 e1]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118396/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118396/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118396/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118396/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118396/mese (GET base S3 $20733)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $118284/mese (GET base S3 $20733)
+  [0+3 corr]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+  [0-lru]
+    b=0.02 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.05 mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.1  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.2  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+    b=0.5  mancate 0.9999 S3 0.9999 Express 0.0000 | medio p50 24.97 p99 98.62 p999 151.5 | doppia: ott p99 49.33, medio p99 88.39 p999 111.5, pess p99 151.50; GET in più 0.0487/lettura | gp3 p99 88.64 | costo in più $1010/mese (GET base S3 $20733)
+
+## tw-campione-024
+richieste 1,000,000, letture 992,844, durata 0.1 h; al database: letture 180,088, scritture 7,156, assorbite dalla cache app 812,756 su 992,844; dati toccati 0.08 GB (letti 0.08 GB)
+  [0]
+    b=0.02 mancate 0.9973 S3 0.9973 Express 0.0000 | medio p50 24.92 p99 99.15 p999 153.5 | doppia: ott p99 49.39, medio p99 88.34 p999 112.5, pess p99 151.50; GET in più 0.0485/lettura | gp3 p99 88.66 | costo in più $1005/mese (GET base S3 $20681)
+    b=0.05 mancate 0.9972 S3 0.9972 Express 0.0000 | medio p50 24.92 p99 99.17 p999 153.5 | doppia: ott p99 49.40, medio p99 88.34 p999 112.5, pess p99 151.50; GET in più 0.0485/lettura | gp3 p99 88.66 | costo in più $1005/mese (GET base S3 $20679)
+    b=0.1  mancate 0.9971 S3 0.9971 Express 0.0000 | medio p50 24.92 p99 99.15 p999 153.5 | doppia: ott p99 49.39, medio p99 88.33 p999 112.5, pess p99 151.50; GET in più 0.0485/lettura | gp3 p99 88.66 | costo in più $1005/mese (GET base S3 $20676)
+    b=0.2  mancate 0.8132 S3 0.8132 Express 0.0000 | medio p50 20.99 p99 94.19 p999 147.5 | doppia: ott p99 48.18, medio p99 86.17 p999 108.5, pess p99 147.50; GET in più 0.0395/lettura | gp3 p99 86.49 | costo in più $819/mese (GET base S3 $16862)
+    b=0.5  mancate 0.6742 S3 0.6742 Express 0.0000 | medio p50 16.95 p99 90.26 p999 144.5 | doppia: ott p99 46.95, medio p99 84.10 p999 106.5, pess p99 143.50; GET in più 0.0329/lettura | gp3 p99 84.31 | costo in più $682/mese (GET base S3 $13981)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.9973 S3 0.0000 Express 0.9973 | medio p50 4.00 p99 9.95 p999 13.3 | doppia: ott p99 4.95, medio p99 9.85 p999 12.0, pess p99 22.04; GET in più 0.0485/lettura | gp3 p99 9.87 | costo in più $1884/mese (GET base S3 $0)
+    b=0.05 mancate 0.9972 S3 0.0000 Express 0.9972 | medio p50 4.00 p99 9.95 p999 13.3 | doppia: ott p99 4.95, medio p99 9.85 p999 12.0, pess p99 22.04; GET in più 0.0485/lettura | gp3 p99 9.87 | costo in più $1884/mese (GET base S3 $0)
+    b=0.1  mancate 0.9971 S3 0.0000 Express 0.9971 | medio p50 4.00 p99 9.95 p999 13.3 | doppia: ott p99 4.95, medio p99 9.85 p999 12.0, pess p99 22.03; GET in più 0.0485/lettura | gp3 p99 9.87 | costo in più $1884/mese (GET base S3 $0)
+    b=0.2  mancate 0.8132 S3 0.0000 Express 0.8132 | medio p50 3.57 p99 9.62 p999 13.0 | doppia: ott p99 4.83, medio p99 9.58 p999 11.9, pess p99 21.50; GET in più 0.0395/lettura | gp3 p99 9.63 | costo in più $1580/mese (GET base S3 $0)
+    b=0.5  mancate 0.6742 S3 0.0000 Express 0.6742 | medio p50 3.10 p99 9.35 p999 12.8 | doppia: ott p99 4.70, medio p99 9.34 p999 11.6, pess p99 20.93; GET in più 0.0329/lettura | gp3 p99 9.39 | costo in più $1351/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.9973 S3 0.8118 Express 0.1855 | medio p50 20.95 p99 94.49 p999 148.5 | doppia: ott p99 48.24, medio p99 86.22 p999 109.5, pess p99 147.50; GET in più 0.0485/lettura | gp3 p99 86.43 | costo in più $96469/mese (GET base S3 $16833)
+    b=0.05 mancate 0.9972 S3 0.8118 Express 0.1855 | medio p50 20.95 p99 94.24 p999 149.5 | doppia: ott p99 48.24, medio p99 85.94 p999 108.5, pess p99 147.50; GET in più 0.0485/lettura | gp3 p99 86.73 | costo in più $96466/mese (GET base S3 $16833)
+    b=0.1  mancate 0.9971 S3 0.8117 Express 0.1854 | medio p50 20.92 p99 94.54 p999 149.5 | doppia: ott p99 48.20, medio p99 86.09 p999 109.5, pess p99 147.50; GET in più 0.0485/lettura | gp3 p99 86.62 | costo in più $96461/mese (GET base S3 $16832)
+    b=0.2  mancate 0.8132 S3 0.8115 Express 0.0016 | medio p50 20.95 p99 94.14 p999 147.5 | doppia: ott p99 48.15, medio p99 86.17 p999 108.5, pess p99 147.50; GET in più 0.0395/lettura | gp3 p99 86.47 | costo in più $96134/mese (GET base S3 $16828)
+    b=0.5  mancate 0.6742 S3 0.6742 Express 0.0000 | medio p50 16.95 p99 90.26 p999 144.5 | doppia: ott p99 46.95, medio p99 84.10 p999 106.5, pess p99 143.50; GET in più 0.0329/lettura | gp3 p99 84.31 | costo in più $79877/mese (GET base S3 $13981)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.9973 S3 0.6721 Express 0.3252 | medio p50 16.92 p99 90.80 p999 146.5 | doppia: ott p99 47.07, medio p99 84.38 p999 108.5, pess p99 143.50; GET in più 0.0485/lettura | gp3 p99 84.37 | costo in più $80226/mese (GET base S3 $13936)
+    b=0.05 mancate 0.9972 S3 0.6720 Express 0.3252 | medio p50 16.88 p99 90.06 p999 144.5 | doppia: ott p99 47.12, medio p99 84.20 p999 106.5, pess p99 144.50; GET in più 0.0485/lettura | gp3 p99 84.78 | costo in più $80221/mese (GET base S3 $13936)
+    b=0.1  mancate 0.9971 S3 0.6720 Express 0.3251 | medio p50 16.87 p99 90.79 p999 144.5 | doppia: ott p99 47.29, medio p99 84.38 p999 107.5, pess p99 144.50; GET in più 0.0485/lettura | gp3 p99 84.49 | costo in più $80218/mese (GET base S3 $13935)
+    b=0.2  mancate 0.8132 S3 0.6000 Express 0.2132 | medio p50 14.05 p99 87.75 p999 141.5 | doppia: ott p99 46.16, medio p99 82.97 p999 106.5, pess p99 141.50; GET in più 0.0395/lettura | gp3 p99 82.86 | costo in più $71502/mese (GET base S3 $12441)
+    b=0.5  mancate 0.6742 S3 0.6623 Express 0.0119 | medio p50 16.54 p99 89.84 p999 144.5 | doppia: ott p99 46.80, medio p99 83.97 p999 106.5, pess p99 143.50; GET in più 0.0329/lettura | gp3 p99 84.16 | costo in più $78557/mese (GET base S3 $13734)
+  [0+1+2 e1]
+    b=0.02 mancate 0.9973 S3 0.5030 Express 0.4943 | medio p50 8.44 p99 84.59 p999 139.5 | doppia: ott p99 44.89, medio p99 81.24 p999 104.5, pess p99 138.50; GET in più 0.0485/lettura | gp3 p99 81.19 | costo in più $60599/mese (GET base S3 $10430)
+    b=0.05 mancate 0.9972 S3 0.5030 Express 0.4942 | medio p50 8.47 p99 84.35 p999 138.5 | doppia: ott p99 45.02, medio p99 80.70 p999 103.5, pess p99 138.50; GET in più 0.0485/lettura | gp3 p99 81.53 | costo in più $60599/mese (GET base S3 $10430)
+    b=0.1  mancate 0.9971 S3 0.5030 Express 0.4941 | medio p50 8.42 p99 85.19 p999 137.5 | doppia: ott p99 45.01, medio p99 80.90 p999 104.5, pess p99 138.50; GET in più 0.0485/lettura | gp3 p99 80.96 | costo in più $60599/mese (GET base S3 $10430)
+    b=0.2  mancate 0.8132 S3 0.5030 Express 0.3102 | medio p50 8.07 p99 84.09 p999 137.5 | doppia: ott p99 44.75, medio p99 80.80 p999 104.5, pess p99 138.50; GET in più 0.0395/lettura | gp3 p99 81.00 | costo in più $60295/mese (GET base S3 $10430)
+    b=0.5  mancate 0.6742 S3 0.5030 Express 0.1712 | medio p50 7.62 p99 84.13 p999 138.5 | doppia: ott p99 44.94, medio p99 80.80 p999 103.5, pess p99 138.50; GET in più 0.0329/lettura | gp3 p99 80.99 | costo in più $60068/mese (GET base S3 $10430)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9776 S3 0.6296 Express 0.3480 | medio p50 15.37 p99 88.83 p999 141.5 | doppia: ott p99 46.60, medio p99 83.35 p999 106.5, pess p99 142.50; GET in più 0.0477/lettura | gp3 p99 83.77 | costo in più $86897/mese (GET base S3 $13056) anticipo: precisione 0.02, sprecati 0.98, in ritardo 5, byte anticipati per lettura 314
+    b=0.05 mancate 0.9519 S3 0.6333 Express 0.3186 | medio p50 15.46 p99 89.29 p999 143.5 | doppia: ott p99 46.69, medio p99 83.69 p999 107.5, pess p99 142.50; GET in più 0.0465/lettura | gp3 p99 83.75 | costo in più $87125/mese (GET base S3 $13132) anticipo: precisione 0.05, sprecati 0.93, in ritardo 3, byte anticipati per lettura 288
+    b=0.1  mancate 0.9215 S3 0.6378 Express 0.2836 | medio p50 15.60 p99 88.98 p999 143.5 | doppia: ott p99 46.58, medio p99 83.91 p999 107.5, pess p99 142.50; GET in più 0.0450/lettura | gp3 p99 83.54 | costo in più $87373/mese (GET base S3 $13226) anticipo: precisione 0.11, sprecati 0.84, in ritardo 4, byte anticipati per lettura 255
+    b=0.2  mancate 0.7786 S3 0.5811 Express 0.1975 | medio p50 13.11 p99 87.65 p999 138.5 | doppia: ott p99 46.05, medio p99 82.64 p999 104.5, pess p99 140.50; GET in più 0.0380/lettura | gp3 p99 82.86 | costo in più $74364/mese (GET base S3 $12050) anticipo: precisione 0.21, sprecati 0.63, in ritardo 2, byte anticipati per lettura 153
+    b=0.5  mancate 0.6636 S3 0.6524 Express 0.0111 | medio p50 16.17 p99 89.58 p999 144.5 | doppia: ott p99 46.74, medio p99 83.84 p999 106.5, pess p99 142.50; GET in più 0.0324/lettura | gp3 p99 83.90 | costo in più $88780/mese (GET base S3 $13529) anticipo: precisione 0.27, sprecati 0.00, in ritardo 3, byte anticipati per lettura 63
+  [0+3 corr]
+    b=0.02 mancate 0.9777 S3 0.9776 Express 0.0000 | medio p50 24.56 p99 98.59 p999 152.5 | doppia: ott p99 49.31, medio p99 88.21 p999 112.5, pess p99 151.50; GET in più 0.0477/lettura | gp3 p99 88.42 | costo in più $10589/mese (GET base S3 $20271) anticipo: precisione 0.02, sprecati 0.98, in ritardo 15, byte anticipati per lettura 314
+    b=0.05 mancate 0.9520 S3 0.9519 Express 0.0000 | medio p50 24.06 p99 97.97 p999 151.5 | doppia: ott p99 49.09, medio p99 87.93 p999 111.5, pess p99 150.50; GET in più 0.0465/lettura | gp3 p99 88.11 | costo in più $9758/mese (GET base S3 $19739) anticipo: precisione 0.05, sprecati 0.93, in ritardo 9, byte anticipati per lettura 288
+    b=0.1  mancate 0.9215 S3 0.9214 Express 0.0000 | medio p50 23.42 p99 96.96 p999 151.5 | doppia: ott p99 48.88, medio p99 87.67 p999 111.5, pess p99 149.50; GET in più 0.0450/lettura | gp3 p99 87.92 | costo in più $8721/mese (GET base S3 $19107) anticipo: precisione 0.11, sprecati 0.84, in ritardo 12, byte anticipati per lettura 255
+    b=0.2  mancate 0.7786 S3 0.7786 Express 0.0000 | medio p50 20.11 p99 93.30 p999 146.5 | doppia: ott p99 47.97, medio p99 85.80 p999 107.5, pess p99 146.50; GET in più 0.0380/lettura | gp3 p99 85.94 | costo in più $5443/mese (GET base S3 $16145) anticipo: precisione 0.21, sprecati 0.63, in ritardo 7, byte anticipati per lettura 153
+    b=0.5  mancate 0.6636 S3 0.6636 Express 0.0000 | medio p50 16.58 p99 89.86 p999 144.5 | doppia: ott p99 46.84, medio p99 83.94 p999 106.5, pess p99 143.50; GET in più 0.0324/lettura | gp3 p99 84.16 | costo in più $2587/mese (GET base S3 $13760) anticipo: precisione 0.27, sprecati 0.00, in ritardo 3, byte anticipati per lettura 63
+  [0-lru]
+    b=0.02 mancate 0.9991 S3 0.9991 Express 0.0000 | medio p50 24.95 p99 99.18 p999 153.5 | doppia: ott p99 49.40, medio p99 88.35 p999 112.5, pess p99 151.50; GET in più 0.0486/lettura | gp3 p99 88.67 | costo in più $1007/mese (GET base S3 $20717)
+    b=0.05 mancate 0.9990 S3 0.9990 Express 0.0000 | medio p50 24.95 p99 99.19 p999 153.5 | doppia: ott p99 49.40, medio p99 88.35 p999 112.5, pess p99 151.50; GET in più 0.0486/lettura | gp3 p99 88.67 | costo in più $1007/mese (GET base S3 $20716)
+    b=0.1  mancate 0.9990 S3 0.9990 Express 0.0000 | medio p50 24.95 p99 99.18 p999 153.5 | doppia: ott p99 49.40, medio p99 88.35 p999 112.5, pess p99 151.50; GET in più 0.0486/lettura | gp3 p99 88.67 | costo in più $1007/mese (GET base S3 $20715)
+    b=0.2  mancate 0.9989 S3 0.9989 Express 0.0000 | medio p50 24.95 p99 99.18 p999 153.5 | doppia: ott p99 49.40, medio p99 88.35 p999 112.5, pess p99 151.50; GET in più 0.0486/lettura | gp3 p99 88.68 | costo in più $1007/mese (GET base S3 $20713)
+    b=0.5  mancate 0.6177 S3 0.6177 Express 0.0000 | medio p50 14.79 p99 88.06 p999 143.5 | doppia: ott p99 46.24, medio p99 83.10 p999 106.5, pess p99 141.50; GET in più 0.0301/lettura | gp3 p99 83.27 | costo in più $625/mese (GET base S3 $12808)
+
+## tw-campione-025
+richieste 1,000,000, letture 968,588, durata 0.0 h; al database: letture 15,369, scritture 31,412, assorbite dalla cache app 953,219 su 968,588; dati toccati 0.00 GB (letti 0.00 GB)
+  [0]
+    b=0.02 mancate 0.0562 S3 0.0562 Express 0.0000 | medio p50 0.05 p99 41.85 p999 87.6 | doppia: ott p99 26.96, medio p99 41.97 p999 84.4, pess p99 68.09; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1165)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.0562 S3 0.0000 Express 0.0562 | medio p50 0.05 p99 5.62 p999 9.2 | doppia: ott p99 2.70, medio p99 5.63 p999 9.1, pess p99 11.12; GET in più 0.0028/lettura | gp3 p99 5.54 | costo in più $385/mese (GET base S3 $0)
+    b=0.05 mancate 0.0556 S3 0.0000 Express 0.0556 | medio p50 0.05 p99 5.62 p999 9.2 | doppia: ott p99 2.68, medio p99 5.63 p999 9.1, pess p99 11.05; GET in più 0.0028/lettura | gp3 p99 5.54 | costo in più $384/mese (GET base S3 $0)
+    b=0.1  mancate 0.0556 S3 0.0000 Express 0.0556 | medio p50 0.05 p99 5.62 p999 9.2 | doppia: ott p99 2.68, medio p99 5.63 p999 9.1, pess p99 11.05; GET in più 0.0028/lettura | gp3 p99 5.54 | costo in più $384/mese (GET base S3 $0)
+    b=0.2  mancate 0.0556 S3 0.0000 Express 0.0556 | medio p50 0.05 p99 5.62 p999 9.2 | doppia: ott p99 2.68, medio p99 5.63 p999 9.1, pess p99 11.05; GET in più 0.0028/lettura | gp3 p99 5.54 | costo in più $384/mese (GET base S3 $0)
+    b=0.5  mancate 0.0556 S3 0.0000 Express 0.0556 | medio p50 0.05 p99 5.62 p999 9.2 | doppia: ott p99 2.68, medio p99 5.63 p999 9.1, pess p99 11.05; GET in più 0.0028/lettura | gp3 p99 5.54 | costo in più $384/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.0562 S3 0.0562 Express 0.0000 | medio p50 0.05 p99 41.85 p999 87.6 | doppia: ott p99 26.96, medio p99 41.97 p999 84.4, pess p99 68.09; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6687/mese (GET base S3 $1165)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6620/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6620/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6620/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6620/mese (GET base S3 $1153)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.0562 S3 0.0562 Express 0.0000 | medio p50 0.05 p99 41.85 p999 87.6 | doppia: ott p99 26.96, medio p99 41.97 p999 84.4, pess p99 68.09; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6755/mese (GET base S3 $1165)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+  [0+1+2 e1]
+    b=0.02 mancate 0.0562 S3 0.0562 Express 0.0000 | medio p50 0.05 p99 41.85 p999 87.6 | doppia: ott p99 26.96, medio p99 41.97 p999 84.4, pess p99 68.09; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6868/mese (GET base S3 $1165)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6801/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6801/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6801/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6801/mese (GET base S3 $1153)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.0562 S3 0.0562 Express 0.0000 | medio p50 0.05 p99 41.85 p999 87.6 | doppia: ott p99 26.96, medio p99 41.97 p999 84.4, pess p99 68.09; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6755/mese (GET base S3 $1165)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $6688/mese (GET base S3 $1153)
+  [0+3 corr]
+    b=0.02 mancate 0.0562 S3 0.0562 Express 0.0000 | medio p50 0.05 p99 41.85 p999 87.6 | doppia: ott p99 26.96, medio p99 41.97 p999 84.4, pess p99 68.09; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1165)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+  [0-lru]
+    b=0.02 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.05 mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.1  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.2  mancate 0.0556 S3 0.0556 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.51; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1153)
+    b=0.5  mancate 0.0555 S3 0.0555 Express 0.0000 | medio p50 0.05 p99 41.81 p999 87.6 | doppia: ott p99 26.76, medio p99 41.91 p999 84.4, pess p99 67.50; GET in più 0.0028/lettura | gp3 p99 40.93 | costo in più $58/mese (GET base S3 $1150)
+
+## tw-campione-028
+richieste 1,000,000, letture 871,864, durata 0.1 h; al database: letture 89,049, scritture 125,455, assorbite dalla cache app 782,815 su 871,864; dati toccati 0.02 GB (letti 0.01 GB)
+  [0]
+    b=0.02 mancate 0.9438 S3 0.9438 Express 0.0000 | medio p50 23.88 p99 96.62 p999 152.5 | doppia: ott p99 48.76, medio p99 87.51 p999 111.5, pess p99 150.50; GET in più 0.0459/lettura | gp3 p99 88.00 | costo in più $952/mese (GET base S3 $19570)
+    b=0.05 mancate 0.9275 S3 0.9275 Express 0.0000 | medio p50 23.54 p99 96.30 p999 152.5 | doppia: ott p99 48.65, medio p99 87.32 p999 111.5, pess p99 150.50; GET in più 0.0451/lettura | gp3 p99 87.91 | costo in più $935/mese (GET base S3 $19233)
+    b=0.1  mancate 0.8937 S3 0.8937 Express 0.0000 | medio p50 22.81 p99 95.57 p999 151.5 | doppia: ott p99 48.48, medio p99 86.77 p999 110.5, pess p99 149.50; GET in più 0.0436/lettura | gp3 p99 87.57 | costo in più $904/mese (GET base S3 $18532)
+    b=0.2  mancate 0.8825 S3 0.8825 Express 0.0000 | medio p50 22.57 p99 95.36 p999 151.5 | doppia: ott p99 48.40, medio p99 86.67 p999 110.5, pess p99 148.50; GET in più 0.0432/lettura | gp3 p99 87.53 | costo in più $896/mese (GET base S3 $18299)
+    b=0.5  mancate 0.5447 S3 0.5447 Express 0.0000 | medio p50 10.97 p99 85.38 p999 140.5 | doppia: ott p99 45.09, medio p99 81.45 p999 103.5, pess p99 139.50; GET in più 0.0264/lettura | gp3 p99 81.86 | costo in più $547/mese (GET base S3 $11294)
+  [0+1+2 copia-piena]
+    b=0.02 mancate 0.9438 S3 0.0000 Express 0.9438 | medio p50 3.88 p99 9.78 p999 13.2 | doppia: ott p99 4.88, medio p99 9.72 p999 12.0, pess p99 21.79; GET in più 0.0459/lettura | gp3 p99 9.77 | costo in più $1856/mese (GET base S3 $0)
+    b=0.05 mancate 0.9275 S3 0.0000 Express 0.9275 | medio p50 3.85 p99 9.76 p999 13.2 | doppia: ott p99 4.87, medio p99 9.70 p999 12.0, pess p99 21.75; GET in più 0.0451/lettura | gp3 p99 9.75 | costo in più $1830/mese (GET base S3 $0)
+    b=0.1  mancate 0.8937 S3 0.0000 Express 0.8937 | medio p50 3.77 p99 9.71 p999 13.2 | doppia: ott p99 4.85, medio p99 9.66 p999 12.0, pess p99 21.68; GET in più 0.0436/lettura | gp3 p99 9.72 | costo in più $1775/mese (GET base S3 $0)
+    b=0.2  mancate 0.8825 S3 0.0000 Express 0.8825 | medio p50 3.74 p99 9.69 p999 13.2 | doppia: ott p99 4.84, medio p99 9.66 p999 12.0, pess p99 21.66; GET in più 0.0432/lettura | gp3 p99 9.71 | costo in più $1756/mese (GET base S3 $0)
+    b=0.5  mancate 0.5447 S3 0.0000 Express 0.5447 | medio p50 2.32 p99 9.01 p999 12.5 | doppia: ott p99 4.51, medio p99 9.01 p999 11.4, pess p99 20.42; GET in più 0.0264/lettura | gp3 p99 9.11 | costo in più $1203/mese (GET base S3 $0)
+  [0+1+2 e0.2]
+    b=0.02 mancate 0.9438 S3 0.6997 Express 0.2441 | medio p50 17.77 p99 91.14 p999 147.5 | doppia: ott p99 46.98, medio p99 84.04 p999 106.5, pess p99 144.50; GET in più 0.0459/lettura | gp3 p99 85.03 | costo in più $83179/mese (GET base S3 $14509)
+    b=0.05 mancate 0.9275 S3 0.6855 Express 0.2420 | medio p50 17.34 p99 90.48 p999 146.5 | doppia: ott p99 46.73, medio p99 84.16 p999 106.5, pess p99 144.50; GET in più 0.0451/lettura | gp3 p99 84.60 | costo in più $81498/mese (GET base S3 $14215)
+    b=0.1  mancate 0.8937 S3 0.6532 Express 0.2405 | medio p50 16.24 p99 88.50 p999 143.5 | doppia: ott p99 46.47, medio p99 83.75 p999 106.5, pess p99 143.50; GET in più 0.0436/lettura | gp3 p99 84.11 | costo in più $77678/mese (GET base S3 $13545)
+    b=0.2  mancate 0.8825 S3 0.6443 Express 0.2382 | medio p50 15.92 p99 88.30 p999 146.5 | doppia: ott p99 46.25, medio p99 83.33 p999 104.5, pess p99 142.50; GET in più 0.0432/lettura | gp3 p99 84.29 | costo in più $76623/mese (GET base S3 $13360)
+    b=0.5  mancate 0.5447 S3 0.5447 Express 0.0000 | medio p50 10.97 p99 85.38 p999 140.5 | doppia: ott p99 45.09, medio p99 81.45 p999 103.5, pess p99 139.50; GET in più 0.0264/lettura | gp3 p99 81.86 | costo in più $64446/mese (GET base S3 $11294)
+  [0+1+2 e0.5]
+    b=0.02 mancate 0.9438 S3 0.3769 Express 0.5668 | medio p50 5.39 p99 79.27 p999 130.5 | doppia: ott p99 42.90, medio p99 76.90 p999 99.5, pess p99 133.50; GET in più 0.0459/lettura | gp3 p99 77.50 | costo in più $45611/mese (GET base S3 $7816)
+    b=0.05 mancate 0.9275 S3 0.3710 Express 0.5566 | medio p50 5.31 p99 78.91 p999 130.5 | doppia: ott p99 42.50, medio p99 76.84 p999 99.7, pess p99 132.50; GET in più 0.0451/lettura | gp3 p99 77.22 | costo in più $44888/mese (GET base S3 $7692)
+    b=0.1  mancate 0.8937 S3 0.3657 Express 0.5280 | medio p50 5.16 p99 77.55 p999 124.5 | doppia: ott p99 42.43, medio p99 76.83 p999 101.5, pess p99 132.50; GET in più 0.0436/lettura | gp3 p99 77.18 | costo in più $44217/mese (GET base S3 $7583)
+    b=0.2  mancate 0.8825 S3 0.3622 Express 0.5203 | medio p50 5.11 p99 77.99 p999 130.5 | doppia: ott p99 42.49, medio p99 76.68 p999 98.7, pess p99 131.50; GET in più 0.0432/lettura | gp3 p99 76.91 | costo in più $43790/mese (GET base S3 $7510)
+    b=0.5  mancate 0.5447 S3 0.3512 Express 0.1935 | medio p50 2.98 p99 77.18 p999 127.5 | doppia: ott p99 42.27, medio p99 76.32 p999 98.7, pess p99 131.50; GET in più 0.0264/lettura | gp3 p99 76.34 | costo in più $41956/mese (GET base S3 $7283)
+  [0+1+2 e1]
+    b=0.02 mancate 0.9438 S3 0.3760 Express 0.5677 | medio p50 5.38 p99 79.25 p999 130.5 | doppia: ott p99 42.90, medio p99 76.90 p999 99.5, pess p99 133.50; GET in più 0.0459/lettura | gp3 p99 77.48 | costo in più $45618/mese (GET base S3 $7797)
+    b=0.05 mancate 0.9275 S3 0.3703 Express 0.5572 | medio p50 5.30 p99 78.91 p999 130.5 | doppia: ott p99 42.50, medio p99 76.69 p999 99.7, pess p99 132.50; GET in più 0.0451/lettura | gp3 p99 77.22 | costo in più $44925/mese (GET base S3 $7679)
+    b=0.1  mancate 0.8937 S3 0.3652 Express 0.5285 | medio p50 5.16 p99 77.47 p999 124.5 | doppia: ott p99 42.41, medio p99 76.83 p999 101.5, pess p99 132.50; GET in più 0.0436/lettura | gp3 p99 77.15 | costo in più $44276/mese (GET base S3 $7573)
+    b=0.2  mancate 0.8825 S3 0.3619 Express 0.5206 | medio p50 5.11 p99 77.97 p999 129.5 | doppia: ott p99 42.48, medio p99 76.68 p999 98.7, pess p99 131.50; GET in più 0.0432/lettura | gp3 p99 76.91 | costo in più $43869/mese (GET base S3 $7504)
+    b=0.5  mancate 0.5447 S3 0.3512 Express 0.1935 | medio p50 2.98 p99 77.18 p999 127.5 | doppia: ott p99 42.27, medio p99 76.32 p999 98.7, pess p99 131.50; GET in più 0.0264/lettura | gp3 p99 76.34 | costo in più $42062/mese (GET base S3 $7281)
+  [0+1+2+3 corr e0.5]
+    b=0.02 mancate 0.9409 S3 0.3790 Express 0.5618 | medio p50 5.42 p99 78.95 p999 135.5 | doppia: ott p99 42.95, medio p99 77.19 p999 100.0, pess p99 133.50; GET in più 0.0458/lettura | gp3 p99 77.47 | costo in più $46753/mese (GET base S3 $7860) anticipo: precisione 0.01, sprecati 0.98, in ritardo 9, byte anticipati per lettura 128
+    b=0.05 mancate 0.9154 S3 0.3723 Express 0.5429 | medio p50 5.30 p99 77.47 p999 133.5 | doppia: ott p99 42.32, medio p99 76.60 p999 101.5, pess p99 133.50; GET in più 0.0447/lettura | gp3 p99 76.65 | costo in più $45869/mese (GET base S3 $7720) anticipo: precisione 0.03, sprecati 0.95, in ritardo 9, byte anticipati per lettura 121
+    b=0.1  mancate 0.8524 S3 0.3679 Express 0.4844 | medio p50 5.05 p99 77.59 p999 129.5 | doppia: ott p99 42.56, medio p99 76.96 p999 101.5, pess p99 133.50; GET in più 0.0418/lettura | gp3 p99 76.95 | costo in più $45083/mese (GET base S3 $7629) anticipo: precisione 0.12, sprecati 0.83, in ritardo 7, byte anticipati per lettura 98
+    b=0.2  mancate 0.7600 S3 0.3630 Express 0.3968 | medio p50 4.66 p99 78.60 p999 127.5 | doppia: ott p99 42.35, medio p99 76.92 p999 100.5, pess p99 132.50; GET in più 0.0371/lettura | gp3 p99 77.00 | costo in più $44173/mese (GET base S3 $7528) anticipo: precisione 0.33, sprecati 0.58, in ritardo 6, byte anticipati per lettura 70
+    b=0.5  mancate 0.5139 S3 0.3528 Express 0.1611 | medio p50 2.33 p99 76.68 p999 128.5 | doppia: ott p99 42.16, medio p99 75.93 p999 98.8, pess p99 131.50; GET in più 0.0247/lettura | gp3 p99 76.38 | costo in più $42243/mese (GET base S3 $7316) anticipo: precisione 0.43, sprecati 0.00, in ritardo 2, byte anticipati per lettura 24
+  [0+3 corr]
+    b=0.02 mancate 0.9419 S3 0.9408 Express 0.0000 | medio p50 23.84 p99 96.48 p999 152.5 | doppia: ott p99 48.79, medio p99 87.48 p999 111.5, pess p99 150.50; GET in più 0.0458/lettura | gp3 p99 88.00 | costo in più $12489/mese (GET base S3 $19509) anticipo: precisione 0.01, sprecati 0.98, in ritardo 77, byte anticipati per lettura 128
+    b=0.05 mancate 0.9162 S3 0.9152 Express 0.0000 | medio p50 23.30 p99 95.93 p999 152.5 | doppia: ott p99 48.62, medio p99 87.19 p999 111.5, pess p99 149.50; GET in più 0.0447/lettura | gp3 p99 87.77 | costo in più $11788/mese (GET base S3 $18978) anticipo: precisione 0.03, sprecati 0.95, in ritardo 66, byte anticipati per lettura 121
+    b=0.1  mancate 0.8530 S3 0.8523 Express 0.0000 | medio p50 21.87 p99 94.84 p999 151.5 | doppia: ott p99 48.32, medio p99 86.43 p999 109.5, pess p99 148.50; GET in più 0.0418/lettura | gp3 p99 87.29 | costo in più $9577/mese (GET base S3 $17673) anticipo: precisione 0.12, sprecati 0.83, in ritardo 53, byte anticipati per lettura 98
+    b=0.2  mancate 0.7605 S3 0.7599 Express 0.0000 | medio p50 19.59 p99 92.69 p999 149.5 | doppia: ott p99 47.55, medio p99 85.33 p999 107.5, pess p99 146.50; GET in più 0.0371/lettura | gp3 p99 85.94 | costo in più $7021/mese (GET base S3 $15757) anticipo: precisione 0.33, sprecati 0.58, in ritardo 46, byte anticipati per lettura 70
+    b=0.5  mancate 0.5140 S3 0.5139 Express 0.0000 | medio p50 8.01 p99 84.28 p999 139.5 | doppia: ott p99 44.76, medio p99 80.71 p999 102.5, pess p99 138.50; GET in più 0.0247/lettura | gp3 p99 81.30 | costo in più $2538/mese (GET base S3 $10656) anticipo: precisione 0.43, sprecati 0.00, in ritardo 10, byte anticipati per lettura 24
+  [0-lru]
+    b=0.02 mancate 0.9319 S3 0.9319 Express 0.0000 | medio p50 23.63 p99 96.41 p999 152.5 | doppia: ott p99 48.68, medio p99 87.33 p999 111.5, pess p99 150.50; GET in più 0.0452/lettura | gp3 p99 87.91 | costo in più $938/mese (GET base S3 $19325)
+    b=0.05 mancate 0.9286 S3 0.9286 Express 0.0000 | medio p50 23.56 p99 96.30 p999 152.5 | doppia: ott p99 48.66, medio p99 87.32 p999 111.5, pess p99 150.50; GET in più 0.0451/lettura | gp3 p99 87.91 | costo in più $936/mese (GET base S3 $19255)
+    b=0.1  mancate 0.9253 S3 0.9253 Express 0.0000 | medio p50 23.50 p99 96.28 p999 152.5 | doppia: ott p99 48.64, medio p99 87.29 p999 111.5, pess p99 150.50; GET in più 0.0450/lettura | gp3 p99 87.87 | costo in più $932/mese (GET base S3 $19187)
+    b=0.2  mancate 0.9181 S3 0.9181 Express 0.0000 | medio p50 23.34 p99 96.19 p999 152.5 | doppia: ott p99 48.60, medio p99 87.17 p999 111.5, pess p99 149.50; GET in più 0.0447/lettura | gp3 p99 87.83 | costo in più $926/mese (GET base S3 $19038)
+    b=0.5  mancate 0.4454 S3 0.4454 Express 0.0000 | medio p50 0.05 p99 82.26 p999 138.5 | doppia: ott p99 43.58, medio p99 79.56 p999 102.5, pess p99 135.50; GET in più 0.0216/lettura | gp3 p99 79.39 | costo in più $448/mese (GET base S3 $9236)
+
 ## twitter-c11
 richieste 40,000,000, letture 40,000,000, durata 25.9 h; al database: letture 18,653,873, scritture 0, assorbite dalla cache app 21,346,127 su 40,000,000; dati toccati 0.22 GB (letti 0.22 GB)
   [0]
@@ -154,6 +793,108 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
     b=0.5  mancate 0.5141 S3 0.5141 Express 0.0000 | medio p50 7.98 p99 85.51 p999 139.5 | doppia: ott p99 45.03, medio p99 81.45 p999 105.5, pess p99 138.50; GET in più 0.0256/lettura | gp3 p99 81.49 | costo in più $532/mese (GET base S3 $10660)
 
 # Taglia minima del bancone per p99 <= 10 ms (con richiesta doppia)
+  tencentBlock-1548 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tencentBlock-1548 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2 e1]: ottimista_doppia ≤0.02, medio_doppia ≤0.5, pessimista_doppia >0.5, medio ≤0.5
+  tencentBlock-1548 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2+3 seq e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2+3 seq+corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2+3+4 w1048576 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2+3+4 w262144 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+1+2+3+4 w65536 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+3 seq]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0+3 seq+corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [4 w1048576]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [4 w262144]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-1548 [4 w65536]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tencentBlock-2982 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2+3 seq e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2+3 seq+corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2+3+4 w1048576 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2+3+4 w262144 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+1+2+3+4 w65536 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+3 seq]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0+3 seq+corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [4 w1048576]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [4 w262144]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-2982 [4 w65536]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia ≤0.5, medio ≤0.02
+  tencentBlock-3580 [0+1+2 e0.2]: ottimista_doppia ≤0.5, medio_doppia ≤0.5, pessimista_doppia >0.5, medio ≤0.5
+  tencentBlock-3580 [0+1+2 e0.5]: ottimista_doppia ≤0.5, medio_doppia ≤0.5, pessimista_doppia ≤0.5, medio ≤0.5
+  tencentBlock-3580 [0+1+2 e1]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia ≤0.5, medio ≤0.02
+  tencentBlock-3580 [0+1+2+3 corr e0.5]: ottimista_doppia ≤0.5, medio_doppia ≤0.5, pessimista_doppia ≤0.5, medio ≤0.5
+  tencentBlock-3580 [0+1+2+3 seq e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+1+2+3 seq+corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+1+2+3+4 w1048576 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+1+2+3+4 w262144 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+1+2+3+4 w65536 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+3 seq]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0+3 seq+corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [4 w1048576]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [4 w262144]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tencentBlock-3580 [4 w65536]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tw-campione-011 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-011 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tw-campione-017 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-017 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tw-campione-018 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-018 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tw-campione-024 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-024 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tw-campione-025 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-025 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
+  tw-campione-028 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0+1+2 e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0+1+2 e1]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0+1+2+3 corr e0.5]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0+3 corr]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
+  tw-campione-028 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
   twitter-c11 [0]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
   twitter-c11 [0+1+2 copia-piena]: ottimista_doppia ≤0.02, medio_doppia ≤0.02, pessimista_doppia >0.5, medio ≤0.02
   twitter-c11 [0+1+2 e0.2]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
@@ -180,6 +921,24 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
   twitter-c25 [0-lru]: ottimista_doppia >0.5, medio_doppia >0.5, pessimista_doppia >0.5, medio >0.5
 
 # Riscaldamento (bancone vuoto): tempo perché le mancate per finestra scendano entro 1,1 volte il valore stabile
+  tencentBlock-3580 [0-lru] b=0.02: stabile 0.9441, prima finestra 0.9328, raggiunto dopo 0.01 h
+  tencentBlock-3580 [0] b=0.02: stabile 0.8993, prima finestra 0.9328, raggiunto dopo 0.01 h
+  tencentBlock-3580 [0-lru] b=0.1: stabile 0.9299, prima finestra 0.9328, raggiunto dopo 0.01 h
+  tencentBlock-3580 [0] b=0.1: stabile 0.7476, prima finestra 0.7728, raggiunto dopo 0.01 h
+  tencentBlock-3580 [0-lru] b=0.5: stabile 0.0490, prima finestra 0.1574, raggiunto dopo 0.01 h
+  tencentBlock-3580 [0] b=0.5: stabile 0.0381, prima finestra 0.1574, raggiunto dopo 0.01 h
+  tencentBlock-1548 [0-lru] b=0.02: stabile 0.8757, prima finestra 0.7527, raggiunto dopo 0.16 h
+  tencentBlock-1548 [0] b=0.02: stabile 0.8722, prima finestra 0.7436, raggiunto dopo 0.16 h
+  tencentBlock-1548 [0-lru] b=0.1: stabile 0.8488, prima finestra 0.6650, raggiunto dopo 0.16 h
+  tencentBlock-1548 [0] b=0.1: stabile 0.8235, prima finestra 0.6733, raggiunto dopo 0.16 h
+  tencentBlock-1548 [0-lru] b=0.5: stabile 0.6637, prima finestra 0.6635, raggiunto dopo 0.16 h
+  tencentBlock-1548 [0] b=0.5: stabile 0.3463, prima finestra 0.6635, raggiunto dopo 1.64 h
+  tencentBlock-2982 [0-lru] b=0.02: stabile 0.9595, prima finestra 1.0000, raggiunto dopo 0.02 h
+  tencentBlock-2982 [0] b=0.02: stabile 0.9556, prima finestra 1.0000, raggiunto dopo 0.02 h
+  tencentBlock-2982 [0-lru] b=0.1: stabile 0.9595, prima finestra 1.0000, raggiunto dopo 0.02 h
+  tencentBlock-2982 [0] b=0.1: stabile 0.9525, prima finestra 1.0000, raggiunto dopo 0.02 h
+  tencentBlock-2982 [0-lru] b=0.5: stabile 0.7082, prima finestra 1.0000, raggiunto dopo 0.42 h
+  tencentBlock-2982 [0] b=0.5: stabile 0.7402, prima finestra 1.0000, raggiunto dopo 0.19 h
   twitter-c24 [0-lru] b=0.02: stabile 0.9138, prima finestra 0.7089, raggiunto dopo 0.26 h
   twitter-c24 [0] b=0.02: stabile 0.5457, prima finestra 0.6103, raggiunto dopo 0.52 h
   twitter-c24 [0-lru] b=0.1: stabile 0.2518, prima finestra 0.4071, raggiunto dopo 0.52 h
@@ -192,14 +951,60 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
   twitter-c25 [0] b=0.1: stabile 0.6133, prima finestra 0.9837, raggiunto dopo 1.14 h
   twitter-c25 [0-lru] b=0.5: stabile 0.5087, prima finestra 0.9837, raggiunto dopo 0.76 h
   twitter-c25 [0] b=0.5: stabile 0.5088, prima finestra 0.9837, raggiunto dopo 0.76 h
+  twitter-c11 [0-lru] b=0.5: stabile 0.0916, prima finestra 0.6747, raggiunto dopo 1.33 h
+  twitter-c11 [0] b=0.5: stabile 0.0837, prima finestra 0.6747, raggiunto dopo 1.46 h
   twitter-c11 [0-lru] b=0.02: stabile 0.9321, prima finestra 1.0000, raggiunto dopo 0.17 h
   twitter-c11 [0] b=0.02: stabile 0.7609, prima finestra 0.9156, raggiunto dopo 0.37 h
   twitter-c11 [0-lru] b=0.1: stabile 0.6237, prima finestra 0.7793, raggiunto dopo 0.60 h
   twitter-c11 [0] b=0.1: stabile 0.5490, prima finestra 0.7845, raggiunto dopo 0.60 h
-  twitter-c11 [0-lru] b=0.5: stabile 0.0916, prima finestra 0.6747, raggiunto dopo 1.33 h
-  twitter-c11 [0] b=0.5: stabile 0.0837, prima finestra 0.6747, raggiunto dopo 1.46 h
+  tw-campione-011 [0-lru] b=0.02: stabile 0.9890, prima finestra 0.9913, raggiunto dopo 0.00 h
+  tw-campione-011 [0] b=0.02: stabile 0.9889, prima finestra 0.9913, raggiunto dopo 0.00 h
+  tw-campione-011 [0-lru] b=0.1: stabile 0.9890, prima finestra 0.9913, raggiunto dopo 0.00 h
+  tw-campione-011 [0] b=0.1: stabile 0.9888, prima finestra 0.9913, raggiunto dopo 0.00 h
+  tw-campione-011 [0-lru] b=0.5: stabile 0.9073, prima finestra 0.9913, raggiunto dopo 0.00 h
+  tw-campione-011 [0] b=0.5: stabile 0.9185, prima finestra 0.9913, raggiunto dopo 0.00 h
+  tw-campione-017 [0-lru] b=0.02: stabile 0.9999, prima finestra 0.9997, raggiunto dopo 0.00 h
+  tw-campione-017 [0] b=0.02: stabile 0.9996, prima finestra 0.9997, raggiunto dopo 0.00 h
+  tw-campione-017 [0-lru] b=0.1: stabile 0.9997, prima finestra 0.9997, raggiunto dopo 0.00 h
+  tw-campione-017 [0] b=0.1: stabile 0.6591, prima finestra 0.9997, raggiunto dopo 0.07 h
+  tw-campione-017 [0-lru] b=0.5: stabile 0.3467, prima finestra 0.9997, raggiunto dopo 0.09 h
+  tw-campione-017 [0] b=0.5: stabile 0.3414, prima finestra 0.9997, raggiunto dopo 0.11 h
+  tw-campione-018 [0-lru] b=0.02: stabile 0.9999, prima finestra 0.9983, raggiunto dopo 0.00 h
+  tw-campione-018 [0] b=0.02: stabile 0.9999, prima finestra 0.9983, raggiunto dopo 0.00 h
+  tw-campione-018 [0-lru] b=0.1: stabile 0.9999, prima finestra 0.9983, raggiunto dopo 0.00 h
+  tw-campione-018 [0] b=0.1: stabile 0.9999, prima finestra 0.9983, raggiunto dopo 0.00 h
+  tw-campione-018 [0-lru] b=0.5: stabile 0.9999, prima finestra 0.9983, raggiunto dopo 0.00 h
+  tw-campione-018 [0] b=0.5: stabile 0.9999, prima finestra 0.9983, raggiunto dopo 0.00 h
+  tw-campione-024 [0-lru] b=0.02: stabile 0.9991, prima finestra 1.0000, raggiunto dopo 0.00 h
+  tw-campione-024 [0] b=0.02: stabile 0.9970, prima finestra 1.0000, raggiunto dopo 0.00 h
+  tw-campione-024 [0-lru] b=0.1: stabile 0.9991, prima finestra 1.0000, raggiunto dopo 0.00 h
+  tw-campione-024 [0] b=0.1: stabile 0.9968, prima finestra 1.0000, raggiunto dopo 0.00 h
+  tw-campione-024 [0-lru] b=0.5: stabile 0.6167, prima finestra 1.0000, raggiunto dopo 0.02 h
+  tw-campione-024 [0] b=0.5: stabile 0.6719, prima finestra 1.0000, raggiunto dopo 0.02 h
+  tw-campione-025 [0-lru] b=0.02: stabile 0.0528, prima finestra 0.3942, raggiunto dopo 0.00 h
+  tw-campione-025 [0] b=0.02: stabile 0.0535, prima finestra 0.3942, raggiunto dopo 0.00 h
+  tw-campione-025 [0-lru] b=0.1: stabile 0.0528, prima finestra 0.3942, raggiunto dopo 0.00 h
+  tw-campione-025 [0] b=0.1: stabile 0.0528, prima finestra 0.3942, raggiunto dopo 0.00 h
+  tw-campione-025 [0-lru] b=0.5: stabile 0.0526, prima finestra 0.3942, raggiunto dopo 0.00 h
+  tw-campione-025 [0] b=0.5: stabile 0.0528, prima finestra 0.3942, raggiunto dopo 0.00 h
+  tw-campione-028 [0-lru] b=0.02: stabile 0.9289, prima finestra 0.9920, raggiunto dopo 0.00 h
+  tw-campione-028 [0] b=0.02: stabile 0.9408, prima finestra 0.9920, raggiunto dopo 0.00 h
+  tw-campione-028 [0-lru] b=0.1: stabile 0.9225, prima finestra 0.9920, raggiunto dopo 0.00 h
+  tw-campione-028 [0] b=0.1: stabile 0.8820, prima finestra 0.9920, raggiunto dopo 0.00 h
+  tw-campione-028 [0-lru] b=0.5: stabile 0.4302, prima finestra 0.9920, raggiunto dopo 0.02 h
+  tw-campione-028 [0] b=0.5: stabile 0.5898, prima finestra 0.9920, raggiunto dopo 0.02 h
 
 # Verifica contro libCacheSim (stesso flusso, tutte le operazioni, pagina per pagina)
+  tencentBlock-3580 lru b=0.02: nostro 0.9170, libCacheSim 0.9170
+  tencentBlock-3580 s3fifo b=0.02: nostro 0.8793, libCacheSim 0.8728
+  tencentBlock-3580 lru b=0.05: nostro 0.9163, libCacheSim 0.9163
+  tencentBlock-3580 s3fifo b=0.05: nostro 0.8145, libCacheSim 0.8060
+  tencentBlock-3580 lru b=0.1: nostro 0.9088, libCacheSim 0.9088
+  tencentBlock-3580 s3fifo b=0.1: nostro 0.7118, libCacheSim 0.7123
+  tencentBlock-3580 lru b=0.2: nostro 0.6460, libCacheSim 0.6460
+  tencentBlock-3580 s3fifo b=0.2: nostro 0.6096, libCacheSim 0.6096
+  tencentBlock-3580 lru b=0.5: nostro 0.0386, libCacheSim 0.0386
+  tencentBlock-3580 s3fifo b=0.5: nostro 0.0312, libCacheSim 0.0307
   twitter-c24 lru b=0.02: nostro 0.8646, libCacheSim 0.8646
   twitter-c24 s3fifo b=0.02: nostro 0.5383, libCacheSim 0.5379
   twitter-c24 lru b=0.05: nostro 0.4182, libCacheSim 0.4182
@@ -212,6 +1017,11 @@ richieste 40,000,000, letture 40,000,000, durata 6.1 h; al database: letture 620
   twitter-c24 s3fifo b=0.5: nostro 0.0745, libCacheSim 0.0736
 
 # Politiche in libCacheSim (tasso di mancata, tutte le operazioni)
+  tencentBlock-3580 cap 0.008 GB: S3FIFO 0.8728, TwoQ 0.9065, WTinyLFU 0.9088, LRU 0.9170, Sieve 0.9182, ARC 0.9732
+  tencentBlock-3580 cap 0.019 GB: S3FIFO 0.8060, WTinyLFU 0.8063, TwoQ 0.8499, Sieve 0.8727, LRU 0.9163, ARC 0.9277
+  tencentBlock-3580 cap 0.039 GB: WTinyLFU 0.6660, S3FIFO 0.7123, TwoQ 0.7453, Sieve 0.7605, ARC 0.8179, LRU 0.9088
+  tencentBlock-3580 cap 0.077 GB: WTinyLFU 0.4213, Sieve 0.5138, S3FIFO 0.6096, LRU 0.6460, TwoQ 0.6559, ARC 0.6646
+  tencentBlock-3580 cap 0.194 GB: WTinyLFU 0.0207, Sieve 0.0238, S3FIFO 0.0307, ARC 0.0369, LRU 0.0386, TwoQ 0.0553
   twitter-c24 cap 0.003 GB: WTinyLFU 0.5245, ARC 0.5356, S3FIFO 0.5379, TwoQ 0.5832, Sieve 0.7373, LRU 0.8646
   twitter-c24 cap 0.008 GB: WTinyLFU 0.3183, S3FIFO 0.3361, ARC 0.3476, TwoQ 0.3619, LRU 0.4182, Sieve 0.4869
   twitter-c24 cap 0.016 GB: WTinyLFU 0.2027, S3FIFO 0.2070, ARC 0.2151, TwoQ 0.2255, LRU 0.2503, Sieve 0.3324
