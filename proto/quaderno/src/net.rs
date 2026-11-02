@@ -150,3 +150,37 @@ fn push_out(buf: &mut Vec<u8>, o: Out) {
         Out::Z(j) => buf.extend_from_slice(j.get()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::codec::*;
+    use bytes::{Bytes, BytesMut};
+
+    /// Giro 5: il frame compresso nel thread di rete (ZJob) si legge come quello del giro 4, e le due repliche
+    /// ricevono gli stessi byte con una sola compressione.
+    #[test]
+    fn zjob_roundtrip_e_una_compressione() {
+        let e = Entry::encode(3, 9, pos_make(1000, 5), Body::Rec { txn: [1; 16], db: [2; 16], session: None, writes: vec![Write { key: Bytes::from_static(b"doc/a"), kind: Kind::Put, val: Bytes::from(vec![7u8; 2000]) }] });
+        let m = Msg::Append { term: 3, leader: 1, prev_index: 8, prev_term: 3, commit: 8, all_match: 8, seq: 4, entries: vec![e.raw.clone()] };
+        let mut b = BytesMut::new();
+        enc_msg(&mut b, &m);
+        let sent = Arc::new(AtomicU64::new(0));
+        let j = Arc::new(ZJob { body: b.to_vec(), lvl: 1, out: OnceLock::new(), sent: sent.clone() });
+        let (a, c) = (j.get().to_vec(), j.get().to_vec());
+        assert_eq!(a, c);
+        assert_eq!(sent.load(Relaxed), 2 * a.len() as u64);
+        assert!(a.len() < b.len() / 4);
+        let FrameRead::Ok(s, en) = read_frame(&a) else { panic!() };
+        match dec_msg(Bytes::from(a[s..en].to_vec())).unwrap() {
+            Msg::Append { entries, seq, .. } => {
+                assert_eq!(seq, 4);
+                assert_eq!(entries[0], e.raw);
+            }
+            _ => panic!(),
+        }
+        // corpo piccolo: in chiaro, come prima
+        let small = compress_frame(b"abc", 1);
+        assert_eq!(small, frame(b"abc"));
+    }
+}
