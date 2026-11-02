@@ -1,0 +1,3 @@
+4997 /tmp/elenco.txt
+byte compressi scaricati 299190504
+durata_s 19
