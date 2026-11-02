@@ -9,8 +9,8 @@
 //! the command put in its write batches; KiB read are the keys and values it got from the store (block cache, memtable or
 //! S3); S3 requests are charged to the database whose objects they touch (`tenants/{db}/...`), when they happen
 //! (flushes, compaction and lease renewals run in the background, after the command that caused them). The weights are
-//! `--unit-weights` (default in [`DEFAULT_WEIGHTS`]); one point is about the cost to us of 0.1 ms of CPU on the shared
-//! server. The same counters serve the per-database accounting (metrics: points by part) and the quotas.
+//! `--unit-weights` (default in [`DEFAULT_WEIGHTS`]); one point is about $2e-9, the cost to us of 0.1 ms of CPU on the
+//! shared server. The same counters serve the per-database accounting (metrics: points by part) and the quotas.
 //!
 //! **Quotas per database.** Each database has a bucket of points that refills at its quota (`--db-quota-pts` points per
 //! second, or the per-database value set with `PUT /v1/databases/{db}/quota`) up to its burst credit (`--db-burst-pts`).
@@ -74,10 +74,12 @@ pub static QUEUED_TOTAL: AtomicU64 = AtomicU64::new(0);
 // The unit
 
 /// Points per CPU ms, per KiB written, per KiB read, per S3 PUT-class request, per S3 GET-class request.
-/// Derivation (docs/isolamento.md): 1 pt = our cost of 0.1 ms of CPU on the shared server; a PUT costs $0.005 per 1000 and
-/// a GET $0.0004 per 1000 (S3 Standard list price), i.e. about 30 and 2.4 ms of that CPU; a KiB written costs its later
-/// rewrites by compaction (CPU outside the command) and memtable memory; a KiB read the block-cache memory it occupies.
-pub const DEFAULT_WEIGHTS: [f64; 5] = [10.0, 1.0, 0.1, 300.0, 24.0];
+/// Derivation (docs/isolamento.md): 1 pt = about $2e-9, our cost of 0.1 ms of CPU on the shared server (estimated: a
+/// 2-vCPU Graviton node at about $0.08 an hour used at 60%). A PUT costs $0.005 per 1000 and a GET $0.0004 per 1000 (S3
+/// Standard list price): 2500 and 200 points. A KiB written costs its later rewrites by compaction (CPU outside the
+/// command; the compaction's own S3 requests are charged as requests) and memtable memory: 0.5; a KiB read, the
+/// block-cache memory it occupies: 0.05 (both estimated).
+pub const DEFAULT_WEIGHTS: [f64; 5] = [10.0, 0.5, 0.05, 2500.0, 200.0];
 static WEIGHTS: [AtomicU64; 5] = [AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0), AtomicU64::new(0)];
 
 fn w(i: usize) -> f64 {
