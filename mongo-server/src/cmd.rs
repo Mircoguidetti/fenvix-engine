@@ -566,8 +566,14 @@ impl Server {
             }
         }
         d.insert("maxBsonObjectSize", 16_777_216_i32);
-        d.insert("maxMessageSizeBytes", 48_000_000_i32);
-        d.insert("maxWriteBatchSize", 100_000_i32);
+        if crate::qmode::on() {
+            // prova M8: i lotti del driver devono stare in un biglietto del quaderno (vedi qmode::MAX_RECORD_BYTES)
+            d.insert("maxMessageSizeBytes", crate::qmode::HELLO_MAX_MESSAGE);
+            d.insert("maxWriteBatchSize", crate::qmode::HELLO_MAX_WRITE_BATCH);
+        } else {
+            d.insert("maxMessageSizeBytes", 48_000_000_i32);
+            d.insert("maxWriteBatchSize", 100_000_i32);
+        }
         d.insert("localTime", Bson::DateTime(DateTime::now()));
         d.insert("logicalSessionTimeoutMinutes", 30_i32);
         d.insert("connectionId", conn_id as i32);

@@ -1,129 +1,149 @@
 {
  "prova": "morte_capo",
- "secondi": 25.2,
+ "secondi": 25.1,
  "esiti": {
-  "ok": 10774,
-  "dup": 3882
+  "ok": 9920,
+  "dup": 3239
  },
  "per_server": {
   "A": {
-   "ok": 5433,
-   "dup": 1969
+   "ok": 5002,
+   "dup": 1614
   },
   "B": {
-   "ok": 5341,
-   "dup": 1913
+   "ok": 4918,
+   "dup": 1625
   }
  },
- "ops_confermate_al_secondo": 582.7,
+ "ops_confermate_al_secondo": 524.3,
  "numeri": {
   "stesso_id": {
-   "valori_confermati": 2998,
-   "documenti": 2998,
+   "valori_confermati": 2844,
+   "documenti": 2844,
    "valori_con_ignoti": 0
   },
   "stessa_email": {
-   "valori_confermati": 2978,
-   "documenti": 2978,
+   "valori_confermati": 2778,
+   "documenti": 2778,
    "valori_con_ignoti": 0
   },
   "incrementi": {
-   "incrementi_confermati": 4798,
+   "incrementi_confermati": 4298,
    "ignoti": 0,
-   "somma_finale": 4798
+   "somma_finale": 4298
   }
  },
  "errori": [],
  "vince": true,
  "stats": {
   "A": {
-   "commits": 5440,
-   "conflicts": 174,
+   "commits": 6622,
+   "conflicts": 166,
    "unknown": 0,
    "rejected": 0,
-   "commandRetries": 174,
+   "commandRetries": 166,
    "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 3,
    "guard": true,
-   "ok": 1.0
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617098, 207)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617098, 207)"
   },
   "B": {
-   "commits": 5345,
-   "conflicts": 172,
+   "commits": 6546,
+   "conflicts": 160,
    "unknown": 0,
    "rejected": 0,
-   "commandRetries": 172,
+   "commandRetries": 160,
    "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 3,
    "guard": true,
-   "ok": 1.0
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617098, 202)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617098, 202)"
   }
  },
  "codici": {
-  "dup:11000": 3882
+  "dup:11000": 3239
  },
- "t_uccisione_s": 7.15,
+ "t_uccisione_s": 7.16,
  "buco_massimo_dopo_uccisione_s": {
-  "A": 2.638,
-  "B": 2.645
+  "A": 2.791,
+  "B": 2.803
  },
  "ops_al_secondo": {
   "A": [
-   298,
-   280,
-   265,
-   278,
-   263,
-   297,
-   261,
-   72,
+   259,
+   258,
+   262,
+   242,
+   274,
+   269,
+   274,
+   49,
    0,
-   40,
-   411,
+   1,
+   283,
+   338,
+   325,
+   326,
+   320,
    340,
-   387,
-   349,
-   342,
-   321,
-   362,
-   307,
-   354,
-   346,
-   358,
-   360,
-   378,
-   318,
-   364,
-   51
+   319,
+   335,
+   276,
+   375,
+   333,
+   331,
+   268,
+   262,
+   272,
+   25
   ],
   "B": [
-   272,
-   278,
-   288,
-   273,
-   260,
-   316,
-   259,
-   81,
+   236,
+   274,
+   251,
+   264,
+   266,
+   251,
+   284,
+   54,
    0,
-   40,
-   349,
-   340,
-   396,
-   339,
-   341,
+   0,
+   298,
+   304,
+   325,
+   316,
    315,
-   335,
+   356,
+   298,
    317,
-   330,
-   331,
-   327,
-   348,
-   390,
+   287,
+   347,
    336,
-   335,
-   58
+   320,
+   262,
+   289,
+   265,
+   28
   ]
  },
- "capo_ucciso": 0,
+ "capo_ucciso": 2,
  "capo_nuovo": 1,
- "durata_s": 30.5
+ "durata_s": 29.6
 }

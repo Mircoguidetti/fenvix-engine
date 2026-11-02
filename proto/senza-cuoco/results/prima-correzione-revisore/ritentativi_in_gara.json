@@ -1,0 +1,59 @@
+{
+ "prova": "ritentativi_in_gara",
+ "secondi": 20.0,
+ "numeri": {
+  "scritture_distinte": 4626,
+  "confermate": 4626,
+  "ignote": 0,
+  "somma_n": 9250
+ },
+ "esiti_coppie": {
+  "ok+ok": 4626
+ },
+ "errori": [
+  "k0: n=2310 ma solo 1155 scritture distinte confermate e 0 ignote (doppiate 1155)",
+  "k1: n=2366 ma solo 1183 scritture distinte confermate e 0 ignote (doppiate 1183)",
+  "k2: n=2338 ma solo 1169 scritture distinte confermate e 0 ignote (doppiate 1169)",
+  "k3: n=2236 ma solo 1119 scritture distinte confermate e 0 ignote (doppiate 1117)"
+ ],
+ "vince": false,
+ "stats": {
+  "A": {
+   "commits": 4629,
+   "conflicts": 1113,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 1113,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793614958, 25)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793614958, 25)"
+  },
+  "B": {
+   "commits": 4624,
+   "conflicts": 1094,
+   "unknown": 0,
+   "rejected": 0,
+   "commandRetries": 1094,
+   "giveups": 0,
+   "guard": true,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793614958, 24)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793614958, 24)"
+  }
+ },
+ "durata_s": 22.7
+}

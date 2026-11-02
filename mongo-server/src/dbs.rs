@@ -156,7 +156,7 @@ pub struct Entry {
     meta: Mutex<MetaCache>,
     /// Prova M8 (`qmode.rs`): posizione di lettura del comando in corso e chiavi lette da dichiarare nel commit.
     pub(crate) qpos: Option<u64>,
-    pub(crate) qreads: Vec<Vec<u8>>,
+    pub(crate) qreads: std::collections::HashSet<Vec<u8>>,
 }
 
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
@@ -215,7 +215,7 @@ impl Dbs {
                     copts: HashMap::new(),
                     meta: Default::default(),
                     qpos: None,
-                    qreads: Vec::new(),
+                    qreads: Default::default(),
                 }))
             })
             .clone()
@@ -293,7 +293,7 @@ impl Dbs {
                     copts: HashMap::new(),
                     meta: Default::default(),
                     qpos: None,
-                    qreads: Vec::new(),
+                    qreads: Default::default(),
                     }))
                 })
                 .clone()
@@ -1079,11 +1079,12 @@ impl Entry {
     /// Point reads in parallel, in key order.
     pub async fn get_many(&mut self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
         if crate::qmode::on() {
-            let mut out = Vec::with_capacity(keys.len());
+            self.touch();
+            let at = self.qpos().await?;
             for k in keys {
-                out.push(self.qget(k).await?);
+                self.qdeclare(k);
             }
-            return Ok(out);
+            return crate::qmode::get_many(&crate::qmode::db_id(&self.name), keys, at).await;
         }
         if keys.is_empty() || !self.ensure_open().await? {
             return Ok(vec![None; keys.len()]);
@@ -1190,12 +1191,7 @@ impl ReadView {
             return Ok(vec![]);
         }
         if crate::qmode::on() {
-            let id = crate::qmode::db_id(&g.name);
-            let mut out = Vec::with_capacity(keys.len());
-            for k in keys {
-                out.push(crate::qmode::get(&id, k, g.qpos.unwrap_or(0)).await?);
-            }
-            return Ok(out);
+            return crate::qmode::get_many(&crate::qmode::db_id(&g.name), keys, g.qpos.unwrap_or(0)).await;
         }
         let t = g.tenant.as_ref().unwrap();
         let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
@@ -1275,10 +1271,19 @@ impl Entry {
     async fn qget(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
         self.touch();
         let at = self.qpos().await?;
-        if !self.qreads.iter().any(|k| k.as_slice() == key) {
-            self.qreads.push(key.to_vec());
-        }
+        self.qdeclare(key);
         crate::qmode::get(&crate::qmode::db_id(&self.name), key, at).await
+    }
+
+    /// Una chiave letta dal comando entra nelle letture dichiarate del suo commit. Il limite dei blocchi dell'ordine
+    /// naturale no: lo usa solo la prenotazione, che si valida da sola (`natural::qalloc`).
+    fn qdeclare(&mut self, key: &[u8]) {
+        if crate::natural::is_meta_key(key) {
+            return;
+        }
+        if !self.qreads.contains(key) {
+            self.qreads.insert(key.to_vec());
+        }
     }
 
     async fn qscan(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
@@ -1288,17 +1293,26 @@ impl Entry {
     }
 
     /// Un commit validato a S con le chiavi lette. La posizione di lettura del comando resta S anche dopo un commit
-    /// in mezzo al comando (la prenotazione dei numeri dell'ordine naturale): il commit finale si valida contro S, così
-    /// copre anche le letture per intervallo (le guardie degli indici unici); le chiavi appena scritte qui escono dalle
-    /// letture dichiarate, se no il commit finale troverebbe in conflitto la nostra stessa scrittura.
+    /// in mezzo al comando (per esempio la creazione implicita della collezione): il commit finale si valida contro S,
+    /// così copre anche le letture per intervallo (le guardie degli indici unici); le chiavi appena scritte qui escono
+    /// dalle letture dichiarate, se no il commit finale troverebbe in conflitto la nostra stessa scrittura. Attenzione:
+    /// se il comando le rilegge dopo (a S non le vede) e le riscrive, il commit trova in conflitto la sua stessa
+    /// scrittura e il comando si rifà; con un commit che si rifà uguale (come era la prenotazione dei numeri
+    /// dell'ordine naturale, ora fuori dal comando: `natural::qalloc`) il comando non finisce mai.
     async fn qapply(&mut self, ops: Vec<Op>) -> Result<()> {
         self.touch();
         let at = self.qpos().await?;
         if ops.iter().any(|o| match o { Op::Put(k, _) | Op::Delete(k) => k.starts_with(b"meta/") }) {
             self.meta_clear();
         }
-        crate::qmode::commit(&crate::qmode::db_id(&self.name), at, &ops, &self.qreads).await?;
-        self.qreads.retain(|k| !ops.iter().any(|o| match o { Op::Put(w, _) | Op::Delete(w) => w == k }));
+        // (insieme, non lista: con 40.000 letture la ricerca in lista costava secondi, MISURATO in `troppo_grande`)
+        let reads: Vec<Vec<u8>> = self.qreads.iter().cloned().collect();
+        crate::qmode::commit(&crate::qmode::db_id(&self.name), at, &ops, &reads).await?;
+        for o in &ops {
+            match o {
+                Op::Put(w, _) | Op::Delete(w) => self.qreads.remove(w),
+            };
+        }
         Ok(())
     }
 }

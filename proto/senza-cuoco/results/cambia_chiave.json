@@ -1,21 +1,21 @@
 {
  "prova": "cambia_chiave",
- "secondi": 20.1,
+ "secondi": 20.2,
  "esiti": {
-  "ok": 7033,
-  "dup": 6800
+  "dup": 4613,
+  "ok": 4585
  },
  "per_server": {
   "A": {
-   "ok": 3530,
-   "dup": 3433
+   "dup": 2304,
+   "ok": 2293
   },
   "B": {
-   "dup": 3367,
-   "ok": 3503
+   "ok": 2292,
+   "dup": 2309
   }
  },
- "ops_confermate_al_secondo": 689.5,
+ "ops_confermate_al_secondo": 456.1,
  "numeri": {
   "documenti": 300
  },
@@ -23,28 +23,48 @@
  "vince": true,
  "stats": {
   "A": {
-   "commits": 3534,
-   "conflicts": 12,
+   "commits": 4601,
+   "conflicts": 1,
    "unknown": 0,
    "rejected": 0,
-   "commandRetries": 12,
+   "commandRetries": 1,
    "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 1,
    "guard": true,
-   "ok": 1.0
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617040, 122)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617040, 122)"
   },
   "B": {
-   "commits": 3503,
-   "conflicts": 10,
+   "commits": 4601,
+   "conflicts": 8,
    "unknown": 0,
    "rejected": 0,
-   "commandRetries": 10,
+   "commandRetries": 8,
    "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 0,
    "guard": true,
-   "ok": 1.0
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617040, 127)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617040, 127)"
   }
  },
  "codici": {
-  "dup:11000": 6800
+  "dup:11000": 4613
  },
- "durata_s": 23.7
+ "durata_s": 24.5
 }

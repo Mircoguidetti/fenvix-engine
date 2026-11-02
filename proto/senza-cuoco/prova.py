@@ -4,25 +4,30 @@
 Ogni scrittura va al quaderno come commit validato (mongo-server/src/qmode.rs); nessun processo possiede il database.
 
   prova.py tutto            tutte le prove, risultati in results/
-  prova.py <nome> [...]     solo alcune: fumo stesso_id stessa_chiave inc cambia_chiave morte_server morte_capo senza_guardia
+  prova.py <nome> [...]     solo alcune (vedi PROVE in fondo)
+  prova.py correzioni       solo le prove dei tre errori trovati dal revisore e le sue prove in gara
+
+I server partono con --replica-set e i client con retryWrites=true (come in produzione); SC_RS=0 per il modo vecchio.
 
 Porte: quaderno 7200-7202 (repliche), mongo-server A 27101, B 27102. Cartella di lavoro: $SC_WORK (default /root/sc-work).
 """
-import json, os, random, signal, socket, subprocess, sys, threading, time, uuid
+import json, os, random, signal, socket, struct, subprocess, sys, threading, time, uuid
 from collections import defaultdict
 
+import bson
 import pymongo
 from pymongo.errors import DuplicateKeyError, OperationFailure, AutoReconnect, ConnectionFailure, NetworkTimeout, ServerSelectionTimeoutError
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
-MS = os.path.join(ROOT, 'target', 'release', 'mongo-server')
+MS = os.environ.get('SC_MS') or os.path.join(ROOT, 'target', 'release', 'mongo-server')
 CLUSTER = os.path.join(ROOT, 'proto', 'quaderno', 'scripts', 'cluster.py')
 WORK = os.environ.get('SC_WORK', '/root/sc-work')
 RES = os.path.join(HERE, 'results')
 PORTS = {'A': 27101, 'B': 27102}
 QADDR = '127.0.0.1:7200,127.0.0.1:7201,127.0.0.1:7202'
 DB = 'cucina'
+RS = os.environ.get('SC_RS', '1') != '0'
 procs = {}
 
 
@@ -63,6 +68,8 @@ def server_up(name, env_extra=None):
     env.update(env_extra or {})
     args = [MS, '--listen', f'127.0.0.1:{PORTS[name]}', '--store', 'local', '--local-dir', d, '--no-leases', '--no-ttl',
             '--no-maintenance', '--holder', f'sc-{name}', '--process-lease', 'false', '--quaderno', QADDR]
+    if RS:
+        args += ['--replica-set', 'rs0', '--advertise', f'127.0.0.1:{PORTS[name]}']
     procs[name] = subprocess.Popen(args, stdout=log, stderr=log, env=env, start_new_session=True)
     assert wait_port(PORTS[name]), f'mongo-server {name} non parte'
 
@@ -81,7 +88,7 @@ def servers_down():
 
 def client(name, timeout_ms=15000):
     return pymongo.MongoClient(f'mongodb://127.0.0.1:{PORTS[name]}/?directConnection=true', serverSelectionTimeoutMS=3000,
-                               socketTimeoutMS=timeout_ms, connectTimeoutMS=2000, retryWrites=False, retryReads=False, maxPoolSize=64)
+                               socketTimeoutMS=timeout_ms, connectTimeoutMS=2000, retryWrites=RS, retryReads=False, maxPoolSize=64)
 
 
 def esito(e):
@@ -89,7 +96,7 @@ def esito(e):
     if isinstance(e, DuplicateKeyError):
         return 'dup'
     if isinstance(e, OperationFailure):
-        if e.code in (112, 91):  # conflitto dopo tutti i tentativi, freno: non è entrata
+        if e.code in (112, 91, 257):  # conflitto dopo tutti i tentativi, freno, comando troppo grande: non è entrata
             return 'no'
         if e.code == 11000:
             return 'dup'
@@ -561,6 +568,490 @@ def prova_senza_guardia(secs=20, workers=8, K=4):
     return r
 
 
+# ------------------------------------------------------------------------------------- prove del revisore (M8-correzioni)
+
+def prova_cancella_reinserisci(secs=20, workers=8, K=6):
+    """Revisore, prova 1: findOneAndDelete per email e insert con _id nuovo, sulle stesse poche email, da A e da B."""
+    nuova_prova('cancella_reinserisci')
+    emails = [f'c{i}@x' for i in range(K)]
+
+    def op(coll, rnd, tag):
+        e = rnd.choice(emails)
+        if rnd.random() < 0.5:
+            try:
+                coll.insert_one({'_id': tag, 'w': tag, 'email': e})
+            except Exception as x:
+                x._key, x._val = ('ins', e), tag
+                raise
+            return ('ins', e), tag
+        try:
+            d = coll.find_one_and_delete({'email': e})
+        except Exception as x:
+            x._key, x._val = ('del', e), None
+            raise
+        return ('del', e), (d or {}).get('_id')
+
+    car, t0, t1, info = corsa('cancella_reinserisci', op, secs, workers)
+    docs = leggi_tutto('A')
+    errori = []
+    vivi = {d['_id']: d for d in docs}
+    ins_ok = {x[4] for x in car.log if x[3] and x[3][0] == 'ins' and x[5] == 'ok'}
+    ins_ign = {x[4] for x in car.log if x[3] and x[3][0] == 'ins' and x[5] == 'ignoto'}
+    dels = [x[4] for x in car.log if x[3] and x[3][0] == 'del' and x[5] == 'ok' and x[4] is not None]
+    del_ign = {x[3][1] for x in car.log if x[3] and x[3][0] == 'del' and x[5] == 'ignoto'}
+    contati = defaultdict(int)
+    for i in dels:
+        contati[i] += 1
+    due = [k for k, v in contati.items() if v > 1]
+    if due:
+        errori.append(f'{len(due)} documenti cancellati due volte (es. {due[:3]})')
+    zombi = [i for i in contati if i in vivi]
+    if zombi:
+        errori.append(f'{len(zombi)} documenti cancellati e ancora vivi (es. {zombi[:3]})')
+    fantasmi = [i for i in contati if i not in ins_ok and i not in ins_ign]
+    if fantasmi:
+        errori.append(f'{len(fantasmi)} cancellazioni hanno restituito un documento mai inserito (es. {fantasmi[:3]})')
+    email_di = {x[4]: x[3][1] for x in car.log if x[3] and x[3][0] == 'ins'}
+    # un inserimento confermato che non c'è più deve essere stato cancellato: da una cancellazione confermata che lo ha
+    # restituito, o da una con esito ignoto sulla stessa email
+    perse = [i for i in ins_ok if i not in vivi and i not in contati and email_di.get(i) not in del_ign]
+    if perse:
+        errori.append(f'{len(perse)} inserimenti confermati spariti senza una cancellazione (es. {perse[:3]})')
+    dal_nulla = [i for i in vivi if i not in ins_ok and i not in ins_ign]
+    if dal_nulla:
+        errori.append(f'{len(dal_nulla)} documenti vivi senza inserimento confermato o ignoto (es. {dal_nulla[:3]})')
+    per = defaultdict(int)
+    for d in docs:
+        per[d['email']] += 1
+    if any(v > 1 for v in per.values()):
+        errori.append(f'email doppie: {[k for k, v in per.items() if v > 1]}')
+    errori += indice_valori('B', emails, docs)
+    numeri = {'inserimenti_confermati': len(ins_ok), 'cancellazioni_con_documento': len(dels), 'documenti_finali': len(docs)}
+    return risultato('cancella_reinserisci', car, t0, t1, errori, numeri, info)
+
+
+def indice_valori(name, valori, docs):
+    """Per ogni valore: la ricerca attraverso l'indice email dà esattamente i documenti che hanno quel valore."""
+    c = client(name, 60000)
+    coll = c[DB]['prova']
+    per = defaultdict(list)
+    for d in docs:
+        per[d.get('email')].append(str(d['_id']))
+    male = []
+    for e in valori:
+        got = sorted(str(g['_id']) for g in coll.find({'email': e}).hint('email_1'))
+        if got != sorted(per.get(e, [])):
+            male.append((e, got, per.get(e, [])))
+    c.close()
+    return [f'indice incoerente su {len(male)} valori, es. {male[:3]}'] if male else []
+
+
+def prova_toglie_rimette(secs=20, workers=8, N=20, K=4):
+    """Revisore, prova 2: N documenti spostano l'email tra K valori contesi e un valore privato, mentre altri lavoratori
+    inseriscono e cancellano quegli stessi valori contesi."""
+    nuova_prova('toglie_rimette')
+    c = client('A')
+    c[DB]['prova'].insert_many([{'_id': i, 'email': f'p{i}@x', 'w': 'prep'} for i in range(N)])
+    c.close()
+    contesi = [f'c{i}@x' for i in range(K)]
+
+    def op(coll, rnd, tag):
+        x = rnd.random()
+        e = rnd.choice(contesi)
+        try:
+            if x < 0.5:
+                i = rnd.randrange(N)
+                v = e if rnd.random() < 0.6 else f'p{i}@x'
+                coll.update_one({'_id': i}, {'$set': {'email': v, 'w': tag}})
+                return ('sposta', i), v
+            if x < 0.75:
+                coll.insert_one({'_id': tag, 'email': e, 'w': tag})
+                return ('ins', e), tag
+            coll.delete_one({'email': e, '_id': {'$type': 'string'}})
+            return ('del', e), None
+        except Exception as ex:
+            ex._key = ('?', e)
+            raise
+
+    car, t0, t1, info = corsa('toglie_rimette', op, secs, workers)
+    docs = leggi_tutto('A')
+    errori = []
+    per = defaultdict(int)
+    for d in docs:
+        per[d['email']] += 1
+    if any(v > 1 for v in per.values()):
+        errori.append(f'email doppie: {[k for k, v in per.items() if v > 1][:5]}')
+    fissi = [d for d in docs if isinstance(d['_id'], int)]
+    if len(fissi) != N:
+        errori.append(f'{len(fissi)} documenti fissi invece di {N}')
+    errori += indice_valori('B', contesi + [f'p{i}@x' for i in range(N)], docs)
+    return risultato('toglie_rimette', car, t0, t1, errori, {'documenti_finali': len(docs)}, info)
+
+
+def prova_upsert(secs=20, workers=8, K=4):
+    """Revisore, prova 3: updateOne({email}, {$inc: {n: 1}}, upsert) in gara sulla chiave unica."""
+    nuova_prova('upsert')
+
+    def op(coll, rnd, tag):
+        e = f'u{conteso(rnd, K, 100)}@x'
+        try:
+            coll.update_one({'email': e}, {'$inc': {'n': 1}}, upsert=True)
+        except Exception as ex:
+            ex._key, ex._val = e, tag
+            raise
+        return e, tag
+
+    car, t0, t1, info = corsa('upsert', op, secs, workers)
+    docs = leggi_tutto('A')
+    errori = []
+    ok = defaultdict(int)
+    ign = defaultdict(int)
+    for x in car.log:
+        if x[5] == 'ok':
+            ok[x[3]] += 1
+        elif x[5] == 'ignoto':
+            ign[x[3]] += 1
+    per = defaultdict(list)
+    for d in docs:
+        per[d['email']].append(d.get('n', 0))
+    dup = [k for k, v in per.items() if len(v) > 1]
+    if dup:
+        errori.append(f'{len(dup)} email con più documenti (es. {dup[:3]})')
+    for e in set(ok) | set(per):
+        n = sum(per.get(e, []))
+        if n < ok[e]:
+            errori.append(f'{e}: n={n} ma {ok[e]} confermati')
+        if n > ok[e] + ign[e]:
+            errori.append(f'{e}: n={n} ma {ok[e]} confermati e {ign[e]} ignoti')
+    errori = errori[:20]
+    numeri = {'upsert_confermati': sum(ok.values()), 'somma_n': sum(sum(v) for v in per.values()), 'email': len(per)}
+    return risultato('upsert', car, t0, t1, errori, numeri, info)
+
+
+def prova_coda(secs=20, workers=8, N=4000):
+    """Revisore, prova 4: una coda di lavori presi con findOneAndUpdate({stato: libero}, sort prio). Il controllo
+    ottimistico qui passa per letture per scansione, non per get."""
+    nuova_prova('coda', unique=False)
+    c = client('A')
+    co = c[DB]['prova']
+    co.create_index([('stato', 1), ('prio', 1)])
+    r = random.Random(7)
+    co.insert_many([{'_id': i, 'stato': 'libero', 'prio': r.randrange(1000)} for i in range(N)])
+    c.close()
+
+    def op(coll, rnd, tag):
+        try:
+            d = coll.find_one_and_update({'stato': 'libero'}, {'$set': {'stato': 'preso', 'da': tag}}, sort=[('prio', 1)])
+        except Exception as ex:
+            ex._key, ex._val = 'job', tag
+            raise
+        return 'job', (tag, d['_id'] if d else None)
+
+    car, t0, t1, info = corsa('coda', op, secs, workers)
+    docs = leggi_tutto('A')
+    errori = []
+    presi = defaultdict(list)
+    for x in car.log:
+        if x[5] == 'ok' and x[4] and x[4][1] is not None:
+            presi[x[4][1]].append(x[4][0])
+    due = {k: v for k, v in presi.items() if len(v) > 1}
+    if due:
+        errori.append(f'{len(due)} lavori presi da due lavoratori (es. {list(due.items())[:3]})')
+    ign = {x[4] for x in car.log if x[5] == 'ignoto'}
+    byid = {d['_id']: d for d in docs}
+    sbagliati = [(k, v, byid[k].get('da')) for k, v in presi.items() if byid[k].get('da') != v[0]]
+    if sbagliati:
+        errori.append(f'{len(sbagliati)} lavori con il prenditore sbagliato (es. {sbagliati[:3]})')
+    presi_db = [d for d in docs if d['stato'] == 'preso']
+    orfani = [d['_id'] for d in presi_db if d['_id'] not in presi and d.get('da') not in ign]
+    if orfani:
+        errori.append(f'{len(orfani)} lavori presi senza conferma né esito ignoto (es. {orfani[:3]})')
+    return risultato('coda', car, t0, t1, errori, {'lavori_presi': len(presi), 'lavori_presi_nel_db': len(presi_db)}, info)
+
+
+def prova_letture_lineari(secs=20, dopo=8.3):
+    """Revisore, prova 5: uno scrive su A e rilegge subito da B (e viceversa); 4 lettori controllano che il valore non
+    torni mai indietro; il capo del quaderno viene ucciso a metà."""
+    nuova_prova('letture_lineari', unique=False)
+    c = client('A')
+    c[DB]['prova'].insert_many([{'_id': 'wA', 'v': 0}, {'_id': 'wB', 'v': 0}])
+    c.close()
+    stop = threading.Event()
+    viol = []
+    cnt = defaultdict(int)
+    lock = threading.Lock()
+
+    def writer(src, dst, key):
+        cs, cd = client(src), client(dst)
+        v = 0
+        while not stop.is_set():
+            v += 1
+            try:
+                cs[DB]['prova'].update_one({'_id': key}, {'$set': {'v': v}})
+            except Exception:
+                with lock:
+                    cnt['scritture_non_confermate'] += 1
+                time.sleep(0.05)
+                continue
+            try:
+                d = cd[DB]['prova'].find_one({'_id': key})
+            except Exception:
+                with lock:
+                    cnt['riletture_fallite'] += 1
+                continue
+            with lock:
+                cnt['scritture_rilette'] += 1
+                if d['v'] < v:
+                    viol.append(f'{key}: scritto {v} su {src}, letto {d["v"]} su {dst}')
+
+    def reader(srv):
+        cl = client(srv)
+        last = {'wA': 0, 'wB': 0}
+        while not stop.is_set():
+            for k in ('wA', 'wB'):
+                try:
+                    d = cl[DB]['prova'].find_one({'_id': k})
+                except Exception:
+                    continue
+                with lock:
+                    cnt['letture_controllate'] += 1
+                    if d['v'] < last[k]:
+                        viol.append(f'{k}: lettore su {srv} ha visto {last[k]} poi {d["v"]}')
+                last[k] = max(last[k], d['v'])
+
+    ths = [threading.Thread(target=writer, args=('A', 'B', 'wA'), daemon=True), threading.Thread(target=writer, args=('B', 'A', 'wB'), daemon=True)]
+    ths += [threading.Thread(target=reader, args=(s,), daemon=True) for s in ('A', 'A', 'B', 'B')]
+    t0 = time.time()
+    for t in ths:
+        t.start()
+    time.sleep(dopo)
+    l = capo()
+    sh([sys.executable, CLUSTER, 'kill', str(l)])
+    t_kill = time.time() - t0
+    time.sleep(max(0, secs - (time.time() - t0)))
+    stop.set()
+    for t in ths:
+        t.join(30)
+    errori = viol[:10] + ([f'... {len(viol)} violazioni in tutto'] if len(viol) > 10 else [])
+    if cnt['scritture_rilette'] < 100:
+        errori.append(f'troppe poche scritture rilette: {cnt["scritture_rilette"]}')
+    return {'prova': 'letture_lineari', 'secondi': round(time.time() - t0, 1), 'capo_ucciso': l, 't_uccisione_s': round(t_kill, 2),
+            'numeri': dict(cnt), 'violazioni': len(viol), 'errori': errori, 'vince': not errori}
+
+
+# --- messaggi a mano (OP_MSG) per i ritentativi con lsid e txnNumber scelti da noi
+
+_rid = [0]
+
+
+def opmsg(port, cmd, timeout=30):
+    _rid[0] += 1
+    body = struct.pack('<I', 0) + b'\x00' + bson.encode(cmd)
+    s = socket.create_connection(('127.0.0.1', port), timeout)
+    try:
+        s.sendall(struct.pack('<iiii', 16 + len(body), _rid[0], 0, 2013) + body)
+        hdr = b''
+        while len(hdr) < 16:
+            x = s.recv(16 - len(hdr))
+            if not x:
+                raise ConnectionError('chiusa')
+            hdr += x
+        n = struct.unpack('<i', hdr[:4])[0] - 16
+        buf = b''
+        while len(buf) < n:
+            x = s.recv(n - len(buf))
+            if not x:
+                raise ConnectionError('chiusa')
+            buf += x
+        return bson.decode(buf[5:])
+    finally:
+        s.close()
+
+
+def inc_cmd(lsid, txn, key='r'):
+    return {'update': 'prova', 'updates': [{'q': {'_id': key}, 'u': {'$inc': {'n': 1}}}], 'ordered': True, 'lsid': lsid, 'txnNumber': bson.Int64(txn), '$db': DB}
+
+
+def prova_ritentativo():
+    """Revisore, prova 6: il driver ritenta la stessa scrittura (stesso lsid e txnNumber) su un altro cameriere."""
+    nuova_prova('ritentativo', unique=False)
+    c = client('A')
+    co = c[DB]['prova']
+    co.insert_many([{'_id': 'r1', 'n': 0}, {'_id': 'r2', 'n': 0}])
+    errori = []
+    risposte = {}
+    # caso 1: B non ha mai visto la sessione
+    L1 = {'id': bson.Binary(uuid.uuid4().bytes, 4)}
+    risposte['caso1'] = [opmsg(PORTS['A'], inc_cmd(L1, 1, 'r1')), opmsg(PORTS['B'], inc_cmd(L1, 1, 'r1'))]
+    n1 = co.find_one({'_id': 'r1'})['n']
+    if n1 != 1:
+        errori.append(f'caso 1: n = {n1} invece di 1')
+    # caso 2: B ha la sessione in memoria ferma a txn 1, A fa txn 2, il driver ritenta txn 2 su B
+    L2 = {'id': bson.Binary(uuid.uuid4().bytes, 4)}
+    risposte['caso2'] = [opmsg(PORTS['B'], inc_cmd(L2, 1, 'r2')), opmsg(PORTS['A'], inc_cmd(L2, 2, 'r2')), opmsg(PORTS['B'], inc_cmd(L2, 2, 'r2'))]
+    n2 = co.find_one({'_id': 'r2'})['n']
+    if n2 != 2:
+        errori.append(f'caso 2: n = {n2} invece di 2')
+    # caso 3: txn vecchio dopo uno nuovo su un altro cameriere: TransactionTooOld
+    r3 = opmsg(PORTS['B'], inc_cmd(L2, 1, 'r2'))
+    risposte['caso3'] = [r3]
+    if r3.get('code') != 225:
+        errori.append(f'caso 3: txn 1 dopo txn 2 non rifiutato con TransactionTooOld: {r3}')
+    n3 = co.find_one({'_id': 'r2'})['n']
+    if n3 != 2:
+        errori.append(f'caso 3: n = {n3} invece di 2')
+    c.close()
+    return {'prova': 'ritentativo', 'numeri': {'caso1_n': n1, 'caso2_n': n2, 'caso3_n': n3}, 'risposte': risposte, 'errori': errori, 'vince': not errori}
+
+
+def prova_ritentativi_in_gara(secs=20, workers=6, C=4):
+    """Lo stesso comando (stesso lsid e txnNumber) mandato insieme ad A e a B, come un ritentativo che parte mentre
+    l'originale è ancora in volo. Ogni (lsid, txnNumber) deve contare una volta sola."""
+    nuova_prova('ritentativi_in_gara', unique=False)
+    c = client('A')
+    c[DB]['prova'].insert_many([{'_id': f'k{i}', 'n': 0} for i in range(C)])
+    c.close()
+    stop = threading.Event()
+    log = []
+    lock = threading.Lock()
+
+    def one(port, cmd, out, i):
+        try:
+            r = opmsg(port, cmd)
+            out[i] = 'ok' if r.get('ok') == 1 and not r.get('writeErrors') and r.get('n') == 1 else f'no:{r.get("code")}:{r.get("errmsg", "")[:60]}'
+        except Exception as e:
+            out[i] = f'ignoto:{type(e).__name__}'
+
+    def worker(w):
+        rnd = random.Random(w * 7919 + int(time.time()))
+        lsid = {'id': bson.Binary(uuid.uuid4().bytes, 4)}
+        txn = 0
+        while not stop.is_set():
+            txn += 1
+            k = f'k{rnd.randrange(C)}'
+            cmd = inc_cmd(lsid, txn, k)
+            out = [None, None]
+            ths = [threading.Thread(target=one, args=(PORTS[s], cmd, out, i)) for i, s in enumerate(('A', 'B') if rnd.random() < 0.5 else ('B', 'A'))]
+            for t in ths:
+                t.start()
+            for t in ths:
+                t.join()
+            with lock:
+                log.append((k, txn, out[0], out[1]))
+
+    ths = [threading.Thread(target=worker, args=(w,), daemon=True) for w in range(workers)]
+    t0 = time.time()
+    for t in ths:
+        t.start()
+    time.sleep(secs)
+    stop.set()
+    for t in ths:
+        t.join(60)
+    docs = {d['_id']: d['n'] for d in leggi_tutto('A')}
+    ok = defaultdict(int)
+    ign = defaultdict(int)
+    esiti = defaultdict(int)
+    for (k, txn, a, b) in log:
+        esiti[(a or '').split(':')[0] + '+' + (b or '').split(':')[0]] += 1
+        if 'ok' in (a, b):
+            ok[k] += 1
+        elif any((x or '').startswith('ignoto') for x in (a, b)):
+            ign[k] += 1
+    errori = []
+    for i in range(C):
+        k = f'k{i}'
+        if docs[k] < ok[k]:
+            errori.append(f'{k}: n={docs[k]} ma {ok[k]} scritture confermate (perse)')
+        if docs[k] > ok[k] + ign[k]:
+            errori.append(f'{k}: n={docs[k]} ma solo {ok[k]} scritture distinte confermate e {ign[k]} ignote (doppiate {docs[k] - ok[k] - ign[k]})')
+    return {'prova': 'ritentativi_in_gara', 'secondi': round(time.time() - t0, 1), 'numeri': {'scritture_distinte': len(log), 'confermate': sum(ok.values()), 'ignote': sum(ign.values()), 'somma_n': sum(docs.values())},
+            'esiti_coppie': dict(esiti), 'errori': errori, 'vince': not errori, 'stats': {s: stats(s) for s in ('A', 'B')}}
+
+
+def prova_insert_mille():
+    """insert di più di 1.000 documenti in un comando solo (mandato a mano: il driver non lo spezza), un client solo."""
+    nuova_prova('insert_mille', unique=False)
+    errori = []
+    tempi = {}
+    for n in (500, 999, 1001, 1500, 2500):
+        coll = f'm{n}'
+        t = time.time()
+        r = opmsg(PORTS['A'], {'insert': coll, 'documents': [{'_id': i, 'x': 'y' * 20} for i in range(n)], 'ordered': True, '$db': DB}, timeout=120)
+        tempi[n] = round(time.time() - t, 2)
+        c = client('B')
+        cnt = c[DB][coll].count_documents({})
+        nat = len(list(c[DB][coll].find({}, batch_size=100000)))
+        c.close()
+        if r.get('ok') != 1 or r.get('n') != n:
+            errori.append(f'{n} documenti: risposta {str(r)[:200]}')
+        if cnt != n or nat != n:
+            errori.append(f'{n} documenti: contati {cnt}, scansione {nat}')
+    return {'prova': 'insert_mille', 'secondi_per_comando': tempi, 'errori': errori, 'vince': not errori, 'stats': {s: stats(s) for s in ('A', 'B')}}
+
+
+def prova_troppo_grande(N=40000, KB=2):
+    """Un comando più grande di un record del quaderno deve fallire subito con un errore chiaro e senza scrivere niente.
+    Un insert_many grande dal driver deve invece passare (il driver lo spezza secondo maxWriteBatchSize)."""
+    nuova_prova('troppo_grande', unique=False)
+    errori = []
+    c = client('A', 120000)
+    co = c[DB]['prova']
+    pad = 'p' * (KB * 1024)
+    t = time.time()
+    for a in range(0, N, 100):  # a pezzi da 100: questa parte prepara i dati, non prova i comandi grandi
+        co.insert_many([{'_id': i, 'pad': pad, 'v': 0} for i in range(a, min(N, a + 100))])
+    t_ins = round(time.time() - t, 2)
+    if co.count_documents({}) != N:
+        errori.append(f'insert_many di {N}: {co.count_documents({})} documenti')
+    # 1) troppi byte: updateMany su tutto (N x KB = circa 80 MB più le chiavi, come nella prova del revisore)
+    t = time.time()
+    try:
+        r = co.update_many({}, {'$set': {'pad': 'q' * (KB * 1024), 'v': 1}})
+        esito1 = f'riuscito: {r.modified_count}'
+        errori.append(f'updateMany troppo grande riuscito ({r.modified_count})')
+    except OperationFailure as e:
+        esito1 = f'errore {e.code}: {str(e)[:200]}'
+        if e.code != 257:
+            errori.append(f'updateMany troppo grande: codice {e.code} invece di 257 ({str(e)[:120]})')
+    except Exception as e:
+        esito1 = f'eccezione {type(e).__name__}: {str(e)[:200]}'
+        errori.append(f'updateMany troppo grande: {esito1}')
+    t_upd = round(time.time() - t, 2)
+    toccati = co.count_documents({'v': 1})
+    if toccati:
+        errori.append(f'updateMany fallito ma {toccati} documenti cambiati')
+    # il tempo è quello delle letture del comando (40.000 documenti letti a S) prima del controllo; prima della
+    # correzione la risposta era "esito ignoto" dopo i 10 s di scadenza del commit, ritentati
+    if t_upd > 60:
+        errori.append(f'updateMany troppo grande: risposta dopo {t_upd} s')
+    # 2) troppe chiavi: un comando insert solo (a mano) di 40.000 documenti piccoli: 80.000 scritture (documento e numero d'ordine), più di 65.535
+    t = time.time()
+    try:
+        r2 = opmsg(PORTS['A'], {'insert': 'tante', 'documents': [{'_id': i} for i in range(40000)], 'ordered': True, '$db': DB}, timeout=120)
+    except Exception as e:
+        r2 = {'eccezione': repr(e)}
+    t_ins2 = round(time.time() - t, 2)
+    n2 = c[DB]['tante'].count_documents({})
+    if r2.get('code') != 257:
+        errori.append(f'insert di 40.000 in un comando: {str(r2)[:200]}')
+    if n2:
+        errori.append(f'insert di 40.000 fallito ma {n2} documenti scritti')
+    # 3) lo stesso con insert_many del driver: spezzato in più comandi, passa
+    t = time.time()
+    try:
+        c[DB]['tante2'].insert_many([{'_id': i} for i in range(40000)])
+    except Exception as e:
+        errori.append(f'insert_many di 40.000 dal driver: {type(e).__name__} {str(e)[:120]}')
+    t_ins3 = round(time.time() - t, 2)
+    n3 = c[DB]['tante2'].count_documents({})
+    if n3 != 40000:
+        errori.append(f'insert_many di 40.000 dal driver: {n3} documenti')
+    c.close()
+    return {'prova': 'troppo_grande', 'numeri': {'insert_many_s': t_ins, 'update_many_troppo_grande': esito1, 'update_many_s': t_upd,
+            'insert_40000_un_comando': str(r2)[:300], 'insert_40000_un_comando_s': t_ins2, 'insert_many_40000_driver_s': t_ins3},
+            'errori': errori, 'vince': not errori, 'stats': {s: stats(s) for s in ('A', 'B')}}
+
+
 PROVE = {
     'fumo': prova_fumo,
     'stesso_id': lambda: prova_inserimenti('stesso_id', op_stesso_id(4), '_id'),
@@ -570,14 +1061,28 @@ PROVE = {
     'morte_server': lambda: prova_mista('morte_server', evento_morte_server()),
     'morte_capo': lambda: prova_mista('morte_capo', evento_morte_capo()),
     'senza_guardia': prova_senza_guardia,
+    # M8-correzioni: le prove del revisore e una per ognuno dei tre errori
+    'cancella_reinserisci': prova_cancella_reinserisci,
+    'toglie_rimette': prova_toglie_rimette,
+    'upsert': prova_upsert,
+    'coda': prova_coda,
+    'letture_lineari': prova_letture_lineari,
+    'ritentativo': prova_ritentativo,
+    'ritentativi_in_gara': prova_ritentativi_in_gara,
+    'insert_mille': prova_insert_mille,
+    'troppo_grande': prova_troppo_grande,
 }
+CORREZIONI = ['ritentativo', 'ritentativi_in_gara', 'insert_mille', 'troppo_grande', 'cancella_reinserisci', 'toglie_rimette', 'upsert', 'coda', 'letture_lineari']
 
 
 def main():
     names = sys.argv[1:] or ['tutto']
     if names == ['tutto']:
         names = list(PROVE)
-    os.makedirs(RES, exist_ok=True)
+    elif names == ['correzioni']:
+        names = CORREZIONI
+    res = os.environ.get('SC_RES', RES)
+    os.makedirs(res, exist_ok=True)
     os.makedirs(WORK, exist_ok=True)
     out = []
     try:
@@ -593,7 +1098,7 @@ def main():
             r['durata_s'] = round(time.time() - t, 1)
             print(json.dumps(r, ensure_ascii=False, default=str), flush=True)
             out.append(r)
-            json.dump(r, open(os.path.join(RES, f'{n}.json'), 'w'), indent=1, ensure_ascii=False, default=str)
+            json.dump(r, open(os.path.join(res, f'{n}.json'), 'w'), indent=1, ensure_ascii=False, default=str)
     finally:
         servers_down()
         quaderno_down()

@@ -2,132 +2,152 @@
  "prova": "morte_server",
  "secondi": 25.1,
  "esiti": {
-  "ok": 10406,
-  "dup": 2949,
-  "ignoto": 16
+  "ok": 9069,
+  "dup": 2333,
+  "ignoto": 14
  },
  "per_server": {
   "A": {
-   "ok": 4294,
-   "dup": 1308,
-   "ignoto": 16
+   "ok": 3641,
+   "dup": 1037,
+   "ignoto": 14
   },
   "B": {
-   "ok": 6112,
-   "dup": 1641
+   "ok": 5428,
+   "dup": 1296
   }
  },
- "ops_confermate_al_secondo": 531.9,
+ "ops_confermate_al_secondo": 455.0,
  "numeri": {
   "stesso_id": {
-   "valori_confermati": 2949,
-   "documenti": 2950,
-   "valori_con_ignoti": 7
+   "valori_confermati": 2674,
+   "documenti": 2674,
+   "valori_con_ignoti": 4
   },
   "stessa_email": {
-   "valori_confermati": 2930,
-   "documenti": 2930,
-   "valori_con_ignoti": 3
+   "valori_confermati": 2645,
+   "documenti": 2645,
+   "valori_con_ignoti": 4
   },
   "incrementi": {
-   "incrementi_confermati": 4527,
-   "ignoti": 4,
-   "somma_finale": 4527
+   "incrementi_confermati": 3750,
+   "ignoti": 5,
+   "somma_finale": 3750
   }
  },
  "errori": [],
  "vince": true,
  "stats": {
   "A": {
-   "commits": 2642,
-   "conflicts": 79,
+   "commits": 3008,
+   "conflicts": 78,
    "unknown": 0,
    "rejected": 0,
-   "commandRetries": 79,
+   "commandRetries": 78,
    "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 2,
    "guard": true,
-   "ok": 1.0
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617069, 100)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617069, 100)"
   },
   "B": {
-   "commits": 6116,
-   "conflicts": 143,
+   "commits": 6728,
+   "conflicts": 96,
    "unknown": 0,
    "rejected": 0,
-   "commandRetries": 143,
+   "commandRetries": 96,
    "giveups": 0,
+   "tooLarge": 0,
+   "reservations": 4,
    "guard": true,
-   "ok": 1.0
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": "Timestamp(1793617069, 104)",
+    "signature": {
+     "hash": "b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+     "keyId": 0
+    }
+   },
+   "operationTime": "Timestamp(1793617069, 104)"
   }
  },
  "codici": {
-  "dup:11000": 2949,
+  "dup:11000": 2333,
   "ignoto:AutoReconnect": 8,
-  "ignoto:ServerSelectionTimeoutError": 8
+  "ignoto:ServerSelectionTimeoutError": 6
  },
- "t_uccisione_s": 7.11,
+ "t_uccisione_s": 7.07,
  "buco_massimo_dopo_uccisione_s": {
-  "A": 6.054,
-  "B": 0.028
+  "A": 6.547,
+  "B": 0.053
  },
  "ops_al_secondo": {
   "A": [
+   221,
+   226,
+   211,
+   263,
+   198,
+   238,
+   293,
+   22,
+   0,
+   0,
+   0,
+   0,
+   0,
+   101,
+   268,
+   304,
+   268,
+   244,
+   224,
+   246,
+   260,
+   283,
+   245,
    288,
-   318,
-   295,
-   255,
-   292,
-   320,
-   354,
-   32,
-   0,
-   0,
-   0,
-   0,
-   0,
-   247,
-   302,
-   302,
-   301,
-   300,
-   316,
-   233,
-   267,
-   296,
-   277,
-   290,
-   288,
-   29
+   249,
+   26
   ],
   "B": [
-   247,
-   295,
-   292,
-   262,
-   288,
-   299,
-   326,
-   371,
-   360,
-   379,
-   379,
-   293,
-   391,
-   345,
-   304,
-   296,
-   265,
-   290,
-   330,
+   207,
+   219,
+   222,
+   281,
+   199,
+   228,
+   283,
+   318,
+   332,
+   300,
+   315,
+   243,
+   285,
+   316,
+   286,
+   298,
+   285,
    245,
-   261,
-   290,
-   292,
-   311,
-   304,
-   38
+   239,
+   271,
+   266,
+   239,
+   248,
+   300,
+   277,
+   22
   ]
  },
- "restart_s": 0.05244135856628418,
- "prima_op_di_A_dopo_ripartenza_s": 0.009,
- "durata_s": 30.5
+ "restart_s": 0.10271239280700684,
+ "prima_op_di_A_dopo_ripartenza_s": 0.447,
+ "durata_s": 29.4
 }

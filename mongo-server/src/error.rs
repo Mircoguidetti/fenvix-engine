@@ -139,6 +139,8 @@ impl From<anyhow::Error> for MongoError {
                     m
                 }
                 crate::qmode::QErr::Unavailable(_) => MongoError::new(6, "HostUnreachable", q.to_string()),
+                // il biglietto non è partito: fallito di sicuro, e ritentarlo uguale non serve (niente etichetta)
+                crate::qmode::QErr::TooLarge(_) => MongoError::new(257, "TransactionTooLarge", q.to_string()),
             };
         }
         MongoError::internal(format!("{e:#}"))

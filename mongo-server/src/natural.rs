@@ -72,6 +72,9 @@ pub fn drop_prefixes(coll: &str) -> Vec<Vec<u8>> {
 
 /// The next sequence number of a collection (enabling insertion order on the first insert).
 pub async fn alloc(g: &mut Entry, coll: &str) -> anyhow::Result<u64> {
+    if crate::qmode::on() {
+        return qalloc(g, coll).await;
+    }
     if !g.nat.contains_key(coll) {
         let next = match g.get_live(&meta_key(coll)).await? {
             Some(v) => u64::from_be_bytes(v[..8].try_into()?),
@@ -79,14 +82,7 @@ pub async fn alloc(g: &mut Entry, coll: &str) -> anyhow::Result<u64> {
         };
         g.nat.insert(coll.to_string(), (next, next));
     }
-    let (mut next, limit) = g.nat[coll];
-    if next >= limit && crate::qmode::on() {
-        // prova M8: un altro processo può aver prenotato il blocco successivo; si riparte dal limite salvato (letto a S
-        // e dichiarato: se cambia prima del commit della prenotazione, il capo del quaderno la rifiuta)
-        if let Some(v) = g.get_live(&meta_key(coll)).await? {
-            next = next.max(u64::from_be_bytes(v[..8].try_into()?));
-        }
-    }
+    let (next, limit) = g.nat[coll];
     let limit = if next >= limit {
         let l = next + BLOCK;
         g.apply(vec![Op::Put(meta_key(coll), l.to_be_bytes().to_vec())]).await?;
@@ -96,6 +92,37 @@ pub async fn alloc(g: &mut Entry, coll: &str) -> anyhow::Result<u64> {
     };
     g.nat.insert(coll.to_string(), (next + 1, limit));
     Ok(next)
+}
+
+/// Prova M8 (`qmode.rs`): più processi prenotano blocchi dallo stesso limite salvato. La prenotazione è un commit a
+/// sé, letto a una posizione nuova e validato solo sul limite (`qmode::reserve`), non un pezzo del comando: un
+/// comando che consuma più di un blocco (insert di più di 1.000 documenti) non trova più in conflitto le sue stesse
+/// prenotazioni. Il limite non entra nelle letture dichiarate del comando (vedi `is_meta_key`): il suo valore serve
+/// solo alla prenotazione, che si valida da sola. (Niente `migrate`: nel modo quaderno ogni collezione nasce numerata.)
+async fn qalloc(g: &mut Entry, coll: &str) -> anyhow::Result<u64> {
+    if let Some(&(next, limit)) = g.nat.get(coll) {
+        if next < limit {
+            g.nat.insert(coll.to_string(), (next + 1, limit));
+            return Ok(next);
+        }
+    }
+    let from = g.nat.get(coll).map(|x| x.0).unwrap_or(1);
+    let (start, limit) = crate::qmode::reserve(&crate::qmode::db_id(g.name()), &meta_key(coll), |cur| {
+        let saved = match cur {
+            Some(v) => u64::from_be_bytes(v[..8].try_into()?),
+            None => 1,
+        };
+        let start = saved.max(from);
+        Ok(((start + BLOCK).to_be_bytes().to_vec(), (start, start + BLOCK)))
+    })
+    .await?;
+    g.nat.insert(coll.to_string(), (start + 1, limit));
+    Ok(start)
+}
+
+/// The key holding a collection's reserved upper bound (`meta/nat/...`).
+pub fn is_meta_key(key: &[u8]) -> bool {
+    key.starts_with(b"meta/nat/")
 }
 
 /// Number the documents a collection already has (in `_id` order); returns the next free number.
