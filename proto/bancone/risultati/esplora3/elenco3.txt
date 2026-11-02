@@ -1,0 +1,113 @@
+== lcs alibaba
+2025-07-15 19:05:01  563411088 cache_dataset_lcs/alibaba/0.lcs.zst
+2025-07-15 19:05:01  153321159 cache_dataset_lcs/alibaba/1.lcs.zst
+2025-07-15 19:05:01 20909935077 cache_dataset_lcs/alibaba/10.lcs.zst
+2025-07-15 19:05:01  232276782 cache_dataset_lcs/alibaba/100.lcs.zst
+2025-07-15 19:05:01   21847495 cache_dataset_lcs/alibaba/101.lcs.zst
+2025-07-15 19:05:03    7723582 cache_dataset_lcs/alibaba/102.lcs.zst
+2025-07-15 19:05:04  353734458 cache_dataset_lcs/alibaba/103.lcs.zst
+2025-07-15 19:05:09   19609554 cache_dataset_lcs/alibaba/104.lcs.zst
+2025-07-15 19:05:11  164051903 cache_dataset_lcs/alibaba/105.lcs.zst
+2025-07-15 19:05:13  339815322 cache_dataset_lcs/alibaba/106.lcs.zst
+2025-07-15 19:05:20 19724601994 cache_dataset_lcs/alibaba/107.lcs.zst
+2025-07-15 19:05:21   64256445 cache_dataset_lcs/alibaba/108.lcs.zst
+2025-07-15 19:05:25  349096154 cache_dataset_lcs/alibaba/109.lcs.zst
+2025-07-15 19:05:28  128371743 cache_dataset_lcs/alibaba/11.lcs.zst
+2025-07-15 19:05:30    3478471 cache_dataset_lcs/alibaba/110.lcs.zst
+2025-07-15 19:05:31  353016607 cache_dataset_lcs/alibaba/111.lcs.zst
+2025-07-15 19:05:36  189592973 cache_dataset_lcs/alibaba/112.lcs.zst
+2025-07-15 19:05:44  265773077 cache_dataset_lcs/alibaba/113.lcs.zst
+2025-07-15 19:05:47   37787402 cache_dataset_lcs/alibaba/114.lcs.zst
+2025-07-15 19:05:50  285976547 cache_dataset_lcs/alibaba/115.lcs.zst
+2025-07-15 19:05:50  355766079 cache_dataset_lcs/alibaba/116.lcs.zst
+2025-07-15 19:05:59  883113978 cache_dataset_lcs/alibaba/117.lcs.zst
+2025-07-15 19:06:05   64970528 cache_dataset_lcs/alibaba/118.lcs.zst
+2025-07-15 19:06:09    9580719 cache_dataset_lcs/alibaba/119.lcs.zst
+2025-07-15 19:06:10 1226493279 cache_dataset_lcs/alibaba/12.lcs.zst
+2025-07-15 19:06:11   36832316 cache_dataset_lcs/alibaba/120.lcs.zst
+2025-07-15 19:06:14 2777338167 cache_dataset_lcs/alibaba/121.lcs.zst
+2025-07-15 19:06:46  669631723 cache_dataset_lcs/alibaba/122.lcs.zst
+2025-07-15 19:07:15  118086756 cache_dataset_lcs/alibaba/123.lcs.zst
+2025-07-15 19:07:23 15939614034 cache_dataset_lcs/alibaba/124.lcs.zst
+2025-07-15 19:07:23   78014741 cache_dataset_lcs/alibaba/125.lcs.zst
+2025-07-15 19:07:27  973422521 cache_dataset_lcs/alibaba/126.lcs.zst
+2025-07-15 19:08:20   36921992 cache_dataset_lcs/alibaba/127.lcs.zst
+2025-07-15 19:08:23  220397591 cache_dataset_lcs/alibaba/128.lcs.zst
+2025-07-15 19:08:37   57558294 cache_dataset_lcs/alibaba/129.lcs.zst
+2025-07-15 19:08:40  360066360 cache_dataset_lcs/alibaba/13.lcs.zst
+2025-07-15 19:08:45  348082593 cache_dataset_lcs/alibaba/130.lcs.zst
+2025-07-15 19:09:01  382636447 cache_dataset_lcs/alibaba/131.lcs.zst
+2025-07-15 19:09:05 1338686339 cache_dataset_lcs/alibaba/132.lcs.zst
+2025-07-15 19:09:24  424458500 cache_dataset_lcs/alibaba/133.lcs.zst
+
+aws: [ERROR]: [Errno 32] Broken pipe
+Exception ignored while flushing sys.stdout:
+BrokenPipeError: [Errno 32] Broken pipe
+file 1001 byte 477256738823
+   1001 cache_dataset_lcs/alibaba
+== lcs tencentBlock
+2025-07-15 20:49:05   90526215 cache_dataset_lcs/tencentBlock/10000.lcs.zst
+2025-07-15 20:49:11  229431883 cache_dataset_lcs/tencentBlock/10001.lcs.zst
+2025-07-15 20:49:24   13367309 cache_dataset_lcs/tencentBlock/10004.lcs.zst
+2025-07-15 20:49:26   23522933 cache_dataset_lcs/tencentBlock/10007.lcs.zst
+2025-07-15 20:49:28   71217362 cache_dataset_lcs/tencentBlock/10011.lcs.zst
+2025-07-15 20:49:32  779618000 cache_dataset_lcs/tencentBlock/10012.lcs.zst
+2025-07-15 20:49:39   13103733 cache_dataset_lcs/tencentBlock/10021.lcs.zst
+2025-07-15 20:49:40   15734895 cache_dataset_lcs/tencentBlock/10022.lcs.zst
+2025-07-15 20:49:42   15778754 cache_dataset_lcs/tencentBlock/10029.lcs.zst
+2025-07-15 20:49:44   19224831 cache_dataset_lcs/tencentBlock/10031.lcs.zst
+2025-07-15 20:49:44    7141536 cache_dataset_lcs/tencentBlock/10039.lcs.zst
+2025-07-15 20:49:44   15220319 cache_dataset_lcs/tencentBlock/10044.lcs.zst
+2025-07-15 20:49:45   44157723 cache_dataset_lcs/tencentBlock/10048.lcs.zst
+2025-07-15 20:49:45  114564022 cache_dataset_lcs/tencentBlock/10053.lcs.zst
+2025-07-15 20:49:49   31559862 cache_dataset_lcs/tencentBlock/10062.lcs.zst
+2025-07-15 20:49:52   49686426 cache_dataset_lcs/tencentBlock/10069.lcs.zst
+2025-07-15 20:49:52    9720589 cache_dataset_lcs/tencentBlock/10074.lcs.zst
+2025-07-15 20:49:54   24505125 cache_dataset_lcs/tencentBlock/10079.lcs.zst
+2025-07-15 20:49:55   11958112 cache_dataset_lcs/tencentBlock/10086.lcs.zst
+2025-07-15 20:49:55   25188615 cache_dataset_lcs/tencentBlock/10095.lcs.zst
+2025-07-15 20:49:56  121935724 cache_dataset_lcs/tencentBlock/10100.lcs.zst
+2025-07-15 20:49:57   16110664 cache_dataset_lcs/tencentBlock/10108.lcs.zst
+2025-07-15 20:49:59  469519253 cache_dataset_lcs/tencentBlock/10116.lcs.zst
+2025-07-15 20:50:03   25468532 cache_dataset_lcs/tencentBlock/10119.lcs.zst
+2025-07-15 20:50:06  132818775 cache_dataset_lcs/tencentBlock/10120.lcs.zst
+2025-07-15 20:50:12   14681301 cache_dataset_lcs/tencentBlock/10124.lcs.zst
+2025-07-15 20:50:14    7037043 cache_dataset_lcs/tencentBlock/10127.lcs.zst
+2025-07-15 20:50:14  513874690 cache_dataset_lcs/tencentBlock/10134.lcs.zst
+2025-07-15 20:50:14   18325307 cache_dataset_lcs/tencentBlock/10143.lcs.zst
+2025-07-15 20:50:16     569115 cache_dataset_lcs/tencentBlock/10149.lcs.zst
+2025-07-15 20:50:16   45274966 cache_dataset_lcs/tencentBlock/10156.lcs.zst
+2025-07-15 20:50:20  920728513 cache_dataset_lcs/tencentBlock/10163.lcs.zst
+2025-07-15 20:50:24  259359322 cache_dataset_lcs/tencentBlock/10171.lcs.zst
+2025-07-15 20:50:39   62016248 cache_dataset_lcs/tencentBlock/10176.lcs.zst
+2025-07-15 20:50:42   41855381 cache_dataset_lcs/tencentBlock/10184.lcs.zst
+2025-07-15 20:50:43   13052544 cache_dataset_lcs/tencentBlock/10192.lcs.zst
+2025-07-15 20:50:43   55537408 cache_dataset_lcs/tencentBlock/10197.lcs.zst
+2025-07-15 20:50:44   42390841 cache_dataset_lcs/tencentBlock/10198.lcs.zst
+2025-07-15 20:50:44   28495602 cache_dataset_lcs/tencentBlock/10203.lcs.zst
+2025-07-15 20:50:47   28933999 cache_dataset_lcs/tencentBlock/10208.lcs.zst
+
+aws: [ERROR]: [Errno 32] Broken pipe
+Exception ignored while flushing sys.stdout:
+BrokenPipeError: [Errno 32] Broken pipe
+file 4997 byte 817215791637
+   4997 cache_dataset_lcs/tencentBlock
+== lcs metaKV
+2025-07-15 20:42:36   69945776 cache_dataset_lcs/metaKV/202206_kv_traces_all.csv.lcs.sample0.01.zst
+2025-07-15 20:42:36  829116527 cache_dataset_lcs/metaKV/202206_kv_traces_all.csv.lcs.sample0.1.zst
+2025-07-15 20:42:36 9138448556 cache_dataset_lcs/metaKV/202206_kv_traces_all.csv.lcs.zst
+2025-07-15 20:42:40   63070835 cache_dataset_lcs/metaKV/202210_kv_traces_all_sort.csv.lcs.sample0.01.zst
+2025-07-15 20:42:40  748515384 cache_dataset_lcs/metaKV/202210_kv_traces_all_sort.csv.lcs.sample0.1.zst
+2025-07-15 20:42:43 7871006479 cache_dataset_lcs/metaKV/202210_kv_traces_all_sort.csv.lcs.zst
+2025-07-15 20:42:45  365065453 cache_dataset_lcs/metaKV/202312_kv_traces_all.csv.lcs.sample0.01.zst
+2025-07-15 20:43:07 4201020517 cache_dataset_lcs/metaKV/202312_kv_traces_all.csv.lcs.sample0.1.zst
+2025-07-15 20:43:19   69150661 cache_dataset_lcs/metaKV/202401_kv_traces_all_sort.csv.lcs.sample0.01.zst
+2025-07-15 20:43:21  780415344 cache_dataset_lcs/metaKV/202401_kv_traces_all_sort.csv.lcs.sample0.1.zst
+2025-07-15 20:43:23 9143483186 cache_dataset_lcs/metaKV/202401_kv_traces_all_sort.csv.lcs.zst
+file 11 byte 33279238718
+     11 cache_dataset_lcs/metaKV
+== lcs 2026-alibaba-ebs
+2026-03-16 12:59:50          0 cache_dataset_lcs/2026-alibaba-ebs/
+2026-03-16 13:01:26      31916 cache_dataset_lcs/2026-alibaba-ebs/README.md
+file 2 byte 31916
+      2 cache_dataset_lcs/2026-alibaba-ebs
