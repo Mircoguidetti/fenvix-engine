@@ -156,6 +156,16 @@ impl Snapshot {
     }
 }
 
+/// Called for every PUT-class (`true`: put, copy, list page) and GET-class (`false`: get, head) request with the object
+/// path, so the server can charge it to the database it belongs to (`tenants/{db}/...`). Set once at start.
+pub static ON_REQUEST: std::sync::OnceLock<fn(&str, bool)> = std::sync::OnceLock::new();
+
+fn on_request(path: &str, put: bool) {
+    if let Some(f) = ON_REQUEST.get() {
+        f(path, put);
+    }
+}
+
 /// Phase labels for traced calls: set by the server around the part of a command that is running. Process-wide, like
 /// the trace itself, so only meaningful on a quiet server.
 pub const PHASES: [&str; 6] = ["other", "index_scan", "doc_fetch", "collection_scan", "metadata", "wake"];
@@ -333,6 +343,7 @@ impl fmt::Display for CountingStore {
 impl ObjectStore for CountingStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
         self.counters.put.fetch_add(1, Relaxed);
+        on_request(location.as_ref(), true);
         let op = match opts.mode {
             PutMode::Create => "PUT(create)",
             PutMode::Update(_) => "PUT(update)",
@@ -370,6 +381,7 @@ impl ObjectStore for CountingStore {
             &self.counters.get
         };
         counter.fetch_add(1, Relaxed);
+        on_request(location.as_ref(), false);
         self.counters.get_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         let op = if options.head {
             "HEAD"
@@ -432,17 +444,20 @@ impl ObjectStore for CountingStore {
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let stream = self.count_list(self.inner.list(prefix));
         self.trace_list("LIST", prefix, stream)
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let stream = self.count_list(self.inner.list_with_offset(prefix, offset));
         self.trace_list("LIST", prefix, stream)
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
         self.counters.list.fetch_add(1, Relaxed);
+        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let token = self.trace.begin("LIST", &prefix.map(|p| p.to_string()).unwrap_or_default());
         let res = self.inner.list_with_delimiter(prefix).await;
         self.trace.end(token, 0);
@@ -451,6 +466,7 @@ impl ObjectStore for CountingStore {
 
     async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
         self.counters.copy.fetch_add(1, Relaxed);
+        on_request(to.as_ref(), true);
         let token = self.trace.begin("COPY", to.as_ref());
         let res = self.inner.copy_opts(from, to, options).await;
         self.trace.end(token, 0);
