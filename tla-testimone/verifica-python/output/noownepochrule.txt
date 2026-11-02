@@ -1,0 +1,11 @@
+flags=['NoOwnEpochRule'] generati=43349 distinti=20036
+VIOLATA LeaderCompleteness, traccia di 9 stati:
+ 1: epoch=(0, 0) capo=(0, 0) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=0 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 2: epoch=(1, 1) capo=(0, 1) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=0 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 3: epoch=(1, 2) capo=(1, 1) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=2 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 4: epoch=(1, 2) capo=(1, 1) degr=(0, 0) log=((1,), ()) vivo=(True, True) match=(0, 0) wEpoch=2 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 5: epoch=(2, 3) capo=(1, 1) degr=(0, 0) log=((), (1,)) vivo=(True, True) match=(0, 0) wEpoch=3 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 6: epoch=(2, 3) capo=(1, 1) degr=(0, 0) log=((2,), (1,)) vivo=(True, True) match=(0, 0) wEpoch=3 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 7: epoch=(2, 3) capo=(1, 1) degr=(0, 1) log=((2,), (1,)) vivo=(True, True) match=(0, 0) wEpoch=3 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 8: epoch=(2, 3) capo=(1, 1) degr=(0, 1) log=((2,), (1,)) vivo=(True, True) match=(0, 0) wEpoch=3 wRec=(1, 1) cmt=(1,) cmtAt=(3,) pienoMax=0 split=False
+ 9: epoch=(4, 4) capo=(0, 1) degr=(0, 0) log=((1,), (2,)) vivo=(True, True) match=(0, 0) wEpoch=3 wRec=(1, 1) cmt=(1,) cmtAt=(3,) pienoMax=0 split=False

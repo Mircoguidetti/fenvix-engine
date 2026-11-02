@@ -1,0 +1,44 @@
+Sun Nov  1 23:01:25 UTC 2026
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=36663 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.10.30.154139 (rev: 090e85c)
+Running breadth-first search Model-Checking with fp 47 and seed -9194999420644478198 with 2 workers on 2 cores with 3641MB heap and 64MB offheap memory [pid: 1304] (Linux 6.18.44-fc-v185 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/claude/fenvix-engine/tla-testimone/MCTestimone.tla
+Parsing file /home/claude/fenvix-engine/tla-testimone/Testimone.tla
+Parsing file /tmp/tlc-10380789100453826932/TLC.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-10380789100453826932/_TLCTrace.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-10380789100453826932/Naturals.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-10380789100453826932/Sequences.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-10380789100453826932/FiniteSets.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-10380789100453826932/TLCExt.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-10380789100453826932/Integers.tla (jar:file:/home/claude/fenvix-engine/tla-registro/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Testimone
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module MCTestimone
+Linting of module Testimone
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module MCTestimone
+Starting... (2026-11-01 23:01:26)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 23:01:26.
+Progress(10) at 2026-11-01 23:01:29: 262,626 states generated (262,626 s/min), 108,068 distinct states found (108,068 ds/min), 67,288 states left on queue.
+Progress(15) at 2026-11-01 23:02:29: 11,292,513 states generated (11,029,887 s/min), 3,797,844 distinct states found (3,689,776 ds/min), 1,329,402 states left on queue.
+Progress(17) at 2026-11-01 23:03:29: 22,823,056 states generated (11,530,543 s/min), 7,099,428 distinct states found (3,301,584 ds/min), 1,420,600 states left on queue.
+Progress(23) at 2026-11-01 23:04:29: 33,502,611 states generated (10,679,555 s/min), 9,622,809 distinct states found (2,523,381 ds/min), 11,960 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.2E-5
+  based on the actual fingerprints:  val = 4.8E-6
+33527119 states generated, 9626124 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 26.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 24 and the 95th percentile is 4).
+Finished in 03min 04s at (2026-11-01 23:04:30)
+EXIT=0
+Sun Nov  1 23:04:30 UTC 2026

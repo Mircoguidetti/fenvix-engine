@@ -1,0 +1,7 @@
+flags=[] generati=894 distinti=442
+VIOLATA SanityNoDegradedCommit, traccia di 5 stati:
+ 1: epoch=(0, 0) capo=(0, 0) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=0 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 2: epoch=(1, 1) capo=(0, 1) degr=(0, 0) log=((), ()) vivo=(True, True) match=(0, 0) wEpoch=0 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 3: epoch=(1, 1) capo=(0, 1) degr=(0, 0) log=((), (1,)) vivo=(True, True) match=(0, 0) wEpoch=0 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 4: epoch=(1, 1) capo=(0, 1) degr=(0, 1) log=((), (1,)) vivo=(True, True) match=(0, 0) wEpoch=1 wRec=(0, 0) cmt=() cmtAt=() pienoMax=0 split=False
+ 5: epoch=(1, 1) capo=(0, 1) degr=(0, 1) log=((), (1,)) vivo=(True, True) match=(0, 0) wEpoch=1 wRec=(1, 1) cmt=(1,) cmtAt=(1,) pienoMax=0 split=False

@@ -1,0 +1,2 @@
+flags=['NoAckReset'] generati=2236120 distinti=623950
+nessuna violazione, modello completo

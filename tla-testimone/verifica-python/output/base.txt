@@ -1,0 +1,2 @@
+flags=[] generati=1693415 distinti=534951
+nessuna violazione, modello completo
