@@ -1,0 +1,168 @@
+{
+  "cameriere_capo_bytes_per_record": {
+    "lotto16_zstd0": {
+      "A_oggi": 1848.2783333333334,
+      "B2_differenza_con_indici": 1407.6126333333334,
+      "B_differenza": 1165.9815333333333
+    },
+    "lotto16_zstd1": {
+      "A_oggi": 618.9441333333333,
+      "B2_differenza_con_indici": 483.2626,
+      "B_differenza": 434.7586
+    }
+  },
+  "cpu_un_thread": {
+    "_sink": 0,
+    "apply_chain16_us": 32.557852,
+    "apply_chain1_us": 18.501641,
+    "apply_chain4_us": 21.8373696,
+    "apply_parse_apply_serialize_us": 21.66629662423907,
+    "diff_compute_us": 8.097771776425015,
+    "diff_serialize_us": 0.5983579413392363,
+    "full_doc_parse_us": 14.182423021582736,
+    "full_doc_serialize_us": 4.438728721638074,
+    "index_recompute_us": 6.818402545655783,
+    "zstd1_lotto16_A_oggi": {
+      "compress_us_per_rec": 7.953168000000001,
+      "decompress_us_per_rec": 3.5683515333333333
+    },
+    "zstd1_lotto16_B2_differenza_con_indici": {
+      "compress_us_per_rec": 6.080349633333333,
+      "decompress_us_per_rec": 3.054792133333333
+    },
+    "zstd1_lotto16_B_differenza": {
+      "compress_us_per_rec": 6.003758066666666,
+      "decompress_us_per_rec": 3.1139985
+    }
+  },
+  "diff_bson_mean_bytes": 60.65268400664084,
+  "diff_check_failures": 0,
+  "doc_bson_mean": 1517.94105,
+  "docs": 20000,
+  "oplog_mongodb": {
+    "all_mean_bytes": 1298.8796666666667,
+    "update_mean_bytes": 365.1531820697288
+  },
+  "ops": 30000,
+  "record_A_oggi": {
+    "all_mean_bytes": 1868.4658333333334,
+    "delete": {
+      "mean_bytes": 451.6867636867637,
+      "n": 1443
+    },
+    "insert": {
+      "mean_bytes": 2039.597326093638,
+      "n": 19522
+    },
+    "update": {
+      "mean_bytes": 1724.9775318206973,
+      "n": 9035
+    }
+  },
+  "record_B2_differenza_con_indici": {
+    "all_mean_bytes": 1427.8001333333334,
+    "delete": {
+      "mean_bytes": 451.6867636867637,
+      "n": 1443
+    },
+    "insert": {
+      "mean_bytes": 2039.597326093638,
+      "n": 19522
+    },
+    "update": {
+      "mean_bytes": 261.7820697288323,
+      "n": 9035
+    }
+  },
+  "record_B_differenza": {
+    "all_mean_bytes": 1186.1690333333333,
+    "delete": {
+      "mean_bytes": 176.2744282744283,
+      "n": 1443
+    },
+    "insert": {
+      "mean_bytes": 1719.017211351296,
+      "n": 19522
+    },
+    "update": {
+      "mean_bytes": 196.13204205866077,
+      "n": 9035
+    }
+  },
+  "replica_bytes_per_record": {
+    "lotto16_zstd-3": {
+      "A_oggi": 790.2524666666667,
+      "B2_differenza_con_indici": 624.5101666666667,
+      "B_differenza": 566.5922333333333,
+      "oplog_mongodb": 531.4901666666667
+    },
+    "lotto16_zstd0": {
+      "A_oggi": 1872.3408333333334,
+      "B2_differenza_con_indici": 1431.6751333333334,
+      "B_differenza": 1190.0440333333333,
+      "oplog_mongodb": 1298.8796666666667
+    },
+    "lotto16_zstd1": {
+      "A_oggi": 630.6844333333333,
+      "B2_differenza_con_indici": 494.58043333333336,
+      "B_differenza": 446.58143333333334,
+      "oplog_mongodb": 413.29023333333333
+    },
+    "lotto16_zstd3": {
+      "A_oggi": 606.2897,
+      "B2_differenza_con_indici": 477.83656666666667,
+      "B_differenza": 432.82623333333333,
+      "oplog_mongodb": 399.8446
+    },
+    "lotto1_zstd-3": {
+      "A_oggi": 1466.7161666666666,
+      "B2_differenza_con_indici": 1126.9400333333333,
+      "B_differenza": 1029.6967333333334,
+      "oplog_mongodb": 1050.8978666666667
+    },
+    "lotto1_zstd0": {
+      "A_oggi": 1930.4658333333334,
+      "B2_differenza_con_indici": 1489.8001333333334,
+      "B_differenza": 1248.1690333333333,
+      "oplog_mongodb": 1298.8796666666667
+    },
+    "lotto1_zstd1": {
+      "A_oggi": 1128.3536,
+      "B2_differenza_con_indici": 893.4059333333333,
+      "B_differenza": 798.6419666666667,
+      "oplog_mongodb": 796.681
+    },
+    "lotto1_zstd3": {
+      "A_oggi": 1115.3465,
+      "B2_differenza_con_indici": 882.0729333333334,
+      "B_differenza": 793.5615666666666,
+      "oplog_mongodb": 791.5861333333334
+    },
+    "lotto32_zstd-3": {
+      "A_oggi": 719.8081666666667,
+      "B2_differenza_con_indici": 561.5613,
+      "B_differenza": 506.06763333333333,
+      "oplog_mongodb": 467.04133333333334
+    },
+    "lotto32_zstd0": {
+      "A_oggi": 1870.4043666666666,
+      "B2_differenza_con_indici": 1429.7386666666666,
+      "B_differenza": 1188.1075666666666,
+      "oplog_mongodb": 1298.8796666666667
+    },
+    "lotto32_zstd1": {
+      "A_oggi": 575.3538666666667,
+      "B2_differenza_con_indici": 446.7525,
+      "B_differenza": 402.3527,
+      "oplog_mongodb": 367.0122
+    },
+    "lotto32_zstd3": {
+      "A_oggi": 547.2298333333333,
+      "B2_differenza_con_indici": 427.336,
+      "B_differenza": 385.5498,
+      "oplog_mongodb": 350.8643
+    }
+  },
+  "seed": 21,
+  "update_fields_mean": 1.7836192584394024
+}
