@@ -28,77 +28,57 @@ fn op_from_lcs(v: i64) -> Op {
     }
 }
 
-fn fsize(c: u8) -> usize {
-    match c {
-        b'c' | b'b' | b'B' | b'?' => 1,
-        b'h' | b'H' => 2,
-        b'i' | b'I' | b'f' => 4,
-        b'q' | b'Q' | b'd' => 8,
-        _ => panic!("campo lcs sconosciuto {}", c as char),
-    }
-}
 
-fn read_field(buf: &[u8], c: u8) -> i64 {
-    match c {
-        b'c' | b'b' => buf[0] as i8 as i64,
-        b'B' | b'?' => buf[0] as i64,
-        b'h' => i16::from_le_bytes([buf[0], buf[1]]) as i64,
-        b'H' => u16::from_le_bytes([buf[0], buf[1]]) as i64,
-        b'i' => i32::from_le_bytes(buf[..4].try_into().unwrap()) as i64,
-        b'I' => u32::from_le_bytes(buf[..4].try_into().unwrap()) as i64,
-        b'q' | b'Q' => i64::from_le_bytes(buf[..8].try_into().unwrap()),
-        _ => 0,
-    }
-}
 
 pub struct LcsInfo {
     pub format: String,
     pub n_req_header: i64,
 }
 
-/// Legge un flusso lcs già decompresso. Si ferma dopo `max` richieste.
+/// Legge un flusso lcs già decompresso (formato dei file di cache-datasets: intestazione da 8192 byte con la
+/// versione all'offset 8; record v1 24 byte, v2 28, v3 36, v4..v8 = v3 più 1, 2, 4, 8, 16 campi da 4 byte;
+/// definizione in libCacheSim, traceReader/customizedReader/lcs.h). Si ferma dopo `max` richieste.
 pub fn read_lcs<R: Read>(r: R, max: usize) -> (Vec<Rec>, LcsInfo) {
     let mut r = BufReader::with_capacity(1 << 22, r);
-    let mut h = [0u8; 1024];
+    let mut h = vec![0u8; 8192];
     r.read_exact(&mut h).expect("intestazione lcs");
     let magic = u64::from_le_bytes(h[0..8].try_into().unwrap());
     assert_eq!(magic, 0x123456789abcdef0, "non è un file lcs");
-    let fmt_end = h[8..248].iter().position(|&b| b == 0).unwrap_or(240);
-    let format = String::from_utf8_lossy(&h[8..8 + fmt_end]).to_string();
-    let (f_id, f_size, f_time, f_op, f_tenant) = (h[248], h[249], h[250], h[253], h[255]);
-    let n_req_header = i64::from_le_bytes(h[488..496].try_into().unwrap());
-    let item_size = u32::from_le_bytes(h[1004..1008].try_into().unwrap()) as usize;
-    let fb = format.as_bytes();
-    let mut offs = vec![0usize; fb.len()];
-    let mut o = 0;
-    for k in 1..fb.len() {
-        offs[k] = o;
-        o += fsize(fb[k]);
-    }
-    assert_eq!(o, item_size, "dimensione del record lcs");
-    let mut out = Vec::with_capacity(max.min(1 << 26));
-    let mut buf = vec![0u8; item_size];
-    let get = |buf: &[u8], f: u8| -> i64 {
-        if f == 0 {
-            return 0;
-        }
-        let k = f as usize;
-        read_field(&buf[offs[k]..], fb[k])
+    let end = u64::from_le_bytes(h[8184..8192].try_into().unwrap());
+    assert_eq!(end, 0x123456789abcdef0, "intestazione lcs da 8192 byte attesa");
+    let ver = u64::from_le_bytes(h[8..16].try_into().unwrap());
+    let n_req_header = i64::from_le_bytes(h[24..32].try_into().unwrap());
+    let item = match ver {
+        1 => 24,
+        2 => 28,
+        3 => 36,
+        4 => 40,
+        5 => 44,
+        6 => 52,
+        7 => 68,
+        8 => 100,
+        v => panic!("versione lcs {v}"),
     };
+    let mut out = Vec::with_capacity(max.min(1 << 26));
+    let mut b = vec![0u8; item];
     while out.len() < max {
-        if r.read_exact(&mut buf).is_err() {
+        if r.read_exact(&mut b).is_err() {
             break;
         }
-        let op = if f_op != 0 { op_from_lcs(get(&buf, f_op)) } else { Op::Read };
-        out.push(Rec {
-            t: get(&buf, f_time) as u32,
-            id: get(&buf, f_id) as u64,
-            size: get(&buf, f_size).max(0) as u32,
-            op,
-            client: get(&buf, f_tenant) as u32,
-        });
+        let t = u32::from_le_bytes(b[0..4].try_into().unwrap());
+        let id = u64::from_le_bytes(b[4..12].try_into().unwrap());
+        let (size, opten) = match ver {
+            1 => (u32::from_le_bytes(b[12..16].try_into().unwrap()) as u64, None),
+            2 => (u32::from_le_bytes(b[12..16].try_into().unwrap()) as u64, Some(u32::from_le_bytes(b[16..20].try_into().unwrap()))),
+            _ => (i64::from_le_bytes(b[12..20].try_into().unwrap()).max(0) as u64, Some(u32::from_le_bytes(b[20..24].try_into().unwrap()))),
+        };
+        let (op, client) = match opten {
+            Some(x) => (op_from_lcs((x & 0xff) as i64), x >> 8),
+            None => (Op::Read, 0),
+        };
+        out.push(Rec { t, id, size: size.min(u32::MAX as u64) as u32, op, client });
     }
-    (out, LcsInfo { format, n_req_header })
+    (out, LcsInfo { format: format!("v{ver}"), n_req_header })
 }
 
 fn fnv(s: &[u8]) -> u64 {

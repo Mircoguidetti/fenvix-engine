@@ -25,7 +25,7 @@ PY
 }
 verifica() { # $1 file og esportato, $2 json info del flusso: confronto con libCacheSim alle stesse taglie
   caps=$(python3 -c "import json,sys; d=[json.loads(l) for l in open('$J') if '\"verifica\"' in l and '\"$3\"' in l]; print(' '.join(str(x['cap']) for x in d if x['policy']=='lru'))")
-  python3 -I proto/bancone/verifica_lcs.py "$1" $caps | sed "s/^{/{\"trace\": \"$3\", /" >> $OUT/libcachesim.jsonl
+  python3 proto/bancone/verifica_lcs.py "$1" $caps | sed "s/^{/{\"trace\": \"$3\", /" >> $OUT/libcachesim.jsonl
 }
 case "$PARTE" in
   a|b)
