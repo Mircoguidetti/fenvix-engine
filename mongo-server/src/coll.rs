@@ -958,7 +958,10 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
     // (A sort on `_id` alone over the collection is not one: mongod reads the `_id` index in order; the documents here are
     // stored in `_id` order too.)
     let id_sorted = matches!((o.sort, &plan, &o.hint), ([(f, _)], Plan::Coll { .. }, Hint::None) if f == "_id");
-    let blocking = !o.sort.is_empty() && !sorted_by_plan && !id_sorted && topk.is_none();
+    // (A sort on the text score or the geo distance with a limit is not counted either: those values are attached after
+    // this function, which cannot keep only the first `want`; mongod's sort with a limit holds only those. Counting every
+    // match would refuse a `$text` search with a limit that mongod answers.)
+    let blocking = !o.sort.is_empty() && !sorted_by_plan && !id_sorted && topk.is_none() && !(meta_sort && o.want.is_some());
     let mut sort_bytes: Option<usize> = blocking.then_some(0);
     // Sort on `_id` alone and no index chosen: documents are stored in `_id` order (the `_id` index), so the scan of
     // the documents in key order can stop once the first `want` are certain.
