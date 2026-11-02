@@ -25,12 +25,13 @@ import sys
 import threading
 import time
 
-from pymongo import MongoClient
+from pymongo import MongoClient, WriteConcern
 
-from lib import Server, make_bucket, MINIO
+from lib import Server, make_bucket, list_prefix, wait_until, MINIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "lease-stall"))
 from blockproxy import BlockProxy  # noqa: E402
+from pathproxy import PathProxy  # noqa: E402
 
 TTL_S = 6
 FREEZE_S = 40            # past the lease and past object_store's 30 s request timeout (the renewal fails, the lease lapses)
@@ -107,3 +108,52 @@ def test_engine_recovers_after_lease_lost_to_store_outage():
         assert not missing, f"{len(missing)} acknowledged documents missing, e.g. {missing[:5]}"
     finally:
         srv2.term()
+
+
+def test_erase_does_not_delete_while_the_close_is_unfinished():
+    """Erase abandons the database's tenant, then deletes every object of the database. With the store not answering the
+    tenant's writes, the abandon leaves the close behind (ABANDON_CLOSE_TIMEOUT, 10 s) and slatedb's tasks of the tenant stay
+    alive: had the erase deleted the objects, the WAL write held by the store would land after the delete (an orphan under
+    tenants/<db>/, replayed into a database created again with the same name). The erase must stop before deleting anything
+    with a retryable error (503 close_pending), and succeed, leaving nothing, once the store answers and the close ended.
+
+    The store is frozen only for the WAL writes of the database, PUTs under tenants/<db>/wal/ (path-aware proxy), so the erase's own reads and its intent
+    record go through; relaxed durability keeps acknowledged writes in the WAL buffer, so the abandon has a WAL write to make."""
+    host, port = MINIO.split("//")[1].split(":")
+    px = PathProxy((host, int(port)))
+    bucket = make_bucket("erasefrz")
+    db = "frz"
+    srv = Server(bucket, "erasefrz", idle=600, endpoint=px.endpoint).start()
+    try:
+        c = srv.client()
+        c[db].t.insert_one({"_id": 0})
+        st, r = srv.admin.put(f"/v1/databases/{db}/durability", {"relaxed_flush_ms": 10000})
+        assert st == 200, r
+        relaxed = c[db].get_collection("t", write_concern=WriteConcern(w=1, j=False))
+        relaxed.insert_many([{"_id": i, "f": "x" * 100} for i in range(1, 200)])
+        px.hold("PUT", f"/tenants/{db}/wal/")
+        relaxed.insert_many([{"_id": i, "f": "y" * 100} for i in range(200, 400)])   # acknowledged from memory
+        t0 = time.time()
+        st, r = srv.admin.delete(f"/v1/databases/{db}", timeout=120)
+        took = time.time() - t0
+        held = px.held
+        assert held > 0, "no PUT of the tenant was held: the test did not reach the case"
+        assert st == 503 and r.get("error", {}).get("code") == "close_pending", (st, r, f"{took:.1f} s")
+        print(f"erase with the store frozen: {st} close_pending in {took:.1f} s ({held} PUTs held)")
+        assert list_prefix(bucket, f"tenants/{db}/"), "objects deleted although the close did not finish"
+        assert list_prefix(bucket, f"control/ops/{db}.json") == [], "the stopped erase left its intent record"
+        assert srv.admin.get(f"/v1/databases/{db}")[0] == 200
+        assert c.admin.command("tenantStats")["maintenance"]["abandonClosesPending"] >= 1
+
+        px.release()
+        wait_until(lambda: c.admin.command("tenantStats")["maintenance"]["abandonClosesPending"] == 0, timeout=60,
+                   what="the close left behind ends once the store answers")
+        st, r = srv.admin.delete(f"/v1/databases/{db}", timeout=120)
+        assert st == 200 and r["erased"], (st, r)
+        time.sleep(5)   # a late write of the old tenant would show up here
+        left = list_prefix(bucket, f"tenants/{db}/")
+        assert left == [], f"objects under tenants/{db}/ after the erase: {left[:5]}"
+    finally:
+        px.release()
+        srv.kill9()
+        px.close()

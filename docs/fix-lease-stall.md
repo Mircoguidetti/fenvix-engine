@@ -35,11 +35,45 @@ Diagnosed with prints around every await of the close, abandon, upgrade and comp
    database behind (counted in `tenantStats.maintenance.abandonCloseTimeouts`). Nothing acknowledged is lost: acknowledged
    writes are in durable WAL objects, abandon writes no clean marker, so the next owner replays the WAL (checked by the unit
    test and by test_31).
-2. `compact_tenant` calls `stop` again every second until the `run` task has returned (at most 120 s, then the task is aborted
-   and the pass fails).
+2. `compact_tenant` calls `stop` again every second until the `run` task has returned (at most `COMPACTOR_STOP_LIMIT`,
+   120 s, then the task is aborted and the pass fails). Each `stop` is itself bounded to 1 s: once `run` has registered its
+   tasks, `stop` cancels them and waits for them, which lasts as long as their store request (object_store's 30 s timeout
+   and its retries), so without that bound the 120 s were not a real limit (review of N4, point 2) Found with it: the
+   pass's own polls of L0 (through the raw store) were not bounded by the pass deadline, and a failed poll returned from the
+   function without stopping the compactor at all; now each poll is bounded by what is left of the pass and a failed poll
+   goes on to the stop.
+
+### After the review (fenvix-brain `sessions/2026-11-02-revisore-fix-lease-stall/RAPPORTO.md`)
+
+3. **Erase and an unfinished close.** `ctl/erase.rs` abandons the tenant, then deletes every object of the database. A close
+   left behind keeps slatedb's tasks alive (slatedb 0.17 has no `Drop` for `Db`), and within the same process nothing fences
+   them, so a WAL object or an SST could land under `tenants/<db>/` after the purge (an orphan, replayed into a database
+   created again with the same name). Now `Tenant::abandon` returns whether the close finished; a close that did not finish
+   goes on in its own task (so slatedb's tasks do stop once the store answers again) and `lifecycle::close_pending(id)` is
+   true until it ends (`tenantStats.maintenance.abandonClosesPending` counts them). Erase stops before touching any object
+   when the close did not finish or one is still pending: `503 close_pending`, its intent record removed, the client retries.
+4. **What the limits do not stop.** When a compaction pass gives up (`runner.abort()`), the pass ends (its worker and the
+   maintenance lock come back), not slatedb's compactor tasks: they run on their own tokio tasks and stay alive until their
+   store request ends. Likewise an abandoned close left behind stays alive until the store answers.
+
+**Longest shutdown with a store that never comes back** (estimated from the code): `Maintenance::shutdown` waits for a
+compaction pass in flight: up to its 30 s deadline, then up to `COMPACTOR_STOP_LIMIT` (120 s) plus one round (2 s), so about
+152 s; the abandon of each tenant is at most 10 s, and closes left behind do not delay the exit. Not counted: the ordinary
+store requests before and after the compactor runs (first L0 count, checkpoint cleanup), each bounded only by object_store's
+own timeout and retries.
 
 ## Tests
 
+- Unit, after the review: `compaction_pass_ends_when_stop_hangs` (the store freezes at the compactor's first output write,
+  so `stop` waits on a request that never ends; the pass must end at its stop limit, store still down) and
+  `abandon_reports_an_unfinished_close` (store up: `abandon` returns true; store down: false after 10 s and `close_pending`
+  stays true until the store is back and the close ends).
+- `test_31 ... test_erase_does_not_delete_while_the_close_is_unfinished`: the store holds only the WAL PUTs of the
+  database (`tenants/<db>/wal/`, `tools/lease-stall/pathproxy.py`), relaxed durability keeps acknowledged writes in the WAL
+  buffer; the erase must answer 503 close_pending and delete nothing, then succeed and leave nothing once the store answers.
+  Negative control (erase check removed): the erase answers 200 with its proof of zero objects, and once the store answers
+  a manifest and an 82 KB WAL object of the erased database appear under `tenants/<db>/`; creating the database again then
+  fails with 409 (the name looks taken) and reading it fails on a missing SST.
 - Unit (`cargo test --lib -p tenant-bench`): `abandon_does_not_wait_for_a_full_l0` (writer with L0 full and a durable write
   in the memtable: abandon returns at once, a writer opened afterwards reads the write) and
   `compaction_pass_ends_when_stopped_while_starting` (store frozen 2 s while the pass starts, pass deadline 0.5 s: the pass ends
