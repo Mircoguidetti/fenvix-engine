@@ -104,8 +104,6 @@ impl Default for ChangeLog {
 /// The database a resume token belongs to.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TokenDb {
-    /// A token of the old layout: no database in it.
-    Unknown,
     /// A stream of the whole cluster (`allChangesForCluster`).
     Cluster,
     /// The fingerprint of a database and branch ([`ChangeLog::fingerprint`]).
@@ -226,15 +224,17 @@ impl ChangeLog {
         }
         let nonce = u32::from_str_radix(&data[2..10], 16).map_err(|_| lost())?;
         let seq = u64::from_str_radix(&data[10..26], 16).map_err(|_| lost())?;
-        let who = if data.len() == 26 {
-            TokenDb::Unknown
-        } else {
-            let fp = u64::from_str_radix(&data[28..44], 16).map_err(|_| invalid())?;
-            match &data[26..28] {
-                "00" if fp == 0 => TokenDb::Cluster,
-                "01" => TokenDb::Db(fp),
-                _ => return Err(invalid()),
-            }
+        // A token of the old layout (26 characters, no database in it) was only ever given by a process of the version
+        // before this one, whose nonce is gone after the restart that installs this one: no such token is valid any more.
+        // Reading it would let a token of another database, cut to its first 26 characters, pass (reviewer of M2, R1).
+        if data.len() == 26 {
+            return Err(lost());
+        }
+        let fp = u64::from_str_radix(&data[28..44], 16).map_err(|_| invalid())?;
+        let who = match &data[26..28] {
+            "00" if fp == 0 => TokenDb::Cluster,
+            "01" => TokenDb::Db(fp),
+            _ => return Err(invalid()),
         };
         if nonce != self.nonce {
             return Err(lost());
@@ -250,7 +250,7 @@ impl ChangeLog {
     /// A stream on `db` resuming from a token that says `who`: a token of another database (or of another branch with
     /// the same name) is not a point of this stream. MongoDB answers such a token with ChangeStreamFatalError (280):
     /// the resumed event is not in the stream. Tokens of the whole cluster (a position in every database's history)
-    /// and tokens of the old layout pass, as before.
+    /// pass: a hand-edited token whose database part is replaced by the cluster's is not told apart (a known limit).
     pub fn check_same_db(&self, db: &str, who: TokenDb, data: &str) -> Result<(), MongoError> {
         match who {
             TokenDb::Db(fp) if fp != self.fingerprint(db) => Err(MongoError::new(280, "ChangeStreamFatalError", format!("cannot resume stream; the resume token was not found. {{_data: \"{data}\"}} (the token is from another database or branch than '{db}')"))),

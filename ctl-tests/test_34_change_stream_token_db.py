@@ -9,7 +9,12 @@ Now the token also holds a fingerprint of its database and branch (name, and for
 where it was born). A stream of a database refuses a token of another database, or of another branch with the same name,
 with ChangeStreamFatalError (280), as MongoDB does when the resumed event is not in the stream. Tokens of the whole cluster
 (`allChangesForCluster`) are a position in every database and pass; a cluster stream takes a token of any database. Tokens of
-the old layout (no database in them) are still read, with the old checks. A token from before a fork stays 286 (test_30).
+the old layout (26 characters, no database in them) are refused with 286: none is valid after the restart that installs this
+version, and reading them let a token of another database, cut to 26 characters, pass (reviewer of M2). A token from before a
+fork stays 286 (test_30).
+
+Known limit (reviewer of M2, R2): a token edited by hand, with its database part replaced by the cluster's (`00` and sixteen
+zeros), passes on any database, because a database accepts the cluster's position. No driver edits tokens.
 
 Without the fix the 280 cases here are accepted (the stream opens and skips events); the others are the control.
 """
@@ -133,18 +138,37 @@ def test_cluster_tokens(srv):
     _refused(mc.ca, t_cluster_event)   # an event of cb is not a point of ca
 
 
-def test_old_layout_still_read(srv):
-    """A token of the old layout (no database: the first 26 characters) is still accepted, with the old checks."""
+HISTORY_LOST = 286
+
+
+def test_old_layout_refused(srv):
+    """A token of the old layout (no database: 26 characters) is refused with 286 ChangeStreamHistoryLost, like a token of an
+    older process. Only the version before this one gave such tokens, and its process number is gone after the restart that
+    installs this one, so no valid one exists; reading them let a token of another database, cut to 26 characters, pass and
+    skip events in silence (reviewer of M2, case R1)."""
     mc = srv.mc
     _new(srv, "co")
     t = _event_token(mc.co, lambda: mc.co.c.insert_one({"_id": 1}))
     assert len(t["_data"]) == 44 and t["_data"][26:28] == "01"
     old = {"_data": t["_data"][:26]}
-    with mc.co.watch(resume_after=old) as s:
-        mc.co.c.insert_one({"_id": 2})
-        assert s.next()["documentKey"] == {"_id": 2}
-    with mc.co.c.watch(start_after=old) as s:
-        assert s.next()["documentKey"] == {"_id": 2}
+    _refused(mc.co, old, HISTORY_LOST)
+    _refused(mc.co.c, old, HISTORY_LOST, how="start_after")
+    _refused(mc, old, HISTORY_LOST)  # the whole cluster too
+
+
+def test_other_db_token_cut_to_old_layout_refused(srv):
+    """Case R1 of the reviewer: an event on `rb` the client has not seen yet, then an event on `ra`. The token of `ra` used on
+    `rb` is refused (280); cut to its first 26 characters it was accepted and the event of `rb` was skipped in silence."""
+    mc = srv.mc
+    _new(srv, "ra")
+    _new(srv, "rb")
+    mc.rb.c.insert_one({"_id": "unseen"})
+    t_ra = _event_token(mc.ra, lambda: mc.ra.c.insert_one({"_id": 1}))
+    _refused(mc.rb, t_ra)
+    cut = {"_data": t_ra["_data"][:26]}
+    _refused(mc.rb, cut, HISTORY_LOST)
+    _refused(mc.rb, cut, HISTORY_LOST, how="start_after")
+    _refused(mc.rb.c, cut, HISTORY_LOST)
 
 
 def test_tokens_sort_by_position(srv):
