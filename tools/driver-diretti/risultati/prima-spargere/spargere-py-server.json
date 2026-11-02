@@ -1,0 +1,17 @@
+{
+ "a": {
+  "query": 11750,
+  "insert": 2984,
+  "conns_now": 3
+ },
+ "b": {
+  "query": 11708,
+  "insert": 3035,
+  "conns_now": 3
+ },
+ "c": {
+  "query": 11717,
+  "insert": 2987,
+  "conns_now": 3
+ }
+}

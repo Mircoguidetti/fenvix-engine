@@ -1,0 +1,171 @@
+{
+ "driver": "rust",
+ "version": "3",
+ "ops": 172110,
+ "per_server": {
+  "a.db.fenvix.test:27017": 56752,
+  "b.db.fenvix.test:27017": 57576,
+  "c.db.fenvix.test:27017": 57782
+ },
+ "per_sec": {
+  "0": {
+   "a.db.fenvix.test:27017": 2631,
+   "b.db.fenvix.test:27017": 2708,
+   "c.db.fenvix.test:27017": 2674
+  },
+  "1": {
+   "a.db.fenvix.test:27017": 2744,
+   "b.db.fenvix.test:27017": 2913,
+   "c.db.fenvix.test:27017": 2903
+  },
+  "2": {
+   "a.db.fenvix.test:27017": 2780,
+   "b.db.fenvix.test:27017": 2917,
+   "c.db.fenvix.test:27017": 2824
+  },
+  "3": {
+   "a.db.fenvix.test:27017": 3111,
+   "b.db.fenvix.test:27017": 3092,
+   "c.db.fenvix.test:27017": 3282
+  },
+  "4": {
+   "a.db.fenvix.test:27017": 2980,
+   "b.db.fenvix.test:27017": 3031,
+   "c.db.fenvix.test:27017": 3169
+  },
+  "5": {
+   "a.db.fenvix.test:27017": 3074,
+   "b.db.fenvix.test:27017": 3441,
+   "c.db.fenvix.test:27017": 2970
+  },
+  "6": {
+   "a.db.fenvix.test:27017": 3320,
+   "b.db.fenvix.test:27017": 3301,
+   "c.db.fenvix.test:27017": 3318
+  },
+  "7": {
+   "a.db.fenvix.test:27017": 3066,
+   "b.db.fenvix.test:27017": 3234,
+   "c.db.fenvix.test:27017": 3254
+  },
+  "8": {
+   "a.db.fenvix.test:27017": 3088,
+   "b.db.fenvix.test:27017": 3110,
+   "c.db.fenvix.test:27017": 3098
+  },
+  "9": {
+   "a.db.fenvix.test:27017": 2392,
+   "b.db.fenvix.test:27017": 2487,
+   "c.db.fenvix.test:27017": 2471
+  },
+  "10": {
+   "a.db.fenvix.test:27017": 2739,
+   "b.db.fenvix.test:27017": 2549,
+   "c.db.fenvix.test:27017": 2606
+  },
+  "11": {
+   "a.db.fenvix.test:27017": 2902,
+   "b.db.fenvix.test:27017": 2708,
+   "c.db.fenvix.test:27017": 2824
+  },
+  "12": {
+   "a.db.fenvix.test:27017": 2880,
+   "b.db.fenvix.test:27017": 2942,
+   "c.db.fenvix.test:27017": 2856
+  },
+  "13": {
+   "a.db.fenvix.test:27017": 2450,
+   "b.db.fenvix.test:27017": 2470,
+   "c.db.fenvix.test:27017": 2513
+  },
+  "14": {
+   "a.db.fenvix.test:27017": 2623,
+   "b.db.fenvix.test:27017": 2579,
+   "c.db.fenvix.test:27017": 2677
+  },
+  "15": {
+   "a.db.fenvix.test:27017": 2938,
+   "b.db.fenvix.test:27017": 3156,
+   "c.db.fenvix.test:27017": 2859
+  },
+  "16": {
+   "a.db.fenvix.test:27017": 3254,
+   "b.db.fenvix.test:27017": 3161,
+   "c.db.fenvix.test:27017": 3350
+  },
+  "17": {
+   "a.db.fenvix.test:27017": 2690,
+   "b.db.fenvix.test:27017": 2637,
+   "c.db.fenvix.test:27017": 2940
+  },
+  "18": {
+   "a.db.fenvix.test:27017": 2397,
+   "b.db.fenvix.test:27017": 2465,
+   "c.db.fenvix.test:27017": 2479
+  },
+  "19": {
+   "a.db.fenvix.test:27017": 2678,
+   "b.db.fenvix.test:27017": 2655,
+   "c.db.fenvix.test:27017": 2695
+  },
+  "20": {
+   "a.db.fenvix.test:27017": 15,
+   "b.db.fenvix.test:27017": 20,
+   "c.db.fenvix.test:27017": 20
+  }
+ },
+ "cmd_fail": {},
+ "heartbeats": {
+  "ok": 6,
+  "fail": {
+   "Kind: Internal error: server closed, labels: {}, source: None, server response: None": 3
+  }
+ },
+ "app_errors": [],
+ "topology": "Sharded",
+ "servers": [],
+ "topo_history": [
+  [
+   0.005476247,
+   "Unknown",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Unknown",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.01154475,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Unknown",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.013036382,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Unknown"
+   ]
+  ],
+  [
+   0.019973556,
+   "Sharded",
+   [
+    "a.db.fenvix.test:27017=Mongos",
+    "b.db.fenvix.test:27017=Mongos",
+    "c.db.fenvix.test:27017=Mongos"
+   ]
+  ],
+  [
+   20.009771547,
+   "Unknown",
+   []
+  ]
+ ],
+ "events": []
+}
