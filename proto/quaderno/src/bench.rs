@@ -297,6 +297,34 @@ where
     })
 }
 
+/// Giro 6 (M16): `rate > 0` ciclo aperto come `open_loop`; `rate <= 0` ciclo chiuso con `workers` lavoratori, ognuno
+/// manda il suo lotto e aspetta l'esito prima del successivo (come il generatore di mongod, `proto/mongobench`): la
+/// latenza parte dall'invio.
+fn drive<F, Fut>(rate: f64, workers: usize, stop: Arc<AtomicBool>, f: F) -> tokio::task::JoinHandle<()>
+where
+    F: Fn(Instant) -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = ()> + Send + 'static,
+{
+    if rate > 0.0 {
+        return open_loop(rate, stop, f);
+    }
+    let f = Arc::new(f);
+    tokio::spawn(async move {
+        let mut hs = vec![];
+        for _ in 0..workers {
+            let (f, stop) = (f.clone(), stop.clone());
+            hs.push(tokio::spawn(async move {
+                while !stop.load(Relaxed) {
+                    f(Instant::now()).await;
+                }
+            }));
+        }
+        for h in hs {
+            let _ = h.await;
+        }
+    })
+}
+
 pub async fn mixed(cl: Arc<Cluster>, c: MixedCfg) {
     let st = Arc::new(MixedState {
         cl: cl.clone(),
@@ -1140,7 +1168,50 @@ pub fn real_record(keys: usize) -> Vec<Write> {
     w
 }
 
-pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, secs: u64, warm: u64, keys: usize, val: usize, dbs: u64, real: bool) {
+/// Record della miscela B1 (giro 6, M16), con il formato di oggi (documento intero nel record):
+/// - 25% inserimento: come `real_record` (documento + `keys - 1` voci d'indice nuove);
+/// - 70% `$set` su 1–2 campi di un documento esistente (preso a caso tra 1 milione di _id: quasi sempre fuori dalla
+///   finestra): il documento intero nuovo; nella metà dei casi cambia un campo indicizzato, quindi la voce vecchia
+///   si cancella e la nuova si scrive (1 o 3 chiavi);
+/// - 5% cancellazione: il documento e le sue `keys - 1` voci d'indice (cancellazioni).
+/// Media con 8 chiavi: 0,25·8 + 0,05·8 + 0,7·(0,5·1 + 0,5·3) = 3,8 chiavi per record (STIMATO: è la definizione).
+pub fn b1_record(keys: usize) -> Vec<Write> {
+    use rand::Rng;
+    let mut g = rand::thread_rng();
+    let r: f64 = g.gen();
+    if r < 0.25 || keys <= 1 {
+        return real_record(keys);
+    }
+    static POOL: std::sync::OnceLock<Vec<Bytes>> = std::sync::OnceLock::new();
+    let pool = POOL.get_or_init(|| (0..8192).map(|_| json_doc(1024)).collect());
+    let id = format!("{:024x}", 0xabc0_0000_0000u64 + g.gen_range(0..1_000_000u64));
+    let ixv = |g: &mut rand::rngs::ThreadRng, i: usize| match i % 4 {
+        1 => format!("{:024x}", g.gen::<u128>() & ((1u128 << 96) - 1)),
+        2 => format!("2026-{:02}-{:02}T{:02}:{:02}", g.gen_range(1..13), g.gen_range(1..29), g.gen_range(0..24), g.gen_range(0..60)),
+        3 => WORDS[g.gen_range(0..WORDS.len())].to_string(),
+        _ => format!("{}", g.gen_range(0..100_000)),
+    };
+    if r < 0.95 {
+        let mut w = vec![Write { key: doc_key(&id), kind: Kind::Put, val: pool[g.gen_range(0..pool.len())].clone() }];
+        if g.gen_bool(0.5) {
+            let i = g.gen_range(1..keys);
+            let (old, new) = (ixv(&mut g, i), ixv(&mut g, i));
+            w.push(Write { key: Bytes::from(format!("ix/{i}/{old}/{id}")), kind: Kind::Del, val: Bytes::new() });
+            w.push(Write { key: Bytes::from(format!("ix/{i}/{new}/{id}")), kind: Kind::Put, val: Bytes::from(id.clone().into_bytes()).slice(..12) });
+        }
+        w
+    } else {
+        let mut w = vec![Write { key: doc_key(&id), kind: Kind::Del, val: Bytes::new() }];
+        for i in 1..keys {
+            w.push(Write { key: Bytes::from(format!("ix/{i}/{}/{id}", ixv(&mut g, i))), kind: Kind::Del, val: Bytes::new() });
+        }
+        w
+    }
+}
+
+pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, secs: u64, warm: u64, keys: usize, val: usize, dbs: u64, real_mode: u64, reads: f64) {
+    // real_mode: 0 = chiavi casuali, 1 = record vero d'inserimento (giro 5), 2 = miscela B1 (giro 6)
+    let real = real_mode >= 1;
     // val = 0: documenti JSON da circa 1 KB invece di un valore fisso (prova della compressione)
     // real: record "vero" (un documento + voci d'indice, giro 5)
     let json = val == 0;
@@ -1155,7 +1226,7 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
     let value = Bytes::from(vec![9u8; val]);
     let gen = {
         let (cl, h, ok, conf, unk, rej, sem, measuring, value) = (cl.clone(), h.clone(), ok.clone(), conf.clone(), unk.clone(), rej.clone(), sem.clone(), measuring.clone(), value.clone());
-        open_loop(rate / batch as f64, stop.clone(), move |sched| {
+        drive(rate / batch as f64, (clients / batch).max(1), stop.clone(), move |sched| {
             let (cl, h, ok, conf, unk, rej, sem, measuring, value) = (cl.clone(), h.clone(), ok.clone(), conf.clone(), unk.clone(), rej.clone(), sem.clone(), measuring.clone(), value.clone());
             async move {
                 let _permit = sem.acquire_many(batch as u32).await.unwrap();
@@ -1163,7 +1234,9 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
                 let cs: Vec<CommitReq> = (0..batch)
                     .map(|_| {
                         let db = db_id(rand::random::<u64>() % dbs);
-                        let writes = if real {
+                        let writes = if real_mode == 2 {
+                            b1_record(keys)
+                        } else if real {
                             real_record(keys)
                         } else {
                             (0..keys)
@@ -1198,6 +1271,46 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
             }
         })
     };
+    // giro 6 (M16): letture sulle repliche (tutte e 3, a caso) mentre si scrive: 90% get di un documento della miscela
+    // B1 (1 milione di _id), 10% scan di 10 voci d'indice; alla posizione confermata vista dal client
+    let rh = Arc::new(Mutex::new(hist()));
+    let (rok, row) = (Arc::new(AtomicU64::new(0)), Arc::new(AtomicU64::new(0)));
+    let rgen = {
+        let (cl, rh, rok, row, measuring) = (cl.clone(), rh.clone(), rok.clone(), row.clone(), measuring.clone());
+        open_loop(reads, stop.clone(), move |_sched| {
+            let (cl, rh, rok, row, measuring) = (cl.clone(), rh.clone(), rok.clone(), row.clone(), measuring.clone());
+            async move {
+                let db = db_id(rand::random::<u64>() % dbs);
+                let at = cl.seen.load(Relaxed);
+                let r = rand::random::<usize>() % cl.n();
+                let t = Instant::now();
+                let q = if rand::random::<u8>() < 26 {
+                    let from = Bytes::from(format!("ix/3/{}/", WORDS[rand::random::<usize>() % WORDS.len()]));
+                    let mut to = from.to_vec();
+                    *to.last_mut().unwrap() = b'0';
+                    Req::Scan { db, from, to: Bytes::from(to), at, limit: 10, wait_ms: 50, dal: 0 }
+                } else {
+                    Req::Get { db, key: doc_key(&format!("{:024x}", 0xabc0_0000_0000u64 + rand::random::<u64>() % 1_000_000)), at, wait_ms: 50, spec: false, dal: 0 }
+                };
+                let res = cl.call(r, &q, Duration::from_secs(2)).await;
+                if !measuring.load(Relaxed) {
+                    return;
+                }
+                match res {
+                    Ok(Resp::Get(GetRes::OutOfWindow { .. })) => {
+                        row.fetch_add(1, Relaxed);
+                        rok.fetch_add(1, Relaxed);
+                        rh.lock().record(t.elapsed().as_micros().max(1) as u64).ok();
+                    }
+                    Ok(Resp::Get(_)) | Ok(Resp::Scan(_)) => {
+                        rok.fetch_add(1, Relaxed);
+                        rh.lock().record(t.elapsed().as_micros().max(1) as u64).ok();
+                    }
+                    _ => {}
+                }
+            }
+        })
+    };
     tokio::time::sleep(Duration::from_secs(warm)).await;
     measuring.store(true, Relaxed);
     let t0 = Instant::now();
@@ -1206,11 +1319,13 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
     let el = t0.elapsed().as_secs_f64();
     stop.store(true, Relaxed);
     let _ = gen.await;
+    let _ = rgen.await;
     tokio::time::sleep(Duration::from_secs(1)).await;
     let n = ok.load(Relaxed) as f64;
     println!(
         "{}",
-        json!({"bench": "lotti", "rate": rate, "batch": batch, "clients": clients, "keys_per_rec": keys, "val_bytes": val, "dbs": dbs, "real": real,
+        json!({"reads_per_s": rok.load(Relaxed) as f64 / el, "reads_out_of_window": row.load(Relaxed), "read_latency": hj(&rh.lock()),
+               "bench": "lotti", "rate": rate, "batch": batch, "clients": clients, "keys_per_rec": keys, "val_bytes": val, "dbs": dbs, "real": real_mode,
                "secs": el, "recs_per_s": n / el, "latency": hj(&h.lock()), "conflicts": conf.load(Relaxed),
                "unknown": unk.load(Relaxed), "rejected": rej.load(Relaxed), "diag": cl.diag.json()})
     );

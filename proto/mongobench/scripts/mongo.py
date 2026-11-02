@@ -5,13 +5,15 @@
   mongo.py single  un nodo solo senza replica (porta 27017) sul core 0
   mongo.py down
 
-Ogni membro: cache WiredTiger 1 GB, journal acceso (predefinito), dati in MB_WORK (stesso disco del quaderno).
+Ogni membro: cache WiredTiger 2 GB (MB_CACHE_GB; con 1 GB lo sfratto delle pagine sporche costava a mongod 0,6 core), journal acceso (predefinito), dati in MB_WORK (stesso disco del quaderno).
 """
 import os, subprocess, sys, time, shutil
 from pymongo import MongoClient
 MONGOD = os.environ.get('MONGOD', '/opt/mongo8/bin/mongod')
 WORK = os.environ.get('MB_WORK', '/root/mb-work')
-CACHE = os.environ.get('MB_CACHE_GB', '1')
+CACHE = os.environ.get('MB_CACHE_GB', '2')
+# MB_PIN=0: nessun core fisso (il sistema sceglie), per il tetto di mongod su tutta la macchina
+PIN = os.environ.get('MB_PIN', '1') == '1'
 
 def down():
     subprocess.run(['pkill', '-x', 'mongod'])
@@ -24,13 +26,15 @@ def down():
 def start(port, core, rs):
     d = os.path.join(WORK, str(port))
     os.makedirs(d, exist_ok=True)
-    cmd = ['taskset', '-c', str(core), MONGOD, '--port', str(port), '--bind_ip', '127.0.0.1', '--dbpath', d, '--logpath', d + '.log',
+    cmd = ['taskset', '-c', str(core) if PIN else '0-%d' % (os.cpu_count() - 1), MONGOD, '--port', str(port), '--bind_ip', '127.0.0.1', '--dbpath', d, '--logpath', d + '.log',
            '--fork', '--wiredTigerCacheSizeGB', CACHE]
     if rs:
         cmd += ['--replSet', 'rs0']
     subprocess.run(cmd, check=True, capture_output=True)
 
 def pin_all(port_core):
+    if not PIN:
+        return
     # i thread nati dopo il fork ereditano il core; ripinna tutto per sicurezza
     out = subprocess.run(['pgrep', '-a', '-x', 'mongod'], capture_output=True, text=True).stdout
     for l in out.splitlines():

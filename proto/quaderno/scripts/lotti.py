@@ -54,7 +54,7 @@ for rep in range(reps):
                 if k.startswith('r') or k in ('proxy', 'flusher', 'minio'):
                     pin(v, 0 if v == lp else 1)
             gen = subprocess.Popen(['nice', '-n', os.environ.get('PQ_GEN_NICE', '0'), 'taskset', '-c', '1', PQ, 'lotti', '--rate', str(rate), '--batch', str(b), '--clients', str(c), '--conns', str(min(c, 256)),
-                                    '--secs', str(SECS), '--warm', str(WARM), '--keys', str(keys), '--val', str(val), '--real', os.environ.get('PQ_REAL', '0')], stdout=subprocess.PIPE, text=True)
+                                    '--secs', str(SECS), '--warm', str(WARM), '--keys', str(keys), '--val', str(val), '--real', os.environ.get('PQ_REAL', '0'), '--dbs', os.environ.get('PQ_DBS', '100'), '--reads', os.environ.get('PQ_READS', '0')], stdout=subprocess.PIPE, text=True)
             time.sleep(WARM + 3)
             s0 = [s for s in status() if s.get('id') == lid][0]
             ci0 = s0['commit_index']
@@ -82,7 +82,8 @@ for rep in range(reps):
                  'zstd': os.environ.get('PQ_ZSTD', '0'),
                  'repl_raw_bytes_per_rec': (s1.get('repl_raw', 0) - s0.get('repl_raw', 0)) / max(n, 1),
                  'repl_sent_bytes_per_rec': (s1.get('repl_sent', 0) - s0.get('repl_sent', 0)) / max(n, 1),
-                 'gen': {k: g[k] for k in ('recs_per_s', 'unknown', 'rejected', 'conflicts')}, 'lat': g['latency']}
+                 'gen': {k: g[k] for k in ('recs_per_s', 'unknown', 'rejected', 'conflicts')}, 'lat': g['latency'],
+                 'dbs': os.environ.get('PQ_DBS', '100'), 'reads_per_s': g.get('reads_per_s'), 'read_latency': g.get('read_latency'), 'reads_out_of_window': g.get('reads_out_of_window'), 'bin': PQ}
             print(json.dumps(r), flush=True)
             res.append(r)
             with open(os.path.join(out, 'lotti.jsonl'), 'a') as f:
