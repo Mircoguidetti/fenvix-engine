@@ -277,10 +277,15 @@ impl Server {
             // this process does not remember the transaction (a restart, or it ran on another process): its commit may
             // still be stored; a repeated commit of a committed transaction answers ok, as on mongod
             if let Some(active) = unknown {
-                return match self.txn_stored_outcome(&tc.lsid, tc.number).await? {
-                    Some((n, true)) if n == tc.number => Ok(ok()),
-                    Some((n, _)) if n > tc.number => Err(too_old(&tc, n)),
-                    _ => Err(no_such(given_msg(&tc, active))),
+                let stored = self.txn_stored_outcome(&tc.lsid, tc.number).await?;
+                return if stored.committed {
+                    // also when a later number of the session exists (mongod answers 225 there): the commit is stored,
+                    // and this process answers ok for a remembered committed transaction in the same situation
+                    Ok(ok())
+                } else if stored.newest > tc.number {
+                    Err(too_old(&tc, stored.newest))
+                } else {
+                    Err(no_such(given_msg(&tc, active)))
                 };
             }
             let taken = {
@@ -428,10 +433,8 @@ impl Server {
             let known = self.sessions.m.lock().unwrap().get(&tc.lsid).map(|s| s.number);
             if known.map_or(true, |n| n < tc.number) {
                 // not remembered here: an abort of a transaction whose commit is stored is refused, as on mongod
-                if let Some((n, true)) = self.txn_stored_outcome(&tc.lsid, tc.number).await? {
-                    if n == tc.number {
-                        return Err(MongoError::new(256, "TransactionCommitted", format!("Transaction {} has been committed.", tc.number)));
-                    }
+                if self.txn_stored_outcome(&tc.lsid, tc.number).await?.committed {
+                    return Err(MongoError::new(256, "TransactionCommitted", format!("Transaction {} has been committed.", tc.number)));
                 }
             }
             let mut m = self.sessions.m.lock().unwrap();
