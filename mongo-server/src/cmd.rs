@@ -156,6 +156,17 @@ impl Server {
         n
     }
 
+    /// A `getMore` that waits on purpose (a change stream, or a tailable cursor): it takes no place in the quota or the
+    /// fair queue, since it would hold it while it waits. Every other `getMore` pays and waits like the other commands
+    /// (review of S4, error 2).
+    fn get_more_waits_on_purpose(&self, cmd: &Document) -> bool {
+        let Some(id) = int_arg(cmd.get("getMore")) else { return false };
+        if self.change_cursors.lock().unwrap().contains_key(&id) {
+            return true;
+        }
+        self.cursors.lock().unwrap().get(&id).is_some_and(|c| c.tail.is_some())
+    }
+
     pub fn new_connection_id(&self) -> i64 {
         self.next_conn.fetch_add(1, Relaxed)
     }
@@ -172,7 +183,7 @@ impl Server {
         // fair queue between databases under saturation, safety limits, per-database metrics (fair.rs)
         // Only commands that pass authentication and authorization take a place (and touch per-database counters); the
         // others go straight to `run_command`, which answers with the same error.
-        let mut permit = if crate::fair::exempt(&name) || self.authorize_if_on(conn_id, db, &name, &cmd).await.is_err() {
+        let mut permit = if crate::fair::exempt(&name) || (name == "getMore" && self.get_more_waits_on_purpose(&cmd)) || self.authorize_if_on(conn_id, db, &name, &cmd).await.is_err() {
             None
         } else {
             match crate::fair::admit(db, !self.dbs.is_open_hint(db)).await {

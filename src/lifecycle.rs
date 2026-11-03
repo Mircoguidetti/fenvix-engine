@@ -350,7 +350,7 @@ fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<
         // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
         settings.flush_interval = Some(relaxed);
     }
-    let b = Db::builder(tenant_path(id), Arc::clone(store)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
+    let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
     match cache_scope() {
         Some((c, scope)) => b.with_db_cache(c, scope),
         None => b,
@@ -392,7 +392,7 @@ fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
 }
 
 async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool) -> Result<DbReader> {
-    let b = DbReader::builder(tenant_path(id), Arc::clone(store)).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
+    let b = DbReader::builder(tenant_path(&id), crate::counting::owned(store, &id.to_string())).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
     let b = match cache_scope() {
         Some((c, scope)) => b.with_db_cache(c, scope),
         None => b,
@@ -1054,7 +1054,7 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
     worker.compactions_poll_interval = Duration::from_millis(50);
     opts.worker = Some(worker);
     let started = Instant::now();
-    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), store).with_options(opts).build());
+    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), crate::counting::owned(&store, id)).with_options(opts).build());
     let runner = {
         let c = Arc::clone(&compactor);
         tokio::spawn(async move { c.run().await })

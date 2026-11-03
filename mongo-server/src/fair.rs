@@ -288,7 +288,8 @@ impl DbStat {
 }
 
 struct GateWaiter {
-    tx: oneshot::Sender<()>,
+    /// Sends the generation of the flush slot the waiter shares (0 in the CPU gate).
+    tx: oneshot::Sender<u64>,
 }
 
 /// Decayed point usage of a database and its weight in the saturated queue.
@@ -309,9 +310,14 @@ struct Gate {
     inflight: u64,
     wakes: VecDeque<(String, GateWaiter)>,
     queues: HashMap<String, VecDeque<GateWaiter>>,
-    /// Flush gate only: commands per database holding its one slot. Commands of a database whose data is being flushed
-    /// share that flush (group commit), so they share its slot instead of filling the gate.
-    held: HashMap<String, u32>,
+    /// Flush gate only: commands per database holding its one slot, and the slot's generation. Commands of a database
+    /// whose data is being flushed share that flush (group commit), so they share its slot instead of filling the gate.
+    /// The slot is given back when the database's WAL PUT starts ([`flush_started`]): the encoding (CPU) is done then,
+    /// and the wait for S3 uses no CPU of the server; the commands still holding a share of that generation then give
+    /// back nothing.
+    held: HashMap<String, (u32, u64)>,
+    /// Last flush slot generation given.
+    gen: u64,
 }
 
 /// The two saturated gates: running commands (CPU), and flushes of written data that commands wait for (each flush is
@@ -386,24 +392,47 @@ fn charge(db: &str, pts: f64, part: impl FnOnce(&mut DbStat)) -> Option<f64> {
     Some(s.rate)
 }
 
-/// An S3 request on `path`: charged to the database `tenants/{db}/...` if this process knows it.
+/// An S3 request on `path`. Who pays (review of S4, error 3): the database of the running command when the request is
+/// made inside a command (the task-local `OP`); else the database whose own store makes it (`counting::owned`: its
+/// writer, reader and compactor; a branch made with fork "clone" reads its parent's objects `tenants/{parent}/...`, and
+/// those reads are the branch's); else, for the rest of the background work (lease renewals, cleanup), the database
+/// whose objects it touches, `tenants/{db}/...`. Counted even if this process has not opened that database (it gets its
+/// counters).
 fn on_s3_request(path: &str, put: bool) {
-    let Some(rest) = path.strip_prefix("tenants/") else { return };
-    let db = rest.split('/').next().unwrap_or("");
-    if db.is_empty() {
-        return;
+    let by_path = path.strip_prefix("tenants/").map(|rest| rest.split('/').next().unwrap_or("")).filter(|d| !d.is_empty());
+    if put && path.contains("/wal/") {
+        if let Some(db) = by_path {
+            flush_started(db);
+        }
     }
     let pts = if put { w(3) } else { w(4) };
-    if let Some(rate) = charge(db, pts, |s| {
+    let part = |s: &mut DbStat| {
         s.pts_s3 += pts;
         if put {
             s.s3_put += 1;
         } else {
             s.s3_get += 1;
         }
-    }) {
-        note_usage(db, pts, rate);
+    };
+    // the command that runs (when the request is made in its task), else the database whose store makes the request
+    // (counting::owned: SlateDB makes most of its reads in tasks of its own)
+    let by_command = OP.try_with(|c| c.db.clone()).ok();
+    let by_store = tenant_bench::counting::request_owner();
+    for db in [by_command.as_deref(), by_store.as_deref()].into_iter().flatten() {
+        if let Some(rate) = charge(db, pts, part) {
+            note_usage(db, pts, rate);
+            return;
+        }
     }
+    let Some(db) = by_store.as_deref().or(by_path) else { return };
+    let rate = {
+        let mut st = STATS.lock().unwrap();
+        let s = st.entry(db.to_string()).or_insert_with(|| DbStat::new(db));
+        part(s);
+        s.charge(pts);
+        s.rate
+    };
+    note_usage(db, pts, rate);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -523,13 +552,19 @@ fn next_waiter_db(g: &mut Gate) -> Option<(String, GateWaiter)> {
 fn start_next(g: &mut Gate, k: Kind) -> bool {
     loop {
         let Some((db, w)) = next_waiter_db(g) else { return false };
-        let mut n = u32::from(w.tx.send(()).is_ok());
+        let gen = if k == Kind::Flush {
+            g.gen += 1;
+            g.gen
+        } else {
+            0
+        };
+        let mut n = u32::from(w.tx.send(gen).is_ok());
         if k == Kind::Flush {
             for w in g.queues.remove(&db).unwrap_or_default() {
-                n += u32::from(w.tx.send(()).is_ok());
+                n += u32::from(w.tx.send(gen).is_ok());
             }
             if n > 0 {
-                *g.held.entry(db).or_default() += n;
+                g.held.insert(db, (n, gen));
             }
         }
         if n > 0 {
@@ -560,18 +595,20 @@ impl Drop for DbSlot {
     }
 }
 
-/// A place in a gate (in the flush gate, a share of its database's slot); dropping it lets the next queued command start.
-pub struct GateSlot(Kind, Option<String>);
+/// A place in a gate (in the flush gate, a share of its database's slot, with the slot's generation); dropping it lets
+/// the next queued command start.
+pub struct GateSlot(Kind, Option<(String, u64)>);
 
-fn release_slot(k: Kind, db: Option<&str>) {
+fn release_slot(k: Kind, db: Option<(&str, u64)>) {
     let mut g = gate(k).lock().unwrap();
-    if let Some(db) = db {
+    if let Some((db, gen)) = db {
         let left = match g.held.get_mut(db) {
-            Some(n) => {
+            Some((n, g_gen)) if *g_gen == gen => {
                 *n = n.saturating_sub(1);
                 *n
             }
-            None => 0,
+            // the slot of this generation was already given back when the database's WAL PUT started
+            _ => return,
         };
         if left > 0 {
             return;
@@ -579,23 +616,38 @@ fn release_slot(k: Kind, db: Option<&str>) {
         g.held.remove(db);
     }
     g.inflight = g.inflight.saturating_sub(1);
-    // under saturation a finishing command lets queued ones start up to the cap, wakes first, then by usage
+    fill(&mut g, k);
+}
+
+/// Under saturation, start queued commands up to the cap (wakes first, then by usage); otherwise all of them.
+fn fill(g: &mut Gate, k: Kind) {
     while !SATURATED.load(Relaxed) || g.inflight < cap(k) {
-        if !start_next(&mut g, k) {
+        if !start_next(g, k) {
             break;
         }
     }
 }
 
+/// The WAL PUT of `db` starts: the data is encoded, what is left is the wait for S3, which uses no CPU of the server.
+/// Its flush slot goes back now (not when S3 answers), so the flushes of other databases are not queued behind the
+/// network (review of S4, error 1).
+pub fn flush_started(db: &str) {
+    let mut g = FLUSH_GATE.lock().unwrap();
+    if g.held.remove(db).is_some() {
+        g.inflight = g.inflight.saturating_sub(1);
+        fill(&mut g, Kind::Flush);
+    }
+}
+
 impl Drop for GateSlot {
     fn drop(&mut self) {
-        release_slot(self.0, self.1.as_deref());
+        release_slot(self.0, self.1.as_ref().map(|(d, g)| (d.as_str(), *g)));
     }
 }
 
 /// Waiting for a gate slot; if the command is dropped after the slot was given but before it saw it, the slot goes back.
 struct GateWait {
-    rx: Option<oneshot::Receiver<()>>,
+    rx: Option<oneshot::Receiver<u64>>,
     kind: Kind,
     db: Option<String>,
 }
@@ -603,8 +655,8 @@ struct GateWait {
 impl Drop for GateWait {
     fn drop(&mut self) {
         if let Some(mut rx) = self.rx.take() {
-            if rx.try_recv().is_ok() {
-                release_slot(self.kind, self.db.as_deref());
+            if let Ok(gen) = rx.try_recv() {
+                release_slot(self.kind, self.db.as_deref().map(|d| (d, gen)));
             }
         }
     }
@@ -615,16 +667,20 @@ async fn enter(k: Kind, db: &str, wakes: bool) -> GateSlot {
     let share = (k == Kind::Flush).then(|| db.to_string());
     let rx = {
         let mut g = gate(k).lock().unwrap();
-        if let Some(n) = share.as_ref().and_then(|d| g.held.get_mut(d)) {
+        if let Some((n, gen)) = share.as_ref().and_then(|d| g.held.get_mut(d)) {
             *n += 1;
-            return GateSlot(k, share);
+            let gen = *gen;
+            return GateSlot(k, share.map(|d| (d, gen)));
         }
         if !SATURATED.load(Relaxed) || g.inflight < cap(k) {
             g.inflight += 1;
+            let mut gen = 0;
             if let Some(d) = &share {
-                g.held.insert(d.clone(), 1);
+                g.gen += 1;
+                gen = g.gen;
+                g.held.insert(d.clone(), (1, gen));
             }
-            return GateSlot(k, share);
+            return GateSlot(k, share.map(|d| (d, gen)));
         }
         let (tx, rx) = oneshot::channel();
         if wakes {
@@ -637,7 +693,7 @@ async fn enter(k: Kind, db: &str, wakes: bool) -> GateSlot {
     QUEUED_TOTAL.fetch_add(1, Relaxed);
     let t = Instant::now();
     let mut wait = GateWait { rx: Some(rx), kind: k, db: share.clone() };
-    let _ = wait.rx.as_mut().unwrap().await;
+    let gen = wait.rx.as_mut().unwrap().await.unwrap_or(0);
     wait.rx = None;
     let us = t.elapsed().as_micros() as u64;
     if let Some(s) = STATS.lock().unwrap().get_mut(db) {
@@ -651,7 +707,7 @@ async fn enter(k: Kind, db: &str, wakes: bool) -> GateSlot {
             s.flush_wait_max_us = s.flush_wait_max_us.max(us);
         }
     }
-    GateSlot(k, share)
+    GateSlot(k, share.map(|d| (d, gen)))
 }
 
 /// The places a command holds while it runs: its database's counters and a gate slot (moved into the command's cost
@@ -900,10 +956,10 @@ pub fn metrics(open: impl Fn(&str) -> String) -> serde_json::Value {
     })
 }
 
-/// Commands that are not queued: cheap, or that wait on purpose (monitoring, awaitable cursors, authentication).
-/// Their cost is still charged to their database.
+/// Commands that are not queued: cheap, or that wait on purpose (monitoring, authentication). Their cost is still
+/// charged to their database. `getMore` is not here: it is queued unless its cursor waits on purpose (cmd.rs).
 pub fn exempt(name: &str) -> bool {
-    matches!(name, "hello" | "isMaster" | "ismaster" | "ping" | "getMore" | "killCursors" | "endSessions" | "saslStart" | "saslContinue" | "buildInfo" | "buildinfo" | "getLastError" | "logout" | "authenticate")
+    matches!(name, "hello" | "isMaster" | "ismaster" | "ping" | "killCursors" | "endSessions" | "saslStart" | "saslContinue" | "buildInfo" | "buildinfo" | "getLastError" | "logout" | "authenticate")
 }
 
 #[cfg(test)]
@@ -951,7 +1007,7 @@ mod tests {
         USAGE.lock().unwrap().insert("heavy".into(), Usage { recent: 1000.0, at: now, weight: 1.0 });
         USAGE.lock().unwrap().insert("light".into(), Usage { recent: 1.0, at: now, weight: 1.0 });
         let w = next_waiter(&mut g).unwrap();
-        w.tx.send(()).unwrap();
+        w.tx.send(0).unwrap();
         assert!(r2.try_recv().is_ok(), "the light database was not served first");
     }
 }
