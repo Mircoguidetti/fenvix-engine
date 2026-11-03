@@ -197,7 +197,7 @@ def run(args):
     n_tot = int(n_fill * (1 + args.regime))
     k = 0  # L0 scaricate; la L0 k contiene le scritture del tempo-dati [k, k+1) * dt_flush
     next_flush_wall = dt_flush
-    pile_tw = pile_t = spazio_tw = 0.0
+    pile_tw = pile_t = spazio_tw = l0_tw = 0.0
     pile_max = 0
     reg = None
     snaps = []
@@ -213,6 +213,7 @@ def run(args):
         if reg is not None:
             cnt = len(sim.l0) + len(sim.srs)
             pile_tw += cnt * dt
+            l0_tw += len(sim.l0) * dt
             pile_t += dt
             pile_max = max(pile_max, cnt)
             # spazio: pile vive più i sorgenti dei lavaggi in corso (le uscite parziali non contano)
@@ -244,7 +245,7 @@ def run(args):
         "wa_lavaggio": (sim.bytes_written - reg[0]) / reg_user,
         "wa_lettura": (sim.bytes_read - reg[1]) / reg_user,
         "lavaggi_regime": sim.n_comp - reg[2],
-        "pile_media": pile_tw / max(pile_t, 1e-9), "pile_max": pile_max,
+        "pile_media": pile_tw / max(pile_t, 1e-9), "pile_max": pile_max, "l0_media": l0_tw / max(pile_t, 1e-9),
         "rallentamento": (sim.t - reg[3]) / ((n_tot - n_fill) * dt_flush),
         "spazio_medio": spazio_tw / max(pile_t, 1e-9) / (S * args.ovh),
         "spazio_fine": (sum(s.size for s in sim.srs) + sum(s.size for s in sim.l0)) / (S * args.ovh),

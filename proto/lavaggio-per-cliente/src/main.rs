@@ -293,6 +293,7 @@ fn val_coll(d: &[u8]) -> u8 {
 fn opzioni_lavaggio(consolida: u64) -> CompactorOptions {
     let mut co = CompactorOptions::default();
     co.checkpoint_lifetime = Duration::from_secs(30);
+    co.poll_interval = Duration::from_millis(500); // il lavaggio guarda spesso: le L0 non aspettano 5 s
     if consolida > 0 {
         co.scheduler_options.insert("sorted_run_consolidation_threshold".into(), consolida.to_string());
     }
@@ -324,6 +325,16 @@ fn settings(lavaggio: bool, consolida: u64, esterno: bool) -> Settings {
 
 /// Pile viste da una find di un cliente: sorted run + L0 del suo albero (segmento o radice).
 /// Restituisce (media sui segmenti dei clienti, massimo, numero di alberi dei clienti).
+fn composizione(m: &slatedb::manifest::VersionedManifest) -> (f64, f64) {
+    let segs: Vec<(usize, usize)> = m.segments().iter().filter(|s| s.prefix().first() == Some(&b'K')).map(|s| (s.l0().len(), s.compacted().len())).collect();
+    if segs.is_empty() {
+        (m.l0().len() as f64, m.compacted().len() as f64)
+    } else {
+        let n = segs.len() as f64;
+        (segs.iter().map(|x| x.0).sum::<usize>() as f64 / n, segs.iter().map(|x| x.1).sum::<usize>() as f64 / n)
+    }
+}
+
 fn pile(m: &slatedb::manifest::VersionedManifest) -> (f64, usize, usize) {
     let segs: Vec<usize> = m.segments().iter().filter(|s| s.prefix().first() == Some(&b'K')).map(|s| s.l0().len() + s.compacted().len()).collect();
     if segs.is_empty() {
@@ -405,6 +416,7 @@ async fn carica(a: &Args) -> Result<()> {
     let cpu0 = cpu_s();
     let mut fase_regime: Option<(f64, f64, u64, u64, u64, u64, u64, u64)> = None; // cpu, s, user, put_sst, put_sst_b, get_sst, get_sst_b, tomb
     let mut campioni: Vec<(f64, usize)> = Vec::new();
+    let (mut comp_l0, mut comp_sr) = (0.0f64, 0.0f64);
     let mut ultimo_campione = Instant::now();
     let mut ultimo_log = Instant::now();
     let fine_regime_byte = |u0: u64| u0 + (regime * taglia as f64) as u64;
@@ -538,8 +550,12 @@ async fn carica(a: &Args) -> Result<()> {
         }
         if fase_regime.is_some() && ultimo_campione.elapsed() > Duration::from_millis(500) {
             ultimo_campione = Instant::now();
-            let (m, mx, _) = pile(&db.manifest());
+            let man = db.manifest();
+            let (m, mx, _) = pile(&man);
             campioni.push((m, mx));
+            let (a0, b0) = composizione(&man);
+            comp_l0 += a0;
+            comp_sr += b0;
         }
         if ultimo_log.elapsed() > Duration::from_secs(20) {
             ultimo_log = Instant::now();
@@ -588,7 +604,14 @@ async fn carica(a: &Args) -> Result<()> {
         c.stop().await?;
     }
     db.close().await?;
-    let (pulite, pulite_b) = pulisci(&dir).await?;
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    let (pulite, pulite_b) = match pulisci(&dir).await {
+        Ok(x) => x,
+        Err(e) => {
+            eprintln!("pulizia saltata: {e}");
+            (0, 0)
+        }
+    };
     let r = fase_regime.context("regime mai iniziato")?;
     let reg_user = user_bytes - r.2;
     let campioni_media = campioni.iter().map(|c| c.0).sum::<f64>() / campioni.len().max(1) as f64;
@@ -631,7 +654,7 @@ async fn carica(a: &Args) -> Result<()> {
             "get_sst_byte": conta.c.get_sst_byte.load(Relaxed) - r.6,
             "cpu_s": cpu_fine - r.0,
             "secondi": t_start.elapsed().as_secs_f64() - r.1,
-            "pile_media": campioni_media, "pile_p90": p90, "pile_max": campioni_max, "campioni": campioni.len(),
+            "pile_media": campioni_media, "l0_media": comp_l0 / campioni.len().max(1) as f64, "sr_media": comp_sr / campioni.len().max(1) as f64, "pile_p90": p90, "pile_max": campioni_max, "campioni": campioni.len(),
         },
         "totale": {"put": conta.c.put.load(Relaxed), "put_byte": conta.c.put_byte.load(Relaxed), "put_sst": conta.c.put_sst.load(Relaxed), "put_sst_byte": conta.c.put_sst_byte.load(Relaxed), "get_sst": conta.c.get_sst.load(Relaxed), "get_sst_byte": conta.c.get_sst_byte.load(Relaxed)},
         "fine": {"pile_media": pm, "pile_max": px, "alberi": alberi, "l0_radice": m.l0().len(), "sr_radice": m.compacted().len()},
@@ -665,18 +688,21 @@ async fn pulisci(dir: &str) -> Result<(u64, u64)> {
         add(s.l0(), s.compacted());
     }
     let cdir = format!("{dir}/{DB_PATH}/compacted");
-    let files: HashSet<String> = std::fs::read_dir(&cdir)?.map(|e| e.unwrap().file_name().to_string_lossy().trim_end_matches(".sst").to_string()).collect();
+    let files: HashSet<String> = std::fs::read_dir(&cdir)?.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().trim_end_matches(".sst").to_string()).collect();
     for v in &vivi {
         anyhow::ensure!(files.contains(v), "scatola viva {v} non trovata: pulizia annullata");
     }
     let (mut tolti, mut byte) = (0u64, 0u64);
     for e in std::fs::read_dir(&cdir)? {
-        let e = e?;
+        // un file può sparire tra la lista e la lettura (il raccoglitore lavora ancora): si salta
+        let Ok(e) = e else { continue };
         let name = e.file_name().to_string_lossy().trim_end_matches(".sst").to_string();
         if !vivi.contains(&name) {
-            byte += e.metadata()?.len();
-            std::fs::remove_file(e.path())?;
-            tolti += 1;
+            let n = e.metadata().map(|m| m.len()).unwrap_or(0);
+            if std::fs::remove_file(e.path()).is_ok() {
+                byte += n;
+                tolti += 1;
+            }
         }
     }
     Ok((tolti, byte))
