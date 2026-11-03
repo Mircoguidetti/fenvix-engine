@@ -24,8 +24,10 @@ SANITY = ["MaiLavaggioFallitoPerCancellazione", "MaiRamoDopoCancellazione", "Mai
 # componenti: lettori (R), cancellazione (E), ramo (F), lavaggi in parallelo (W)
 LETTORI = dict(MaxErase=0, MaxForks=0, MaxSeq=2)                       # valore che cambia (1 -> 2)
 LETTORI3 = dict(MaxErase=0, MaxForks=0, MaxSeq=3, Vals="{1}")          # crea, cancella, ricrea
-CANCELLA = dict(Readers="{}", MaxSeq=3)
-DUE = dict(Readers="{}", MaxForks=0, Workers='{"w1", "w2"}', MaxBoxes=6, MaxSeq=3)
+CANCELLA = dict(Readers="{}", MaxSeq=3)                                # base dei negativi di ramo
+CANCELLA2 = dict(Readers="{}", MaxSeq=3, MaxForks=0)                   # lavaggio partito prima della cancellazione
+CANCELLA_RAMO = dict(Readers="{}", MaxSeq=3, Vals="{1}")               # ramo prima e dopo la cancellazione
+DUE = dict(Readers="{}", MaxForks=0, Workers='{"w1", "w2"}', MaxBoxes=6, MaxSeq=3, Vals="{1}")
 COLLEZIONI = dict(Colls='{"k1", "k2"}', Vals="{1}", MaxForks=0, MaxBoxes=6, MaxSeq=3, Readers="{}")
 TUTTO = dict(MaxSeq=2, Vals="{1}")
 VIVO = dict(Vals="{1}", MaxSeq=3, Readers="{}", MaxForks=0, MaxBoxes=4)
@@ -36,7 +38,8 @@ MODELS = {
     # modelli giusti, sicurezza
     "lettori": (LETTORI, SAFETY, []),
     "lettori3": (LETTORI3, SAFETY, []),
-    "cancella": (CANCELLA, SAFETY, []),
+    "cancella": (CANCELLA2, SAFETY, []),
+    "cancella-ramo": (CANCELLA_RAMO, SAFETY, []),
     "due-lavaggi": (DUE, SAFETY, []),
     "collezioni": (COLLEZIONI, SAFETY, []),
     "tutto": (TUTTO, SAFETY, []),
