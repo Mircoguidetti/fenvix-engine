@@ -1,2 +1,4 @@
 states/
 *.st
+*_TTrace_*
+output/*-interrotto.txt
