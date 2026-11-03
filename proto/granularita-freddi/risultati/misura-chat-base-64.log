@@ -1,0 +1,5 @@
+{"byte_filtri":20000484,"byte_indici_blocchi":2231720,"byte_scatole":2985832781,"etichetta":"chat-base-64","l0":0,"run":[[4,41392433],[4,30105035],[4,60095428],[4,239294017],[4,417970385],[4,417816854],[8,1779158629]],"scatole":32,"sorted_run":7,"tipo":"stato"}
+{"byte_filtri":20000484,"byte_indici_blocchi":2231720,"byte_scatole":2985832781,"etichetta":"chat-base-64","l0":0,"run":[[4,41392433],[4,30105035],[4,60095428],[4,239294017],[4,417970385],[4,417816854],[8,1779158629]],"scatole":32,"sorted_run":7,"tipo":"stato"}
+riscaldo: 1500 query in 2 s; bancone: indici 32 voci 2231592 byte, filtri 31 voci 14912840 byte, stat 0 voci
+{"byte_filtri":20000484,"byte_indici_blocchi":2231720,"byte_scatole":2985832781,"etichetta":"chat-base-64","l0":0,"run":[[4,41392433],[4,30105035],[4,60095428],[4,239294017],[4,417970385],[4,417816854],[8,1779158629]],"scatole":32,"sorted_run":7,"tipo":"stato"}
+riscaldo: 1500 query in 2 s; bancone: indici 32 voci 2231592 byte, filtri 31 voci 14912840 byte, stat 0 voci

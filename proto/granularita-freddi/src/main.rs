@@ -273,13 +273,18 @@ fn valore(owner: u32, ts: i64, len: usize, rng: &mut SmallRng) -> Vec<u8> {
     v
 }
 
-fn writer_settings(gc: bool) -> Settings {
+fn writer_settings(gc: bool, consolida: u64) -> Settings {
     // Come `lifecycle::writer_settings` del motore (memtable/L0 8 MB, nessuna compressione), più il compattatore
     // size-tiered di default acceso nel processo (il motore lo fa girare a parte quando L0 >= 4).
     let mut s = Settings::default();
     s.l0_sst_size_bytes = 8 << 20;
     s.max_unflushed_bytes = 32 << 20;
-    s.compactor_options = Some(CompactorOptions::default());
+    let mut co = CompactorOptions::default();
+    if consolida > 0 {
+        // tetto ai sorted run: il lavaggio unisce i run quando ce ne sarebbero più di `consolida`
+        co.scheduler_options.insert("sorted_run_consolidation_threshold".into(), consolida.to_string());
+    }
+    s.compactor_options = Some(co);
     s.garbage_collector_options = if gc {
         let d = GarbageCollectorDirectoryOptions { interval: Some(Duration::from_secs(10)), min_age: Duration::from_secs(60), dry_run: false };
         let mut g = GarbageCollectorOptions::default();
@@ -328,7 +333,7 @@ async fn carica(a: &Args) -> Result<()> {
     let conta = Arc::new(Conta::new(raw));
     let store: Arc<dyn ObjectStore> = conta.clone();
     let prefisso = a.n("prefisso", 0) == 1;
-    let mut builder = Db::builder(DB_PATH, store).with_settings(writer_settings(true)).with_sst_block_size(block_size(blk));
+    let mut builder = Db::builder(DB_PATH, store).with_settings(writer_settings(true, a.n("consolida", 0))).with_sst_block_size(block_size(blk));
     if prefisso {
         builder = builder.with_filter_policies(politiche_filtri());
     }
@@ -434,7 +439,7 @@ async fn carica(a: &Args) -> Result<()> {
     v.ids = ids;
     std::fs::write(format!("{dir}/verita.json"), serde_json::to_vec(&v)?)?;
     let info = serde_json::json!({
-        "carico": a.s("carico", "chat"), "disposizione": a.s("disposizione", "base"), "blocco_kb": blk, "prefisso": prefisso,
+        "carico": a.s("carico", "chat"), "disposizione": a.s("disposizione", "base"), "blocco_kb": blk, "prefisso": prefisso, "consolida": a.n("consolida", 0),
         "documenti": n, "proprietari": owners, "giorni": days, "byte_logici": byte_logici,
         "secondi": t_start.elapsed().as_secs_f64(), "put": conta.c.put.load(Relaxed), "put_byte": conta.c.put_byte.load(Relaxed),
         "candidati": v.candidati.len(),

@@ -1,0 +1,1 @@
+Interrotto: disco della macchina pieno durante il lavaggio con tetto a 2 pile (i file sostituiti restano finché scadono i checkpoint del lavaggio, 15 minuti). Nessuna misura.

@@ -1,0 +1,5 @@
+{"byte_filtri":18000299,"byte_indici_blocchi":1533208,"byte_scatole":1944859923,"etichetta":"eventi-base-64","l0":2,"run":[[4,648205660],[8,1282825046]],"scatole":14,"sorted_run":2,"tipo":"stato"}
+{"byte_filtri":18000299,"byte_indici_blocchi":1533208,"byte_scatole":1944859923,"etichetta":"eventi-base-64","l0":2,"run":[[4,648205660],[8,1282825046]],"scatole":14,"sorted_run":2,"tipo":"stato"}
+riscaldo: 1500 query in 4 s; bancone: indici 14 voci 1533152 byte, filtri 13 voci 16532006 byte, stat 0 voci
+{"byte_filtri":18000299,"byte_indici_blocchi":1533208,"byte_scatole":1944859923,"etichetta":"eventi-base-64","l0":2,"run":[[4,648205660],[8,1282825046]],"scatole":14,"sorted_run":2,"tipo":"stato"}
+riscaldo: 1500 query in 4 s; bancone: indici 14 voci 1533152 byte, filtri 13 voci 16532006 byte, stat 0 voci
