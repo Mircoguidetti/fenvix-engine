@@ -243,6 +243,8 @@ struct DbStat {
     flush_waits: u64,
     flush_wait_us: u64,
     flush_wait_max_us: u64,
+    /// A command opened or wrote the database (see [`register`]); false while it has counters only from S3 requests.
+    registered: bool,
 }
 
 impl DbStat {
@@ -253,7 +255,7 @@ impl DbStat {
             ring: [0; 60], ring_pts: [0.0; 60], ring_sec: [0; 60], unflushed_bytes: 0,
             pts: 0.0, pts_cpu: 0.0, pts_written: 0.0, pts_read: 0.0, pts_s3: 0.0, bytes_written: 0, bytes_read: 0, s3_put: 0, s3_get: 0,
             rate, burst, balance: burst, refilled: Instant::now(), est: MIN_EST, quota_q: VecDeque::new(), quota_waits: 0, quota_wait_us: 0,
-            quota_wait_max_us: 0, quota_rejections: 0, flush_waits: 0, flush_wait_us: 0, flush_wait_max_us: 0,
+            quota_wait_max_us: 0, quota_rejections: 0, flush_waits: 0, flush_wait_us: 0, flush_wait_max_us: 0, registered: false,
         }
     }
 
@@ -778,6 +780,8 @@ pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
                 }
                 s.inflight += 1;
                 s.commands += 1;
+                // counted here: `register` must not count this command again
+                s.registered = true;
                 slot.counted = true;
                 rx
             }
@@ -805,7 +809,18 @@ pub async fn admit(db: &str, wakes: bool) -> Result<Permit, Document> {
 
 /// The database exists (it was opened or written): from now on it has counters, limits, a quota and metrics.
 pub fn register(db: &str) {
-    STATS.lock().unwrap().entry(db.to_string()).or_insert_with(|| first_stat(db));
+    registered(&mut STATS.lock().unwrap(), db);
+}
+
+/// The counters of `db`, made now if missing (see [`first_stat`]). Counters made earlier only by its S3 requests (the
+/// opening or creating command's own requests come before its database is registered) count that command now.
+fn registered<'a>(st: &'a mut HashMap<String, DbStat>, db: &str) -> &'a mut DbStat {
+    let s = st.entry(db.to_string()).or_insert_with(|| first_stat(db));
+    if !s.registered {
+        s.registered = true;
+        s.commands += 1;
+    }
+    s
 }
 
 /// The counters of a database seen for the first time: the command that opened or created it was admitted before they
@@ -813,6 +828,7 @@ pub fn register(db: &str) {
 fn first_stat(db: &str) -> DbStat {
     let mut s = DbStat::new(db);
     s.commands = 1;
+    s.registered = true;
     s
 }
 
@@ -831,7 +847,7 @@ pub fn forget(db: &str) {
 pub fn note_written(db: &str, bytes: u64, reset: bool) {
     let _ = OP.try_with(|c| c.written.fetch_add(bytes, Relaxed));
     let mut st = STATS.lock().unwrap();
-    let s = st.entry(db.to_string()).or_insert_with(|| first_stat(db));
+    let s = registered(&mut st, db);
     if reset {
         s.unflushed_bytes = 0;
     }
