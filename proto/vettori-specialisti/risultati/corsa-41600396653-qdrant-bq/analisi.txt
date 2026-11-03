@@ -1,0 +1,15 @@
+
+===== job qdrant-bq =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.982 | @0.9: 6939/s lordo (richiamo 0.919, {'ef': 48, 'k_factor': 1}) | @0.95: 4141/s lordo (richiamo 0.951, {'ef': 96, 'k_factor': 1})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.977 | @0.9: 2821/s lordo (richiamo 0.916, {'ef': 128, 'k_factor': 2}) | @0.95: 2084/s lordo (richiamo 0.951, {'ef': 192, 'k_factor': 2})
+qdrant | HNSW + binaria 1 bit | filtro=False | max richiamo 0.868 | @0.9: non arriva | @0.95: non arriva
+qdrant | HNSW + binaria 1 bit | filtro=True | max richiamo 0.894 | @0.9: non arriva | @0.95: non arriva
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: qdrant HNSW + binaria 1 bit: non arriva (noi 6939/s)
+filtro=False @0.95: qdrant HNSW + binaria 1 bit: non arriva (noi 4141/s)
+filtro=True @0.9: qdrant HNSW + binaria 1 bit: non arriva (noi 2821/s)
+filtro=True @0.95: qdrant HNSW + binaria 1 bit: non arriva (noi 2084/s)
+
+===== costruzione e protocollo =====
+{"job": "qdrant-bq", "engine": "qdrant", "config": "HNSW + binaria 1 bit", "kind": "build", "build_s": 15.30258822441101, "load_s": 5.241579055786133, "segments": 2, "version": "1.20.0", "points": 50000, "indexed": 50000}
+{"job": "qdrant-bq", "engine": "qdrant", "config": "HNSW + binaria 1 bit domanda vuota", "kind": "build", "ovh_ms": 0.25000000000000355}
