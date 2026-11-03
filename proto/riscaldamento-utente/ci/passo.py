@@ -123,6 +123,8 @@ def do_ecom():
             heads[u] = {"status": r.status, "len": r.headers.get("Content-Range")}
         except Exception as ex:
             heads[u] = repr(ex)
+    if CFG.get("ecom_url"):
+        return do_ecom_get(CFG["ecom_url"], CFG.get("ecom_formato", "rees46"))
     json.dump({"ricerche": found, "file": trees, "rees46": heads}, open(f"{OUT}/esplora.json", "w"), indent=1)
     # scaricamento, se indicato in run.json
     src = CFG.get("ecom_url")
@@ -153,8 +155,14 @@ def do_ecom_get(urls, fmt):
             else:
                 rows = csv.DictReader(io.TextIOWrapper(raw, encoding="utf-8", errors="replace"))
             n = 0
+            mod = CFG.get("ecom_campione_mod", 10)
             for row in rows:
                 n += 1
+                uid = str(row.get("user_id") or row.get("visitorid") or "")
+                if not sampled(uid, mod):
+                    if c.n > cap:
+                        break
+                    continue
                 if fmt == "rees46":
                     out.write(f"{row.get('event_time')}\t{row.get('user_id')}\t{row.get('event_type')}\t{row.get('product_id')}\t{row.get('user_session')}\n")
                 else:  # retailrocket
@@ -170,6 +178,8 @@ def do_ecom_get(urls, fmt):
 
 import urllib.parse  # noqa: E402
 
+if PARTE not in CFG.get("parti", ["gh", "ecom"]):
+    print("parte saltata"); sys.exit(0)
 if PARTE == "gh":
     do_gh()
 elif PARTE == "ecom":
