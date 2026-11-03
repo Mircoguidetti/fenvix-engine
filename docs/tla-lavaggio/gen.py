@@ -22,11 +22,12 @@ SANITY = ["MaiLavaggioFallitoPerCancellazione", "MaiRamoDopoCancellazione", "Mai
           "MaiRicreatoDopoCancellazione", "MaiScambioConLettore"]
 
 # componenti: lettori (R), cancellazione (E), ramo (F), lavaggi in parallelo (W)
-LETTORI = dict(MaxErase=0, MaxForks=0, MaxSeq=3)
+LETTORI = dict(MaxErase=0, MaxForks=0, MaxSeq=2)                       # valore che cambia (1 -> 2)
+LETTORI3 = dict(MaxErase=0, MaxForks=0, MaxSeq=3, Vals="{1}")          # crea, cancella, ricrea
 CANCELLA = dict(Readers="{}", MaxSeq=3)
 DUE = dict(Readers="{}", MaxForks=0, Workers='{"w1", "w2"}', MaxBoxes=6, MaxSeq=3)
-COLLEZIONI = dict(Colls='{"k1", "k2"}', Vals="{1}", MaxForks=0, MaxBoxes=6, MaxSeq=3)
-TUTTO = dict(MaxSeq=3)
+COLLEZIONI = dict(Colls='{"k1", "k2"}', Vals="{1}", MaxForks=0, MaxBoxes=6, MaxSeq=3, Readers="{}")
+TUTTO = dict(MaxSeq=2, Vals="{1}")
 VIVO = dict(Vals="{1}", MaxSeq=3, Readers="{}", MaxForks=0, MaxBoxes=4)
 VIVO_RAMO = dict(VIVO, MaxForks=1, MaxErase=0, MaxBoxes=5)
 SOLO = dict(Readers="{}", MaxForks=0, MaxErase=0)   # base dei negativi: si accende solo il pezzo che serve
@@ -34,6 +35,7 @@ SOLO = dict(Readers="{}", MaxForks=0, MaxErase=0)   # base dei negativi: si acce
 MODELS = {
     # modelli giusti, sicurezza
     "lettori": (LETTORI, SAFETY, []),
+    "lettori3": (LETTORI3, SAFETY, []),
     "cancella": (CANCELLA, SAFETY, []),
     "due-lavaggi": (DUE, SAFETY, []),
     "collezioni": (COLLEZIONI, SAFETY, []),
