@@ -1,0 +1,27 @@
+bancone10 {"quota_fredde": 98.5, "preceduta_lettore": {"1": 98.9, "5": 99.6, "30": 100.0, "300": 100.0}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+bancone1 {"quota_fredde": 98.5, "preceduta_lettore": {"1": 98.9, "5": 99.6, "30": 100.0, "300": 100.0}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+cluster011 client 700
+bancone10 {"quota_fredde": 99.9, "preceduta_lettore": {"1": 12.2, "5": 35.0, "30": 86.2, "300": 99.9}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+bancone1 {"quota_fredde": 99.9, "preceduta_lettore": {"1": 12.2, "5": 35.0, "30": 86.2, "300": 99.9}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+cluster024 client 8664
+bancone10 {"quota_fredde": 5.6, "preceduta_lettore": {"1": 35.1, "5": 65.6, "30": 93.6, "300": 95.2}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+bancone1 {"quota_fredde": 5.6, "preceduta_lettore": {"1": 35.1, "5": 65.6, "30": 93.6, "300": 95.2}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+cluster025 client 997
+bancone10 {"quota_fredde": 100.0, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.0, "300": 11.0}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+bancone1 {"quota_fredde": 100.0, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.0, "300": 11.0}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo1h {"quota_fredde": 100.0, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.0, "300": 10.8}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo6h {"quota_fredde": 100.0, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.0, "300": 10.9}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo24h {"quota_fredde": 100.0, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.0, "300": 10.8}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+cluster010 client 14325
+bancone10 {"quota_fredde": 82.8, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.3, "300": 12.8}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+bancone1 {"quota_fredde": 95.9, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.3, "300": 12.7}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo1h {"quota_fredde": 94.7, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.3, "300": 12.6}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo6h {"quota_fredde": 84.9, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.3, "300": 12.5}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo24h {"quota_fredde": 66.1, "preceduta_lettore": {"1": 0.0, "5": 0.2, "30": 1.3, "300": 12.9}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+cluster050 client 20202
+bancone10 {"quota_fredde": 87.7, "preceduta_lettore": {"1": 3.5, "5": 11.1, "30": 41.8, "300": 98.5}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+bancone1 {"quota_fredde": 93.9, "preceduta_lettore": {"1": 3.5, "5": 11.1, "30": 41.7, "300": 98.4}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo1h {"quota_fredde": 92.0, "preceduta_lettore": {"1": 3.3, "5": 10.4, "30": 40.0, "300": 98.3}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo6h {"quota_fredde": 87.0, "preceduta_lettore": {"1": 3.4, "5": 10.8, "30": 40.9, "300": 98.4}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+tempo24h {"quota_fredde": 82.5, "preceduta_lettore": {"1": 3.5, "5": 11.0, "30": 41.5, "300": 98.3}, "preceduta_stretta": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}, "preceduta_larga": {"1": 0.0, "5": 0.0, "30": 0.0, "300": 0.0}}
+cluster045 client 583
