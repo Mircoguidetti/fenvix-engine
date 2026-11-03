@@ -109,8 +109,8 @@ public class Bench {
     int threads = 2;
     IndexWriterConfig c = iwc(enc, 1, null);
     c.setMergePolicy(NoMergePolicy.INSTANCE);
-    c.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
     c.setMaxBufferedDocs(N / segs);
+    c.setRAMBufferSizeMB(IndexWriterConfig.DISABLE_AUTO_FLUSH);
     long t0 = System.nanoTime();
     try (FSDirectory fsd = FSDirectory.open(Paths.get(dir));
          IndexWriter w = new IndexWriter(fsd, c);
