@@ -1,0 +1,14 @@
+           _                 _    
+  __ _  __| |_ __ __ _ _ __ | |_  
+ / _` |/ _` | '__/ _` | '_ \| __| 
+| (_| | (_| | | | (_| | | | | |_  
+ \__, |\__,_|_|  \__,_|_| |_|\__| 
+    |_|                           
+
+Version: 1.20.0, build: 222b2e44
+Access web UI at http://localhost:6333/dashboard
+Agentic Skills: https://skills.qdrant.tech/
+
+2026-11-03T07:55:27.110760Z  WARN qdrant::settings: Config file not found: config/config
+2026-11-03T07:55:27.110798Z  WARN qdrant::settings: Config file not found: config/development
+Error: failed to create directory `/mnt/qd/storage`: Permission denied (os error 13)
