@@ -1,0 +1,7 @@
+2026-11-03 08:05:47.916 UTC [2533] LOG:  starting PostgreSQL 16.15 (Ubuntu 16.15-1.pgdg24.04+2) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-11-03 08:05:47.916 UTC [2533] LOG:  listening on IPv6 address "::1", port 5433
+2026-11-03 08:05:47.916 UTC [2533] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-11-03 08:05:47.917 UTC [2533] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5433"
+2026-11-03 08:05:47.968 UTC [2536] LOG:  database system was shut down at 2026-11-03 08:05:47 UTC
+2026-11-03 08:05:47.978 UTC [2533] LOG:  database system is ready to accept connections
+2026-11-03 08:06:48.046 UTC [2591] LOG:  skipping vacuum of "items" --- lock not available
