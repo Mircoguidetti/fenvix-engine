@@ -1,0 +1,38 @@
+# M24 riscaldamento per utente: scarica tracce pubbliche (GH Archive, copie pubbliche di tracce e-commerce)
+# e ne estrae solo i campi che servono (ora, utente, oggetto). Niente segreti, niente AWS, meno di 120 minuti.
+# Un solo innesco: un push sul branch riscaldamento-utente che cambia proto/riscaldamento-utente/ci/run.json.
+name: riscaldamento-utente
+on:
+  push:
+    branches: [riscaldamento-utente]
+    paths: ['proto/riscaldamento-utente/ci/run.json']
+permissions:
+  contents: write
+concurrency:
+  group: fenvix-riscaldamento-utente
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [gh, ecom]
+    env:
+      PARTE: ${{ matrix.parte }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strumenti
+        run: pip install -q --break-system-packages orjson pyarrow || true
+      - name: Esegui
+        run: bash proto/riscaldamento-utente/ci/run.sh
+      - name: Commit dei risultati
+        if: always()
+        run: |
+          git config user.name "riscaldamento-utente-ci"
+          git config user.email "actions@users.noreply.github.com"
+          git add proto/riscaldamento-utente/tracce
+          git commit -q -m "riscaldamento: tracce della corsa ${{ github.run_id }} parte ${{ matrix.parte }}" || exit 0
+          for i in 1 2 3 4 5; do git pull -q --rebase && git push -q && break; sleep 7; done
