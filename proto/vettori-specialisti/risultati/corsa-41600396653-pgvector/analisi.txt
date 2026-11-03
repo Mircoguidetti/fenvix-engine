@@ -1,0 +1,22 @@
+
+===== job pgvector =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.982 | @0.9: 5950/s lordo (richiamo 0.919, {'ef': 48, 'k_factor': 1}) | @0.95: 3533/s lordo (richiamo 0.951, {'ef': 96, 'k_factor': 1})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.977 | @0.9: 2487/s lordo (richiamo 0.916, {'ef': 128, 'k_factor': 2}) | @0.95: 1755/s lordo (richiamo 0.951, {'ef': 192, 'k_factor': 2})
+pgvector | HNSW m16 efC64 | filtro=False | max richiamo 0.982 | @0.9: 1538/s lordo, 1818/s senza protocollo (vuota 0.100 ms) (richiamo 0.901, {'ef_search': 24}) | @0.95: 800/s lordo, 870/s senza protocollo (vuota 0.100 ms) (richiamo 0.963, {'ef_search': 64})
+pgvector | HNSW m16 efC64 | filtro=True | max richiamo 0.980 | @0.9: 513/s lordo, 541/s senza protocollo (vuota 0.100 ms) (richiamo 0.937, {'ef_search': 32}) | @0.95: 408/s lordo, 426/s senza protocollo (vuota 0.100 ms) (richiamo 0.956, {'ef_search': 128})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 5950/s contro pgvector HNSW m16 efC64 1818/s -> 3.27x (lordo 3.87x)
+filtro=False @0.95: noi 3533/s contro pgvector HNSW m16 efC64 870/s -> 4.06x (lordo 4.42x)
+filtro=True @0.9: noi 2487/s contro pgvector HNSW m16 efC64 541/s -> 4.60x (lordo 4.85x)
+filtro=True @0.95: noi 1755/s contro pgvector HNSW m16 efC64 426/s -> 4.12x (lordo 4.30x)
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 4.06x (lordo 4.42x) pgvector HNSW m16 efC64 [job pgvector: noi 3533/s, loro 870/s]
+filtro=False @0.9: 3.27x (lordo 3.87x) pgvector HNSW m16 efC64 [job pgvector: noi 5950/s, loro 1818/s]
+filtro=True @0.95: 4.12x (lordo 4.30x) pgvector HNSW m16 efC64 [job pgvector: noi 1755/s, loro 426/s]
+filtro=True @0.9: 4.60x (lordo 4.85x) pgvector HNSW m16 efC64 [job pgvector: noi 2487/s, loro 541/s]
+
+===== costruzione e protocollo =====
+{"job": "pgvector", "engine": "pgvector", "config": "HNSW m16 efC64", "kind": "build", "build_s": 26.403531312942505, "load_s": 2.574125289916992, "version": "0.8.1", "sizes": ["195 MB", "196 MB"]}
+{"job": "pgvector", "engine": "pgvector", "config": "piani", "kind": "build", "iterative": true}
+{"job": "pgvector", "engine": "pgvector", "config": "domanda vuota", "kind": "build", "ovh_ms": 0.09999999999999787}

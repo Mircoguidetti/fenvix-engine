@@ -1,0 +1,5 @@
+
+===== job qdrant-sq =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.982 | @0.9: 6641/s lordo (richiamo 0.919, {'ef': 48, 'k_factor': 1}) | @0.95: 3827/s lordo (richiamo 0.951, {'ef': 96, 'k_factor': 1})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.977 | @0.9: 2941/s lordo (richiamo 0.916, {'ef': 128, 'k_factor': 2}) | @0.95: 2056/s lordo (richiamo 0.951, {'ef': 192, 'k_factor': 2})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --

@@ -1,0 +1,57 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 275s
+== noi finito in 305s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         769        5530          27        1931        7162
+Swap:           3071         151        2920
+== qdrant_bq inizio
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 104s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 114s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 124s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 134s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 144s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 154s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 164s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 174s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 184s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 194s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 204s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 214s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 224s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 234s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 244s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 254s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 264s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 274s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 284s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 294s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 304s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 314s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 324s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 334s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 344s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 354s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 364s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 374s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 384s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 394s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 404s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 414s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 424s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 434s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 444s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 454s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 464s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 474s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 484s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 494s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 504s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 514s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 524s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 534s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 544s
+qdrant bq: stato yellow indicizzati 0 punti 1000000 segmenti 2 554s
+== qdrant_bq finito in 815s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         934        4013          20        3280        6997
+Swap:           3071         200        2871

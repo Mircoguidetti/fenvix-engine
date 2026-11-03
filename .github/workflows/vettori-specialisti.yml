@@ -1,0 +1,121 @@
+# M23: la nostra ricerca per significato contro i motori specializzati (Qdrant, FAISS, usearch, hnswlib, LanceDB, pgvector).
+# Ogni job: scarica Cohere 1M (VectorDBBench), gira il nostro riferimento (faiss HNSW SQ8 + ricalcolo, M20) e uno o più
+# avversari sulla stessa macchina, fa commit solo dei risultati su questo branch. Niente segreti, niente spesa, < 120 minuti.
+name: vettori-specialisti
+on:
+  push:
+    branches: [vettori-specialisti]
+    paths: ['proto/vettori-specialisti/corsa.json']
+permissions:
+  contents: write
+jobs:
+  misura:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 118
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { job: qdrant-sq,  quali: "noi qdrant_sq",  qdrant: 1, pg: 0 }
+          - { job: qdrant-bq,  quali: "noi qdrant_bq",  qdrant: 1, pg: 0 }
+          - { job: qdrant-bq2, quali: "noi qdrant_bq2", qdrant: 1, pg: 0 }
+          - { job: faiss,      quali: "noi faiss_hnsw faiss_ivfpq", qdrant: 0, pg: 0 }
+          - { job: librerie,   quali: "noi hnswlib usearch_serie noi_usearch", qdrant: 0, pg: 0 }
+          - { job: lancedb,    quali: "noi lancedb",    qdrant: 0, pg: 0 }
+          - { job: pgvector,   quali: "noi pgvector",   qdrant: 0, pg: 1 }
+    env:
+      P: proto/vettori-specialisti
+      M20: proto/cuochi-vettori
+      DATA: /mnt/m23/dati
+      SRC: /mnt/m23/src
+    steps:
+      - uses: actions/checkout@v4
+      - name: questo job gira?
+        run: |
+          GO=$(python3 -c "import json;print('si' if '${{ matrix.job }}' in json.load(open('$P/corsa.json')).get('jobs',[]) else 'no')")
+          echo "GO=$GO" >> $GITHUB_ENV
+          echo "NQ=$(python3 -c "import json;print(json.load(open('$P/corsa.json')).get('nq',1000))")" >> $GITHUB_ENV
+          echo "job ${{ matrix.job }}: $GO"
+      - name: macchina e spazio
+        if: env.GO == 'si'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          sudo mkdir -p /mnt/m23 && sudo chown -R $USER /mnt/m23
+          RUN=$P/risultati/corsa-${{ github.run_id }}-${{ matrix.job }}
+          echo "RUN=$RUN" >> $GITHUB_ENV
+          mkdir -p $RUN
+          { echo "job ${{ matrix.job }}: ${{ matrix.quali }}"; nproc; lscpu; free -m; df -h / /mnt; python3 --version; cat $P/corsa.json; } | tee $RUN/macchina.txt
+      - name: programmi
+        if: env.GO == 'si'
+        run: |
+          pip install --quiet numpy pyarrow faiss-cpu usearch hnswlib lancedb qdrant-client "psycopg[binary]"
+          pip list 2>/dev/null | grep -i -E "^(numpy|pyarrow|faiss-cpu|usearch|hnswlib|lancedb|pylance|qdrant-client|psycopg) " | tee -a $RUN/macchina.txt
+          python3 -c "import faiss,usearch;print('faiss',faiss.get_compile_options())" | tee -a $RUN/macchina.txt
+      - name: Qdrant (binario ufficiale, ultima versione)
+        if: env.GO == 'si' && matrix.qdrant == 1
+        run: |
+          mkdir -p /mnt/m23/qd && cd /mnt/m23/qd
+          curl -fsSL --retry 3 -o qd.tgz https://github.com/qdrant/qdrant/releases/latest/download/qdrant-x86_64-unknown-linux-gnu.tar.gz
+          tar xzf qd.tgz
+          QDRANT__STORAGE__STORAGE_PATH=/mnt/m23/qd/storage QDRANT__STORAGE__SNAPSHOTS_PATH=/mnt/m23/qd/snap \
+          QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=1 QDRANT__TELEMETRY_DISABLED=true QDRANT__LOG_LEVEL=WARN \
+            nohup ./qdrant > $GITHUB_WORKSPACE/$RUN/qdrant.log 2>&1 &
+          echo "QDRANT_PID=$!" >> $GITHUB_ENV
+          sleep 5
+          curl -fsS http://127.0.0.1:6333/ | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt
+      - name: PostgreSQL 16 e pgvector 0.8.1 (dal sorgente)
+        if: env.GO == 'si' && matrix.pg == 1
+        run: |
+          sudo apt-get install -y -q postgresql-16 postgresql-server-dev-16 > /dev/null
+          git clone -q --depth 1 --branch v0.8.1 https://github.com/pgvector/pgvector.git /tmp/pgvector
+          (cd /tmp/pgvector && make -s with_llvm=no PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config && sudo make -s install with_llvm=no PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config)
+          PGBIN=/usr/lib/postgresql/16/bin
+          mkdir -p /mnt/m23/pg
+          $PGBIN/initdb -D /mnt/m23/pg/data -A trust > /dev/null
+          $PGBIN/pg_ctl -D /mnt/m23/pg/data -l $GITHUB_WORKSPACE/$RUN/pg.log -o "-c port=5433 -c unix_socket_directories=/tmp -c shared_buffers=1GB -c maintenance_work_mem=3500MB -c max_parallel_maintenance_workers=1 -c jit=off -c max_wal_size=8GB -c checkpoint_timeout=30min -c synchronous_commit=off" start
+          sleep 3
+          psql "host=/tmp port=5433 dbname=postgres" -c "select version()" | tee -a $RUN/macchina.txt
+          echo "PG_DSN=host=/tmp port=5433 dbname=postgres" >> $GITHUB_ENV
+      - name: scarica Cohere 1M
+        if: env.GO == 'si'
+        timeout-minutes: 15
+        run: |
+          mkdir -p $SRC && cd $SRC
+          get() { for t in 1 2 3 4 5 6; do curl -fsSL -C - --connect-timeout 20 --speed-limit 2000000 --speed-time 30 --max-time 900 -o "$1" "$2" && return 0; echo "riprovo $1 ($t)"; sleep 3; done; return 1; }
+          base=https://assets.zilliz.com/benchmark/cohere_medium_1m
+          get test.parquet $base/test.parquet
+          get neighbors.parquet $base/neighbors.parquet || true
+          get train.parquet $base/train.parquet
+          ls -la $SRC | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt
+      - name: prepara i dati (codice di M20)
+        if: env.GO == 'si'
+        timeout-minutes: 12
+        run: |
+          MAX=$(python3 -c "import json;print(json.load(open('$P/corsa.json')).get('max',1000000))")
+          python3 $M20/dati.py $SRC $DATA --max $MAX 2>&1 | tee $RUN/dati.txt
+          cp $DATA/meta.json $RUN/meta.json
+          rm -f $SRC/train.parquet
+          df -h /mnt
+      - name: misura
+        if: env.GO == 'si'
+        timeout-minutes: 95
+        run: |
+          set -o pipefail
+          export LANCE_PATH=/mnt/m23/lance USEARCH_SAVE=/mnt/m23/u_i8.usearch
+          for w in ${{ matrix.quali }}; do
+            python3 $P/specialisti.py $DATA $RUN/risultati.jsonl ${{ matrix.job }} $w 2>&1 | grep -v '^{' | tee -a $RUN/log.txt || echo "FALLITO $w" | tee -a $RUN/log.txt
+            free -m | tee -a $RUN/log.txt
+          done
+      - name: analisi del job
+        if: env.GO == 'si' && always()
+        run: python3 $P/analizza.py $RUN/risultati.jsonl | tee $RUN/analisi.txt || true
+      - name: commit dei risultati
+        if: env.GO == 'si' && always()
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $P/risultati
+          git commit -q -m "M23: risultati ${{ matrix.job }} corsa ${{ github.run_id }}" || exit 0
+          for i in 1 2 3 4 5 6; do git pull --rebase -q && git push -q && break; sleep $((5 * i)); done

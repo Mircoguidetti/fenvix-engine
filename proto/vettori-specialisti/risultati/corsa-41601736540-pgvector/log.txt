@@ -1,0 +1,11 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 262s
+== noi finito in 294s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         793        5518          55        1953        7139
+Swap:           3071         168        2903
+== pgvector inizio
+== pgvector finito in 3346s
+               total        used        free      shared  buff/cache   available
+Mem:            7932        1873        5240        1094        2188        6059
+Swap:           3071         196        2875

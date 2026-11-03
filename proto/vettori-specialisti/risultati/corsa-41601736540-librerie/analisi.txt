@@ -1,0 +1,27 @@
+
+===== job librerie =====
+hnswlib | M16 efC200 float32 | filtro=False | max richiamo 0.978 | @0.9: 2769/s lordo (richiamo 0.931, {'ef': 48}) | @0.95: 1605/s lordo (richiamo 0.961, {'ef': 96})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 3865/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 1849/s lordo (richiamo 0.951, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1260/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 665/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+noi (usearch) | b1+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.984 | @0.9: 884/s lordo (richiamo 0.909, {'ef': 256, 'R': 80}) | @0.95: 563/s lordo (richiamo 0.969, {'ef': 384, 'R': 320})
+noi (usearch) | i8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.980 | @0.9: 2325/s lordo (richiamo 0.918, {'ef': 48, 'R': 20}) | @0.95: 1343/s lordo (richiamo 0.955, {'ef': 96, 'R': 40})
+usearch | f16 di serie | filtro=False | max richiamo 0.979 | @0.9: 1917/s lordo (richiamo 0.918, {'ef': 48}) | @0.95: 1117/s lordo (richiamo 0.955, {'ef': 96})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 3865/s contro hnswlib M16 efC200 float32 2769/s -> 1.40x (lordo 1.40x)
+filtro=False @0.9: noi 3865/s contro usearch f16 di serie 1917/s -> 2.02x (lordo 2.02x)
+filtro=False @0.9: noi usearch b1+ricalcolo, 1 pezzo 884/s = 0.23 volte il riferimento faiss
+filtro=False @0.9: noi usearch i8+ricalcolo, 1 pezzo 2325/s = 0.60 volte il riferimento faiss
+filtro=False @0.95: noi 1849/s contro hnswlib M16 efC200 float32 1605/s -> 1.15x (lordo 1.15x)
+filtro=False @0.95: noi 1849/s contro usearch f16 di serie 1117/s -> 1.66x (lordo 1.66x)
+filtro=False @0.95: noi usearch b1+ricalcolo, 1 pezzo 563/s = 0.30 volte il riferimento faiss
+filtro=False @0.95: noi usearch i8+ricalcolo, 1 pezzo 1343/s = 0.73 volte il riferimento faiss
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 1.15x (lordo 1.15x) hnswlib M16 efC200 float32 [job librerie: noi 1849/s, loro 1605/s]
+filtro=False @0.95: 1.66x (lordo 1.66x) usearch f16 di serie [job librerie: noi 1849/s, loro 1117/s]
+filtro=False @0.9: 1.40x (lordo 1.40x) hnswlib M16 efC200 float32 [job librerie: noi 3865/s, loro 2769/s]
+filtro=False @0.9: 2.02x (lordo 2.02x) usearch f16 di serie [job librerie: noi 3865/s, loro 1917/s]
+
+===== costruzione e protocollo =====
+{"job": "librerie", "engine": "hnswlib", "config": "M16 efC200 float32", "kind": "build", "build_s": 956.0267956256866}
+{"job": "librerie", "engine": "usearch", "config": "f16 di serie", "kind": "build", "build_s": 658.1042721271515, "connectivity": 16, "expansion_add": 128, "hw": "haswell"}

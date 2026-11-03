@@ -1,0 +1,12 @@
+{
+ "source": "/mnt/m23/src",
+ "dataset": "VectorDBBench cohere_medium_1m",
+ "n": 50000,
+ "dim": 768,
+ "nq": 1000,
+ "filter_pass": 0.1009,
+ "gt_agreement_top10_vs_dataset": 0.049100000000000005,
+ "seq_095": 3000,
+ "seq_090": 3000,
+ "seconds": 13.25939393043518
+}

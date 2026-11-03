@@ -1,0 +1,6 @@
+vettori scritti {'source': '/mnt/m23/src', 'dataset': 'VectorDBBench cohere_medium_1m', 'n': 50000, 'dim': 768, 'nq': 1000} 4s
+gt 5s
+gt filtro 5s
+sequenza 095 3000 8s
+sequenza 090 3000 10s
+{"source": "/mnt/m23/src", "dataset": "VectorDBBench cohere_medium_1m", "n": 50000, "dim": 768, "nq": 1000, "filter_pass": 0.1009, "gt_agreement_top10_vs_dataset": 0.049100000000000005, "seq_095": 3000, "seq_090": 3000, "seconds": 9.511807680130005}

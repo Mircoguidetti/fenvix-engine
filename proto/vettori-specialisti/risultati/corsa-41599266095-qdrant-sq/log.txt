@@ -1,0 +1,49 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 11s
+== noi finito in 13s
+               total        used        free      shared  buff/cache   available
+Mem:            7932        1012        5958          46        1278        6919
+Swap:           3071           0        3071
+== qdrant_sq inizio
+/home/runner/.local/lib/python3.12/site-packages/qdrant_client/qdrant_remote.py:295: UserWarning: Failed to obtain server version. Unable to check client-server compatibility. Set check_compatibility=False to skip version check.
+  show_warning(
+Traceback (most recent call last):
+  File "/home/runner/work/fenvix-engine/fenvix-engine/proto/vettori-specialisti/specialisti.py", line 559, in <module>
+    main()
+  File "/home/runner/work/fenvix-engine/fenvix-engine/proto/vettori-specialisti/specialisti.py", line 550, in main
+    run_qdrant(out, base, q, gt, gtf, cat, w.split("_")[1])
+  File "/home/runner/work/fenvix-engine/fenvix-engine/proto/vettori-specialisti/specialisti.py", line 376, in run_qdrant
+    if cl.collection_exists(name):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/qdrant_client/qdrant_client.py", line 1612, in collection_exists
+    return self._client.collection_exists(collection_name=collection_name, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/qdrant_client/qdrant_remote.py", line 1934, in collection_exists
+    return self.grpc_collections.CollectionExists(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/grpc/_interceptor.py", line 276, in __call__
+    response, ignored_call = self._with_call(
+                             ^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/grpc/_interceptor.py", line 331, in _with_call
+    return call.result(), call
+           ^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/grpc/_channel.py", line 447, in result
+    raise self
+  File "/home/runner/.local/lib/python3.12/site-packages/grpc/_interceptor.py", line 314, in continuation
+    response, call = self._thunk(new_method).with_call(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/grpc/_channel.py", line 1182, in with_call
+    return _end_unary_response_blocking(state, call, True, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/.local/lib/python3.12/site-packages/grpc/_channel.py", line 999, in _end_unary_response_blocking
+    raise _InactiveRpcError(state)  # pytype: disable=not-instantiable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+grpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:
+	status = StatusCode.UNAVAILABLE
+	details = "failed to connect to all addresses; last error: UNKNOWN: ipv4:127.0.0.1:6334: Failed to connect to remote host: Connection refused"
+	debug_error_string = "UNAVAILABLE:failed to connect to all addresses; last error: UNKNOWN: ipv4:127.0.0.1:6334: Failed to connect to remote host: Connection refused"
+>
+FALLITO qdrant_sq
+               total        used        free      shared  buff/cache   available
+Mem:            7932        1022        5917          46        1308        6909
+Swap:           3071           0        3071

@@ -1,0 +1,21 @@
+
+===== job lancedb =====
+lancedb | IVF_PQ predefinito | filtro=False | max richiamo 0.977 | @0.9: 124/s lordo, 243/s senza protocollo (vuota 3.944 ms) (richiamo 0.909, {'nprobes': 5, 'refine': 10}) | @0.95: 101/s lordo, 167/s senza protocollo (vuota 3.944 ms) (richiamo 0.954, {'nprobes': 20, 'refine': 20})
+lancedb | IVF_PQ predefinito | filtro=True | max richiamo 0.977 | @0.9: 120/s lordo, 226/s senza protocollo (vuota 3.944 ms) (richiamo 0.903, {'nprobes': 20, 'refine': 10}) | @0.95: 94/s lordo, 150/s senza protocollo (vuota 3.944 ms) (richiamo 0.958, {'nprobes': 120, 'refine': 20})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.982 | @0.9: 5810/s lordo (richiamo 0.919, {'ef': 48, 'k_factor': 1}) | @0.95: 3331/s lordo (richiamo 0.951, {'ef': 96, 'k_factor': 1})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.977 | @0.9: 2507/s lordo (richiamo 0.916, {'ef': 128, 'k_factor': 2}) | @0.95: 1787/s lordo (richiamo 0.951, {'ef': 192, 'k_factor': 2})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 5810/s contro lancedb IVF_PQ predefinito 243/s -> 23.95x (lordo 46.87x)
+filtro=False @0.95: noi 3331/s contro lancedb IVF_PQ predefinito 167/s -> 19.98x (lordo 33.12x)
+filtro=True @0.9: noi 2507/s contro lancedb IVF_PQ predefinito 226/s -> 11.09x (lordo 20.98x)
+filtro=True @0.95: noi 1787/s contro lancedb IVF_PQ predefinito 150/s -> 11.95x (lordo 19.00x)
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 19.98x (lordo 33.12x) lancedb IVF_PQ predefinito [job lancedb: noi 3331/s, loro 167/s]
+filtro=False @0.9: 23.95x (lordo 46.87x) lancedb IVF_PQ predefinito [job lancedb: noi 5810/s, loro 243/s]
+filtro=True @0.95: 11.95x (lordo 19.00x) lancedb IVF_PQ predefinito [job lancedb: noi 1787/s, loro 150/s]
+filtro=True @0.9: 11.09x (lordo 20.98x) lancedb IVF_PQ predefinito [job lancedb: noi 2507/s, loro 226/s]
+
+===== costruzione e protocollo =====
+{"job": "lancedb", "engine": "lancedb", "config": "IVF_PQ predefinito", "kind": "build", "build_s": 57.713075399398804, "load_s": 0.47632837295532227, "index": "IndexStatistics(num_indexed_rows=50000, num_unindexed_rows=0, index_type='IVF_PQ', distance_type='cosine', num_indices=1)", "version": "0.41.0"}
+{"job": "lancedb", "engine": "lancedb", "config": "domanda vuota", "kind": "build", "ovh_ms": 3.9436779549999557}

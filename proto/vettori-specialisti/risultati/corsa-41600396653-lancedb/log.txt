@@ -1,0 +1,14 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 12s
+== noi finito in 15s
+               total        used        free      shared  buff/cache   available
+Mem:            7932        1002        5960          46        1286        6930
+Swap:           3071           0        3071
+== lancedb inizio
+[2026-11-03T08:05:21Z WARN  lance::dataset::write::insert] No existing dataset at /mnt/m23/lance/cohere.lance, it will be created
+[2026-11-03T08:05:22Z WARN  lance_index::vector::kmeans] KMeans: more than 10% of clusters are empty: 1 of 6.
+    Help: this could mean your dataset has many duplicate vectors.
+== lancedb finito in 204s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         870        5829          47        1550        7062
+Swap:           3071           0        3071

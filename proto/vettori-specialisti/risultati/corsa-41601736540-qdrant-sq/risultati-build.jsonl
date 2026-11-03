@@ -1,0 +1,2 @@
+{"job": "qdrant-sq", "engine": "qdrant", "config": "HNSW + int8 (scalare)", "kind": "build", "build_s": 881.9764177799225, "load_s": 98.96916890144348, "segments": 2, "version": "1.20.0", "points": 1000000, "indexed": 1000000}
+{"job": "qdrant-sq", "engine": "qdrant", "config": "HNSW + int8 (scalare) domanda vuota", "kind": "build", "ovh_ms": 0.23230255200000016, "controllo_contatori": {"schedstat_s": 0.8457806859999977, "stat_s": 0.849999999999909, "n": 1000}, "segmenti": []}

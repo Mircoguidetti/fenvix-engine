@@ -1,0 +1,2 @@
+{"job": "librerie", "engine": "hnswlib", "config": "M16 efC200 float32", "kind": "build", "build_s": 17.32428288459778}
+{"job": "librerie", "engine": "usearch", "config": "f16 di serie", "kind": "build", "build_s": 11.61618709564209, "connectivity": 16, "expansion_add": 128, "hw": "skylake"}

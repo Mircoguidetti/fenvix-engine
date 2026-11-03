@@ -1,0 +1,2 @@
+{"job": "lancedb", "engine": "lancedb", "config": "IVF_PQ predefinito", "kind": "build", "build_s": 57.713075399398804, "load_s": 0.47632837295532227, "index": "IndexStatistics(num_indexed_rows=50000, num_unindexed_rows=0, index_type='IVF_PQ', distance_type='cosine', num_indices=1)", "version": "0.41.0"}
+{"job": "lancedb", "engine": "lancedb", "config": "domanda vuota", "kind": "build", "ovh_ms": 3.9436779549999557}

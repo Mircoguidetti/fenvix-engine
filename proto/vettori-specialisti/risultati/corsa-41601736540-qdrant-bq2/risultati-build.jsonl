@@ -1,0 +1,2 @@
+{"job": "qdrant-bq2", "engine": "qdrant", "config": "HNSW + binaria 2 bit", "kind": "build", "build_s": 725.5950796604156, "load_s": 65.23326873779297, "segments": 2, "version": "1.20.0", "points": 1000000, "indexed": 1000000}
+{"job": "qdrant-bq2", "engine": "qdrant", "config": "HNSW + binaria 2 bit domanda vuota", "kind": "build", "ovh_ms": 0.3100898189999981, "controllo_contatori": {"schedstat_s": 0.8941335389999949, "stat_s": 0.8999999999998636, "n": 1000}, "segmenti": []}
