@@ -55,10 +55,10 @@ jobs:
       - name: Qdrant (binario ufficiale, ultima versione)
         if: env.GO == 'si' && matrix.qdrant == 1
         run: |
-          mkdir -p /mnt/qd && cd /mnt/qd
+          mkdir -p /mnt/m23/qd && cd /mnt/m23/qd
           curl -fsSL --retry 3 -o qd.tgz https://github.com/qdrant/qdrant/releases/latest/download/qdrant-x86_64-unknown-linux-gnu.tar.gz
           tar xzf qd.tgz
-          QDRANT__STORAGE__STORAGE_PATH=/mnt/qd/storage QDRANT__STORAGE__SNAPSHOTS_PATH=/mnt/qd/snap \
+          QDRANT__STORAGE__STORAGE_PATH=/mnt/m23/qd/storage QDRANT__STORAGE__SNAPSHOTS_PATH=/mnt/m23/qd/snap \
           QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=1 QDRANT__TELEMETRY_DISABLED=true QDRANT__LOG_LEVEL=WARN \
             nohup ./qdrant > $GITHUB_WORKSPACE/$RUN/qdrant.log 2>&1 &
           echo "QDRANT_PID=$!" >> $GITHUB_ENV
@@ -69,11 +69,11 @@ jobs:
         run: |
           sudo apt-get install -y -q postgresql-16 postgresql-server-dev-16 > /dev/null
           git clone -q --depth 1 --branch v0.8.1 https://github.com/pgvector/pgvector.git /tmp/pgvector
-          (cd /tmp/pgvector && make -s PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config && sudo make -s install PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config)
+          (cd /tmp/pgvector && make -s with_llvm=no PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config && sudo make -s install with_llvm=no PG_CONFIG=/usr/lib/postgresql/16/bin/pg_config)
           PGBIN=/usr/lib/postgresql/16/bin
-          mkdir -p /mnt/pg
-          $PGBIN/initdb -D /mnt/pg/data -A trust > /dev/null
-          $PGBIN/pg_ctl -D /mnt/pg/data -l $GITHUB_WORKSPACE/$RUN/pg.log -o "-c port=5433 -c unix_socket_directories=/tmp -c shared_buffers=1GB -c maintenance_work_mem=3500MB -c max_parallel_maintenance_workers=1 -c jit=off -c max_wal_size=8GB -c checkpoint_timeout=30min -c synchronous_commit=off" start
+          mkdir -p /mnt/m23/pg
+          $PGBIN/initdb -D /mnt/m23/pg/data -A trust > /dev/null
+          $PGBIN/pg_ctl -D /mnt/m23/pg/data -l $GITHUB_WORKSPACE/$RUN/pg.log -o "-c port=5433 -c unix_socket_directories=/tmp -c shared_buffers=1GB -c maintenance_work_mem=3500MB -c max_parallel_maintenance_workers=1 -c jit=off -c max_wal_size=8GB -c checkpoint_timeout=30min -c synchronous_commit=off" start
           sleep 3
           psql "host=/tmp port=5433 dbname=postgres" -c "select version()" | tee -a $RUN/macchina.txt
           echo "PG_DSN=host=/tmp port=5433 dbname=postgres" >> $GITHUB_ENV
@@ -102,7 +102,7 @@ jobs:
         timeout-minutes: 95
         run: |
           set -o pipefail
-          export LANCE_PATH=/mnt/lance USEARCH_SAVE=/mnt/m23/u_i8.usearch
+          export LANCE_PATH=/mnt/m23/lance USEARCH_SAVE=/mnt/m23/u_i8.usearch
           for w in ${{ matrix.quali }}; do
             python3 $P/specialisti.py $DATA $RUN/risultati.jsonl ${{ matrix.job }} $w 2>&1 | grep -v '^{' | tee -a $RUN/log.txt || echo "FALLITO $w" | tee -a $RUN/log.txt
             free -m | tee -a $RUN/log.txt

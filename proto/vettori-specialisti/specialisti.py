@@ -226,7 +226,7 @@ def run_faiss_ivfpq(out, base, q, gt, gtf, cat):
     faiss.omp_set_num_threads(1)
     sel, _keep = faiss_selector(cat)
     for filt, g in ((False, gt), (True, gtf)):
-        for kf in (2, 4, 8):
+        for kf in (4, 8, 16, 32):
             pts = [{"nprobe": n, "k_factor": kf} for n in (8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256)]
 
             def make(p, filt=filt):
