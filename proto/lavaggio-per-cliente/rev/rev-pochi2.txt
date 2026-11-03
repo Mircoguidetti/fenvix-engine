@@ -1,0 +1,7 @@
+19:35:20 inizio rev-v4-0.5gb-pochi-b
+19:49:06 misura 65536 4
+19:49:11 misura 65536 1
+19:49:16 misura 1048576 1
+19:49:21 misura 4194304 1
+19:49:27 misura 16777216 1
+19:49:27 fine
