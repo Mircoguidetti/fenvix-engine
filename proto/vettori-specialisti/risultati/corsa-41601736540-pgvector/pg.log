@@ -1,0 +1,54 @@
+2026-11-03 08:18:19.619 UTC [2392] LOG:  starting PostgreSQL 16.15 (Ubuntu 16.15-1.pgdg24.04+2) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-11-03 08:18:19.619 UTC [2392] LOG:  listening on IPv6 address "::1", port 5433
+2026-11-03 08:18:19.619 UTC [2392] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-11-03 08:18:19.620 UTC [2392] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5433"
+2026-11-03 08:18:19.628 UTC [2395] LOG:  database system was shut down at 2026-11-03 08:18:19 UTC
+2026-11-03 08:18:19.633 UTC [2392] LOG:  database system is ready to accept connections
+2026-11-03 08:33:20.097 UTC [2616] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:34:20.122 UTC [2625] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:35:20.151 UTC [2635] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:36:20.180 UTC [2641] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:37:20.210 UTC [2646] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:38:20.238 UTC [2652] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:39:20.268 UTC [2722] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:40:20.296 UTC [2730] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:41:20.327 UTC [2736] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:42:20.356 UTC [2740] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:43:20.381 UTC [2746] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:44:20.798 UTC [2757] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:45:20.430 UTC [2765] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:46:20.459 UTC [2771] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:47:20.483 UTC [2779] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:48:19.207 UTC [2393] LOG:  checkpoint starting: time
+2026-11-03 08:48:20.517 UTC [2785] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:49:20.535 UTC [2793] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:50:20.583 UTC [2801] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:51:20.606 UTC [2808] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:52:20.614 UTC [2815] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:53:20.692 UTC [2820] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:54:20.668 UTC [2832] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:55:20.702 UTC [2842] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:56:20.720 UTC [2848] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:57:20.774 UTC [2853] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:58:20.760 UTC [2857] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 08:59:20.778 UTC [2864] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:00:20.811 UTC [2871] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:01:05.712 UTC [2393] LOG:  checkpoint complete: wrote 1120 buffers (0.9%); 0 WAL file(s) added, 0 removed, 191 recycled; write=766.436 s, sync=0.026 s, total=766.595 s; sync files=106, longest=0.014 s, average=0.001 s; distance=3129773 kB, estimate=3129773 kB; lsn=0/C055AE58, redo lsn=0/C055ADF0
+2026-11-03 09:01:20.835 UTC [2875] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:02:20.979 UTC [2879] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:03:21.100 UTC [2891] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:04:20.952 UTC [2902] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:05:20.951 UTC [2915] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:06:20.966 UTC [2922] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:07:21.069 UTC [2927] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:08:21.027 UTC [2935] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:09:21.221 UTC [3007] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:10:21.099 UTC [3015] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:11:21.131 UTC [3020] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:12:21.245 UTC [3025] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:13:21.738 UTC [3033] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:14:21.550 UTC [3048] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:15:21.207 UTC [3058] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:16:21.551 UTC [3063] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:17:21.230 UTC [3070] LOG:  skipping vacuum of "items" --- lock not available
+2026-11-03 09:18:19.077 UTC [2393] LOG:  checkpoint starting: time
