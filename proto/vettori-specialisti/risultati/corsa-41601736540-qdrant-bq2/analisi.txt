@@ -1,0 +1,21 @@
+
+===== job qdrant-bq2 =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 3650/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 1621/s lordo (richiamo 0.951, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1255/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 658/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+qdrant | HNSW + binaria 2 bit | filtro=False | max richiamo 0.984 | @0.9: 1870/s lordo, 4452/s senza protocollo (vuota 0.310 ms) (richiamo 0.921, {'hnsw_ef': 16, 'oversampling': 4.0}) | @0.95: 1576/s lordo, 3083/s senza protocollo (vuota 0.310 ms) (richiamo 0.962, {'hnsw_ef': 64, 'oversampling': 8.0})
+qdrant | HNSW + binaria 2 bit | filtro=True | max richiamo 0.979 | @0.9: 1239/s lordo, 2012/s senza protocollo (vuota 0.310 ms) (richiamo 0.948, {'hnsw_ef': 24, 'oversampling': 8.0}) | @0.95: 1092/s lordo, 1652/s senza protocollo (vuota 0.310 ms) (richiamo 0.952, {'hnsw_ef': 96, 'oversampling': 8.0})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 3650/s contro qdrant HNSW + binaria 2 bit 4452/s -> 0.82x (lordo 1.95x)
+filtro=False @0.95: noi 1621/s contro qdrant HNSW + binaria 2 bit 3083/s -> 0.53x (lordo 1.03x)
+filtro=True @0.9: noi 1255/s contro qdrant HNSW + binaria 2 bit 2012/s -> 0.62x (lordo 1.01x)
+filtro=True @0.95: noi 658/s contro qdrant HNSW + binaria 2 bit 1652/s -> 0.40x (lordo 0.60x)
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 0.53x (lordo 1.03x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 1621/s, loro 3083/s]
+filtro=False @0.9: 0.82x (lordo 1.95x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 3650/s, loro 4452/s]
+filtro=True @0.95: 0.40x (lordo 0.60x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 658/s, loro 1652/s]
+filtro=True @0.9: 0.62x (lordo 1.01x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 1255/s, loro 2012/s]
+
+===== costruzione e protocollo =====
+{"job": "qdrant-bq2", "engine": "qdrant", "config": "HNSW + binaria 2 bit", "kind": "build", "build_s": 725.5950796604156, "load_s": 65.23326873779297, "segments": 2, "version": "1.20.0", "points": 1000000, "indexed": 1000000}
+{"job": "qdrant-bq2", "engine": "qdrant", "config": "HNSW + binaria 2 bit domanda vuota", "kind": "build", "ovh_ms": 0.3100898189999981, "controllo_contatori": {"schedstat_s": 0.8941335389999949, "stat_s": 0.8999999999998636, "n": 1000}, "segmenti": []}
