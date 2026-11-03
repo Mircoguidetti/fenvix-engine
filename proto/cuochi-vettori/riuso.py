@@ -9,7 +9,7 @@ Uso: python3 riuso.py <dati> <indice usearch salvato> <risultati nostri .jsonl> 
 """
 import json, sys, time
 import numpy as np
-from nostri import load, rescore
+from nostri import load, rescore, to_i8
 
 WINDOW = 60.0
 
@@ -18,7 +18,7 @@ def recall_list(res, gt):
     return [len(set(r[:10]) & set(g[:10])) / 10.0 for r, g in zip(res, gt.tolist())]
 
 
-def run(idx, base, seq, info, gt, ef, R, C, tau, use_cache, m_near=1):
+def run(idx, base, seq, info, gt, ef, R, C, tau, use_cache, m_near=1, scale=1.0):
     idx.expansion_search = ef
     cache_t, cache_v, cache_c, cache_r = [], [], [], []
     res, kinds = [], []
@@ -40,7 +40,7 @@ def run(idx, base, seq, info, gt, ef, R, C, tau, use_cache, m_near=1):
                     near = near[np.argsort(-sims[near])[:m_near]]
                     cand = np.unique(np.concatenate([cache_c[k] for k in near]))
                     res.append(rescore(base, q, cand)); kinds.append("vicina"); continue
-        m = idx.search(q, max(R, C), threads=1, exact=False)
+        m = idx.search(to_i8(q, scale), max(R, C), threads=1, exact=False)
         keys = m.keys.astype(np.int64)
         r = rescore(base, q, keys[:R])
         res.append(r); kinds.append(hit)
@@ -80,6 +80,7 @@ def main():
     ef, R = best["params"]["ef"], best["params"]["R"]
     print("configurazione di partenza", best, flush=True)
     idx = Index.restore(ipath)
+    scale = json.load(open(ipath + ".json"))["scale"]
     d = meta["dim"]
     with open(out, "a") as f:
         for tag in ("095", "090"):
@@ -88,13 +89,13 @@ def main():
             sgt = np.fromfile(f"{dd}/seq_{tag}_gt.i32", dtype=np.int32).reshape(-1, 100)
             for scen, (s, inf, g) in (("tutte", (seq, info, sgt)), ("dopo cache app", drop_app_cache(seq, info, sgt))):
                 # riscaldamento
-                run(idx, base, s[:300], inf[:300], g[:300], ef, R, R, 0.95, False)
-                b = run(idx, base, s, inf, g, ef, R, R, 1.1, False)
+                run(idx, base, s[:300], inf[:300], g[:300], ef, R, R, 0.95, False, 1, scale)
+                b = run(idx, base, s, inf, g, ef, R, R, 1.1, False, 1, scale)
                 b.update({"seq": tag, "scenario": scen, "variant": "senza riuso", "ef": ef, "R": R})
                 print(json.dumps(b), flush=True); f.write(json.dumps(b) + "\n")
                 for C, mn in ((R, 1), (50, 1), (100, 1), (50, 3)):
                     for tau in (0.98, 0.95, 0.92, 0.90, 0.88, 0.85, 0.80):
-                        x = run(idx, base, s, inf, g, ef, R, C, tau, True, mn)
+                        x = run(idx, base, s, inf, g, ef, R, C, tau, True, mn, scale)
                         x.update({"seq": tag, "scenario": scen, "variant": "riuso", "tau": tau, "C": C, "m_near": mn,
                                   "ef": ef, "R": R, "speedup_cpu": b["cpu_s"] / x["cpu_s"]})
                         print(json.dumps(x), flush=True); f.write(json.dumps(x) + "\n")

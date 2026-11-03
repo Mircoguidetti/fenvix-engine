@@ -194,7 +194,7 @@ public class Bench {
         rows.add(new double[] {nc, m[0], m[1], m[2]});
         System.out.printf("%s seg=%d filtro=%s ricalcolo=%s nc=%d recall=%.4f qps_cpu=%.1f qps_wall=%.1f%n",
             label, segs, filter, rescore, nc, m[0], m[1], m[2]);
-        if (m[0] >= 0.985) break;
+        if (m[0] >= 0.975) break;
         if (rows.size() >= 2 && nc >= 400 && m[0] - rows.get(rows.size() - 2)[1] < 0.002) break; // piatto
       }
       // rimisura dei punti decisivi (0,90 e 0,95): due giri in più, si tiene il migliore

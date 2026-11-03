@@ -36,7 +36,7 @@ jobs:
           python3 -c "import faiss,usearch;print('faiss',faiss.__version__,faiss.get_compile_options());print('usearch',usearch.__version__)" | tee -a $RUN/macchina.txt
           (cd $P/lucene && mvn -q -B package -DskipTests && ls target target/lib) | tee -a $RUN/macchina.txt
       - name: scarica Cohere 1M
-        timeout-minutes: 30
+        timeout-minutes: 15
         run: |
           mkdir -p $SRC && cd $SRC
           get() { for t in 1 2 3 4 5 6; do curl -fsSL -C - --connect-timeout 20 --speed-limit 2000000 --speed-time 30 --max-time 900 -o "$1" "$2" && return 0; echo "riprovo $1 ($t)"; sleep 3; done; return 1; }
@@ -59,6 +59,7 @@ jobs:
           fi
           ls -la $SRC | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt
       - name: prepara i dati
+        timeout-minutes: 12
         run: |
           MAX=$(python3 -c "import json;print(json.load(open('$P/corsa.json')).get('max',1000000))")
           python3 $P/dati.py $SRC $DATA --max $MAX 2>&1 | tee $RUN/dati.txt
@@ -66,18 +67,29 @@ jobs:
           rm -f $SRC/train.parquet $SRC/shuffle_train.parquet $SRC/hf-*.parquet
           df -h /mnt
       - name: Lucene int8 (7 bit), 8 segmenti poi 1
+        if: ${{ !cancelled() }}
+        timeout-minutes: 40
         run: |
           set -o pipefail
           CP="$P/lucene/target/classes:$P/lucene/target/lib/*"
           J="java -Xmx3g --add-modules=jdk.incubator.vector -cp $CP fenvix.Bench"
           L=$RUN/lucene-int8.txt
           $J build $DATA $IDX/int8 int8 8 2>&1 | tee -a $L
-          for f in 0 1; do for r in 0 1; do $J search $DATA $IDX/int8 "int8" $f $r $RUN/risultati.jsonl 2>&1 | tee -a $L; done; done
+          for fr in "0 0" "0 1" "1 1"; do $J search $DATA $IDX/int8 "int8" $fr $RUN/risultati.jsonl 2>&1 | tee -a $L; done
           $J merge $IDX/int8 int8 2>&1 | tee -a $L
-          for f in 0 1; do for r in 0 1; do $J search $DATA $IDX/int8 "int8" $f $r $RUN/risultati.jsonl 2>&1 | tee -a $L; done; done
+          for fr in "0 0" "0 1" "1 1"; do $J search $DATA $IDX/int8 "int8" $fr $RUN/risultati.jsonl 2>&1 | tee -a $L; done
           du -sh $IDX/int8 | tee -a $L
           rm -rf $IDX/int8
+      - name: le nostre leve 1 e 2
+        if: ${{ !cancelled() }}
+        timeout-minutes: 30
+        run: |
+          set -o pipefail
+          cd $P
+          USEARCH_SAVE=$IDX/u_i8.usearch python3 nostri.py $DATA $GITHUB_WORKSPACE/$RUN/risultati.jsonl usearch_i8 usearch_b1 usearch_i8_8pezzi faiss_sq8 2>&1 | grep -v '^{' | tee $GITHUB_WORKSPACE/$RUN/nostri.txt
       - name: Lucene binario (BBQ 1 bit) più ricalcolo, 8 segmenti poi 1
+        if: ${{ !cancelled() }}
+        timeout-minutes: 25
         run: |
           set -o pipefail
           CP="$P/lucene/target/classes:$P/lucene/target/lib/*"
@@ -89,12 +101,9 @@ jobs:
           for f in 0 1; do $J search $DATA $IDX/bin "bin" $f 1 $RUN/risultati.jsonl 2>&1 | tee -a $L; done
           du -sh $IDX/bin | tee -a $L
           rm -rf $IDX/bin
-      - name: le nostre leve 1 e 2
-        run: |
-          set -o pipefail
-          cd $P
-          USEARCH_SAVE=$IDX/u_i8.usearch python3 nostri.py $DATA $GITHUB_WORKSPACE/$RUN/risultati.jsonl usearch_i8 usearch_b1 usearch_i8_8pezzi faiss_sq8 2>&1 | grep -v '^{' | tee $GITHUB_WORKSPACE/$RUN/nostri.txt
       - name: leva 3, riuso
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
         run: |
           set -o pipefail
           cd $P

@@ -45,7 +45,7 @@ def timed(fn, queries):
     return res, time.thread_time() - c0, time.perf_counter() - w0
 
 
-def sweep(out, engine, config, points, make_fn, queries, gt, filt, extra=None, stop_at=0.985):
+def sweep(out, engine, config, points, make_fn, queries, gt, filt, extra=None, stop_at=0.975):
     """points: lista di parametri (dict). Riscaldamento sul primo, poi una passata per punto;
     i punti sopra 0,90 e 0,95 rimisurati 2 volte (si tiene il più veloce)."""
     fn = make_fn(points[0])
@@ -83,7 +83,21 @@ def sweep(out, engine, config, points, make_fn, queries, gt, filt, extra=None, s
 
 # ---------------- usearch ----------------
 
-def build_usearch(base, dtype, keys_from=0, n=None, threads=2):
+def i8_scale(base):
+    """Scala globale per int8 fatta da noi. Se si danno float a usearch con dtype i8, usearch li normalizza
+    e moltiplica per 127: con 768 dimensioni le componenti (~0,04) diventano interi da 0 a 5, quasi tutto perso.
+    Quindi quantizzo io: q = round(x * scala), scala = 127 / quantile 99,99% di |x|, uguale per base e domande
+    (stessa scala per tutti: l'ordine del prodotto scalare non cambia)."""
+    rng = np.random.default_rng(7)
+    smp = np.asarray(base[np.sort(rng.choice(base.shape[0], min(20000, base.shape[0]), replace=False))])
+    return float(127.0 / np.quantile(np.abs(smp), 0.9999))
+
+
+def to_i8(x, scale):
+    return np.clip(np.rint(np.asarray(x) * scale), -127, 127).astype(np.int8)
+
+
+def build_usearch(base, dtype, keys_from=0, n=None, threads=2, scale=1.0):
     from usearch.index import Index
     n = base.shape[0] if n is None else n
     d = base.shape[1]
@@ -98,23 +112,27 @@ def build_usearch(base, dtype, keys_from=0, n=None, threads=2):
         x = np.asarray(base[s:e])
         if dtype == "b1":
             x = np.packbits(x > 0, axis=1)
+        elif dtype == "i8":
+            x = to_i8(x, scale)
         idx.add(np.arange(s, e, dtype=np.uint64), x, threads=threads)
     return idx, time.time() - t0
 
 
 def run_usearch(out, base, q, gt, dtype, save=None):
-    idx, bt = build_usearch(base, dtype)
-    print(f"usearch {dtype} costruito in {bt:.0f}s, hw={idx.hardware_acceleration}", flush=True)
+    scale = i8_scale(base) if dtype == "i8" else 1.0
+    idx, bt = build_usearch(base, dtype, scale=scale)
+    print(f"usearch {dtype} costruito in {bt:.0f}s, hw={idx.hardware_acceleration}, scala={scale:.2f}", flush=True)
     if save:
         idx.save(save)
+        json.dump({"scale": scale}, open(save + ".json", "w"))
     if dtype == "b1":
         qq = np.packbits(q > 0, axis=1)
-        efs = [32, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536]
-        rs = [40, 80, 160, 320, 640]
+        efs = [64, 128, 256, 384, 512, 768, 1024]
+        rs = [80, 160, 320, 640]
     else:
-        qq = q
+        qq = to_i8(q, scale)
         efs = [16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512]
-        rs = [10, 20, 40, 80]
+        rs = [10, 20, 40]
     points = [{"ef": ef, "R": r} for ef in efs for r in rs if r <= max(ef, 10)]
     # ordino per costo atteso, così lo stop a 0,985 ha senso per ogni R
     rows = []
@@ -141,14 +159,16 @@ def run_usearch_pieces(out, base, q, gt, pieces=8):
     n = base.shape[0]
     per = n // pieces
     idxs, bt = [], 0.0
+    scale = i8_scale(base)
+    qs = to_i8(q, scale)
     for p in range(pieces):
-        ix, t = build_usearch(base, "i8", keys_from=p * per, n=per if p < pieces - 1 else n - p * per)
+        ix, t = build_usearch(base, "i8", keys_from=p * per, n=per if p < pieces - 1 else n - p * per, scale=scale)
         idxs.append(ix)
         bt += t
     print(f"usearch i8 in {pieces} pezzi costruito in {bt:.0f}s", flush=True)
     efs = [16, 24, 32, 48, 64, 96, 128, 192, 256]
     rows = []
-    for r in (10, 20, 40):
+    for r in (10, 20):
         pts = [{"ef": ef, "R": r} for ef in efs if r <= max(ef, 10)]
 
         def make(p):
@@ -159,7 +179,7 @@ def run_usearch_pieces(out, base, q, gt, pieces=8):
             def fn(i):
                 ks, ds = [], []
                 for ix in idxs:
-                    m = ix.search(q[i], R, threads=1, exact=False)
+                    m = ix.search(qs[i], R, threads=1, exact=False)
                     ks.append(m.keys)
                     ds.append(m.distances)
                 ks = np.concatenate(ks).astype(np.int64)
@@ -203,7 +223,7 @@ def run_faiss(out, base, q, gt, gtf, cat, do_filter):
         sel = faiss.IDSelectorBitmap(len(mask), faiss.swig_ptr(bitmap))
     cases = [(False, gt)] + ([(True, gtf)] if do_filter else [])
     for filt, g in cases:
-        for kf in (1, 2, 4, 8):
+        for kf in ((1, 2) if not filt else (2,)):
             efs = [16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024]
             pts = [{"ef": ef, "k_factor": kf} for ef in efs if ef >= 10 * kf or ef >= 64]
 

@@ -60,4 +60,9 @@ Questo file non si cambia dopo la prima misura. Se una scelta cambia, la scrivo 
 
 ## Cambi dopo la prima misura
 
-(nessuno per ora)
+Scritti dopo le corse di prova da 50.000 vettori (solo per provare i programmi) e PRIMA della corsa vera da 1 milione.
+
+1. int8 di Lucene: in Lucene 10.4 il formato `Lucene99HnswScalarQuantizedVectorsFormat` sta nei codec vecchi e non sa più scrivere ("Old codecs may only be used for reading", letto nel sorgente di Lucene 10.4.0); mongot lo riscrive con codice suo che non posso compilare. Uso il formato nuovo di Lucene 10.4, `Lucene104HnswScalarQuantizedVectorsFormat` con `SEVEN_BIT` (stessi 7 bit, quantizzazione più nuova e più precisa): favorisce Lucene, quindi è prudente per noi.
+2. usearch int8: se gli si danno float, usearch li normalizza e li moltiplica per 127, e con 768 dimensioni resta quasi niente (richiamo fermo a circa 0,79, MISURATO sulla prova). Quantizzo io, con una scala unica per tutti i vettori (127 / quantile 99,99% dei valori). È parte della leva 2, non un trucco: l'ordine del prodotto scalare non cambia.
+3. Per stare sotto i 120 minuti: Lucene int8 con filtro solo con ricalcolo (era il migliore sulla prova); i giri si fermano a richiamo 0,975 invece di 0,985 (a noi servono 0,90 e 0,95); meno combinazioni per faiss, per usearch a 8 pezzi e per il binario.
+4. Faiss con filtro: solo k_factor 2.

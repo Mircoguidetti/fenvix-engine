@@ -87,7 +87,7 @@ def brute_topk(base, queries, k=100, mask=None, block=100_000):
     return np.take_along_axis(best_i, order, axis=1).astype(np.int32)
 
 
-def gt_chunks(base, queries, mask=None, chunk=500):
+def gt_chunks(base, queries, mask=None, chunk=1000):
     out = []
     for s in range(0, len(queries), chunk):
         out.append(brute_topk(base, queries[s:s + chunk], mask=mask))
