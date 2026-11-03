@@ -1240,19 +1240,24 @@ pub(crate) async fn compact_tenant_pass(
     COMPACTED.lock().unwrap().insert(id.to_string());
     COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
     // Before the writer switches to the new manifest, its cache gets the new blocks that replace the ones it had (`warm.rs`).
-    // Bounded: past `COMPACTION_WARM_SECS` (or on an error) the pass goes on and the reads not warmed miss, as without it.
+    // Bounded: past `COMPACTION_WARM_MS` the warm-up stops where it is (what it read stays in the cache, its reader is
+    // closed) and the writer switches anyway; on an error the reads not warmed miss, as without it.
     let mut consumed = Vec::new();
     if let Some((cache, scope, before)) = &warm_from {
-        let limit = Duration::from_secs(crate::warm::COMPACTION_WARM_SECS.load(std::sync::atomic::Ordering::Relaxed));
-        match tokio::time::timeout(limit, crate::warm::warm_compaction_output(&cleanup_store, &tenant_path(id), cache, *scope, before)).await {
-            Ok(Ok((c, _rec))) => consumed = c,
-            Ok(Err(e)) => {
+        let limit = Duration::from_millis(crate::warm::COMPACTION_WARM_MS.load(std::sync::atomic::Ordering::Relaxed));
+        match crate::warm::warm_compaction_output(&cleanup_store, &tenant_path(id), cache, *scope, before, limit).await {
+            Ok((c, rec)) => {
+                consumed = c;
+                if rec.timed_out {
+                    eprintln!(
+                        "compaction warm-up of tenant {id}: stopped after {limit:?} ({} of {} reads done; reader open at {:.2} s, hot keys at {:.2} s, plan at {:.2} s)",
+                        rec.calls_done, rec.calls, rec.secs_open, rec.secs_hot, rec.secs_plan
+                    );
+                }
+            }
+            Err(e) => {
                 crate::warm::WARM_FAILS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 eprintln!("compaction warm-up of tenant {id}: {e}");
-            }
-            Err(_) => {
-                crate::warm::WARM_FAILS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                eprintln!("compaction warm-up of tenant {id}: timed out after {limit:?}");
             }
         }
     }

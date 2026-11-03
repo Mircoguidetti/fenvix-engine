@@ -29,9 +29,25 @@ no cache at all. Measured (`warm::tests::hot_reads_stay_in_cache_after_compactio
    `warm_sst(index, filters, data runs)`. The entries land under the writer's scope.
 4. The writer refreshes its manifest (as before) and the consumed SSTs are evicted from its cache.
 
-Bounded by `--compaction-warm-secs` (20); `--compaction-warm false` turns it off. Counters in `tenantStats`
+`--compaction-warm false` turns it off. Counters in `tenantStats`
 (`maintenance.compactionWarm`). After the fix the same test measures **100%** after the first pass and **99.2%** after a
 second pass (65.2% without); cold keys stay cold (0/400 served), so only what was hot is loaded.
+
+## Bounds (C9)
+
+The C8 review measured the first version on a 200 MB database (200,000 keys of 1 KB, 2% hot keys spread out) with every
+GET 20 ms slower: 45.5% of the hot reads served after the pass, and the pass 22.3 s instead of 2.4 s, because slatedb's
+`warm_sst` reads the ranges of one call one after the other and there were at most 8 calls (one per SST). Now:
+
+* **Parallel:** 2 ranges per `warm_sst` call, `--compaction-warm-concurrency` calls in flight (128). The new SSTs'
+  indexes are read in parallel too, and in place (no copy of an index).
+* **One short time limit:** `--compaction-warm-ms` (3000) covers the whole warm-up. Past it the warm-up stops where it is
+  (the blocks already read stay in the cache), its `DbReader` is closed, and the writer switches to the new manifest
+  anyway. Counted in `compactionWarm.timeouts`; `compactionWarm.readersOpen` must be 0 between passes.
+* **A part instead of none:** at most `--compaction-warm-max-key-mb` (32) MB of hot keys are kept (copied out of their
+  blocks) and at most 200,000 ranges read; past a cap the rest is not warmed (`compactionWarm.truncated`), the pass goes on.
+
+Test: `warm::tests::big_db_slow_store` (ignored by default, run with `--ignored`).
 
 ## Limits
 

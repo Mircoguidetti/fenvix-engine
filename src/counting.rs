@@ -329,6 +329,10 @@ impl fmt::Display for CountingStore {
     }
 }
 
+/// Tests only: latency added to every GET, as a crude S3 (`warm.rs`, C8/C9).
+#[cfg(test)]
+pub static TEST_GET_DELAY_MS: AtomicU64 = AtomicU64::new(0);
+
 #[async_trait]
 impl ObjectStore for CountingStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
@@ -362,6 +366,13 @@ impl ObjectStore for CountingStore {
     }
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
+        #[cfg(test)]
+        {
+            let d = TEST_GET_DELAY_MS.load(Relaxed);
+            if d > 0 {
+                tokio::time::sleep(std::time::Duration::from_millis(d)).await;
+            }
+        }
         let counter = if options.head {
             &self.counters.head
         } else if options.range.is_some() {
