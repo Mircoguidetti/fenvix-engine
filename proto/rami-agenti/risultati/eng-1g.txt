@@ -1,0 +1,56 @@
+{
+ "docs": 1000000,
+ "size": 1000,
+ "n": 50,
+ "pausa_s": 30,
+ "cmd": "--listen 127.0.0.1:27100 --admin-listen 127.0.0.1:27101 --store local --local-dir /home/claude/engstore --idle-secs 3600 --no-ttl --holder m22",
+ "padre_byte_su_disco": 1159963888,
+ "processo_base_pss_mb": 17.46484375,
+ "fork_ms": {
+  "n": 50,
+  "min": 9.103542000048037,
+  "mediana": 11.367733999918528,
+  "p90": 13.059270999974615,
+  "max": 18.085048000102688,
+  "media": 11.45582579998063
+ },
+ "fork_piu_prima_lettura_ms": {
+  "n": 50,
+  "min": 15.824339000118925,
+  "mediana": 19.80485749993477,
+  "p90": 23.603890000003958,
+  "max": 28.287235000107103,
+  "media": 20.12802319999537
+ },
+ "aperti_processo_pss_mb": 130.1220703125,
+ "aperti_processo_rss_mb": 132.08984375,
+ "aperti_pss_per_ramo_mb": 2.25314453125,
+ "aperti_prima_lettura_dopo_pausa_ms": {
+  "n": 50,
+  "min": 1.2155740000707738,
+  "mediana": 4.120335000038722,
+  "p90": 5.5564140000115,
+  "max": 7.109773000138375,
+  "media": 4.097508880013265
+ },
+ "chiusi_processo_pss_mb": 120.2236328125,
+ "chiusi_pss_per_ramo_mb": 2.05517578125,
+ "aperti_meno_chiusi_per_ramo_mb": 0.19796875,
+ "chiusi_risveglio_ms_cache_fredda": {
+  "n": 50,
+  "min": 5.778325000164841,
+  "mediana": 10.552134000022306,
+  "p90": 16.513025999984166,
+  "max": 34.96918500013635,
+  "media": 11.827669719996265
+ },
+ "spazio_rami_byte": 2312136,
+ "butta_ramo_ms": {
+  "n": 50,
+  "min": 8.406244000070728,
+  "mediana": 10.968618500101002,
+  "p90": 13.585688000148366,
+  "max": 14.294393999989552,
+  "media": 11.251369019992126
+ }
+}

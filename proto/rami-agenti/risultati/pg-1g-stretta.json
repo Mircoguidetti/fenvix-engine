@@ -1,0 +1,402 @@
+{
+ "base": "/mnt/rami/base1",
+ "n": 50,
+ "letture": 100,
+ "scritture": 20,
+ "conf": "stretta",
+ "config": {
+  "shared_buffers": "16MB",
+  "max_connections": "20",
+  "autovacuum_max_workers": "1"
+ },
+ "pausa_s": 30,
+ "postgres": "postgres (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+ "creazione": {
+  "istantanea_ms": {
+   "n": 50,
+   "min": 8.19631699994261,
+   "mediana": 14.880962999995972,
+   "p90": 21.048555999982455,
+   "max": 29.6602979999534,
+   "media": 15.50462386000163
+  },
+  "pronto_ms": {
+   "n": 50,
+   "min": 71.65596999993795,
+   "mediana": 101.27733349997925,
+   "p90": 125.59748500007117,
+   "max": 180.01340099999652,
+   "media": 102.4130698399972
+  },
+  "prima_lettura_ms": {
+   "n": 50,
+   "min": 74.58181300000888,
+   "mediana": 104.35251050000716,
+   "p90": 129.20502600002237,
+   "max": 186.98832500001572,
+   "media": 106.45802997999454
+  }
+ },
+ "creazione_grezzi": [
+  {
+   "istantanea_ms": 29.6602979999534,
+   "pronto_ms": 180.01340099999652,
+   "prima_lettura_ms": 186.98832500001572
+  },
+  {
+   "istantanea_ms": 10.57280100008029,
+   "pronto_ms": 126.79373500009206,
+   "prima_lettura_ms": 136.94959700001164
+  },
+  {
+   "istantanea_ms": 14.866510999922866,
+   "pronto_ms": 91.41547599995192,
+   "prima_lettura_ms": 93.77310399997896
+  },
+  {
+   "istantanea_ms": 11.964988000045196,
+   "pronto_ms": 102.66536599999654,
+   "prima_lettura_ms": 111.539257000004
+  },
+  {
+   "istantanea_ms": 16.089384999986578,
+   "pronto_ms": 109.41128199999639,
+   "prima_lettura_ms": 112.40578600006756
+  },
+  {
+   "istantanea_ms": 11.618945999998687,
+   "pronto_ms": 99.11056700002518,
+   "prima_lettura_ms": 101.10978599993814
+  },
+  {
+   "istantanea_ms": 14.503861999969558,
+   "pronto_ms": 116.06914899994081,
+   "prima_lettura_ms": 118.60870900000009
+  },
+  {
+   "istantanea_ms": 11.892184999965139,
+   "pronto_ms": 96.02159300004587,
+   "prima_lettura_ms": 99.85213300001305
+  },
+  {
+   "istantanea_ms": 16.157547000034356,
+   "pronto_ms": 147.56393400000434,
+   "prima_lettura_ms": 151.19224299996858
+  },
+  {
+   "istantanea_ms": 12.896277000095324,
+   "pronto_ms": 107.39277700008643,
+   "prima_lettura_ms": 110.1022100000364
+  },
+  {
+   "istantanea_ms": 11.062983999977405,
+   "pronto_ms": 109.01315199998862,
+   "prima_lettura_ms": 118.72123199998441
+  },
+  {
+   "istantanea_ms": 16.013917000009315,
+   "pronto_ms": 107.90587500002857,
+   "prima_lettura_ms": 110.08758499997384
+  },
+  {
+   "istantanea_ms": 8.845419000067523,
+   "pronto_ms": 90.79785300002641,
+   "prima_lettura_ms": 97.87699200001043
+  },
+  {
+   "istantanea_ms": 12.000733000036234,
+   "pronto_ms": 108.17120100000466,
+   "prima_lettura_ms": 115.75547500001448
+  },
+  {
+   "istantanea_ms": 16.42113600007633,
+   "pronto_ms": 125.59748500007117,
+   "prima_lettura_ms": 128.23713400007364
+  },
+  {
+   "istantanea_ms": 12.016080999956102,
+   "pronto_ms": 88.44698500001869,
+   "prima_lettura_ms": 93.97155999999995
+  },
+  {
+   "istantanea_ms": 14.391689000035512,
+   "pronto_ms": 93.94992000000002,
+   "prima_lettura_ms": 95.90080200007378
+  },
+  {
+   "istantanea_ms": 9.035823999965942,
+   "pronto_ms": 78.06777200005399,
+   "prima_lettura_ms": 79.80475199997272
+  },
+  {
+   "istantanea_ms": 14.337417999968238,
+   "pronto_ms": 108.13309000002391,
+   "prima_lettura_ms": 115.06033500006652
+  },
+  {
+   "istantanea_ms": 10.500030999992305,
+   "pronto_ms": 92.0973029999459,
+   "prima_lettura_ms": 97.05181399999674
+  },
+  {
+   "istantanea_ms": 14.431009999952948,
+   "pronto_ms": 93.71824199990897,
+   "prima_lettura_ms": 95.77618099990559
+  },
+  {
+   "istantanea_ms": 18.065328000034242,
+   "pronto_ms": 122.14355399999022,
+   "prima_lettura_ms": 123.93714899997121
+  },
+  {
+   "istantanea_ms": 17.85569100002249,
+   "pronto_ms": 117.5654050000503,
+   "prima_lettura_ms": 122.29166600002372
+  },
+  {
+   "istantanea_ms": 17.1583470000769,
+   "pronto_ms": 80.12804500003767,
+   "prima_lettura_ms": 83.37467900003048
+  },
+  {
+   "istantanea_ms": 21.048555999982455,
+   "pronto_ms": 111.83187599999656,
+   "prima_lettura_ms": 113.63136999989365
+  },
+  {
+   "istantanea_ms": 11.036852999950497,
+   "pronto_ms": 82.81469299993205,
+   "prima_lettura_ms": 94.98997999992298
+  },
+  {
+   "istantanea_ms": 11.727375999953438,
+   "pronto_ms": 104.09945799995057,
+   "prima_lettura_ms": 105.8951850000085
+  },
+  {
+   "istantanea_ms": 18.04272200001833,
+   "pronto_ms": 123.98301099995024,
+   "prima_lettura_ms": 129.20502600002237
+  },
+  {
+   "istantanea_ms": 8.19631699994261,
+   "pronto_ms": 100.65214499991271,
+   "prima_lettura_ms": 102.46281299998827
+  },
+  {
+   "istantanea_ms": 19.54505000003337,
+   "pronto_ms": 131.15663500002483,
+   "prima_lettura_ms": 133.23266099996545
+  },
+  {
+   "istantanea_ms": 17.318294999995487,
+   "pronto_ms": 95.20050799994806,
+   "prima_lettura_ms": 105.16592299995864
+  },
+  {
+   "istantanea_ms": 19.68502099998659,
+   "pronto_ms": 112.32310599996254,
+   "prima_lettura_ms": 115.26482600004329
+  },
+  {
+   "istantanea_ms": 12.515407000023515,
+   "pronto_ms": 76.6856390000612,
+   "prima_lettura_ms": 78.60193999999865
+  },
+  {
+   "istantanea_ms": 18.261844999983623,
+   "pronto_ms": 94.87135099993793,
+   "prima_lettura_ms": 99.58936399993945
+  },
+  {
+   "istantanea_ms": 21.220770000013545,
+   "pronto_ms": 94.2144890000236,
+   "prima_lettura_ms": 96.98546499998884
+  },
+  {
+   "istantanea_ms": 17.555959999981496,
+   "pronto_ms": 109.69760900002257,
+   "prima_lettura_ms": 113.4823070000266
+  },
+  {
+   "istantanea_ms": 12.640482000051634,
+   "pronto_ms": 92.19391500005258,
+   "prima_lettura_ms": 95.45588399998906
+  },
+  {
+   "istantanea_ms": 17.611284000054184,
+   "pronto_ms": 115.77327099996637,
+   "prima_lettura_ms": 120.63576900004591
+  },
+  {
+   "istantanea_ms": 22.886717000005774,
+   "pronto_ms": 108.04165199999716,
+   "prima_lettura_ms": 109.91108099995017
+  },
+  {
+   "istantanea_ms": 22.24685999999565,
+   "pronto_ms": 104.3896929999164,
+   "prima_lettura_ms": 106.12383499994849
+  },
+  {
+   "istantanea_ms": 14.336685999978727,
+   "pronto_ms": 101.90252200004579,
+   "prima_lettura_ms": 103.53909800005567
+  },
+  {
+   "istantanea_ms": 16.860254999983226,
+   "pronto_ms": 84.36294499995256,
+   "prima_lettura_ms": 87.45859299995118
+  },
+  {
+   "istantanea_ms": 11.533681999935652,
+   "pronto_ms": 72.96610399998826,
+   "prima_lettura_ms": 74.58181300000888
+  },
+  {
+   "istantanea_ms": 18.298891999961597,
+   "pronto_ms": 98.91543900005217,
+   "prima_lettura_ms": 100.5304980000119
+  },
+  {
+   "istantanea_ms": 19.845769999960794,
+   "pronto_ms": 91.48660299990752,
+   "prima_lettura_ms": 94.85434699990947
+  },
+  {
+   "istantanea_ms": 14.895415000069079,
+   "pronto_ms": 77.27897900008429,
+   "prima_lettura_ms": 81.13320000006752
+  },
+  {
+   "istantanea_ms": 14.076079000005848,
+   "pronto_ms": 89.89174700002422,
+   "prima_lettura_ms": 93.64305099995818
+  },
+  {
+   "istantanea_ms": 13.958729000023595,
+   "pronto_ms": 75.76137199998811,
+   "prima_lettura_ms": 80.93235399996956
+  },
+  {
+   "istantanea_ms": 19.165786000030494,
+   "pronto_ms": 106.30959799993889,
+   "prima_lettura_ms": 108.83235599999352
+  },
+  {
+   "istantanea_ms": 18.361975999937385,
+   "pronto_ms": 71.65596999993795,
+   "prima_lettura_ms": 76.3942539999789
+  }
+ ],
+ "fermo_acceso_mem": {
+  "rss_kb": {
+   "n": 50,
+   "min": 70.9921875,
+   "mediana": 72.41796875,
+   "p90": 73.0703125,
+   "max": 73.14453125,
+   "media": 72.493515625
+  },
+  "pss_kb": {
+   "n": 50,
+   "min": 11.9248046875,
+   "mediana": 11.97314453125,
+   "p90": 12.0068359375,
+   "max": 12.0224609375,
+   "media": 11.9752734375
+  },
+  "pss_anon_kb": {
+   "n": 50,
+   "min": 5.7177734375,
+   "mediana": 5.7431640625,
+   "p90": 5.75,
+   "max": 5.75,
+   "media": 5.7403125
+  },
+  "pss_shmem_kb": {
+   "n": 50,
+   "min": 5.798828125,
+   "mediana": 5.853515625,
+   "p90": 5.8701171875,
+   "max": 5.900390625,
+   "media": 5.8501953125
+  },
+  "pss_file_kb": {
+   "n": 50,
+   "min": 0.3681640625,
+   "mediana": 0.37744140625,
+   "p90": 0.390625,
+   "max": 0.4033203125,
+   "media": 0.37939453125
+  },
+  "processi": {
+   "n": 50,
+   "min": 7.0,
+   "mediana": 7.0,
+   "p90": 7.0,
+   "max": 7.0,
+   "media": 7.0
+  },
+  "unita": "MB per istanza (processi: numero)"
+ },
+ "sistema_memavailable_calo_mb": -619.6484375,
+ "sistema_calo_per_istanza_mb": -12.39296875,
+ "fermo_acceso_prima_lettura_ms": {
+  "n": 50,
+  "min": 0.2368939999541908,
+  "mediana": 0.34596400001873917,
+  "p90": 0.4143330000943024,
+  "max": 0.9492840000575598,
+  "media": 0.36055368001143506
+ },
+ "sospeso_mem_pss_mb": {
+  "n": 50,
+  "min": 11.9443359375,
+  "mediana": 11.99609375,
+  "p90": 12.0263671875,
+  "max": 12.0419921875,
+  "media": 11.9958984375
+ },
+ "sospeso_risveglio_ms": {
+  "n": 50,
+  "min": 0.3958089999969161,
+  "mediana": 1.1218499999472442,
+  "p90": 7.178540000040812,
+  "max": 12.813260000029913,
+  "media": 2.6128398000014386
+ },
+ "spento_memavailable_calo_mb": -1344.89453125,
+ "spento_risveglio_cache_calda_ms": {
+  "n": 40,
+  "min": 25.334662999966895,
+  "mediana": 28.115518499987502,
+  "p90": 37.68972499995016,
+  "max": 43.22611700001744,
+  "media": 29.974208724996743
+ },
+ "spento_risveglio_cache_fredda_ms": {
+  "n": 10,
+  "min": 44.204833999970106,
+  "mediana": 52.22311899996157,
+  "p90": 59.07094999997753,
+  "max": 59.07094999997753,
+  "media": 51.594711099983215
+ },
+ "dopo_riavvio_mem_pss_mb": {
+  "n": 50,
+  "min": 9.4873046875,
+  "mediana": 9.513671875,
+  "p90": 9.5263671875,
+  "max": 9.5546875,
+  "media": 9.51341796875
+ },
+ "spazio_ramo_esclusivo_mb": {
+  "n": 50,
+  "min": 1.421875,
+  "mediana": 1.421875,
+  "p90": 1.421875,
+  "max": 1.421875,
+  "media": 1.421875
+ }
+}

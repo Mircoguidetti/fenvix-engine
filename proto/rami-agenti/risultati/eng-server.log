@@ -1,0 +1,1712 @@
+admin interface listening on 127.0.0.1:27101 (bearer token required)
+mongo-server listening on 127.0.0.1:27100 (idle close after 3600 s, holder m22, lease ttl 30 s)
+ADMIN GET /v1/health -> 200 2 ms peer=127.0.0.1:50912
+LEASE process_lease tenant=- holder=m22 unix_ms=1793687062750 inc=e25d4ea4d7eae19e gen=1
+LEASE acquired tenant=padre holder=m22 unix_ms=1793687062750 takeover_from=-
+LEASE acquired tenant=padre holder=m22 unix_ms=1793687062759 takeover_from=-
+LEASE acquired tenant=padre holder=m22 unix_ms=1793687062759 takeover_from=- new=true
+LEASE writer_open tenant=padre holder=m22 unix_ms=1793687062768 
+LEASE writer_close tenant=padre holder=m22 unix_ms=1793687063158 
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687063158 
+LEASE release tenant=padre holder=m22 unix_ms=1793687063158 ok=true
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687065167 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687065168 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687065173 
+LEASE release tenant=padre holder=m22 unix_ms=1793687065173 ok=true
+LEASE release_begin tenant=ramo000 holder=m22 unix_ms=1793687065174 
+LEASE release tenant=ramo000 holder=m22 unix_ms=1793687065174 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:50914
+LEASE acquired tenant=ramo000 holder=m22 unix_ms=1793687065175 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687065179 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687065180 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687065183 
+LEASE release tenant=padre holder=m22 unix_ms=1793687065183 ok=true
+LEASE release_begin tenant=ramo001 holder=m22 unix_ms=1793687065184 
+LEASE release tenant=ramo001 holder=m22 unix_ms=1793687065184 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 4 ms peer=127.0.0.1:50920
+LEASE acquired tenant=ramo001 holder=m22 unix_ms=1793687065185 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687065194 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687065195 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687065200 
+LEASE release tenant=padre holder=m22 unix_ms=1793687065207 ok=true
+LEASE release_begin tenant=ramo002 holder=m22 unix_ms=1793687065210 
+LEASE release tenant=ramo002 holder=m22 unix_ms=1793687065210 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:50936
+LEASE acquired tenant=ramo002 holder=m22 unix_ms=1793687065211 takeover_from=-
+LEASE writer_open tenant=ramo000 holder=m22 unix_ms=1793687065274 
+LEASE writer_open tenant=ramo001 holder=m22 unix_ms=1793687065375 
+LEASE writer_open tenant=ramo002 holder=m22 unix_ms=1793687065432 
+LEASE writer_close tenant=ramo000 holder=m22 unix_ms=1793687067451 
+LEASE release_begin tenant=ramo000 holder=m22 unix_ms=1793687067451 
+LEASE release tenant=ramo000 holder=m22 unix_ms=1793687067452 ok=true
+LEASE writer_close tenant=ramo001 holder=m22 unix_ms=1793687067453 
+LEASE release_begin tenant=ramo001 holder=m22 unix_ms=1793687067453 
+LEASE release tenant=ramo001 holder=m22 unix_ms=1793687067454 ok=true
+LEASE writer_close tenant=ramo002 holder=m22 unix_ms=1793687067455 
+LEASE release_begin tenant=ramo002 holder=m22 unix_ms=1793687067455 
+LEASE release tenant=ramo002 holder=m22 unix_ms=1793687067456 ok=true
+LEASE acquired tenant=ramo000 holder=m22 unix_ms=1793687070352 takeover_from=-
+LEASE acquired tenant=ramo001 holder=m22 unix_ms=1793687070355 takeover_from=-
+LEASE acquired tenant=ramo002 holder=m22 unix_ms=1793687070358 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687070390 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687070391 takeover_from=-
+ADMIN DELETE /v1/databases/ramo000 -> 200 10 ms peer=127.0.0.1:50950
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687070406 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687070407 takeover_from=-
+ADMIN DELETE /v1/databases/ramo001 -> 200 16 ms peer=127.0.0.1:50962
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687070419 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687070420 takeover_from=-
+ADMIN DELETE /v1/databases/ramo002 -> 200 10 ms peer=127.0.0.1:50964
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
+admin interface listening on 127.0.0.1:27101 (bearer token required)
+mongo-server listening on 127.0.0.1:27100 (idle close after 3600 s, holder m22, lease ttl 30 s)
+ADMIN GET /v1/health -> 200 1 ms peer=127.0.0.1:48512
+LEASE process_lease tenant=- holder=m22 unix_ms=1793687422387 inc=d21704fa7abf94bf gen=1
+LEASE acquired tenant=padre holder=m22 unix_ms=1793687422387 takeover_from=-
+LEASE acquired tenant=padre holder=m22 unix_ms=1793687422394 takeover_from=-
+LEASE acquired tenant=padre holder=m22 unix_ms=1793687422395 takeover_from=- new=true
+LEASE writer_open tenant=padre holder=m22 unix_ms=1793687422399 
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=padre unix_ms=1793687483698
+SSTGC end tenant=padre unix_ms=1793687483703 deleted_ssts=0 deleted_manifests=0 referenced=34 waiting=660
+LEASE writer_close tenant=padre holder=m22 unix_ms=1793687489938 
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687489942 
+LEASE release tenant=padre holder=m22 unix_ms=1793687489946 ok=true
+SLOW tenantAdmin db=padre ms=1056 ok=true
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687491958 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687491960 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687491979 
+LEASE release tenant=padre holder=m22 unix_ms=1793687491980 ok=true
+LEASE release_begin tenant=ramo000 holder=m22 unix_ms=1793687491982 
+LEASE release tenant=ramo000 holder=m22 unix_ms=1793687491982 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 25 ms peer=127.0.0.1:53610
+LEASE acquired tenant=ramo000 holder=m22 unix_ms=1793687491984 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687491992 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687491993 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492022 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492023 ok=true
+LEASE release_begin tenant=ramo001 holder=m22 unix_ms=1793687492023 
+LEASE release tenant=ramo001 holder=m22 unix_ms=1793687492024 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 32 ms peer=127.0.0.1:53622
+LEASE acquired tenant=ramo001 holder=m22 unix_ms=1793687492025 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492038 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492039 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492058 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492059 ok=true
+LEASE release_begin tenant=ramo002 holder=m22 unix_ms=1793687492060 
+LEASE release tenant=ramo002 holder=m22 unix_ms=1793687492060 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 22 ms peer=127.0.0.1:53632
+LEASE acquired tenant=ramo002 holder=m22 unix_ms=1793687492061 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492070 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492071 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492087 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492088 ok=true
+LEASE release_begin tenant=ramo003 holder=m22 unix_ms=1793687492089 
+LEASE release tenant=ramo003 holder=m22 unix_ms=1793687492089 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 18 ms peer=127.0.0.1:53648
+LEASE acquired tenant=ramo003 holder=m22 unix_ms=1793687492090 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492098 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492099 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492111 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492111 ok=true
+LEASE release_begin tenant=ramo004 holder=m22 unix_ms=1793687492112 
+LEASE release tenant=ramo004 holder=m22 unix_ms=1793687492112 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 14 ms peer=127.0.0.1:53664
+LEASE acquired tenant=ramo004 holder=m22 unix_ms=1793687492113 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492121 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492122 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492133 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492134 ok=true
+LEASE release_begin tenant=ramo005 holder=m22 unix_ms=1793687492135 
+LEASE release tenant=ramo005 holder=m22 unix_ms=1793687492135 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 13 ms peer=127.0.0.1:53666
+LEASE acquired tenant=ramo005 holder=m22 unix_ms=1793687492136 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492146 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492147 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492159 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492160 ok=true
+LEASE release_begin tenant=ramo006 holder=m22 unix_ms=1793687492161 
+LEASE release tenant=ramo006 holder=m22 unix_ms=1793687492161 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 15 ms peer=127.0.0.1:53680
+LEASE acquired tenant=ramo006 holder=m22 unix_ms=1793687492162 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492171 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492172 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492187 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492188 ok=true
+LEASE release_begin tenant=ramo007 holder=m22 unix_ms=1793687492189 
+LEASE release tenant=ramo007 holder=m22 unix_ms=1793687492189 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53692
+LEASE acquired tenant=ramo007 holder=m22 unix_ms=1793687492190 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492199 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492200 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492212 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492213 ok=true
+LEASE release_begin tenant=ramo008 holder=m22 unix_ms=1793687492214 
+LEASE release tenant=ramo008 holder=m22 unix_ms=1793687492214 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 15 ms peer=127.0.0.1:53696
+LEASE acquired tenant=ramo008 holder=m22 unix_ms=1793687492217 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492226 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492226 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492241 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492241 ok=true
+LEASE release_begin tenant=ramo009 holder=m22 unix_ms=1793687492242 
+LEASE release tenant=ramo009 holder=m22 unix_ms=1793687492242 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53706
+LEASE acquired tenant=ramo009 holder=m22 unix_ms=1793687492243 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492254 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492254 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492272 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492273 ok=true
+LEASE release_begin tenant=ramo010 holder=m22 unix_ms=1793687492274 
+LEASE release tenant=ramo010 holder=m22 unix_ms=1793687492274 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 20 ms peer=127.0.0.1:53718
+LEASE acquired tenant=ramo010 holder=m22 unix_ms=1793687492275 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492289 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492290 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492305 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492305 ok=true
+LEASE release_begin tenant=ramo011 holder=m22 unix_ms=1793687492306 
+LEASE release tenant=ramo011 holder=m22 unix_ms=1793687492306 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53726
+LEASE acquired tenant=ramo011 holder=m22 unix_ms=1793687492307 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492314 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492314 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492328 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492328 ok=true
+LEASE release_begin tenant=ramo012 holder=m22 unix_ms=1793687492329 
+LEASE release tenant=ramo012 holder=m22 unix_ms=1793687492329 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53734
+LEASE acquired tenant=ramo012 holder=m22 unix_ms=1793687492331 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492338 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492338 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492354 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492354 ok=true
+LEASE release_begin tenant=ramo013 holder=m22 unix_ms=1793687492355 
+LEASE release tenant=ramo013 holder=m22 unix_ms=1793687492355 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53740
+LEASE acquired tenant=ramo013 holder=m22 unix_ms=1793687492356 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492366 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492367 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492381 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492381 ok=true
+LEASE release_begin tenant=ramo014 holder=m22 unix_ms=1793687492382 
+LEASE release tenant=ramo014 holder=m22 unix_ms=1793687492382 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53756
+LEASE acquired tenant=ramo014 holder=m22 unix_ms=1793687492384 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492390 takeover_from=-
+SLOW hello db=admin ms=10000 ok=true
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492390 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492405 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492405 ok=true
+LEASE release_begin tenant=ramo015 holder=m22 unix_ms=1793687492406 
+LEASE release tenant=ramo015 holder=m22 unix_ms=1793687492406 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53772
+LEASE acquired tenant=ramo015 holder=m22 unix_ms=1793687492408 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492418 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492419 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492436 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492437 ok=true
+LEASE release_begin tenant=ramo016 holder=m22 unix_ms=1793687492437 
+LEASE release tenant=ramo016 holder=m22 unix_ms=1793687492437 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 19 ms peer=127.0.0.1:53774
+LEASE acquired tenant=ramo016 holder=m22 unix_ms=1793687492439 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492448 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492449 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492462 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492463 ok=true
+LEASE release_begin tenant=ramo017 holder=m22 unix_ms=1793687492464 
+LEASE release tenant=ramo017 holder=m22 unix_ms=1793687492464 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53778
+LEASE acquired tenant=ramo017 holder=m22 unix_ms=1793687492465 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492473 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492474 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492493 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492494 ok=true
+LEASE release_begin tenant=ramo018 holder=m22 unix_ms=1793687492495 
+LEASE release tenant=ramo018 holder=m22 unix_ms=1793687492495 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 22 ms peer=127.0.0.1:53780
+LEASE acquired tenant=ramo018 holder=m22 unix_ms=1793687492496 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492506 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492507 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492521 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492522 ok=true
+LEASE release_begin tenant=ramo019 holder=m22 unix_ms=1793687492523 
+LEASE release tenant=ramo019 holder=m22 unix_ms=1793687492523 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53788
+LEASE acquired tenant=ramo019 holder=m22 unix_ms=1793687492524 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492529 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492529 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492542 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492542 ok=true
+LEASE release_begin tenant=ramo020 holder=m22 unix_ms=1793687492543 
+LEASE release tenant=ramo020 holder=m22 unix_ms=1793687492543 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 14 ms peer=127.0.0.1:53792
+LEASE acquired tenant=ramo020 holder=m22 unix_ms=1793687492544 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492552 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492553 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492566 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492566 ok=true
+LEASE release_begin tenant=ramo021 holder=m22 unix_ms=1793687492567 
+LEASE release tenant=ramo021 holder=m22 unix_ms=1793687492567 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 15 ms peer=127.0.0.1:53800
+LEASE acquired tenant=ramo021 holder=m22 unix_ms=1793687492568 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492575 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492576 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492590 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492590 ok=true
+LEASE release_begin tenant=ramo022 holder=m22 unix_ms=1793687492591 
+LEASE release tenant=ramo022 holder=m22 unix_ms=1793687492591 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53812
+LEASE acquired tenant=ramo022 holder=m22 unix_ms=1793687492592 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492599 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492600 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492614 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492614 ok=true
+LEASE release_begin tenant=ramo023 holder=m22 unix_ms=1793687492615 
+LEASE release tenant=ramo023 holder=m22 unix_ms=1793687492615 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53824
+LEASE acquired tenant=ramo023 holder=m22 unix_ms=1793687492616 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492628 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492629 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492647 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492648 ok=true
+LEASE release_begin tenant=ramo024 holder=m22 unix_ms=1793687492648 
+LEASE release tenant=ramo024 holder=m22 unix_ms=1793687492649 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 20 ms peer=127.0.0.1:53834
+LEASE acquired tenant=ramo024 holder=m22 unix_ms=1793687492650 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492660 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492661 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492676 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492677 ok=true
+LEASE release_begin tenant=ramo025 holder=m22 unix_ms=1793687492678 
+LEASE release tenant=ramo025 holder=m22 unix_ms=1793687492678 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 18 ms peer=127.0.0.1:53844
+LEASE acquired tenant=ramo025 holder=m22 unix_ms=1793687492679 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492690 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492691 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492705 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492705 ok=true
+LEASE release_begin tenant=ramo026 holder=m22 unix_ms=1793687492706 
+LEASE release tenant=ramo026 holder=m22 unix_ms=1793687492706 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53850
+LEASE acquired tenant=ramo026 holder=m22 unix_ms=1793687492708 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492713 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492714 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492728 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492728 ok=true
+LEASE release_begin tenant=ramo027 holder=m22 unix_ms=1793687492729 
+LEASE release tenant=ramo027 holder=m22 unix_ms=1793687492729 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53860
+LEASE acquired tenant=ramo027 holder=m22 unix_ms=1793687492730 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492739 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492740 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492755 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492755 ok=true
+LEASE release_begin tenant=ramo028 holder=m22 unix_ms=1793687492756 
+LEASE release tenant=ramo028 holder=m22 unix_ms=1793687492756 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53876
+LEASE acquired tenant=ramo028 holder=m22 unix_ms=1793687492757 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492766 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492767 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492785 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492785 ok=true
+LEASE release_begin tenant=ramo029 holder=m22 unix_ms=1793687492786 
+LEASE release tenant=ramo029 holder=m22 unix_ms=1793687492786 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 20 ms peer=127.0.0.1:53880
+LEASE acquired tenant=ramo029 holder=m22 unix_ms=1793687492787 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492794 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492795 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492810 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492810 ok=true
+LEASE release_begin tenant=ramo030 holder=m22 unix_ms=1793687492811 
+LEASE release tenant=ramo030 holder=m22 unix_ms=1793687492811 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53888
+LEASE acquired tenant=ramo030 holder=m22 unix_ms=1793687492812 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492821 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492822 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492839 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492840 ok=true
+LEASE release_begin tenant=ramo031 holder=m22 unix_ms=1793687492840 
+LEASE release tenant=ramo031 holder=m22 unix_ms=1793687492840 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 19 ms peer=127.0.0.1:53898
+LEASE acquired tenant=ramo031 holder=m22 unix_ms=1793687492841 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492849 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492850 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492870 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492870 ok=true
+LEASE release_begin tenant=ramo032 holder=m22 unix_ms=1793687492871 
+LEASE release tenant=ramo032 holder=m22 unix_ms=1793687492871 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 22 ms peer=127.0.0.1:53900
+LEASE acquired tenant=ramo032 holder=m22 unix_ms=1793687492872 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492880 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492881 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492897 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492897 ok=true
+LEASE release_begin tenant=ramo033 holder=m22 unix_ms=1793687492898 
+LEASE release tenant=ramo033 holder=m22 unix_ms=1793687492898 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 18 ms peer=127.0.0.1:53916
+LEASE acquired tenant=ramo033 holder=m22 unix_ms=1793687492899 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492908 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492909 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492922 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492923 ok=true
+LEASE release_begin tenant=ramo034 holder=m22 unix_ms=1793687492924 
+LEASE release tenant=ramo034 holder=m22 unix_ms=1793687492924 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53920
+LEASE acquired tenant=ramo034 holder=m22 unix_ms=1793687492925 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492934 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492935 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492949 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492949 ok=true
+LEASE release_begin tenant=ramo035 holder=m22 unix_ms=1793687492950 
+LEASE release tenant=ramo035 holder=m22 unix_ms=1793687492950 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53934
+LEASE acquired tenant=ramo035 holder=m22 unix_ms=1793687492952 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492960 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492961 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492975 
+LEASE release tenant=padre holder=m22 unix_ms=1793687492976 ok=true
+LEASE release_begin tenant=ramo036 holder=m22 unix_ms=1793687492977 
+LEASE release tenant=ramo036 holder=m22 unix_ms=1793687492977 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53946
+LEASE acquired tenant=ramo036 holder=m22 unix_ms=1793687492978 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492984 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687492985 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687492999 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493000 ok=true
+LEASE release_begin tenant=ramo037 holder=m22 unix_ms=1793687493001 
+LEASE release tenant=ramo037 holder=m22 unix_ms=1793687493001 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53954
+LEASE acquired tenant=ramo037 holder=m22 unix_ms=1793687493002 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493011 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493012 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493026 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493026 ok=true
+LEASE release_begin tenant=ramo038 holder=m22 unix_ms=1793687493028 
+LEASE release tenant=ramo038 holder=m22 unix_ms=1793687493028 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:53966
+LEASE acquired tenant=ramo038 holder=m22 unix_ms=1793687493030 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493037 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493037 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493051 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493052 ok=true
+LEASE release_begin tenant=ramo039 holder=m22 unix_ms=1793687493052 
+LEASE release tenant=ramo039 holder=m22 unix_ms=1793687493052 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 15 ms peer=127.0.0.1:53974
+LEASE acquired tenant=ramo039 holder=m22 unix_ms=1793687493053 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493062 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493063 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493077 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493077 ok=true
+LEASE release_begin tenant=ramo040 holder=m22 unix_ms=1793687493078 
+LEASE release tenant=ramo040 holder=m22 unix_ms=1793687493078 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53980
+LEASE acquired tenant=ramo040 holder=m22 unix_ms=1793687493080 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493087 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493088 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493102 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493102 ok=true
+LEASE release_begin tenant=ramo041 holder=m22 unix_ms=1793687493103 
+LEASE release tenant=ramo041 holder=m22 unix_ms=1793687493103 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 15 ms peer=127.0.0.1:53984
+LEASE acquired tenant=ramo041 holder=m22 unix_ms=1793687493104 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493112 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493113 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493126 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493127 ok=true
+LEASE release_begin tenant=ramo042 holder=m22 unix_ms=1793687493128 
+LEASE release tenant=ramo042 holder=m22 unix_ms=1793687493128 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:53996
+LEASE acquired tenant=ramo042 holder=m22 unix_ms=1793687493129 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493139 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493140 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493154 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493155 ok=true
+LEASE release_begin tenant=ramo043 holder=m22 unix_ms=1793687493156 
+LEASE release tenant=ramo043 holder=m22 unix_ms=1793687493157 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 18 ms peer=127.0.0.1:54004
+LEASE acquired tenant=ramo043 holder=m22 unix_ms=1793687493158 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493166 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493167 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493181 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493182 ok=true
+LEASE release_begin tenant=ramo044 holder=m22 unix_ms=1793687493182 
+LEASE release tenant=ramo044 holder=m22 unix_ms=1793687493183 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:54010
+LEASE acquired tenant=ramo044 holder=m22 unix_ms=1793687493185 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493190 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493190 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493207 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493207 ok=true
+LEASE release_begin tenant=ramo045 holder=m22 unix_ms=1793687493208 
+LEASE release tenant=ramo045 holder=m22 unix_ms=1793687493208 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 19 ms peer=127.0.0.1:54022
+LEASE acquired tenant=ramo045 holder=m22 unix_ms=1793687493209 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493220 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493221 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493242 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493243 ok=true
+LEASE release_begin tenant=ramo046 holder=m22 unix_ms=1793687493244 
+LEASE release tenant=ramo046 holder=m22 unix_ms=1793687493244 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 23 ms peer=127.0.0.1:54030
+LEASE acquired tenant=ramo046 holder=m22 unix_ms=1793687493245 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493253 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493254 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493268 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493268 ok=true
+LEASE release_begin tenant=ramo047 holder=m22 unix_ms=1793687493269 
+LEASE release tenant=ramo047 holder=m22 unix_ms=1793687493269 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:54046
+LEASE acquired tenant=ramo047 holder=m22 unix_ms=1793687493270 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493275 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493276 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493290 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493290 ok=true
+LEASE release_begin tenant=ramo048 holder=m22 unix_ms=1793687493291 
+LEASE release tenant=ramo048 holder=m22 unix_ms=1793687493291 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 16 ms peer=127.0.0.1:54052
+LEASE acquired tenant=ramo048 holder=m22 unix_ms=1793687493292 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493301 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687493301 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687493317 
+LEASE release tenant=padre holder=m22 unix_ms=1793687493318 ok=true
+LEASE release_begin tenant=ramo049 holder=m22 unix_ms=1793687493318 
+LEASE release tenant=ramo049 holder=m22 unix_ms=1793687493319 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 18 ms peer=127.0.0.1:54068
+LEASE acquired tenant=ramo049 holder=m22 unix_ms=1793687493321 takeover_from=-
+LEASE writer_open tenant=ramo000 holder=m22 unix_ms=1793687493412 
+LEASE writer_open tenant=ramo001 holder=m22 unix_ms=1793687493528 
+LEASE writer_open tenant=ramo002 holder=m22 unix_ms=1793687493649 
+LEASE writer_open tenant=ramo003 holder=m22 unix_ms=1793687493763 
+LEASE writer_open tenant=ramo004 holder=m22 unix_ms=1793687493900 
+LEASE writer_open tenant=ramo005 holder=m22 unix_ms=1793687494039 
+LEASE writer_open tenant=ramo006 holder=m22 unix_ms=1793687494169 
+LEASE writer_open tenant=ramo007 holder=m22 unix_ms=1793687494287 
+LEASE writer_open tenant=ramo008 holder=m22 unix_ms=1793687494401 
+LEASE writer_open tenant=ramo009 holder=m22 unix_ms=1793687494541 
+LEASE writer_open tenant=ramo010 holder=m22 unix_ms=1793687494698 
+LEASE writer_open tenant=ramo011 holder=m22 unix_ms=1793687494829 
+LEASE writer_open tenant=ramo012 holder=m22 unix_ms=1793687494944 
+LEASE writer_open tenant=ramo013 holder=m22 unix_ms=1793687495061 
+LEASE writer_open tenant=ramo014 holder=m22 unix_ms=1793687495187 
+LEASE writer_open tenant=ramo015 holder=m22 unix_ms=1793687495338 
+LEASE writer_open tenant=ramo016 holder=m22 unix_ms=1793687495490 
+LEASE writer_open tenant=ramo017 holder=m22 unix_ms=1793687495618 
+LEASE writer_open tenant=ramo018 holder=m22 unix_ms=1793687495733 
+LEASE writer_open tenant=ramo019 holder=m22 unix_ms=1793687495855 
+LEASE writer_open tenant=ramo020 holder=m22 unix_ms=1793687495988 
+LEASE writer_open tenant=ramo021 holder=m22 unix_ms=1793687496120 
+LEASE writer_open tenant=ramo022 holder=m22 unix_ms=1793687496262 
+LEASE writer_open tenant=ramo023 holder=m22 unix_ms=1793687496397 
+LEASE writer_open tenant=ramo024 holder=m22 unix_ms=1793687496531 
+LEASE writer_open tenant=ramo025 holder=m22 unix_ms=1793687496653 
+LEASE writer_open tenant=ramo026 holder=m22 unix_ms=1793687496775 
+LEASE writer_open tenant=ramo027 holder=m22 unix_ms=1793687496888 
+LEASE writer_open tenant=ramo028 holder=m22 unix_ms=1793687497000 
+LEASE writer_open tenant=ramo029 holder=m22 unix_ms=1793687497159 
+LEASE writer_open tenant=ramo030 holder=m22 unix_ms=1793687497299 
+LEASE writer_open tenant=ramo031 holder=m22 unix_ms=1793687497444 
+LEASE writer_open tenant=ramo032 holder=m22 unix_ms=1793687497571 
+LEASE writer_open tenant=ramo033 holder=m22 unix_ms=1793687497693 
+LEASE writer_open tenant=ramo034 holder=m22 unix_ms=1793687497817 
+LEASE writer_open tenant=ramo035 holder=m22 unix_ms=1793687497938 
+LEASE writer_open tenant=ramo036 holder=m22 unix_ms=1793687498061 
+LEASE writer_open tenant=ramo037 holder=m22 unix_ms=1793687498193 
+LEASE writer_open tenant=ramo038 holder=m22 unix_ms=1793687498327 
+LEASE writer_open tenant=ramo039 holder=m22 unix_ms=1793687498461 
+LEASE writer_open tenant=ramo040 holder=m22 unix_ms=1793687498580 
+LEASE writer_open tenant=ramo041 holder=m22 unix_ms=1793687498711 
+LEASE writer_open tenant=ramo042 holder=m22 unix_ms=1793687498842 
+LEASE writer_open tenant=ramo043 holder=m22 unix_ms=1793687498978 
+LEASE writer_open tenant=ramo044 holder=m22 unix_ms=1793687499107 
+LEASE writer_open tenant=ramo045 holder=m22 unix_ms=1793687499256 
+LEASE writer_open tenant=ramo046 holder=m22 unix_ms=1793687499400 
+LEASE writer_open tenant=ramo047 holder=m22 unix_ms=1793687499525 
+LEASE writer_open tenant=ramo048 holder=m22 unix_ms=1793687499650 
+LEASE writer_open tenant=ramo049 holder=m22 unix_ms=1793687499792 
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_close tenant=ramo000 holder=m22 unix_ms=1793687530096 
+LEASE release_begin tenant=ramo000 holder=m22 unix_ms=1793687530096 
+LEASE release tenant=ramo000 holder=m22 unix_ms=1793687530096 ok=true
+LEASE writer_close tenant=ramo001 holder=m22 unix_ms=1793687530098 
+LEASE release_begin tenant=ramo001 holder=m22 unix_ms=1793687530098 
+LEASE release tenant=ramo001 holder=m22 unix_ms=1793687530099 ok=true
+LEASE writer_close tenant=ramo002 holder=m22 unix_ms=1793687530101 
+LEASE release_begin tenant=ramo002 holder=m22 unix_ms=1793687530101 
+LEASE release tenant=ramo002 holder=m22 unix_ms=1793687530101 ok=true
+LEASE writer_close tenant=ramo003 holder=m22 unix_ms=1793687530103 
+LEASE release_begin tenant=ramo003 holder=m22 unix_ms=1793687530103 
+LEASE release tenant=ramo003 holder=m22 unix_ms=1793687530103 ok=true
+LEASE writer_close tenant=ramo004 holder=m22 unix_ms=1793687530105 
+LEASE release_begin tenant=ramo004 holder=m22 unix_ms=1793687530105 
+LEASE release tenant=ramo004 holder=m22 unix_ms=1793687530106 ok=true
+LEASE writer_close tenant=ramo005 holder=m22 unix_ms=1793687530108 
+LEASE release_begin tenant=ramo005 holder=m22 unix_ms=1793687530108 
+LEASE release tenant=ramo005 holder=m22 unix_ms=1793687530108 ok=true
+LEASE writer_close tenant=ramo006 holder=m22 unix_ms=1793687530110 
+LEASE release_begin tenant=ramo006 holder=m22 unix_ms=1793687530110 
+LEASE release tenant=ramo006 holder=m22 unix_ms=1793687530110 ok=true
+LEASE writer_close tenant=ramo007 holder=m22 unix_ms=1793687530112 
+LEASE release_begin tenant=ramo007 holder=m22 unix_ms=1793687530112 
+LEASE release tenant=ramo007 holder=m22 unix_ms=1793687530112 ok=true
+LEASE writer_close tenant=ramo008 holder=m22 unix_ms=1793687530114 
+LEASE release_begin tenant=ramo008 holder=m22 unix_ms=1793687530114 
+LEASE release tenant=ramo008 holder=m22 unix_ms=1793687530114 ok=true
+LEASE writer_close tenant=ramo009 holder=m22 unix_ms=1793687530116 
+LEASE release_begin tenant=ramo009 holder=m22 unix_ms=1793687530116 
+LEASE release tenant=ramo009 holder=m22 unix_ms=1793687530116 ok=true
+LEASE writer_close tenant=ramo010 holder=m22 unix_ms=1793687530118 
+LEASE release_begin tenant=ramo010 holder=m22 unix_ms=1793687530118 
+LEASE release tenant=ramo010 holder=m22 unix_ms=1793687530118 ok=true
+LEASE writer_close tenant=ramo011 holder=m22 unix_ms=1793687530120 
+LEASE release_begin tenant=ramo011 holder=m22 unix_ms=1793687530120 
+LEASE release tenant=ramo011 holder=m22 unix_ms=1793687530120 ok=true
+LEASE writer_close tenant=ramo012 holder=m22 unix_ms=1793687530122 
+LEASE release_begin tenant=ramo012 holder=m22 unix_ms=1793687530122 
+LEASE release tenant=ramo012 holder=m22 unix_ms=1793687530122 ok=true
+LEASE writer_close tenant=ramo013 holder=m22 unix_ms=1793687530123 
+LEASE release_begin tenant=ramo013 holder=m22 unix_ms=1793687530123 
+LEASE release tenant=ramo013 holder=m22 unix_ms=1793687530124 ok=true
+LEASE writer_close tenant=ramo014 holder=m22 unix_ms=1793687530125 
+LEASE release_begin tenant=ramo014 holder=m22 unix_ms=1793687530125 
+LEASE release tenant=ramo014 holder=m22 unix_ms=1793687530125 ok=true
+LEASE writer_close tenant=ramo015 holder=m22 unix_ms=1793687530127 
+LEASE release_begin tenant=ramo015 holder=m22 unix_ms=1793687530127 
+LEASE release tenant=ramo015 holder=m22 unix_ms=1793687530127 ok=true
+LEASE writer_close tenant=ramo016 holder=m22 unix_ms=1793687530129 
+LEASE release_begin tenant=ramo016 holder=m22 unix_ms=1793687530129 
+LEASE release tenant=ramo016 holder=m22 unix_ms=1793687530129 ok=true
+LEASE writer_close tenant=ramo017 holder=m22 unix_ms=1793687530130 
+LEASE release_begin tenant=ramo017 holder=m22 unix_ms=1793687530130 
+LEASE release tenant=ramo017 holder=m22 unix_ms=1793687530131 ok=true
+LEASE writer_close tenant=ramo018 holder=m22 unix_ms=1793687530134 
+LEASE release_begin tenant=ramo018 holder=m22 unix_ms=1793687530134 
+LEASE release tenant=ramo018 holder=m22 unix_ms=1793687530135 ok=true
+LEASE writer_close tenant=ramo019 holder=m22 unix_ms=1793687530138 
+LEASE release_begin tenant=ramo019 holder=m22 unix_ms=1793687530138 
+LEASE release tenant=ramo019 holder=m22 unix_ms=1793687530139 ok=true
+LEASE writer_close tenant=ramo020 holder=m22 unix_ms=1793687530141 
+LEASE release_begin tenant=ramo020 holder=m22 unix_ms=1793687530141 
+LEASE release tenant=ramo020 holder=m22 unix_ms=1793687530142 ok=true
+LEASE writer_close tenant=ramo021 holder=m22 unix_ms=1793687530143 
+LEASE release_begin tenant=ramo021 holder=m22 unix_ms=1793687530143 
+LEASE release tenant=ramo021 holder=m22 unix_ms=1793687530144 ok=true
+LEASE writer_close tenant=ramo022 holder=m22 unix_ms=1793687530145 
+LEASE release_begin tenant=ramo022 holder=m22 unix_ms=1793687530145 
+LEASE release tenant=ramo022 holder=m22 unix_ms=1793687530146 ok=true
+LEASE writer_close tenant=ramo023 holder=m22 unix_ms=1793687530147 
+LEASE release_begin tenant=ramo023 holder=m22 unix_ms=1793687530147 
+LEASE release tenant=ramo023 holder=m22 unix_ms=1793687530148 ok=true
+LEASE writer_close tenant=ramo024 holder=m22 unix_ms=1793687530150 
+LEASE release_begin tenant=ramo024 holder=m22 unix_ms=1793687530150 
+LEASE release tenant=ramo024 holder=m22 unix_ms=1793687530151 ok=true
+LEASE writer_close tenant=ramo025 holder=m22 unix_ms=1793687530153 
+LEASE release_begin tenant=ramo025 holder=m22 unix_ms=1793687530153 
+LEASE release tenant=ramo025 holder=m22 unix_ms=1793687530153 ok=true
+LEASE writer_close tenant=ramo026 holder=m22 unix_ms=1793687530155 
+LEASE release_begin tenant=ramo026 holder=m22 unix_ms=1793687530155 
+LEASE release tenant=ramo026 holder=m22 unix_ms=1793687530155 ok=true
+LEASE writer_close tenant=ramo027 holder=m22 unix_ms=1793687530157 
+LEASE release_begin tenant=ramo027 holder=m22 unix_ms=1793687530157 
+LEASE release tenant=ramo027 holder=m22 unix_ms=1793687530157 ok=true
+LEASE writer_close tenant=ramo028 holder=m22 unix_ms=1793687530158 
+LEASE release_begin tenant=ramo028 holder=m22 unix_ms=1793687530158 
+LEASE release tenant=ramo028 holder=m22 unix_ms=1793687530159 ok=true
+LEASE writer_close tenant=ramo029 holder=m22 unix_ms=1793687530160 
+LEASE release_begin tenant=ramo029 holder=m22 unix_ms=1793687530160 
+LEASE release tenant=ramo029 holder=m22 unix_ms=1793687530161 ok=true
+LEASE writer_close tenant=ramo030 holder=m22 unix_ms=1793687530162 
+LEASE release_begin tenant=ramo030 holder=m22 unix_ms=1793687530162 
+LEASE release tenant=ramo030 holder=m22 unix_ms=1793687530163 ok=true
+LEASE writer_close tenant=ramo031 holder=m22 unix_ms=1793687530164 
+LEASE release_begin tenant=ramo031 holder=m22 unix_ms=1793687530164 
+LEASE release tenant=ramo031 holder=m22 unix_ms=1793687530164 ok=true
+LEASE writer_close tenant=ramo032 holder=m22 unix_ms=1793687530166 
+LEASE release_begin tenant=ramo032 holder=m22 unix_ms=1793687530166 
+LEASE release tenant=ramo032 holder=m22 unix_ms=1793687530166 ok=true
+LEASE writer_close tenant=ramo033 holder=m22 unix_ms=1793687530168 
+LEASE release_begin tenant=ramo033 holder=m22 unix_ms=1793687530168 
+LEASE release tenant=ramo033 holder=m22 unix_ms=1793687530168 ok=true
+LEASE writer_close tenant=ramo034 holder=m22 unix_ms=1793687530170 
+LEASE release_begin tenant=ramo034 holder=m22 unix_ms=1793687530170 
+LEASE release tenant=ramo034 holder=m22 unix_ms=1793687530170 ok=true
+LEASE writer_close tenant=ramo035 holder=m22 unix_ms=1793687530171 
+LEASE release_begin tenant=ramo035 holder=m22 unix_ms=1793687530171 
+LEASE release tenant=ramo035 holder=m22 unix_ms=1793687530172 ok=true
+LEASE writer_close tenant=ramo036 holder=m22 unix_ms=1793687530173 
+LEASE release_begin tenant=ramo036 holder=m22 unix_ms=1793687530173 
+LEASE release tenant=ramo036 holder=m22 unix_ms=1793687530173 ok=true
+LEASE writer_close tenant=ramo037 holder=m22 unix_ms=1793687530175 
+LEASE release_begin tenant=ramo037 holder=m22 unix_ms=1793687530175 
+LEASE release tenant=ramo037 holder=m22 unix_ms=1793687530175 ok=true
+LEASE writer_close tenant=ramo038 holder=m22 unix_ms=1793687530176 
+LEASE release_begin tenant=ramo038 holder=m22 unix_ms=1793687530176 
+LEASE release tenant=ramo038 holder=m22 unix_ms=1793687530177 ok=true
+LEASE writer_close tenant=ramo039 holder=m22 unix_ms=1793687530178 
+LEASE release_begin tenant=ramo039 holder=m22 unix_ms=1793687530178 
+LEASE release tenant=ramo039 holder=m22 unix_ms=1793687530178 ok=true
+LEASE writer_close tenant=ramo040 holder=m22 unix_ms=1793687530180 
+LEASE release_begin tenant=ramo040 holder=m22 unix_ms=1793687530180 
+LEASE release tenant=ramo040 holder=m22 unix_ms=1793687530180 ok=true
+LEASE writer_close tenant=ramo041 holder=m22 unix_ms=1793687530182 
+LEASE release_begin tenant=ramo041 holder=m22 unix_ms=1793687530182 
+LEASE release tenant=ramo041 holder=m22 unix_ms=1793687530182 ok=true
+LEASE writer_close tenant=ramo042 holder=m22 unix_ms=1793687530184 
+LEASE release_begin tenant=ramo042 holder=m22 unix_ms=1793687530184 
+LEASE release tenant=ramo042 holder=m22 unix_ms=1793687530184 ok=true
+LEASE writer_close tenant=ramo043 holder=m22 unix_ms=1793687530186 
+LEASE release_begin tenant=ramo043 holder=m22 unix_ms=1793687530186 
+LEASE release tenant=ramo043 holder=m22 unix_ms=1793687530186 ok=true
+LEASE writer_close tenant=ramo044 holder=m22 unix_ms=1793687530188 
+LEASE release_begin tenant=ramo044 holder=m22 unix_ms=1793687530188 
+LEASE release tenant=ramo044 holder=m22 unix_ms=1793687530188 ok=true
+LEASE writer_close tenant=ramo045 holder=m22 unix_ms=1793687530190 
+LEASE release_begin tenant=ramo045 holder=m22 unix_ms=1793687530190 
+LEASE release tenant=ramo045 holder=m22 unix_ms=1793687530190 ok=true
+LEASE writer_close tenant=ramo046 holder=m22 unix_ms=1793687530192 
+LEASE release_begin tenant=ramo046 holder=m22 unix_ms=1793687530192 
+LEASE release tenant=ramo046 holder=m22 unix_ms=1793687530192 ok=true
+LEASE writer_close tenant=ramo047 holder=m22 unix_ms=1793687530193 
+LEASE release_begin tenant=ramo047 holder=m22 unix_ms=1793687530193 
+LEASE release tenant=ramo047 holder=m22 unix_ms=1793687530194 ok=true
+LEASE writer_close tenant=ramo048 holder=m22 unix_ms=1793687530195 
+LEASE release_begin tenant=ramo048 holder=m22 unix_ms=1793687530195 
+LEASE release tenant=ramo048 holder=m22 unix_ms=1793687530196 ok=true
+LEASE writer_close tenant=ramo049 holder=m22 unix_ms=1793687530197 
+LEASE release_begin tenant=ramo049 holder=m22 unix_ms=1793687530197 
+LEASE release tenant=ramo049 holder=m22 unix_ms=1793687530198 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SSTGC begin tenant=padre unix_ms=1793687544585
+SSTGC skip tenant=padre (segments or checkpoints present)
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=ramo000 holder=m22 unix_ms=1793687560376 takeover_from=-
+LEASE acquired tenant=ramo001 holder=m22 unix_ms=1793687560389 takeover_from=-
+LEASE acquired tenant=ramo002 holder=m22 unix_ms=1793687560406 takeover_from=-
+LEASE acquired tenant=ramo003 holder=m22 unix_ms=1793687560417 takeover_from=-
+LEASE acquired tenant=ramo004 holder=m22 unix_ms=1793687560424 takeover_from=-
+LEASE acquired tenant=ramo005 holder=m22 unix_ms=1793687560436 takeover_from=-
+LEASE acquired tenant=ramo006 holder=m22 unix_ms=1793687560446 takeover_from=-
+LEASE acquired tenant=ramo007 holder=m22 unix_ms=1793687560458 takeover_from=-
+LEASE acquired tenant=ramo008 holder=m22 unix_ms=1793687560467 takeover_from=-
+LEASE acquired tenant=ramo009 holder=m22 unix_ms=1793687560475 takeover_from=-
+LEASE acquired tenant=ramo010 holder=m22 unix_ms=1793687560486 takeover_from=-
+LEASE acquired tenant=ramo011 holder=m22 unix_ms=1793687560498 takeover_from=-
+LEASE acquired tenant=ramo012 holder=m22 unix_ms=1793687560507 takeover_from=-
+LEASE acquired tenant=ramo013 holder=m22 unix_ms=1793687560513 takeover_from=-
+LEASE acquired tenant=ramo014 holder=m22 unix_ms=1793687560524 takeover_from=-
+LEASE acquired tenant=ramo015 holder=m22 unix_ms=1793687560534 takeover_from=-
+LEASE acquired tenant=ramo016 holder=m22 unix_ms=1793687560544 takeover_from=-
+LEASE acquired tenant=ramo017 holder=m22 unix_ms=1793687560554 takeover_from=-
+LEASE acquired tenant=ramo018 holder=m22 unix_ms=1793687560565 takeover_from=-
+LEASE acquired tenant=ramo019 holder=m22 unix_ms=1793687560573 takeover_from=-
+LEASE acquired tenant=ramo020 holder=m22 unix_ms=1793687560581 takeover_from=-
+LEASE acquired tenant=ramo021 holder=m22 unix_ms=1793687560593 takeover_from=-
+LEASE acquired tenant=ramo022 holder=m22 unix_ms=1793687560612 takeover_from=-
+LEASE acquired tenant=ramo023 holder=m22 unix_ms=1793687560638 takeover_from=-
+LEASE acquired tenant=ramo024 holder=m22 unix_ms=1793687560654 takeover_from=-
+LEASE acquired tenant=ramo025 holder=m22 unix_ms=1793687560675 takeover_from=-
+LEASE acquired tenant=ramo026 holder=m22 unix_ms=1793687560694 takeover_from=-
+LEASE acquired tenant=ramo027 holder=m22 unix_ms=1793687560707 takeover_from=-
+LEASE acquired tenant=ramo028 holder=m22 unix_ms=1793687560714 takeover_from=-
+LEASE acquired tenant=ramo029 holder=m22 unix_ms=1793687560723 takeover_from=-
+LEASE acquired tenant=ramo030 holder=m22 unix_ms=1793687560732 takeover_from=-
+LEASE acquired tenant=ramo031 holder=m22 unix_ms=1793687560741 takeover_from=-
+LEASE acquired tenant=ramo032 holder=m22 unix_ms=1793687560750 takeover_from=-
+LEASE acquired tenant=ramo033 holder=m22 unix_ms=1793687560759 takeover_from=-
+LEASE acquired tenant=ramo034 holder=m22 unix_ms=1793687560768 takeover_from=-
+LEASE acquired tenant=ramo035 holder=m22 unix_ms=1793687560776 takeover_from=-
+LEASE acquired tenant=ramo036 holder=m22 unix_ms=1793687560786 takeover_from=-
+LEASE acquired tenant=ramo037 holder=m22 unix_ms=1793687560793 takeover_from=-
+LEASE acquired tenant=ramo038 holder=m22 unix_ms=1793687560806 takeover_from=-
+LEASE acquired tenant=ramo039 holder=m22 unix_ms=1793687560818 takeover_from=-
+LEASE acquired tenant=ramo040 holder=m22 unix_ms=1793687560829 takeover_from=-
+LEASE acquired tenant=ramo041 holder=m22 unix_ms=1793687560841 takeover_from=-
+LEASE acquired tenant=ramo042 holder=m22 unix_ms=1793687560851 takeover_from=-
+LEASE acquired tenant=ramo043 holder=m22 unix_ms=1793687560858 takeover_from=-
+LEASE acquired tenant=ramo044 holder=m22 unix_ms=1793687560868 takeover_from=-
+LEASE acquired tenant=ramo045 holder=m22 unix_ms=1793687560878 takeover_from=-
+LEASE acquired tenant=ramo046 holder=m22 unix_ms=1793687560887 takeover_from=-
+LEASE acquired tenant=ramo047 holder=m22 unix_ms=1793687560897 takeover_from=-
+LEASE acquired tenant=ramo048 holder=m22 unix_ms=1793687560907 takeover_from=-
+LEASE acquired tenant=ramo049 holder=m22 unix_ms=1793687560918 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560949 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560950 takeover_from=-
+ADMIN DELETE /v1/databases/ramo000 -> 200 11 ms peer=127.0.0.1:41654
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560959 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560960 takeover_from=-
+ADMIN DELETE /v1/databases/ramo001 -> 200 9 ms peer=127.0.0.1:41662
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560968 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560969 takeover_from=-
+ADMIN DELETE /v1/databases/ramo002 -> 200 8 ms peer=127.0.0.1:41670
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560977 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560978 takeover_from=-
+ADMIN DELETE /v1/databases/ramo003 -> 200 8 ms peer=127.0.0.1:41686
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560986 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560987 takeover_from=-
+ADMIN DELETE /v1/databases/ramo004 -> 200 8 ms peer=127.0.0.1:41702
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560995 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687560996 takeover_from=-
+ADMIN DELETE /v1/databases/ramo005 -> 200 8 ms peer=127.0.0.1:41714
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561004 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561005 takeover_from=-
+ADMIN DELETE /v1/databases/ramo006 -> 200 8 ms peer=127.0.0.1:41724
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561013 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561014 takeover_from=-
+ADMIN DELETE /v1/databases/ramo007 -> 200 8 ms peer=127.0.0.1:41740
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561022 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561023 takeover_from=-
+ADMIN DELETE /v1/databases/ramo008 -> 200 8 ms peer=127.0.0.1:41748
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561031 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561032 takeover_from=-
+ADMIN DELETE /v1/databases/ramo009 -> 200 8 ms peer=127.0.0.1:41764
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561040 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561040 takeover_from=-
+ADMIN DELETE /v1/databases/ramo010 -> 200 8 ms peer=127.0.0.1:41776
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561049 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561049 takeover_from=-
+ADMIN DELETE /v1/databases/ramo011 -> 200 7 ms peer=127.0.0.1:41782
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561056 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561057 takeover_from=-
+ADMIN DELETE /v1/databases/ramo012 -> 200 8 ms peer=127.0.0.1:41794
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561066 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561066 takeover_from=-
+ADMIN DELETE /v1/databases/ramo013 -> 200 7 ms peer=127.0.0.1:41798
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561073 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561074 takeover_from=-
+ADMIN DELETE /v1/databases/ramo014 -> 200 7 ms peer=127.0.0.1:41802
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561081 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561082 takeover_from=-
+ADMIN DELETE /v1/databases/ramo015 -> 200 7 ms peer=127.0.0.1:41810
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561089 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561089 takeover_from=-
+ADMIN DELETE /v1/databases/ramo016 -> 200 7 ms peer=127.0.0.1:41812
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561096 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561097 takeover_from=-
+ADMIN DELETE /v1/databases/ramo017 -> 200 7 ms peer=127.0.0.1:41816
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561105 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561105 takeover_from=-
+ADMIN DELETE /v1/databases/ramo018 -> 200 7 ms peer=127.0.0.1:41822
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561112 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561113 takeover_from=-
+ADMIN DELETE /v1/databases/ramo019 -> 200 7 ms peer=127.0.0.1:41826
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561120 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561121 takeover_from=-
+ADMIN DELETE /v1/databases/ramo020 -> 200 7 ms peer=127.0.0.1:41840
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561128 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561129 takeover_from=-
+ADMIN DELETE /v1/databases/ramo021 -> 200 7 ms peer=127.0.0.1:41842
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561136 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561136 takeover_from=-
+ADMIN DELETE /v1/databases/ramo022 -> 200 7 ms peer=127.0.0.1:41858
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561143 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561144 takeover_from=-
+ADMIN DELETE /v1/databases/ramo023 -> 200 7 ms peer=127.0.0.1:41862
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561151 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561152 takeover_from=-
+ADMIN DELETE /v1/databases/ramo024 -> 200 7 ms peer=127.0.0.1:41876
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561159 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561160 takeover_from=-
+ADMIN DELETE /v1/databases/ramo025 -> 200 7 ms peer=127.0.0.1:41888
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561167 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561168 takeover_from=-
+ADMIN DELETE /v1/databases/ramo026 -> 200 7 ms peer=127.0.0.1:41900
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561174 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561175 takeover_from=-
+ADMIN DELETE /v1/databases/ramo027 -> 200 7 ms peer=127.0.0.1:41906
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561182 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561182 takeover_from=-
+ADMIN DELETE /v1/databases/ramo028 -> 200 7 ms peer=127.0.0.1:41908
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561189 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561190 takeover_from=-
+ADMIN DELETE /v1/databases/ramo029 -> 200 7 ms peer=127.0.0.1:41914
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561197 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561198 takeover_from=-
+ADMIN DELETE /v1/databases/ramo030 -> 200 7 ms peer=127.0.0.1:41918
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561205 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561205 takeover_from=-
+ADMIN DELETE /v1/databases/ramo031 -> 200 7 ms peer=127.0.0.1:41934
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561213 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561213 takeover_from=-
+ADMIN DELETE /v1/databases/ramo032 -> 200 7 ms peer=127.0.0.1:41946
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561224 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561225 takeover_from=-
+ADMIN DELETE /v1/databases/ramo033 -> 200 11 ms peer=127.0.0.1:41962
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561232 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561233 takeover_from=-
+ADMIN DELETE /v1/databases/ramo034 -> 200 12 ms peer=127.0.0.1:41976
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561246 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561247 takeover_from=-
+ADMIN DELETE /v1/databases/ramo035 -> 200 10 ms peer=127.0.0.1:41978
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561257 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561258 takeover_from=-
+ADMIN DELETE /v1/databases/ramo036 -> 200 10 ms peer=127.0.0.1:41992
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561268 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561269 takeover_from=-
+ADMIN DELETE /v1/databases/ramo037 -> 200 8 ms peer=127.0.0.1:41994
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561277 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561278 takeover_from=-
+ADMIN DELETE /v1/databases/ramo038 -> 200 8 ms peer=127.0.0.1:42002
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561287 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561287 takeover_from=-
+ADMIN DELETE /v1/databases/ramo039 -> 200 8 ms peer=127.0.0.1:42006
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561296 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561296 takeover_from=-
+ADMIN DELETE /v1/databases/ramo040 -> 200 8 ms peer=127.0.0.1:42008
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561305 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561305 takeover_from=-
+ADMIN DELETE /v1/databases/ramo041 -> 200 8 ms peer=127.0.0.1:42020
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561313 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561314 takeover_from=-
+ADMIN DELETE /v1/databases/ramo042 -> 200 7 ms peer=127.0.0.1:42026
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561321 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561322 takeover_from=-
+ADMIN DELETE /v1/databases/ramo043 -> 200 7 ms peer=127.0.0.1:42034
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561329 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561330 takeover_from=-
+ADMIN DELETE /v1/databases/ramo044 -> 200 7 ms peer=127.0.0.1:42048
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561337 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561338 takeover_from=-
+ADMIN DELETE /v1/databases/ramo045 -> 200 8 ms peer=127.0.0.1:42056
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561346 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561347 takeover_from=-
+ADMIN DELETE /v1/databases/ramo046 -> 200 9 ms peer=127.0.0.1:42060
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561356 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561356 takeover_from=-
+ADMIN DELETE /v1/databases/ramo047 -> 200 8 ms peer=127.0.0.1:42072
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561365 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561366 takeover_from=-
+ADMIN DELETE /v1/databases/ramo048 -> 200 9 ms peer=127.0.0.1:42088
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561374 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687561375 takeover_from=-
+ADMIN DELETE /v1/databases/ramo049 -> 200 7 ms peer=127.0.0.1:42104
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+SLOW hello db=admin ms=10001 ok=true
+maintenance stopped
+admin interface listening on 127.0.0.1:27101 (bearer token required)
+mongo-server listening on 127.0.0.1:27100 (idle close after 3600 s, holder m22, lease ttl 30 s)
+ADMIN GET /v1/health -> 200 0 ms peer=127.0.0.1:53456
+SLOW hello db=admin ms=10002 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10000 ok=true
+LEASE process_lease tenant=- holder=m22 unix_ms=1793687605521 inc=1d50d4ccc0b41e64 gen=1
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605521 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605523 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605533 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605536 ok=true
+LEASE release_begin tenant=ramo000 holder=m22 unix_ms=1793687605537 
+LEASE release tenant=ramo000 holder=m22 unix_ms=1793687605537 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 17 ms peer=127.0.0.1:48222
+LEASE acquired tenant=ramo000 holder=m22 unix_ms=1793687605538 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605548 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605549 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605556 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605557 ok=true
+LEASE release_begin tenant=ramo001 holder=m22 unix_ms=1793687605557 
+LEASE release tenant=ramo001 holder=m22 unix_ms=1793687605558 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48226
+LEASE acquired tenant=ramo001 holder=m22 unix_ms=1793687605559 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605570 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605571 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605579 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605579 ok=true
+LEASE release_begin tenant=ramo002 holder=m22 unix_ms=1793687605580 
+LEASE release tenant=ramo002 holder=m22 unix_ms=1793687605581 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48242
+LEASE acquired tenant=ramo002 holder=m22 unix_ms=1793687605582 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605591 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605592 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605599 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605599 ok=true
+LEASE release_begin tenant=ramo003 holder=m22 unix_ms=1793687605600 
+LEASE release tenant=ramo003 holder=m22 unix_ms=1793687605600 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48258
+LEASE acquired tenant=ramo003 holder=m22 unix_ms=1793687605601 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605613 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605613 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605620 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605620 ok=true
+LEASE release_begin tenant=ramo004 holder=m22 unix_ms=1793687605621 
+LEASE release tenant=ramo004 holder=m22 unix_ms=1793687605621 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 8 ms peer=127.0.0.1:48272
+LEASE acquired tenant=ramo004 holder=m22 unix_ms=1793687605622 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605633 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605634 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605640 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605640 ok=true
+LEASE release_begin tenant=ramo005 holder=m22 unix_ms=1793687605641 
+LEASE release tenant=ramo005 holder=m22 unix_ms=1793687605641 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 8 ms peer=127.0.0.1:48282
+LEASE acquired tenant=ramo005 holder=m22 unix_ms=1793687605642 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605653 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605654 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605661 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605662 ok=true
+LEASE release_begin tenant=ramo006 holder=m22 unix_ms=1793687605662 
+LEASE release tenant=ramo006 holder=m22 unix_ms=1793687605663 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48292
+LEASE acquired tenant=ramo006 holder=m22 unix_ms=1793687605664 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605674 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605675 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605684 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605684 ok=true
+LEASE release_begin tenant=ramo007 holder=m22 unix_ms=1793687605685 
+LEASE release tenant=ramo007 holder=m22 unix_ms=1793687605685 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48300
+LEASE acquired tenant=ramo007 holder=m22 unix_ms=1793687605686 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605699 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605700 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605708 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605709 ok=true
+LEASE release_begin tenant=ramo008 holder=m22 unix_ms=1793687605709 
+LEASE release tenant=ramo008 holder=m22 unix_ms=1793687605710 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48308
+LEASE acquired tenant=ramo008 holder=m22 unix_ms=1793687605711 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605722 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605723 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605731 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605731 ok=true
+LEASE release_begin tenant=ramo009 holder=m22 unix_ms=1793687605732 
+LEASE release tenant=ramo009 holder=m22 unix_ms=1793687605732 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48324
+LEASE acquired tenant=ramo009 holder=m22 unix_ms=1793687605733 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605745 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605746 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605755 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605755 ok=true
+LEASE release_begin tenant=ramo010 holder=m22 unix_ms=1793687605756 
+LEASE release tenant=ramo010 holder=m22 unix_ms=1793687605756 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48338
+LEASE acquired tenant=ramo010 holder=m22 unix_ms=1793687605757 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605770 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605771 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605779 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605779 ok=true
+LEASE release_begin tenant=ramo011 holder=m22 unix_ms=1793687605780 
+LEASE release tenant=ramo011 holder=m22 unix_ms=1793687605780 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48340
+LEASE acquired tenant=ramo011 holder=m22 unix_ms=1793687605781 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605788 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605788 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605796 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605796 ok=true
+LEASE release_begin tenant=ramo012 holder=m22 unix_ms=1793687605796 
+LEASE release tenant=ramo012 holder=m22 unix_ms=1793687605797 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48348
+LEASE acquired tenant=ramo012 holder=m22 unix_ms=1793687605798 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605803 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605804 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605811 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605811 ok=true
+LEASE release_begin tenant=ramo013 holder=m22 unix_ms=1793687605812 
+LEASE release tenant=ramo013 holder=m22 unix_ms=1793687605812 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48364
+LEASE acquired tenant=ramo013 holder=m22 unix_ms=1793687605813 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605823 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605823 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605831 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605831 ok=true
+LEASE release_begin tenant=ramo014 holder=m22 unix_ms=1793687605832 
+LEASE release tenant=ramo014 holder=m22 unix_ms=1793687605832 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48374
+LEASE acquired tenant=ramo014 holder=m22 unix_ms=1793687605833 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605840 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605840 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605848 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605848 ok=true
+LEASE release_begin tenant=ramo015 holder=m22 unix_ms=1793687605848 
+LEASE release tenant=ramo015 holder=m22 unix_ms=1793687605849 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48390
+LEASE acquired tenant=ramo015 holder=m22 unix_ms=1793687605849 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605858 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605858 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605865 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605865 ok=true
+LEASE release_begin tenant=ramo016 holder=m22 unix_ms=1793687605866 
+LEASE release tenant=ramo016 holder=m22 unix_ms=1793687605866 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48394
+LEASE acquired tenant=ramo016 holder=m22 unix_ms=1793687605867 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605875 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605876 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605883 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605883 ok=true
+LEASE release_begin tenant=ramo017 holder=m22 unix_ms=1793687605884 
+LEASE release tenant=ramo017 holder=m22 unix_ms=1793687605884 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48396
+LEASE acquired tenant=ramo017 holder=m22 unix_ms=1793687605885 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605893 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605893 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605901 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605901 ok=true
+LEASE release_begin tenant=ramo018 holder=m22 unix_ms=1793687605901 
+LEASE release tenant=ramo018 holder=m22 unix_ms=1793687605902 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48406
+LEASE acquired tenant=ramo018 holder=m22 unix_ms=1793687605903 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605911 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605912 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605919 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605919 ok=true
+LEASE release_begin tenant=ramo019 holder=m22 unix_ms=1793687605920 
+LEASE release tenant=ramo019 holder=m22 unix_ms=1793687605921 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48408
+LEASE acquired tenant=ramo019 holder=m22 unix_ms=1793687605922 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605927 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605928 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605935 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605935 ok=true
+LEASE release_begin tenant=ramo020 holder=m22 unix_ms=1793687605936 
+LEASE release tenant=ramo020 holder=m22 unix_ms=1793687605936 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48424
+LEASE acquired tenant=ramo020 holder=m22 unix_ms=1793687605937 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605947 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605947 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605955 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605955 ok=true
+LEASE release_begin tenant=ramo021 holder=m22 unix_ms=1793687605956 
+LEASE release tenant=ramo021 holder=m22 unix_ms=1793687605956 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 9 ms peer=127.0.0.1:48440
+LEASE acquired tenant=ramo021 holder=m22 unix_ms=1793687605957 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605964 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605965 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605972 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605973 ok=true
+LEASE release_begin tenant=ramo022 holder=m22 unix_ms=1793687605974 
+LEASE release tenant=ramo022 holder=m22 unix_ms=1793687605974 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48456
+LEASE acquired tenant=ramo022 holder=m22 unix_ms=1793687605975 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605981 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687605981 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687605990 
+LEASE release tenant=padre holder=m22 unix_ms=1793687605990 ok=true
+LEASE release_begin tenant=ramo023 holder=m22 unix_ms=1793687605991 
+LEASE release tenant=ramo023 holder=m22 unix_ms=1793687605991 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48464
+LEASE acquired tenant=ramo023 holder=m22 unix_ms=1793687605992 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606003 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606004 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606013 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606014 ok=true
+LEASE release_begin tenant=ramo024 holder=m22 unix_ms=1793687606014 
+LEASE release tenant=ramo024 holder=m22 unix_ms=1793687606015 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 12 ms peer=127.0.0.1:48472
+LEASE acquired tenant=ramo024 holder=m22 unix_ms=1793687606016 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606023 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606024 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606032 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606033 ok=true
+LEASE release_begin tenant=ramo025 holder=m22 unix_ms=1793687606033 
+LEASE release tenant=ramo025 holder=m22 unix_ms=1793687606034 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48482
+LEASE acquired tenant=ramo025 holder=m22 unix_ms=1793687606035 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606045 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606046 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606059 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606059 ok=true
+LEASE release_begin tenant=ramo026 holder=m22 unix_ms=1793687606060 
+LEASE release tenant=ramo026 holder=m22 unix_ms=1793687606060 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 15 ms peer=127.0.0.1:48498
+LEASE acquired tenant=ramo026 holder=m22 unix_ms=1793687606061 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606067 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606068 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606078 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606079 ok=true
+LEASE release_begin tenant=ramo027 holder=m22 unix_ms=1793687606080 
+LEASE release tenant=ramo027 holder=m22 unix_ms=1793687606080 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 13 ms peer=127.0.0.1:48500
+LEASE acquired tenant=ramo027 holder=m22 unix_ms=1793687606081 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606091 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606092 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606101 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606102 ok=true
+LEASE release_begin tenant=ramo028 holder=m22 unix_ms=1793687606103 
+LEASE release tenant=ramo028 holder=m22 unix_ms=1793687606103 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 12 ms peer=127.0.0.1:48508
+LEASE acquired tenant=ramo028 holder=m22 unix_ms=1793687606104 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606113 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606114 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606123 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606123 ok=true
+LEASE release_begin tenant=ramo029 holder=m22 unix_ms=1793687606124 
+LEASE release tenant=ramo029 holder=m22 unix_ms=1793687606124 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48510
+LEASE acquired tenant=ramo029 holder=m22 unix_ms=1793687606125 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606131 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606132 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606140 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606141 ok=true
+LEASE release_begin tenant=ramo030 holder=m22 unix_ms=1793687606142 
+LEASE release tenant=ramo030 holder=m22 unix_ms=1793687606142 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48524
+LEASE acquired tenant=ramo030 holder=m22 unix_ms=1793687606143 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606150 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606151 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606160 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606160 ok=true
+LEASE release_begin tenant=ramo031 holder=m22 unix_ms=1793687606161 
+LEASE release tenant=ramo031 holder=m22 unix_ms=1793687606161 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48540
+LEASE acquired tenant=ramo031 holder=m22 unix_ms=1793687606162 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606170 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606171 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606181 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606182 ok=true
+LEASE release_begin tenant=ramo032 holder=m22 unix_ms=1793687606182 
+LEASE release tenant=ramo032 holder=m22 unix_ms=1793687606183 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 12 ms peer=127.0.0.1:48550
+LEASE acquired tenant=ramo032 holder=m22 unix_ms=1793687606184 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606189 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606190 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606201 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606201 ok=true
+LEASE release_begin tenant=ramo033 holder=m22 unix_ms=1793687606202 
+LEASE release tenant=ramo033 holder=m22 unix_ms=1793687606202 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 13 ms peer=127.0.0.1:48564
+LEASE acquired tenant=ramo033 holder=m22 unix_ms=1793687606203 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606211 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606212 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606221 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606221 ok=true
+LEASE release_begin tenant=ramo034 holder=m22 unix_ms=1793687606222 
+LEASE release tenant=ramo034 holder=m22 unix_ms=1793687606222 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48572
+LEASE acquired tenant=ramo034 holder=m22 unix_ms=1793687606223 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606236 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606236 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606246 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606247 ok=true
+LEASE release_begin tenant=ramo035 holder=m22 unix_ms=1793687606248 
+LEASE release tenant=ramo035 holder=m22 unix_ms=1793687606248 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 12 ms peer=127.0.0.1:48588
+LEASE acquired tenant=ramo035 holder=m22 unix_ms=1793687606249 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606256 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606257 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606266 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606266 ok=true
+LEASE release_begin tenant=ramo036 holder=m22 unix_ms=1793687606267 
+LEASE release tenant=ramo036 holder=m22 unix_ms=1793687606267 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48596
+LEASE acquired tenant=ramo036 holder=m22 unix_ms=1793687606268 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606275 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606276 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606284 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606284 ok=true
+LEASE release_begin tenant=ramo037 holder=m22 unix_ms=1793687606285 
+LEASE release tenant=ramo037 holder=m22 unix_ms=1793687606285 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 12 ms peer=127.0.0.1:48612
+LEASE acquired tenant=ramo037 holder=m22 unix_ms=1793687606286 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606296 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606297 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606306 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606306 ok=true
+LEASE release_begin tenant=ramo038 holder=m22 unix_ms=1793687606307 
+LEASE release tenant=ramo038 holder=m22 unix_ms=1793687606307 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48620
+LEASE acquired tenant=ramo038 holder=m22 unix_ms=1793687606308 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606315 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606316 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606325 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606325 ok=true
+LEASE release_begin tenant=ramo039 holder=m22 unix_ms=1793687606326 
+LEASE release tenant=ramo039 holder=m22 unix_ms=1793687606326 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48632
+LEASE acquired tenant=ramo039 holder=m22 unix_ms=1793687606327 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606334 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606335 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606344 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606344 ok=true
+LEASE release_begin tenant=ramo040 holder=m22 unix_ms=1793687606345 
+LEASE release tenant=ramo040 holder=m22 unix_ms=1793687606345 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48636
+LEASE acquired tenant=ramo040 holder=m22 unix_ms=1793687606346 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606355 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606356 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606364 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606364 ok=true
+LEASE release_begin tenant=ramo041 holder=m22 unix_ms=1793687606365 
+LEASE release tenant=ramo041 holder=m22 unix_ms=1793687606365 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48638
+LEASE acquired tenant=ramo041 holder=m22 unix_ms=1793687606366 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606374 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606375 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606384 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606384 ok=true
+LEASE release_begin tenant=ramo042 holder=m22 unix_ms=1793687606385 
+LEASE release tenant=ramo042 holder=m22 unix_ms=1793687606385 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48652
+LEASE acquired tenant=ramo042 holder=m22 unix_ms=1793687606386 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606394 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606395 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606403 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606404 ok=true
+LEASE release_begin tenant=ramo043 holder=m22 unix_ms=1793687606405 
+LEASE release tenant=ramo043 holder=m22 unix_ms=1793687606405 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48658
+LEASE acquired tenant=ramo043 holder=m22 unix_ms=1793687606406 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606415 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606416 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606425 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606425 ok=true
+LEASE release_begin tenant=ramo044 holder=m22 unix_ms=1793687606426 
+LEASE release tenant=ramo044 holder=m22 unix_ms=1793687606426 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48666
+LEASE acquired tenant=ramo044 holder=m22 unix_ms=1793687606428 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606433 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606434 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606443 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606444 ok=true
+LEASE release_begin tenant=ramo045 holder=m22 unix_ms=1793687606444 
+LEASE release tenant=ramo045 holder=m22 unix_ms=1793687606444 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 11 ms peer=127.0.0.1:48668
+LEASE acquired tenant=ramo045 holder=m22 unix_ms=1793687606445 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606454 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606455 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606463 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606464 ok=true
+LEASE release_begin tenant=ramo046 holder=m22 unix_ms=1793687606464 
+LEASE release tenant=ramo046 holder=m22 unix_ms=1793687606465 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48680
+LEASE acquired tenant=ramo046 holder=m22 unix_ms=1793687606466 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606473 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606474 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606482 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606483 ok=true
+LEASE release_begin tenant=ramo047 holder=m22 unix_ms=1793687606483 
+LEASE release tenant=ramo047 holder=m22 unix_ms=1793687606484 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48686
+LEASE acquired tenant=ramo047 holder=m22 unix_ms=1793687606484 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606490 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606491 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606499 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606499 ok=true
+LEASE release_begin tenant=ramo048 holder=m22 unix_ms=1793687606500 
+LEASE release tenant=ramo048 holder=m22 unix_ms=1793687606500 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48692
+LEASE acquired tenant=ramo048 holder=m22 unix_ms=1793687606501 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606509 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687606509 takeover_from=-
+LEASE release_begin tenant=padre holder=m22 unix_ms=1793687606517 
+LEASE release tenant=padre holder=m22 unix_ms=1793687606517 ok=true
+LEASE release_begin tenant=ramo049 holder=m22 unix_ms=1793687606518 
+LEASE release tenant=ramo049 holder=m22 unix_ms=1793687606518 ok=true
+ADMIN POST /v1/databases/padre/fork -> 201 10 ms peer=127.0.0.1:48700
+LEASE acquired tenant=ramo049 holder=m22 unix_ms=1793687606519 takeover_from=-
+LEASE writer_open tenant=ramo000 holder=m22 unix_ms=1793687606606 
+LEASE writer_open tenant=ramo001 holder=m22 unix_ms=1793687606736 
+LEASE writer_open tenant=ramo002 holder=m22 unix_ms=1793687606862 
+LEASE writer_open tenant=ramo003 holder=m22 unix_ms=1793687606997 
+LEASE writer_open tenant=ramo004 holder=m22 unix_ms=1793687607128 
+LEASE writer_open tenant=ramo005 holder=m22 unix_ms=1793687607286 
+LEASE writer_open tenant=ramo006 holder=m22 unix_ms=1793687607412 
+LEASE writer_open tenant=ramo007 holder=m22 unix_ms=1793687607529 
+LEASE writer_open tenant=ramo008 holder=m22 unix_ms=1793687607654 
+LEASE writer_open tenant=ramo009 holder=m22 unix_ms=1793687607774 
+LEASE writer_open tenant=ramo010 holder=m22 unix_ms=1793687607888 
+LEASE writer_open tenant=ramo011 holder=m22 unix_ms=1793687608008 
+LEASE writer_open tenant=ramo012 holder=m22 unix_ms=1793687608137 
+LEASE writer_open tenant=ramo013 holder=m22 unix_ms=1793687608260 
+LEASE writer_open tenant=ramo014 holder=m22 unix_ms=1793687608408 
+LEASE writer_open tenant=ramo015 holder=m22 unix_ms=1793687608533 
+LEASE writer_open tenant=ramo016 holder=m22 unix_ms=1793687608660 
+LEASE writer_open tenant=ramo017 holder=m22 unix_ms=1793687608797 
+LEASE writer_open tenant=ramo018 holder=m22 unix_ms=1793687608925 
+LEASE writer_open tenant=ramo019 holder=m22 unix_ms=1793687609040 
+LEASE writer_open tenant=ramo020 holder=m22 unix_ms=1793687609169 
+LEASE writer_open tenant=ramo021 holder=m22 unix_ms=1793687609294 
+LEASE writer_open tenant=ramo022 holder=m22 unix_ms=1793687609415 
+LEASE writer_open tenant=ramo023 holder=m22 unix_ms=1793687609539 
+LEASE writer_open tenant=ramo024 holder=m22 unix_ms=1793687609659 
+LEASE writer_open tenant=ramo025 holder=m22 unix_ms=1793687609786 
+LEASE writer_open tenant=ramo026 holder=m22 unix_ms=1793687609918 
+LEASE writer_open tenant=ramo027 holder=m22 unix_ms=1793687610050 
+LEASE writer_open tenant=ramo028 holder=m22 unix_ms=1793687610187 
+LEASE writer_open tenant=ramo029 holder=m22 unix_ms=1793687610324 
+LEASE writer_open tenant=ramo030 holder=m22 unix_ms=1793687610459 
+LEASE writer_open tenant=ramo031 holder=m22 unix_ms=1793687610584 
+LEASE writer_open tenant=ramo032 holder=m22 unix_ms=1793687610698 
+LEASE writer_open tenant=ramo033 holder=m22 unix_ms=1793687610828 
+LEASE writer_open tenant=ramo034 holder=m22 unix_ms=1793687611009 
+LEASE writer_open tenant=ramo035 holder=m22 unix_ms=1793687611150 
+LEASE writer_open tenant=ramo036 holder=m22 unix_ms=1793687611272 
+LEASE writer_open tenant=ramo037 holder=m22 unix_ms=1793687611396 
+LEASE writer_open tenant=ramo038 holder=m22 unix_ms=1793687611520 
+LEASE writer_open tenant=ramo039 holder=m22 unix_ms=1793687611645 
+LEASE writer_open tenant=ramo040 holder=m22 unix_ms=1793687611801 
+LEASE writer_open tenant=ramo041 holder=m22 unix_ms=1793687611938 
+LEASE writer_open tenant=ramo042 holder=m22 unix_ms=1793687612062 
+LEASE writer_open tenant=ramo043 holder=m22 unix_ms=1793687612188 
+LEASE writer_open tenant=ramo044 holder=m22 unix_ms=1793687612303 
+LEASE writer_open tenant=ramo045 holder=m22 unix_ms=1793687612442 
+LEASE writer_open tenant=ramo046 holder=m22 unix_ms=1793687612581 
+LEASE writer_open tenant=ramo047 holder=m22 unix_ms=1793687612701 
+LEASE writer_open tenant=ramo048 holder=m22 unix_ms=1793687612826 
+LEASE writer_open tenant=ramo049 holder=m22 unix_ms=1793687612948 
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE writer_close tenant=ramo000 holder=m22 unix_ms=1793687643194 
+LEASE release_begin tenant=ramo000 holder=m22 unix_ms=1793687643194 
+LEASE release tenant=ramo000 holder=m22 unix_ms=1793687643195 ok=true
+LEASE writer_close tenant=ramo001 holder=m22 unix_ms=1793687643196 
+LEASE release_begin tenant=ramo001 holder=m22 unix_ms=1793687643196 
+LEASE release tenant=ramo001 holder=m22 unix_ms=1793687643197 ok=true
+LEASE writer_close tenant=ramo002 holder=m22 unix_ms=1793687643198 
+LEASE release_begin tenant=ramo002 holder=m22 unix_ms=1793687643199 
+LEASE release tenant=ramo002 holder=m22 unix_ms=1793687643199 ok=true
+LEASE writer_close tenant=ramo003 holder=m22 unix_ms=1793687643200 
+LEASE release_begin tenant=ramo003 holder=m22 unix_ms=1793687643200 
+LEASE release tenant=ramo003 holder=m22 unix_ms=1793687643201 ok=true
+LEASE writer_close tenant=ramo004 holder=m22 unix_ms=1793687643203 
+LEASE release_begin tenant=ramo004 holder=m22 unix_ms=1793687643203 
+LEASE release tenant=ramo004 holder=m22 unix_ms=1793687643203 ok=true
+LEASE writer_close tenant=ramo005 holder=m22 unix_ms=1793687643206 
+LEASE release_begin tenant=ramo005 holder=m22 unix_ms=1793687643206 
+LEASE release tenant=ramo005 holder=m22 unix_ms=1793687643206 ok=true
+LEASE writer_close tenant=ramo006 holder=m22 unix_ms=1793687643208 
+LEASE release_begin tenant=ramo006 holder=m22 unix_ms=1793687643208 
+LEASE release tenant=ramo006 holder=m22 unix_ms=1793687643208 ok=true
+LEASE writer_close tenant=ramo007 holder=m22 unix_ms=1793687643210 
+LEASE release_begin tenant=ramo007 holder=m22 unix_ms=1793687643210 
+LEASE release tenant=ramo007 holder=m22 unix_ms=1793687643210 ok=true
+LEASE writer_close tenant=ramo008 holder=m22 unix_ms=1793687643212 
+LEASE release_begin tenant=ramo008 holder=m22 unix_ms=1793687643212 
+LEASE release tenant=ramo008 holder=m22 unix_ms=1793687643213 ok=true
+LEASE writer_close tenant=ramo009 holder=m22 unix_ms=1793687643214 
+LEASE release_begin tenant=ramo009 holder=m22 unix_ms=1793687643214 
+LEASE release tenant=ramo009 holder=m22 unix_ms=1793687643215 ok=true
+LEASE writer_close tenant=ramo010 holder=m22 unix_ms=1793687643216 
+LEASE release_begin tenant=ramo010 holder=m22 unix_ms=1793687643216 
+LEASE release tenant=ramo010 holder=m22 unix_ms=1793687643217 ok=true
+LEASE writer_close tenant=ramo011 holder=m22 unix_ms=1793687643218 
+LEASE release_begin tenant=ramo011 holder=m22 unix_ms=1793687643218 
+LEASE release tenant=ramo011 holder=m22 unix_ms=1793687643219 ok=true
+LEASE writer_close tenant=ramo012 holder=m22 unix_ms=1793687643221 
+LEASE release_begin tenant=ramo012 holder=m22 unix_ms=1793687643221 
+LEASE release tenant=ramo012 holder=m22 unix_ms=1793687643221 ok=true
+LEASE writer_close tenant=ramo013 holder=m22 unix_ms=1793687643223 
+LEASE release_begin tenant=ramo013 holder=m22 unix_ms=1793687643223 
+LEASE release tenant=ramo013 holder=m22 unix_ms=1793687643223 ok=true
+LEASE writer_close tenant=ramo014 holder=m22 unix_ms=1793687643225 
+LEASE release_begin tenant=ramo014 holder=m22 unix_ms=1793687643225 
+LEASE release tenant=ramo014 holder=m22 unix_ms=1793687643225 ok=true
+LEASE writer_close tenant=ramo015 holder=m22 unix_ms=1793687643227 
+LEASE release_begin tenant=ramo015 holder=m22 unix_ms=1793687643227 
+LEASE release tenant=ramo015 holder=m22 unix_ms=1793687643227 ok=true
+LEASE writer_close tenant=ramo016 holder=m22 unix_ms=1793687643229 
+LEASE release_begin tenant=ramo016 holder=m22 unix_ms=1793687643229 
+LEASE release tenant=ramo016 holder=m22 unix_ms=1793687643230 ok=true
+LEASE writer_close tenant=ramo017 holder=m22 unix_ms=1793687643231 
+LEASE release_begin tenant=ramo017 holder=m22 unix_ms=1793687643231 
+LEASE release tenant=ramo017 holder=m22 unix_ms=1793687643232 ok=true
+LEASE writer_close tenant=ramo018 holder=m22 unix_ms=1793687643234 
+LEASE release_begin tenant=ramo018 holder=m22 unix_ms=1793687643234 
+LEASE release tenant=ramo018 holder=m22 unix_ms=1793687643234 ok=true
+LEASE writer_close tenant=ramo019 holder=m22 unix_ms=1793687643236 
+LEASE release_begin tenant=ramo019 holder=m22 unix_ms=1793687643236 
+LEASE release tenant=ramo019 holder=m22 unix_ms=1793687643236 ok=true
+LEASE writer_close tenant=ramo020 holder=m22 unix_ms=1793687643238 
+LEASE release_begin tenant=ramo020 holder=m22 unix_ms=1793687643238 
+LEASE release tenant=ramo020 holder=m22 unix_ms=1793687643239 ok=true
+LEASE writer_close tenant=ramo021 holder=m22 unix_ms=1793687643241 
+LEASE release_begin tenant=ramo021 holder=m22 unix_ms=1793687643241 
+LEASE release tenant=ramo021 holder=m22 unix_ms=1793687643241 ok=true
+LEASE writer_close tenant=ramo022 holder=m22 unix_ms=1793687643243 
+LEASE release_begin tenant=ramo022 holder=m22 unix_ms=1793687643243 
+LEASE release tenant=ramo022 holder=m22 unix_ms=1793687643244 ok=true
+LEASE writer_close tenant=ramo023 holder=m22 unix_ms=1793687643246 
+LEASE release_begin tenant=ramo023 holder=m22 unix_ms=1793687643246 
+LEASE release tenant=ramo023 holder=m22 unix_ms=1793687643246 ok=true
+LEASE writer_close tenant=ramo024 holder=m22 unix_ms=1793687643249 
+LEASE release_begin tenant=ramo024 holder=m22 unix_ms=1793687643249 
+LEASE release tenant=ramo024 holder=m22 unix_ms=1793687643249 ok=true
+LEASE writer_close tenant=ramo025 holder=m22 unix_ms=1793687643251 
+LEASE release_begin tenant=ramo025 holder=m22 unix_ms=1793687643251 
+LEASE release tenant=ramo025 holder=m22 unix_ms=1793687643252 ok=true
+LEASE writer_close tenant=ramo026 holder=m22 unix_ms=1793687643254 
+LEASE release_begin tenant=ramo026 holder=m22 unix_ms=1793687643254 
+LEASE release tenant=ramo026 holder=m22 unix_ms=1793687643254 ok=true
+LEASE writer_close tenant=ramo027 holder=m22 unix_ms=1793687643256 
+LEASE release_begin tenant=ramo027 holder=m22 unix_ms=1793687643256 
+LEASE release tenant=ramo027 holder=m22 unix_ms=1793687643256 ok=true
+LEASE writer_close tenant=ramo028 holder=m22 unix_ms=1793687643258 
+LEASE release_begin tenant=ramo028 holder=m22 unix_ms=1793687643258 
+LEASE release tenant=ramo028 holder=m22 unix_ms=1793687643259 ok=true
+LEASE writer_close tenant=ramo029 holder=m22 unix_ms=1793687643261 
+LEASE release_begin tenant=ramo029 holder=m22 unix_ms=1793687643261 
+LEASE release tenant=ramo029 holder=m22 unix_ms=1793687643261 ok=true
+LEASE writer_close tenant=ramo030 holder=m22 unix_ms=1793687643263 
+LEASE release_begin tenant=ramo030 holder=m22 unix_ms=1793687643263 
+LEASE release tenant=ramo030 holder=m22 unix_ms=1793687643264 ok=true
+LEASE writer_close tenant=ramo031 holder=m22 unix_ms=1793687643265 
+LEASE release_begin tenant=ramo031 holder=m22 unix_ms=1793687643265 
+LEASE release tenant=ramo031 holder=m22 unix_ms=1793687643266 ok=true
+LEASE writer_close tenant=ramo032 holder=m22 unix_ms=1793687643268 
+LEASE release_begin tenant=ramo032 holder=m22 unix_ms=1793687643268 
+LEASE release tenant=ramo032 holder=m22 unix_ms=1793687643268 ok=true
+LEASE writer_close tenant=ramo033 holder=m22 unix_ms=1793687643270 
+LEASE release_begin tenant=ramo033 holder=m22 unix_ms=1793687643270 
+LEASE release tenant=ramo033 holder=m22 unix_ms=1793687643270 ok=true
+LEASE writer_close tenant=ramo034 holder=m22 unix_ms=1793687643272 
+LEASE release_begin tenant=ramo034 holder=m22 unix_ms=1793687643272 
+LEASE release tenant=ramo034 holder=m22 unix_ms=1793687643273 ok=true
+LEASE writer_close tenant=ramo035 holder=m22 unix_ms=1793687643276 
+LEASE release_begin tenant=ramo035 holder=m22 unix_ms=1793687643276 
+LEASE release tenant=ramo035 holder=m22 unix_ms=1793687643277 ok=true
+LEASE writer_close tenant=ramo036 holder=m22 unix_ms=1793687643279 
+LEASE release_begin tenant=ramo036 holder=m22 unix_ms=1793687643279 
+LEASE release tenant=ramo036 holder=m22 unix_ms=1793687643279 ok=true
+LEASE writer_close tenant=ramo037 holder=m22 unix_ms=1793687643282 
+LEASE release_begin tenant=ramo037 holder=m22 unix_ms=1793687643282 
+LEASE release tenant=ramo037 holder=m22 unix_ms=1793687643282 ok=true
+LEASE writer_close tenant=ramo038 holder=m22 unix_ms=1793687643284 
+LEASE release_begin tenant=ramo038 holder=m22 unix_ms=1793687643284 
+LEASE release tenant=ramo038 holder=m22 unix_ms=1793687643285 ok=true
+LEASE writer_close tenant=ramo039 holder=m22 unix_ms=1793687643287 
+LEASE release_begin tenant=ramo039 holder=m22 unix_ms=1793687643287 
+LEASE release tenant=ramo039 holder=m22 unix_ms=1793687643287 ok=true
+LEASE writer_close tenant=ramo040 holder=m22 unix_ms=1793687643290 
+LEASE release_begin tenant=ramo040 holder=m22 unix_ms=1793687643290 
+LEASE release tenant=ramo040 holder=m22 unix_ms=1793687643290 ok=true
+LEASE writer_close tenant=ramo041 holder=m22 unix_ms=1793687643293 
+LEASE release_begin tenant=ramo041 holder=m22 unix_ms=1793687643293 
+LEASE release tenant=ramo041 holder=m22 unix_ms=1793687643293 ok=true
+LEASE writer_close tenant=ramo042 holder=m22 unix_ms=1793687643296 
+LEASE release_begin tenant=ramo042 holder=m22 unix_ms=1793687643296 
+LEASE release tenant=ramo042 holder=m22 unix_ms=1793687643296 ok=true
+LEASE writer_close tenant=ramo043 holder=m22 unix_ms=1793687643299 
+LEASE release_begin tenant=ramo043 holder=m22 unix_ms=1793687643299 
+LEASE release tenant=ramo043 holder=m22 unix_ms=1793687643299 ok=true
+LEASE writer_close tenant=ramo044 holder=m22 unix_ms=1793687643302 
+LEASE release_begin tenant=ramo044 holder=m22 unix_ms=1793687643302 
+LEASE release tenant=ramo044 holder=m22 unix_ms=1793687643303 ok=true
+LEASE writer_close tenant=ramo045 holder=m22 unix_ms=1793687643306 
+LEASE release_begin tenant=ramo045 holder=m22 unix_ms=1793687643306 
+LEASE release tenant=ramo045 holder=m22 unix_ms=1793687643306 ok=true
+LEASE writer_close tenant=ramo046 holder=m22 unix_ms=1793687643310 
+LEASE release_begin tenant=ramo046 holder=m22 unix_ms=1793687643310 
+LEASE release tenant=ramo046 holder=m22 unix_ms=1793687643310 ok=true
+LEASE writer_close tenant=ramo047 holder=m22 unix_ms=1793687643314 
+LEASE release_begin tenant=ramo047 holder=m22 unix_ms=1793687643314 
+LEASE release tenant=ramo047 holder=m22 unix_ms=1793687643315 ok=true
+LEASE writer_close tenant=ramo048 holder=m22 unix_ms=1793687643317 
+LEASE release_begin tenant=ramo048 holder=m22 unix_ms=1793687643317 
+LEASE release tenant=ramo048 holder=m22 unix_ms=1793687643318 ok=true
+LEASE writer_close tenant=ramo049 holder=m22 unix_ms=1793687643320 
+LEASE release_begin tenant=ramo049 holder=m22 unix_ms=1793687643320 
+LEASE release tenant=ramo049 holder=m22 unix_ms=1793687643320 ok=true
+SLOW hello db=admin ms=10001 ok=true
+SLOW hello db=admin ms=10000 ok=true
+SLOW hello db=admin ms=10001 ok=true
+LEASE acquired tenant=ramo000 holder=m22 unix_ms=1793687673362 takeover_from=-
+LEASE acquired tenant=ramo001 holder=m22 unix_ms=1793687673379 takeover_from=-
+LEASE acquired tenant=ramo002 holder=m22 unix_ms=1793687673393 takeover_from=-
+LEASE acquired tenant=ramo003 holder=m22 unix_ms=1793687673406 takeover_from=-
+LEASE acquired tenant=ramo004 holder=m22 unix_ms=1793687673415 takeover_from=-
+LEASE acquired tenant=ramo005 holder=m22 unix_ms=1793687673427 takeover_from=-
+LEASE acquired tenant=ramo006 holder=m22 unix_ms=1793687673439 takeover_from=-
+LEASE acquired tenant=ramo007 holder=m22 unix_ms=1793687673454 takeover_from=-
+LEASE acquired tenant=ramo008 holder=m22 unix_ms=1793687673464 takeover_from=-
+LEASE acquired tenant=ramo009 holder=m22 unix_ms=1793687673476 takeover_from=-
+LEASE acquired tenant=ramo010 holder=m22 unix_ms=1793687673487 takeover_from=-
+LEASE acquired tenant=ramo011 holder=m22 unix_ms=1793687673504 takeover_from=-
+LEASE acquired tenant=ramo012 holder=m22 unix_ms=1793687673527 takeover_from=-
+SLOW hello db=admin ms=10004 ok=true
+LEASE acquired tenant=ramo013 holder=m22 unix_ms=1793687673547 takeover_from=-
+LEASE acquired tenant=ramo014 holder=m22 unix_ms=1793687673573 takeover_from=-
+LEASE acquired tenant=ramo015 holder=m22 unix_ms=1793687673595 takeover_from=-
+LEASE acquired tenant=ramo016 holder=m22 unix_ms=1793687673618 takeover_from=-
+LEASE acquired tenant=ramo017 holder=m22 unix_ms=1793687673628 takeover_from=-
+LEASE acquired tenant=ramo018 holder=m22 unix_ms=1793687673639 takeover_from=-
+LEASE acquired tenant=ramo019 holder=m22 unix_ms=1793687673646 takeover_from=-
+LEASE acquired tenant=ramo020 holder=m22 unix_ms=1793687673654 takeover_from=-
+LEASE acquired tenant=ramo021 holder=m22 unix_ms=1793687673666 takeover_from=-
+LEASE acquired tenant=ramo022 holder=m22 unix_ms=1793687673676 takeover_from=-
+LEASE acquired tenant=ramo023 holder=m22 unix_ms=1793687673686 takeover_from=-
+LEASE acquired tenant=ramo024 holder=m22 unix_ms=1793687673697 takeover_from=-
+LEASE acquired tenant=ramo025 holder=m22 unix_ms=1793687673709 takeover_from=-
+LEASE acquired tenant=ramo026 holder=m22 unix_ms=1793687673721 takeover_from=-
+LEASE acquired tenant=ramo027 holder=m22 unix_ms=1793687673730 takeover_from=-
+LEASE acquired tenant=ramo028 holder=m22 unix_ms=1793687673737 takeover_from=-
+LEASE acquired tenant=ramo029 holder=m22 unix_ms=1793687673746 takeover_from=-
+LEASE acquired tenant=ramo030 holder=m22 unix_ms=1793687673757 takeover_from=-
+LEASE acquired tenant=ramo031 holder=m22 unix_ms=1793687673769 takeover_from=-
+LEASE acquired tenant=ramo032 holder=m22 unix_ms=1793687673782 takeover_from=-
+LEASE acquired tenant=ramo033 holder=m22 unix_ms=1793687673792 takeover_from=-
+LEASE acquired tenant=ramo034 holder=m22 unix_ms=1793687673803 takeover_from=-
+LEASE acquired tenant=ramo035 holder=m22 unix_ms=1793687673811 takeover_from=-
+LEASE acquired tenant=ramo036 holder=m22 unix_ms=1793687673822 takeover_from=-
+LEASE acquired tenant=ramo037 holder=m22 unix_ms=1793687673829 takeover_from=-
+LEASE acquired tenant=ramo038 holder=m22 unix_ms=1793687673838 takeover_from=-
+LEASE acquired tenant=ramo039 holder=m22 unix_ms=1793687673848 takeover_from=-
+LEASE acquired tenant=ramo040 holder=m22 unix_ms=1793687673859 takeover_from=-
+LEASE acquired tenant=ramo041 holder=m22 unix_ms=1793687673868 takeover_from=-
+LEASE acquired tenant=ramo042 holder=m22 unix_ms=1793687673876 takeover_from=-
+LEASE acquired tenant=ramo043 holder=m22 unix_ms=1793687673882 takeover_from=-
+LEASE acquired tenant=ramo044 holder=m22 unix_ms=1793687673893 takeover_from=-
+LEASE acquired tenant=ramo045 holder=m22 unix_ms=1793687673903 takeover_from=-
+LEASE acquired tenant=ramo046 holder=m22 unix_ms=1793687673913 takeover_from=-
+LEASE acquired tenant=ramo047 holder=m22 unix_ms=1793687673924 takeover_from=-
+LEASE acquired tenant=ramo048 holder=m22 unix_ms=1793687673933 takeover_from=-
+LEASE acquired tenant=ramo049 holder=m22 unix_ms=1793687673942 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687673972 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687673973 takeover_from=-
+ADMIN DELETE /v1/databases/ramo000 -> 200 13 ms peer=127.0.0.1:58132
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687673985 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687673986 takeover_from=-
+ADMIN DELETE /v1/databases/ramo001 -> 200 13 ms peer=127.0.0.1:58134
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687673998 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687673999 takeover_from=-
+ADMIN DELETE /v1/databases/ramo002 -> 200 12 ms peer=127.0.0.1:58142
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674012 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674012 takeover_from=-
+ADMIN DELETE /v1/databases/ramo003 -> 200 13 ms peer=127.0.0.1:58146
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674025 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674026 takeover_from=-
+ADMIN DELETE /v1/databases/ramo004 -> 200 12 ms peer=127.0.0.1:58160
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674038 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674039 takeover_from=-
+ADMIN DELETE /v1/databases/ramo005 -> 200 11 ms peer=127.0.0.1:58164
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674050 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674051 takeover_from=-
+ADMIN DELETE /v1/databases/ramo006 -> 200 10 ms peer=127.0.0.1:58172
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674061 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674062 takeover_from=-
+ADMIN DELETE /v1/databases/ramo007 -> 200 9 ms peer=127.0.0.1:58176
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674072 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674073 takeover_from=-
+ADMIN DELETE /v1/databases/ramo008 -> 200 12 ms peer=127.0.0.1:58180
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674085 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674086 takeover_from=-
+ADMIN DELETE /v1/databases/ramo009 -> 200 12 ms peer=127.0.0.1:58192
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674098 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674099 takeover_from=-
+ADMIN DELETE /v1/databases/ramo010 -> 200 11 ms peer=127.0.0.1:58202
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674110 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674111 takeover_from=-
+ADMIN DELETE /v1/databases/ramo011 -> 200 12 ms peer=127.0.0.1:58216
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674123 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674124 takeover_from=-
+ADMIN DELETE /v1/databases/ramo012 -> 200 11 ms peer=127.0.0.1:58228
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674135 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674136 takeover_from=-
+ADMIN DELETE /v1/databases/ramo013 -> 200 11 ms peer=127.0.0.1:58230
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674147 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674148 takeover_from=-
+ADMIN DELETE /v1/databases/ramo014 -> 200 10 ms peer=127.0.0.1:58234
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674158 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674159 takeover_from=-
+ADMIN DELETE /v1/databases/ramo015 -> 200 10 ms peer=127.0.0.1:58248
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674168 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674169 takeover_from=-
+ADMIN DELETE /v1/databases/ramo016 -> 200 10 ms peer=127.0.0.1:58252
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674179 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674180 takeover_from=-
+ADMIN DELETE /v1/databases/ramo017 -> 200 9 ms peer=127.0.0.1:58262
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674189 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674189 takeover_from=-
+ADMIN DELETE /v1/databases/ramo018 -> 200 8 ms peer=127.0.0.1:58266
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674197 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674198 takeover_from=-
+ADMIN DELETE /v1/databases/ramo019 -> 200 8 ms peer=127.0.0.1:58274
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674206 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674206 takeover_from=-
+ADMIN DELETE /v1/databases/ramo020 -> 200 10 ms peer=127.0.0.1:58280
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674216 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674217 takeover_from=-
+ADMIN DELETE /v1/databases/ramo021 -> 200 8 ms peer=127.0.0.1:58290
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674225 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674226 takeover_from=-
+ADMIN DELETE /v1/databases/ramo022 -> 200 8 ms peer=127.0.0.1:58300
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674234 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674234 takeover_from=-
+ADMIN DELETE /v1/databases/ramo023 -> 200 9 ms peer=127.0.0.1:58306
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674244 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674244 takeover_from=-
+ADMIN DELETE /v1/databases/ramo024 -> 200 9 ms peer=127.0.0.1:58314
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674254 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674255 takeover_from=-
+ADMIN DELETE /v1/databases/ramo025 -> 200 9 ms peer=127.0.0.1:58322
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674264 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674265 takeover_from=-
+ADMIN DELETE /v1/databases/ramo026 -> 200 9 ms peer=127.0.0.1:58332
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674274 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674275 takeover_from=-
+ADMIN DELETE /v1/databases/ramo027 -> 200 10 ms peer=127.0.0.1:58344
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674285 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674285 takeover_from=-
+ADMIN DELETE /v1/databases/ramo028 -> 200 9 ms peer=127.0.0.1:58358
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674295 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674296 takeover_from=-
+ADMIN DELETE /v1/databases/ramo029 -> 200 10 ms peer=127.0.0.1:58362
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674305 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674306 takeover_from=-
+ADMIN DELETE /v1/databases/ramo030 -> 200 9 ms peer=127.0.0.1:58376
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674316 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674316 takeover_from=-
+ADMIN DELETE /v1/databases/ramo031 -> 200 9 ms peer=127.0.0.1:58380
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674325 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674326 takeover_from=-
+ADMIN DELETE /v1/databases/ramo032 -> 200 9 ms peer=127.0.0.1:58386
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674336 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674337 takeover_from=-
+ADMIN DELETE /v1/databases/ramo033 -> 200 10 ms peer=127.0.0.1:58392
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674347 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674348 takeover_from=-
+ADMIN DELETE /v1/databases/ramo034 -> 200 10 ms peer=127.0.0.1:58398
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674358 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674359 takeover_from=-
+ADMIN DELETE /v1/databases/ramo035 -> 200 11 ms peer=127.0.0.1:58414
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674370 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674370 takeover_from=-
+ADMIN DELETE /v1/databases/ramo036 -> 200 12 ms peer=127.0.0.1:58426
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674383 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674384 takeover_from=-
+ADMIN DELETE /v1/databases/ramo037 -> 200 12 ms peer=127.0.0.1:58442
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674396 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674397 takeover_from=-
+ADMIN DELETE /v1/databases/ramo038 -> 200 11 ms peer=127.0.0.1:58456
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674408 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674408 takeover_from=-
+ADMIN DELETE /v1/databases/ramo039 -> 200 10 ms peer=127.0.0.1:58466
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674418 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674419 takeover_from=-
+ADMIN DELETE /v1/databases/ramo040 -> 200 10 ms peer=127.0.0.1:58478
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674429 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674430 takeover_from=-
+ADMIN DELETE /v1/databases/ramo041 -> 200 9 ms peer=127.0.0.1:58492
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674439 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674439 takeover_from=-
+ADMIN DELETE /v1/databases/ramo042 -> 200 9 ms peer=127.0.0.1:58508
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674449 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674450 takeover_from=-
+ADMIN DELETE /v1/databases/ramo043 -> 200 10 ms peer=127.0.0.1:58512
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674460 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674461 takeover_from=-
+ADMIN DELETE /v1/databases/ramo044 -> 200 10 ms peer=127.0.0.1:58518
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674472 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674472 takeover_from=-
+ADMIN DELETE /v1/databases/ramo045 -> 200 13 ms peer=127.0.0.1:58532
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674486 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674486 takeover_from=-
+ADMIN DELETE /v1/databases/ramo046 -> 200 11 ms peer=127.0.0.1:58538
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674497 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674498 takeover_from=-
+ADMIN DELETE /v1/databases/ramo047 -> 200 10 ms peer=127.0.0.1:58542
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674508 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674509 takeover_from=-
+ADMIN DELETE /v1/databases/ramo048 -> 200 10 ms peer=127.0.0.1:58546
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674520 takeover_from=-
+LEASE acquired tenant=admin holder=m22 unix_ms=1793687674521 takeover_from=-
+ADMIN DELETE /v1/databases/ramo049 -> 200 13 ms peer=127.0.0.1:58552
+shutting down: closing tenants cleanly
+tenants closed; stopping maintenance
+maintenance stopped
