@@ -23,3 +23,907 @@ Linting of module LavaggioPerCliente
 Starting... (2026-11-03 16:47:53)
 Computing initial states...
 Finished computing initial states: 1 distinct state generated at 2026-11-03 16:47:53.
+Progress(13) at 2026-11-03 16:47:56: 59,026 states generated (59,026 s/min), 29,788 distinct states found (29,788 ds/min), 13,303 states left on queue.
+Error: Invariant RamoIntegro is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 0, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "idle"
+/\ content = <<{}, {}, {}, {}, {}>>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 0
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = <<{}, {}, {}>>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"none", "none", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 2: <Write(A,"k",1) line 194, col 3 to line 208, col 61 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 0, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "idle"
+/\ content = <<{}, {}, {}, {}, {}>>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 1
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   {},
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"none", "none", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 3: <FlushWrite line 226, col 3 to line 233, col 63 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 1
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 0, ledger |-> {}]
+/\ fbox = 1
+/\ kst = "idle"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   {},
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 1
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "wrote"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   {},
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "none", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 4: <Write(A,"k",0) line 194, col 3 to line 208, col 61 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 1
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 0, ledger |-> {}]
+/\ fbox = 1
+/\ kst = "idle"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   {},
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "wrote"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "none", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 5: <FlushCommit line 237, col 3 to line 243, col 81 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {1}, flushed |-> 1, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "idle"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   {},
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "none", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 6: <FlushWrite line 226, col 3 to line 233, col 63 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 2
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {1}, flushed |-> 1, ledger |-> {}]
+/\ fbox = 2
+/\ kst = "idle"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "wrote"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 1
+/\ seen = {}
+/\ xage = 0
+
+State 7: <FlushCommit line 237, col 3 to line 243, col 81 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {1, 2}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "idle"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 8: <CompactRead("w1") line 278, col 3 to line 291, col 63 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "read"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {1, 2}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "idle"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {1, 2}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {}
+/\ kF = 0
+/\ kG = {}
+/\ kL = {}
+/\ kS = 0
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 9: <ForkRead line 469, col 3 to line 475, col 77 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "read"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {1, 2}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "read"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {1, 2}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {1, 2}
+/\ kF = 2
+/\ kG = {}
+/\ kL = {}
+/\ kS = 2
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 10: <CompactCommit("w1") line 305, col 3 to line 320, col 69 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "read"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 0
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {1, 2}
+/\ kF = 2
+/\ kG = {}
+/\ kL = {}
+/\ kS = 2
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 11: <ForkPin line 478, col 3 to line 481, col 93 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "live"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 0
+/\ nForks = 1
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {1, 2}
+/\ kF = 2
+/\ kG = {}
+/\ kL = {}
+/\ kS = 2
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 12: <Gc line 502, col 6 to line 519, col 68 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "live"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 2
+/\ nForks = 1
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 0
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<1, 1, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {1, 2}
+/\ kF = 2
+/\ kG = {}
+/\ kL = {}
+/\ kS = 2
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 13: <Gc line 502, col 6 to line 519, col 68 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "live"
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {},
+   {},
+   {} >>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 2
+/\ nForks = 1
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 2
+/\ boxSt = <<"live", "live", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<2, 2, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {1, 2}
+/\ kF = 2
+/\ kG = {}
+/\ kL = {}
+/\ kS = 2
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+State 14: <Gc line 502, col 6 to line 519, col 68 of module LavaggioPerCliente>
+/\ bad = {}
+/\ cst = [w1 |-> "idle"]
+/\ fTo = 0
+/\ cres = [w1 |-> {}]
+/\ mf = [boxes |-> {}, flushed |-> 2, ledger |-> {}]
+/\ fbox = 0
+/\ kst = "live"
+/\ content = <<{}, {}, {}, {}, {}>>
+/\ ridx = <<>>
+/\ cin = [w1 |-> {}]
+/\ cM = [w1 |-> [boxes |-> {}, flushed |-> 0, ledger |-> {}]]
+/\ wasIn = <<FALSE, FALSE, FALSE, FALSE, FALSE>>
+/\ xout = {}
+/\ rage = <<>>
+/\ pf = 2
+/\ nForks = 1
+/\ seqNow = 2
+/\ rB = <<>>
+/\ rF = <<>>
+/\ rG = <<>>
+/\ rS = <<>>
+/\ fX = {}
+/\ rc = <<>>
+/\ rk = <<>>
+/\ xres = {}
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0],
+   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ cage = [w1 |-> 0]
+/\ fst = "idle"
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
+   {} >>
+/\ rst = <<>>
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  3 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
+/\ trim = 2
+/\ boxSt = <<"gone", "gone", "none", "none", "none">>
+/\ xst = "idle"
+/\ crashes = 0
+/\ bage = <<0, 0, 0, 0, 0>>
+/\ kage = 0
+/\ cout = [w1 |-> {}]
+/\ kB = {1, 2}
+/\ kF = 2
+/\ kG = {}
+/\ kL = {}
+/\ kS = 2
+/\ fage = 0
+/\ xin = {}
+/\ kX = {}
+/\ fFrom = 0
+/\ seen = {}
+/\ xage = 0
+
+189919 states generated, 90416 distinct states found, 35693 states left on queue.
+The depth of the complete state graph search is 15.
+Finished in 06s at (2026-11-03 16:47:59)
+Trace exploration spec path: ./LavaggioPerCliente_TTrace_1793724472.tla

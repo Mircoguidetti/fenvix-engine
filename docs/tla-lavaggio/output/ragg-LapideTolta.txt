@@ -1,14 +1,14 @@
 Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=34575 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
 TLC2 Version 2026.11.02.164701 (rev: dc6a944)
-Running breadth-first search Model-Checking with fp 48 and seed 3894091939071772840 with 1 worker on 4 cores with 2731MB heap and 64MB offheap memory [pid: 2725] (Linux 6.18.44-fc-v230 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 33 and seed -3309856676891139460 with 4 workers on 4 cores with 5461MB heap and 64MB offheap memory [pid: 8740] (Linux 6.18.44-fc-v230 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/user/fenvix-engine/docs/tla-lavaggio/LavaggioPerCliente.tla
-Parsing file /tmp/tlc-14961839759722243593/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
-Parsing file /tmp/tlc-14961839759722243593/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
-Parsing file /tmp/tlc-14961839759722243593/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
-Parsing file /tmp/tlc-14961839759722243593/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
-Parsing file /tmp/tlc-14961839759722243593/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
-Parsing file /tmp/tlc-14961839759722243593/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
-Parsing file /tmp/tlc-14961839759722243593/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /tmp/tlc-16398878748640502602/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-16398878748640502602/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-16398878748640502602/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-16398878748640502602/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-16398878748640502602/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-16398878748640502602/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-16398878748640502602/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
 Semantic processing of module Naturals
 Semantic processing of module Sequences
 Semantic processing of module FiniteSets
@@ -20,10 +20,9 @@ Semantic processing of module LavaggioPerCliente
 Linting of module TLCExt
 Linting of module _TLCTrace
 Linting of module LavaggioPerCliente
-Starting... (2026-11-03 14:32:23)
+Starting... (2026-11-03 16:48:24)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-11-03 14:32:24.
-Progress(7) at 2026-11-03 14:32:27: 56,180 states generated (56,180 s/min), 39,409 distinct states found (39,409 ds/min), 31,142 states left on queue.
+Finished computing initial states: 1 distinct state generated at 2026-11-03 16:48:24.
 Error: Invariant MaiLapideTolta is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
@@ -53,16 +52,14 @@ State 1: <Initial predicate>
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
 /\ hist = << [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
    [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "idle"
-/\ logE = <<{}, {}, {}>>
+/\ logE = <<{}, {}>>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"none", "none", "none", "none", "none">>
 /\ xst = "idle"
@@ -82,7 +79,7 @@ State 1: <Initial predicate>
 /\ seen = {}
 /\ xage = 0
 
-State 2: <Write("A","k",1) line 191, col 3 to line 205, col 61 of module LavaggioPerCliente>
+State 2: <Write(A,"k",1) line 194, col 3 to line 208, col 61 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "idle"]
 /\ fTo = 0
@@ -108,20 +105,17 @@ State 2: <Write("A","k",1) line 191, col 3 to line 205, col 61 of module Lavaggi
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
    [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "idle"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   {},
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
    {} >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"none", "none", "none", "none", "none">>
 /\ xst = "idle"
@@ -141,7 +135,7 @@ State 2: <Write("A","k",1) line 191, col 3 to line 205, col 61 of module Lavaggi
 /\ seen = {}
 /\ xage = 0
 
-State 3: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCliente>
+State 3: <FlushWrite line 226, col 3 to line 233, col 63 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "idle"]
 /\ fTo = 1
@@ -149,8 +143,8 @@ State 3: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCl
 /\ mf = [boxes |-> {}, flushed |-> 0, ledger |-> {}]
 /\ fbox = 1
 /\ kst = "idle"
-/\ content = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
    {},
    {},
    {},
@@ -172,20 +166,17 @@ State 3: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCl
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0],
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
    [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "wrote"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   {},
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
    {} >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"live", "none", "none", "none", "none">>
 /\ xst = "idle"
@@ -205,7 +196,7 @@ State 3: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCl
 /\ seen = {}
 /\ xage = 0
 
-State 4: <Write("A","k",0) line 191, col 3 to line 205, col 61 of module LavaggioPerCliente>
+State 4: <Write(A,"k",0) line 194, col 3 to line 208, col 61 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "idle"]
 /\ fTo = 1
@@ -213,8 +204,8 @@ State 4: <Write("A","k",0) line 191, col 3 to line 205, col 61 of module Lavaggi
 /\ mf = [boxes |-> {}, flushed |-> 0, ledger |-> {}]
 /\ fbox = 1
 /\ kst = "idle"
-/\ content = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
    {},
    {},
    {},
@@ -236,21 +227,18 @@ State 4: <Write("A","k",0) line 191, col 3 to line 205, col 61 of module Lavaggi
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "k", t |-> "w", c |-> "A", v |-> 0],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "wrote"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
-   {} >>
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] } >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"live", "none", "none", "none", "none">>
 /\ xst = "idle"
@@ -270,7 +258,7 @@ State 4: <Write("A","k",0) line 191, col 3 to line 205, col 61 of module Lavaggi
 /\ seen = {}
 /\ xage = 0
 
-State 5: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerCliente>
+State 5: <FlushCommit line 237, col 3 to line 243, col 81 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "idle"]
 /\ fTo = 0
@@ -278,8 +266,8 @@ State 5: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerC
 /\ mf = [boxes |-> {1}, flushed |-> 1, ledger |-> {}]
 /\ fbox = 0
 /\ kst = "idle"
-/\ content = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
    {},
    {},
    {},
@@ -301,21 +289,18 @@ State 5: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerC
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "k", t |-> "w", c |-> "A", v |-> 0],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "idle"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
-   {} >>
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] } >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"live", "none", "none", "none", "none">>
 /\ xst = "idle"
@@ -335,7 +320,7 @@ State 5: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerC
 /\ seen = {}
 /\ xage = 0
 
-State 6: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCliente>
+State 6: <FlushWrite line 226, col 3 to line 233, col 63 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "idle"]
 /\ fTo = 2
@@ -343,10 +328,10 @@ State 6: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCl
 /\ mf = [boxes |-> {1}, flushed |-> 1, ledger |-> {}]
 /\ fbox = 2
 /\ kst = "idle"
-/\ content = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
    {},
    {},
    {} >>
@@ -367,21 +352,18 @@ State 6: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCl
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "k", t |-> "w", c |-> "A", v |-> 0],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "wrote"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
-   {} >>
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] } >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"live", "live", "none", "none", "none">>
 /\ xst = "idle"
@@ -401,7 +383,7 @@ State 6: <FlushWrite line 223, col 3 to line 230, col 63 of module LavaggioPerCl
 /\ seen = {}
 /\ xage = 0
 
-State 7: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerCliente>
+State 7: <FlushCommit line 237, col 3 to line 243, col 81 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "idle"]
 /\ fTo = 0
@@ -409,10 +391,10 @@ State 7: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerC
 /\ mf = [boxes |-> {1, 2}, flushed |-> 2, ledger |-> {}]
 /\ fbox = 0
 /\ kst = "idle"
-/\ content = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
    {},
    {},
    {} >>
@@ -433,21 +415,18 @@ State 7: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerC
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "k", t |-> "w", c |-> "A", v |-> 0],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "idle"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
-   {} >>
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] } >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"live", "live", "none", "none", "none">>
 /\ xst = "idle"
@@ -467,7 +446,7 @@ State 7: <FlushCommit line 234, col 3 to line 240, col 81 of module LavaggioPerC
 /\ seen = {}
 /\ xage = 0
 
-State 8: <CompactRead("w1") line 275, col 3 to line 288, col 63 of module LavaggioPerCliente>
+State 8: <CompactRead("w1") line 278, col 3 to line 291, col 63 of module LavaggioPerCliente>
 /\ bad = {}
 /\ cst = [w1 |-> "read"]
 /\ fTo = 0
@@ -475,10 +454,10 @@ State 8: <CompactRead("w1") line 275, col 3 to line 288, col 63 of module Lavagg
 /\ mf = [boxes |-> {1, 2}, flushed |-> 2, ledger |-> {}]
 /\ fbox = 0
 /\ kst = "idle"
-/\ content = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
+/\ content = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] },
    {},
    {},
    {} >>
@@ -499,21 +478,18 @@ State 8: <CompactRead("w1") line 275, col 3 to line 288, col 63 of module Lavagg
 /\ rc = [r1 |-> "-"]
 /\ rk = [r1 |-> "-"]
 /\ xres = {}
-/\ hist = << [k |-> "k", t |-> "w", c |-> "A", v |-> 1],
-   [k |-> "k", t |-> "w", c |-> "A", v |-> 0],
-   [k |-> "-", t |-> "none", c |-> "-", v |-> 0] >>
+/\ hist = << [k |-> "k", t |-> "w", c |-> A, v |-> 1],
+   [k |-> "k", t |-> "w", c |-> A, v |-> 0] >>
 /\ cage = [w1 |-> 0]
 /\ fst = "idle"
-/\ logE = << { [k |-> "k", t |-> "d", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> TRUE, s |-> 1] },
-   { [k |-> "k", t |-> "d", c |-> "A", v |-> 0, on |-> FALSE, s |-> 2],
-     [k |-> "k", t |-> "i", c |-> "A", v |-> 1, on |-> FALSE, s |-> 2] },
-   {} >>
+/\ logE = << { [k |-> "k", t |-> "d", c |-> A, v |-> 1, on |-> TRUE, s |-> 1],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> TRUE, s |-> 1] },
+   { [k |-> "k", t |-> "d", c |-> A, v |-> 0, on |-> FALSE, s |-> 2],
+     [k |-> "k", t |-> "i", c |-> A, v |-> 1, on |-> FALSE, s |-> 2] } >>
 /\ rst = [r1 |-> "idle"]
-/\ tr = ( 0 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  1 :> (<<"A", "k">> :> 1 @@ <<"B", "k">> :> 0) @@
-  2 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) @@
-  3 :> (<<"A", "k">> :> 0 @@ <<"B", "k">> :> 0) )
+/\ tr = ( 0 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) @@
+  1 :> (<<A, "k">> :> 1 @@ <<B, "k">> :> 0) @@
+  2 :> (<<A, "k">> :> 0 @@ <<B, "k">> :> 0) )
 /\ trim = 0
 /\ boxSt = <<"live", "live", "none", "none", "none">>
 /\ xst = "idle"
@@ -533,7 +509,7 @@ State 8: <CompactRead("w1") line 275, col 3 to line 288, col 63 of module Lavagg
 /\ seen = {"lapideTolta"}
 /\ xage = 0
 
-156650 states generated, 103458 distinct states found, 79010 states left on queue.
-The depth of the complete state graph search is 8.
-Finished in 06s at (2026-11-03 14:32:29)
-Trace exploration spec path: ./LavaggioPerCliente_TTrace_1793716342.tla
+20875 states generated, 11361 distinct states found, 7092 states left on queue.
+The depth of the complete state graph search is 9.
+Finished in 02s at (2026-11-03 16:48:26)
+Trace exploration spec path: ./LavaggioPerCliente_TTrace_1793724504.tla

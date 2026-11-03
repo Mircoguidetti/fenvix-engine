@@ -10,7 +10,28 @@ Invarianti controllate in ogni modello: NessunDatoPerso, FoglioIntegro, IndicePu
 UnaVersione, LettoreMaiSenzaScatola, RamoCorretto, RamoIntegro. Simmetria tra i due clienti (A e B
 sono intercambiabili, TLC conta una volta sola due stati uguali a meno dello scambio).
 
-@@GIUSTI@@
+Base di tutti: 2 clienti, tetto 1 pila, età minima 2 giri, tetti di tempo 1 giro, 1 crash, 5
+scatole (6 dove serve), nomi delle scatole riusati dopo la cancellazione.
+
+- `lettori`: 1 collezione, un valore che cambia (1, poi 2, con la voce di indice vecchia spenta e la
+  nuova accesa), 2 posizioni del quaderno, 1 lavaggio, 1 lettore. 502.123 stati distinti, profondità
+  42, ricerca completa, nessun errore.
+- `lettori3`: come sopra ma 3 posizioni con un valore solo (crea, cancella, ricrea). 4.446.591
+  stati, profondità 48, completa, nessun errore.
+- `cancella`: lavaggio partito prima della cancellazione: due valori, 3 posizioni, 1 cancellazione
+  di un cliente, riscrittura mirata, nessun lettore né ramo. 2.009.427 stati, profondità 47,
+  completa, nessun errore.
+- `cancella-ramo`: un valore, 3 posizioni, 1 cancellazione, 1 ramo (prima o dopo la cancellazione).
+  4.316.286 stati, profondità 49, completa, nessun errore.
+- `due-lavaggi`: due lavaggi in parallelo, un valore, 3 posizioni, 1 cancellazione, 6 scatole.
+  6.234.617 stati, profondità 60, completa, nessun errore.
+- `collezioni`: 2 collezioni con il loro indice, un valore, 3 posizioni, 1 cancellazione, 6
+  scatole. 4.207.441 stati, profondità 55, completa, nessun errore.
+- `tutto`: tutti i pezzi insieme (scrittore, scarico, lavaggio, lettore, ramo, cancellazione,
+  riscrittura mirata, pulizia, crash), un valore, 2 posizioni. 2.178.306 stati, profondità 34,
+  completa, nessun errore.
+
+Totale dei modelli di sicurezza completi: 23.894.791 stati distinti, nessun errore.
 
 ## Vivezza: nessun errore
 
@@ -18,13 +39,59 @@ Proprietà: NessunOrfanoPerSempre, PileSottoIlTetto, CancellazioneFinita, con l'
 `Fair` (chi può lavorare prima o poi lavora; il lavaggio, lo scarico e la riscrittura mirata
 riescono se hanno l'occasione infinite volte). Senza simmetria (TLC non la ammette con la vivezza).
 
-@@VIVI@@
+Base: 2 clienti, un valore, tetto 1 pila, 1 crash, nessun lettore (i lettori non servono alla
+vivezza: la pulizia non li aspetta).
+
+- `vivo`: 3 posizioni, 1 cancellazione, 4 scatole, nessun ramo. 237.063 stati distinti,
+  profondità 41, completa, nessun errore.
+- `vivo-ramo`: 2 posizioni, 1 ramo che può restare vivo per sempre, 5 scatole. 91.313 stati,
+  profondità 30, completa, nessun errore.
 
 ## Controlli negativi: tutti trovano l'errore
 
 Ognuno toglie una regola e gira sul modello più piccolo dove quella regola conta.
 
-@@NEGATIVI@@
+Tra parentesi: stati distinti visti da TLC fino all'errore (con 4 worker; con un numero diverso di
+worker il conteggio cambia, conta solo "trovato sì o no") e lunghezza della traccia.
+
+- **NoInputCheck** (lo scambio del lavaggio non guarda se le sue scatole ci sono ancora): violata
+  NessunDatoPerso (261.980 stati, traccia di 17 stati). In parole: il cliente A scrive 2, poi 1; due
+  scarichi fanno due scatole; il lavaggio legge le due scatole; arriva la cancellazione di A; lo
+  scarico la porta nella lista dei cancellati; la riscrittura mirata toglie le due scatole e la riga
+  si chiude; il lavaggio, partito prima, scrive la sua scatola con "A = 1" e la mette nel foglio. A
+  riappare. Regola che lo corregge: 11 (lo scambio riesce solo se tutte le scatole di partenza sono
+  nel foglio).
+- **BlindPut** (il lavaggio scrive il foglio intero letto all'inizio): violata NessunDatoPerso
+  (7.278 stati, traccia di 14). In parole: il lavaggio legge il foglio; uno scarico aggiunge una
+  scatola e sposta la posizione scaricata; il quaderno tronca; il lavaggio riscrive il foglio
+  vecchio: la scatola dello scarico sparisce e la sua scrittura non è più nemmeno nel quaderno.
+  Regola: 7.
+- **DropTombAlways** (lapidi tolte sempre): violata NessunDatoPerso (25.429 stati, traccia di 12).
+  A scrive 1, poi 2, poi cancella il documento; tre scatole; il lavaggio unisce le due più nuove e
+  butta la lapide; sotto resta "A = 1", che torna visibile. Regola: 12.
+- **SplitSwap** (prima i documenti, poi gli indici, in due scritture del foglio): violata
+  NessunDatoPerso (14.493 stati, traccia di 11). Dopo la prima scrittura il foglio ha il documento
+  di A ma non la sua voce di indice. Regola: 8.
+- **ReaderTwoSnap** (il lettore rilegge il foglio prima del documento): violata DocHaIndice (444
+  stati, traccia di 5). Il lettore legge l'indice vuoto; A scrive 1; il lettore legge il documento
+  dalla vista nuova: c'è un documento senza voce di indice. Regola: 18.
+- **ForkNoLedger** (il ramo non eredita la lista dei cancellati): violata RamoCorretto (11.976
+  stati, traccia di 9). A scrive 1; scarico; A viene cancellato; lo scarico porta la cancellazione
+  nella lista; il ramo nasce dopo e mostra ancora A. Regola: 20.
+- **GcNoPins** (la pulizia non guarda la spilla del ramo): violata RamoIntegro (90.416 stati,
+  traccia di 14). Il ramo fissa una scatola; il lavaggio la toglie dal foglio; dopo due giri la
+  pulizia la cancella anche se il ramo la usa. Regola: 22.
+- **Grace = 0** (nessuna età minima, lettore con tetto di 1 giro): violata LettoreMaiSenzaScatola
+  (32.466 stati, traccia di 12). Il lettore prende il foglio; il lavaggio scambia; la pulizia
+  cancella subito la scatola vecchia; il lettore la cerca e non la trova. Regola: 23.
+- **GcOnlyRemoved** (la pulizia cancella solo scatole uscite da un foglio): violata
+  NessunOrfanoPerSempre (10.190 stati, traccia di 9). Lo scarico scrive la scatola e va in crash
+  prima di aggiornare il foglio; la scatola non entra mai in un foglio e resta per sempre. Regola: 24.
+- **MinSources = 3** (il lavaggio parte solo con almeno 3 scatole): violata PileSottoIlTetto
+  (12.840 stati, traccia di 10). A ha 2 pile con tetto 1 e le scritture finiscono: il lavaggio non
+  parte mai. Regola: 9.
+
+10 controlli negativi su 10 trovano l'errore previsto (8 di sicurezza, 2 di vivezza).
 
 ## Raggiungibilità: i casi interessanti succedono davvero
 
@@ -37,7 +104,15 @@ tolta dal lavaggio; cliente ricreato dopo la cancellazione.
 
 ## Corse interrotte (non complete, tenute per onestà)
 
-@@INTERROTTE@@
+Queste corse non sono finite (tagliate da me per tempo): nessun errore fino al punto raggiunto,
+ma non contano come verifica completa.
+
+- `lettori` a 3 posizioni con due valori: 34.279.087 stati, profondità 25, nessun errore.
+- `cancella-ramo` con due valori: 22.229.976 stati, profondità 24, nessun errore.
+- `due-lavaggi` con due valori: 23.221.122 stati, profondità 24, nessun errore.
+- `vivo-ramo` a 3 posizioni (vivezza con il ramo): 3.589.053 stati, nessun errore fino al taglio.
+- `lettori` a 4 posizioni, su una versione più vecchia della specifica (senza troncamento del
+  quaderno e senza simmetria): 18.275.612 stati, profondità 15, nessun errore.
 
 ## Cosa ho cambiato nel modello mentre lavoravo, e perché
 
