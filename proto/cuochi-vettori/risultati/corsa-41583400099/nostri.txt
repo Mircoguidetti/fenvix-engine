@@ -1,0 +1,8 @@
+usearch i8 costruito in 7s, hw=haswell
+== usearch_i8 finito in 34s
+usearch b1 costruito in 5s, hw=haswell
+== usearch_b1 finito in 46s
+usearch i8 in 8 pezzi costruito in 3s
+== usearch_i8_8pezzi finito in 66s
+faiss HNSW SQ8 + refine costruito in 12s
+== faiss_sq8 finito in 79s

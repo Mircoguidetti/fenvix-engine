@@ -1,0 +1,143 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Nov 03, 2026 5:23:05 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+  aggiunti 0 (1s)
+BUILD enc=int8 segmenti=8 docs=50000 secondi=16.2
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:23:22 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=8 filtro=false ricalcolo=false nc=10 recall=0.9029 qps_cpu=659.3 qps_wall=657.5
+int8 seg=8 filtro=false ricalcolo=false nc=15 recall=0.9192 qps_cpu=639.7 qps_wall=637.8
+int8 seg=8 filtro=false ricalcolo=false nc=20 recall=0.9281 qps_cpu=611.5 qps_wall=610.5
+int8 seg=8 filtro=false ricalcolo=false nc=30 recall=0.9380 qps_cpu=565.1 qps_wall=564.3
+int8 seg=8 filtro=false ricalcolo=false nc=40 recall=0.9447 qps_cpu=517.6 qps_wall=516.4
+int8 seg=8 filtro=false ricalcolo=false nc=60 recall=0.9508 qps_cpu=451.2 qps_wall=450.6
+int8 seg=8 filtro=false ricalcolo=false nc=80 recall=0.9556 qps_cpu=426.0 qps_wall=425.2
+int8 seg=8 filtro=false ricalcolo=false nc=100 recall=0.9576 qps_cpu=396.9 qps_wall=396.0
+int8 seg=8 filtro=false ricalcolo=false nc=150 recall=0.9621 qps_cpu=333.2 qps_wall=332.8
+int8 seg=8 filtro=false ricalcolo=false nc=200 recall=0.9647 qps_cpu=299.3 qps_wall=299.0
+int8 seg=8 filtro=false ricalcolo=false nc=300 recall=0.9676 qps_cpu=252.4 qps_wall=252.2
+int8 seg=8 filtro=false ricalcolo=false nc=400 recall=0.9696 qps_cpu=239.0 qps_wall=238.9
+int8 seg=8 filtro=false ricalcolo=false nc=600 recall=0.9715 qps_cpu=183.4 qps_wall=183.3
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:24:09 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=8 filtro=false ricalcolo=true nc=10 recall=0.9029 qps_cpu=650.5 qps_wall=647.4
+int8 seg=8 filtro=false ricalcolo=true nc=15 recall=0.9284 qps_cpu=698.7 qps_wall=697.5
+int8 seg=8 filtro=false ricalcolo=true nc=20 recall=0.9379 qps_cpu=658.7 qps_wall=657.5
+int8 seg=8 filtro=false ricalcolo=true nc=30 recall=0.9485 qps_cpu=572.8 qps_wall=571.3
+int8 seg=8 filtro=false ricalcolo=true nc=40 recall=0.9559 qps_cpu=488.2 qps_wall=487.5
+int8 seg=8 filtro=false ricalcolo=true nc=60 recall=0.9627 qps_cpu=453.5 qps_wall=452.9
+int8 seg=8 filtro=false ricalcolo=true nc=80 recall=0.9677 qps_cpu=394.7 qps_wall=394.0
+int8 seg=8 filtro=false ricalcolo=true nc=100 recall=0.9700 qps_cpu=372.5 qps_wall=372.0
+int8 seg=8 filtro=false ricalcolo=true nc=150 recall=0.9747 qps_cpu=308.1 qps_wall=307.7
+int8 seg=8 filtro=false ricalcolo=true nc=200 recall=0.9774 qps_cpu=283.3 qps_wall=283.1
+int8 seg=8 filtro=false ricalcolo=true nc=300 recall=0.9804 qps_cpu=232.7 qps_wall=232.6
+int8 seg=8 filtro=false ricalcolo=true nc=400 recall=0.9829 qps_cpu=204.2 qps_wall=204.2
+int8 seg=8 filtro=false ricalcolo=true nc=600 recall=0.9848 qps_cpu=166.3 qps_wall=166.2
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:24:58 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=8 filtro=true ricalcolo=false nc=10 recall=0.9870 qps_cpu=274.8 qps_wall=273.9
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:25:22 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=8 filtro=true ricalcolo=true nc=10 recall=0.9870 qps_cpu=258.8 qps_wall=257.7
+WARNING: Using incubator modules: jdk.incubator.vector
+Nov 03, 2026 5:25:48 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+MERGE secondi=21.3
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:26:10 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=1 filtro=false ricalcolo=false nc=10 recall=0.7315 qps_cpu=3446.2 qps_wall=3094.3
+int8 seg=1 filtro=false ricalcolo=false nc=15 recall=0.7975 qps_cpu=3817.2 qps_wall=3769.8
+int8 seg=1 filtro=false ricalcolo=false nc=20 recall=0.8352 qps_cpu=4126.4 qps_wall=4033.5
+int8 seg=1 filtro=false ricalcolo=false nc=30 recall=0.8738 qps_cpu=2993.3 qps_wall=2980.5
+int8 seg=1 filtro=false ricalcolo=false nc=40 recall=0.8971 qps_cpu=2636.1 qps_wall=2623.2
+int8 seg=1 filtro=false ricalcolo=false nc=60 recall=0.9244 qps_cpu=2114.8 qps_wall=2099.1
+int8 seg=1 filtro=false ricalcolo=false nc=80 recall=0.9361 qps_cpu=1949.0 qps_wall=1948.0
+int8 seg=1 filtro=false ricalcolo=false nc=100 recall=0.9425 qps_cpu=1754.0 qps_wall=1747.5
+int8 seg=1 filtro=false ricalcolo=false nc=150 recall=0.9532 qps_cpu=1503.5 qps_wall=1496.6
+int8 seg=1 filtro=false ricalcolo=false nc=200 recall=0.9584 qps_cpu=1145.6 qps_wall=1144.6
+int8 seg=1 filtro=false ricalcolo=false nc=300 recall=0.9663 qps_cpu=855.1 qps_wall=853.1
+int8 seg=1 filtro=false ricalcolo=false nc=400 recall=0.9687 qps_cpu=705.3 qps_wall=705.2
+int8 seg=1 filtro=false ricalcolo=false nc=600 recall=0.9722 qps_cpu=497.1 qps_wall=496.4
+int8 seg=1 filtro=false ricalcolo=false nc=800 recall=0.9739 qps_cpu=403.5 qps_wall=402.6
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:26:26 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=1 filtro=false ricalcolo=true nc=10 recall=0.7315 qps_cpu=3075.3 qps_wall=2974.7
+int8 seg=1 filtro=false ricalcolo=true nc=15 recall=0.8008 qps_cpu=3563.7 qps_wall=3532.2
+int8 seg=1 filtro=false ricalcolo=true nc=20 recall=0.8395 qps_cpu=3237.9 qps_wall=3208.3
+int8 seg=1 filtro=false ricalcolo=true nc=30 recall=0.8793 qps_cpu=2768.5 qps_wall=2727.0
+int8 seg=1 filtro=false ricalcolo=true nc=40 recall=0.9039 qps_cpu=2371.9 qps_wall=2361.0
+int8 seg=1 filtro=false ricalcolo=true nc=60 recall=0.9325 qps_cpu=1870.7 qps_wall=1859.7
+int8 seg=1 filtro=false ricalcolo=true nc=80 recall=0.9450 qps_cpu=1536.4 qps_wall=1531.0
+int8 seg=1 filtro=false ricalcolo=true nc=100 recall=0.9518 qps_cpu=1501.8 qps_wall=1482.7
+int8 seg=1 filtro=false ricalcolo=true nc=150 recall=0.9635 qps_cpu=1181.1 qps_wall=1180.7
+int8 seg=1 filtro=false ricalcolo=true nc=200 recall=0.9694 qps_cpu=995.7 qps_wall=992.9
+int8 seg=1 filtro=false ricalcolo=true nc=300 recall=0.9780 qps_cpu=742.4 qps_wall=742.3
+int8 seg=1 filtro=false ricalcolo=true nc=400 recall=0.9808 qps_cpu=565.9 qps_wall=564.9
+int8 seg=1 filtro=false ricalcolo=true nc=600 recall=0.9847 qps_cpu=389.4 qps_wall=388.9
+int8 seg=1 filtro=false ricalcolo=true nc=800 recall=0.9870 qps_cpu=311.6 qps_wall=311.2
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:26:44 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=1 filtro=true ricalcolo=false nc=10 recall=0.8864 qps_cpu=1300.3 qps_wall=1286.2
+int8 seg=1 filtro=true ricalcolo=false nc=15 recall=0.9194 qps_cpu=1096.5 qps_wall=1093.8
+int8 seg=1 filtro=true ricalcolo=false nc=20 recall=0.9346 qps_cpu=983.6 qps_wall=967.2
+int8 seg=1 filtro=true ricalcolo=false nc=30 recall=0.9526 qps_cpu=911.9 qps_wall=911.6
+int8 seg=1 filtro=true ricalcolo=false nc=40 recall=0.9659 qps_cpu=627.2 qps_wall=626.1
+int8 seg=1 filtro=true ricalcolo=false nc=60 recall=0.9835 qps_cpu=419.5 qps_wall=419.2
+int8 seg=1 filtro=true ricalcolo=false nc=80 recall=0.9861 qps_cpu=396.8 qps_wall=396.4
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A restricted method in java.lang.foreign.Linker has been called
+WARNING: java.lang.foreign.Linker::downcallHandle has been called by the unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for this module
+
+Nov 03, 2026 5:27:03 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=256; FMA enabled
+int8 seg=1 filtro=true ricalcolo=true nc=10 recall=0.8864 qps_cpu=1271.3 qps_wall=1261.2
+int8 seg=1 filtro=true ricalcolo=true nc=15 recall=0.9264 qps_cpu=1101.7 qps_wall=1076.9
+int8 seg=1 filtro=true ricalcolo=true nc=20 recall=0.9427 qps_cpu=918.2 qps_wall=914.6
+int8 seg=1 filtro=true ricalcolo=true nc=30 recall=0.9621 qps_cpu=682.2 qps_wall=674.5
+int8 seg=1 filtro=true ricalcolo=true nc=40 recall=0.9772 qps_cpu=547.1 qps_wall=546.1
+int8 seg=1 filtro=true ricalcolo=true nc=60 recall=0.9968 qps_cpu=405.0 qps_wall=403.2
+186M	/mnt/m20/idx/int8
