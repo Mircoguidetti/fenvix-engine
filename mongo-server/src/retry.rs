@@ -15,9 +15,12 @@
 //! transaction itself, so the outcome is durable exactly when the transaction is. A `commitTransaction` repeated for a
 //! committed transaction that this process does not remember (a restart, another process) answers ok instead of
 //! `NoSuchTransaction` (whose `TransientTransactionError` label makes the drivers run the whole transaction again). A
-//! commit names no database (it runs on `admin`), so the session's database is found through a small object
-//! `txn-hints/{session}` = `{db}`, written before the first commit with writes of the session (and again after
-//! [`hint_refresh_ms()`] or when the session moves to another database), and always before the batch.
+//! commit names no database (it runs on `admin`), so the session's databases are found through small objects
+//! `txn-hints/{session}/{db}`, one per database the session committed in, written before the first commit with writes
+//! of the session in that database (and again after [`hint_refresh_ms()`]), and always before the batch. A hint is never
+//! rewritten with another database, so a process whose memory of a hint is fresh is never wrong about it, also when
+//! another process wrote hints of the same session (C8: one hint per session went stale with two processes). The lookup
+//! lists the session's prefix and takes the highest transaction number among the records of those databases.
 //!
 //! Cleanup, the logical-session rule (`session_ttl_ms()`, 30 minutes, mongod's `localLogicalSessionTimeoutMinutes`): a
 //! record or a hint idle longer than that counts as absent; a write of a session record deletes, in its own batch, the
@@ -72,8 +75,8 @@ const EMPTY_UID_B64: &str = "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=";
 pub struct Registry {
     m: Mutex<HashMap<String, Arc<AMutex<Sess>>>>,
     calls: AtomicU64,
-    /// Hints written by this process: session -> (database, when).
-    hinted: Mutex<HashMap<String, (String, i64)>>,
+    /// Hints written by this process: (session, database) -> when.
+    hinted: Mutex<HashMap<(String, String), i64>>,
     /// Cleanup of each database's session records: (last pass, key to resume from).
     swept: Mutex<HashMap<String, (i64, Vec<u8>)>>,
 }
@@ -86,11 +89,14 @@ pub struct Sess {
     loaded: bool,
     ins: BTreeSet<i32>,
     stmts: BTreeMap<i32, Document>,
+    /// The commit of the batch that last wrote this record, until it is known durable: a retry answered from the record
+    /// waits for it first (C8: the record is in memory as soon as the batch is staged, before it is durable).
+    durable: Option<tenant_bench::lifecycle::Commit>,
 }
 
 impl Sess {
     fn new() -> Self {
-        Sess { number: -1, txn: false, last: now_ms(), loaded: false, ins: BTreeSet::new(), stmts: BTreeMap::new() }
+        Sess { number: -1, txn: false, last: now_ms(), loaded: false, ins: BTreeSet::new(), stmts: BTreeMap::new(), durable: None }
     }
 
     fn reset(&mut self, number: i64, txn: bool) {
@@ -98,6 +104,7 @@ impl Sess {
         self.txn = txn;
         self.ins.clear();
         self.stmts.clear();
+        self.durable = None;
     }
 }
 
@@ -176,7 +183,11 @@ fn session_key(key: &str) -> Vec<u8> {
     format!("meta/rw/{key}").into_bytes()
 }
 
-fn hint_path(key: &str) -> object_store::path::Path {
+fn hint_path(key: &str, db: &str) -> object_store::path::Path {
+    object_store::path::Path::from(format!("{HINTS}/{key}/{db}"))
+}
+
+fn hint_prefix(key: &str) -> object_store::path::Path {
     object_store::path::Path::from(format!("{HINTS}/{key}"))
 }
 
@@ -277,9 +288,13 @@ impl Run {
         }
     }
 
-    /// The batch was applied: the new statements join the record.
+    /// The batch was applied: the new statements join the record. A retry answered from them waits for the durability
+    /// of this batch (the commit the command just staged).
     pub fn apply(&mut self) {
         let s = &mut *self.guard;
+        if !self.new_ins.is_empty() || !self.new_stmts.is_empty() {
+            s.durable = crate::dbs::staged_commit();
+        }
         s.ins.extend(self.new_ins.drain(..));
         for (id, d) in self.new_stmts.drain(..) {
             s.stmts.insert(id, d);
@@ -324,6 +339,17 @@ impl Server {
         if number > guard.number {
             guard.reset(number, false);
             dirty = true;
+        }
+        // a retry of the current write: what it answers from the record must be durable first, as on mongod, where the
+        // retry waits for the write concern of the original write
+        if number == guard.number {
+            if let Some(c) = guard.durable.clone() {
+                let relaxed = crate::dbs::RELAX.try_with(|r| r.get()).unwrap_or(false) && crate::ctl::durability::relaxed_ms(c.tenant()) > 0 && crate::locallog::get().is_none();
+                if !relaxed {
+                    c.wait().await.map_err(MongoError::from)?;
+                }
+                guard.durable = None;
+            }
         }
         guard.last = now_ms();
         Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty }, key }))
@@ -402,50 +428,76 @@ impl Server {
 }
 
 impl Server {
-    /// Before the batch of a commit with writes: make sure `txn-hints/{session}` names the transaction's database.
+    /// Before the batch of a commit with writes: make sure `txn-hints/{session}/{db}` exists and is fresh.
     pub(crate) async fn txn_hint(&self, key: &str, db: &str) -> R<()> {
         let now = now_ms();
-        if let Some((d, at)) = self.retry.hinted.lock().unwrap().get(key) {
-            if d == db && now - at < hint_refresh_ms() {
+        let k = (key.to_string(), db.to_string());
+        if let Some(at) = self.retry.hinted.lock().unwrap().get(&k) {
+            if now - at < hint_refresh_ms() {
                 return Ok(());
             }
         }
         let body = doc! { "db": db, "last": now }.to_vec().unwrap_or_default();
-        self.dbs.store().put(&hint_path(key), bytes::Bytes::from(body).into()).await.map_err(|e| MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}")))?;
+        self.dbs.store().put(&hint_path(key, db), bytes::Bytes::from(body).into()).await.map_err(|e| MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}")))?;
         let mut h = self.retry.hinted.lock().unwrap();
         if h.len() > 100_000 {
-            h.retain(|_, (_, at)| now - *at < hint_refresh_ms());
+            h.retain(|_, at| now - *at < hint_refresh_ms());
         }
-        h.insert(key.to_string(), (db.to_string(), now));
+        h.insert(k, now);
         Ok(())
     }
 
-    /// The latest transaction of a session as stored by its commit: `(number, committed)`, found through the session's
-    /// hint, or `None` (no hint, no record, or expired). Used when this process does not remember the transaction.
-    pub(crate) async fn txn_stored_outcome(&self, key: &str) -> R<Option<(i64, bool)>> {
-
+    /// The latest transaction of a session as stored by its commit: `(number, committed)`, the highest number among the
+    /// records of the databases the session's hints name, or `None` (no hint, no record, or expired). Used when this
+    /// process does not remember the transaction `number`. A database whose record cannot be read (another process owns
+    /// it, the store fails) makes the answer an error unless a readable record has `number` or a higher one, so that an
+    /// unknown outcome is never reported as `NoSuchTransaction`.
+    pub(crate) async fn txn_stored_outcome(&self, key: &str, number: i64) -> R<Option<(i64, bool)>> {
+        use futures::TryStreamExt;
         let now = now_ms();
-        let db = match self.dbs.store().get(&hint_path(key)).await {
-            Ok(r) => {
-                let bytes = r.bytes().await.map_err(|e| MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}")))?;
-                match Document::from_reader(&bytes[..]) {
-                    Ok(d) if d.get_i64("last").map(|l| l >= now - session_ttl_ms()).unwrap_or(false) => d.get_str("db").unwrap_or("").to_string(),
-                    _ => return Ok(None),
-                }
+        let hints: Vec<object_store::path::Path> = self
+            .dbs
+            .store()
+            .list(Some(&hint_prefix(key)))
+            .try_filter(|m| futures::future::ready(m.last_modified.timestamp_millis() >= now - session_ttl_ms()))
+            .map_ok(|m| m.location)
+            .try_collect()
+            .await
+            .map_err(|e| MongoError::from(anyhow::anyhow!("transaction hints of the session: {e}")))?;
+        let mut best: Option<(i64, bool)> = None;
+        let mut failed: Option<MongoError> = None;
+        for p in hints {
+            let Some(db) = p.filename().map(|s| s.to_string()) else { continue };
+            if !crate::dbs::valid_db_name(&db) {
+                continue;
             }
-            Err(object_store::Error::NotFound { .. }) => return Ok(None),
-            Err(e) => return Err(MongoError::from(anyhow::anyhow!("transaction hint of the session: {e}"))),
-        };
-        if !crate::dbs::valid_db_name(&db) {
-            return Ok(None);
+            let rec = async {
+                let mut g = self.dbs.lock(&db).await;
+                g.get_live(&session_key(key)).await.map_err(MongoError::from)
+            }
+            .await;
+            let bytes = match rec {
+                Ok(Some(b)) => b,
+                Ok(None) => continue,
+                Err(e) => {
+                    failed.get_or_insert(e);
+                    continue;
+                }
+            };
+            let Ok(d) = Document::from_reader(&bytes[..]) else { continue };
+            if d.get_i64("last").unwrap_or(0) < now - session_ttl_ms() || !d.get_bool("txn").unwrap_or(false) {
+                continue;
+            }
+            let found = (d.get_i64("number").unwrap_or(-1), d.get_bool("committed").unwrap_or(false));
+            if best.map_or(true, |b| found.0 > b.0) {
+                best = Some(found);
+            }
         }
-        let mut g = self.dbs.lock(&db).await;
-        let Some(bytes) = g.get_live(&session_key(key)).await? else { return Ok(None) };
-        let Ok(d) = Document::from_reader(&bytes[..]) else { return Ok(None) };
-        if d.get_i64("last").unwrap_or(0) < now - session_ttl_ms() || !d.get_bool("txn").unwrap_or(false) {
-            return Ok(None);
+        match failed {
+            // an unreadable database may hold the transaction asked for
+            Some(e) if best.map_or(true, |b| b.0 < number) => Err(e),
+            _ => Ok(best),
         }
-        Ok(Some((d.get_i64("number").unwrap_or(-1), d.get_bool("committed").unwrap_or(false))))
     }
 
     /// Deletes of the expired session records of `db`, for the batch that writes the record of `keep` (see the module

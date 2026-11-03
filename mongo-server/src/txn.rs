@@ -27,11 +27,47 @@ pub struct Txn {
     pub started: Instant,
 }
 
+/// How far a running commit is, published by the commit that runs it to the repeated commits that wait for it.
+#[derive(Clone)]
+enum Phase {
+    /// Conflict check, hint and staging of the batch.
+    Staging,
+    /// The batch is staged; it is durable once this clone of its commit is (`None`: already durable).
+    Staged(Option<tenant_bench::lifecycle::Commit>),
+}
+
 enum State {
     /// The transaction is idle between commands, or `None` while a command of it runs.
     Active(Option<Txn>),
+    /// A commit of the transaction runs: it is staging the batch or waiting for it to be durable. A repeated commit waits
+    /// for the same durability before it answers ok (C8: answering at once lost acknowledged transactions on a crash).
+    /// Stays here when the durability wait failed or was dropped, so a later repeated commit waits again.
+    Committing(tokio::sync::watch::Receiver<Phase>),
+    /// Committed and durable.
     Committed,
     Aborted,
+}
+
+/// Puts a transaction whose commit stopped while staging (the command was dropped) back to aborted: nothing was staged
+/// that its repeated commits could wait for. Disarmed once the commit has an outcome.
+struct StagingGuard<'a> {
+    sessions: &'a Sessions,
+    lsid: &'a str,
+    number: i64,
+    armed: bool,
+}
+
+impl Drop for StagingGuard<'_> {
+    fn drop(&mut self) {
+        if !self.armed {
+            return;
+        }
+        if let Some(s) = self.sessions.m.lock().unwrap().get_mut(self.lsid) {
+            if s.number == self.number && matches!(&s.state, State::Committing(r) if matches!(*r.borrow(), Phase::Staging)) {
+                s.state = State::Aborted;
+            }
+        }
+    }
 }
 
 struct Session {
@@ -157,6 +193,10 @@ impl Server {
                     s.state = State::Committed;
                     Err(no_such(format!("Transaction {} has been committed.", tc.number)))
                 }
+                committing @ State::Committing(_) => {
+                    s.state = committing;
+                    Err(no_such(format!("Transaction {} has been committed.", tc.number)))
+                }
             };
         }
         self.retry_txn_start(&tc.lsid, &tc.lsid_doc, tc.number).await?;
@@ -237,32 +277,49 @@ impl Server {
             // this process does not remember the transaction (a restart, or it ran on another process): its commit may
             // still be stored; a repeated commit of a committed transaction answers ok, as on mongod
             if let Some(active) = unknown {
-                return match self.txn_stored_outcome(&tc.lsid).await? {
+                return match self.txn_stored_outcome(&tc.lsid, tc.number).await? {
                     Some((n, true)) if n == tc.number => Ok(ok()),
                     Some((n, _)) if n > tc.number => Err(too_old(&tc, n)),
                     _ => Err(no_such(given_msg(&tc, active))),
                 };
             }
-            let mut m = self.sessions.m.lock().unwrap();
-            let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(given_msg(&tc, retry_n)));
+            let taken = {
+                let mut m = self.sessions.m.lock().unwrap();
+                let Some(s) = m.get_mut(&tc.lsid) else {
+                    return Err(no_such(given_msg(&tc, retry_n)));
+                };
+                if s.number != tc.number {
+                    return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
+                }
+                match std::mem::replace(&mut s.state, State::Active(None)) {
+                    State::Active(Some(t)) => {
+                        let (tx, rx) = tokio::sync::watch::channel(Phase::Staging);
+                        s.state = State::Committing(rx);
+                        Ok((t, tx))
+                    }
+                    State::Active(None) => return Err(MongoError::new(117, "ConflictingOperationInProgress", "Another operation of this transaction is in progress".into())),
+                    // a commit of this transaction is running (or its durability wait failed): wait for the same durability
+                    State::Committing(rx) => {
+                        s.state = State::Committing(rx.clone());
+                        Err(rx)
+                    }
+                    State::Committed => {
+                        s.state = State::Committed;
+                        return Ok(ok());
+                    }
+                    State::Aborted => {
+                        s.state = State::Aborted;
+                        return Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)));
+                    }
+                }
             };
-            if s.number != tc.number {
-                return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
-            }
-            match std::mem::replace(&mut s.state, State::Active(None)) {
-                State::Active(Some(t)) => t,
-                State::Active(None) => return Err(MongoError::new(117, "ConflictingOperationInProgress", "Another operation of this transaction is in progress".into())),
-                State::Committed => {
-                    s.state = State::Committed;
-                    return Ok(ok());
-                }
-                State::Aborted => {
-                    s.state = State::Aborted;
-                    return Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)));
-                }
+            match taken {
+                Ok(t) => t,
+                Err(rx) => return self.commit_wait(&tc, rx).await,
             }
         };
+        let (txn, phase) = txn;
+        let mut guard = StagingGuard { sessions: &self.sessions, lsid: &tc.lsid, number: tc.number, armed: true };
         let txn_id = txn.id;
         let mut txn = txn;
         let mut events = std::mem::take(&mut txn.w.events);
@@ -295,14 +352,71 @@ impl Server {
                 Err(e) => Err(e),
             }
         };
+        // the batch of this commit (when it wrote): durable once this clone of its commit is
+        let staged = if result.is_ok() { crate::dbs::take_staged_commit() } else { None };
         g.end_txn(txn_id);
         drop(g);
-        let retry_n = self.retry_session_number(&tc.lsid).await;
-        let mut m = self.sessions.m.lock().unwrap();
-        if let Some(s) = m.get_mut(&tc.lsid) {
-            s.state = if result.is_ok() { State::Committed } else { State::Aborted };
+        guard.armed = false;
+        if let Err(e) = result {
+            if let Some(s) = self.sessions.m.lock().unwrap().get_mut(&tc.lsid) {
+                if s.number == tc.number {
+                    s.state = State::Aborted;
+                }
+            }
+            return Err(e);
         }
-        result.map(|_| ok())
+        // repeated commits arriving from now on wait for this durability, not for this command
+        phase.send_replace(Phase::Staged(staged.clone()));
+        if let Some(c) = staged {
+            c.wait().await.map_err(MongoError::from)?;
+        }
+        self.mark_committed(&tc);
+        Ok(ok())
+    }
+
+    fn mark_committed(&self, tc: &TxnCtx) {
+        if let Some(s) = self.sessions.m.lock().unwrap().get_mut(&tc.lsid) {
+            if s.number == tc.number && matches!(s.state, State::Committing(_)) {
+                s.state = State::Committed;
+            }
+        }
+    }
+
+    /// A commit repeated while a commit of the same transaction runs, or after its durability wait failed: wait until the
+    /// first commit's batch is durable (as mongod waits for the write concern of a repeated commit), then answer ok.
+    async fn commit_wait(&self, tc: &TxnCtx, mut rx: tokio::sync::watch::Receiver<Phase>) -> R<Document> {
+        loop {
+            let phase = rx.borrow_and_update().clone();
+            match phase {
+                Phase::Staged(c) => {
+                    if let Some(c) = c {
+                        c.wait().await.map_err(MongoError::from)?;
+                    }
+                    self.mark_committed(tc);
+                    return Ok(ok());
+                }
+                Phase::Staging => {
+                    if rx.changed().await.is_ok() || matches!(*rx.borrow(), Phase::Staged(_)) {
+                        continue;
+                    }
+                    // the first commit ended without staging anything (a conflict, an error, or it was dropped)
+                    let m = self.sessions.m.lock().unwrap();
+                    return match m.get(&tc.lsid) {
+                        Some(s) if s.number == tc.number => match &s.state {
+                            State::Committed => Ok(ok()),
+                            State::Committing(r) if matches!(*r.borrow(), Phase::Staged(_)) => {
+                                rx = r.clone();
+                                drop(m);
+                                continue;
+                            }
+                            _ => Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number))),
+                        },
+                        Some(s) => Err(no_such(given_msg(tc, s.number))),
+                        None => Err(no_such(given_msg(tc, -1))),
+                    };
+                }
+            }
+        }
     }
 
     pub(crate) async fn abort_txn(&self, cmd: &Document) -> R<Document> {
@@ -314,7 +428,7 @@ impl Server {
             let known = self.sessions.m.lock().unwrap().get(&tc.lsid).map(|s| s.number);
             if known.map_or(true, |n| n < tc.number) {
                 // not remembered here: an abort of a transaction whose commit is stored is refused, as on mongod
-                if let Some((n, true)) = self.txn_stored_outcome(&tc.lsid).await? {
+                if let Some((n, true)) = self.txn_stored_outcome(&tc.lsid, tc.number).await? {
                     if n == tc.number {
                         return Err(MongoError::new(256, "TransactionCommitted", format!("Transaction {} has been committed.", tc.number)));
                     }
@@ -340,6 +454,10 @@ impl Server {
                     s.state = State::Committed;
                     return Err(MongoError::new(256, "TransactionCommitted", format!("Transaction {} has been committed.", tc.number)));
                 }
+                committing @ State::Committing(_) => {
+                    s.state = committing;
+                    return Err(MongoError::new(117, "ConflictingOperationInProgress", "A commit of this transaction is in progress".into()));
+                }
                 State::Aborted => {
                     return Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)));
                 }
@@ -359,6 +477,10 @@ impl Server {
         {
             let mut m = self.sessions.m.lock().unwrap();
             for id in ids {
+                // a running commit keeps its session: its repeated commits must find it and wait for its durability
+                if matches!(m.get(&id).map(|s| &s.state), Some(State::Committing(_))) {
+                    continue;
+                }
                 if let Some(Session { state: State::Active(Some(t)), .. }) = m.remove(&id) {
                     open.push((t.db.clone(), t.id));
                 }

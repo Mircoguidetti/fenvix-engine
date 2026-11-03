@@ -4,8 +4,8 @@ Before the fix the outcome of a transaction lived only in the memory of the proc
 (or sent to another process) answered 251 NoSuchTransaction with the label TransientTransactionError, and the drivers'
 `withTransaction` then ran the whole transaction again: a transaction applied twice (a double `$inc`). mongod answers
 ok, because the outcome is in `config.transactions`. Now the commit stores `{number, committed}` in the session record,
-in the transaction's own atomic batch, and a small hint object `txn-hints/{session}` tells a process the database of the
-session (a commit names no database).
+in the transaction's own atomic batch, and small hint objects `txn-hints/{session}/{db}` tell a process the databases of
+the session (a commit names no database; one hint per database since C8).
 
 1. commit, restart, the same commit again -> ok, the document once;
 2. a transaction never committed, restart, commit -> 251 NoSuchTransaction with TransientTransactionError, as before;
@@ -114,8 +114,8 @@ def test_repeated_commit_after_restart_is_ok():
         r = _commit(c, lsid, 1)
         assert r["ok"] == 1.0, r
         assert list(c.ct.c.find({})) == [{"_id": 1, "v": "a"}]
-        # a session of the hint prefix exists for it
-        assert any(k.endswith(lsid["id"].hex()) for k, _ in list_prefix(srv.bucket, "txn-hints/"))
+        # the hint of the session and its database exists (one per database since C8)
+        assert any(k == f"txn-hints/{lsid['id'].hex()}/ct" for k, _ in list_prefix(srv.bucket, "txn-hints/"))
         c.close()
     finally:
         srv.kill9()
@@ -319,7 +319,8 @@ def test_with_transaction_inc_once_across_a_cut_and_a_restart():
 # ------------------------------------------------------------------------------------------------ 6. cleanup
 
 def test_hint_and_record_are_per_session_and_overwritten():
-    """One record and one hint per session, not one per transaction: 20 transactions of one session leave one of each."""
+    """One record and one hint per session and database, not one per transaction: 20 transactions of one session in one
+    database leave one of each."""
     srv = _srv("cr41e")
     try:
         c = _client(srv)
@@ -354,7 +355,7 @@ def test_expired_session_record_and_hint_are_removed():
         assert _txn_insert(c, b, 1, {"_id": "b"})["ok"] == 1.0   # its batch deletes a's expired record
         deadline = time.time() + 15
         while time.time() < deadline:                   # the hint cleanup runs every TTL/3
-            hints = sorted(k.rsplit("/", 1)[1] for k, _ in list_prefix(srv.bucket, "txn-hints/"))
+            hints = sorted(k.split("/")[1] for k, _ in list_prefix(srv.bucket, "txn-hints/"))
             if hints == [b["id"].hex()]:
                 break
             time.sleep(0.5)

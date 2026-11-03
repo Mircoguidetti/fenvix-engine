@@ -58,6 +58,19 @@ tokio::task_local! {
     pub static RELAX: std::cell::Cell<bool>;
 }
 
+/// The commit the current command staged last (group commit on), still waiting for its durability: a clone, for a later
+/// command that will answer from what this batch recorded (a repeated commit, a retried write) and must wait for the same
+/// durability before it says ok. `None`: nothing staged, or group commit off (the batch was durable before `apply` returned).
+pub fn staged_commit() -> Option<Commit> {
+    PENDING.try_with(|p| p.borrow().last().cloned()).ok().flatten()
+}
+
+/// Like [`staged_commit`], but the commit leaves the command's list: the caller waits for it itself (a transaction's
+/// commit, which publishes it to its repeated commits), so the reply does not wait for it a second time.
+pub fn take_staged_commit() -> Option<Commit> {
+    PENDING.try_with(|p| p.borrow_mut().pop()).ok().flatten()
+}
+
 /// Reads (find, count, distinct, aggregate) see only durable data: a write that is staged and waiting for its group
 /// flush is invisible to them until its flush is done. Commands that write still see their own staged data, which
 /// they need to decide (duplicate keys, unique indexes). False (`--durable-reads false`) lets reads see staged data.
