@@ -1,0 +1,37 @@
+R (nostra CPU contro il migliore specializzato) = 1.0
+
+== medio: 50 milioni di vettori (205 GB in float), 50 ricerche/s ==
+Pinecone serverless $424,741
+Pinecone DRN (b1, 2 repliche, 2 nodi; capienza in ricerche/s NON SO) $740
+turbopuffer a consumo $7,101 (fissato: NON SO)
+S3 Vectors $19,553
+Weaviate Cloud (prezzo 'da', compressione forte) $139–238
+  int8: Qdrant Cloud (RAM 58 GB x 2, terza parte) $6,559; noi costo $860 (2 x r7gd da 8 vCPU), prezzo $1,563
+  binario: Qdrant Cloud (RAM 13 GB x 2, terza parte) $1,458; noi costo $377 (2 x m7gd da 4 vCPU), prezzo $685
+
+== medio: 50 milioni di vettori (205 GB in float), 250 ricerche/s ==
+Pinecone serverless $2,123,434
+Pinecone DRN (b1, 2 repliche, 2 nodi; capienza in ricerche/s NON SO) $740
+turbopuffer a consumo $35,236 (fissato: NON SO)
+S3 Vectors $97,715
+Weaviate Cloud (prezzo 'da', compressione forte) $139–238
+  int8: Qdrant Cloud (RAM 58 GB x 2, terza parte) $6,559; noi costo $860 (2 x r7gd da 8 vCPU), prezzo $1,563
+  binario: Qdrant Cloud (RAM 13 GB x 2, terza parte) $1,458; noi costo $377 (2 x m7gd da 4 vCPU), prezzo $685
+
+== grande: 500 milioni di vettori (2048 GB in float), 500 ricerche/s ==
+Pinecone serverless $42,468,004
+Pinecone DRN (b1, 2 repliche, 18 nodi; capienza in ricerche/s NON SO) $6,731
+turbopuffer a consumo $166,564 (fissato: NON SO)
+S3 Vectors $1,151,042
+Weaviate Cloud (prezzo 'da', compressione forte) $1,392–2,381
+  int8: Qdrant Cloud (RAM 576 GB x 2, terza parte) $65,595; noi costo $9,785 (4 x r7gd da 48 vCPU in 2 pezzi), prezzo $17,791
+  binario: Qdrant Cloud (RAM 128 GB x 2, terza parte) $14,577; noi costo $3,989 (2 x m7gd da 48 vCPU), prezzo $7,253
+
+== grande: 500 milioni di vettori (2048 GB in float), 2500 ricerche/s ==
+Pinecone serverless $212,337,316
+Pinecone DRN (b1, 2 repliche, 18 nodi; capienza in ricerche/s NON SO) $6,731
+turbopuffer a consumo $830,116 (fissato: NON SO)
+S3 Vectors $5,754,721
+Weaviate Cloud (prezzo 'da', compressione forte) $1,392–2,381
+  int8: Qdrant Cloud (RAM 576 GB x 2, terza parte) $65,595; noi costo $9,785 (4 x r7gd da 48 vCPU in 2 pezzi), prezzo $17,791
+  binario: Qdrant Cloud (RAM 128 GB x 2, terza parte) $14,577; noi costo $3,989 (2 x m7gd da 48 vCPU), prezzo $7,253

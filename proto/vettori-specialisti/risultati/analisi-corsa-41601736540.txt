@@ -1,0 +1,140 @@
+
+===== job faiss =====
+faiss | HNSW32,Flat | filtro=False | max richiamo 0.978 | @0.9: 3901/s lordo (richiamo 0.923, {'ef': 32}) | @0.95: 2313/s lordo (richiamo 0.960, {'ef': 64})
+faiss | HNSW32,Flat | filtro=True | max richiamo 0.978 | @0.9: 1260/s lordo (richiamo 0.919, {'ef': 128}) | @0.95: 875/s lordo (richiamo 0.952, {'ef': 192})
+faiss | IVF4096,PQ192x4fs,RFlat | filtro=False | max richiamo 0.973 | @0.9: 1614/s lordo (richiamo 0.903, {'nprobe': 32, 'k_factor': 32}) | @0.95: 1099/s lordo (richiamo 0.956, {'nprobe': 96, 'k_factor': 32})
+faiss | IVF4096,PQ192x4fs,RFlat | filtro=True | max richiamo 0.969 | @0.9: 1180/s lordo (richiamo 0.902, {'nprobe': 64, 'k_factor': 32}) | @0.95: 677/s lordo (richiamo 0.961, {'nprobe': 192, 'k_factor': 32})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 3896/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 1790/s lordo (richiamo 0.951, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1226/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 681/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 3896/s contro faiss HNSW32,Flat 3901/s -> 1.00x (lordo 1.00x)
+filtro=False @0.9: noi 3896/s contro faiss IVF4096,PQ192x4fs,RFlat 1614/s -> 2.41x (lordo 2.41x)
+filtro=False @0.95: noi 1790/s contro faiss HNSW32,Flat 2313/s -> 0.77x (lordo 0.77x)
+filtro=False @0.95: noi 1790/s contro faiss IVF4096,PQ192x4fs,RFlat 1099/s -> 1.63x (lordo 1.63x)
+filtro=True @0.9: noi 1226/s contro faiss HNSW32,Flat 1260/s -> 0.97x (lordo 0.97x)
+filtro=True @0.9: noi 1226/s contro faiss IVF4096,PQ192x4fs,RFlat 1180/s -> 1.04x (lordo 1.04x)
+filtro=True @0.95: noi 681/s contro faiss HNSW32,Flat 875/s -> 0.78x (lordo 0.78x)
+filtro=True @0.95: noi 681/s contro faiss IVF4096,PQ192x4fs,RFlat 677/s -> 1.01x (lordo 1.01x)
+
+===== job lancedb =====
+lancedb | IVF_PQ predefinito | filtro=False | max richiamo 0.975 | @0.9: 103/s lordo, 157/s senza protocollo (vuota 3.324 ms) (richiamo 0.908, {'nprobes': 15, 'refine': 10}) | @0.95: 67/s lordo, 87/s senza protocollo (vuota 3.324 ms) (richiamo 0.950, {'nprobes': 15, 'refine': 40})
+lancedb | IVF_PQ predefinito | filtro=True | max richiamo 0.960 | @0.9: 70/s lordo, 90/s senza protocollo (vuota 3.324 ms) (richiamo 0.912, {'nprobes': 15, 'refine': 40}) | @0.95: 51/s lordo, 61/s senza protocollo (vuota 3.324 ms) (richiamo 0.953, {'nprobes': 40, 'refine': 40})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 3656/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 1673/s lordo (richiamo 0.950, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1178/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 624/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 3656/s contro lancedb IVF_PQ predefinito 157/s -> 23.36x (lordo 35.51x)
+filtro=False @0.95: noi 1673/s contro lancedb IVF_PQ predefinito 87/s -> 19.25x (lordo 24.81x)
+filtro=True @0.9: noi 1178/s contro lancedb IVF_PQ predefinito 90/s -> 13.02x (lordo 16.93x)
+filtro=True @0.95: noi 624/s contro lancedb IVF_PQ predefinito 61/s -> 10.21x (lordo 12.28x)
+
+===== job librerie =====
+hnswlib | M16 efC200 float32 | filtro=False | max richiamo 0.978 | @0.9: 2769/s lordo (richiamo 0.931, {'ef': 48}) | @0.95: 1605/s lordo (richiamo 0.961, {'ef': 96})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 3865/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 1849/s lordo (richiamo 0.951, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1260/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 665/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+noi (usearch) | b1+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.984 | @0.9: 884/s lordo (richiamo 0.909, {'ef': 256, 'R': 80}) | @0.95: 563/s lordo (richiamo 0.969, {'ef': 384, 'R': 320})
+noi (usearch) | i8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.980 | @0.9: 2325/s lordo (richiamo 0.918, {'ef': 48, 'R': 20}) | @0.95: 1343/s lordo (richiamo 0.955, {'ef': 96, 'R': 40})
+usearch | f16 di serie | filtro=False | max richiamo 0.979 | @0.9: 1917/s lordo (richiamo 0.918, {'ef': 48}) | @0.95: 1117/s lordo (richiamo 0.955, {'ef': 96})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 3865/s contro hnswlib M16 efC200 float32 2769/s -> 1.40x (lordo 1.40x)
+filtro=False @0.9: noi 3865/s contro usearch f16 di serie 1917/s -> 2.02x (lordo 2.02x)
+filtro=False @0.9: noi usearch b1+ricalcolo, 1 pezzo 884/s = 0.23 volte il riferimento faiss
+filtro=False @0.9: noi usearch i8+ricalcolo, 1 pezzo 2325/s = 0.60 volte il riferimento faiss
+filtro=False @0.95: noi 1849/s contro hnswlib M16 efC200 float32 1605/s -> 1.15x (lordo 1.15x)
+filtro=False @0.95: noi 1849/s contro usearch f16 di serie 1117/s -> 1.66x (lordo 1.66x)
+filtro=False @0.95: noi usearch b1+ricalcolo, 1 pezzo 563/s = 0.30 volte il riferimento faiss
+filtro=False @0.95: noi usearch i8+ricalcolo, 1 pezzo 1343/s = 0.73 volte il riferimento faiss
+
+===== job pgvector =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 4734/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 2118/s lordo (richiamo 0.950, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1427/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 800/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+pgvector | HNSW m16 efC64 | filtro=False | max richiamo 0.978 | @0.9: 520/s lordo, 541/s senza protocollo (vuota 0.072 ms) (richiamo 0.904, {'ef_search': 32}) | @0.95: 222/s lordo, 225/s senza protocollo (vuota 0.072 ms) (richiamo 0.962, {'ef_search': 96})
+pgvector | HNSW m16 efC64 | filtro=True | max richiamo 0.980 | @0.9: 169/s lordo, 172/s senza protocollo (vuota 0.072 ms) (richiamo 0.901, {'ef_search': 32}) | @0.95: 87/s lordo, 88/s senza protocollo (vuota 0.072 ms) (richiamo 0.955, {'ef_search': 256})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 4734/s contro pgvector HNSW m16 efC64 541/s -> 8.76x (lordo 9.10x)
+filtro=False @0.95: noi 2118/s contro pgvector HNSW m16 efC64 225/s -> 9.40x (lordo 9.55x)
+filtro=True @0.9: noi 1427/s contro pgvector HNSW m16 efC64 172/s -> 8.32x (lordo 8.42x)
+filtro=True @0.95: noi 800/s contro pgvector HNSW m16 efC64 88/s -> 9.13x (lordo 9.18x)
+
+===== job qdrant-bq =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 4766/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 2164/s lordo (richiamo 0.950, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1522/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 822/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+qdrant | HNSW + binaria 1 bit | filtro=False | max richiamo 0.973 | @0.9: 1863/s lordo, 3360/s senza protocollo (vuota 0.239 ms) (richiamo 0.904, {'hnsw_ef': 16, 'oversampling': 8.0}) | @0.95: 1049/s lordo, 1400/s senza protocollo (vuota 0.239 ms) (richiamo 0.951, {'hnsw_ef': 256, 'oversampling': 16.0})
+qdrant | HNSW + binaria 1 bit | filtro=True | max richiamo 0.965 | @0.9: 1088/s lordo, 1471/s senza protocollo (vuota 0.239 ms) (richiamo 0.920, {'hnsw_ef': 64, 'oversampling': 16.0}) | @0.95: 692/s lordo, 829/s senza protocollo (vuota 0.239 ms) (richiamo 0.964, {'hnsw_ef': 128, 'oversampling': 32.0})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 4766/s contro qdrant HNSW + binaria 1 bit 3360/s -> 1.42x (lordo 2.56x)
+filtro=False @0.95: noi 2164/s contro qdrant HNSW + binaria 1 bit 1400/s -> 1.55x (lordo 2.06x)
+filtro=True @0.9: noi 1522/s contro qdrant HNSW + binaria 1 bit 1471/s -> 1.03x (lordo 1.40x)
+filtro=True @0.95: noi 822/s contro qdrant HNSW + binaria 1 bit 829/s -> 0.99x (lordo 1.19x)
+
+===== job qdrant-bq2 =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 3650/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 1621/s lordo (richiamo 0.951, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1255/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 658/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+qdrant | HNSW + binaria 2 bit | filtro=False | max richiamo 0.984 | @0.9: 1870/s lordo, 4452/s senza protocollo (vuota 0.310 ms) (richiamo 0.921, {'hnsw_ef': 16, 'oversampling': 4.0}) | @0.95: 1576/s lordo, 3083/s senza protocollo (vuota 0.310 ms) (richiamo 0.962, {'hnsw_ef': 64, 'oversampling': 8.0})
+qdrant | HNSW + binaria 2 bit | filtro=True | max richiamo 0.979 | @0.9: 1239/s lordo, 2012/s senza protocollo (vuota 0.310 ms) (richiamo 0.948, {'hnsw_ef': 24, 'oversampling': 8.0}) | @0.95: 1092/s lordo, 1652/s senza protocollo (vuota 0.310 ms) (richiamo 0.952, {'hnsw_ef': 96, 'oversampling': 8.0})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 3650/s contro qdrant HNSW + binaria 2 bit 4452/s -> 0.82x (lordo 1.95x)
+filtro=False @0.95: noi 1621/s contro qdrant HNSW + binaria 2 bit 3083/s -> 0.53x (lordo 1.03x)
+filtro=True @0.9: noi 1255/s contro qdrant HNSW + binaria 2 bit 2012/s -> 0.62x (lordo 1.01x)
+filtro=True @0.95: noi 658/s contro qdrant HNSW + binaria 2 bit 1652/s -> 0.40x (lordo 0.60x)
+
+===== job qdrant-sq =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.976 | @0.9: 4564/s lordo (richiamo 0.902, {'ef': 48, 'k_factor': 2}) | @0.95: 2076/s lordo (richiamo 0.950, {'ef': 128, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.979 | @0.9: 1472/s lordo (richiamo 0.920, {'ef': 192, 'k_factor': 2}) | @0.95: 780/s lordo (richiamo 0.959, {'ef': 384, 'k_factor': 2})
+qdrant | HNSW + int8 (scalare) | filtro=False | max richiamo 0.979 | @0.9: 2190/s lordo, 4457/s senza protocollo (vuota 0.232 ms) (richiamo 0.916, {'hnsw_ef': 16, 'oversampling': 3.0}) | @0.95: 1708/s lordo, 2831/s senza protocollo (vuota 0.232 ms) (richiamo 0.961, {'hnsw_ef': 64, 'oversampling': 3.0})
+qdrant | HNSW + int8 (scalare) | filtro=True | max richiamo 0.977 | @0.9: 1589/s lordo, 2518/s senza protocollo (vuota 0.232 ms) (richiamo 0.937, {'hnsw_ef': 48, 'oversampling': 2.0}) | @0.95: 1410/s lordo, 2097/s senza protocollo (vuota 0.232 ms) (richiamo 0.950, {'hnsw_ef': 64, 'oversampling': 2.0})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 4564/s contro qdrant HNSW + int8 (scalare) 4457/s -> 1.02x (lordo 2.08x)
+filtro=False @0.95: noi 2076/s contro qdrant HNSW + int8 (scalare) 2831/s -> 0.73x (lordo 1.22x)
+filtro=True @0.9: noi 1472/s contro qdrant HNSW + int8 (scalare) 2518/s -> 0.58x (lordo 0.93x)
+filtro=True @0.95: noi 780/s contro qdrant HNSW + int8 (scalare) 2097/s -> 0.37x (lordo 0.55x)
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 0.53x (lordo 1.03x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 1621/s, loro 3083/s]
+filtro=False @0.95: 0.73x (lordo 1.22x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 2076/s, loro 2831/s]
+filtro=False @0.95: 0.77x (lordo 0.77x) faiss HNSW32,Flat [job faiss: noi 1790/s, loro 2313/s]
+filtro=False @0.95: 1.15x (lordo 1.15x) hnswlib M16 efC200 float32 [job librerie: noi 1849/s, loro 1605/s]
+filtro=False @0.95: 1.55x (lordo 2.06x) qdrant HNSW + binaria 1 bit [job qdrant-bq: noi 2164/s, loro 1400/s]
+filtro=False @0.95: 1.63x (lordo 1.63x) faiss IVF4096,PQ192x4fs,RFlat [job faiss: noi 1790/s, loro 1099/s]
+filtro=False @0.95: 1.66x (lordo 1.66x) usearch f16 di serie [job librerie: noi 1849/s, loro 1117/s]
+filtro=False @0.95: 9.40x (lordo 9.55x) pgvector HNSW m16 efC64 [job pgvector: noi 2118/s, loro 225/s]
+filtro=False @0.95: 19.25x (lordo 24.81x) lancedb IVF_PQ predefinito [job lancedb: noi 1673/s, loro 87/s]
+filtro=False @0.9: 0.82x (lordo 1.95x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 3650/s, loro 4452/s]
+filtro=False @0.9: 1.00x (lordo 1.00x) faiss HNSW32,Flat [job faiss: noi 3896/s, loro 3901/s]
+filtro=False @0.9: 1.02x (lordo 2.08x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 4564/s, loro 4457/s]
+filtro=False @0.9: 1.40x (lordo 1.40x) hnswlib M16 efC200 float32 [job librerie: noi 3865/s, loro 2769/s]
+filtro=False @0.9: 1.42x (lordo 2.56x) qdrant HNSW + binaria 1 bit [job qdrant-bq: noi 4766/s, loro 3360/s]
+filtro=False @0.9: 2.02x (lordo 2.02x) usearch f16 di serie [job librerie: noi 3865/s, loro 1917/s]
+filtro=False @0.9: 2.41x (lordo 2.41x) faiss IVF4096,PQ192x4fs,RFlat [job faiss: noi 3896/s, loro 1614/s]
+filtro=False @0.9: 8.76x (lordo 9.10x) pgvector HNSW m16 efC64 [job pgvector: noi 4734/s, loro 541/s]
+filtro=False @0.9: 23.36x (lordo 35.51x) lancedb IVF_PQ predefinito [job lancedb: noi 3656/s, loro 157/s]
+filtro=True @0.95: 0.37x (lordo 0.55x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 780/s, loro 2097/s]
+filtro=True @0.95: 0.40x (lordo 0.60x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 658/s, loro 1652/s]
+filtro=True @0.95: 0.78x (lordo 0.78x) faiss HNSW32,Flat [job faiss: noi 681/s, loro 875/s]
+filtro=True @0.95: 0.99x (lordo 1.19x) qdrant HNSW + binaria 1 bit [job qdrant-bq: noi 822/s, loro 829/s]
+filtro=True @0.95: 1.01x (lordo 1.01x) faiss IVF4096,PQ192x4fs,RFlat [job faiss: noi 681/s, loro 677/s]
+filtro=True @0.95: 9.13x (lordo 9.18x) pgvector HNSW m16 efC64 [job pgvector: noi 800/s, loro 88/s]
+filtro=True @0.95: 10.21x (lordo 12.28x) lancedb IVF_PQ predefinito [job lancedb: noi 624/s, loro 61/s]
+filtro=True @0.9: 0.58x (lordo 0.93x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 1472/s, loro 2518/s]
+filtro=True @0.9: 0.62x (lordo 1.01x) qdrant HNSW + binaria 2 bit [job qdrant-bq2: noi 1255/s, loro 2012/s]
+filtro=True @0.9: 0.97x (lordo 0.97x) faiss HNSW32,Flat [job faiss: noi 1226/s, loro 1260/s]
+filtro=True @0.9: 1.03x (lordo 1.40x) qdrant HNSW + binaria 1 bit [job qdrant-bq: noi 1522/s, loro 1471/s]
+filtro=True @0.9: 1.04x (lordo 1.04x) faiss IVF4096,PQ192x4fs,RFlat [job faiss: noi 1226/s, loro 1180/s]
+filtro=True @0.9: 8.32x (lordo 8.42x) pgvector HNSW m16 efC64 [job pgvector: noi 1427/s, loro 172/s]
+filtro=True @0.9: 13.02x (lordo 16.93x) lancedb IVF_PQ predefinito [job lancedb: noi 1178/s, loro 90/s]
+
+===== costruzione e protocollo =====
+{"job": "faiss", "engine": "faiss", "config": "HNSW32,Flat", "kind": "build", "build_s": 502.46738862991333}
+{"job": "faiss", "engine": "faiss", "config": "IVF4096,PQ192x4fs,RFlat", "kind": "build", "build_s": 225.36446261405945}
+{"job": "lancedb", "engine": "lancedb", "config": "IVF_PQ predefinito", "kind": "build", "build_s": 154.0378966331482, "load_s": 19.8242404460907, "index": "IndexStatistics(num_indexed_rows=1000000, num_unindexed_rows=0, index_type='IVF_PQ', distance_type='cosine', num_indices=1)", "version": "0.41.0"}
+{"job": "lancedb", "engine": "lancedb", "config": "domanda vuota", "kind": "build", "ovh_ms": 3.3239574549999986}
+{"job": "librerie", "engine": "hnswlib", "config": "M16 efC200 float32", "kind": "build", "build_s": 956.0267956256866}
+{"job": "librerie", "engine": "usearch", "config": "f16 di serie", "kind": "build", "build_s": 658.1042721271515, "connectivity": 16, "expansion_add": 128, "hw": "haswell"}
+{"job": "pgvector", "engine": "pgvector", "config": "HNSW m16 efC64", "kind": "build", "build_s": 3016.520742893219, "load_s": 322.80969500541687, "version": "0.8.1", "sizes": ["3906 MB", "3907 MB"]}
+{"job": "pgvector", "engine": "pgvector", "config": "piani", "kind": "build", "iterative": true}
+{"job": "pgvector", "engine": "pgvector", "config": "domanda vuota", "kind": "build", "ovh_ms": 0.07224005199998373, "controllo_contatori": {"schedstat_s": 5.852729271000044, "stat_s": 5.849999999999909, "n": 1000}}
+{"job": "qdrant-bq", "engine": "qdrant", "config": "HNSW + binaria 1 bit", "kind": "build", "build_s": 564.332117319107, "load_s": 89.60946679115295, "segments": 2, "version": "1.20.0", "points": 1000000, "indexed": 1000000}
+{"job": "qdrant-bq", "engine": "qdrant", "config": "HNSW + binaria 1 bit domanda vuota", "kind": "build", "ovh_ms": 0.23922044000000042, "controllo_contatori": {"schedstat_s": 1.1900397180000013, "stat_s": 1.1999999999999318, "n": 1000}, "segmenti": []}
+{"job": "qdrant-bq2", "engine": "qdrant", "config": "HNSW + binaria 2 bit", "kind": "build", "build_s": 725.5950796604156, "load_s": 65.23326873779297, "segments": 2, "version": "1.20.0", "points": 1000000, "indexed": 1000000}
+{"job": "qdrant-bq2", "engine": "qdrant", "config": "HNSW + binaria 2 bit domanda vuota", "kind": "build", "ovh_ms": 0.3100898189999981, "controllo_contatori": {"schedstat_s": 0.8941335389999949, "stat_s": 0.8999999999998636, "n": 1000}, "segmenti": []}
+{"job": "qdrant-sq", "engine": "qdrant", "config": "HNSW + int8 (scalare)", "kind": "build", "build_s": 881.9764177799225, "load_s": 98.96916890144348, "segments": 2, "version": "1.20.0", "points": 1000000, "indexed": 1000000}
+{"job": "qdrant-sq", "engine": "qdrant", "config": "HNSW + int8 (scalare) domanda vuota", "kind": "build", "ovh_ms": 0.23230255200000016, "controllo_contatori": {"schedstat_s": 0.8457806859999977, "stat_s": 0.849999999999909, "n": 1000}, "segmenti": []}
