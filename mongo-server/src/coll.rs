@@ -1352,6 +1352,11 @@ impl Writes {
         Ok(false)
     }
 
+    /// [`Writes::final_ops`] would apply something (a transaction that wrote, not one that only read).
+    pub fn has_writes(&self) -> bool {
+        !self.ops.is_empty() || !self.meta.is_empty() || self.names.is_some() || !self.extra.is_empty()
+    }
+
     /// All ops to apply at commit: the document and index writes, changed index definitions, the collection list.
     pub fn final_ops(mut self) -> R<Vec<Op>> {
         let mut ops = std::mem::take(&mut self.ops);

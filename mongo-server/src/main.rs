@@ -647,6 +647,7 @@ async fn run() -> Result<()> {
         *server.rs.lock().unwrap() = Some((args.replica_set.clone(), args.advertise.clone().unwrap_or_else(|| format!("localhost:{port}"))));
     }
     server.spawn_txn_janitor();
+    server.spawn_txn_hint_sweeper();
     // The local log is applied before the control layer starts: no erase, restore or fork (resumed or new) may run on a
     // database whose acknowledged writes are still only in the log, and an erase's drop record is then always seen first.
     if let Some(old) = local_log_old {
