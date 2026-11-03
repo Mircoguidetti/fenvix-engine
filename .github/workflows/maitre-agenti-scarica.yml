@@ -1,0 +1,65 @@
+# M18: scarica le tracce pubbliche degli agenti di DAB (UC Berkeley, Google Drive), estrae solo le chiamate al
+# database e fa commit del file compresso su questo branch. Niente segreti, niente AWS, meno di 120 minuti.
+name: maitre-agenti-scarica
+on:
+  push:
+    branches: [maitre-agenti]
+    paths: ['proto/maitre-agenti/tracce/scarica.json']
+permissions:
+  contents: write
+jobs:
+  scarica:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: scarica da Google Drive
+        run: |
+          set -x
+          pip install --quiet gdown
+          ID=$(python3 -c "import json;print(json.load(open('proto/maitre-agenti/tracce/scarica.json'))['drive_id'])")
+          mkdir -p /tmp/dab && cd /tmp/dab
+          gdown "https://drive.google.com/uc?id=$ID" -O dab.bin || gdown "$ID" -O dab.bin || gdown "https://drive.google.com/drive/folders/$ID" -O dabdir
+          ls -la /tmp/dab; file /tmp/dab/* || true
+      - name: estrai
+        run: |
+          cd /tmp/dab
+          mkdir -p x
+          if [ -f dab.bin ]; then
+            case "$(file -b dab.bin)" in
+              Zip*) unzip -q dab.bin -d x ;;
+              *gzip*) tar xzf dab.bin -C x ;;
+              *XZ*) tar xJf dab.bin -C x ;;
+              *bzip2*) tar xjf dab.bin -C x ;;
+              *tar*) tar xf dab.bin -C x ;;
+              *7-zip*) sudo apt-get install -y p7zip-full >/dev/null; 7z x dab.bin -ox >/dev/null ;;
+              *) echo "formato sconosciuto"; file dab.bin ;;
+            esac
+          else
+            cp -r dabdir/* x/ || true
+          fi
+          # archivi dentro l'archivio
+          find x -name '*.zip' -exec sh -c 'unzip -q -o "$1" -d "${1%.zip}"' _ {} \; || true
+          find x \( -name '*.tar.gz' -o -name '*.tgz' \) -exec sh -c 'mkdir -p "$1.d" && tar xzf "$1" -C "$1.d"' _ {} \; || true
+          du -sh x
+          OUT=$GITHUB_WORKSPACE/proto/maitre-agenti/tracce
+          (cd x && find . -type d | head -3000) > $OUT/dab-elenco-cartelle.txt
+          (cd x && find . -type f | sed 's#.*/##' | sort | uniq -c | sort -rn | head -50) > $OUT/dab-tipi-file.txt
+          du -sh x/*; find x -type f | wc -l
+          # tutte le traiettorie, compresse e divise in pezzi da 45 MB (sotto il limite di GitHub)
+          mkdir -p $OUT/dab-grezze
+          tar -C x -cf - . | xz -9 -T0 > /tmp/dab/grezze.tar.xz
+          ls -la /tmp/dab/grezze.tar.xz
+          SZ=$(stat -c %s /tmp/dab/grezze.tar.xz)
+          if [ "$SZ" -lt 400000000 ]; then split -b 45m -d /tmp/dab/grezze.tar.xz $OUT/dab-grezze/grezze.tar.xz.part; fi
+          sha256sum /tmp/dab/grezze.tar.xz > $OUT/dab-grezze/sha256.txt
+          ls -la $OUT/dab-grezze
+      - name: commit
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add proto/maitre-agenti/tracce
+          git commit -m "M18: tracce DAB estratte dal runner (solo chiamate al database)" || exit 0
+          git push

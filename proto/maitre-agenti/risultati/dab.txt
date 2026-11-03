@@ -1,0 +1,81 @@
+{"conversazioni": 13482, "chiamate_query_db": 76213, "riuscite": 79865, "chiamate_list_db": 8244, "fallite": 4592}
+== DAB sessione passo=10s periodo=24h solo_riuscite=False
+cache_app=60s W=600s letture=84457 assorbite_app=2792 al_db=81665 scritture=0 | collezione=2.5% intervallo=2.5% tetto=2.5% | +parametri=3.2% +sottoquery=1.6% | picco_pronte=79280 picco_byte=241422103
+cache_app=60s W=300s letture=84457 assorbite_app=2792 al_db=81665 scritture=0 | collezione=2.4% intervallo=2.4% tetto=2.4% | +parametri=3.2% +sottoquery=1.6% | picco_pronte=76306 picco_byte=234064703
+cache_app=60s W=3600s letture=84457 assorbite_app=2792 al_db=81665 scritture=0 | collezione=2.5% intervallo=2.5% tetto=2.5% | +parametri=3.2% +sottoquery=1.6% | picco_pronte=79631 picco_byte=242466527
+cache_app=0s W=600s letture=84457 assorbite_app=0 al_db=84457 scritture=0 | collezione=5.7% intervallo=5.7% tetto=5.7% | +parametri=3.1% +sottoquery=1.5% | picco_pronte=79280 picco_byte=241411039
+   gemini-2.5-flash   al_db=  9325 tetto_dopo_cache=5.9% +param=2.9% +sottoq=0.7% | senza_cache tetto=15.6%
+   gemini-3-pro       al_db= 18932 tetto_dopo_cache=0.0% +param=4.8% +sottoq=1.6% | senza_cache tetto=0.1%
+   gpt-5-mini         al_db= 15877 tetto_dopo_cache=0.5% +param=1.6% +sottoq=0.4% | senza_cache tetto=1.7%
+   gpt-5.2            al_db= 11576 tetto_dopo_cache=0.1% +param=2.0% +sottoq=3.4% | senza_cache tetto=0.4%
+   kimi-k2            al_db= 25955 tetto_dopo_cache=5.3% +param=3.6% +sottoq=1.8% | senza_cache tetto=10.4%
+== DAB paralleli passo=10s periodo=24h solo_riuscite=False
+cache_app=60s W=600s letture=84457 assorbite_app=39270 al_db=45187 scritture=0 | collezione=8.7% intervallo=8.7% tetto=8.7% | +parametri=13.7% +sottoquery=5.1% | picco_pronte=40943 picco_byte=114430165
+cache_app=60s W=300s letture=84457 assorbite_app=39270 al_db=45187 scritture=0 | collezione=8.4% intervallo=8.4% tetto=8.4% | +parametri=13.6% +sottoquery=5.1% | picco_pronte=38429 picco_byte=109061318
+cache_app=60s W=3600s letture=84457 assorbite_app=39270 al_db=45187 scritture=0 | collezione=8.8% intervallo=8.8% tetto=8.8% | +parametri=13.7% +sottoquery=5.1% | picco_pronte=41192 picco_byte=115206145
+cache_app=0s W=600s letture=84457 assorbite_app=0 al_db=84457 scritture=0 | collezione=51.2% intervallo=51.2% tetto=51.2% | +parametri=7.3% +sottoquery=2.7% | picco_pronte=40943 picco_byte=114446664
+   gemini-2.5-flash   al_db=  4731 tetto_dopo_cache=15.1% +param=13.6% +sottoq=3.0% | senza_cache tetto=61.4%
+   gemini-3-pro       al_db=  8076 tetto_dopo_cache=5.8% +param=22.6% +sottoq=6.5% | senza_cache tetto=59.9%
+   gpt-5-mini         al_db=  9305 tetto_dopo_cache=5.5% +param=8.7% +sottoq=2.6% | senza_cache tetto=45.3%
+   gpt-5.2            al_db=  6603 tetto_dopo_cache=1.1% +param=8.8% +sottoq=10.4% | senza_cache tetto=43.7%
+   kimi-k2            al_db= 16472 tetto_dopo_cache=13.3% +param=14.1% +sottoq=4.4% | senza_cache tetto=47.9%
+== DAB condiviso passo=10s periodo=24h solo_riuscite=False
+cache_app=60s W=600s letture=84457 assorbite_app=3963 al_db=80494 scritture=0 | collezione=11.9% intervallo=11.9% tetto=11.9% | +parametri=4.8% +sottoquery=1.8% | picco_pronte=958 picco_byte=2684067
+cache_app=60s W=300s letture=84457 assorbite_app=3963 al_db=80494 scritture=0 | collezione=7.4% intervallo=7.4% tetto=7.4% | +parametri=4.2% +sottoquery=1.7% | picco_pronte=579 picco_byte=1855376
+cache_app=60s W=3600s letture=84457 assorbite_app=3963 al_db=80494 scritture=0 | collezione=29.2% intervallo=29.2% tetto=29.2% | +parametri=7.4% +sottoquery=2.3% | picco_pronte=3306 picco_byte=9710077
+cache_app=0s W=600s letture=84457 assorbite_app=0 al_db=84457 scritture=0 | collezione=16.0% intervallo=16.0% tetto=16.0% | +parametri=4.6% +sottoquery=1.7% | picco_pronte=958 picco_byte=2705756
+   gemini-2.5-flash   al_db=  9225 tetto_dopo_cache=13.7% +param=4.1% +sottoq=1.1% | senza_cache tetto=23.4%
+   gemini-3-pro       al_db= 18614 tetto_dopo_cache=11.0% +param=7.5% +sottoq=1.7% | senza_cache tetto=12.6%
+   gpt-5-mini         al_db= 15689 tetto_dopo_cache=9.1% +param=2.3% +sottoq=0.6% | senza_cache tetto=11.2%
+   gpt-5.2            al_db= 11439 tetto_dopo_cache=7.7% +param=2.8% +sottoq=3.8% | senza_cache tetto=9.1%
+   kimi-k2            al_db= 25527 tetto_dopo_cache=15.4% +param=5.5% +sottoq=2.0% | senza_cache tetto=21.3%
+== DAB condiviso passo=10s periodo=1h solo_riuscite=False
+cache_app=60s W=600s letture=84457 assorbite_app=15755 al_db=68702 scritture=0 | collezione=31.9% intervallo=31.9% tetto=31.9% | +parametri=10.0% +sottoquery=3.1% | picco_pronte=9275 picco_byte=28674423
+cache_app=60s W=300s letture=84457 assorbite_app=15755 al_db=68702 scritture=0 | collezione=24.9% intervallo=24.9% tetto=24.9% | +parametri=9.6% +sottoquery=3.0% | picco_pronte=5544 picco_byte=17228748
+cache_app=60s W=3600s letture=84457 assorbite_app=15755 al_db=68702 scritture=0 | collezione=42.3% intervallo=42.3% tetto=42.3% | +parametri=9.9% +sottoquery=3.4% | picco_pronte=38917 picco_byte=108263541
+cache_app=0s W=600s letture=84457 assorbite_app=0 al_db=84457 scritture=0 | collezione=44.7% intervallo=44.7% tetto=44.7% | +parametri=8.1% +sottoquery=2.5% | picco_pronte=9285 picco_byte=28683390
+   gemini-2.5-flash   al_db=  7952 tetto_dopo_cache=41.3% +param=8.8% +sottoq=2.1% | senza_cache tetto=55.2%
+   gemini-3-pro       al_db= 15341 tetto_dopo_cache=41.4% +param=14.4% +sottoq=2.8% | senza_cache tetto=52.6%
+   gpt-5-mini         al_db= 13795 tetto_dopo_cache=24.2% +param=6.2% +sottoq=1.8% | senza_cache tetto=34.9%
+   gpt-5.2            al_db= 10063 tetto_dopo_cache=27.3% +param=6.3% +sottoq=6.4% | senza_cache tetto=37.1%
+   kimi-k2            al_db= 21551 tetto_dopo_cache=28.8% +param=11.5% +sottoq=3.1% | senza_cache tetto=44.1%
+== DAB paralleli passo=3s periodo=24h solo_riuscite=False
+cache_app=60s W=600s letture=84457 assorbite_app=42350 al_db=42107 scritture=0 | collezione=2.2% intervallo=2.2% tetto=2.2% | +parametri=14.7% +sottoquery=5.5% | picco_pronte=41181 picco_byte=115167247
+cache_app=60s W=300s letture=84457 assorbite_app=42350 al_db=42107 scritture=0 | collezione=2.2% intervallo=2.2% tetto=2.2% | +parametri=14.7% +sottoquery=5.5% | picco_pronte=41181 picco_byte=115167247
+cache_app=60s W=3600s letture=84457 assorbite_app=42350 al_db=42107 scritture=0 | collezione=2.2% intervallo=2.2% tetto=2.2% | +parametri=14.7% +sottoquery=5.5% | picco_pronte=41181 picco_byte=115167247
+cache_app=0s W=600s letture=84457 assorbite_app=0 al_db=84457 scritture=0 | collezione=51.2% intervallo=51.2% tetto=51.2% | +parametri=7.3% +sottoquery=2.7% | picco_pronte=41180 picco_byte=115160645
+   gemini-2.5-flash   al_db=  4217 tetto_dopo_cache=5.1% +param=15.4% +sottoq=3.4% | senza_cache tetto=61.5%
+   gemini-3-pro       al_db=  7637 tetto_dopo_cache=0.4% +param=23.9% +sottoq=6.8% | senza_cache tetto=59.9%
+   gpt-5-mini         al_db=  8889 tetto_dopo_cache=1.4% +param=9.2% +sottoq=2.8% | senza_cache tetto=45.4%
+   gpt-5.2            al_db=  6538 tetto_dopo_cache=0.1% +param=8.9% +sottoq=10.5% | senza_cache tetto=43.7%
+   kimi-k2            al_db= 14826 tetto_dopo_cache=3.6% +param=15.6% +sottoq=4.8% | senza_cache tetto=47.9%
+== DAB paralleli passo=30s periodo=24h solo_riuscite=False
+cache_app=60s W=600s letture=84457 assorbite_app=33023 al_db=51434 scritture=0 | collezione=19.1% intervallo=19.1% tetto=19.1% | +parametri=11.9% +sottoquery=4.5% | picco_pronte=35724 picco_byte=102136969
+cache_app=60s W=300s letture=84457 assorbite_app=33023 al_db=51434 scritture=0 | collezione=17.9% intervallo=17.9% tetto=17.9% | +parametri=11.7% +sottoquery=4.3% | picco_pronte=28838 picco_byte=84449747
+cache_app=60s W=3600s letture=84457 assorbite_app=33023 al_db=51434 scritture=0 | collezione=19.9% intervallo=19.9% tetto=19.9% | +parametri=12.0% +sottoquery=4.5% | picco_pronte=41192 picco_byte=115216375
+cache_app=0s W=600s letture=84457 assorbite_app=0 al_db=84457 scritture=0 | collezione=50.8% intervallo=50.8% tetto=50.8% | +parametri=7.2% +sottoquery=2.7% | picco_pronte=35724 picco_byte=102132892
+   gemini-2.5-flash   al_db=  5761 tetto_dopo_cache=29.1% +param=10.7% +sottoq=2.6% | senza_cache tetto=60.7%
+   gemini-3-pro       al_db=  9525 tetto_dopo_cache=20.0% +param=19.1% +sottoq=5.3% | senza_cache tetto=59.8%
+   gpt-5-mini         al_db= 10426 tetto_dopo_cache=14.9% +param=7.8% +sottoq=2.3% | senza_cache tetto=44.7%
+   gpt-5.2            al_db=  6886 tetto_dopo_cache=5.1% +param=8.5% +sottoq=10.0% | senza_cache tetto=43.7%
+   kimi-k2            al_db= 18836 tetto_dopo_cache=23.2% +param=12.1% +sottoq=3.7% | senza_cache tetto=47.3%
+== DAB paralleli passo=10s periodo=24h solo_riuscite=True
+cache_app=60s W=600s letture=79865 assorbite_app=38654 al_db=41211 scritture=0 | collezione=9.4% intervallo=9.4% tetto=9.4% | +parametri=14.5% +sottoquery=4.4% | picco_pronte=37078 picco_byte=112421179
+cache_app=60s W=300s letture=79865 assorbite_app=38654 al_db=41211 scritture=0 | collezione=9.0% intervallo=9.0% tetto=9.0% | +parametri=14.5% +sottoquery=4.4% | picco_pronte=34782 picco_byte=107131514
+cache_app=60s W=3600s letture=79865 assorbite_app=38654 al_db=41211 scritture=0 | collezione=9.5% intervallo=9.5% tetto=9.5% | +parametri=14.5% +sottoquery=4.4% | picco_pronte=37311 picco_byte=113190007
+cache_app=0s W=600s letture=79865 assorbite_app=0 al_db=79865 scritture=0 | collezione=53.2% intervallo=53.2% tetto=53.2% | +parametri=7.5% +sottoquery=2.3% | picco_pronte=37078 picco_byte=112440965
+   gemini-2.5-flash   al_db=  4047 tetto_dopo_cache=16.7% +param=15.0% +sottoq=2.8% | senza_cache tetto=64.6%
+   gemini-3-pro       al_db=  7577 tetto_dopo_cache=6.0% +param=23.3% +sottoq=6.1% | senza_cache tetto=61.1%
+   gpt-5-mini         al_db=  8845 tetto_dopo_cache=5.8% +param=9.0% +sottoq=2.6% | senza_cache tetto=46.4%
+   gpt-5.2            al_db=  5440 tetto_dopo_cache=1.2% +param=10.0% +sottoq=7.1% | senza_cache tetto=47.9%
+   kimi-k2            al_db= 15302 tetto_dopo_cache=14.0% +param=14.9% +sottoq=4.0% | senza_cache tetto=49.7%
+== DAB condiviso passo=10s periodo=24h solo_riuscite=True
+cache_app=60s W=600s letture=79865 assorbite_app=3855 al_db=76010 scritture=0 | collezione=12.5% intervallo=12.5% tetto=12.5% | +parametri=5.0% +sottoquery=1.4% | picco_pronte=923 picco_byte=2674715
+cache_app=60s W=300s letture=79865 assorbite_app=3855 al_db=76010 scritture=0 | collezione=7.8% intervallo=7.8% tetto=7.8% | +parametri=4.4% +sottoquery=1.3% | picco_pronte=567 picco_byte=1849298
+cache_app=60s W=3600s letture=79865 assorbite_app=3855 al_db=76010 scritture=0 | collezione=30.7% intervallo=30.7% tetto=30.7% | +parametri=7.7% +sottoquery=2.0% | picco_pronte=3098 picco_byte=9622849
+cache_app=0s W=600s letture=79865 assorbite_app=0 al_db=79865 scritture=0 | collezione=16.7% intervallo=16.7% tetto=16.7% | +parametri=4.8% +sottoquery=1.4% | picco_pronte=923 picco_byte=2675447
+   gemini-2.5-flash   al_db=  8427 tetto_dopo_cache=14.6% +param=4.4% +sottoq=0.9% | senza_cache tetto=24.4%
+   gemini-3-pro       al_db= 17979 tetto_dopo_cache=11.3% +param=7.7% +sottoq=1.5% | senza_cache tetto=13.0%
+   gpt-5-mini         al_db= 15188 tetto_dopo_cache=9.4% +param=2.4% +sottoq=0.6% | senza_cache tetto=11.5%
+   gpt-5.2            al_db= 10138 tetto_dopo_cache=8.7% +param=3.0% +sottoq=2.2% | senza_cache tetto=10.1%
+   kimi-k2            al_db= 24278 tetto_dopo_cache=16.1% +param=5.8% +sottoq=1.8% | senza_cache tetto=22.3%
