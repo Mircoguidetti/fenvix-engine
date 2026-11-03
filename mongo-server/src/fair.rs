@@ -112,6 +112,10 @@ pub struct OpCost {
     /// The command's gate slot: given back as soon as the command waits for durability ([`io_wait`]), or when it ends.
     gate: Mutex<Option<GateSlot>>,
     db: String,
+    /// S3 requests the command made for its database while that database had no counters (pts, PUT-class, GET-class):
+    /// charged if the command opens or creates it ([`register`], [`note_written`]), dropped otherwise, so a command on a
+    /// database that does not exist creates no counters (C9, `test_25_review_fixes`).
+    s3_pending: Mutex<(f64, u64, u64)>,
 }
 
 tokio::task_local! {
@@ -398,8 +402,8 @@ fn charge(db: &str, pts: f64, part: impl FnOnce(&mut DbStat)) -> Option<f64> {
 /// made inside a command (the task-local `OP`); else the database whose own store makes it (`counting::owned`: its
 /// writer, reader and compactor; a branch made with fork "clone" reads its parent's objects `tenants/{parent}/...`, and
 /// those reads are the branch's); else, for the rest of the background work (lease renewals, cleanup), the database
-/// whose objects it touches, `tenants/{db}/...`. Counted even if this process has not opened that database (it gets its
-/// counters).
+/// whose objects it touches, `tenants/{db}/...`. Counters are made only for a database that exists or is being made
+/// (C9): by the database's own store, or by a command that then opens or creates it; never by a path alone.
 fn on_s3_request(path: &str, put: bool) {
     let by_path = path.strip_prefix("tenants/").map(|rest| rest.split('/').next().unwrap_or("")).filter(|d| !d.is_empty());
     if put && path.contains("/wal/") {
@@ -420,13 +424,32 @@ fn on_s3_request(path: &str, put: bool) {
     // (counting::owned: SlateDB makes most of its reads in tasks of its own)
     let by_command = OP.try_with(|c| c.db.clone()).ok();
     let by_store = tenant_bench::counting::request_owner();
-    for db in [by_command.as_deref(), by_store.as_deref()].into_iter().flatten() {
+    for db in [by_command.as_deref(), by_store.as_deref(), by_path].into_iter().flatten() {
         if let Some(rate) = charge(db, pts, part) {
             note_usage(db, pts, rate);
             return;
         }
     }
-    let Some(db) = by_store.as_deref().or(by_path) else { return };
+    // Inside a command whose database has no counters yet (being opened, being created, or not existing): kept on the
+    // command, charged only if the command opens or creates the database (`registered`). A client naming arbitrary
+    // databases grows nothing.
+    if OP.try_with(|c| {
+        let mut p = c.s3_pending.lock().unwrap();
+        p.0 += pts;
+        if put {
+            p.1 += 1;
+        } else {
+            p.2 += 1;
+        }
+    })
+    .is_ok()
+    {
+        return;
+    }
+    // Outside a command: only the database's own store (`counting::owned`: its writer, reader or compactor, so the database
+    // exists or is being opened or created) gives it counters. The rest (cleanup, lease work, an erase after it forgot the
+    // database) is not charged to a database that has none: a path alone does not make a database exist.
+    let Some(db) = by_store.as_deref() else { return };
     let rate = {
         let mut st = STATS.lock().unwrap();
         let s = st.entry(db.to_string()).or_insert_with(|| DbStat::new(db));
@@ -814,11 +837,19 @@ pub fn register(db: &str) {
 
 /// The counters of `db`, made now if missing (see [`first_stat`]). Counters made earlier only by its S3 requests (the
 /// opening or creating command's own requests come before its database is registered) count that command now.
+/// The S3 requests the running command made for `db` before it had counters are charged now.
 fn registered<'a>(st: &'a mut HashMap<String, DbStat>, db: &str) -> &'a mut DbStat {
     let s = st.entry(db.to_string()).or_insert_with(|| first_stat(db));
     if !s.registered {
         s.registered = true;
         s.commands += 1;
+    }
+    let pending = OP.try_with(|c| if c.db == db { std::mem::take(&mut *c.s3_pending.lock().unwrap()) } else { (0.0, 0, 0) }).unwrap_or((0.0, 0, 0));
+    if pending.0 > 0.0 {
+        s.pts_s3 += pending.0;
+        s.s3_put += pending.1;
+        s.s3_get += pending.2;
+        s.charge(pending.0);
     }
     s
 }
