@@ -1,0 +1,67 @@
+
+== chat-base-4: L0 2, sorted run 5, scatole 30, dati 3.03 GB, indici dei blocchi 1.22%, filtri 0.66% dei dati
+  S0: Q1 53.6 GET (p90 58, 28384 KB, 20.0 doc); Q2 3.0 GET (p90 3, 3487 KB, 1.0 doc); Q3 36.9 GET (p90 56, 17697 KB, 15.1 doc); MIX 40.1 GET
+  S1: Q1 27.6 GET (p90 29, 109 KB, 20.0 doc); Q2 1.0 GET (p90 1, 4 KB, 1.0 doc); Q3 22.6 GET (p90 37, 88 KB, 15.1 doc); MIX 21.3 GET
+  S1_ritardo20: Q1 27.5 GET (p90 28, 108 KB, 20.0 doc, 3.4 giri); Q2 1.0 GET (p90 1, 4 KB, 1.0 doc, 1.1 giri); Q3 24.1 GET (p90 38, 95 KB, 16.7 doc, 3.3 giri); MIX 21.5 GET
+  soldi B: GET $772/mese (peggiore query $1000); bancone in più 377 GB = $65-196; costo condivisa $1419-1549, prezzo $2580-2817, su Infinite centro 35-38% (forchetta 29-43%); dedicati prezzo $3489-3999 = 47-54% (peggio 62%)
+
+== chat-gruppo-4: L0 1, sorted run 3, scatole 21, dati 3.36 GB, indici dei blocchi 1.26%, filtri 0.60% dei dati
+  S0: Q1 8.0 GET (p90 8, 5517 KB, 20.0 doc); Q2 10.6 GET (p90 11, 11990 KB, 1.0 doc); Q3 8.0 GET (p90 8, 5584 KB, 15.1 doc); MIX 8.6 GET
+  S1: Q1 4.0 GET (p90 4, 34 KB, 20.0 doc); Q2 2.0 GET (p90 2, 8 KB, 1.0 doc); Q3 4.0 GET (p90 4, 21 KB, 15.1 doc); MIX 3.6 GET
+  S1_ritardo20: Q1 4.0 GET (p90 4, 29 KB, 20.0 doc, 1.1 giri); Q2 2.0 GET (p90 2, 8 KB, 1.0 doc, 2.2 giri); Q3 4.0 GET (p90 4, 21 KB, 16.7 doc, 1.1 giri); MIX 3.6 GET
+  soldi B: GET $132/mese (peggiore query $147); bancone in più 372 GB = $64-193; costo condivisa $778-907, prezzo $1415-1650, su Infinite centro 19-22% (forchetta 16-25%); dedicati prezzo $2324-2831 = 31-38% (peggio 44%)
+
+== chat-base-64: L0 0, sorted run 7, scatole 32, dati 2.99 GB, indici dei blocchi 0.07%, filtri 0.67% dei dati
+  S0: Q1 54.7 GET (p90 59, 9446 KB, 20.0 doc); Q2 3.0 GET (p90 3, 1005 KB, 1.0 doc); Q3 36.8 GET (p90 54, 5604 KB, 15.1 doc); MIX 40.8 GET
+  S1: Q1 27.0 GET (p90 27, 1728 KB, 20.0 doc); Q2 1.0 GET (p90 1, 64 KB, 1.0 doc); Q3 22.1 GET (p90 37, 1410 KB, 15.1 doc); MIX 20.8 GET
+  S1_ritardo20: Q1 27.0 GET (p90 27, 1726 KB, 20.0 doc, 3.3 giri); Q2 1.0 GET (p90 1, 64 KB, 1.0 doc, 1.1 giri); Q3 23.6 GET (p90 37, 1509 KB, 16.7 doc, 3.3 giri); MIX 21.1 GET
+  soldi B: GET $756/mese (peggiore query $981); bancone in più 149 GB = $26-77; costo condivisa $1364-1415, prezzo $2480-2573, su Infinite centro 33-35% (forchetta 28-40%); dedicati prezzo $3389-3755 = 46-50% (peggio 58%)
+
+== chat-gruppo-64: L0 0, sorted run 5, scatole 28, dati 3.31 GB, indici dei blocchi 0.08%, filtri 0.61% dei dati
+  S0: Q1 10.0 GET (p90 10, 627 KB, 20.0 doc); Q2 13.5 GET (p90 14, 6567 KB, 1.0 doc); Q3 10.0 GET (p90 10, 619 KB, 15.1 doc); MIX 10.7 GET
+  S1: Q1 5.0 GET (p90 5, 335 KB, 20.0 doc); Q2 2.1 GET (p90 2, 132 KB, 1.0 doc); Q3 5.0 GET (p90 5, 325 KB, 15.1 doc); MIX 4.4 GET
+  S1_ritardo20: Q1 5.0 GET (p90 5, 327 KB, 20.0 doc, 2.2 giri); Q2 2.1 GET (p90 2, 132 KB, 1.0 doc, 2.2 giri); Q3 5.0 GET (p90 5, 325 KB, 16.7 doc, 2.2 giri); MIX 4.4 GET
+  soldi B: GET $161/mese (peggiore query $182); bancone in più 136 GB = $24-71; costo condivisa $766-814, prezzo $1393-1479, su Infinite centro 19-20% (forchetta 16-23%); dedicati prezzo $2303-2661 = 31-36% (peggio 41%)
+
+== eventi-base-4: L0 0, sorted run 5, scatole 24, dati 1.98 GB, indici dei blocchi 1.27%, filtri 0.91% dei dati
+  S0: Q1 48.8 GET (p90 50, 6120 KB, 20.0 doc); Q2 3.0 GET (p90 3, 3769 KB, 1.0 doc); Q3 93.9 GET (p90 108, 14371 KB, 74.6 doc); MIX 48.7 GET
+  S1: Q1 25.7 GET (p90 27, 115 KB, 20.0 doc); Q2 1.0 GET (p90 1, 4 KB, 1.0 doc); Q3 82.6 GET (p90 94, 325 KB, 74.6 doc); MIX 32.1 GET
+  S1_ritardo20: Q1 25.6 GET (p90 27, 115 KB, 20.0 doc, 3.4 giri); Q2 1.0 GET (p90 1, 4 KB, 1.0 doc, 1.1 giri); Q3 82.7 GET (p90 95, 325 KB, 74.7 doc, 6.7 giri); MIX 32.1 GET
+  soldi B: GET $1166/mese (peggiore query $2998); bancone in più 437 GB = $76-227; costo condivisa $1824-1975, prezzo $3316-3592, su Infinite centro 45-48% (forchetta 37-55%); dedicati prezzo $4226-4773 = 57-64% (peggio 73%)
+
+== eventi-gruppo-4: L0 3, sorted run 5, scatole 27, dati 2.28 GB, indici dei blocchi 1.34%, filtri 0.79% dei dati
+  S0: Q1 16.0 GET (p90 16, 6228 KB, 20.0 doc); Q2 16.5 GET (p90 17, 12368 KB, 1.0 doc); Q3 16.0 GET (p90 16, 6231 KB, 74.6 doc); MIX 16.1 GET
+  S1: Q1 8.0 GET (p90 8, 114 KB, 20.0 doc); Q2 2.1 GET (p90 3, 8 KB, 1.0 doc); Q3 8.0 GET (p90 8, 49 KB, 74.6 doc); MIX 6.8 GET
+  S1_ritardo20: Q1 8.0 GET (p90 8, 114 KB, 20.0 doc, 2.2 giri); Q2 2.2 GET (p90 3, 8 KB, 1.0 doc, 2.2 giri); Q3 8.0 GET (p90 8, 49 KB, 74.7 doc, 2.2 giri); MIX 6.8 GET
+  soldi B: GET $248/mese (peggiore query $290); bancone in più 426 GB = $74-221; costo condivisa $903-1051, prezzo $1643-1911, su Infinite centro 22-26% (forchetta 18-29%); dedicati prezzo $2552-3093 = 34-42% (peggio 48%)
+
+== chat-gruppo-4-prefisso: L0 0, sorted run 6, scatole 32, dati 3.36 GB, indici dei blocchi 1.26%, filtri 0.62% dei dati
+  S0: Q1 13.9 GET (p90 16, 8860 KB, 20.0 doc); Q2 14.9 GET (p90 16, 12126 KB, 1.0 doc); Q3 13.9 GET (p90 16, 8978 KB, 15.1 doc); MIX 14.1 GET
+  S1: Q1 4.0 GET (p90 5, 34 KB, 20.0 doc); Q2 2.1 GET (p90 2, 8 KB, 1.0 doc); Q3 4.0 GET (p90 5, 21 KB, 15.1 doc); MIX 3.6 GET
+  S1_ritardo20: Q1 3.9 GET (p90 5, 28 KB, 20.0 doc, 1.1 giri); Q2 2.1 GET (p90 2, 8 KB, 1.0 doc, 2.2 giri); Q3 4.1 GET (p90 6, 22 KB, 16.7 doc, 1.1 giri); MIX 3.6 GET
+  soldi B: GET $130/mese (peggiore query $144); bancone in più 376 GB = $65-195; costo condivisa $777-908, prezzo $1414-1650, su Infinite centro 19-22% (forchetta 16-25%); dedicati prezzo $2323-2832 = 31-38% (peggio 44%)
+
+== eventi-base-64: L0 2, sorted run 2, scatole 14, dati 1.94 GB, indici dei blocchi 0.08%, filtri 0.93% dei dati
+  S0: Q1 33.0 GET (p90 33, 6258 KB, 20.0 doc); Q2 3.0 GET (p90 3, 1686 KB, 1.0 doc); Q3 88.6 GET (p90 100, 9976 KB, 74.6 doc); MIX 38.1 GET
+  S1: Q1 24.0 GET (p90 24, 1549 KB, 20.0 doc); Q2 1.0 GET (p90 1, 64 KB, 1.0 doc); Q3 78.8 GET (p90 89, 5035 KB, 74.6 doc); MIX 30.4 GET
+  S1_ritardo20: Q1 24.0 GET (p90 24, 1548 KB, 20.0 doc, 2.3 giri); Q2 1.0 GET (p90 1, 64 KB, 1.0 doc, 1.1 giri); Q3 78.8 GET (p90 89, 5040 KB, 74.7 doc, 4.5 giri); MIX 30.4 GET
+  soldi B: GET $1103/mese (peggiore query $2859); bancone in più 201 GB = $35-104; costo condivisa $1719-1789, prezzo $3126-3253, su Infinite centro 42-44% (forchetta 35-50%); dedicati prezzo $4035-4434 = 54-60% (peggio 68%)
+
+== eventi-gruppo-64: L0 0, sorted run 6, scatole 28, dati 2.24 GB, indici dei blocchi 0.08%, filtri 0.80% dei dati
+  S0: Q1 12.0 GET (p90 12, 840 KB, 20.0 doc); Q2 15.2 GET (p90 17, 7834 KB, 1.0 doc); Q3 12.0 GET (p90 12, 779 KB, 74.6 doc); MIX 12.7 GET
+  S1: Q1 6.0 GET (p90 6, 466 KB, 20.0 doc); Q2 2.1 GET (p90 3, 135 KB, 1.0 doc); Q3 6.0 GET (p90 6, 400 KB, 74.6 doc); MIX 5.2 GET
+  S1_ritardo20: Q1 6.0 GET (p90 6, 463 KB, 20.0 doc, 2.2 giri); Q2 2.1 GET (p90 2, 133 KB, 1.0 doc, 2.2 giri); Q3 6.0 GET (p90 6, 399 KB, 74.7 doc, 2.2 giri); MIX 5.2 GET
+  soldi B: GET $190/mese (peggiore query $219); bancone in più 177 GB = $31-92; costo condivisa $803-864, prezzo $1460-1571, su Infinite centro 20-21% (forchetta 16-24%); dedicati prezzo $2369-2753 = 32-37% (peggio 42%)
+
+== eventi-gruppo-4-prefisso: L0 2, sorted run 6, scatole 30, dati 2.28 GB, indici dei blocchi 1.34%, filtri 0.80% dei dati
+  S0: Q1 22.1 GET (p90 22, 8278 KB, 20.0 doc); Q2 17.3 GET (p90 18, 11373 KB, 1.0 doc); Q3 22.1 GET (p90 22, 8369 KB, 74.6 doc); MIX 21.2 GET
+  S1: Q1 7.0 GET (p90 7, 110 KB, 20.0 doc); Q2 2.1 GET (p90 3, 8 KB, 1.0 doc); Q3 7.1 GET (p90 7, 45 KB, 74.6 doc); MIX 6.1 GET
+  S1_ritardo20: Q1 7.0 GET (p90 7, 110 KB, 20.0 doc, 2.2 giri); Q2 2.1 GET (p90 2, 8 KB, 1.0 doc, 2.2 giri); Q3 7.1 GET (p90 7, 45 KB, 74.7 doc, 2.2 giri); MIX 6.1 GET
+  soldi B: GET $220/mese (peggiore query $257); bancone in più 428 GB = $74-222; costo condivisa $876-1025, prezzo $1593-1863, su Infinite centro 21-25% (forchetta 18-29%); dedicati prezzo $2502-3045 = 34-41% (peggio 47%)
+
+== eventi-gruppo-4-consolida2: L0 0, sorted run 2, scatole 12, dati 2.28 GB, indici dei blocchi 1.35%, filtri 0.79% dei dati
+  S0: Q1 5.0 GET (p90 5, 4312 KB, 20.0 doc); Q2 7.8 GET (p90 8, 12018 KB, 1.0 doc); Q3 4.0 GET (p90 4, 4238 KB, 74.6 doc); MIX 5.4 GET
+  S1: Q1 3.0 GET (p90 3, 91 KB, 20.0 doc); Q2 2.0 GET (p90 2, 8 KB, 1.0 doc); Q3 2.0 GET (p90 2, 25 KB, 74.6 doc); MIX 2.6 GET
+  S1_ritardo20: Q1 3.0 GET (p90 3, 92 KB, 20.0 doc, 1.1 giri); Q2 2.0 GET (p90 2, 8 KB, 1.0 doc, 2.2 giri); Q3 2.0 GET (p90 2, 26 KB, 74.7 doc, 1.1 giri); MIX 2.6 GET
+  soldi B: GET $94/mese (peggiore query $109); bancone in più 427 GB = $74-222; costo condivisa $750-898, prezzo $1364-1633, su Infinite centro 18-22% (forchetta 15-25%); dedicati prezzo $2273-2815 = 31-38% (peggio 43%)
+{"costo_1_get_per_find_al_mese": 36.288000000000004, "nvme_gb_mese": 0.17322033898305084, "get_per_find_alla_soglia_47_senza_bancone": 36.960978835978835}

@@ -1,0 +1,5 @@
+{"byte_filtri":18000515,"byte_indici_blocchi":25249200,"byte_scatole":1980793908,"etichetta":"eventi-base-4","l0":0,"run":[[4,41348279],[4,34466243],[4,55096877],[4,220199281],[8,1629683228]],"scatole":24,"sorted_run":5,"tipo":"stato"}
+{"byte_filtri":18000515,"byte_indici_blocchi":25249200,"byte_scatole":1980793908,"etichetta":"eventi-base-4","l0":0,"run":[[4,41348279],[4,34466243],[4,55096877],[4,220199281],[8,1629683228]],"scatole":24,"sorted_run":5,"tipo":"stato"}
+riscaldo: 1500 query in 4 s; bancone: indici 24 voci 25249104 byte, filtri 23 voci 14097692 byte, stat 0 voci
+{"byte_filtri":18000515,"byte_indici_blocchi":25249200,"byte_scatole":1980793908,"etichetta":"eventi-base-4","l0":0,"run":[[4,41348279],[4,34466243],[4,55096877],[4,220199281],[8,1629683228]],"scatole":24,"sorted_run":5,"tipo":"stato"}
+riscaldo: 1500 query in 3 s; bancone: indici 24 voci 25249104 byte, filtri 23 voci 14097692 byte, stat 0 voci
