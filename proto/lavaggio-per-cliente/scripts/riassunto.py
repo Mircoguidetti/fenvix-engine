@@ -15,6 +15,8 @@ for j in car:
         continue
     r = j["regime"]; u = r["utente_byte"]
     b = base.get((j["disposizione"], j["taglia_byte"])) or base.get(("Cliente", j["taglia_byte"]))
+    if b is None:  # base della taglia più vicina (CPU e L0 per byte dell'utente non dipendono dalla taglia)
+        b = min((v for k, v in base.items() if k[0] == "Cliente"), key=lambda v: abs(v["taglia_byte"] - j["taglia_byte"]))
     l0 = b["regime"]["put_sst_byte"] / b["regime"]["utente_byte"] if b else float("nan")
     comp_w = r["put_sst_byte"] - l0 * u
     cpu_comp = r["cpu_s"] - (b["regime"]["cpu_s"] * u / b["regime"]["utente_byte"] if b else float("nan"))

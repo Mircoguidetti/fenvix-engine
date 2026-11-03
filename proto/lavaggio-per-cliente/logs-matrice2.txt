@@ -13,3 +13,9 @@
 12:33:55 cliente-c0-s0-l1-v4-r2-1gb
 13:00:51 cliente-c0-s0-l1-v8-r2-1gb
 13:27:52 cliente-c4-s0-l1-v0-r2-1gb
+13:54:52 cliente-c0-s0-l1-v0-r2-0.5gb
+14:08:33 cliente-c0-s0-l1-v4-r2-0.5gb
+salto cliente-c0-s0-l0-v0-r0-2gb
+salto cliente-c0-s0-l1-v0-r2-2gb
+salto cliente-c0-s0-l1-v4-r2-2gb
+14:22:33 fine
