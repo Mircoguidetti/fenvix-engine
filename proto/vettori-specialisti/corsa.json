@@ -1,0 +1,1 @@
+{"modo":"prova","max":50000,"nq":200,"jobs":["qdrant-sq","qdrant-bq","qdrant-bq2","faiss","librerie","lancedb","pgvector"],"n":1}
