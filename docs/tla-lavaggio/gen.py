@@ -31,7 +31,7 @@ DUE = dict(Readers="{}", MaxForks=0, Workers='{"w1", "w2"}', MaxBoxes=6, MaxSeq=
 COLLEZIONI = dict(Colls='{"k1", "k2"}', Vals="{1}", MaxForks=0, MaxBoxes=6, MaxSeq=3, Readers="{}")
 TUTTO = dict(MaxSeq=2, Vals="{1}")
 VIVO = dict(Vals="{1}", MaxSeq=3, Readers="{}", MaxForks=0, MaxBoxes=4)
-VIVO_RAMO = dict(VIVO, MaxForks=1, MaxErase=0, MaxBoxes=5)
+VIVO_RAMO = dict(VIVO, MaxForks=1, MaxErase=0, MaxBoxes=5, MaxSeq=2)
 SOLO = dict(Readers="{}", MaxForks=0, MaxErase=0)   # base dei negativi: si accende solo il pezzo che serve
 
 MODELS = {
