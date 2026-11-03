@@ -1,0 +1,12 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 340s
+== noi finito in 378s
+               total        used        free      shared  buff/cache   available
+Mem:            7931         772        5502          32        1962        7159
+Swap:           3071         137        2934
+== lancedb inizio
+[2026-11-03T08:24:36Z WARN  lance::dataset::write::insert] No existing dataset at /mnt/m23/lance/cohere.lance, it will be created
+== lancedb finito in 1884s
+               total        used        free      shared  buff/cache   available
+Mem:            7931         818        1014          28        6438        7113
+Swap:           3071         175        2896
