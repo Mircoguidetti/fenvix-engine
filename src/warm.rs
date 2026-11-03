@@ -878,6 +878,559 @@ mod tests {
         // Only what was hot is warmed: most cold reads still go to the store.
         assert!(on.cold_after.share() < 0.5, "the warm-up loaded cold blocks too ({} of {} cold reads served)", on.cold_after.served, on.cold_after.reads);
     }
+
+    /// Revisore di C9 (2026-11-03): prove in più su #47. Tutte ignorate di default, una alla volta:
+    /// `cargo test --release --lib warm::tests::rev_c9::<nome> -- --ignored --nocapture --test-threads=1`.
+    /// Variabili: `RC9_KEYS`, `RC9_VLEN`, `RC9_GET_MS`, `RC9_DOUBLE` (1 = il ritardo di C8/C9, due volte), `RC9_HOT`
+    /// (sparse, dense, clustered), `RC9_DBS` (database che lavano insieme), `RC9_FLUSH_MS`.
+    mod rev_c9 {
+        use super::*;
+        use futures::stream::BoxStream;
+        use object_store::path::Path;
+        use object_store::{CopyOptions, GetOptions, GetResult, ListResult, MultipartUpload, ObjectMeta, PutMultipartOptions, PutOptions, PutPayload, PutResult};
+        use std::alloc::{GlobalAlloc, Layout, System};
+        use std::sync::atomic::{AtomicI64, AtomicUsize};
+        use std::sync::Mutex;
+
+        // ---- memoria: un contatore dell'allocatore (solo nel binario dei test) ----
+        struct Track;
+        static CUR: AtomicUsize = AtomicUsize::new(0);
+        static PEAK: AtomicUsize = AtomicUsize::new(0);
+        unsafe impl GlobalAlloc for Track {
+            unsafe fn alloc(&self, l: Layout) -> *mut u8 {
+                let p = unsafe { System.alloc(l) };
+                if !p.is_null() {
+                    let c = CUR.fetch_add(l.size(), Relaxed) + l.size();
+                    PEAK.fetch_max(c, Relaxed);
+                }
+                p
+            }
+            unsafe fn dealloc(&self, p: *mut u8, l: Layout) {
+                unsafe { System.dealloc(p, l) };
+                CUR.fetch_sub(l.size(), Relaxed);
+            }
+            unsafe fn realloc(&self, p: *mut u8, l: Layout, new: usize) -> *mut u8 {
+                let q = unsafe { System.realloc(p, l, new) };
+                if !q.is_null() {
+                    CUR.fetch_sub(l.size(), Relaxed);
+                    let c = CUR.fetch_add(new, Relaxed) + new;
+                    PEAK.fetch_max(c, Relaxed);
+                }
+                q
+            }
+        }
+        #[global_allocator]
+        static ALLOC: Track = Track;
+
+        // ---- uno S3 finto: ritardo una volta sola, richieste in volo, GET al secondo, guasti ----
+        #[derive(Debug, Default)]
+        pub struct Probe {
+            pub delay_ms: AtomicU64,
+            pub inflight: AtomicU64,
+            pub peak: AtomicU64,
+            pub gets: AtomicU64,
+            pub stamps: Mutex<Vec<Instant>>,
+            /// 0 nessun guasto, 1 ogni GET su una scatola nuova fallisce, 2 dopo `fail_after` GET sulle nuove, 3 restano appese.
+            pub fault: AtomicU64,
+            pub fail_after: AtomicI64,
+            pub known: Mutex<HashSet<String>>,
+            pub faulted: AtomicU64,
+        }
+        impl Probe {
+            /// Il massimo di GET partite in una finestra di 1 s.
+            pub fn max_per_sec(&self) -> usize {
+                self.max_in(Duration::from_secs(1))
+            }
+            /// Il massimo di GET partite in una finestra `w` (per il ritmo al secondo: moltiplicare per 1 s / w).
+            pub fn max_in(&self, w: Duration) -> usize {
+                let mut s = self.stamps.lock().unwrap().clone();
+                s.sort();
+                let (mut j, mut best) = (0, 0);
+                for i in 0..s.len() {
+                    while s[i].duration_since(s[j]) >= w {
+                        j += 1;
+                    }
+                    best = best.max(i - j + 1);
+                }
+                best
+            }
+        }
+        struct Guard<'a>(&'a AtomicU64);
+        impl Drop for Guard<'_> {
+            fn drop(&mut self) {
+                self.0.fetch_sub(1, Relaxed);
+            }
+        }
+        #[derive(Debug)]
+        pub struct DelayStore {
+            pub inner: Arc<dyn ObjectStore>,
+            pub p: Arc<Probe>,
+        }
+        impl std::fmt::Display for DelayStore {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "DelayStore")
+            }
+        }
+        #[async_trait::async_trait]
+        impl ObjectStore for DelayStore {
+            async fn put_opts(&self, l: &Path, p: PutPayload, o: PutOptions) -> object_store::Result<PutResult> {
+                self.inner.put_opts(l, p, o).await
+            }
+            async fn put_multipart_opts(&self, l: &Path, o: PutMultipartOptions) -> object_store::Result<Box<dyn MultipartUpload>> {
+                self.inner.put_multipart_opts(l, o).await
+            }
+            async fn get_opts(&self, l: &Path, o: GetOptions) -> object_store::Result<GetResult> {
+                if !o.head {
+                    let n = self.p.inflight.fetch_add(1, Relaxed) + 1;
+                    self.p.peak.fetch_max(n, Relaxed);
+                    self.p.gets.fetch_add(1, Relaxed);
+                    self.p.stamps.lock().unwrap().push(Instant::now());
+                }
+                let _g = (!o.head).then(|| Guard(&self.p.inflight));
+                let d = self.p.delay_ms.load(Relaxed);
+                if d > 0 {
+                    tokio::time::sleep(Duration::from_millis(d)).await;
+                }
+                let fault = self.p.fault.load(Relaxed);
+                if fault > 0 && l.as_ref().ends_with(".sst") && !self.p.known.lock().unwrap().contains(l.as_ref()) {
+                    let hit = match fault {
+                        1 | 3 => true,
+                        _ => self.p.fail_after.fetch_sub(1, Relaxed) <= 0,
+                    };
+                    if hit {
+                        self.p.faulted.fetch_add(1, Relaxed);
+                        if fault == 3 {
+                            tokio::time::sleep(Duration::from_secs(3600)).await;
+                        }
+                        return Err(object_store::Error::Generic { store: "rev-c9", source: "guasto finto di S3".into() });
+                    }
+                }
+                self.inner.get_opts(l, o).await
+            }
+            fn delete_stream(&self, s: BoxStream<'static, object_store::Result<Path>>) -> BoxStream<'static, object_store::Result<Path>> {
+                self.inner.delete_stream(s)
+            }
+            fn list(&self, p: Option<&Path>) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+                self.inner.list(p)
+            }
+            fn list_with_offset(&self, p: Option<&Path>, o: &Path) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+                self.inner.list_with_offset(p, o)
+            }
+            async fn list_with_delimiter(&self, p: Option<&Path>) -> object_store::Result<ListResult> {
+                self.inner.list_with_delimiter(p).await
+            }
+            async fn copy_opts(&self, f: &Path, t: &Path, o: CopyOptions) -> object_store::Result<()> {
+                self.inner.copy_opts(f, t, o).await
+            }
+        }
+
+        fn env<T: std::str::FromStr>(k: &str, d: T) -> T {
+            std::env::var(k).ok().and_then(|v| v.parse().ok()).unwrap_or(d)
+        }
+        fn val(i: usize, len: usize, version: u8) -> Vec<u8> {
+            (0..len).map(|j| (i.wrapping_mul(31).wrapping_add(j * 7) as u8) ^ version).collect()
+        }
+
+        #[derive(Clone, Copy, Debug, PartialEq)]
+        enum Hot {
+            Sparse,
+            Dense,
+            Clustered,
+        }
+        fn hot_keys_of(n: usize, h: Hot) -> Vec<usize> {
+            let count = n / HOT_EVERY;
+            match h {
+                Hot::Sparse => (0..n).step_by(HOT_EVERY).collect(),
+                Hot::Dense => (n / 3..n / 3 + count).collect(),
+                Hot::Clustered => {
+                    let per = count / 40;
+                    (0..40).flat_map(|c| (c * (n / 40)..c * (n / 40) + per)).collect()
+                }
+            }
+        }
+
+        struct Prepared {
+            id: String,
+            db: Db,
+            raw: Arc<dyn ObjectStore>,
+            counting: Arc<CountingStore>,
+            hot: Vec<usize>,
+            vlen: usize,
+        }
+
+        async fn prepare(id: &str, n: usize, vlen: usize, hot: Hot) -> Prepared {
+            crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(1 << 30, Relaxed);
+            crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(env("RC9_L0MAX", 64), Relaxed);
+            crate::lifecycle::MEMTABLE_MAX_BYTES.store(1 << 30, Relaxed);
+            let cache = counting_cache();
+            let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+            let counting = Arc::new(CountingStore::new(Arc::clone(&raw)));
+            let store: Arc<dyn ObjectStore> = counting.clone();
+            let db = writer_builder(id, &store).build().await.unwrap();
+            let scope = crate::lifecycle::writer_scope(id).expect("writer scope");
+            cache.scope.store(scope, Relaxed);
+            writer_opened(id, &db);
+            let per = n / 4;
+            for part in 0..4 {
+                for i in part * per..((part + 1) * per).min(n) {
+                    db.put(&key(i), &val(i, vlen, 0)).await.unwrap();
+                }
+                db.flush_with_options(FlushOptions { flush_type: FlushType::MemTable }).await.unwrap();
+            }
+            let hot = hot_keys_of(n, hot);
+            let p = Prepared { id: id.to_string(), db, raw, counting, hot, vlen };
+            let _ = served(&p).await;
+            let (s, r) = served(&p).await;
+            assert!(s as f64 / r as f64 >= SERVED_MIN, "il bancone non era caldo prima del lavaggio ({s}/{r})");
+            p
+        }
+
+        /// Letture calde servite dal bancone (nessuna GET su una scatola), con il valore giusto.
+        async fn served(p: &Prepared) -> (u64, u64) {
+            let mut s = 0;
+            for &i in &p.hot {
+                let g0 = p.counting.counters.get_cat[2].load(Relaxed);
+                let v = p.db.get(&key(i)).await.unwrap().expect("chiave persa");
+                assert_eq!(v.as_ref(), val(i, p.vlen, 0).as_slice(), "valore vecchio o sbagliato");
+                if p.counting.counters.get_cat[2].load(Relaxed) == g0 {
+                    s += 1;
+                }
+            }
+            (s, p.hot.len() as u64)
+        }
+
+        #[derive(Debug, Default, Clone)]
+        struct Out {
+            served: u64,
+            reads: u64,
+            secs: f64,
+            ok: bool,
+            l0_after: usize,
+            late_gets: u64,
+            inflight_after: u64,
+            pass_gets: u64,
+        }
+
+        /// Un lavaggio di `p` con le GET del lavaggio che passano da `probe` (ritardo una volta) o, con `double`, dal ritardo
+        /// di C8/C9 (due volte).
+        async fn pass(p: &Prepared, probe: &Arc<Probe>, delay: u64, double: bool, warm: bool) -> Out {
+            let s3: Arc<dyn ObjectStore> = if double {
+                crate::counting::TEST_GET_DELAY_MS.store(delay, Relaxed);
+                probe.delay_ms.store(0, Relaxed);
+                Arc::new(DelayStore { inner: p.counting.clone(), p: Arc::clone(probe) })
+            } else {
+                probe.delay_ms.store(delay, Relaxed);
+                Arc::new(DelayStore { inner: Arc::clone(&p.raw), p: Arc::clone(probe) })
+            };
+            let t = Instant::now();
+            let rec = compact_tenant_pass(&s3, &p.raw, &p.id, Duration::from_secs(600), COMPACTOR_STOP_LIMIT, warm).await;
+            let secs = t.elapsed().as_secs_f64();
+            let g_end = probe.gets.load(Relaxed);
+            let pass_gets = rec.as_ref().ok().and_then(|r| r.as_ref()).map_or(0, |r| r.requests.get + r.requests.get_range + r.requests.head);
+            Out { secs, ok: rec.is_ok(), l0_after: p.db.manifest().l0().len(), pass_gets, late_gets: g_end, ..Default::default() }
+        }
+
+        async fn finish(p: &Prepared, probe: &Arc<Probe>, mut o: Out) -> Out {
+            crate::counting::TEST_GET_DELAY_MS.store(0, Relaxed);
+            probe.fault.store(0, Relaxed);
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            o.late_gets = probe.gets.load(Relaxed) - o.late_gets;
+            o.inflight_after = probe.inflight.load(Relaxed);
+            probe.delay_ms.store(0, Relaxed);
+            let (s, r) = served(p).await;
+            o.served = s;
+            o.reads = r;
+            o
+        }
+
+        async fn close(p: Prepared) {
+            writer_closed(&p.id);
+            p.db.close().await.unwrap();
+        }
+
+        fn hot_of_env() -> Hot {
+            match std::env::var("RC9_HOT").as_deref() {
+                Ok("dense") => Hot::Dense,
+                Ok("clustered") => Hot::Clustered,
+                _ => Hot::Sparse,
+            }
+        }
+
+        /// Punto 1: la prova che decide nelle varianti (dimensione, ritardo una o due volte, chiavi calde dense e sparse).
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn variants() {
+            let n: usize = env("RC9_KEYS", 200_000);
+            let vlen: usize = env("RC9_VLEN", 1000);
+            let delay: u64 = env("RC9_GET_MS", 40);
+            let double = env("RC9_DOUBLE", 0u8) == 1;
+            let hot = hot_of_env();
+            let only_on = env("RC9_ONLY_ON", 0u8) == 1;
+            let mut res = Vec::new();
+            for warm in [false, true] {
+                if only_on && !warm {
+                    continue;
+                }
+                let probe = Arc::new(Probe::default());
+                let p = prepare(&format!("rc9-var-{warm}"), n, vlen, hot).await;
+                let (t0, f0, r0) = (WARM_TIMEOUTS.load(Relaxed), WARM_TRUNCATED.load(Relaxed), WARM_READERS_OPEN.load(Relaxed));
+                probe.stamps.lock().unwrap().clear();
+                let o = pass(&p, &probe, delay, double, warm).await;
+                let o = finish(&p, &probe, o).await;
+                println!(
+                    "RC9 variants n={n} vlen={vlen} hot={hot:?} GET {delay} ms x{} warm={warm}: servite {}/{} ({:.1}%), lavaggio {:.2} s, ok {}, L0 dopo {}, GET del lavaggio {}, picco in volo {}, max GET in 1 s {} (ritmo massimo su 200 ms: {}/s), tetto scaduto {}, parziale {}, lettori aperti {}, GET dopo la fine {}",
+                    if double { 2 } else { 1 },
+                    o.served,
+                    o.reads,
+                    100.0 * o.served as f64 / o.reads as f64,
+                    o.secs,
+                    o.ok,
+                    o.l0_after,
+                    o.pass_gets,
+                    probe.peak.load(Relaxed),
+                    probe.max_per_sec(),
+                    probe.max_in(Duration::from_millis(200)) * 5,
+                    WARM_TIMEOUTS.load(Relaxed) - t0,
+                    WARM_TRUNCATED.load(Relaxed) - f0,
+                    WARM_READERS_OPEN.load(Relaxed) as i64 - r0 as i64,
+                    o.late_gets
+                );
+                res.push(o);
+                close(p).await;
+            }
+        }
+
+        /// Punto 2a: più database lavano insieme sulla stessa macchina, GET a `RC9_GET_MS` (una volta): picco di GET in volo e
+        /// massimo di GET in un secondo, contro i 5.500 al secondo per prefisso di S3.
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn many_dbs_at_once() {
+            let n: usize = env("RC9_KEYS", 200_000);
+            let k: usize = env("RC9_DBS", 2);
+            let delay: u64 = env("RC9_GET_MS", 20);
+            let probe = Arc::new(Probe::default());
+            let mut ps = Vec::new();
+            for i in 0..k {
+                ps.push(prepare(&format!("rc9-many-{i}"), n, 1000, Hot::Sparse).await);
+            }
+            probe.stamps.lock().unwrap().clear();
+            let outs = futures::future::join_all(ps.iter().map(|p| pass(p, &probe, delay, false, true))).await;
+            let peak = probe.peak.load(Relaxed);
+            let maxs = probe.max_per_sec();
+            for (p, o) in ps.iter().zip(outs) {
+                let o = finish(p, &probe, o).await;
+                println!("RC9 many k={k} {}: servite {}/{}, lavaggio {:.2} s, ok {}, L0 dopo {}", p.id, o.served, o.reads, o.secs, o.ok, o.l0_after);
+            }
+            println!("RC9 many k={k} GET {delay} ms: picco GET in volo {peak}, massimo GET in 1 s {maxs} (ritmo massimo su 200 ms: {}/s), lettori aperti {}", probe.max_in(Duration::from_millis(200)) * 5, WARM_READERS_OPEN.load(Relaxed));
+            for p in ps {
+                close(p).await;
+            }
+        }
+
+        /// Punto 2b e 2c: il tetto che scade a metà (anche quello di default, 3 s, con un insieme caldo troppo grande) e i
+        /// guasti di S3 durante il riscaldamento: il lavaggio va avanti, il cameriere cambia foglio, il lettore si chiude,
+        /// nessuna GET resta in volo né parte dopo.
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn limits_and_faults() {
+            let n: usize = env("RC9_KEYS", 200_000);
+            let delay: u64 = env("RC9_GET_MS", 40);
+            // (nome, guasto, fail_after, tetto ms, concorrenza)
+            let cases: Vec<(&str, u64, i64, u64, u64)> = vec![
+                ("tetto 3 s scade a meta' (concorrenza 16)", 0, 0, 3000, 16),
+                ("tetto 1 s scade a meta'", 0, 0, 1000, 128),
+                ("ogni GET sulle scatole nuove fallisce", 1, 0, 3000, 128),
+                ("GET sulle nuove falliscono dopo 300", 2, 300, 3000, 128),
+                ("GET sulle nuove restano appese", 3, 0, 3000, 128),
+            ];
+            let (ms0, c0) = (COMPACTION_WARM_MS.load(Relaxed), COMPACTION_WARM_CONCURRENCY.load(Relaxed));
+            let mut bad = Vec::new();
+            for (name, fault, after, ms, conc) in cases {
+                let probe = Arc::new(Probe::default());
+                let p = prepare(&format!("rc9-lim-{fault}-{ms}-{conc}"), n, 1000, Hot::Sparse).await;
+                *probe.known.lock().unwrap() = p.raw.list(None).map(|m| m.unwrap().location.to_string()).collect::<Vec<_>>().await.into_iter().collect();
+                probe.fault.store(fault, Relaxed);
+                probe.fail_after.store(after, Relaxed);
+                COMPACTION_WARM_MS.store(ms, Relaxed);
+                COMPACTION_WARM_CONCURRENCY.store(conc, Relaxed);
+                let (t0, f0, r0) = (WARM_TIMEOUTS.load(Relaxed), WARM_FAILS.load(Relaxed), WARM_READERS_OPEN.load(Relaxed));
+                let o = pass(&p, &probe, delay, false, true).await;
+                let o = finish(&p, &probe, o).await;
+                let readers = WARM_READERS_OPEN.load(Relaxed) as i64 - r0 as i64;
+                println!(
+                    "RC9 limits {name}: servite {}/{}, lavaggio {:.2} s, ok {}, L0 dopo {}, tetto scaduto {}, errori {}, GET guaste {}, lettori aperti {readers}, GET in volo dopo {}, GET partite nei 2 s dopo {}",
+                    o.served,
+                    o.reads,
+                    o.secs,
+                    o.ok,
+                    o.l0_after,
+                    WARM_TIMEOUTS.load(Relaxed) - t0,
+                    WARM_FAILS.load(Relaxed) - f0,
+                    probe.faulted.load(Relaxed),
+                    o.inflight_after,
+                    o.late_gets
+                );
+                if !o.ok || o.l0_after != 0 || readers != 0 || o.inflight_after != 0 || o.late_gets != 0 || o.secs > ms as f64 / 1000.0 + 8.0 {
+                    bad.push(name);
+                }
+                close(p).await;
+            }
+            COMPACTION_WARM_MS.store(ms0, Relaxed);
+            COMPACTION_WARM_CONCURRENCY.store(c0, Relaxed);
+            assert!(bad.is_empty(), "casi falliti: {bad:?}");
+        }
+
+        /// Punto 2d: la memoria delle chiavi calde con il tetto di 32 MB. Un database di documenti piccoli dove ogni blocco è
+        /// caldo: le chiavi calde superano il tetto. Misura i byte allocati in più (picco e tenuti) durante `hot_keys`.
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn key_memory_cap() {
+            let n: usize = env("RC9_KEYS", 2_000_000);
+            let vlen: usize = env("RC9_VLEN", 16);
+            let p = prepare("rc9-mem", n, vlen, Hot::Sparse).await;
+            let cache = crate::lifecycle::shared_cache().unwrap();
+            let scope = crate::lifecycle::writer_scope(&p.id).unwrap();
+            let consumed: Vec<SsTableHandle> = p.db.manifest().l0().iter().map(|v| v.sst.clone()).collect();
+            let scoped: Arc<dyn DbCache> = Arc::new(ScopedCache { inner: Arc::clone(&cache), scope });
+            let store: Arc<dyn ObjectStore> = p.counting.clone();
+            let ssts = SstReader::new(tenant_path(&p.id), store, Some(scoped), None);
+            for cap_mb in [32usize, 8] {
+                let base = CUR.load(Relaxed);
+                PEAK.store(base, Relaxed);
+                let (keys, hot, cut) = hot_keys(&ssts, &cache, scope, &consumed, cap_mb << 20).await.unwrap();
+                let peak = PEAK.load(Relaxed) - base;
+                let kept = CUR.load(Relaxed) as i64 - base as i64;
+                let key_bytes: usize = keys.iter().map(|k| k.len()).sum();
+                println!(
+                    "RC9 memory cap {cap_mb} MB: blocchi caldi {hot}, chiavi tenute {} ({} byte di chiave, capacità del vettore {}), tagliato {cut}; allocati in più: picco {:.1} MB, tenuti {:.1} MB",
+                    keys.len(),
+                    key_bytes,
+                    keys.capacity(),
+                    peak as f64 / (1 << 20) as f64,
+                    kept as f64 / (1 << 20) as f64
+                );
+                drop(keys);
+            }
+            close(p).await;
+        }
+
+        /// Punto 2e e 2f: scritture e letture mentre il lavaggio e il riscaldamento girano con le GET del lavaggio lente (una
+        /// volta, `RC9_GET_MS`); il cameriere scrive di continuo e scarica una scatola L0 ogni `RC9_FLUSH_MS`. Nessuna lettura
+        /// vecchia; latenza delle scritture (p50, p99, massimo) con e senza riscaldamento.
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn writes_during_slow_warm() {
+            let delay: u64 = env("RC9_GET_MS", 40);
+            let flush_ms: u64 = env("RC9_FLUSH_MS", 500);
+            let n: usize = env("RC9_KEYS", 200_000);
+            let rounds: usize = env("RC9_ROUNDS", 2);
+            for round in 0..rounds {
+                for warm in [false, true] {
+                    let probe = Arc::new(Probe::default());
+                    let p = prepare(&format!("rc9-sw-{warm}-{round}"), n, 1000, Hot::Sparse).await;
+                    let wkeys: Vec<usize> = (HOT_EVERY / 2..n).step_by(HOT_EVERY).collect();
+                    let acked: Arc<Vec<AtomicU64>> = Arc::new((0..n).map(|_| AtomicU64::new(0)).collect());
+                    let stop = Arc::new(AtomicBool::new(false));
+                    let lats = Arc::new(Mutex::new(Vec::<u64>::new()));
+                    let flat = Arc::new(Mutex::new(Vec::<(Instant, u64)>::new()));
+                    let w = {
+                        let (db, acked, stop, lats, wkeys, flat) = (p.db.clone(), Arc::clone(&acked), Arc::clone(&stop), Arc::clone(&lats), wkeys.clone(), Arc::clone(&flat));
+                        tokio::spawn(async move {
+                            let mut seq = 1u64;
+                            let mut last = Instant::now();
+                            let mut j = 0usize;
+                            while !stop.load(Relaxed) {
+                                let i = wkeys[j % wkeys.len()];
+                                j += 1;
+                                let mut v = seq.to_be_bytes().to_vec();
+                                v.resize(1000, 7);
+                                let t = Instant::now();
+                                db.put(&key(i), &v).await.unwrap();
+                                lats.lock().unwrap().push(t.elapsed().as_micros() as u64);
+                                acked[i].store(seq, Relaxed);
+                                seq += 1;
+                                if last.elapsed() >= Duration::from_millis(flush_ms) {
+                                    let tf = Instant::now();
+                                    db.flush_with_options(FlushOptions { flush_type: FlushType::MemTable }).await.unwrap();
+                                    flat.lock().unwrap().push((tf, tf.elapsed().as_micros() as u64));
+                                    last = Instant::now();
+                                }
+                                tokio::time::sleep(Duration::from_millis(2)).await;
+                            }
+                        })
+                    };
+                    let stale = Arc::new(AtomicU64::new(0));
+                    let reads = Arc::new(AtomicU64::new(0));
+                    let r = {
+                        let (db, acked, stop, stale, reads, wkeys, hot) = (p.db.clone(), Arc::clone(&acked), Arc::clone(&stop), Arc::clone(&stale), Arc::clone(&reads), wkeys.clone(), p.hot.clone());
+                        tokio::spawn(async move {
+                            let mut k = 0usize;
+                            while !stop.load(Relaxed) {
+                                let i = wkeys[(k * 13) % wkeys.len()];
+                                let h = hot[(k * 7919) % hot.len()];
+                                k += 1;
+                                let floor = acked[i].load(Relaxed);
+                                let v = db.get(&key(i)).await.unwrap().expect("chiave persa");
+                                let got = if v.as_ref() == val(i, 1000, 0).as_slice() { 0 } else { u64::from_be_bytes(v[..8].try_into().unwrap()) };
+                                if got < floor {
+                                    stale.fetch_add(1, Relaxed);
+                                }
+                                let hv = db.get(&key(h)).await.unwrap().expect("chiave calda persa");
+                                if hv.as_ref() != val(h, 1000, 0).as_slice() {
+                                    stale.fetch_add(1, Relaxed);
+                                }
+                                reads.fetch_add(2, Relaxed);
+                            }
+                        })
+                    };
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    let l0_start = p.db.manifest().l0().len();
+                    let n0 = lats.lock().unwrap().len();
+                    let tp = Instant::now();
+                    let l0max = Arc::new(AtomicU64::new(0));
+                    let mon = {
+                        let (db, l0max, stop) = (p.db.clone(), Arc::clone(&l0max), Arc::clone(&stop));
+                        tokio::spawn(async move {
+                            while !stop.load(Relaxed) {
+                                l0max.fetch_max(db.manifest().l0().len() as u64, Relaxed);
+                                tokio::time::sleep(Duration::from_millis(20)).await;
+                            }
+                        })
+                    };
+                    let o = pass(&p, &probe, delay, false, warm).await;
+                    let n1 = lats.lock().unwrap().len();
+                    let fl: Vec<u64> = flat.lock().unwrap().iter().filter(|(t, _)| *t >= tp).map(|(_, d)| *d).collect();
+                    let l0_end_pass = p.db.manifest().l0().len();
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    stop.store(true, Relaxed);
+                    w.await.unwrap();
+                    r.await.unwrap();
+                    mon.await.unwrap();
+                    let mut l: Vec<u64> = lats.lock().unwrap()[n0..n1].to_vec();
+                    l.sort();
+                    let q = |f: f64| l.get(((l.len() as f64 * f) as usize).min(l.len().saturating_sub(1))).copied().unwrap_or(0) as f64 / 1000.0;
+                    probe.delay_ms.store(0, Relaxed);
+                    let (s, rr) = served(&p).await;
+                    println!(
+                        "RC9 switch GET {delay} ms flush {flush_ms} ms warm={warm} giro {round}: lavaggio {:.2} s ok {}; scritture durante il lavaggio {} p50 {:.1} ms p99 {:.1} ms max {:.1} ms; letture {} vecchie {}; L0 all'inizio {l0_start}, alla fine del lavaggio {l0_end_pass}, massimo {}; scarichi L0 nel lavaggio {} (piu' lento {:.0} ms); calde servite dopo {s}/{rr}",
+                        o.secs,
+                        o.ok,
+                        l.len(),
+                        q(0.5),
+                        q(0.99),
+                        l.last().copied().unwrap_or(0) as f64 / 1000.0,
+                        reads.load(Relaxed),
+                        stale.load(Relaxed),
+                        l0max.load(Relaxed),
+                        fl.len(),
+                        fl.iter().max().copied().unwrap_or(0) as f64 / 1000.0
+                    );
+                    assert_eq!(stale.load(Relaxed), 0, "una lettura vecchia");
+                    close(p).await;
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
