@@ -714,11 +714,12 @@ struct Lettore {
     r: DbReader,
 }
 
-const READ_AHEAD: usize = 64 << 10;
+fn read_ahead() -> usize { std::env::var("REV_READ_AHEAD").ok().and_then(|v| v.parse().ok()).unwrap_or(64 << 10) }
+fn fetch_tasks() -> usize { std::env::var("REV_FETCH_TASKS").ok().and_then(|v| v.parse().ok()).unwrap_or(4) }
 
 impl Lettore {
     async fn scan(&self, start: Vec<u8>, end: Vec<u8>, limit: usize) -> Result<Vec<(Bytes, Bytes)>> {
-        let opts = ScanOptions { read_ahead_bytes: READ_AHEAD, max_fetch_tasks: 4, cache_blocks: true, order: slatedb::IterationOrder::Ascending, ..Default::default() };
+        let opts = ScanOptions { read_ahead_bytes: read_ahead(), max_fetch_tasks: fetch_tasks(), cache_blocks: true, order: slatedb::IterationOrder::Ascending, ..Default::default() };
         let mut it = match owner_prefix_len(&start) {
             Some(n) if end.len() >= n && end[..n] == start[..n] || end.len() < n => {
                 let p = start[..n].to_vec();
@@ -859,7 +860,7 @@ async fn misura(a: &Args) -> Result<()> {
                 let mut tot = 0;
                 if ch.disp == Disp::Cliente {
                     let p = ch.prefisso_tutto(c.0);
-                    let opts = ScanOptions { read_ahead_bytes: READ_AHEAD, max_fetch_tasks: 4, cache_blocks: true, order: slatedb::IterationOrder::Ascending, ..Default::default() };
+                    let opts = ScanOptions { read_ahead_bytes: read_ahead(), max_fetch_tasks: fetch_tasks(), cache_blocks: true, order: slatedb::IterationOrder::Ascending, ..Default::default() };
                     let mut rows = l.r.scan_prefix_with_options(&p, .., &opts).await?;
                     let mut cnt = [0u32; 3];
                     while let Some(kv) = rows.next().await? {
