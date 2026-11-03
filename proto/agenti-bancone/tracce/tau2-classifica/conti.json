@@ -1,0 +1,167 @@
+{
+ "file": [
+  {
+   "tag": "claude-opus-4-5_sierra_2026-02-26__retail",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-opus-4-5_sierra_2026-02-26/trajectories/claude-opus-4-5_high_retail_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-opus-4-5_sierra_2026-02-26__airline",
+   "layout": "flat",
+   "conversazioni": 200,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-opus-4-5_sierra_2026-02-26/trajectories/claude-opus-4-5_high_airline_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-opus-4-5_sierra_2026-02-26__telecom",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-opus-4-5_sierra_2026-02-26/trajectories/claude-opus-4-5_high_telecom_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-opus-4-5_sierra_2026-02-26__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-opus-4-5_sierra_2026-02-26/trajectories/claude-opus-4-5_high_banking_knowledge_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-sonnet-4-5_sierra_2026-02-26__retail",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-sonnet-4-5_sierra_2026-02-26/trajectories/claude-sonnet-4-5_enabled_retail_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-sonnet-4-5_sierra_2026-02-26__airline",
+   "layout": "flat",
+   "conversazioni": 200,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-sonnet-4-5_sierra_2026-02-26/trajectories/claude-sonnet-4-5_enabled_airline_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-sonnet-4-5_sierra_2026-02-26__telecom",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-sonnet-4-5_sierra_2026-02-26/trajectories/claude-sonnet-4-5_enabled_telecom_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "claude-sonnet-4-5_sierra_2026-02-26__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-sonnet-4-5_sierra_2026-02-26/trajectories/claude-sonnet-4-5_enabled_banking_knowledge_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "gpt-5-2_sierra_2026-02-26__retail",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gpt-5-2_sierra_2026-02-26/trajectories/gpt-5.2_high_retail_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "gpt-5-2_sierra_2026-02-26__airline",
+   "layout": "flat",
+   "conversazioni": 200,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gpt-5-2_sierra_2026-02-26/trajectories/gpt-5.2_high_airline_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "gpt-5-2_sierra_2026-02-26__telecom",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gpt-5-2_sierra_2026-02-26/trajectories/gpt-5.2_high_telecom_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "gpt-5-2_sierra_2026-02-26__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gpt-5-2_sierra_2026-02-26/trajectories/gpt-5.2_high_banking_knowledge_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "glm-5-think_sierra_2026-03-02__retail",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/glm-5-think_sierra_2026-03-02/trajectories/glm-5_enabled_retail_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "glm-5-think_sierra_2026-03-02__airline",
+   "layout": "flat",
+   "conversazioni": 200,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/glm-5-think_sierra_2026-03-02/trajectories/glm-5_enabled_airline_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "glm-5-think_sierra_2026-03-02__telecom",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/glm-5-think_sierra_2026-03-02/trajectories/glm-5_enabled_telecom_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "glm-5-think_sierra_2026-03-02__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 307,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/glm-5-think_sierra_2026-03-02/trajectories/glm-5_enabled_banking_knowledge_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "qwen3.5-397b-a17b-think_sierra_2026-03-02__retail",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/qwen3.5-397b-a17b-think_sierra_2026-03-02/trajectories/qwen3.5-397b-a17b_enabled_retail_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "qwen3.5-397b-a17b-think_sierra_2026-03-02__airline",
+   "layout": "flat",
+   "conversazioni": 200,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/qwen3.5-397b-a17b-think_sierra_2026-03-02/trajectories/qwen3.5-397b-a17b_enabled_airline_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "qwen3.5-397b-a17b-think_sierra_2026-03-02__telecom",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/qwen3.5-397b-a17b-think_sierra_2026-03-02/trajectories/qwen3.5-397b-a17b_enabled_telecom_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "qwen3.5-397b-a17b-think_sierra_2026-03-02__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/qwen3.5-397b-a17b-think_sierra_2026-03-02/trajectories/qwen3.5-397b-a17b_enabled_banking_knowledge_gpt-5.2_4trials.json"
+  },
+  {
+   "tag": "gemini-3-pro_sierra_2026-03-02__retail",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gemini-3-pro_sierra_2026-03-02/trajectories/geminipro-retail.json"
+  },
+  {
+   "tag": "gemini-3-pro_sierra_2026-03-02__airline",
+   "layout": "flat",
+   "conversazioni": 200,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gemini-3-pro_sierra_2026-03-02/trajectories/geminipro-airline.json"
+  },
+  {
+   "tag": "gemini-3-pro_sierra_2026-03-02__telecom",
+   "layout": "flat",
+   "conversazioni": 456,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gemini-3-pro_sierra_2026-03-02/trajectories/geminipro-telecom.json"
+  },
+  {
+   "tag": "claude-opus-5_sierra_2026-08-04__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-opus-5_sierra_2026-08-04/trajectories/banking_knowledge_results.json"
+  },
+  {
+   "tag": "gpt-5-6-sol_sierra_2026-08-04__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/gpt-5-6-sol_sierra_2026-08-04/trajectories/banking_knowledge_results.json"
+  },
+  {
+   "tag": "claude-fable-5_sierra_2026-08-04__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/claude-fable-5_sierra_2026-08-04/trajectories/banking_knowledge_results.json"
+  },
+  {
+   "tag": "kimi-k3_sierra_2026-08-04__banking_knowledge",
+   "layout": "flat",
+   "conversazioni": 388,
+   "url": "https://sierra-tau-bench-public.s3.us-west-2.amazonaws.com/submissions/kimi-k3_sierra_2026-08-04/trajectories/banking_knowledge_results.json"
+  }
+ ],
+ "byte_scaricati": 1929950024
+}
