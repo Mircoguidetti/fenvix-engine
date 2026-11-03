@@ -1,0 +1,36 @@
+660 lavori
+0 già fatti, 660 da fare
+0 19 me202210|B|300|
+20 166 me202401|B|300|taglia_dim=M50
+40 225 tw45|B|300|taglia_dim=M80
+60 318 tw10|B|600|
+80 475 tw10|B|600|taglia_dim=M80
+100 568 tw45|B|600|taglia_dim=M50
+120 642 tw10|A|300|scala=8.0
+140 660 tw7|A|300|scala=8.0
+160 684 tw45|A|600|scala=8.0
+180 703 tw24|A|300|scala=4.0
+200 717 me202210|A|600|scala=4.0
+220 734 tw50|A|600|scala=4.0
+240 747 tw3|A|300|scala=2.0
+260 759 tw10|A|600|scala=2.0,tb=5.0
+280 772 tw7|A|600|scala=2.0,tb=5.0
+300 786 tw26|C|300|
+320 801 tw7|A|300|
+340 811 me202401|A|300|taglia_dim=M50
+360 818 tw24|C|300|squilibrio=0.0
+380 825 tw45|A|300|taglia_dim=M80
+400 831 tw53|A|300|taglia_dim=M50
+420 841 me202401|C|600|
+440 858 tw45|A|600|
+460 875 al-somma56|A|600|forma_vera=True
+480 886 tw10|C|600|squilibrio=0.0
+500 897 tw3|A|600|taglia_dim=M80
+520 907 tw49|A|600|squilibrio=0.0
+540 918 tw7|C|600|squilibrio=0.0
+560 928 tw3|A|300|scala=0.5
+580 938 tw10|A|600|scala=0.5
+600 948 tw7|A|600|scala=0.5
+620 958 tw45|A|300|scala=0.25
+640 968 tw24|A|600|scala=0.25
+fatto 978

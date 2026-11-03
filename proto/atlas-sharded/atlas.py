@@ -50,19 +50,23 @@ def forma(c, bersaglio):
         y = c ** k
         return p999(y) / y.mean()
 
-    lo, hi = 0.01, 40.0
-    if r(hi) < bersaglio:
-        k = hi
-    elif r(lo) > bersaglio:
-        k = lo
-    else:
-        for _ in range(60):
-            mid = math.sqrt(lo * hi)
-            if r(mid) < bersaglio:
-                lo = mid
-            else:
-                hi = mid
-        k = math.sqrt(lo * hi)
+    # r(k) non è monotona per k grandi (pochi minuti enormi): si parte da k = 1 e si va verso il bersaglio
+    # su una griglia logaritmica, poi bisezione tra i due punti che lo racchiudono.
+    passo = 1.1 if r(1.0) < bersaglio else 1 / 1.1
+    a, k = 1.0, 1.0
+    while 0.02 < k < 40:
+        b = k * passo
+        if (r(b) >= bersaglio) == (passo > 1):
+            lo, hi = sorted((k, b))
+            for _ in range(40):
+                mid = math.sqrt(lo * hi)
+                if (r(mid) < bersaglio) == (passo > 1):
+                    lo, hi = (mid, hi) if passo > 1 else (lo, mid)
+                else:
+                    lo, hi = (lo, mid) if passo > 1 else (mid, hi)
+            k = math.sqrt(lo * hi)
+            break
+        k = b
     y = c ** k
     return y / y.mean(), k
 
@@ -132,7 +136,8 @@ def pavimento(disco_shard):
     raise ValueError(disco_shard)
 
 
-def atlas(L, tb, variante, taglia_dim="M60", predittiva=True, squilibrio=0.10, tmax=None, conta_da=GIORNO):
+def atlas(L, tb, variante, taglia_dim="M60", predittiva=True, squilibrio=0.10, tmax=None, conta_da=GIORNO,
+          pav_min=None):
     """L: core del primario per minuto per tutto il cluster. variante: 'i' | 'ii' | 'iii'."""
     i_dim = IDX[taglia_dim]
     if tmax is None:
@@ -141,6 +146,8 @@ def atlas(L, tb, variante, taglia_dim="M60", predittiva=True, squilibrio=0.10, t
     q = quote_shard(S, squilibrio)
     disco = tb * 1000 * GB_FISICI_PER_GB * MARGINE_DISCO / S
     tmin = pavimento(disco)
+    if pav_min is not None:  # pavimento imposto (es. RAM per la parte calda: non simulata dalle regole)
+        tmin = max(tmin, IDX[pav_min])
     n = len(L)
     Ls = np.outer(q / S, L)  # S x n
     tiers = np.zeros((S, n), int)
@@ -267,14 +274,14 @@ def noi(w, tb, mongo_w_us, conta_da=GIORNO, rapporti=(0.81, 0.36)):
 
 
 def confronto(w, tb, mongo_w_us, varianti=("i", "i_reat", "ii", "iii"), taglia_dim="M60", squilibrio=0.10,
-              con_noi=True):
+              con_noi=True, pav_min=None):
     L = w * MONGO_R_US + w * mongo_w_us
     res = dict(atlas={})
     for v in varianti:
         if v == "i_reat":
-            a = atlas(L, tb, "i", taglia_dim, predittiva=False, squilibrio=squilibrio)
+            a = atlas(L, tb, "i", taglia_dim, predittiva=False, squilibrio=squilibrio, pav_min=pav_min)
         else:
-            a = atlas(L, tb, v, taglia_dim, squilibrio=squilibrio)
+            a = atlas(L, tb, v, taglia_dim, squilibrio=squilibrio, pav_min=pav_min)
         a["totale"] = tot_atlas(a)
         res["atlas"][v] = a
     if con_noi:

@@ -83,4 +83,11 @@ sotto, con il verso.
 
 ## Cambi fatti dopo il primo giro
 
-(nessuno per ora)
+1. Correzione di un errore, non del modello: la ricerca di k (curva^k) partiva da k = 40 e per le curve a raffiche
+   (Alibaba) trovava k = 40 invece di k < 1, perché il rapporto picco/media non cresce sempre con k. Ora parte da
+   k = 1 e va verso il bersaglio. Verso: nessuno sui conti (la prima corsa non era arrivata ai risultati).
+2. La nostra bolletta si calcola una volta per curva e profilo (non cambia con le varianti di Atlas): solo velocità.
+3. Aggiunta dopo il primo giro, solo come sensibilità (il verdetto resta sulla variante (i) di base): pavimento
+   imposto M50 o M60 nella variante (i), cioè "la RAM per la parte calda non lascia scendere sotto". Motivo: il primo
+   giro ha mostrato che Atlas passa il 70–96% del tempo in M40 (16 GB di RAM per circa 1 TB di disco per shard), e le
+   regole sulla memoria non sono simulate. Verso: alza la bolletta di Atlas, favorevole a noi.
