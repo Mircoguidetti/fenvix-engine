@@ -191,6 +191,14 @@ struct Args {
     /// cache scope per open). Blocks are still cached when read.
     #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     cache_flushed_blocks: bool,
+    /// After a compaction pass of an open database, read into the shared block cache the new blocks that hold the keys of
+    /// the blocks it had cached, before the database switches to the new manifest (`src/warm.rs`). Off: every compaction
+    /// cooled the cache, the hot reads went back to object storage (M27: 0% of the hot reads served by the cache after a pass).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    compaction_warm: bool,
+    /// Longest warm-up after one compaction pass, in seconds; past it the pass goes on without it.
+    #[arg(long, default_value_t = 20)]
+    compaction_warm_secs: u64,
     /// A cursor (find, aggregate, tailable, change stream) that no getMore used for this long is closed and its buffered
     /// results freed, as mongod's `cursorTimeoutMillis` (10 minutes). Before, an abandoned cursor stayed until the process
     /// stopped. 0 = never.
@@ -543,6 +551,8 @@ async fn run() -> Result<()> {
     changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::MEMTABLE_MAX_AGE_SECS.store(args.memtable_max_age_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::CACHE_FLUSHED_BLOCKS.store(args.cache_flushed_blocks, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM.store(args.compaction_warm, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM_SECS.store(args.compaction_warm_secs, std::sync::atomic::Ordering::Relaxed);
     cmd::CURSOR_TIMEOUT_SECS.store(args.cursor_timeout_secs, std::sync::atomic::Ordering::Relaxed);
     ctl::durability::install(args.relaxed_flush_ms)?;
     fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight);

@@ -785,6 +785,7 @@ impl Server {
                 "abandonCloseTimeouts": tenant_bench::lifecycle::ABANDON_CLOSE_TIMEOUTS.load(Relaxed) as i64,
                 "abandonClosesPending": tenant_bench::lifecycle::pending_closes() as i64,
                 "l0WatchDeferred": tenant_bench::lifecycle::L0_WATCH_DEFERRED.load(Relaxed) as i64,
+                "compactionWarm": { "runs": tenant_bench::warm::WARM_RUNS.load(Relaxed) as i64, "hotBlocks": tenant_bench::warm::WARM_HOT_BLOCKS.load(Relaxed) as i64, "ranges": tenant_bench::warm::WARM_RANGES.load(Relaxed) as i64, "fails": tenant_bench::warm::WARM_FAILS.load(Relaxed) as i64 },
             },
             "wakeQueue": { "queued": crate::dbs::WAKE_QUEUED.load(Relaxed), "maxQueued": crate::dbs::WAKE_MAX_QUEUED.load(Relaxed), "waits": crate::dbs::WAKE_WAITS.load(Relaxed) as i64, "waitMs": crate::dbs::WAKE_WAIT_MS.load(Relaxed) as i64 },
             "lat": {

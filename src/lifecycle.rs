@@ -98,7 +98,7 @@ pub const CLOSE_FLUSH_TIMEOUT: Duration = Duration::from_secs(20);
 pub const ABANDON_CLOSE_TIMEOUT: Duration = Duration::from_secs(10);
 /// After its deadline a compaction pass stops its compactor in rounds of about 1 s (`compact_tenant_within`) for at most this
 /// long, then gives up (the pass fails; slatedb's compactor tasks are left to their store request).
-const COMPACTOR_STOP_LIMIT: Duration = Duration::from_secs(120);
+pub(crate) const COMPACTOR_STOP_LIMIT: Duration = Duration::from_secs(120);
 pub static ABANDON_CLOSE_TIMEOUTS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Closes of abandoned tenants still running, per tenant id ([`Tenant::abandon`] left them behind or is still waiting for them).
@@ -142,16 +142,17 @@ static OPEN_WRITERS: std::sync::LazyLock<Mutex<std::collections::HashSet<String>
 /// reading the manifest from the store at every pass.
 static WRITER_DBS: std::sync::LazyLock<Mutex<HashMap<String, Db>>> = std::sync::LazyLock::new(Default::default);
 
-fn writer_opened(id: &str, db: &Db) {
+pub(crate) fn writer_opened(id: &str, db: &Db) {
     OPEN_WRITERS.lock().unwrap().insert(id.to_string());
     WRITER_DBS.lock().unwrap().insert(id.to_string(), db.clone());
 }
 
-fn writer_closed(id: &str) {
+pub(crate) fn writer_closed(id: &str) {
     OPEN_WRITERS.lock().unwrap().remove(id);
     WRITER_DBS.lock().unwrap().remove(id);
     UNFLUSHED_SINCE.lock().unwrap().remove(id);
     COMPACT_RETRY.lock().unwrap().remove(id);
+    WRITER_SCOPE.lock().unwrap().remove(id);
 }
 
 /// Pause before the L0 watch asks again for the compaction of a tenant whose last pass failed: `COMPACT_RETRY_BASE`, doubled
@@ -357,6 +358,24 @@ fn cache_scope() -> Option<(Arc<dyn slatedb::db_cache::DbCache>, u64)> {
     DB_CACHE.get().map(|c| (Arc::clone(c), CACHE_SCOPE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)))
 }
 
+/// The shared block and metadata cache, when installed (`install_shared_cache`).
+pub fn shared_cache() -> Option<Arc<dyn slatedb::db_cache::DbCache>> {
+    DB_CACHE.get().cloned()
+}
+
+/// Install a given cache as the shared one (tests: a cache that counts its hits). False if one is already installed.
+pub fn install_cache(cache: Arc<dyn slatedb::db_cache::DbCache>) -> bool {
+    DB_CACHE.set(cache).is_ok()
+}
+
+/// Cache scope of the writer last built for each tenant (`writer_builder`): the compaction warm-up puts the new SSTs'
+/// blocks under it (`warm.rs`). Removed when the writer closes.
+static WRITER_SCOPE: std::sync::LazyLock<Mutex<HashMap<String, u64>>> = std::sync::LazyLock::new(Default::default);
+
+pub fn writer_scope(id: &str) -> Option<u64> {
+    WRITER_SCOPE.lock().unwrap().get(id).copied()
+}
+
 /// Relaxed durability window of a database (control layer, `ctl/durability.rs`): its writer flushes the WAL on its own at
 /// least this often, so writes acknowledged before they were durable (`{w: 1, j: false}`) are durable within it.
 pub static RELAXED_WINDOW: std::sync::OnceLock<fn(&str) -> Duration> = std::sync::OnceLock::new();
@@ -381,7 +400,7 @@ pub fn relaxed_window(id: &str) -> Duration {
     RELAXED_WINDOW.get().map(|f| f(id)).unwrap_or_default()
 }
 
-fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
+pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
     let mut settings = writer_settings();
     let relaxed = relaxed_window(id);
     let local = LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed);
@@ -394,7 +413,10 @@ fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<
     }
     let b = Db::builder(tenant_path(id), Arc::clone(store)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
     match cache_scope() {
-        Some((c, scope)) => b.with_db_cache(c, scope),
+        Some((c, scope)) => {
+            WRITER_SCOPE.lock().unwrap().insert(id.to_string(), scope);
+            b.with_db_cache(c, scope)
+        }
         None => b,
     }
 }
@@ -1099,6 +1121,20 @@ pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore
 }
 
 async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, pass: Duration, stop_limit: Duration) -> Result<Option<CompactionRecord>> {
+    let warm = crate::warm::COMPACTION_WARM.load(std::sync::atomic::Ordering::Relaxed);
+    compact_tenant_pass(s3, raw, id, pass, stop_limit, warm).await
+}
+
+/// One compaction pass; with `warm`, the output that replaces blocks an open writer has in the shared block cache is read
+/// into that cache before the writer switches to the new manifest (`warm.rs`).
+pub(crate) async fn compact_tenant_pass(
+    s3: &Arc<dyn ObjectStore>,
+    raw: &Arc<dyn ObjectStore>,
+    id: impl std::fmt::Display,
+    pass: Duration,
+    stop_limit: Duration,
+    warm: bool,
+) -> Result<Option<CompactionRecord>> {
     let id = id.to_string();
     let id = id.as_str();
     let l0_before = l0_count(raw, id).await?;
@@ -1118,6 +1154,17 @@ async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectSt
     let counting = Arc::new(CountingStore::new(Arc::clone(s3)));
     let store: Arc<dyn ObjectStore> = counting.clone();
     let cleanup_store = Arc::clone(&store);
+    // What the open writer's cache can hold before the pass (no writer, no cache, or a writer built without the shared
+    // cache: nothing to warm).
+    let warm_from = if warm {
+        let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
+        match (writer, shared_cache(), writer_scope(id)) {
+            (Some(db), Some(cache), Some(scope)) => Some((cache, scope, crate::warm::before(&db.manifest()))),
+            _ => None,
+        }
+    } else {
+        None
+    };
     let mut opts = CompactorOptions::default();
     opts.poll_interval = Duration::from_millis(50);
     let mut worker = CompactionWorkerOptions::default();
@@ -1182,7 +1229,7 @@ async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectSt
     // manifest version it was taken at, and through it old SSTs and WALs, so GC cannot reclaim them
     // until they expire. Nothing else takes checkpoints in this lifecycle (FollowLatest readers
     // create none), so drop them all once the pass is over. Counted in the pass's requests.
-    let admin = Admin::builder(tenant_path(id), cleanup_store).build();
+    let admin = Admin::builder(tenant_path(id), Arc::clone(&cleanup_store)).build();
     // Only the compactor's own checkpoints (named nothing, with an expiry). A checkpoint without an expiry pins the SSTs
     // a shallow fork (control layer) still reads, and a named one is a restore point or an export snapshot.
     let checkpoints: Vec<_> = admin.list_checkpoints(None).await?.into_iter().filter(|c| c.name.is_none() && c.expire_time.is_some()).collect();
@@ -1192,11 +1239,32 @@ async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectSt
     }
     COMPACTED.lock().unwrap().insert(id.to_string());
     COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
+    // Before the writer switches to the new manifest, its cache gets the new blocks that replace the ones it had (`warm.rs`).
+    // Bounded: past `COMPACTION_WARM_SECS` (or on an error) the pass goes on and the reads not warmed miss, as without it.
+    let mut consumed = Vec::new();
+    if let Some((cache, scope, before)) = &warm_from {
+        let limit = Duration::from_secs(crate::warm::COMPACTION_WARM_SECS.load(std::sync::atomic::Ordering::Relaxed));
+        match tokio::time::timeout(limit, crate::warm::warm_compaction_output(&cleanup_store, &tenant_path(id), cache, *scope, before)).await {
+            Ok(Ok((c, _rec))) => consumed = c,
+            Ok(Err(e)) => {
+                crate::warm::WARM_FAILS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("compaction warm-up of tenant {id}: {e}");
+            }
+            Err(_) => {
+                crate::warm::WARM_FAILS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("compaction warm-up of tenant {id}: timed out after {limit:?}");
+            }
+        }
+    }
     // An open writer learns of the compaction now instead of at its next manifest poll (`--writer-poll-secs`): until then it
     // still counts the compacted L0 SSTs, and a writer written fast can fill its L0 and stall its memtable flushes.
     let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
     if let Some(db) = writer {
-        let _ = db.refresh_manifest().await;
+        let refreshed = db.refresh_manifest().await.is_ok();
+        // The consumed SSTs are no longer in the writer's manifest: their blocks would only age out of the cache.
+        if refreshed && !consumed.is_empty() {
+            crate::warm::evict_consumed(&db, &consumed).await;
+        }
     }
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
     {
