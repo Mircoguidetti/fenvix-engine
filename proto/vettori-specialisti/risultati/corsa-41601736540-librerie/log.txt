@@ -1,0 +1,23 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 400s
+== noi finito in 435s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         787        5534          29        1913        7144
+Swap:           3071         120        2951
+== hnswlib inizio
+== hnswlib finito in 963s
+               total        used        free      shared  buff/cache   available
+Mem:            7932        1055        3907          34        3280        6877
+Swap:           3071         113        2958
+== usearch_serie inizio
+== usearch_serie finito in 670s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         819        4130          39        3297        7112
+Swap:           3071         109        2962
+== noi_usearch inizio
+usearch i8 costruito in 353s, hw=haswell, scala=311.90
+usearch b1 costruito in 250s, hw=haswell, scala=1.00
+== noi_usearch finito in 726s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         842        3217          40        4200        7089
+Swap:           3071         108        2963

@@ -1,0 +1,2 @@
+{"job": "librerie", "engine": "hnswlib", "config": "M16 efC200 float32", "kind": "build", "build_s": 956.0267956256866}
+{"job": "librerie", "engine": "usearch", "config": "f16 di serie", "kind": "build", "build_s": 658.1042721271515, "connectivity": 16, "expansion_add": 128, "hw": "haswell"}
