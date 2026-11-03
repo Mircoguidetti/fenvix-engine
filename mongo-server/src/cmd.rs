@@ -34,6 +34,17 @@ pub struct Server {
     pub(crate) diag: crate::diag::Diag,
 }
 
+/// This process's `topologyVersion.processId`: a new one at every start, so a driver can tell a restart.
+pub(crate) fn process_id() -> ObjectId {
+    static PROCESS_ID: std::sync::OnceLock<ObjectId> = std::sync::OnceLock::new();
+    *PROCESS_ID.get_or_init(ObjectId::new)
+}
+
+/// An awaitable `hello` (`topologyVersion` and `maxAwaitTimeMS`): the one a driver may let the server stream (exhaust).
+pub(crate) fn awaitable_hello(cmd: &Document) -> bool {
+    matches!(cmd.keys().next().map(|k| k.as_str()), Some("hello" | "isMaster" | "ismaster")) && cmd.get_document("topologyVersion").is_ok() && int_arg(cmd.get("maxAwaitTimeMS")).is_some_and(|ms| ms > 0)
+}
+
 /// Idle time after which a cursor is closed (`--cursor-timeout-secs`, mongod's `cursorTimeoutMillis`; 0 = never).
 pub static CURSOR_TIMEOUT_SECS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(600);
 /// Cursors closed because they were idle (serverStatus `metrics.cursor.timedOut`).
@@ -346,9 +357,11 @@ impl Server {
                 if let Ok(md) = cmd.get_document("client") {
                     self.diag.set_metadata(conn_id, md.clone());
                 }
-                // an awaitable hello (topologyVersion + maxAwaitTimeMS): nothing changes here, so wait out the time
+                // an awaitable hello (topologyVersion + maxAwaitTimeMS): nothing changes here, so wait out the time. A
+                // topologyVersion of another process (the driver saw this address before a restart) is answered at once,
+                // as mongod does: the topology the driver knows is stale.
                 if let (Ok(tv), Some(ms)) = (cmd.get_document("topologyVersion"), crate::cmd::int_arg(cmd.get("maxAwaitTimeMS"))) {
-                    if tv.get_i64("counter").unwrap_or(-1) == 0 && ms > 0 {
+                    if tv.get_object_id("processId").ok() == Some(process_id()) && tv.get_i64("counter").unwrap_or(-1) == 0 && ms > 0 {
                         tokio::time::sleep(std::time::Duration::from_millis(ms.min(10_000) as u64)).await;
                     }
                 }
@@ -511,8 +524,7 @@ impl Server {
     }
 
     fn hello(&self, name: &str, conn_id: i64) -> Document {
-        static PROCESS_ID: std::sync::OnceLock<ObjectId> = std::sync::OnceLock::new();
-        let pid = *PROCESS_ID.get_or_init(ObjectId::new);
+        let pid = process_id();
         let mut d = Document::new();
         let rs = self.rs.lock().unwrap().clone();
         let primary_flag = if name == "hello" { "isWritablePrimary" } else { "ismaster" };
