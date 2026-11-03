@@ -1,0 +1,8 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+Nov 03, 2026 5:11:59 AM org.apache.lucene.internal.vectorization.PanamaVectorizationProvider <init>
+INFO: Java vector incubator API enabled; uses preferredBitSize=512; FMA enabled
+Exception in thread "main" java.lang.IllegalArgumentException: at least one of ramBufferSize and maxBufferedDocs must be enabled
+	at org.apache.lucene.index.LiveIndexWriterConfig.setRAMBufferSizeMB(LiveIndexWriterConfig.java:189)
+	at org.apache.lucene.index.IndexWriterConfig.setRAMBufferSizeMB(IndexWriterConfig.java:435)
+	at fenvix.Bench.build(Bench.java:112)
+	at fenvix.Bench.main(Bench.java:267)

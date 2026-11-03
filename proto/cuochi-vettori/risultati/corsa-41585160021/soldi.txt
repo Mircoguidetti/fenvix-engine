@@ -1,0 +1,20 @@
+== R contro 8 segmenti (int8 13,48, binario 5,17)
+medio int8, 50/s: Atlas migliore $2,453 (2 x S80 Low CPU); High CPU $3,650; Storage-Opt $2,759 | noi costo $860 (2 x r7gd da 8 vCPU), prezzo $1,563 = 64% del migliore Atlas, 43% di High CPU, 57% di Storage-Opt
+medio int8, 250/s: Atlas migliore $2,453 (2 x S80 Low CPU); High CPU $3,650; Storage-Opt $2,759 | noi costo $860 (2 x r7gd da 8 vCPU), prezzo $1,563 = 64% del migliore Atlas, 43% di High CPU, 57% di Storage-Opt
+medio binario, 50/s: Atlas migliore $460 (3 x S40 Low CPU); High CPU $701; Storage-Opt $548 | noi costo $377 (2 x m7gd da 4 vCPU), prezzo $685 = 149% del migliore Atlas, 98% di High CPU, 125% di Storage-Opt
+medio binario, 250/s: Atlas migliore $1,402 (4 x S40 High CPU); High CPU $1,402; Storage-Opt $2,372 | noi costo $377 (2 x m7gd da 4 vCPU), prezzo $685 = 49% del migliore Atlas, 49% di High CPU, 29% di Storage-Opt
+grande int8, 500/s: Atlas migliore $12,848 (4 x S100 Low CPU); High CPU n/d; Storage-Opt n/d | noi costo $9,785 (4 x r7gd da 48 vCPU in 2 pezzi), prezzo $17,791 = 138% del migliore Atlas
+grande int8, 2500/s: Atlas migliore $17,140 (4 x S110 Low CPU); High CPU n/d; Storage-Opt n/d | noi costo $9,785 (4 x r7gd da 48 vCPU in 2 pezzi), prezzo $17,791 = 104% del migliore Atlas
+grande binario, 500/s: Atlas migliore $4,906 (4 x S80 Low CPU); High CPU $5,168; Storage-Opt $5,490 | noi costo $3,989 (2 x m7gd da 48 vCPU), prezzo $7,253 = 148% del migliore Atlas, 140% di High CPU, 132% di Storage-Opt
+grande binario, 2500/s: Atlas migliore $9,519 (4 x S80 High CPU); High CPU $9,519; Storage-Opt $21,958 | noi costo $3,989 (2 x m7gd da 48 vCPU), prezzo $7,253 = 76% del migliore Atlas, 76% di High CPU, 33% di Storage-Opt
+Solo CPU: Atlas High CPU $0.0509/vCPU-ora, Storage-Opt $0.1181; noi c7gd costo $0.0454, prezzo $0.0825. Prezzo/Atlas = 0.12 (High CPU), 0.05 (Storage-Opt) con R=13.48
+== R contro 1 segmento (int8 2,03, binario 1,29)
+medio int8, 50/s: Atlas migliore $2,453 (2 x S80 Low CPU); High CPU $3,650; Storage-Opt $2,759 | noi costo $860 (2 x r7gd da 8 vCPU), prezzo $1,563 = 64% del migliore Atlas, 43% di High CPU, 57% di Storage-Opt
+medio int8, 250/s: Atlas migliore $2,453 (2 x S80 Low CPU); High CPU $3,650; Storage-Opt $2,759 | noi costo $860 (2 x r7gd da 8 vCPU), prezzo $1,563 = 64% del migliore Atlas, 43% di High CPU, 57% di Storage-Opt
+medio binario, 50/s: Atlas migliore $460 (3 x S40 Low CPU); High CPU $701; Storage-Opt $548 | noi costo $377 (2 x m7gd da 4 vCPU), prezzo $685 = 149% del migliore Atlas, 98% di High CPU, 125% di Storage-Opt
+medio binario, 250/s: Atlas migliore $1,402 (4 x S40 High CPU); High CPU $1,402; Storage-Opt $2,372 | noi costo $845 (5 x m7gd da 4 vCPU), prezzo $1,536 = 110% del migliore Atlas, 110% di High CPU, 65% di Storage-Opt
+grande int8, 500/s: Atlas migliore $12,848 (4 x S100 Low CPU); High CPU n/d; Storage-Opt n/d | noi costo $9,785 (4 x r7gd da 48 vCPU in 2 pezzi), prezzo $17,791 = 138% del migliore Atlas
+grande int8, 2500/s: Atlas migliore $17,140 (4 x S110 Low CPU); High CPU n/d; Storage-Opt n/d | noi costo $9,785 (4 x r7gd da 48 vCPU in 2 pezzi), prezzo $17,791 = 104% del migliore Atlas
+grande binario, 500/s: Atlas migliore $4,906 (4 x S80 Low CPU); High CPU $5,168; Storage-Opt $5,490 | noi costo $3,989 (2 x m7gd da 48 vCPU), prezzo $7,253 = 148% del migliore Atlas, 140% di High CPU, 132% di Storage-Opt
+grande binario, 2500/s: Atlas migliore $9,519 (4 x S80 High CPU); High CPU $9,519; Storage-Opt $21,958 | noi costo $9,603 (5 x m7gd da 48 vCPU), prezzo $17,459 = 183% del migliore Atlas, 183% di High CPU, 80% di Storage-Opt
+Solo CPU: Atlas High CPU $0.0509/vCPU-ora, Storage-Opt $0.1181; noi c7gd costo $0.0454, prezzo $0.0825. Prezzo/Atlas = 0.80 (High CPU), 0.34 (Storage-Opt) con R=2.03

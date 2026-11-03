@@ -1,0 +1,119 @@
+# M20: cercare per significato, Lucene 10.4 (come mongot) contro le nostre leve, sulla stessa macchina.
+# Scarica Cohere 1M (VectorDBBench), misura, fa commit solo dei risultati su questo branch.
+# Niente segreti, niente AWS a pagamento, meno di 120 minuti.
+name: cuochi-vettori
+on:
+  push:
+    branches: [cuochi-vettori]
+    paths: ['proto/cuochi-vettori/corsa.json']
+permissions:
+  contents: write
+jobs:
+  misura:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 118
+    env:
+      P: proto/cuochi-vettori
+      DATA: /mnt/m20/dati
+      SRC: /mnt/m20/src
+      IDX: /mnt/m20/idx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - name: macchina e spazio
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          sudo mkdir -p /mnt/m20 && sudo chown -R $USER /mnt/m20
+          RUN=$P/risultati/corsa-${{ github.run_id }}
+          echo "RUN=$RUN" >> $GITHUB_ENV
+          mkdir -p $RUN
+          { nproc; lscpu; free -m; df -h / /mnt; java -version 2>&1; python3 --version; cat $P/corsa.json; } | tee $RUN/macchina.txt
+      - name: programmi
+        run: |
+          pip install --quiet numpy pyarrow faiss-cpu usearch
+          python3 -c "import faiss,usearch;print('faiss',faiss.__version__,faiss.get_compile_options());print('usearch',usearch.__version__)" | tee -a $RUN/macchina.txt
+          (cd $P/lucene && mvn -q -B package -DskipTests && ls target target/lib) | tee -a $RUN/macchina.txt
+      - name: scarica Cohere 1M
+        timeout-minutes: 15
+        run: |
+          mkdir -p $SRC && cd $SRC
+          get() { for t in 1 2 3 4 5 6; do curl -fsSL -C - --connect-timeout 20 --speed-limit 2000000 --speed-time 30 --max-time 900 -o "$1" "$2" && return 0; echo "riprovo $1 ($t)"; sleep 3; done; return 1; }
+          ok=0
+          for base in https://assets.zilliz.com/benchmark/cohere_medium_1m https://assets.zilliz.com.s3.amazonaws.com/benchmark/cohere_medium_1m; do
+            if get test.parquet $base/test.parquet; then
+              get neighbors.parquet $base/neighbors.parquet || true
+              if get train.parquet $base/train.parquet; then ok=1; echo "fonte $base" | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt; break; fi
+            fi
+          done
+          if [ $ok = 0 ]; then
+            aws s3 cp --no-sign-request s3://assets.zilliz.com/benchmark/cohere_medium_1m/ . --recursive --exclude "*" --include "train.parquet" --include "test.parquet" --include "neighbors.parquet" && ok=1 && echo "fonte s3 anonimo" | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt
+          fi
+          if [ $ok = 0 ]; then
+            echo "ripiego Hugging Face" | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt
+            rm -f *.parquet
+            for i in 0 1 2 3 4 5; do
+              curl -fsSL --retry 3 -o hf-$i.parquet "https://huggingface.co/datasets/Cohere/wikipedia-22-12-en-embeddings/resolve/main/data/train-0000$i-of-00253.parquet" || true
+            done
+          fi
+          ls -la $SRC | tee -a $GITHUB_WORKSPACE/$RUN/macchina.txt
+      - name: prepara i dati
+        timeout-minutes: 12
+        run: |
+          MAX=$(python3 -c "import json;print(json.load(open('$P/corsa.json')).get('max',1000000))")
+          python3 $P/dati.py $SRC $DATA --max $MAX 2>&1 | tee $RUN/dati.txt
+          cp $DATA/meta.json $RUN/meta.json
+          rm -f $SRC/train.parquet $SRC/shuffle_train.parquet $SRC/hf-*.parquet
+          df -h /mnt
+      - name: Lucene int8 (7 bit), 8 segmenti poi 1
+        if: ${{ !cancelled() }}
+        timeout-minutes: 40
+        run: |
+          set -o pipefail
+          CP="$P/lucene/target/classes:$P/lucene/target/lib/*"
+          J="java -Xmx3g --add-modules=jdk.incubator.vector -cp $CP fenvix.Bench"
+          L=$RUN/lucene-int8.txt
+          $J build $DATA $IDX/int8 int8 8 2>&1 | tee -a $L
+          for fr in "0 0" "0 1" "1 1"; do $J search $DATA $IDX/int8 "int8" $fr $RUN/risultati.jsonl 2>&1 | tee -a $L; done
+          $J merge $IDX/int8 int8 2>&1 | tee -a $L
+          for fr in "0 0" "0 1" "1 1"; do $J search $DATA $IDX/int8 "int8" $fr $RUN/risultati.jsonl 2>&1 | tee -a $L; done
+          du -sh $IDX/int8 | tee -a $L
+          rm -rf $IDX/int8
+      - name: le nostre leve 1 e 2
+        if: ${{ !cancelled() }}
+        timeout-minutes: 30
+        run: |
+          set -o pipefail
+          cd $P
+          USEARCH_SAVE=$IDX/u_i8.usearch python3 nostri.py $DATA $GITHUB_WORKSPACE/$RUN/risultati.jsonl usearch_i8 usearch_b1 usearch_i8_8pezzi faiss_sq8 2>&1 | grep -v '^{' | tee $GITHUB_WORKSPACE/$RUN/nostri.txt
+      - name: Lucene binario (BBQ 1 bit) più ricalcolo, 8 segmenti poi 1
+        if: ${{ !cancelled() }}
+        timeout-minutes: 25
+        run: |
+          set -o pipefail
+          CP="$P/lucene/target/classes:$P/lucene/target/lib/*"
+          J="java -Xmx3g --add-modules=jdk.incubator.vector -cp $CP fenvix.Bench"
+          L=$RUN/lucene-bin.txt
+          $J build $DATA $IDX/bin bin 8 2>&1 | tee -a $L
+          for f in 0 1; do $J search $DATA $IDX/bin "bin" $f 1 $RUN/risultati.jsonl 2>&1 | tee -a $L; done
+          $J merge $IDX/bin bin 2>&1 | tee -a $L
+          for f in 0 1; do $J search $DATA $IDX/bin "bin" $f 1 $RUN/risultati.jsonl 2>&1 | tee -a $L; done
+          du -sh $IDX/bin | tee -a $L
+          rm -rf $IDX/bin
+      - name: leva 3, riuso
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        run: |
+          set -o pipefail
+          cd $P
+          python3 riuso.py $DATA $IDX/u_i8.usearch $GITHUB_WORKSPACE/$RUN/risultati.jsonl $GITHUB_WORKSPACE/$RUN/riuso.jsonl 2>&1 | tail -n 200 > $GITHUB_WORKSPACE/$RUN/riuso.txt
+      - name: commit dei risultati
+        if: always()
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $P/risultati
+          git commit -m "M20: risultati della corsa ${{ github.run_id }}" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
