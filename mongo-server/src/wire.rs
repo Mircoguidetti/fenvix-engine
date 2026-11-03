@@ -13,6 +13,7 @@ pub const OP_MSG: i32 = 2013;
 const MAX_MESSAGE: usize = 48_000_000 + 1024 * 1024;
 const FLAG_CHECKSUM: u32 = 1;
 const FLAG_MORE_TO_COME: u32 = 2;
+const FLAG_EXHAUST_ALLOWED: u32 = 1 << 16;
 
 pub struct Request {
     pub request_id: i32,
@@ -22,6 +23,9 @@ pub struct Request {
     pub command: Document,
     /// The sender does not want a reply (unacknowledged write).
     pub more_to_come: bool,
+    /// The sender accepts a stream of replies to this one request (`exhaustAllowed`): drivers ask it for the awaitable
+    /// `hello` of their monitoring connection and expect the replies flagged `moreToCome`.
+    pub exhaust_allowed: bool,
     /// Fields that arrived as document sequences (`documents`, `updates`, `deletes`).
     pub seq_keys: Vec<String>,
     /// The compressor (1 snappy, 2 zlib, 3 zstd) of an OP_COMPRESSED request: the reply is compressed the same way.
@@ -54,9 +58,12 @@ pub async fn read_request<R: AsyncRead + Unpin>(r: &mut R) -> Result<Option<Requ
     read_request_bounded(r, MAX_MESSAGE, None, None).await
 }
 
-/// A message did not arrive in time (handshake timeout, or a slow sender before authentication).
+/// A message did not arrive in time (handshake timeout, a slow sender before authentication, or a connection that has
+/// not authenticated and stayed silent too long). `first_byte`: no byte of the message had arrived.
 #[derive(Debug)]
-pub struct ReadTimeout;
+pub struct ReadTimeout {
+    pub first_byte: bool,
+}
 
 impl std::fmt::Display for ReadTimeout {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -83,7 +90,7 @@ impl std::error::Error for TooLarge {}
 pub async fn read_request_bounded<R: AsyncRead + Unpin>(r: &mut R, max_len: usize, first_byte_by: Option<tokio::time::Instant>, rest_within: Option<std::time::Duration>) -> Result<Option<Request>> {
     let mut header = [0u8; 16];
     let first = match first_byte_by {
-        Some(d) => tokio::time::timeout_at(d, r.read(&mut header[..1])).await.map_err(|_| anyhow::Error::new(ReadTimeout))?,
+        Some(d) => tokio::time::timeout_at(d, r.read(&mut header[..1])).await.map_err(|_| anyhow::Error::new(ReadTimeout { first_byte: true }))?,
         None => r.read(&mut header[..1]).await,
     };
     match first {
@@ -108,7 +115,7 @@ pub async fn read_request_bounded<R: AsyncRead + Unpin>(r: &mut R, max_len: usiz
         parse_body(request_id, opcode, &body, max_len)
     };
     match rest_within {
-        Some(t) => tokio::time::timeout(t, rest).await.map_err(|_| anyhow::Error::new(ReadTimeout))?,
+        Some(t) => tokio::time::timeout(t, rest).await.map_err(|_| anyhow::Error::new(ReadTimeout { first_byte: false }))?,
         None => rest.await,
     }
 }
@@ -174,7 +181,7 @@ fn parse_msg(request_id: i32, body: &[u8]) -> Result<Request> {
         command.insert(ident, Bson::Array(docs));
     }
     let db = command.get_str("$db").unwrap_or("admin").to_string();
-    Ok(Request { request_id, legacy: false, db, command, more_to_come: flags & FLAG_MORE_TO_COME != 0, seq_keys, compressor: None })
+    Ok(Request { request_id, legacy: false, db, command, more_to_come: flags & FLAG_MORE_TO_COME != 0, exhaust_allowed: flags & FLAG_EXHAUST_ALLOWED != 0, seq_keys, compressor: None })
 }
 
 fn parse_query(request_id: i32, body: &[u8]) -> Result<Request> {
@@ -188,7 +195,7 @@ fn parse_query(request_id: i32, body: &[u8]) -> Result<Request> {
         command = inner;
     }
     let db = ns.strip_suffix(".$cmd").ok_or_else(|| anyhow!("OP_QUERY on non-command namespace {ns}"))?.to_string();
-    Ok(Request { request_id, legacy: true, db, command, more_to_come: false, seq_keys: Vec::new(), compressor: None })
+    Ok(Request { request_id, legacy: true, db, command, more_to_come: false, exhaust_allowed: false, seq_keys: Vec::new(), compressor: None })
 }
 
 fn decompress(id: u8, data: &[u8], size: usize) -> Result<Vec<u8>> {
@@ -243,11 +250,13 @@ pub struct ReplyTo {
     pub legacy: bool,
     /// The compressor of the reply: the request's, unless its command is one whose reply is never compressed.
     pub compressor: Option<u8>,
+    /// Flag the reply `moreToCome`: another reply to the same request follows without a new request (exhaust).
+    pub more_to_come: bool,
 }
 
 impl Request {
     pub fn reply_to(&self) -> ReplyTo {
-        ReplyTo { request_id: self.request_id, legacy: self.legacy, compressor: self.compressor.filter(|_| !self.legacy && !never_compressed(&self.command)) }
+        ReplyTo { request_id: self.request_id, legacy: self.legacy, compressor: self.compressor.filter(|_| !self.legacy && !never_compressed(&self.command)), more_to_come: false }
     }
 }
 
@@ -275,7 +284,7 @@ pub async fn write_reply<W: AsyncWrite + Unpin>(w: &mut W, req: &ReplyTo, reply:
         out.extend(response_id.to_le_bytes());
         out.extend(req.request_id.to_le_bytes());
         out.extend(OP_MSG.to_le_bytes());
-        out.extend(0u32.to_le_bytes()); // flagBits
+        out.extend((if req.more_to_come { FLAG_MORE_TO_COME } else { 0 }).to_le_bytes()); // flagBits
         out.push(0); // section kind 0
     }
     out.extend(doc);

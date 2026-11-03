@@ -20,7 +20,7 @@ DBS = [f"d{i:02d}" for i in range(26)]
 
 DEFAULTS = {
     "auth_fail_max": 100, "auth_fail_max_per_db": 5, "auth_fail_window_secs": 60, "auth_block_secs": 300,
-    "auth_block_max_secs": 3600, "auth_block_forget_secs": 86400, "max_conns_per_ip": 200, "handshake_timeout_secs": 10,
+    "auth_block_max_secs": 3600, "auth_block_forget_secs": 86400, "max_conns_per_ip": 0, "max_unauth_conns_per_ip": 4000, "max_conns_per_db": 5000, "handshake_timeout_secs": 10,
     "pre_auth_max_message_bytes": 65536, "ip_allowlist_refresh_secs": 5, "ipv6_group_prefix": 64, "netguard_max_tracked": 100000,
     "netguard_max_dbs_per_ip": 1000,
 }
@@ -29,7 +29,7 @@ DEFAULTS = {
 FLAGS = {
     "--auth-fail-max": "auth_fail_max", "--auth-fail-max-per-db": "auth_fail_max_per_db", "--auth-fail-window-secs": "auth_fail_window_secs",
     "--auth-block-secs": "auth_block_secs", "--auth-block-max-secs": "auth_block_max_secs", "--auth-block-forget-secs": "auth_block_forget_secs",
-    "--max-conns-per-ip": "max_conns_per_ip", "--handshake-timeout-secs": "handshake_timeout_secs",
+    "--max-conns-per-ip": "max_conns_per_ip", "--max-unauth-conns-per-ip": "max_unauth_conns_per_ip", "--max-conns-per-db": "max_conns_per_db", "--handshake-timeout-secs": "handshake_timeout_secs",
     "--pre-auth-max-message-bytes": "pre_auth_max_message_bytes", "--ip-allowlist-refresh-secs": "ip_allowlist_refresh_secs",
     "--ipv6-group-prefix": "ipv6_group_prefix", "--netguard-max-tracked": "netguard_max_tracked", "--netguard-max-dbs-per-ip": "netguard_max_dbs_per_ip",
 }
@@ -88,7 +88,7 @@ def test_5_failures_on_one_pair_block_only_that_database(srv):
 
 def test_status_shows_the_values_in_force():
     vals = {"--auth-fail-max": 37, "--auth-fail-max-per-db": 7, "--auth-fail-window-secs": 45, "--auth-block-secs": 120,
-            "--auth-block-max-secs": 1800, "--auth-block-forget-secs": 7200, "--max-conns-per-ip": 50, "--handshake-timeout-secs": 7,
+            "--auth-block-max-secs": 1800, "--auth-block-forget-secs": 7200, "--max-conns-per-ip": 50, "--max-unauth-conns-per-ip": 40, "--max-conns-per-db": 70, "--handshake-timeout-secs": 7,
             "--pre-auth-max-message-bytes": 32768, "--ip-allowlist-refresh-secs": 3, "--ipv6-group-prefix": 56, "--netguard-max-tracked": 5000,
             "--netguard-max-dbs-per-ip": 300}
     s = start("r2limcfg", [x for k, v in vals.items() for x in (k, str(v))])

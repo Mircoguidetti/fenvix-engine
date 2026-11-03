@@ -66,8 +66,9 @@ def free_port():
 
 
 class Server:
-    def __init__(self, bucket, tag="srv", idle=60, extra=(), holder=None, port=None, admin_port=None, env=None, endpoint=None, admin=True, binary=None):
+    def __init__(self, bucket, tag="srv", idle=60, extra=(), holder=None, port=None, admin_port=None, env=None, endpoint=None, admin=True, binary=None, nofile=None):
         self.admin_enabled, self.binary = admin, binary or BIN
+        self.nofile = nofile          # open-files limit (soft and hard) of the server process, for the network-limit tests
         self.bucket, self.tag, self.idle, self.extra = bucket, tag, idle, list(extra)
         self.endpoint = endpoint or MINIO
         self.port = port or free_port()
@@ -88,7 +89,12 @@ class Server:
         if "--unsafe-skip-ownership-checks" in cmd:
             env["MONGO_ALLOW_UNSAFE_TEST_FLAGS"] = "1"      # negative controls only
         self.log = open(self.log_path, "ab")
-        self.proc = subprocess.Popen(cmd, stdout=self.log, stderr=self.log, env=env)
+        pre = None
+        if self.nofile:
+            import resource
+            n = self.nofile
+            pre = lambda: resource.setrlimit(resource.RLIMIT_NOFILE, (n, n))
+        self.proc = subprocess.Popen(cmd, stdout=self.log, stderr=self.log, env=env, preexec_fn=pre)
         if wait:
             self.wait_ready()
         return self

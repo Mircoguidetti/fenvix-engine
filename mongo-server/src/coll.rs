@@ -452,37 +452,213 @@ async fn resolve_id(g: &mut impl Rd, coll: &str, id: &Bson, ov: Option<&Overlay>
 
 /// Candidate documents of `plan` (index order), still to be filtered.
 async fn plan_docs_ids(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan: &Plan, stats: &mut Stats) -> R<Vec<Vec<u8>>> {
-    let mut ids = Vec::new();
-    let mut stack = vec![plan];
-    while let Some(p) = stack.pop() {
-        match p {
-            Plan::Id(id) => match resolve_id(g, coll, id, None).await? {
-                IdRes::Direct => ids.push(encode_sortable(id)),
-                IdRes::Found(enc) => ids.push(enc),
-                IdRes::Absent => {}
-                IdRes::Scan => {
-                    let prefix = doc_prefix(coll);
-                    for (k, _) in g.scan_range(&prefix, prefix_end(&prefix).as_deref(), false, None, DOC_READ_AHEAD).await? {
-                        ids.push(k[prefix.len()..].to_vec());
-                    }
-                }
-            },
-            Plan::Ix(s) => {
-                let mut c = IxCursor::new(coll, &indexes[s.idx], s);
-                loop {
-                    let b = c.next_batch(g, usize::MAX).await?;
+    PlanIds::new(plan).next(g, coll, indexes, stats, usize::MAX).await
+}
+
+/// The candidate `_id`s of a plan (index order, still to be filtered), a batch at a time: the same list as
+/// [`plan_docs_ids`] without holding it whole.
+struct PlanIds<'p> {
+    stack: Vec<&'p Plan>,
+    cur: Option<IdSource>,
+}
+
+enum IdSource {
+    Ix(IxCursor),
+    /// The keys of every document, from `start` on (an `_id` equality the collation does not decide).
+    Docs(Vec<u8>),
+}
+
+impl<'p> PlanIds<'p> {
+    fn new(plan: &'p Plan) -> Self {
+        PlanIds { stack: vec![plan], cur: None }
+    }
+
+    /// The next candidates, at most `n` (more than one call per plan only with `n` smaller than the list); empty at the end.
+    async fn next(&mut self, g: &mut impl Rd, coll: &str, indexes: &[IndexDef], stats: &mut Stats, n: usize) -> R<Vec<Vec<u8>>> {
+        let mut ids = Vec::new();
+        while ids.len() < n {
+            match &mut self.cur {
+                Some(IdSource::Ix(c)) => {
+                    let b = c.next_batch(g, n - ids.len()).await?;
                     if b.is_empty() {
-                        break;
+                        self.cur = None;
+                        continue;
                     }
                     stats.keys += b.len();
                     ids.extend(b.iter().filter_map(|k| entry_id(k).map(|x| x.to_vec())));
                 }
+                Some(IdSource::Docs(start)) => {
+                    let prefix = doc_prefix(coll);
+                    let want = n - ids.len();
+                    let rows = g.scan_range(start, prefix_end(&prefix).as_deref(), false, Some(want), DOC_READ_AHEAD).await?;
+                    ids.extend(rows.iter().map(|(k, _)| k[prefix.len()..].to_vec()));
+                    match rows.last() {
+                        Some((k, _)) if rows.len() >= want => {
+                            let mut k = k.to_vec();
+                            k.push(0);
+                            *start = k;
+                        }
+                        _ => self.cur = None,
+                    }
+                }
+                None => {
+                    let Some(p) = self.stack.pop() else { break };
+                    match p {
+                        Plan::Id(id) => match resolve_id(g, coll, id, None).await? {
+                            IdRes::Direct => ids.push(encode_sortable(id)),
+                            IdRes::Found(enc) => ids.push(enc),
+                            IdRes::Absent => {}
+                            IdRes::Scan => self.cur = Some(IdSource::Docs(doc_prefix(coll))),
+                        },
+                        Plan::Ix(s) => self.cur = Some(IdSource::Ix(IxCursor::new(coll, &indexes[s.idx], s))),
+                        Plan::Or(subs) => self.stack.extend(subs.iter().rev()),
+                        Plan::Coll { .. } => {}
+                    }
+                }
             }
-            Plan::Or(subs) => stack.extend(subs.iter().rev()),
-            Plan::Coll { .. } => {}
+        }
+        Ok(ids)
+    }
+}
+
+/// Candidates read before choosing how to fetch the documents of a blocking sort: when the plan has no more, they are
+/// fetched as before (one range scan or point reads, positions exact); otherwise the documents are read a chunk at a
+/// time. About 155 bytes each (MISURATO by the reviewer of N5): about 10 MB.
+const SORT_BUFFER_IDS: usize = 65_536;
+
+/// [`SORT_BUFFER_IDS`], the chunk of the reads after it ([`FETCH_CHUNK`]) and a forced switch to the scan after that
+/// many candidates (none): settings for the tests (`MONGO_SORT_BUFFER_IDS`, `MONGO_SORT_CHUNK_IDS`,
+/// `MONGO_SORT_SCAN_AFTER`), so that a small collection takes every path.
+fn sort_chunks() -> (usize, usize, usize) {
+    static V: std::sync::OnceLock<(usize, usize, usize)> = std::sync::OnceLock::new();
+    *V.get_or_init(|| {
+        let env = |k: &str, d: usize| std::env::var(k).ok().and_then(|v| v.parse::<usize>().ok()).filter(|n| *n > 0).unwrap_or(d);
+        (env("MONGO_SORT_BUFFER_IDS", SORT_BUFFER_IDS), env("MONGO_SORT_CHUNK_IDS", FETCH_CHUNK), env("MONGO_SORT_SCAN_AFTER", usize::MAX))
+    })
+}
+
+/// Where the documents of a blocking sort go: the first `k` in sort order (a limit), or every one (within the memory
+/// limit of a blocking sort, [`crate::query::SORT_MEM_LIMIT`]).
+enum Sink<'a, 'b> {
+    Top(&'b mut crate::query::TopK<'a>),
+    All { docs: Vec<(u64, Document)>, ids: HashSet<Vec<u8>>, bytes: usize },
+}
+
+impl Sink<'_, '_> {
+    /// A matching document at plan position `seq`, with `id` its key: a candidate that comes again (a multikey index,
+    /// the branches of an `$or`) counts once, at its first position, as long as positions only grow.
+    fn push(&mut self, seq: u64, id: Vec<u8>, d: Document) -> R<()> {
+        let limit = crate::query::SORT_MEM_LIMIT.load(std::sync::atomic::Ordering::Relaxed) as usize;
+        match self {
+            Sink::Top(t) => {
+                t.push_once(seq, id, d);
+                if t.bytes() > limit {
+                    return Err(crate::query::sort_mem_error());
+                }
+            }
+            Sink::All { docs, ids, bytes } => {
+                if ids.insert(id) {
+                    *bytes += crate::query::bson_size(&d);
+                    if *bytes > limit {
+                        return Err(crate::query::sort_mem_error());
+                    }
+                    docs.push((seq, d));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+/// May the documents of `plan` be found by a scan of the whole collection and the filter alone? Not when an index
+/// decides which documents are candidates beyond the filter (a hint, a sparse or partial index, a special kind).
+fn scan_equivalent(plan: &Plan, indexes: &[IndexDef], hint: &Hint) -> bool {
+    fn ok(p: &Plan, indexes: &[IndexDef]) -> bool {
+        match p {
+            Plan::Ix(s) => indexes.get(s.idx).map(|i| matches!(i.kind, index::Kind::Regular) && !i.sparse && i.partial.is_none()).unwrap_or(false),
+            Plan::Or(subs) => subs.iter().all(|p| ok(p, indexes)),
+            Plan::Id(_) | Plan::Coll { .. } => true,
         }
     }
-    Ok(ids)
+    matches!(hint, Hint::None) && ok(plan, indexes)
+}
+
+/// The candidates of a plan that does not give the sort order, into `sink`, without the whole list of candidates:
+/// - few candidates (the plan ends within [`SORT_BUFFER_IDS`]): fetched as before, one range scan or point reads;
+/// - more: point reads a chunk at a time in plan order, until a scan of the whole collection would take fewer requests
+///   (the choice of [`prefer_scan`] for the candidates so far); then that scan, with the filter, for the rest.
+///   Documents equal in sort order keep plan order up to the switch and `_id` order after it (mongod promises no order
+///   for them either).
+async fn sort_candidates(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], plan: &Plan, o: &FindOpts<'_>, ov_keys: &HashSet<&Vec<u8>>, stats: &mut Stats, sink: &mut Sink<'_, '_>) -> R<()> {
+    let (buffer_ids, chunk_ids, scan_after) = sort_chunks();
+    let prefix = doc_prefix(coll);
+    let in_ov = |d: &Document| !ov_keys.is_empty() && d.get("_id").map(|id| ov_keys.contains(&doc_key(coll, id))).unwrap_or(false);
+    let mut src = PlanIds::new(plan);
+    let mut buf: Vec<Vec<u8>> = Vec::new();
+    let mut seen: HashSet<Vec<u8>> = HashSet::new();
+    let mut more = true;
+    while buf.len() <= buffer_ids {
+        let b = src.next(g, coll, indexes, stats, buffer_ids + 1 - buf.len()).await?;
+        if b.is_empty() {
+            more = false;
+            break;
+        }
+        buf.extend(b.into_iter().filter(|id| seen.insert(id.clone())));
+    }
+    drop(seen);
+    if !more {
+        let ids = &buf;
+        stats.docs += each_doc_by_ids(g, coll, ids, |i, d| if !in_ov(&d) && visible(&d, o) && matches(&d, o.filter)? { sink.push(i as u64, ids[i].clone(), d) } else { Ok(()) }).await?;
+        return Ok(());
+    }
+    let scan_ok = scan_equivalent(plan, indexes, &o.hint);
+    let mut pos: u64 = 0;
+    loop {
+        let so_far = pos as usize + buf.len();
+        if scan_ok && (prefer_scan(g.approx_bytes(), so_far) || so_far >= scan_after) {
+            tenant_bench::counting::set_phase(3);
+            let (mut start, stop) = (prefix.clone(), prefix_end(&prefix));
+            loop {
+                let rows = g.scan_range(&start, stop.as_deref(), false, Some(4096), DOC_READ_AHEAD).await?;
+                let n = rows.len();
+                for (k, v) in &rows {
+                    stats.docs += 1;
+                    if ov_keys.contains(&k.to_vec()) {
+                        continue;
+                    }
+                    let d = decode(v)?;
+                    if visible(&d, o) && matches(&d, o.filter)? {
+                        sink.push(pos, k[prefix.len()..].to_vec(), d)?;
+                    }
+                    pos += 1;
+                }
+                if n < 4096 {
+                    break;
+                }
+                let mut k = rows.last().unwrap().0.to_vec();
+                k.push(0);
+                start = k;
+            }
+            return Ok(());
+        }
+        tenant_bench::counting::set_phase(2);
+        for chunk in buf.chunks(chunk_ids) {
+            let keys: Vec<Vec<u8>> = chunk.iter().map(|id| [prefix.as_slice(), id].concat()).collect();
+            for (j, v) in g.get_many(&keys).await?.into_iter().enumerate() {
+                let Some(v) = v else { continue };
+                stats.docs += 1;
+                let d = decode(&v)?;
+                if !in_ov(&d) && visible(&d, o) && matches(&d, o.filter)? {
+                    sink.push(pos + j as u64, chunk[j].clone(), d)?;
+                }
+            }
+            pos += chunk.len() as u64;
+        }
+        buf = src.next(g, coll, indexes, stats, chunk_ids).await?;
+        if buf.is_empty() {
+            return Ok(());
+        }
+    }
 }
 
 fn visible(d: &Document, o: &FindOpts) -> bool {
@@ -731,7 +907,30 @@ pub fn order_by_near(mut docs: Vec<Document>, path: &str, n: &crate::geo_query::
 }
 
 async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
-    let mut plan = plan_for(indexes, o);
+    let plan = plan_for(indexes, o);
+    let coll_plan = matches!(plan, Plan::Coll { .. });
+    match find_docs_with(g, coll, indexes, o, plan).await {
+        // Without a limit the planner prefers a scan and a sort to reading a whole index in order; when that sort is
+        // over the memory limit of a blocking sort and an index gives the order, the index is read instead (mongod
+        // reads it from the start: same answer, no sort).
+        Err(e) if e.code == 292 && coll_plan && o.want.is_none() => {
+            let (hint, natural) = match &o.hint {
+                Hint::None => (None, None),
+                Hint::Natural(a) => (None, Some(*a)),
+                Hint::Index(i) => (Some(*i), None),
+            };
+            match index::plan(&index::PlanInput { indexes, filter: o.filter, sort: o.sort, has_limit: true, hint, natural }) {
+                ordered @ Plan::Ix(index::IxScan { sorted: true, .. }) => find_docs_with(g, coll, indexes, o, ordered).await,
+                _ => Err(e),
+            }
+        }
+        r => r,
+    }
+}
+
+/// [`find_docs_inner`] with the plan chosen.
+async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>, plan: Plan) -> R<(Vec<Document>, Stats, Plan)> {
+    let mut plan = plan;
     let mut id_lookup: Option<Vec<u8>> = None;
     let mut id_absent = false;
     if let Plan::Id(id) = &plan {
@@ -754,6 +953,16 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
     // candidates stream by (not every candidate). Text score and geo distance are attached after this function.
     let meta_sort = o.sort.iter().any(|(f, _)| f == crate::text::SCORE_KEY || f == crate::geo::DIST_KEY);
     let mut topk = o.want.filter(|_| !sorted_by_plan && !meta_sort).map(|k| crate::query::TopK::new(k, o.sort));
+    // A sort the plan does not give and no limit: every match is held for the sort (after this function), within the
+    // memory limit of a blocking sort, as in mongod (error 292 beyond it).
+    // (A sort on `_id` alone over the collection is not one: mongod reads the `_id` index in order; the documents here are
+    // stored in `_id` order too.)
+    let id_sorted = matches!((o.sort, &plan, &o.hint), ([(f, _)], Plan::Coll { .. }, Hint::None) if f == "_id");
+    // (A sort on the text score or the geo distance with a limit is not counted either: those values are attached after
+    // this function, which cannot keep only the first `want`; mongod's sort with a limit holds only those. Counting every
+    // match would refuse a `$text` search with a limit that mongod answers.)
+    let blocking = !o.sort.is_empty() && !sorted_by_plan && !id_sorted && topk.is_none() && !(meta_sort && o.want.is_some());
+    let mut sort_bytes: Option<usize> = blocking.then_some(0);
     // Sort on `_id` alone and no index chosen: documents are stored in `_id` order (the `_id` index), so the scan of
     // the documents in key order can stop once the first `want` are certain.
     let mut id_order = match (o.sort, &plan, &o.hint) {
@@ -792,7 +1001,10 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                     if visible(&d, o) && matches(&d, o.filter)? {
                         match topk.as_mut() {
                             Some(t) => t.push(d),
-                            None => out.push(d),
+                            None => {
+                                charge(&mut sort_bytes, &d)?;
+                                out.push(d)
+                            }
                         }
                     }
                 }
@@ -873,7 +1085,10 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                     if visible(&d, o) && matches(&d, o.filter)? {
                         match topk.as_mut() {
                             Some(t) => t.push(d),
-                            None => out.push(d),
+                            None => {
+                                charge(&mut sort_bytes, &d)?;
+                                out.push(d)
+                            }
                         }
                         if early.map(|w| out.len() >= w).unwrap_or(false) {
                             break 'nat;
@@ -912,7 +1127,10 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                     if visible(&d, o) && matches(&d, o.filter)? {
                         match topk.as_mut() {
                             Some(t) => t.push(d),
-                            None => out.push(d),
+                            None => {
+                                charge(&mut sort_bytes, &d)?;
+                                out.push(d)
+                            }
                         }
                         if early.map(|w| out.len() >= w).unwrap_or(false) {
                             break 'scan;
@@ -963,25 +1181,19 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
                 }
             }
         }
-        plan if topk.is_some() => {
-            let ids = plan_docs_ids(g, coll, indexes, plan, &mut stats).await?;
-            let mut seen: HashSet<Vec<u8>> = HashSet::new();
-            let ids: Vec<Vec<u8>> = ids.into_iter().filter(|id| seen.insert(id.clone())).collect();
-            let t = topk.as_mut().unwrap();
-            stats.docs += each_doc_by_ids(g, coll, &ids, |i, d| {
-                if !ov_keys.is_empty() {
-                    if let Some(id) = d.get("_id") {
-                        if ov_keys.contains(&doc_key(coll, id)) {
-                            return Ok(());
-                        }
-                    }
-                }
-                if visible(&d, o) && matches(&d, o.filter)? {
-                    t.push_at(i as u64, d);
-                }
-                Ok(())
-            })
-            .await?;
+        // A sort the plan does not give (a blocking sort): the candidates a chunk at a time, into the first `want` or
+        // into every match within the memory limit of a blocking sort.
+        plan if topk.is_some() || blocking => {
+            let mut sink = match topk.as_mut() {
+                Some(t) => Sink::Top(t),
+                None => Sink::All { docs: Vec::new(), ids: HashSet::new(), bytes: 0 },
+            };
+            sort_candidates(g, coll, indexes, plan, o, &ov_keys, &mut stats, &mut sink).await?;
+            if let Sink::All { mut docs, bytes, .. } = sink {
+                docs.sort_by_key(|(seq, _)| *seq);
+                out = docs.into_iter().map(|(_, d)| d).collect();
+                sort_bytes = Some(bytes);
+            }
         }
         plan => {
             let ids = plan_docs_ids(g, coll, indexes, plan, &mut stats).await?;
@@ -1020,15 +1232,32 @@ async fn find_docs_inner(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &
             if visible(d, o) && matches(d, o.filter)? {
                 match topk.as_mut() {
                     Some(t) => t.push(d.clone()),
-                    None => out.push(d.clone()),
+                    None => {
+                        charge(&mut sort_bytes, d)?;
+                        out.push(d.clone())
+                    }
                 }
             }
         }
     }
     if let Some(t) = topk {
+        if t.bytes() > crate::query::SORT_MEM_LIMIT.load(std::sync::atomic::Ordering::Relaxed) as usize {
+            return Err(crate::query::sort_mem_error());
+        }
         out = t.into_sorted();
     }
     Ok((out, stats, plan))
+}
+
+/// Count a document held for a blocking sort without a limit (`bytes` is `None` when there is none).
+fn charge(bytes: &mut Option<usize>, d: &Document) -> R<()> {
+    if let Some(b) = bytes {
+        *b += crate::query::bson_size(d);
+        if *b > crate::query::SORT_MEM_LIMIT.load(std::sync::atomic::Ordering::Relaxed) as usize {
+            return Err(crate::query::sort_mem_error());
+        }
+    }
+    Ok(())
 }
 
 /// One command's (or transaction's) writes.

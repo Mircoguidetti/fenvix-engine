@@ -1,7 +1,7 @@
 //! `getParameter` / `setParameter`: the server parameters of mongod 7.0 (names, values and whether they can be changed at
 //! runtime, captured from a mongod; `src/diag/params_{sa,rs}.json`). A parameter set at runtime keeps its new value and is
 //! reported by `getParameter`; only a few of them change what the server does (the JavaScript limits and the transaction
-//! lifetime).
+//! lifetime, the memory limit of a blocking sort).
 
 use crate::cmd::R;
 use crate::error::MongoError;
@@ -49,6 +49,10 @@ fn current(name: &str, captured: &Bson) -> Bson {
         "internalQueryJavaScriptFnTimeoutMillis" => return Bson::Int32(crate::js::TIMEOUT_MS.load(Relaxed) as i32),
         "jsHeapLimitMB" => return Bson::Int32(crate::js::HEAP_MB.load(Relaxed) as i32),
         "transactionLifetimeLimitSeconds" => return Bson::Int32(crate::txn::LIFETIME_SECS.load(Relaxed) as i32),
+        "internalQueryMaxBlockingSortMemoryUsageBytes" => {
+            let n = crate::query::SORT_MEM_LIMIT.load(Relaxed);
+            return if n <= i32::MAX as u64 { Bson::Int32(n as i32) } else { Bson::Int64(n as i64) };
+        }
         "featureCompatibilityVersion" => return Bson::Document(doc! { "version": crate::admin_cmds::fcv() }),
         _ => {}
     }
@@ -137,7 +141,7 @@ fn coerce(name: &str, old: &Bson, v: &Bson) -> R<Bson> {
 fn minimum(name: &str) -> Option<i64> {
     match name {
         "transactionLifetimeLimitSeconds" => Some(1),
-        "ttlMonitorSleepSecs" | "internalQueryJavaScriptFnTimeoutMillis" => Some(1),
+        "ttlMonitorSleepSecs" | "internalQueryJavaScriptFnTimeoutMillis" | "internalQueryMaxBlockingSortMemoryUsageBytes" => Some(1),
         _ => None,
     }
 }
@@ -176,6 +180,7 @@ pub(crate) fn set_parameter(cmd: &Document, rs: bool) -> R<Document> {
             "internalQueryJavaScriptFnTimeoutMillis" => crate::js::TIMEOUT_MS.store(num_u64(&new), Relaxed),
             "jsHeapLimitMB" => crate::js::HEAP_MB.store(num_u64(&new), Relaxed),
             "transactionLifetimeLimitSeconds" => crate::txn::LIFETIME_SECS.store(num_u64(&new), Relaxed),
+            "internalQueryMaxBlockingSortMemoryUsageBytes" => crate::query::SORT_MEM_LIMIT.store(num_u64(&new), Relaxed),
             _ => {}
         }
         overlay().lock().unwrap().insert(k.clone(), new);

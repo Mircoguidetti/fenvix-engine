@@ -1,0 +1,6 @@
+CHURN issued=301 in 30.0 s, done in 30.0 s; reads_ok=301 errors=0 created=301 (10/s) closed=339 checkout_failed=0 latency_ms p50=1.69 p99=3.99 max=34.39
+CPU server 0.76 s (2.525 ms per new connection, 3% of one core), generator 0.84 s (3% of one core); server_rss_kb=159968
+CHURN issued=24001 in 30.0 s, done in 30.0 s; reads_ok=24001 errors=0 created=24001 (800/s) closed=23934 checkout_failed=0 latency_ms p50=1.10 p99=10.00 max=68.03
+CPU server 14.44 s (0.602 ms per new connection, 48% of one core), generator 10.77 s (36% of one core); server_rss_kb=191392
+CHURN issued=24000 in 30.0 s, done in 30.0 s; reads_ok=24000 errors=0 created=24000 (800/s) closed=24007 checkout_failed=0 latency_ms p50=1.04 p99=5.48 max=60.58
+CPU server 13.97 s (0.582 ms per new connection, 47% of one core), generator 10.23 s (34% of one core); server_rss_kb=191000

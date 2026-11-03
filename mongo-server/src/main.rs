@@ -92,7 +92,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tenant_bench::counting::CountingStore;
 use tenant_bench::lifecycle::{CompactionQueue, Lifecycle, Maintenance};
-use tokio::io::BufReader;
+use bson::Bson;
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::net::{TcpListener, TcpStream};
 
 #[derive(Parser, Debug)]
@@ -365,13 +366,17 @@ struct Args {
     /// With --tls-ca-file: accept clients that present no certificate (net.tls.allowConnectionsWithoutCertificates).
     #[arg(long)]
     tls_allow_connections_without_certificates: bool,
+    /// TLS session resumption: cache (rustls's default: 256 sessions kept in memory), tickets (stateless TLS 1.3 tickets,
+    /// nothing kept) or off.
+    #[arg(long, default_value = "cache")]
+    tls_session_resumption: String,
 }
 
 async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: TcpStream, conn_id: i64) {
     // The client address is the TCP peer: nothing in front of the engine rewrites it, and nothing the client sends changes it.
     let guard = netguard::get();
     let peer = tcp.peer_addr().ok().map(|a| netguard::canonical_ip(a.ip()));
-    let Some(_slot) = guard.open_connection(peer) else {
+    let Some(slot) = guard.open_connection(peer) else {
         return; // over the per-address limit: closed at once
     };
     let deadline = guard.handshake_timeout().map(|t| tokio::time::Instant::now() + t);
@@ -395,7 +400,7 @@ async fn handle_connection(server: Arc<Server>, tls: Arc<tls::TlsConfig>, tcp: T
     };
     stream.set_nodelay(true);
     server.diag.conn_opened(conn_id, stream.peer_addr().ok().map(|a| std::net::SocketAddr::new(a.ip(), a.port())));
-    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject());
+    server.auth_connection_opened(conn_id, stream.peer_addr().ok().map(|a| a.ip()), stream.local_addr().ok().map(|a| a.ip()), stream.client_subject(), Some(slot));
     handle_connection_inner(&server, stream, conn_id, deadline, peer).await;
     server.auth_connection_closed(conn_id);
     server.diag.conn_closed(conn_id);
@@ -410,12 +415,15 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
     loop {
         // The first message must arrive whole before the handshake deadline. With --auth, until the connection has
         // authenticated, a message must arrive whole within the handshake timeout once it started, and may not be larger than
-        // the pre-authentication limit. Idle time between messages is not limited (a driver's monitoring connection never
-        // authenticates and waits between its hello commands).
+        // the pre-authentication limit, and the next one must start within --unauth-idle-timeout-secs (a driver's
+        // monitoring connection never authenticates but sends a hello at least every ~10 s). Idle time between the messages
+        // of an authenticated connection is not limited.
         let pre_auth = server.auth.enabled.load(std::sync::atomic::Ordering::Relaxed) && !server.conn_authenticated(conn_id);
-        let (first_by, rest_within) = match (first, first_deadline) {
-            (true, Some(d)) => (Some(d), Some(d.saturating_duration_since(tokio::time::Instant::now()))),
-            _ => (None, if pre_auth { guard.handshake_timeout() } else { None }),
+        // `idle_wait`: the wait for the first byte is the silence limit (not the handshake deadline)
+        let (first_by, rest_within, idle_wait) = match (first, first_deadline) {
+            (true, Some(d)) => (Some(d), Some(d.saturating_duration_since(tokio::time::Instant::now())), false),
+            _ if pre_auth => (guard.unauth_idle_timeout().map(|t| tokio::time::Instant::now() + t), guard.handshake_timeout(), true),
+            _ => (None, None, false),
         };
         let max_len = if pre_auth { guard.pre_auth_max() } else { usize::MAX };
         first = false;
@@ -424,9 +432,13 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                 let probe = ctl::usage::before(&req.db, &req.command).await;
                 server.diag.note_seq(conn_id, &req.seq_keys);
                 // the command document is handed over (not copied): the reply needs only `reply_to`
-                let reply_to = req.reply_to();
+                let mut reply_to = req.reply_to();
                 let command = std::mem::take(&mut req.command);
-                let reply = server.handle(&req.db, command, conn_id).await;
+                // an awaitable `hello` the driver allows to stream (its monitoring connection): keep the command to answer it again
+                let exhaust = (req.exhaust_allowed && cmd::awaitable_hello(&command)).then(|| command.clone());
+                // boxed: the command's future is large (about 22 KB); kept inline it would be part of every connection's
+                // task, idle or not
+                let reply = Box::pin(server.handle(&req.db, command, conn_id)).await;
                 ctl::usage::after(probe).await;
                 if reply.contains_key("$shutdown") {
                     // `shutdown`: no reply; the connection closes and the process stops
@@ -437,17 +449,50 @@ async fn handle_connection_inner(server: &Arc<Server>, stream: tls::Stream, conn
                     continue;
                 }
                 response_id += 1;
+                let streaming = exhaust.is_some() && matches!(reply.get("ok"), Some(Bson::Double(x)) if *x == 1.0);
+                reply_to.more_to_come = streaming;
                 if let Err(e) = wire::write_reply(&mut w, &reply_to, &reply, response_id).await {
                     eprintln!("conn {conn_id}: write failed: {e:#}");
+                    break;
+                }
+                if streaming {
+                    // exhaust, as mongod: every maxAwaitTimeMS (or at a topology change) another reply flagged moreToCome,
+                    // each answering the previous reply, with no request in between; it ends when the driver closes the
+                    // connection (the write fails or the read side sees the end).
+                    let mut cmd = exhaust.unwrap();
+                    let mut last = reply;
+                    loop {
+                        // the next wait starts from the topology of the last reply, as the driver's next request would:
+                        // a request that came with a stale topologyVersion (another process) is answered at once only once
+                        if let Ok(tv) = last.get_document("topologyVersion") {
+                            cmd.insert("topologyVersion", tv.clone());
+                        }
+                        let next = tokio::select! {
+                            r = Box::pin(server.handle(&req.db, cmd.clone(), conn_id)) => r,
+                            _ = r.fill_buf() => break,
+                        };
+                        reply_to.request_id = response_id;
+                        response_id += 1;
+                        reply_to.more_to_come = matches!(next.get("ok"), Some(Bson::Double(x)) if *x == 1.0);
+                        if wire::write_reply(&mut w, &reply_to, &next, response_id).await.is_err() || !reply_to.more_to_come {
+                            break;
+                        }
+                        last = next;
+                    }
                     break;
                 }
             }
             Ok(None) => break,
             Err(e) => {
                 let shown = peer.map(|p| p.to_string()).unwrap_or_default();
-                if e.downcast_ref::<wire::ReadTimeout>().is_some() {
-                    guard.totals.handshake_timeouts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    eprintln!("conn {conn_id}: closed: message not received within the handshake timeout (peer {shown})");
+                if let Some(t) = e.downcast_ref::<wire::ReadTimeout>() {
+                    if t.first_byte && idle_wait {
+                        guard.totals.idle_unauthenticated_closed.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        guard.note_idle_close(conn_id, &shown);
+                    } else {
+                        guard.totals.handshake_timeouts.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        eprintln!("conn {conn_id}: closed: message not received within the handshake timeout (peer {shown})");
+                    }
                 } else if let Some(t) = e.downcast_ref::<wire::TooLarge>() {
                     guard.totals.oversized_before_auth.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     eprintln!("conn {conn_id}: closed: {t} before authentication (peer {shown})");
@@ -509,6 +554,8 @@ async fn run() -> Result<()> {
         "--unsafe-skip-ownership-checks is a test control that lets two processes serve one database; it needs MONGO_ALLOW_UNSAFE_TEST_FLAGS=1"
     );
     netguard::install(&args.net)?;
+    tls::check_resumption(&args.tls_session_resumption)?;
+    let _ = tls::RESUMPTION.set(args.tls_session_resumption.clone());
     let grantable = authz::parse_grantable(&args.grantable_roles).map_err(|e| anyhow::anyhow!(e))?;
     let s3: Arc<dyn ObjectStore> = match args.store.as_str() {
         "s3" => {
@@ -640,10 +687,26 @@ async fn run() -> Result<()> {
     let listener = TcpListener::bind(&args.listen).await?;
     eprintln!("mongo-server listening on {} (idle close after {} s, holder {holder}, lease ttl {} s)", args.listen, args.idle_secs, args.lease_ttl_secs);
     let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+    let mut last_accept_log: Option<std::time::Instant> = None;
     loop {
         tokio::select! {
             accepted = listener.accept() => {
-                let (stream, _) = accepted?;
+                let stream = match accepted {
+                    Ok((stream, _)) => stream,
+                    Err(e) => {
+                        // Out of open files (EMFILE, ENFILE), memory (ENOBUFS, ENOMEM) or a connection reset before it was
+                        // taken: never a reason to stop the process. The pending connections stay in the kernel's queue;
+                        // wait a little (no busy loop while the files are out) and go on. One log line a minute at most.
+                        netguard::get().totals.accept_errors.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        let now = std::time::Instant::now();
+                        if last_accept_log.map(|t| now.duration_since(t) >= Duration::from_secs(60)).unwrap_or(true) {
+                            last_accept_log = Some(now);
+                            eprintln!("accept failed: {e} (open connections {}; the server goes on, next message at most in 60 s)", netguard::get().open_connections());
+                        }
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        continue;
+                    }
+                };
                 let server = Arc::clone(&server);
                 let id = server.new_connection_id();
                 tokio::spawn(handle_connection(server, Arc::clone(&tls_cfg), stream, id));

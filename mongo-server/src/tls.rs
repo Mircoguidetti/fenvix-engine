@@ -49,6 +49,22 @@ struct Files {
     allow_without_certificates: bool,
 }
 
+/// TLS session resumption (`--tls-session-resumption`), set once at startup:
+/// * `cache` (default, rustls's own default): the server keeps up to 256 sessions in memory; a client resumes only while its
+///   session is still among the last 256 made, which at hundreds of new connections per second is a fraction of a second;
+/// * `tickets`: stateless TLS 1.3 tickets (encrypted with a key that rustls rotates every 6 hours): nothing kept in the
+///   server, a client resumes as long as its ticket is valid; the full handshake's certificate signature is skipped;
+/// * `off`: never resume.
+/// Either way TLS 1.3 resumption still runs a fresh key exchange (forward secrecy is kept).
+pub static RESUMPTION: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+pub fn check_resumption(v: &str) -> Result<()> {
+    match v {
+        "cache" | "tickets" | "off" => Ok(()),
+        other => bail!("unknown --tls-session-resumption {other:?} (cache, tickets, off)"),
+    }
+}
+
 pub struct Options<'a> {
     pub mode: &'a str,
     pub certificate_key_file: &'a str,
@@ -92,7 +108,17 @@ fn build(o: &Options) -> Result<Option<TlsAcceptor>> {
         let v = if o.allow_without_certificates { v.allow_unauthenticated() } else { v };
         builder.with_client_cert_verifier(v.build()?)
     };
-    let cfg = builder.with_single_cert(certs, key)?;
+    let mut cfg = builder.with_single_cert(certs, key)?;
+    match RESUMPTION.get().map(|s| s.as_str()).unwrap_or("cache") {
+        "tickets" => {
+            cfg.ticketer = rustls::crypto::ring::Ticketer::new().map_err(|e| anyhow!("TLS session tickets: {e}"))?;
+        }
+        "off" => {
+            cfg.session_storage = Arc::new(rustls::server::NoServerSessionStorage {});
+            cfg.send_tls13_tickets = 0;
+        }
+        _ => {}
+    }
     Ok(Some(TlsAcceptor::from(Arc::new(cfg))))
 }
 

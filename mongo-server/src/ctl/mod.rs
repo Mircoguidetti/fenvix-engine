@@ -215,10 +215,17 @@ pub async fn start(dbs: Arc<Dbs>, server: Arc<crate::cmd::Server>, lc: Arc<Lifec
 
 
 /// Test hook: when the environment variable `CTL_FAILPOINT` names this point, the process announces it on stderr
-/// and then waits forever, so a test can `kill -9` it at exactly this step of an operation. Unset in production.
+/// and then waits forever, so a test can `kill -9` it at exactly this step of an operation. With `CTL_FAILPOINT_PAUSE_MS`
+/// set it waits that long instead and then goes on (a test acts in the window, then sees how the operation ends).
+/// Unset in production.
 pub async fn failpoint(name: &str) {
     if std::env::var("CTL_FAILPOINT").map(|v| v == name).unwrap_or(false) {
         eprintln!("FAILPOINT {name} reached");
+        if let Some(ms) = std::env::var("CTL_FAILPOINT_PAUSE_MS").ok().and_then(|v| v.parse::<u64>().ok()) {
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+            eprintln!("FAILPOINT {name} resumed");
+            return;
+        }
         loop {
             tokio::time::sleep(Duration::from_secs(3600)).await;
         }

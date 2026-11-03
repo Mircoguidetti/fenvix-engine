@@ -26,6 +26,34 @@ use slatedb::admin::Admin;
 use std::sync::Arc;
 use tenant_bench::lifecycle::{marker_path, maint_lock, Op};
 
+/// Branches being created by a fork in this process, with the allow list they will get (their source's; `None` when the
+/// source has none). Until the branch's registry record exists the allow-list check reads it from here, so the branch is
+/// never open to addresses its source refuses, even while it has no record of its own.
+static FORKING: std::sync::Mutex<Option<std::collections::HashMap<String, Option<Arc<Vec<crate::netguard::Net>>>>>> = std::sync::Mutex::new(None);
+
+/// The allow list of `db` while a fork creates it (see [`FORKING`]); `None` when no fork is creating it.
+pub fn list_while_forking(db: &str) -> Option<Option<Arc<Vec<crate::netguard::Net>>>> {
+    FORKING.lock().unwrap().as_ref().and_then(|m| m.get(db).cloned())
+}
+
+/// Registers the branch in [`FORKING`] for as long as it lives.
+struct Forking(String);
+
+impl Forking {
+    fn new(db: &str, list: Option<Vec<crate::netguard::Net>>) -> Forking {
+        FORKING.lock().unwrap().get_or_insert_with(Default::default).insert(db.to_string(), list.map(Arc::new));
+        Forking(db.to_string())
+    }
+}
+
+impl Drop for Forking {
+    fn drop(&mut self) {
+        if let Some(m) = FORKING.lock().unwrap().as_mut() {
+            m.remove(&self.0);
+        }
+    }
+}
+
 pub fn fork_marker(ancestor: &str, db: &str) -> Path {
     rec::path(&["control", "forks", ancestor, db])
 }
@@ -81,14 +109,68 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
         return Err(ApiError::bad("mode must be \"clone\" or \"copy\""));
     }
     let (_g1, _g2) = ctl.ops.lock2(src, target).await?;
+    // An existing database is never forked over: refused before its allow list is replaced by the source's below. (The
+    // branch's `ops` lock is held: no registry record or list can be written for it meanwhile; a database made implicitly
+    // by a write has no list. The check is repeated under the entry lock below.)
+    if meta::exists(ctl, target).await? {
+        return Err(ApiError::conflict("exists", format!("database {target} already exists")));
+    }
+    // The branch gets its source's allow list. From here on, before anything else, the check at authentication reads it
+    // from [`FORKING`] until the branch's own record exists: a user created on the branch after the check below cannot
+    // come in from an address the source refuses (one created before is seen by the check, which refuses the fork). The
+    // source's `ops` lock is held: its list cannot change meanwhile. A stored list that does not parse fails the fork
+    // rather than giving an open fork.
+    let src_meta = rec::get(&ctl.store, &meta::meta_path(src)).await?;
+    let list = src_meta.as_ref().and_then(crate::netguard::stored_entries).transpose().map_err(|e| anyhow::anyhow!("the allow list of {src} is not valid: {e}"))?;
+    let _forking = Forking::new(target, list.clone());
+    // (before the entry locks below: it reads the admin database)
+    meta::ensure_no_auth(ctl, target).await?;
+    // The entry locks of the source and of the branch, in name order like a rename across databases (xdb.rs), so the
+    // two can never deadlock. The source's is held while it is closed and copied: no command runs on it meanwhile. The
+    // branch's is held from before the check that the name is free until the fork is complete or rolled back: no
+    // command creates a database with that name in between (the rollback would delete it), and none opens the branch
+    // (or writes to it) before it is complete.
+    let (g, gt) = if src < target {
+        let g = ctl.dbs.lock(src).await;
+        (g, ctl.dbs.lock(target).await)
+    } else {
+        let gt = ctl.dbs.lock(target).await;
+        (ctl.dbs.lock(src).await, gt)
+    };
+    // The entry lock works within this process only. Another process on the same bucket (a handover between two
+    // machines, a deploy) could still create the branch's name and write to it, and the rollback would delete those
+    // writes. The branch's lease is taken too, before the check that the name is free and until the fork is complete or
+    // rolled back: another process asking for the branch meanwhile gets "owned elsewhere" (code 134, retry) instead of
+    // writing. A process that already owns it refuses the fork (409 `owned_elsewhere`). When this process already held it
+    // (an entry of its own is open on the name: the check below then finds the database), it is not released here.
+    let ours = !ctl.dbs.leases.is_held(target);
+    ctl.dbs.leases.acquire(target).await?;
+    let r = fork_leased(ctl, g, src, target, mode, &list, std::time::Instant::now()).await;
+    if ours {
+        // A fork that leaves no branch (refused, or rolled back) leaves no lease object either, like a database that turned
+        // out not to exist (dbs.rs): an erase finds nothing left under the name. Otherwise the lease is released. (After a
+        // rollback the object is already gone with the rest of the branch.)
+        let none = r.is_err() && !meta::exists(ctl, target).await.unwrap_or(true);
+        if none {
+            ctl.dbs.leases.discard(target).await;
+        } else {
+            ctl.dbs.leases.release(target).await;
+        }
+    }
+    // The branch's entry lock last: no command of this process opens the branch while the lease is being released.
+    drop(gt);
+    r
+}
+
+/// [`fork`] once the locks and the branch's lease are held: `g` is the entry lock of the source (the caller holds the
+/// branch's until after this returns).
+async fn fork_leased(ctl: &Arc<Ctl>, mut g: tokio::sync::OwnedRwLockWriteGuard<crate::dbs::Entry>, src: &str, target: &str, mode: &str, list: &Option<Vec<crate::netguard::Net>>, t0: std::time::Instant) -> ApiResult<Value> {
     if !meta::exists(ctl, src).await? {
         return Err(ApiError::not_found(format!("database {src} does not exist")));
     }
     if meta::exists(ctl, target).await? || ops::get(ctl, target).await?.is_some() {
         return Err(ApiError::conflict("exists", format!("database {target} already exists")));
     }
-    meta::ensure_no_auth(ctl, target).await?;
-    let t0 = std::time::Instant::now();
     let before = ctl.usage.today_sum(&[src, target]);
     let ancestors: Vec<String> = purge::ancestors(&ctl.store, src).await?.into_iter().filter_map(|(p, _)| db_of_path(&p)).collect();
     if mode == "copy" && !ancestors.is_empty() {
@@ -98,31 +180,35 @@ pub async fn fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str) -> ApiRes
     chain.extend(ancestors);
     ops::begin(ctl, target, "fork", json!({ "source": src, "mode": mode, "ancestors": chain })).await?;
     super::failpoint("fork.after_intent").await;
-    let result = do_fork(ctl, src, target, mode, &chain).await;
-    match result {
-        Ok(source_manifest) => {
-            ops::finish(ctl, target).await?;
-            ctl.usage.touch(src);
-            ctl.usage.touch(target);
-            let cost = ctl.usage.today_sum(&[src, target]).minus(&before);
-            let mut d = meta::describe(ctl, target, true).await?;
-            d["fork"] = json!({ "source": src, "mode": mode, "source_manifest_id": source_manifest, "elapsed_ms": t0.elapsed().as_millis() as u64, "cost": cost.to_json() });
-            Ok(d)
-        }
+    let result = do_fork(ctl, &mut g, src, target, mode, &chain, list).await;
+    drop(g);
+    let source_manifest = match result {
+        Ok(m) => m,
         Err(e) => {
-            // All or nothing: undo what was done. If this fails too, the intent record makes the next start do it.
-            if let Err(r) = rollback(ctl, target, &json!({ "ancestors": chain })).await {
+            // All or nothing: undo what was done (the branch still locked, its lease still held). If this fails too, the intent record makes
+            // the next start do it.
+            if let Err(r) = rollback_locked(ctl, target, &json!({ "ancestors": chain })).await {
                 eprintln!("fork {src} -> {target}: rollback failed ({r}); it is retried at the next start");
             }
-            Err(e)
+            return Err(e);
         }
-    }
+    };
+    // The intent record is deleted before the branch's entry lock and lease are released (fork()): a crash between the two would otherwise leave a complete
+    // branch, maybe with confirmed writes, that the recovery at the next start rolls back (deletes).
+    ops::finish(ctl, target).await?;
+    super::failpoint("fork.finished").await;
+    ctl.usage.touch(src);
+    ctl.usage.touch(target);
+    let cost = ctl.usage.today_sum(&[src, target]).minus(&before);
+    let mut d = meta::describe(ctl, target, true).await?;
+    d["fork"] = json!({ "source": src, "mode": mode, "source_manifest_id": source_manifest, "elapsed_ms": t0.elapsed().as_millis() as u64, "cost": cost.to_json() });
+    Ok(d)
 }
 
-async fn do_fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str, chain: &[String]) -> ApiResult<Option<u64>> {
-    // Everything below happens with the source closed and its entry lock held: no command runs on it meanwhile.
-    let mut g = ctl.dbs.lock(src).await;
-    quiesce(ctl, &mut g, src).await?;
+/// The fork itself; the caller holds the entry locks of the source (`g`) and of the branch.
+async fn do_fork(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str, target: &str, mode: &str, chain: &[String], list: &Option<Vec<crate::netguard::Net>>) -> ApiResult<Option<u64>> {
+    // `list`: the source's allow list, read by fork() (and served for the branch from [`FORKING`] since then).
+    quiesce(ctl, g, src).await?;
     let lock = maint_lock(&ctl.lc.maint_locks, src);
     let _maint = lock.lock().await;
     ctl.dbs.leases.acquire(src).await?;
@@ -153,16 +239,18 @@ async fn do_fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str, chain: &[S
         let m = meta::default_meta(target, now_ms(), "fork");
         let mut m = m;
         m["forked_from"] = fm;
-        // A fresh record (no users, no pin), but never fewer network restrictions than the source: its allow list is
-        // copied (TLS is per listener, so the fork has the same TLS mode). The source's entry lock is held: the list
-        // cannot change meanwhile. A stored list that does not parse fails the fork rather than giving an open fork.
-        let src_meta = rec::get(&ctl.store, &meta::meta_path(src)).await?;
-        let list = src_meta.as_ref().and_then(crate::netguard::stored_entries).transpose().map_err(|e| anyhow::anyhow!("the allow list of {src} is not valid: {e}"))?;
-        if let Some(l) = &list {
+        // A fresh record (no users, no pin), but never fewer network restrictions than the source: its allow list
+        // (read above) is copied (TLS is per listener, so the fork has the same TLS mode).
+        if let Some(l) = list {
             m["ip_allowlist"] = json!(l.iter().map(|n| n.to_string()).collect::<Vec<_>>());
         }
         rec::put(&ctl.store, &meta::meta_path(target), &m).await?;
-        crate::netguard::get().set_cached(target, list);
+        crate::netguard::get().set_cached(target, list.clone());
+        // Like a change of the list (allowlist.rs): a connection that authenticated on the branch from an address
+        // outside the list loses that authentication.
+        if let Some(l) = list {
+            ctl.server.drop_auth_outside(target, l);
+        }
         // The source's TTL hints (written at its clean close): the maintenance pass finds the fork's due documents too.
         let hints: Vec<Path> = ctl.store.list(Some(&rec::path(&["ttl-hints", src]))).map_ok(|o| o.location).try_collect().await?;
         for h in hints {
@@ -177,7 +265,6 @@ async fn do_fork(ctl: &Arc<Ctl>, src: &str, target: &str, mode: &str, chain: &[S
     }
     .await;
     ctl.dbs.leases.release(src).await;
-    drop(g);
     Ok(r?)
 }
 
@@ -199,6 +286,11 @@ async fn copy_objects(ctl: &Arc<Ctl>, src: &str, target: &str) -> anyhow::Result
 /// Undo a fork: release the pins it took, delete its objects, its dependency records and its registry record.
 pub async fn rollback(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()> {
     let _g = ctl.dbs.lock(target).await;
+    rollback_locked(ctl, target, op).await
+}
+
+/// [`rollback`] for a caller that holds the branch's entry lock.
+async fn rollback_locked(ctl: &Arc<Ctl>, target: &str, op: &Value) -> ApiResult<()> {
     purge::purge_tenant(ctl, target).await?;
     if let Some(a) = op["ancestors"].as_array() {
         for a in a.iter().filter_map(|a| a.as_str()) {

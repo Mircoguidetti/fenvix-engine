@@ -531,8 +531,9 @@ impl Entry {
         }
     }
 
-    /// Drop the tenant without clean-close bookkeeping (its lease was lost).
-    pub async fn abandon(&mut self) {
+    /// Drop the tenant without clean-close bookkeeping (its lease was lost). Returns whether its close finished (see
+    /// `Tenant::abandon`); true when no tenant was open.
+    pub async fn abandon(&mut self) -> bool {
         self.nat.clear();
         self.copts.clear();
         self.meta_clear();
@@ -544,12 +545,14 @@ impl Entry {
                 let _ = l.append_drop(&self.name).await;
             }
         }
+        let mut closed = true;
         if let Some(t) = self.tenant.take() {
-            t.abandon().await;
+            closed = t.abandon().await;
             self.closes += 1;
         }
         self.leases.forget(&self.name);
         self.sync_gauges();
+        closed
     }
 
     /// Wake the tenant as a reader if it is closed. `Ok(false)` if the database does not exist.
