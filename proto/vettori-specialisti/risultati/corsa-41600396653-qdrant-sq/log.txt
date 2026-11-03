@@ -1,0 +1,13 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 12s
+== noi finito in 14s
+               total        used        free      shared  buff/cache   available
+Mem:            7932        1026        5930          47        1292        6906
+Swap:           3071           0        3071
+== qdrant_sq inizio
+qdrant sq: stato yellow indicizzati 0 punti 50000 segmenti 2 13s
+qdrant sq: stato yellow indicizzati 0 punti 50000 segmenti 2 23s
+== qdrant_sq finito in 49s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         952        5901          47        1395        6980
+Swap:           3071           0        3071

@@ -1,0 +1,21 @@
+
+===== job qdrant-sq =====
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.982 | @0.9: 5737/s lordo (richiamo 0.919, {'ef': 48, 'k_factor': 1}) | @0.95: 3318/s lordo (richiamo 0.951, {'ef': 96, 'k_factor': 1})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.977 | @0.9: 2596/s lordo (richiamo 0.916, {'ef': 128, 'k_factor': 2}) | @0.95: 1812/s lordo (richiamo 0.951, {'ef': 192, 'k_factor': 2})
+qdrant | HNSW + int8 (scalare) | filtro=False | max richiamo 0.985 | @0.9: 2500/s lordo, 10000/s senza protocollo (vuota 0.300 ms) (richiamo 0.905, {'hnsw_ef': 24, 'oversampling': 2.0}) | @0.95: 1818/s lordo, 4000/s senza protocollo (vuota 0.300 ms) (richiamo 0.963, {'hnsw_ef': 48, 'oversampling': 2.0})
+qdrant | HNSW + int8 (scalare) | filtro=True | max richiamo 0.982 | @0.9: 2222/s lordo, 6667/s senza protocollo (vuota 0.300 ms) (richiamo 0.963, {'hnsw_ef': 32, 'oversampling': 2.0}) | @0.95: 2222/s lordo, 6667/s senza protocollo (vuota 0.300 ms) (richiamo 0.963, {'hnsw_ef': 32, 'oversampling': 2.0})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 5737/s contro qdrant HNSW + int8 (scalare) 10000/s -> 0.57x (lordo 2.29x)
+filtro=False @0.95: noi 3318/s contro qdrant HNSW + int8 (scalare) 4000/s -> 0.83x (lordo 1.83x)
+filtro=True @0.9: noi 2596/s contro qdrant HNSW + int8 (scalare) 6667/s -> 0.39x (lordo 1.17x)
+filtro=True @0.95: noi 1812/s contro qdrant HNSW + int8 (scalare) 6667/s -> 0.27x (lordo 0.82x)
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 0.83x (lordo 1.83x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 3318/s, loro 4000/s]
+filtro=False @0.9: 0.57x (lordo 2.29x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 5737/s, loro 10000/s]
+filtro=True @0.95: 0.27x (lordo 0.82x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 1812/s, loro 6667/s]
+filtro=True @0.9: 0.39x (lordo 1.17x) qdrant HNSW + int8 (scalare) [job qdrant-sq: noi 2596/s, loro 6667/s]
+
+===== costruzione e protocollo =====
+{"job": "qdrant-sq", "engine": "qdrant", "config": "HNSW + int8 (scalare)", "kind": "build", "build_s": 33.05829048156738, "load_s": 3.039217710494995, "segments": 2, "version": "1.20.0", "points": 50000, "indexed": 50000}
+{"job": "qdrant-sq", "engine": "qdrant", "config": "HNSW + int8 (scalare) domanda vuota", "kind": "build", "ovh_ms": 0.29999999999997584}
