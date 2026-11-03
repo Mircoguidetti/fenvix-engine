@@ -1,0 +1,1298 @@
+{
+ "identificazione": {
+  "eventi": 4697,
+  "letture": 3264,
+  "bancone10": {
+   "letture_misurate": 2612,
+   "fredde": 1422,
+   "quota_fredde": 54.4,
+   "fredde_su_dati_condivisi": 24.6,
+   "solo_dati_propri_preceduta_stretta": {
+    "1": 39.0,
+    "5": 74.5,
+    "30": 88.7,
+    "300": 88.8
+   },
+   "preceduta_lettore": {
+    "1": 39.5,
+    "5": 70.0,
+    "30": 86.7,
+    "300": 87.2
+   },
+   "preceduta_stretta": {
+    "1": 29.4,
+    "5": 56.2,
+    "30": 66.9,
+    "300": 66.9
+   },
+   "preceduta_larga": {
+    "1": 29.7,
+    "5": 56.9,
+    "30": 68.1,
+    "300": 68.3
+   },
+   "risc_stretta_ttl300_2MB": {
+    "fredde": 1422,
+    "servite": 66.9,
+    "in_attesa": 0.1,
+    "su_s3": 33.1,
+    "riscaldamenti": 333,
+    "risc_per_fredda": 0.23417721518987342,
+    "inutili": 25.5,
+    "permanenza_media_s": 354.55610366483353,
+    "oggetti_medi_per_risc": 4.621621621621622,
+    "fredde_proprie": 1072,
+    "servite_proprie": 88.7,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     29.18,
+     88.87
+    ],
+    "attesa_media_ms": 45.9,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.05,
+     158.66
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     60.08,
+     115.57
+    ]
+   },
+   "risc_stretta_ttl1800_2MB": {
+    "fredde": 1422,
+    "servite": 66.9,
+    "in_attesa": 0.1,
+    "su_s3": 33.1,
+    "riscaldamenti": 327,
+    "risc_per_fredda": 0.229957805907173,
+    "inutili": 24.2,
+    "permanenza_media_s": 1864.0086563034524,
+    "oggetti_medi_per_risc": 4.599388379204893,
+    "fredde_proprie": 1072,
+    "servite_proprie": 88.7,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     29.18,
+     88.87
+    ],
+    "attesa_media_ms": 44.1,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.05,
+     158.66
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     60.08,
+     115.57
+    ]
+   },
+   "risc_stretta_ttl1800_20MB": {
+    "fredde": 1422,
+    "servite": 66.9,
+    "in_attesa": 0.1,
+    "su_s3": 33.1,
+    "riscaldamenti": 327,
+    "risc_per_fredda": 0.229957805907173,
+    "inutili": 24.2,
+    "permanenza_media_s": 1864.0086563034524,
+    "oggetti_medi_per_risc": 4.599388379204893,
+    "fredde_proprie": 1072,
+    "servite_proprie": 88.7,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     29.18,
+     89.05
+    ],
+    "attesa_media_ms": 97.0,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.05,
+     158.66
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     60.12,
+     115.57
+    ]
+   },
+   "risc_stretta_ttl7200_2MB": {
+    "fredde": 1422,
+    "servite": 66.9,
+    "in_attesa": 0.1,
+    "su_s3": 33.1,
+    "riscaldamenti": 326,
+    "risc_per_fredda": 0.22925457102672292,
+    "inutili": 23.9,
+    "permanenza_media_s": 7275.155853123752,
+    "oggetti_medi_per_risc": 4.604294478527607,
+    "fredde_proprie": 1072,
+    "servite_proprie": 88.7,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     29.18,
+     88.87
+    ],
+    "attesa_media_ms": 44.1,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.05,
+     158.66
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     60.08,
+     115.57
+    ]
+   },
+   "risc_larga_ttl300_2MB": {
+    "fredde": 1422,
+    "servite": 68.1,
+    "in_attesa": 0.2,
+    "su_s3": 31.7,
+    "riscaldamenti": 353,
+    "risc_per_fredda": 0.24824191279887484,
+    "inutili": 26.6,
+    "permanenza_media_s": 354.1769085646351,
+    "oggetti_medi_per_risc": 4.7733711048158645,
+    "fredde_proprie": 1072,
+    "servite_proprie": 90.3,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     84.03
+    ],
+    "attesa_media_ms": 49.1,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.18,
+     157.55
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.94,
+     114.33
+    ]
+   },
+   "risc_larga_ttl1800_2MB": {
+    "fredde": 1422,
+    "servite": 68.1,
+    "in_attesa": 0.2,
+    "su_s3": 31.7,
+    "riscaldamenti": 347,
+    "risc_per_fredda": 0.2440225035161744,
+    "inutili": 25.4,
+    "permanenza_media_s": 1863.063459498738,
+    "oggetti_medi_per_risc": 4.755043227665706,
+    "fredde_proprie": 1072,
+    "servite_proprie": 90.3,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     84.03
+    ],
+    "attesa_media_ms": 50.7,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.18,
+     157.55
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.9,
+     114.33
+    ]
+   },
+   "risc_larga_ttl1800_20MB": {
+    "fredde": 1422,
+    "servite": 68.1,
+    "in_attesa": 0.2,
+    "su_s3": 31.7,
+    "riscaldamenti": 347,
+    "risc_per_fredda": 0.2440225035161744,
+    "inutili": 25.4,
+    "permanenza_media_s": 1863.063459498738,
+    "oggetti_medi_per_risc": 4.755043227665706,
+    "fredde_proprie": 1072,
+    "servite_proprie": 90.3,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     84.95
+    ],
+    "attesa_media_ms": 103.6,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.27,
+     157.55
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.99,
+     114.33
+    ]
+   },
+   "risc_larga_ttl7200_2MB": {
+    "fredde": 1422,
+    "servite": 68.1,
+    "in_attesa": 0.2,
+    "su_s3": 31.7,
+    "riscaldamenti": 346,
+    "risc_per_fredda": 0.24331926863572434,
+    "inutili": 25.1,
+    "permanenza_media_s": 7273.563577899354,
+    "oggetti_medi_per_risc": 4.7601156069364166,
+    "fredde_proprie": 1072,
+    "servite_proprie": 90.3,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     84.03
+    ],
+    "attesa_media_ms": 50.7,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.18,
+     157.55
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.9,
+     114.33
+    ]
+   },
+   "senza_risc_p50_p99_p999_traccia_ms": [
+    27.0,
+    127.48,
+    188.89
+   ],
+   "senza_risc_p50_p99_p999_profiloB_ms": [
+    0.05,
+    86.35,
+    143.01
+   ],
+   "ingenuo_successore": {
+    "fredde": 1422,
+    "servite": 0.0,
+    "in_attesa": 0.0,
+    "anticipi": 3,
+    "anticipi_per_fredda": 0.002109704641350211,
+    "precisione": 0.0,
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     86.76,
+     146.54
+    ]
+   }
+  },
+  "bancone1": {
+   "letture_misurate": 2612,
+   "fredde": 1440,
+   "quota_fredde": 55.1,
+   "fredde_su_dati_condivisi": 24.9,
+   "solo_dati_propri_preceduta_stretta": {
+    "1": 38.9,
+    "5": 74.4,
+    "30": 88.7,
+    "300": 88.9
+   },
+   "preceduta_lettore": {
+    "1": 39.3,
+    "5": 69.7,
+    "30": 86.8,
+    "300": 87.4
+   },
+   "preceduta_stretta": {
+    "1": 29.2,
+    "5": 55.8,
+    "30": 66.6,
+    "300": 66.7
+   },
+   "preceduta_larga": {
+    "1": 29.6,
+    "5": 56.5,
+    "30": 67.8,
+    "300": 68.1
+   },
+   "risc_stretta_ttl300_2MB": {
+    "fredde": 1440,
+    "servite": 66.7,
+    "in_attesa": 0.1,
+    "su_s3": 33.3,
+    "riscaldamenti": 333,
+    "risc_per_fredda": 0.23125,
+    "inutili": 25.5,
+    "permanenza_media_s": 354.55610366483353,
+    "oggetti_medi_per_risc": 4.621621621621622,
+    "fredde_proprie": 1081,
+    "servite_proprie": 88.8,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     28.94,
+     87.23
+    ],
+    "attesa_media_ms": 45.9,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.49,
+     158.46
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     59.73,
+     115.57
+    ]
+   },
+   "risc_stretta_ttl1800_2MB": {
+    "fredde": 1440,
+    "servite": 66.7,
+    "in_attesa": 0.1,
+    "su_s3": 33.3,
+    "riscaldamenti": 327,
+    "risc_per_fredda": 0.22708333333333333,
+    "inutili": 24.2,
+    "permanenza_media_s": 1864.0086563034524,
+    "oggetti_medi_per_risc": 4.599388379204893,
+    "fredde_proprie": 1081,
+    "servite_proprie": 88.8,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     28.94,
+     87.23
+    ],
+    "attesa_media_ms": 44.1,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.49,
+     158.46
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     59.73,
+     115.57
+    ]
+   },
+   "risc_stretta_ttl1800_20MB": {
+    "fredde": 1440,
+    "servite": 66.7,
+    "in_attesa": 0.1,
+    "su_s3": 33.3,
+    "riscaldamenti": 327,
+    "risc_per_fredda": 0.22708333333333333,
+    "inutili": 24.2,
+    "permanenza_media_s": 1864.0086563034524,
+    "oggetti_medi_per_risc": 4.599388379204893,
+    "fredde_proprie": 1081,
+    "servite_proprie": 88.8,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     28.94,
+     87.36
+    ],
+    "attesa_media_ms": 97.0,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.49,
+     158.46
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     59.81,
+     115.57
+    ]
+   },
+   "risc_stretta_ttl7200_2MB": {
+    "fredde": 1440,
+    "servite": 66.7,
+    "in_attesa": 0.1,
+    "su_s3": 33.3,
+    "riscaldamenti": 326,
+    "risc_per_fredda": 0.2263888888888889,
+    "inutili": 23.9,
+    "permanenza_media_s": 7275.155853123752,
+    "oggetti_medi_per_risc": 4.604294478527607,
+    "fredde_proprie": 1081,
+    "servite_proprie": 88.8,
+    "in_attesa_proprie": 0.1,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     28.94,
+     87.23
+    ],
+    "attesa_media_ms": 44.1,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     100.49,
+     158.46
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     59.73,
+     115.57
+    ]
+   },
+   "risc_larga_ttl300_2MB": {
+    "fredde": 1440,
+    "servite": 67.8,
+    "in_attesa": 0.2,
+    "su_s3": 31.9,
+    "riscaldamenti": 353,
+    "risc_per_fredda": 0.24513888888888888,
+    "inutili": 26.6,
+    "permanenza_media_s": 354.1769085646351,
+    "oggetti_medi_per_risc": 4.7733711048158645,
+    "fredde_proprie": 1081,
+    "servite_proprie": 90.4,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     82.75
+    ],
+    "attesa_media_ms": 49.1,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.85,
+     158.28
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.98,
+     114.8
+    ]
+   },
+   "risc_larga_ttl1800_2MB": {
+    "fredde": 1440,
+    "servite": 67.8,
+    "in_attesa": 0.2,
+    "su_s3": 31.9,
+    "riscaldamenti": 347,
+    "risc_per_fredda": 0.24097222222222223,
+    "inutili": 25.4,
+    "permanenza_media_s": 1863.063459498738,
+    "oggetti_medi_per_risc": 4.755043227665706,
+    "fredde_proprie": 1081,
+    "servite_proprie": 90.4,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     82.75
+    ],
+    "attesa_media_ms": 50.7,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.85,
+     158.28
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.97,
+     114.8
+    ]
+   },
+   "risc_larga_ttl1800_20MB": {
+    "fredde": 1440,
+    "servite": 67.8,
+    "in_attesa": 0.2,
+    "su_s3": 31.9,
+    "riscaldamenti": 347,
+    "risc_per_fredda": 0.24097222222222223,
+    "inutili": 25.4,
+    "permanenza_media_s": 1863.063459498738,
+    "oggetti_medi_per_risc": 4.755043227665706,
+    "fredde_proprie": 1081,
+    "servite_proprie": 90.4,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     83.8
+    ],
+    "attesa_media_ms": 103.6,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.94,
+     158.28
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     59.06,
+     114.8
+    ]
+   },
+   "risc_larga_ttl7200_2MB": {
+    "fredde": 1440,
+    "servite": 67.8,
+    "in_attesa": 0.2,
+    "su_s3": 31.9,
+    "riscaldamenti": 346,
+    "risc_per_fredda": 0.24027777777777778,
+    "inutili": 25.1,
+    "permanenza_media_s": 7273.563577899354,
+    "oggetti_medi_per_risc": 4.7601156069364166,
+    "fredde_proprie": 1081,
+    "servite_proprie": 90.4,
+    "in_attesa_proprie": 0.3,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     82.75
+    ],
+    "attesa_media_ms": 50.7,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     99.85,
+     158.28
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     58.97,
+     114.8
+    ]
+   },
+   "senza_risc_p50_p99_p999_traccia_ms": [
+    27.79,
+    127.64,
+    190.69
+   ],
+   "senza_risc_p50_p99_p999_profiloB_ms": [
+    0.05,
+    86.35,
+    143.01
+   ],
+   "ingenuo_successore": {
+    "fredde": 1440,
+    "servite": 0.0,
+    "in_attesa": 0.0,
+    "anticipi": 3,
+    "anticipi_per_fredda": 0.0020833333333333333,
+    "precisione": 0.0,
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     86.26,
+     143.81
+    ]
+   }
+  },
+  "file": [
+   {
+    "conversazioni": 50,
+    "chiamate": 456,
+    "letture_dati": 338,
+    "senza_cliente": 0,
+    "file": "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 894,
+    "letture_dati": 566,
+    "senza_cliente": 0,
+    "file": "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 50,
+    "chiamate": 396,
+    "letture_dati": 298,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 871,
+    "letture_dati": 549,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 50,
+    "chiamate": 380,
+    "letture_dati": 276,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 901,
+    "letture_dati": 555,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 50,
+    "chiamate": 292,
+    "letture_dati": 218,
+    "senza_cliente": 2,
+    "file": "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 787,
+    "letture_dati": 464,
+    "senza_cliente": 1,
+    "file": "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json"
+   }
+  ]
+ },
+ "login": {
+  "eventi": 5353,
+  "letture": 3264,
+  "bancone10": {
+   "letture_misurate": 2612,
+   "fredde": 1422,
+   "quota_fredde": 54.4,
+   "fredde_su_dati_condivisi": 24.6,
+   "solo_dati_propri_preceduta_stretta": {
+    "1": 39.8,
+    "5": 75.7,
+    "30": 99.7,
+    "300": 100.0
+   },
+   "preceduta_lettore": {
+    "1": 41.7,
+    "5": 73.8,
+    "30": 99.4,
+    "300": 100.0
+   },
+   "preceduta_stretta": {
+    "1": 30.0,
+    "5": 57.0,
+    "30": 75.2,
+    "300": 75.4
+   },
+   "preceduta_larga": {
+    "1": 30.0,
+    "5": 57.0,
+    "30": 75.2,
+    "300": 75.4
+   },
+   "risc_stretta_ttl300_2MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 358,
+    "risc_per_fredda": 0.2517580872011252,
+    "inutili": 21.2,
+    "permanenza_media_s": 365.712332495098,
+    "oggetti_medi_per_risc": 4.720670391061453,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_stretta_ttl1800_2MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24753867791842477,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_stretta_ttl1800_20MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24753867791842477,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_stretta_ttl7200_2MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 351,
+    "risc_per_fredda": 0.2468354430379747,
+    "inutili": 19.7,
+    "permanenza_media_s": 7284.857743365133,
+    "oggetti_medi_per_risc": 4.706552706552706,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_larga_ttl300_2MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 358,
+    "risc_per_fredda": 0.2517580872011252,
+    "inutili": 21.2,
+    "permanenza_media_s": 365.712332495098,
+    "oggetti_medi_per_risc": 4.720670391061453,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_larga_ttl1800_2MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24753867791842477,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_larga_ttl1800_20MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24753867791842477,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "risc_larga_ttl7200_2MB": {
+    "fredde": 1422,
+    "servite": 75.4,
+    "in_attesa": 0.0,
+    "su_s3": 24.6,
+    "riscaldamenti": 351,
+    "risc_per_fredda": 0.2468354430379747,
+    "inutili": 19.7,
+    "permanenza_media_s": 7284.857743365133,
+    "oggetti_medi_per_risc": 4.706552706552706,
+    "fredde_proprie": 1072,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     92.78,
+     150.32
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.35,
+     105.48
+    ]
+   },
+   "senza_risc_p50_p99_p999_traccia_ms": [
+    27.0,
+    127.48,
+    188.89
+   ],
+   "senza_risc_p50_p99_p999_profiloB_ms": [
+    0.05,
+    86.35,
+    143.01
+   ],
+   "ingenuo_successore": {
+    "fredde": 1422,
+    "servite": 0.0,
+    "in_attesa": 0.0,
+    "anticipi": 3,
+    "anticipi_per_fredda": 0.002109704641350211,
+    "precisione": 0.0,
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     86.76,
+     146.54
+    ]
+   }
+  },
+  "bancone1": {
+   "letture_misurate": 2612,
+   "fredde": 1440,
+   "quota_fredde": 55.1,
+   "fredde_su_dati_condivisi": 24.9,
+   "solo_dati_propri_preceduta_stretta": {
+    "1": 39.8,
+    "5": 75.5,
+    "30": 99.6,
+    "300": 100.0
+   },
+   "preceduta_lettore": {
+    "1": 41.5,
+    "5": 73.4,
+    "30": 99.4,
+    "300": 100.0
+   },
+   "preceduta_stretta": {
+    "1": 29.9,
+    "5": 56.7,
+    "30": 74.8,
+    "300": 75.1
+   },
+   "preceduta_larga": {
+    "1": 29.9,
+    "5": 56.7,
+    "30": 74.8,
+    "300": 75.1
+   },
+   "risc_stretta_ttl300_2MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 358,
+    "risc_per_fredda": 0.24861111111111112,
+    "inutili": 21.2,
+    "permanenza_media_s": 365.712332495098,
+    "oggetti_medi_per_risc": 4.720670391061453,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_stretta_ttl1800_2MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24444444444444444,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_stretta_ttl1800_20MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24444444444444444,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_stretta_ttl7200_2MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 351,
+    "risc_per_fredda": 0.24375,
+    "inutili": 19.7,
+    "permanenza_media_s": 7284.857743365133,
+    "oggetti_medi_per_risc": 4.706552706552706,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_larga_ttl300_2MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 358,
+    "risc_per_fredda": 0.24861111111111112,
+    "inutili": 21.2,
+    "permanenza_media_s": 365.712332495098,
+    "oggetti_medi_per_risc": 4.720670391061453,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_larga_ttl1800_2MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24444444444444444,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_larga_ttl1800_20MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 352,
+    "risc_per_fredda": 0.24444444444444444,
+    "inutili": 19.9,
+    "permanenza_media_s": 1874.509041960944,
+    "oggetti_medi_per_risc": 4.701704545454546,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "risc_larga_ttl7200_2MB": {
+    "fredde": 1440,
+    "servite": 75.1,
+    "in_attesa": 0.0,
+    "su_s3": 24.9,
+    "riscaldamenti": 351,
+    "risc_per_fredda": 0.24375,
+    "inutili": 19.7,
+    "permanenza_media_s": 7284.857743365133,
+    "oggetti_medi_per_risc": 4.706552706552706,
+    "fredde_proprie": 1081,
+    "servite_proprie": 100.0,
+    "in_attesa_proprie": 0.0,
+    "p50_p99_p999_profiloB_solo_propri_ms": [
+     0.05,
+     0.05,
+     0.05
+    ],
+    "attesa_media_ms": null,
+    "p50_p99_p999_traccia_ms": [
+     0.05,
+     93.68,
+     150.69
+    ],
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     53.67,
+     106.8
+    ]
+   },
+   "senza_risc_p50_p99_p999_traccia_ms": [
+    27.79,
+    127.64,
+    190.69
+   ],
+   "senza_risc_p50_p99_p999_profiloB_ms": [
+    0.05,
+    86.35,
+    143.01
+   ],
+   "ingenuo_successore": {
+    "fredde": 1440,
+    "servite": 0.0,
+    "in_attesa": 0.0,
+    "anticipi": 3,
+    "anticipi_per_fredda": 0.0020833333333333333,
+    "precisione": 0.0,
+    "p50_p99_p999_profiloB_ms": [
+     0.05,
+     86.26,
+     143.81
+    ]
+   }
+  },
+  "file": [
+   {
+    "conversazioni": 50,
+    "chiamate": 456,
+    "letture_dati": 338,
+    "senza_cliente": 0,
+    "file": "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 894,
+    "letture_dati": 566,
+    "senza_cliente": 0,
+    "file": "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 50,
+    "chiamate": 396,
+    "letture_dati": 298,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 871,
+    "letture_dati": 549,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 50,
+    "chiamate": 380,
+    "letture_dati": 276,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 901,
+    "letture_dati": 555,
+    "senza_cliente": 1,
+    "file": "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 50,
+    "chiamate": 292,
+    "letture_dati": 218,
+    "senza_cliente": 2,
+    "file": "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json"
+   },
+   {
+    "conversazioni": 114,
+    "chiamate": 787,
+    "letture_dati": 464,
+    "senza_cliente": 1,
+    "file": "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json"
+   }
+  ]
+ }
+}

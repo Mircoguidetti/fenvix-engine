@@ -1,0 +1,30 @@
+# M25 agenti e bancone: scarica le traiettorie pubbliche della classifica tau2 (S3 pubblico di Sierra) e ne
+# estrae solo ora, chiamate e inizio delle risposte. Niente segreti, niente AWS nostro, meno di 120 minuti.
+# Un solo innesco: un push sul branch agenti-bancone che cambia proto/agenti-bancone/ci/run.json.
+name: agenti-bancone
+on:
+  push:
+    branches: [agenti-bancone]
+    paths: ['proto/agenti-bancone/ci/run.json']
+permissions:
+  contents: write
+concurrency:
+  group: fenvix-agenti-bancone
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Esegui
+        run: bash proto/agenti-bancone/ci/run.sh
+      - name: Commit dei risultati
+        if: always()
+        run: |
+          git config user.name "agenti-bancone-ci"
+          git config user.email "actions@users.noreply.github.com"
+          git add proto/agenti-bancone/tracce
+          git commit -q -m "agenti-bancone: tracce della corsa ${{ github.run_id }}" || exit 0
+          for i in 1 2 3 4 5; do git pull -q --rebase && git push -q && break; sleep 7; done

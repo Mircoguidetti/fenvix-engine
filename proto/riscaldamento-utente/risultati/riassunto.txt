@@ -1,0 +1,93 @@
+== letture fredde precedute dallo stesso utente (stretta), tutte le fredde e solo dati propri ==
+tau2 (cliente noto dopo l'identificazione): fredde 1422 su 2612 misurate (54.4%), su dati condivisi 24.6%
+   tutte, entro 1/5/30/300 s: {'1': 29.4, '5': 56.2, '30': 66.9, '300': 66.9}
+   solo dati propri:          {'1': 39.0, '5': 74.5, '30': 88.7, '300': 88.8}
+   lettore (prompt alla lettera): {'1': 39.5, '5': 70.0, '30': 86.7, '300': 87.2}
+tau2 (app con login): fredde 1422 su 2612 misurate (54.4%), su dati condivisi 24.6%
+   tutte, entro 1/5/30/300 s: {'1': 30.0, '5': 57.0, '30': 75.2, '300': 75.4}
+   solo dati propri:          {'1': 39.8, '5': 75.7, '30': 99.7, '300': 100.0}
+   lettore (prompt alla lettera): {'1': 41.7, '5': 73.8, '30': 99.4, '300': 100.0}
+GH Archive senza bot: fredde 58616 su 102101 misurate (57.4%), su dati condivisi 0.0%
+   tutte, entro 1/5/30/300 s: {'1': 0.2, '5': 0.4, '30': 1.1, '300': 3.2}
+   solo dati propri:          {'1': 0.2, '5': 0.4, '30': 1.1, '300': 3.2}
+   lettore (prompt alla lettera): {'1': 0.2, '5': 0.5, '30': 1.5, '300': 4.3}
+GH Archive con bot: fredde 73946 su 132598 misurate (55.8%), su dati condivisi 0.0%
+   tutte, entro 1/5/30/300 s: {'1': 0.1, '5': 0.3, '30': 1.0, '300': 2.8}
+   solo dati propri:          {'1': 0.1, '5': 0.3, '30': 1.0, '300': 2.8}
+   lettore (prompt alla lettera): {'1': 3.6, '5': 8.7, '30': 15.5, '300': 21.0}
+REES46 e-commerce: fredde 653430 su 1708162 misurate (38.3%), su dati condivisi 94.0%
+   tutte, entro 1/5/30/300 s: {'1': 0.0, '5': 0.2, '30': 1.8, '300': 5.7}
+   solo dati propri:          {'1': 0.4, '5': 2.7, '30': 29.5, '300': 94.2}
+   lettore (prompt alla lettera): {'1': 0.0, '5': 0.7, '30': 31.3, '300': 75.8}
+
+== riscaldamento simulato (stretta, permanenza 30 min, H = 2 MB), e confronto con l'ingenuo ==
+tau2 (cliente noto dopo l'identificazione): servite 66.9% di tutte, 88.7% delle proprie (in attesa 0.1%); riscaldamenti per fredda propria 0.31; inutili 24.2%; permanenza media 1864 s
+   p50/p99/p999 profilo B, tutte le fredde: [0.05, 60.08, 115.57]  senza riscaldamento: [0.05, 86.35, 143.01]
+   p50/p99/p999 profilo B se le fredde fossero tutte dati propri: [0.05, 29.18, 88.87] (H = 20 MB: [0.05, 29.18, 89.05])
+   ingenuo (successore, senza utente): servite 0.0%, precisione 0.0%, anticipi per fredda 0.00
+   permanenza 5 min: servite proprie 88.7%, inutili 25.5%
+   permanenza 120 min: servite proprie 88.7%, inutili 23.9%
+tau2 (app con login): servite 75.4% di tutte, 100.0% delle proprie (in attesa 0.0%); riscaldamenti per fredda propria 0.33; inutili 19.9%; permanenza media 1875 s
+   p50/p99/p999 profilo B, tutte le fredde: [0.05, 53.35, 105.48]  senza riscaldamento: [0.05, 86.35, 143.01]
+   p50/p99/p999 profilo B se le fredde fossero tutte dati propri: [0.05, 0.05, 0.05] (H = 20 MB: [0.05, 0.05, 0.05])
+   ingenuo (successore, senza utente): servite 0.0%, precisione 0.0%, anticipi per fredda 0.00
+   permanenza 5 min: servite proprie 100.0%, inutili 21.2%
+   permanenza 120 min: servite proprie 100.0%, inutili 19.7%
+GH Archive senza bot: servite 6.3% di tutte, 6.3% delle proprie (in attesa 0.0%); riscaldamenti per fredda propria 1.26; inutili 96.7%; permanenza media 2048 s
+   p50/p99/p999 profilo B, tutte le fredde: [0.05, 85.32, 142.83]  senza riscaldamento: [0.05, 86.35, 143.01]
+   p50/p99/p999 profilo B se le fredde fossero tutte dati propri: [0.05, 84.68, 141.89] (H = 20 MB: [0.05, 84.57, 141.61])
+   ingenuo (successore, senza utente): servite 1.1%, precisione 3.5%, anticipi per fredda 0.33
+   permanenza 5 min: servite proprie 3.2%, inutili 98.7%
+   permanenza 120 min: servite proprie 16.0%, inutili 90.7%
+GH Archive con bot: servite 5.7% di tutte, 5.7% delle proprie (in attesa 0.0%); riscaldamenti per fredda propria 1.05; inutili 96.6%; permanenza media 2076 s
+   p50/p99/p999 profilo B, tutte le fredde: [0.05, 85.29, 142.9]  senza riscaldamento: [0.05, 86.35, 143.01]
+   p50/p99/p999 profilo B se le fredde fossero tutte dati propri: [0.05, 84.8, 141.87] (H = 20 MB: [0.05, 84.8, 141.87])
+   ingenuo (successore, senza utente): servite 1.3%, precisione 3.9%, anticipi per fredda 0.34
+   permanenza 5 min: servite proprie 2.8%, inutili 98.6%
+   permanenza 120 min: servite proprie 13.8%, inutili 90.5%
+REES46 e-commerce: servite 6.0% di tutte, 99.6% delle proprie (in attesa 0.0%); riscaldamenti per fredda propria 7.96; inutili 90.3%; permanenza media 2150 s
+   p50/p99/p999 profilo B, tutte le fredde: [0.05, 96.39, 153.65]  senza riscaldamento: [0.05, 97.74, 156.84]
+   p50/p99/p999 profilo B se le fredde fossero tutte dati propri: [0.05, 0.05, 0.05] (H = 20 MB: [0.05, 0.05, 0.05])
+   ingenuo (successore, senza utente): servite 4.9%, precisione 8.2%, anticipi per fredda 0.60
+   permanenza 5 min: servite proprie 94.2%, inutili 92.2%
+   permanenza 120 min: servite proprie 99.8%, inutili 89.9%
+
+== costi sul profilo B (20 TB, 35 letture fredde/s), riscaldamenti per lettura fredda propria ==
+tau2 (cliente noto dopo l'identificazione), H = 2 MB: costo in più $-168 – $46 al mese (GET in più $44–155, GET risparmiate $116–219, bancone 40 GB, caricati 21 MB/s)
+      chat: prezzo 15–23% di Infinite (al peggio 27%)
+      eventi: prezzo 18–27% di Infinite (al peggio 31%)
+tau2 (cliente noto dopo l'identificazione), H = 20 MB: costo in più $-107 – $107 al mese (GET in più $44–155, GET risparmiate $116–219, bancone 398 GB, caricati 214 MB/s)
+      chat: prezzo 16–25% di Infinite (al peggio 28%)
+      eventi: prezzo 19–28% di Infinite (al peggio 32%)
+tau2 (app con login), H = 2 MB: costo in più $-192 – $44 al mese (GET in più $48–167, GET risparmiate $131–247, bancone 43 GB, caricati 23 MB/s)
+      chat: prezzo 14–23% di Infinite (al peggio 27%)
+      eventi: prezzo 17–27% di Infinite (al peggio 31%)
+tau2 (app con login), H = 20 MB: costo in più $-126 – $109 al mese (GET in più $48–167, GET risparmiate $131–247, bancone 431 GB, caricati 230 MB/s)
+      chat: prezzo 16–25% di Infinite (al peggio 29%)
+      eventi: prezzo 19–28% di Infinite (al peggio 32%)
+GH Archive senza bot, H = 2 MB: costo in più $198 – $664 al mese (GET in più $183–641, GET risparmiate $8–16, bancone 181 GB, caricati 88 MB/s)
+      chat: prezzo 24–38% di Infinite (al peggio 44%)
+      eventi: prezzo 27–42% di Infinite (al peggio 48%)
+GH Archive senza bot, H = 20 MB: costo in più $475 – $940 al mese (GET in più $183–641, GET risparmiate $8–16, bancone 1,809 GB, caricati 883 MB/s)
+      chat: prezzo 31–45% di Infinite (al peggio 52%)
+      eventi: prezzo 34–49% di Infinite (al peggio 56%)
+GH Archive con bot, H = 2 MB: costo in più $164 – $551 al mese (GET in più $152–533, GET risparmiate $7–14, bancone 152 GB, caricati 73 MB/s)
+      chat: prezzo 23–36% di Infinite (al peggio 41%)
+      eventi: prezzo 26–39% di Infinite (al peggio 45%)
+GH Archive con bot, H = 20 MB: costo in più $397 – $785 al mese (GET in più $152–533, GET risparmiate $7–14, bancone 1,524 GB, caricati 734 MB/s)
+      chat: prezzo 29–41% di Infinite (al peggio 47%)
+      eventi: prezzo 32–45% di Infinite (al peggio 51%)
+REES46 e-commerce, H = 2 MB: costo in più $1,114 – $4,119 al mese (GET in più $1,156–4,045, GET risparmiate $130–246, bancone 1,198 GB, caricati 557 MB/s)
+      chat: prezzo 46–123% di Infinite (al peggio 141%)
+      eventi: prezzo 49–126% di Infinite (al peggio 145%)
+REES46 e-commerce, H = 20 MB: costo in più $2,947 – $5,952 al mese (GET in più $1,156–4,045, GET risparmiate $130–246, bancone 11,984 GB, caricati 5,573 MB/s)
+      chat: prezzo 91–168% di Infinite (al peggio 192%)
+      eventi: prezzo 94–171% di Infinite (al peggio 196%)
+
+== Twitter (controllo: il client è un servizio frontend) ==
+cluster011 (bancone10): client 700, fredde 98.5%, precedute dallo stesso client {'1': 98.9, '5': 99.6, '30': 100.0, '300': 100.0}, servite dal riscaldamento per client 0.0%
+cluster024 (bancone10): client 8664, fredde 99.9%, precedute dallo stesso client {'1': 12.2, '5': 35.0, '30': 86.2, '300': 99.9}, servite dal riscaldamento per client 0.0%
+cluster025 (bancone10): client 997, fredde 5.6%, precedute dallo stesso client {'1': 35.1, '5': 65.6, '30': 93.6, '300': 95.2}, servite dal riscaldamento per client 0.0%
+cluster010 (tempo1h): client 14325, fredde 100.0%, precedute dallo stesso client {'1': 0.0, '5': 0.2, '30': 1.0, '300': 10.8}, servite dal riscaldamento per client 0.0%
+cluster050 (tempo1h): client 20202, fredde 94.7%, precedute dallo stesso client {'1': 0.0, '5': 0.2, '30': 1.3, '300': 12.6}, servite dal riscaldamento per client 0.0%
+cluster045 (tempo1h): client 583, fredde 92.0%, precedute dallo stesso client {'1': 3.3, '5': 10.4, '30': 40.0, '300': 98.3}, servite dal riscaldamento per client 0.0%

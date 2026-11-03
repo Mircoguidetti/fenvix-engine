@@ -1,0 +1,139 @@
+== Fonti ==
+tau2, risultati dell'articolo (2025, 4 modelli, retail/airline/telecom, 4 tentativi): 4448 conversazioni, 4414 con cliente/entità riconosciuti
+   passo del modello dopo uno strumento (MISURATO): mediana 2.98 s, p10 1.32 s, p90 6.44 s
+   prima lettura fredda del cliente: 15.57 s dopo l'inizio (p10 9.05 s); 3.23 s dopo il primo segnale (p10 0.0 s, sotto 0,2 s nel 18.1%)
+tau2, classifica 2026 (6+4 modelli, 4 domini con banking, 4 tentativi): 10083 conversazioni, 8503 con cliente/entità riconosciuti
+   passo del modello dopo uno strumento (MISURATO): mediana 8.0 s, p10 2.23 s, p90 109.39 s
+   prima lettura fredda del cliente: 54.4 s dopo l'inizio (p10 10.28 s); 4.93 s dopo il primo segnale (p10 0.0 s, sotto 0,2 s nel 16.4%)
+tau-bench originale (gpt-4o, Claude 3.5 Sonnet; tempi STIMATI): 1980 conversazioni, 1541 con cliente/entità riconosciuti
+   prima lettura fredda del cliente: 19.72 s dopo l'inizio (p10 10.0 s); 6.38 s dopo il primo segnale (p10 0.0 s, sotto 0,2 s nel 13.3%)
+DAB, agenti sui dati (5 modelli, 54 domande, 10 tentativi; tempi STIMATI; entità = dataset): 2700 conversazioni, 2700 con cliente/entità riconosciuti
+   prima lettura fredda del cliente: 4.97 s dopo l'inizio (p10 1.96 s); 0.0 s dopo il primo segnale (p10 0.0 s, sotto 0,2 s nel 70.9%)
+SWE-bench Verified, mini-swe-agent con Gemini 3.5 Flash (entità = repository): 441 conversazioni, 441 con cliente/entità riconosciuti
+   passo del modello dopo uno strumento (MISURATO): mediana 2.25 s, p10 1.42 s, p90 7.62 s
+   prima lettura fredda del cliente: 5.12 s dopo l'inizio (p10 4.11 s); 1.68 s dopo il primo segnale (p10 1.28 s, sotto 0,2 s nel 5.4%)
+tempi per le tracce senza ora (dall'articolo tau2): {'passo_agente_mediana_s': 3.67, 'risposta_utente_mediana_s': 1.74}
+
+== Quanto pesa la parte condivisa nei database dei banchi (byte JSON) ==
+airline: 43.3% condivisa (flights), totale 3.30 MB, storia media di un cliente 3745 byte
+retail: 7.6% condivisa (products), totale 1.27 MB, storia media di un cliente 2355 byte
+telecom: 3.9% condivisa (plans), totale 0.01 MB, storia media di un cliente 2328 byte
+banking_knowledge: 83.5% condivisa (credit_card_applications, documents (base di conoscenza)), totale 1.12 MB, storia media di un cliente 4732 byte
+
+== Politiche, caso base (bancone in RAM, permanenza 30 min, S3 scenario medio di M15) ==
+
+-- tau2, risultati dell'articolo (2025, 4 modelli, retail/airline/telecom, 4 tentativi) (storia H = 2 MB, caricamento mediana/p99 [51.2, 139.6] ms)
+nessuna: servite 0.0% delle fredde (proprie 0.0%, condivise 0.0%), in attesa 0.0%, su S3 100.0%; fredde 15384 (4.9% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.35, 143.01] ms, traccia [35.52, 132.37, 195.86] ms
+(a) primo segnale: servite 89.8% delle fredde (proprie 94.4%, condivise 0.0%), in attesa 5.3%, su S3 4.9%; fredde 15384 (4.9% condivise); risc. per fredda 0.295, inutili 5.6%; p50/p99/p99,9 profilo B [0.05, 20.02, 72.41] ms, traccia [0.05, 65.32, 115.49] ms
+(b) condivisi fissi: servite 4.9% delle fredde (proprie 0.0%, condivise 100.0%), in attesa 0.0%, su S3 95.1%; fredde 15384 (4.9% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 84.76, 142.07] ms, traccia [33.71, 131.04, 194.7] ms
+(c) segnale esplicito: servite 95.1% delle fredde (proprie 99.9%, condivise 0.0%), in attesa 0.0%, su S3 4.9%; fredde 15384 (4.9% condivise); risc. per fredda 0.287, inutili 2.9%; p50/p99/p99,9 profilo B [0.05, 0.05, 69.49] ms, traccia [0.05, 59.31, 115.8] ms
+a+b: servite 94.7% delle fredde (proprie 94.4%, condivise 100.0%), in attesa 5.3%, su S3 0.0%; fredde 15384 (4.9% condivise); risc. per fredda 0.295, inutili 5.6%; p50/p99/p99,9 profilo B [0.05, 0.05, 51.69] ms, traccia [0.05, 47.36, 73.02] ms
+c+b: servite 99.9% delle fredde (proprie 99.9%, condivise 100.0%), in attesa 0.0%, su S3 0.1%; fredde 15384 (4.9% condivise); risc. per fredda 0.287, inutili 2.9%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+a+b+c: servite 100.0% delle fredde (proprie 100.0%, condivise 100.0%), in attesa 0.0%, su S3 0.0%; fredde 15384 (4.9% condivise); risc. per fredda 0.295, inutili 5.5%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+
+-- tau2, classifica 2026 (6+4 modelli, 4 domini con banking, 4 tentativi) (storia H = 2 MB, caricamento mediana/p99 [51.2, 139.6] ms)
+nessuna: servite 0.0% delle fredde (proprie 0.0%, condivise 0.0%), in attesa 0.0%, su S3 100.0%; fredde 78673 (65.0% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.35, 143.01] ms, traccia [42.13, 137.81, 204.67] ms
+(a) primo segnale: servite 32.4% delle fredde (proprie 92.6%, condivise 0.0%), in attesa 2.5%, su S3 65.1%; fredde 78673 (65.0% condivise); risc. per fredda 0.122, inutili 15.6%; p50/p99/p99,9 profilo B [0.05, 76.08, 132.25] ms, traccia [27.96, 127.07, 189.81] ms
+(b) condivisi fissi: servite 65.0% delle fredde (proprie 0.0%, condivise 100.0%), in attesa 0.0%, su S3 35.0%; fredde 78673 (65.0% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 61.06, 115.44] ms, traccia [0.05, 111.68, 174.64] ms
+(c) segnale esplicito: servite 34.9% delle fredde (proprie 99.9%, condivise 0.0%), in attesa 0.0%, su S3 65.1%; fredde 78673 (65.0% condivise); risc. per fredda 0.108, inutili 6.4%; p50/p99/p99,9 profilo B [0.05, 76.01, 131.49] ms, traccia [25.53, 127.45, 189.35] ms
+a+b: servite 97.4% delle fredde (proprie 92.6%, condivise 100.0%), in attesa 2.5%, su S3 0.0%; fredde 78673 (65.0% condivise); risc. per fredda 0.122, inutili 15.6%; p50/p99/p99,9 profilo B [0.05, 0.05, 43.19] ms, traccia [0.05, 40.83, 68.46] ms
+c+b: servite 100.0% delle fredde (proprie 99.9%, condivise 100.0%), in attesa 0.0%, su S3 0.0%; fredde 78673 (65.0% condivise); risc. per fredda 0.108, inutili 6.4%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+a+b+c: servite 100.0% delle fredde (proprie 100.0%, condivise 100.0%), in attesa 0.0%, su S3 0.0%; fredde 78673 (65.0% condivise); risc. per fredda 0.112, inutili 9.2%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+
+-- tau-bench originale (gpt-4o, Claude 3.5 Sonnet; tempi STIMATI) (storia H = 2 MB, caricamento mediana/p99 [51.2, 139.6] ms)
+nessuna: servite 0.0% delle fredde (proprie 0.0%, condivise 0.0%), in attesa 0.0%, su S3 100.0%; fredde 4500 (3.4% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.35, 143.01] ms, traccia [23.75, 126.17, 187.98] ms
+(a) primo segnale: servite 87.3% delle fredde (proprie 90.4%, condivise 0.0%), in attesa 3.8%, su S3 8.9%; fredde 4500 (3.4% condivise); risc. per fredda 0.349, inutili 3.3%; p50/p99/p99,9 profilo B [0.05, 32.64, 82.82] ms, traccia [0.05, 70.05, 122.9] ms
+(b) condivisi fissi: servite 3.4% delle fredde (proprie 0.0%, condivise 100.0%), in attesa 0.0%, su S3 96.6%; fredde 4500 (3.4% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 85.38, 141.72] ms, traccia [18.37, 125.7, 188.21] ms
+(c) segnale esplicito: servite 96.5% delle fredde (proprie 99.9%, condivise 0.0%), in attesa 0.0%, su S3 3.5%; fredde 4500 (3.4% condivise); risc. per fredda 0.342, inutili 0.8%; p50/p99/p99,9 profilo B [0.05, 0.05, 60.45] ms, traccia [0.05, 45.0, 99.89] ms
+a+b: servite 90.7% delle fredde (proprie 90.4%, condivise 100.0%), in attesa 3.8%, su S3 5.5%; fredde 4500 (3.4% condivise); risc. per fredda 0.349, inutili 3.3%; p50/p99/p99,9 profilo B [0.05, 0.05, 74.53] ms, traccia [0.05, 61.42, 112.21] ms
+c+b: servite 99.9% delle fredde (proprie 99.9%, condivise 100.0%), in attesa 0.0%, su S3 0.1%; fredde 4500 (3.4% condivise); risc. per fredda 0.342, inutili 0.8%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+a+b+c: servite 100.0% delle fredde (proprie 100.0%, condivise 100.0%), in attesa 0.0%, su S3 0.0%; fredde 4500 (3.4% condivise); risc. per fredda 0.349, inutili 2.6%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+
+-- DAB, agenti sui dati (5 modelli, 54 domande, 10 tentativi; tempi STIMATI; entità = dataset) (storia H = 200 MB, caricamento mediana/p99 [172.7, 277.8] ms)
+nessuna: servite 0.0% delle fredde (proprie 0.0%, condivise None%), in attesa 0.0%, su S3 100.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.35, 143.01] ms, traccia [33.55, 130.6, 193.41] ms
+(a) primo segnale: servite 85.6% delle fredde (proprie 85.6%, condivise None%), in attesa 14.4%, su S3 0.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.136, inutili 0.1%; p50/p99/p99,9 profilo B [0.05, 38.32, 92.59] ms, traccia [0.05, 84.16, 142.68] ms
+(b) condivisi fissi: servite 0.0% delle fredde (proprie 0.0%, condivise None%), in attesa 0.0%, su S3 100.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.35, 143.01] ms, traccia [33.55, 130.6, 193.41] ms
+(c) segnale esplicito: servite 100.0% delle fredde (proprie 100.0%, condivise None%), in attesa 0.0%, su S3 0.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.136, inutili 0.2%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+a+b: servite 85.6% delle fredde (proprie 85.6%, condivise None%), in attesa 14.4%, su S3 0.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.136, inutili 0.1%; p50/p99/p99,9 profilo B [0.05, 38.32, 92.59] ms, traccia [0.05, 84.16, 142.68] ms
+c+b: servite 100.0% delle fredde (proprie 100.0%, condivise None%), in attesa 0.0%, su S3 0.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.136, inutili 0.2%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+a+b+c: servite 100.0% delle fredde (proprie 100.0%, condivise None%), in attesa 0.0%, su S3 0.0%; fredde 19786 (0.0% condivise); risc. per fredda 0.136, inutili 0.2%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+
+-- SWE-bench Verified, mini-swe-agent con Gemini 3.5 Flash (entità = repository) (storia H = 20 MB, caricamento mediana/p99 [104.2, 192.6] ms)
+nessuna: servite 0.0% delle fredde (proprie 0.0%, condivise 0.0%), in attesa 0.0%, su S3 100.0%; fredde 2883 (1.4% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.35, 143.01] ms, traccia [0.05, 115.2, 176.02] ms
+(a) primo segnale: servite 97.7% delle fredde (proprie 99.1%, condivise 0.0%), in attesa 0.9%, su S3 1.4%; fredde 2883 (1.4% condivise); risc. per fredda 0.153, inutili 0.0%; p50/p99/p99,9 profilo B [0.05, 0.05, 50.67] ms, traccia [0.05, 0.05, 79.0] ms
+(b) condivisi fissi: servite 1.4% delle fredde (proprie 0.0%, condivise 100.0%), in attesa 0.0%, su S3 98.6%; fredde 2883 (1.4% condivise); risc. per fredda 0.0, inutili None%; p50/p99/p99,9 profilo B [0.05, 86.4, 143.73] ms, traccia [0.05, 115.2, 177.16] ms
+(c) segnale esplicito: servite 98.6% delle fredde (proprie 100.0%, condivise 0.0%), in attesa 0.0%, su S3 1.4%; fredde 2883 (1.4% condivise); risc. per fredda 0.153, inutili 0.0%; p50/p99/p99,9 profilo B [0.05, 0.05, 36.32] ms, traccia [0.05, 0.05, 67.31] ms
+a+b: servite 99.1% delle fredde (proprie 99.1%, condivise 100.0%), in attesa 0.9%, su S3 0.0%; fredde 2883 (1.4% condivise); risc. per fredda 0.153, inutili 0.0%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 56.61] ms
+c+b: servite 100.0% delle fredde (proprie 100.0%, condivise 100.0%), in attesa 0.0%, su S3 0.0%; fredde 2883 (1.4% condivise); risc. per fredda 0.153, inutili 0.0%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+a+b+c: servite 100.0% delle fredde (proprie 100.0%, condivise 100.0%), in attesa 0.0%, su S3 0.0%; fredde 2883 (1.4% condivise); risc. per fredda 0.153, inutili 0.0%; p50/p99/p99,9 profilo B [0.05, 0.05, 0.05] ms, traccia [0.05, 0.05, 0.05] ms
+
+== Varianti (a+b+c e c+b): servite, p99 profilo B ==
+tau2_articolo / storia_20MB: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 89.8% p99 20.08 ms p99,9 84.21; (c) segnale esplicito 95.1% p99 0.05 ms p99,9 69.49; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_articolo / permanenza_5min: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 89.7% p99 21.29 ms p99,9 71.67; (c) segnale esplicito 95.1% p99 0.05 ms p99,9 69.49; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_articolo / bancone_nvme: nessuna 0.0% p99 86.61 ms p99,9 145.59; (a) primo segnale 89.8% p99 19.79 ms p99,9 73.63; (c) segnale esplicito 95.1% p99 1.72 ms p99,9 69.64; c+b 99.9% p99 1.51 ms p99,9 2.34; a+b+c 100.0% p99 1.5 ms p99,9 2.31
+tau2_articolo / s3_lento: nessuna 0.0% p99 298.46 ms p99,9 634.59; (a) primo segnale 89.8% p99 32.55 ms p99,9 231.58; (c) segnale esplicito 95.1% p99 0.05 ms p99,9 217.01; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_articolo / condivisi_freddi_per_conversazione: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 73.1% p99 52.38 ms p99,9 104.41; (c) segnale esplicito 77.4% p99 50.21 ms p99,9 105.53; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_classifica / storia_20MB: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 32.4% p99 76.97 ms p99,9 132.36; (c) segnale esplicito 34.9% p99 76.01 ms p99,9 131.49; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_classifica / permanenza_5min: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 28.3% p99 76.33 ms p99,9 131.99; (c) segnale esplicito 34.9% p99 76.01 ms p99,9 131.49; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_classifica / bancone_nvme: nessuna 0.0% p99 86.61 ms p99,9 145.59; (a) primo segnale 32.4% p99 76.28 ms p99,9 134.16; (c) segnale esplicito 34.9% p99 75.99 ms p99,9 133.73; c+b 100.0% p99 1.51 ms p99,9 2.32; a+b+c 100.0% p99 1.5 ms p99,9 2.31
+tau2_classifica / s3_lento: nessuna 0.0% p99 298.46 ms p99,9 634.59; (a) primo segnale 32.4% p99 249.21 ms p99,9 561.35; (c) segnale esplicito 34.9% p99 248.91 ms p99,9 554.42; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+tau2_classifica / condivisi_freddi_per_conversazione: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 26.9% p99 78.15 ms p99,9 135.83; (c) segnale esplicito 29.0% p99 77.93 ms p99,9 133.45; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+taubench / storia_20MB: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 87.3% p99 33.71 ms p99,9 89.2; (c) segnale esplicito 96.5% p99 0.05 ms p99,9 60.45; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+taubench / permanenza_5min: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 87.3% p99 32.64 ms p99,9 82.82; (c) segnale esplicito 96.5% p99 0.05 ms p99,9 60.45; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+taubench / bancone_nvme: nessuna 0.0% p99 86.61 ms p99,9 145.59; (a) primo segnale 87.3% p99 33.24 ms p99,9 83.77; (c) segnale esplicito 96.5% p99 1.64 ms p99,9 62.08; c+b 99.9% p99 1.51 ms p99,9 2.35; a+b+c 100.0% p99 1.5 ms p99,9 2.31
+taubench / s3_lento: nessuna 0.0% p99 298.46 ms p99,9 634.59; (a) primo segnale 87.3% p99 72.02 ms p99,9 282.41; (c) segnale esplicito 96.5% p99 0.05 ms p99,9 181.67; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+taubench / condivisi_freddi_per_conversazione: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 67.6% p99 57.92 ms p99,9 112.74; (c) segnale esplicito 74.7% p99 52.86 ms p99,9 108.43; c+b 99.9% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+dab / storia_2000MB: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 84.9% p99 39.43 ms p99,9 94.73; (c) segnale esplicito 98.8% p99 0.05 ms p99,9 28.88; c+b 98.8% p99 0.05 ms p99,9 28.88; a+b+c 98.8% p99 0.05 ms p99,9 28.88
+dab / storia_20MB: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 85.6% p99 38.32 ms p99,9 88.12; (c) segnale esplicito 100.0% p99 0.05 ms p99,9 0.05; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+dab / s3_lento: nessuna 0.0% p99 298.46 ms p99,9 634.59; (a) primo segnale 85.6% p99 93.45 ms p99,9 294.98; (c) segnale esplicito 100.0% p99 0.05 ms p99,9 0.05; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+swe / storia_200MB: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 97.7% p99 0.05 ms p99,9 50.67; (c) segnale esplicito 98.6% p99 0.05 ms p99,9 36.32; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+swe / permanenza_5min: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 97.7% p99 0.05 ms p99,9 50.67; (c) segnale esplicito 98.6% p99 0.05 ms p99,9 36.32; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+swe / bancone_nvme: nessuna 0.0% p99 86.61 ms p99,9 145.59; (a) primo segnale 97.7% p99 1.58 ms p99,9 51.34; (c) segnale esplicito 98.6% p99 1.55 ms p99,9 38.56; c+b 100.0% p99 1.5 ms p99,9 2.31; a+b+c 100.0% p99 1.5 ms p99,9 2.31
+swe / s3_lento: nessuna 0.0% p99 298.46 ms p99,9 634.59; (a) primo segnale 97.7% p99 0.05 ms p99,9 135.1; (c) segnale esplicito 98.6% p99 0.05 ms p99,9 85.85; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+swe / condivisi_freddi_per_conversazione: nessuna 0.0% p99 86.35 ms p99,9 143.01; (a) primo segnale 97.4% p99 0.05 ms p99,9 54.52; (c) segnale esplicito 98.3% p99 0.05 ms p99,9 42.19; c+b 100.0% p99 0.05 ms p99,9 0.05; a+b+c 100.0% p99 0.05 ms p99,9 0.05
+
+== tau2 per dominio (articolo + classifica), caso base ==
+airline: 2000 conv.; fredde condivise 22.8% (se i condivisi fossero freddi a ogni conversazione: 41.0%); (a) primo segnale 53.0%; (b) condivisi fissi 22.8%; (c) segnale esplicito 77.2%; c+b 100.0%; a+b+c 100.0%; con condivisi freddi per conversazione: a 40.4%, c 59.0%
+retail: 4560 conv.; fredde condivise 3.2% (se i condivisi fossero freddi a ogni conversazione: 22.3%); (a) primo segnale 95.1%; (b) condivisi fissi 3.2%; (c) segnale esplicito 96.5%; c+b 99.8%; a+b+c 100.0%; con condivisi freddi per conversazione: a 76.4%, c 77.5%
+telecom: 4560 conv.; fredde condivise 0.1% (se i condivisi fossero freddi a ogni conversazione: 14.2%); (a) primo segnale 98.5%; (b) condivisi fissi 0.1%; (c) segnale esplicito 99.8%; c+b 99.9%; a+b+c 99.9%; con condivisi freddi per conversazione: a 84.7%, c 85.8%
+banking_knowledge: 3411 conv.; fredde condivise 91.9% (se i condivisi fossero freddi a ogni conversazione: 93.2%); (a) primo segnale 7.9%; (b) condivisi fissi 91.9%; (c) segnale esplicito 8.1%; c+b 100.0%; a+b+c 100.0%; con condivisi freddi per conversazione: a 6.6%, c 6.8%
+
+== Costi sul profilo B (20 TB, 35 letture fredde/s; base M21 $780–1.050; Infinite $7.440, minimo $6.500) ==
+tau2_articolo (a) primo segnale (H 2 MB): costo in più $-172 – $-25 al mese; {'risc_al_s': 10.3, 'MB_al_s': 20.6, 'GET_piu_al_mese': [43, 86], 'GET_risparmiate_al_mese': [117, 222], 'bancone_storie_GB': 39, 'bancone_condivisi_GB': [0, 0]}; prezzo 15–25% di Infinite (al peggio 29%)
+tau2_articolo (b) condivisi fissi (H 2 MB): costo in più $-7 – $96 al mese; {'risc_al_s': 0.0, 'MB_al_s': 0.0, 'GET_piu_al_mese': [0, 0], 'GET_risparmiate_al_mese': [6, 12], 'bancone_storie_GB': 0, 'bancone_condivisi_GB': [30, 600]}; prezzo 19–28% di Infinite (al peggio 32%)
+tau2_articolo (c) segnale esplicito (H 2 MB): costo in più $-187 – $-34 al mese; {'risc_al_s': 10.0, 'MB_al_s': 20.1, 'GET_piu_al_mese': [42, 83], 'GET_risparmiate_al_mese': [124, 235], 'bancone_storie_GB': 38, 'bancone_condivisi_GB': [0, 0]}; prezzo 15–25% di Infinite (al peggio 28%)
+tau2_articolo c+b (H 2 MB): costo in più $-193 – $61 al mese; {'risc_al_s': 10.0, 'MB_al_s': 20.1, 'GET_piu_al_mese': [42, 83], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 38, 'bancone_condivisi_GB': [30, 600]}; prezzo 14–27% di Infinite (al peggio 31%)
+tau2_articolo a+b+c (H 2 MB): costo in più $-192 – $64 al mese; {'risc_al_s': 10.3, 'MB_al_s': 20.6, 'GET_piu_al_mese': [43, 86], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 39, 'bancone_condivisi_GB': [30, 600]}; prezzo 14–27% di Infinite (al peggio 31%)
+tau2_articolo a+b+c con H 20 MB: costo in più $-132 – $123; {'risc_al_s': 10.3, 'MB_al_s': 206.5, 'GET_piu_al_mese': [43, 86], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 390, 'bancone_condivisi_GB': [30, 600]}; prezzo 16–29% (al peggio 33%)
+tau2_classifica (a) primo segnale (H 2 MB): costo in più $-59 – $-4 al mese; {'risc_al_s': 4.3, 'MB_al_s': 8.5, 'GET_piu_al_mese': [18, 35], 'GET_risparmiate_al_mese': [42, 80], 'bancone_storie_GB': 19, 'bancone_condivisi_GB': [0, 0]}; prezzo 18–26% di Infinite (al peggio 29%)
+tau2_classifica (b) condivisi fissi (H 2 MB): costo in più $-155 – $17 al mese; {'risc_al_s': 0.0, 'MB_al_s': 0.0, 'GET_piu_al_mese': [0, 0], 'GET_risparmiate_al_mese': [85, 160], 'bancone_storie_GB': 0, 'bancone_condivisi_GB': [30, 600]}; prezzo 15–26% di Infinite (al peggio 30%)
+tau2_classifica (c) segnale esplicito (H 2 MB): costo in più $-66 – $-10 al mese; {'risc_al_s': 3.8, 'MB_al_s': 7.6, 'GET_piu_al_mese': [16, 31], 'GET_risparmiate_al_mese': [46, 86], 'bancone_storie_GB': 24, 'bancone_condivisi_GB': [0, 0]}; prezzo 17–25% di Infinite (al peggio 29%)
+tau2_classifica c+b (H 2 MB): costo in più $-222 – $7 al mese; {'risc_al_s': 3.8, 'MB_al_s': 7.6, 'GET_piu_al_mese': [16, 31], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 24, 'bancone_condivisi_GB': [30, 600]}; prezzo 14–26% di Infinite (al peggio 30%)
+tau2_classifica a+b+c (H 2 MB): costo in più $-221 – $8 al mese; {'risc_al_s': 3.9, 'MB_al_s': 7.8, 'GET_piu_al_mese': [16, 33], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 24, 'bancone_condivisi_GB': [30, 600]}; prezzo 14–26% di Infinite (al peggio 30%)
+tau2_classifica a+b+c con H 20 MB: costo in più $-184 – $45; {'risc_al_s': 3.9, 'MB_al_s': 78.4, 'GET_piu_al_mese': [16, 33], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 244, 'bancone_condivisi_GB': [30, 600]}; prezzo 15–27% (al peggio 31%)
+taubench (a) primo segnale (H 2 MB): costo in più $-157 – $-5 al mese; {'risc_al_s': 12.2, 'MB_al_s': 24.4, 'GET_piu_al_mese': [51, 101], 'GET_risparmiate_al_mese': [114, 215], 'bancone_storie_GB': 45, 'bancone_condivisi_GB': [0, 0]}; prezzo 15–26% di Infinite (al peggio 29%)
+taubench (b) condivisi fissi (H 2 MB): costo in più $-3 – $98 al mese; {'risc_al_s': 0.0, 'MB_al_s': 0.0, 'GET_piu_al_mese': [0, 0], 'GET_risparmiate_al_mese': [4, 8], 'bancone_storie_GB': 0, 'bancone_condivisi_GB': [30, 600]}; prezzo 19–28% di Infinite (al peggio 32%)
+taubench (c) segnale esplicito (H 2 MB): costo in più $-181 – $-19 al mese; {'risc_al_s': 12.0, 'MB_al_s': 23.9, 'GET_piu_al_mese': [50, 99], 'GET_risparmiate_al_mese': [126, 238], 'bancone_storie_GB': 45, 'bancone_condivisi_GB': [0, 0]}; prezzo 15–25% di Infinite (al peggio 29%)
+taubench c+b (H 2 MB): costo in più $-184 – $78 al mese; {'risc_al_s': 12.0, 'MB_al_s': 23.9, 'GET_piu_al_mese': [50, 99], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 45, 'bancone_condivisi_GB': [30, 600]}; prezzo 15–28% di Infinite (al peggio 32%)
+taubench a+b+c (H 2 MB): costo in più $-183 – $80 al mese; {'risc_al_s': 12.2, 'MB_al_s': 24.4, 'GET_piu_al_mese': [51, 101], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 46, 'bancone_condivisi_GB': [30, 600]}; prezzo 15–28% di Infinite (al peggio 32%)
+taubench a+b+c con H 20 MB: costo in più $-113 – $150; {'risc_al_s': 12.2, 'MB_al_s': 244.3, 'GET_piu_al_mese': [51, 101], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 456, 'bancone_condivisi_GB': [30, 600]}; prezzo 16–29% (al peggio 34%)
+dab (a) primo segnale (H 200 MB): costo in più $209 – $431 al mese; {'risc_al_s': 4.8, 'MB_al_s': 952.0, 'GET_piu_al_mese': [123, 247], 'GET_risparmiate_al_mese': [112, 211], 'bancone_storie_GB': 1744, 'bancone_condivisi_GB': [0, 0]}; prezzo 24–36% di Infinite (al peggio 41%)
+dab (b) condivisi fissi (H 200 MB): costo in più $5 – $102 al mese; {'risc_al_s': 0.0, 'MB_al_s': 0.0, 'GET_piu_al_mese': [0, 0], 'GET_risparmiate_al_mese': [0, 0], 'bancone_storie_GB': 0, 'bancone_condivisi_GB': [30, 600]}; prezzo 19–28% di Infinite (al peggio 32%)
+dab (c) segnale esplicito (H 200 MB): costo in più $174 – $413 al mese; {'risc_al_s': 4.8, 'MB_al_s': 952.0, 'GET_piu_al_mese': [123, 247], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 1749, 'bancone_condivisi_GB': [0, 0]}; prezzo 23–36% di Infinite (al peggio 41%)
+dab c+b (H 200 MB): costo in più $179 – $515 al mese; {'risc_al_s': 4.8, 'MB_al_s': 952.0, 'GET_piu_al_mese': [123, 247], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 1749, 'bancone_condivisi_GB': [30, 600]}; prezzo 23–38% di Infinite (al peggio 44%)
+dab a+b+c (H 200 MB): costo in più $179 – $515 al mese; {'risc_al_s': 4.8, 'MB_al_s': 952.0, 'GET_piu_al_mese': [123, 247], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 1749, 'bancone_condivisi_GB': [30, 600]}; prezzo 23–38% di Infinite (al peggio 44%)
+dab a+b+c con H 2000 MB: costo in più $3,050 – $3,578; {'risc_al_s': 4.8, 'MB_al_s': 9520.0, 'GET_piu_al_mese': [316, 632], 'GET_risparmiate_al_mese': [129, 244], 'bancone_storie_GB': 17488, 'bancone_condivisi_GB': [30, 600]}; prezzo 94–113% (al peggio 129%)
+dab a+b+c con H 20 MB: costo in più $-192 – $41; {'risc_al_s': 4.8, 'MB_al_s': 95.2, 'GET_piu_al_mese': [20, 39], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 175, 'bancone_condivisi_GB': [30, 600]}; prezzo 14–27% (al peggio 31%)
+swe (a) primo segnale (H 20 MB): costo in più $-183 – $-47 al mese; {'risc_al_s': 5.4, 'MB_al_s': 107.1, 'GET_piu_al_mese': [22, 44], 'GET_risparmiate_al_mese': [128, 241], 'bancone_storie_GB': 212, 'bancone_condivisi_GB': [0, 0]}; prezzo 15–25% di Infinite (al peggio 28%)
+swe (b) condivisi fissi (H 20 MB): costo in più $2 – $100 al mese; {'risc_al_s': 0.0, 'MB_al_s': 0.0, 'GET_piu_al_mese': [0, 0], 'GET_risparmiate_al_mese': [2, 3], 'bancone_storie_GB': 0, 'bancone_condivisi_GB': [30, 600]}; prezzo 19–28% di Infinite (al peggio 32%)
+swe (c) segnale esplicito (H 20 MB): costo in più $-185 – $-48 al mese; {'risc_al_s': 5.4, 'MB_al_s': 107.1, 'GET_piu_al_mese': [22, 44], 'GET_risparmiate_al_mese': [129, 243], 'bancone_storie_GB': 212, 'bancone_condivisi_GB': [0, 0]}; prezzo 15–24% di Infinite (al peggio 28%)
+swe c+b (H 20 MB): costo in più $-183 – $52 al mese; {'risc_al_s': 5.4, 'MB_al_s': 107.1, 'GET_piu_al_mese': [22, 44], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 212, 'bancone_condivisi_GB': [30, 600]}; prezzo 15–27% di Infinite (al peggio 31%)
+swe a+b+c (H 20 MB): costo in più $-183 – $52 al mese; {'risc_al_s': 5.4, 'MB_al_s': 107.1, 'GET_piu_al_mese': [22, 44], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 212, 'bancone_condivisi_GB': [30, 600]}; prezzo 15–27% di Infinite (al peggio 31%)
+swe a+b+c con H 200 MB: costo in più $257 – $609; {'risc_al_s': 5.4, 'MB_al_s': 1071.0, 'GET_piu_al_mese': [139, 278], 'GET_risparmiate_al_mese': [131, 247], 'bancone_storie_GB': 2120, 'bancone_condivisi_GB': [30, 600]}; prezzo 25–41% (al peggio 46%)
+
+== p99 contro il passo del modello (a+b+c, profilo B, bancone NVMe) ==
+tau2_articolo: p99 1.5 ms, p99,9 2.31 ms; passo mediano 2.98 s -> p99 = 0.050% del passo
+tau2_classifica: p99 1.5 ms, p99,9 2.31 ms; passo mediano 8.0 s -> p99 = 0.019% del passo
+taubench: p99 1.5 ms, p99,9 2.31 ms; passo mediano 3.67 s -> p99 = 0.041% del passo
+dab: p99 0.05 ms, p99,9 0.05 ms; passo mediano 3.67 s -> p99 = 0.001% del passo
+swe: p99 1.5 ms, p99,9 2.31 ms; passo mediano 2.25 s -> p99 = 0.067% del passo
