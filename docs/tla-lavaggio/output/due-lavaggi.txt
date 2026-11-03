@@ -1,0 +1,39 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=34575 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.11.02.164701 (rev: dc6a944)
+Running breadth-first search Model-Checking with fp 11 and seed -5108997814063390663 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 7937] (Linux 6.18.44-fc-v230 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/user/fenvix-engine/docs/tla-lavaggio/LavaggioPerCliente.tla
+Parsing file /tmp/tlc-8803000099635461783/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-8803000099635461783/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-8803000099635461783/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-8803000099635461783/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-8803000099635461783/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-8803000099635461783/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-8803000099635461783/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module LavaggioPerCliente
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module LavaggioPerCliente
+Starting... (2026-11-03 16:42:38)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-03 16:42:39.
+Progress(16) at 2026-11-03 16:42:42: 59,876 states generated (59,876 s/min), 31,192 distinct states found (31,192 ds/min), 12,725 states left on queue.
+Progress(25) at 2026-11-03 16:43:42: 3,595,922 states generated (3,536,046 s/min), 1,385,459 distinct states found (1,354,267 ds/min), 298,251 states left on queue.
+Progress(28) at 2026-11-03 16:44:42: 7,294,900 states generated (3,698,978 s/min), 2,638,713 distinct states found (1,253,254 ds/min), 367,833 states left on queue.
+Progress(32) at 2026-11-03 16:45:42: 11,349,226 states generated (4,054,326 s/min), 3,919,558 distinct states found (1,280,845 ds/min), 338,037 states left on queue.
+Progress(36) at 2026-11-03 16:46:42: 15,470,698 states generated (4,121,472 s/min), 5,138,851 distinct states found (1,219,293 ds/min), 234,488 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 4.6E-6
+  based on the actual fingerprints:  val = 8.9E-6
+19713730 states generated, 6234617 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 60.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 3).
+Finished in 05min 01s at (2026-11-03 16:47:39)
