@@ -2,3 +2,5 @@ states/
 *.st
 *_TTrace_*
 output/*-interrotto.txt
+output/*.txt
+# gli output finiti si aggiungono con git add -f
