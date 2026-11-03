@@ -1,0 +1,15 @@
+           _                 _    
+  __ _  __| |_ __ __ _ _ __ | |_  
+ / _` |/ _` | '__/ _` | '_ \| __| 
+| (_| | (_| | | | (_| | | | | |_  
+ \__, |\__,_|_|  \__,_|_| |_|\__| 
+    |_|                           
+
+Version: 1.20.0, build: 222b2e44
+Access web UI at http://localhost:6333/dashboard
+Agentic Skills: https://skills.qdrant.tech/
+
+2026-11-03T08:17:13.132142Z  WARN qdrant::settings: Config file not found: config/config
+2026-11-03T08:17:13.132165Z  WARN qdrant::settings: Config file not found: config/development
+2026-11-03T08:17:13.565089Z  WARN qdrant::actix::web_ui: Static content folder for Web UI './static' does not exist
+2026-11-03T08:36:09.357908Z  WARN collection::update_workers::optimization_worker: Cleaned an optimization handle after timeout, explicitly triggering optimizers
