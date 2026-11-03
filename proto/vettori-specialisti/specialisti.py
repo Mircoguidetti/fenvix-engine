@@ -35,7 +35,8 @@ CLK = os.sysconf("SC_CLK_TCK")
 
 # ---------------- misura ----------------
 
-def proc_meter(pid):
+def proc_meter_stat(pid):
+    """utime+stime di tutto il processo (tutti i thread, anche quelli finiti), risoluzione 10 ms."""
     path = f"/proc/{pid}/stat"
 
     def m():
@@ -44,6 +45,32 @@ def proc_meter(pid):
         parts = s[s.rindex(")") + 2:].split()
         return (int(parts[11]) + int(parts[12])) / CLK  # utime, stime
     return m
+
+
+def proc_meter(pid):
+    """Somma del tempo di CPU dei thread vivi (schedstat, in nanosecondi): molto più preciso di /proc/<pid>/stat.
+    Controllato contro /proc/<pid>/stat con check_meter (i thread che finiscono durante la misura non si vedrebbero)."""
+    base = f"/proc/{pid}/task"
+
+    def m():
+        tot = 0
+        for t in os.listdir(base):
+            try:
+                with open(f"{base}/{t}/schedstat") as f:
+                    tot += int(f.read().split()[0])
+            except (FileNotFoundError, ProcessLookupError):
+                pass
+        return tot / 1e9
+    return m
+
+
+def check_meter(pid, fn, n):
+    """Stesso giro misurato con i due contatori: devono coincidere (entro la risoluzione di 10 ms)."""
+    a, b = proc_meter(pid), proc_meter_stat(pid)
+    a0, b0 = a(), b()
+    for i in range(n):
+        fn(i)
+    return {"schedstat_s": a() - a0, "stat_s": b() - b0, "n": n}
 
 
 def timed(fn, idxs, meter):
@@ -355,6 +382,25 @@ def run_lancedb(out, base, q, gt, gtf, cat, path):
 
 # ---------------- Qdrant ----------------
 
+def qdrant_segments(name):
+    """Punti per segmento (telemetria di Qdrant), per controllare che l'indice sia in un pezzo."""
+    import urllib.request
+    try:
+        t = json.load(urllib.request.urlopen("http://127.0.0.1:6333/telemetry?details_level=3", timeout=30))
+        out = []
+        for c in t["result"]["collections"]["collections"]:
+            if c.get("id") != name:
+                continue
+            for sh in c.get("shards", []):
+                for sg in (sh.get("local") or {}).get("segments", []):
+                    i = sg.get("info", {})
+                    out.append({"tipo": i.get("segment_type"), "punti": i.get("num_points"),
+                                "indicizzati": i.get("num_indexed_vectors")})
+        return out
+    except Exception as e:  # noqa
+        return repr(e)
+
+
 def run_qdrant(out, base, q, gt, gtf, cat, kind):
     from qdrant_client import QdrantClient, models as m
     pid = int(os.environ["QDRANT_PID"])
@@ -371,7 +417,7 @@ def run_qdrant(out, base, q, gt, gtf, cat, kind):
     else:
         enc = m.BinaryQuantizationEncoding.ONE_BIT if kind == "bq" else m.BinaryQuantizationEncoding.TWO_BITS
         quant = m.BinaryQuantization(binary=m.BinaryQuantizationConfig(always_ram=True, encoding=enc))
-        oss = (2.0, 4.0, 8.0)
+        oss = (4.0, 8.0, 16.0, 32.0) if kind == "bq" else (2.0, 4.0, 8.0, 16.0)
         label = "HNSW + binaria 1 bit" if kind == "bq" else "HNSW + binaria 2 bit"
     if cl.collection_exists(name):
         cl.delete_collection(name)
@@ -421,7 +467,9 @@ def run_qdrant(out, base, q, gt, gtf, cat, kind):
         return [p.id for p in r.points]
 
     ovh = overhead(lambda i: query(i, 16, 1.0, filt99), range(len(q)), meter)
-    log_build(out, "qdrant", label + " domanda vuota", ovh_ms=ovh * 1e3)
+    chk = check_meter(pid, lambda i: query(i, 64, 2.0, None), len(q))
+    log_build(out, "qdrant", label + " domanda vuota", ovh_ms=ovh * 1e3, controllo_contatori=chk,
+              segmenti=qdrant_segments(name))
     efs = [16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512]
     for filt, g in ((False, gt), (True, gtf)):
         for os_ in oss:
@@ -502,7 +550,9 @@ def run_pgvector(out, base, q, gt, gtf, cat):
         cur.execute("SELECT %s::vector IS NULL", (ql[i],), prepare=True)
         return cur.fetchall()
     ovh = overhead(empty, range(len(q)), meter)
-    log_build(out, "pgvector", "domanda vuota", ovh_ms=ovh * 1e3)
+    cur.execute("SET hnsw.ef_search = 64")
+    chk = check_meter(pid, lambda i: (cur.execute(sql, (ql[i],), prepare=True), cur.fetchall()), len(q))
+    log_build(out, "pgvector", "domanda vuota", ovh_ms=ovh * 1e3, controllo_contatori=chk)
     efs = [10, 16, 24, 32, 40, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1000]
     for filt, g in ((False, gt), (True, gtf)):
         if filt and not has_iter:

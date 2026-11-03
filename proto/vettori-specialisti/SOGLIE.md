@@ -63,4 +63,11 @@ Nota scritta prima di misurare: "la nostra ricerca" di M20 è costruita sopra fa
 
 ## Cambi dopo la prima misura
 
-(vuoto)
+Scritti dopo due corse di prova da 50.000 vettori (solo per provare i programmi) e PRIMA della corsa vera da 1 milione.
+
+1. Contatore della CPU dei server: `/proc/<pid>/stat` conta a passi di 10 ms, troppo grossolano per togliere il costo del protocollo (circa 0,1–0,3 ms a domanda). Uso la somma di `schedstat` di tutti i thread del server (nanosecondi) e la controllo una volta contro `/proc/<pid>/stat` sullo stesso giro (scritto nel file di costruzione, `controllo_contatori`).
+2. Qdrant binaria: con sovracampionamento fino a 8 il richiamo si ferma a 0,87 (prova). Anche il nostro binario in M20 aveva bisogno di 320 candidati. Allargo: 1 bit con sovracampionamento 4–32, 2 bit con 2–16.
+3. FAISS IVF-PQ: con k_factor fino a 8 non arriva a 0,95 (prova). Uso k_factor 4, 8, 16, 32.
+4. LanceDB: chiedere solo `id` fa scrivere un avviso di deprecazione a ogni domanda, che costa CPU. Chiedo `id` e `_distance`.
+5. Qdrant "un pezzo": oltre al segmento con tutti i punti Qdrant tiene un segmento vuoto per le scritture nuove; il numero di punti per segmento è registrato dalla telemetria.
+6. Riuso (leva 3): non lo rifaccio, per stare nei tempi; cito il numero di M20 (STIMATO) e non entra nel verdetto, come scritto sopra.
