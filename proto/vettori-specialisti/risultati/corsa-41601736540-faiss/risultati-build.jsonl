@@ -1,0 +1,2 @@
+{"job": "faiss", "engine": "faiss", "config": "HNSW32,Flat", "kind": "build", "build_s": 502.46738862991333}
+{"job": "faiss", "engine": "faiss", "config": "IVF4096,PQ192x4fs,RFlat", "kind": "build", "build_s": 225.36446261405945}

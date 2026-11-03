@@ -1,0 +1,16 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 380s
+== noi finito in 416s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         799        5169          32        2280        7133
+Swap:           3071         119        2952
+== faiss_hnsw inizio
+== faiss_hnsw finito in 519s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         778        4283          23        3210        7154
+Swap:           3071         178        2893
+== faiss_ivfpq inizio
+== faiss_ivfpq finito in 318s
+               total        used        free      shared  buff/cache   available
+Mem:            7932         759        4239          18        3243        7172
+Swap:           3071         190        2881
