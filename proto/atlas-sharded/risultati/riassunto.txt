@@ -1,0 +1,1574 @@
+
+===== BASE =====
+
+[A 300µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3486 (costo $1917); migliore $3098, peggiore $3874
+    voci migliore: {'camerieri': 203, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 332, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 523.0, 'M50': 163.0, 'M60': 17.0, 'M80': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $2041, totale $2775–3696; sovraccarico 19.2 min/mese per shard
+     RAPPORTO centro 107% [curve 77–124], forbice 83–138%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 544.0, 'M50': 149.0, 'M60': 5.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1908, totale $2646–3574; sovraccarico 62.8 min/mese per shard
+     RAPPORTO centro 114% [curve 100–133], forbice 88–150%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 52.0, 'M50': 341.0, 'M60': 303.0, 'M80': 0.0}; taglia di dimensionamento o sopra 42% del tempo; calcolo $3973, totale $4642–5465; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 69% [curve 34–89], forbice 57–84%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 52% [curve 49–55], forbice 44–61%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 230% (Atlas medio che serve $7417)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 119% (Atlas medio che serve $7417)
+
+[A 300µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $3639 (costo $2001); migliore $3180, peggiore $4097
+    voci migliore: {'camerieri': 255, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 465, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 462.0, 'M50': 158.0, 'M60': 76.0, 'M80': 34.0}; taglia di dimensionamento o sopra 15% del tempo; calcolo $2685, totale $3393–4275; sovraccarico 296.7 min/mese per shard
+     RAPPORTO centro 101% [curve 77–124], forbice 78–131%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 720.0, 'M50': 10.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1538, totale $2289–3236; sovraccarico 1186.7 min/mese per shard
+     RAPPORTO centro 132% [curve 130–133], forbice 98–179%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 18.0, 'M50': 362.0, 'M60': 0.0, 'M80': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $6587, totale $7123–7747; sovraccarico 13.1 min/mese per shard
+     RAPPORTO centro 61% [curve 34–89], forbice 50–76%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 54% [curve 53–55], forbice 45–64%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 109% (Atlas medio che serve $7742)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 134% (Atlas medio che serve $7742)
+
+[A 300µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3466 (costo $1906); migliore $3089, peggiore $3843
+    voci migliore: {'camerieri': 197, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 321, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 523.0, 'M50': 163.0, 'M60': 17.0, 'M80': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $2041, totale $2775–3696; sovraccarico 14.4 min/mese per shard
+     RAPPORTO centro 107% [curve 100–123], forbice 83–138%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 522.0, 'M50': 171.0, 'M60': 8.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1993, totale $2729–3652; sovraccarico 57.8 min/mese per shard
+     RAPPORTO centro 112% [curve 100–121], forbice 86–146%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 67.0, 'M50': 341.0, 'M60': 304.0, 'M80': 0.0}; taglia di dimensionamento o sopra 42% del tempo; calcolo $3973, totale $4642–5465; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 69% [curve 39–88], forbice 57–84%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–55], forbice 43–60%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 228% (Atlas medio che serve $7375)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 118% (Atlas medio che serve $7375)
+
+[A 300µs Alibaba n=1] media scritture 7687/s, picco 35902/s, k 0.41
+  noi: prezzo centro $3408 (costo $1874); migliore $3024, peggiore $3792
+    voci migliore: {'camerieri': 188, 'quaderni': 452, 'dispensa': 370, 's3': 142, 'lavaggio': 132, 'tra_zone': 300, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 343, 'quaderni': 455, 'dispensa': 634, 's3': 142, 'lavaggio': 132, 'tra_zone': 300, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 677.0, 'M50': 53.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1620, totale $2368–3311; sovraccarico 71.1 min/mese per shard
+     RAPPORTO centro 120% [curve 120–120], forbice 91–160%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 715.0, 'M50': 15.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1547, totale $2298–3245; sovraccarico 99.4 min/mese per shard
+     RAPPORTO centro 123% [curve 123–123], forbice 93–165%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 365.0, 'M60': 365.0}; taglia di dimensionamento o sopra 50% del tempo; calcolo $4344, totale $5000–5804; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 63% [curve 63–63], forbice 52–76%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 51–51], forbice 43–59%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 172% (Atlas medio che serve $7251)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 113% (Atlas medio che serve $7251)
+
+[A 300µs Tencent n=1] media scritture 8001/s, picco 40002/s, k 0.57
+  noi: prezzo centro $3481 (costo $1915); migliore $3082, peggiore $3880
+    voci migliore: {'camerieri': 202, 'quaderni': 452, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 312, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 373, 'quaderni': 456, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 312, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 668.0, 'M50': 45.0, 'M60': 17.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1701, totale $2447–3386; sovraccarico 71.7 min/mese per shard
+     RAPPORTO centro 119% [curve 119–119], forbice 91–159%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 729.0, 'M50': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1520, totale $2272–3220; sovraccarico 126.7 min/mese per shard
+     RAPPORTO centro 127% [curve 127–127], forbice 96–171%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 21.0, 'M50': 358.0, 'M60': 350.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $4245, totale $4904–5713; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 66% [curve 66–66], forbice 54–79%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 52% [curve 52–52], forbice 43–61%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 188% (Atlas medio che serve $7406)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 117% (Atlas medio che serve $7406)
+
+[A 600µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3828 (costo $2105); migliore $3281, peggiore $4374
+    voci migliore: {'camerieri': 303, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 607, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 393.0, 'M50': 230.0, 'M60': 70.0, 'M80': 0.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $3744, totale $4421–5257; sovraccarico 14.4 min/mese per shard
+     RAPPORTO centro 78% [curve 56–106], forbice 62–97%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 441.0, 'M50': 176.0, 'M60': 28.0}; taglia di dimensionamento o sopra 4% del tempo; calcolo $3474, totale $4161–5012; sovraccarico 84.6 min/mese per shard
+     RAPPORTO centro 84% [curve 69–117], forbice 65–105%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 66.0, 'M60': 590.0, 'M80': 0.0, 'M40': 13.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $7901, totale $8439–9065; sovraccarico 1.7 min/mese per shard
+     RAPPORTO centro 44% [curve 26–74], forbice 36–52%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–45], forbice 34–48%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 84% (Atlas medio che serve $8144)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 72% (Atlas medio che serve $8144)
+
+[A 600µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $4160 (costo $2288); migliore $3480, peggiore $4839
+    voci migliore: {'camerieri': 420, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 873, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 377.0, 'M50': 216.0, 'M60': 69.0, 'M80': 68.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $4781, totale $5418–6193; sovraccarico 235.4 min/mese per shard
+     RAPPORTO centro 79% [curve 56–103], forbice 61–101%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 675.0, 'M50': 55.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2437, totale $3160–4063; sovraccarico 1479.8 min/mese per shard
+     RAPPORTO centro 115% [curve 113–117], forbice 86–153%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 377.0, 'M60': 0.0, 'M80': 349.0, 'M40': 3.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $9926, totale $10364–10841; sovraccarico 127.4 min/mese per shard
+     RAPPORTO centro 51% [curve 27–74], forbice 40–62%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 44% [curve 43–45], forbice 36–53%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 63% (Atlas medio che serve $8850)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 83% (Atlas medio che serve $8850)
+
+[A 600µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3798 (costo $2089); migliore $3264, peggiore $4333
+    voci migliore: {'camerieri': 293, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 593, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 393.0, 'M50': 247.0, 'M60': 70.0, 'M80': 0.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $3744, totale $4421–5257; sovraccarico 9.6 min/mese per shard
+     RAPPORTO centro 78% [curve 65–106], forbice 62–97%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 406.0, 'M50': 239.0, 'M60': 61.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $3676, totale $4357–5197; sovraccarico 79.4 min/mese per shard
+     RAPPORTO centro 82% [curve 69–106], forbice 64–103%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 15.0, 'M50': 66.0, 'M60': 607.0, 'M80': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $7901, totale $8439–9065; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 44% [curve 26–59], forbice 36–52%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–44], forbice 33–47%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 83% (Atlas medio che serve $8082)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 70% (Atlas medio che serve $8082)
+
+[A 600µs Alibaba n=1] media scritture 7687/s, picco 35902/s, k 0.41
+  noi: prezzo centro $3799 (costo $2090); migliore $3260, peggiore $4339
+    voci migliore: {'camerieri': 318, 'quaderni': 452, 'dispensa': 370, 's3': 142, 'lavaggio': 132, 'tra_zone': 300, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 644, 'quaderni': 455, 'dispensa': 634, 's3': 142, 'lavaggio': 132, 'tra_zone': 300, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 617.0, 'M50': 112.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2608, totale $3325–4220; sovraccarico 123.0 min/mese per shard
+     RAPPORTO centro 101% [curve 101–101], forbice 77–130%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 690.0, 'M50': 39.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2397, totale $3121–4027; sovraccarico 173.3 min/mese per shard
+     RAPPORTO centro 106% [curve 106–106], forbice 81–139%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 40–40], forbice 33–47%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 40–40], forbice 33–47%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 76% (Atlas medio che serve $8084)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 76% (Atlas medio che serve $8084)
+
+[A 600µs Tencent n=1] media scritture 8001/s, picco 40002/s, k 0.57
+  noi: prezzo centro $3897 (costo $2143); migliore $3327, peggiore $4466
+    voci migliore: {'camerieri': 337, 'quaderni': 452, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 312, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 695, 'quaderni': 456, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 312, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 584.0, 'M50': 107.0, 'M60': 40.0}; taglia di dimensionamento o sopra 5% del tempo; calcolo $2930, totale $3636–4514; sovraccarico 105.6 min/mese per shard
+     RAPPORTO centro 96% [curve 96–96], forbice 74–123%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 32.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2376, totale $3101–4008; sovraccarico 218.5 min/mese per shard
+     RAPPORTO centro 110% [curve 110–110], forbice 83–144%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 9.0, 'M50': 20.0, 'M60': 701.0}; taglia di dimensionamento o sopra 96% del tempo; calcolo $8453, totale $8971–9569; sovraccarico 5.9 min/mese per shard
+     RAPPORTO centro 42% [curve 42–42], forbice 35–50%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 41% [curve 41–41], forbice 34–49%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 81% (Atlas medio che serve $8290)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 78% (Atlas medio che serve $8290)
+
+[B 300µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 701.0, 'M50': 18.0, 'M60': 11.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1618, totale $2366–3309; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 103% [curve 102–105], forbice 80–135%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 700.0, 'M50': 17.0, 'M60': 14.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1631, totale $2379–3321; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 102% [curve 101–105], forbice 80–134%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 1.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5248, totale $5874–6632; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 46–57], forbice 40–55%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 37–50%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 99% (Atlas medio che serve $6209)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 86% (Atlas medio che serve $6209)
+
+[B 300µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $2907 (costo $1599); migliore $2638, peggiore $3177
+    voci migliore: {'camerieri': 181, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 199, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 703.0, 'M50': 19.0, 'M60': 7.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1599, totale $2348–3292; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 103% [curve 103–103], forbice 80–135%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 702.0, 'M50': 18.0, 'M60': 10.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1613, totale $2362–3305; sovraccarico 1.8 min/mese per shard
+     RAPPORTO centro 103% [curve 102–103], forbice 80–135%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 161.0, 'M60': 481.0}; taglia di dimensionamento o sopra 66% del tempo; calcolo $4625, totale $5271–6061; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 52% [curve 47–57], forbice 44–61%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 43% [curve 43–43], forbice 37–50%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 118% (Atlas medio che serve $6186)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 86% (Atlas medio che serve $6186)
+
+[B 300µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 701.0, 'M50': 17.0, 'M60': 12.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1619, totale $2368–3310; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 102% [curve 102–105], forbice 80–134%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 16.0, 'M60': 14.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1633, totale $2381–3323; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 102% [curve 101–105], forbice 80–134%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 1.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5248, totale $5874–6632; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 46–48], forbice 40–55%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 37–50%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 99% (Atlas medio che serve $6209)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 86% (Atlas medio che serve $6209)
+
+[B 300µs Alibaba n=1] media scritture 4587/s, picco 40004/s, k 0.10
+  noi: prezzo centro $2990 (costo $1645); migliore $2720, peggiore $3261
+    voci migliore: {'camerieri': 183, 'quaderni': 464, 'dispensa': 370, 's3': 105, 'lavaggio': 115, 'tra_zone': 179, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 203, 'quaderni': 478, 'dispensa': 634, 's3': 105, 'lavaggio': 115, 'tra_zone': 179, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 703.0, 'M50': 15.0, 'M60': 12.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1618, totale $2366–3309; sovraccarico 0.4 min/mese per shard
+     RAPPORTO centro 105% [curve 105–105], forbice 82–138%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 701.0, 'M50': 15.0, 'M60': 14.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1629, totale $2377–3319; sovraccarico 1.2 min/mese per shard
+     RAPPORTO centro 105% [curve 105–105], forbice 82–137%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 2.0, 'M60': 640.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5246, totale $5872–6630; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 48% [curve 48–48], forbice 41–56%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 44% [curve 44–44], forbice 38–51%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 103% (Atlas medio che serve $6363)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 90% (Atlas medio che serve $6363)
+
+[B 300µs Tencent n=1] media scritture 4453/s, picco 40004/s, k 0.14
+  noi: prezzo centro $2971 (costo $1634); migliore $2697, peggiore $3245
+    voci migliore: {'camerieri': 183, 'quaderni': 459, 'dispensa': 370, 's3': 103, 'lavaggio': 115, 'tra_zone': 174, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 202, 'quaderni': 478, 'dispensa': 634, 's3': 103, 'lavaggio': 115, 'tra_zone': 174, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 703.0, 'M50': 15.0, 'M60': 13.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1621, totale $2369–3312; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 105% [curve 105–105], forbice 81–137%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 700.0, 'M50': 14.0, 'M60': 16.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1637, totale $2385–3327; sovraccarico 0.9 min/mese per shard
+     RAPPORTO centro 104% [curve 104–104], forbice 81–136%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5251, totale $5877–6635; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 47–47], forbice 41–55%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 44% [curve 44–44], forbice 38–51%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 102% (Atlas medio che serve $6322)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 89% (Atlas medio che serve $6322)
+
+[B 600µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 290, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 11.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2485, totale $3206–4108; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 82% [curve 81–86], forbice 65–105%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 11.0, 'M60': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2500, totale $3221–4121; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 82% [curve 80–86], forbice 65–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7878, totale $8416–9043; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 35% [curve 34–36], forbice 30–40%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 32% [curve 31–33], forbice 27–37%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 54% (Atlas medio che serve $6408)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 47% (Atlas medio che serve $6408)
+
+[B 600µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $3011 (costo $1656); migliore $2663, peggiore $3358
+    voci migliore: {'camerieri': 195, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 298, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 700.0, 'M50': 12.0, 'M60': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2475, totale $3197–4099; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 83% [curve 82–83], forbice 65–105%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 698.0, 'M50': 11.0, 'M60': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2499, totale $3219–4120; sovraccarico 1.6 min/mese per shard
+     RAPPORTO centro 82% [curve 81–83], forbice 65–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7876, totale $8414–9042; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 34% [curve 34–35], forbice 29–40%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 32% [curve 32–32], forbice 27–37%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 54% (Atlas medio che serve $6406)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 47% (Atlas medio che serve $6406)
+
+[B 600µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 287, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 11.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2488, totale $3209–4110; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 82% [curve 81–86], forbice 65–104%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 11.0, 'M60': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2500, totale $3221–4121; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 82% [curve 80–86], forbice 65–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7878, totale $8416–9043; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 35% [curve 34–36], forbice 30–40%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 32% [curve 31–33], forbice 27–37%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 54% (Atlas medio che serve $6408)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 47% (Atlas medio che serve $6408)
+
+[B 600µs Alibaba n=1] media scritture 4587/s, picco 40004/s, k 0.10
+  noi: prezzo centro $3119 (costo $1716); migliore $2748, peggiore $3491
+    voci migliore: {'camerieri': 199, 'quaderni': 464, 'dispensa': 370, 's3': 105, 'lavaggio': 115, 'tra_zone': 179, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 329, 'quaderni': 478, 'dispensa': 634, 's3': 105, 'lavaggio': 115, 'tra_zone': 179, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 700.0, 'M50': 9.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2490, totale $3211–4112; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 85% [curve 85–85], forbice 67–109%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 698.0, 'M50': 9.0, 'M60': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2500, totale $3220–4121; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 85% [curve 85–85], forbice 67–108%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7878, totale $8416–9043; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 36% [curve 36–36], forbice 30–41%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 33% [curve 33–33], forbice 28–38%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 59% (Atlas medio che serve $6637)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 51% (Atlas medio che serve $6637)
+
+[B 600µs Tencent n=1] media scritture 4453/s, picco 40004/s, k 0.14
+  noi: prezzo centro $3097 (costo $1704); migliore $2725, peggiore $3470
+    voci migliore: {'camerieri': 198, 'quaderni': 459, 'dispensa': 370, 's3': 103, 'lavaggio': 115, 'tra_zone': 174, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 325, 'quaderni': 478, 'dispensa': 634, 's3': 103, 'lavaggio': 115, 'tra_zone': 174, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 700.0, 'M50': 9.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2488, totale $3209–4111; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 85% [curve 85–85], forbice 66–108%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 9.0, 'M60': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2498, totale $3218–4119; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 84% [curve 84–84], forbice 66–108%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7878, totale $8416–9043; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 35% [curve 35–35], forbice 30–41%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 33% [curve 33–33], forbice 28–38%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 58% (Atlas medio che serve $6590)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 51% (Atlas medio che serve $6590)
+
+[C 300µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $6625 (costo $3644); migliore $5587, peggiore $7667
+    voci migliore: {'camerieri': 322, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 626, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 727.0, 'M60': 3.0, 'M80': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5865, totale $7672–9933; sovraccarico 4.2 min/mese per shard
+     RAPPORTO centro 74% [curve 69–77], forbice 56–99%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 729.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5845, totale $7653–9915; sovraccarico 4.3 min/mese per shard
+     RAPPORTO centro 75% [curve 72–81], forbice 56–99%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 376.0, 'M60': 299.0, 'M80': 0.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $8601, totale $10316–12438; sovraccarico 2.2 min/mese per shard
+     RAPPORTO centro 59% [curve 32–77], forbice 46–75%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 44–50], forbice 37–58%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 206% (Atlas medio che serve $14096)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 99% (Atlas medio che serve $14096)
+
+[C 300µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $6936 (costo $3815); migliore $5786, peggiore $8087
+    voci migliore: {'camerieri': 449, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 902, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 648.0, 'M60': 81.0, 'M80': 1.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $6487, totale $8273–10502; sovraccarico 22.9 min/mese per shard
+     RAPPORTO centro 74% [curve 71–77], forbice 55–98%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5840, totale $7648–9910; sovraccarico 22.9 min/mese per shard
+     RAPPORTO centro 79% [curve 77–81], forbice 58–106%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 380.0, 'M60': 0.0, 'M80': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $13244, totale $14713–16467; sovraccarico 9.7 min/mese per shard
+     RAPPORTO centro 55% [curve 32–77], forbice 42–71%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 49% [curve 48–50], forbice 38–61%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 87% (Atlas medio che serve $14758)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 113% (Atlas medio che serve $14758)
+
+[C 300µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $6588 (costo $3624); migliore $5561, peggiore $7620
+    voci migliore: {'camerieri': 312, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 613, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 727.0, 'M60': 3.0, 'M80': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5865, totale $7672–9933; sovraccarico 2.8 min/mese per shard
+     RAPPORTO centro 74% [curve 69–77], forbice 56–99%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 728.0, 'M60': 2.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5853, totale $7660–9922; sovraccarico 3.5 min/mese per shard
+     RAPPORTO centro 75% [curve 72–80], forbice 56–99%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 376.0, 'M60': 329.0, 'M80': 0.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $8601, totale $10316–12438; sovraccarico 0.8 min/mese per shard
+     RAPPORTO centro 59% [curve 35–75], forbice 46–75%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 44–49], forbice 37–58%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 203% (Atlas medio che serve $14018)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 98% (Atlas medio che serve $14018)
+
+[C 300µs Alibaba n=1] media scritture 15374/s, picco 71803/s, k 0.41
+  noi: prezzo centro $6467 (costo $3557); migliore $5476, peggiore $7458
+    voci migliore: {'camerieri': 334, 'quaderni': 454, 'dispensa': 925, 's3': 310, 'lavaggio': 309, 'tra_zone': 600, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 664, 'quaderni': 555, 'dispensa': 1585, 's3': 310, 'lavaggio': 309, 'tra_zone': 600, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5840, totale $7648–9910; sovraccarico 14.2 min/mese per shard
+     RAPPORTO centro 74% [curve 74–74], forbice 55–98%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5840, totale $7648–9910; sovraccarico 14.2 min/mese per shard
+     RAPPORTO centro 74% [curve 74–74], forbice 55–98%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 365.0, 'M60': 365.0}; taglia di dimensionamento o sopra 50% del tempo; calcolo $8687, totale $10399–12517; sovraccarico 1.4 min/mese per shard
+     RAPPORTO centro 56% [curve 56–56], forbice 44–72%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 46% [curve 46–46], forbice 36–57%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 186% (Atlas medio che serve $13759)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 93% (Atlas medio che serve $13759)
+
+[C 300µs Tencent n=1] media scritture 16002/s, picco 80003/s, k 0.57
+  noi: prezzo centro $6682 (costo $3675); migliore $5590, peggiore $7774
+    voci migliore: {'camerieri': 361, 'quaderni': 455, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 624, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 718, 'quaderni': 640, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 624, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 730.0, 'M60': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5843, totale $7651–9913; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 76% [curve 76–76], forbice 56–102%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 730.0, 'M60': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5842, totale $7650–9912; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 76% [curve 76–76], forbice 56–102%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 380.0, 'M60': 350.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $8572, totale $10288–12412; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 59% [curve 59–59], forbice 45–76%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 47–47], forbice 37–59%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 212% (Atlas medio che serve $14217)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 102% (Atlas medio che serve $14217)
+
+[C 600µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $7341 (costo $4037); migliore $6029, peggiore $8659
+    voci migliore: {'camerieri': 565, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1177, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 393.0, 'M50': 226.0, 'M60': 69.0, 'M80': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $7441, totale $9198–11385; sovraccarico 18.7 min/mese per shard
+     RAPPORTO centro 71% [curve 52–92], forbice 52–93%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 444.0, 'M50': 167.0, 'M60': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $6949, totale $8723–10934; sovraccarico 84.9 min/mese per shard
+     RAPPORTO centro 75% [curve 62–103], forbice 55–99%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M50': 66.0, 'M60': 590.0, 'M80': 0.0, 'M40': 13.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $15784, totale $17259–19022; sovraccarico 1.8 min/mese per shard
+     RAPPORTO centro 41% [curve 25–67], forbice 32–50%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 38% [curve 36–42], forbice 30–46%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 68% (Atlas medio che serve $15619)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 57% (Atlas medio che serve $15619)
+
+[C 600µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $8008 (costo $4404); migliore $6446, peggiore $9570
+    voci migliore: {'camerieri': 812, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1718, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 377.0, 'M50': 216.0, 'M60': 69.0, 'M80': 68.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $9558, totale $11218–13259; sovraccarico 229.3 min/mese per shard
+     RAPPORTO centro 71% [curve 52–91], forbice 52–96%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 673.0, 'M50': 57.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $4884, totale $6729–9046; sovraccarico 1524.3 min/mese per shard
+     RAPPORTO centro 101% [curve 100–103], forbice 71–142%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M50': 377.0, 'M60': 0.0, 'M80': 349.0, 'M40': 3.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $19851, totale $21055–22412; sovraccarico 119.3 min/mese per shard
+     RAPPORTO centro 47% [curve 26–67], forbice 35–60%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 41% [curve 39–42], forbice 32–51%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 51% (Atlas medio che serve $17038)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 65% (Atlas medio che serve $17038)
+
+[C 600µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $7297 (costo $4013); migliore $5992, peggiore $8602
+    voci migliore: {'camerieri': 552, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1157, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 393.0, 'M50': 240.0, 'M60': 69.0, 'M80': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $7441, totale $9198–11385; sovraccarico 12.1 min/mese per shard
+     RAPPORTO centro 71% [curve 61–92], forbice 52–93%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 406.0, 'M50': 243.0, 'M60': 62.0}; taglia di dimensionamento o sopra 9% del tempo; calcolo $7406, totale $9165–11354; sovraccarico 79.4 min/mese per shard
+     RAPPORTO centro 73% [curve 62–92], forbice 54–97%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 17.0, 'M50': 66.0, 'M60': 607.0, 'M80': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $15784, totale $17259–19022; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 41% [curve 25–55], forbice 32–50%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 36–41], forbice 29–46%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 67% (Atlas medio che serve $15526)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 56% (Atlas medio che serve $15526)
+
+[C 600µs Alibaba n=1] media scritture 15374/s, picco 71803/s, k 0.41
+  noi: prezzo centro $7248 (costo $3986); migliore $5957, peggiore $8539
+    voci migliore: {'camerieri': 599, 'quaderni': 454, 'dispensa': 925, 's3': 310, 'lavaggio': 309, 'tra_zone': 600, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1258, 'quaderni': 555, 'dispensa': 1585, 's3': 310, 'lavaggio': 309, 'tra_zone': 600, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 615.0, 'M50': 113.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5233, totale $7066–9365; sovraccarico 119.3 min/mese per shard
+     RAPPORTO centro 88% [curve 88–88], forbice 64–121%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 690.0, 'M50': 39.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $4794, totale $6642–8964; sovraccarico 168.3 min/mese per shard
+     RAPPORTO centro 93% [curve 93–93], forbice 66–129%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 37–37], forbice 29–46%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 37–37], forbice 29–46%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 63% (Atlas medio che serve $15421)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 63% (Atlas medio che serve $15421)
+
+[C 600µs Tencent n=1] media scritture 16002/s, picco 80003/s, k 0.57
+  noi: prezzo centro $7527 (costo $4140); migliore $6109, peggiore $8944
+    voci migliore: {'camerieri': 646, 'quaderni': 455, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 624, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1361, 'quaderni': 640, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 624, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 593.0, 'M50': 106.0, 'M60': 31.0}; taglia di dimensionamento o sopra 4% del tempo; calcolo $5711, totale $7527–9802; sovraccarico 103.7 min/mese per shard
+     RAPPORTO centro 87% [curve 87–87], forbice 62–119%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 696.0, 'M50': 33.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $4759, totale $6608–8932; sovraccarico 214.6 min/mese per shard
+     RAPPORTO centro 97% [curve 97–97], forbice 68–135%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 9.0, 'M50': 20.0, 'M60': 701.0}; taglia di dimensionamento o sopra 96% del tempo; calcolo $16903, totale $18341–20047; sovraccarico 6.3 min/mese per shard
+     RAPPORTO centro 39% [curve 39–39], forbice 30–49%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 38% [curve 38–38], forbice 30–48%
+  quota di clienti in (ii) perché il rapporto medio scenda sotto il 47%: 70% (Atlas medio che serve $16014)
+  quota di clienti in (iii) perché il rapporto medio scenda sotto il 47%: 67% (Atlas medio che serve $16014)
+
+===== FORMA VERA (solo A) =====
+
+[A 300µs Meta+Twitter n=14] media scritture 19583/s, picco 40018/s, k 1.00
+  noi: prezzo centro $5458 (costo $3002); migliore $4575, peggiore $6341
+    voci migliore: {'camerieri': 363, 'quaderni': 460, 'dispensa': 370, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 726, 'quaderni': 806, 'dispensa': 634, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 120.0, 'M50': 512.0, 'M60': 57.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $2918, totale $3622–4498; sovraccarico 3.1 min/mese per shard
+     RAPPORTO centro 139% [curve 105–151], forbice 105–182%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 160.0, 'M50': 446.0, 'M60': 61.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $2854, totale $3561–4440; sovraccarico 20.3 min/mese per shard
+     RAPPORTO centro 134% [curve 114–151], forbice 103–172%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 252.0, 'M60': 478.0, 'M40': 0.0}; taglia di dimensionamento o sopra 66% del tempo; calcolo $4786, totale $5427–6208; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 98% [curve 53–131], forbice 77–121%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 81% [curve 52–109], forbice 64–99%
+
+[A 300µs Meta n=2] media scritture 19995/s, picco 40000/s, k 1.00
+  noi: prezzo centro $5593 (costo $3076); migliore $4656, peggiore $6529
+    voci migliore: {'camerieri': 386, 'quaderni': 459, 'dispensa': 370, 's3': 291, 'lavaggio': 196, 'tra_zone': 780, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 773, 'quaderni': 837, 'dispensa': 634, 's3': 291, 'lavaggio': 196, 'tra_zone': 780, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 127.0, 'M50': 601.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2681, totale $3393–4281; sovraccarico 21.9 min/mese per shard
+     RAPPORTO centro 146% [curve 145–146], forbice 109–192%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 108.0, 'M50': 622.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2712, totale $3423–4310; sovraccarico 45.8 min/mese per shard
+     RAPPORTO centro 145% [curve 143–146], forbice 108–191%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 555.0, 'M60': 175.0}; taglia di dimensionamento o sopra 24% del tempo; calcolo $3601, totale $4282–5123; sovraccarico 8.6 min/mese per shard
+     RAPPORTO centro 120% [curve 110–131], forbice 92–155%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 3.3 min/mese per shard
+     RAPPORTO centro 83% [curve 79–87], forbice 66–102%
+
+[A 300µs Twitter n=12] media scritture 19583/s, picco 40023/s, k 1.00
+  noi: prezzo centro $5408 (costo $2974); migliore $4553, peggiore $6262
+    voci migliore: {'camerieri': 350, 'quaderni': 460, 'dispensa': 370, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 696, 'quaderni': 791, 'dispensa': 634, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 120.0, 'M50': 499.0, 'M60': 72.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $2938, totale $3642–4517; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 134% [curve 105–151], forbice 102–174%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 166.0, 'M50': 430.0, 'M60': 61.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $2874, totale $3579–4458; sovraccarico 16.7 min/mese per shard
+     RAPPORTO centro 132% [curve 114–151], forbice 101–171%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 121.0, 'M60': 609.0, 'M40': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $5294, totale $5918–6674; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 95% [curve 53–114], forbice 75–118%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 80% [curve 52–109], forbice 64–98%
+
+[A 300µs Alibaba n=1] media scritture 830/s, picco 30771/s, k 1.00
+  noi: prezzo centro $2543 (costo $1399); migliore $2296, peggiore $2791
+    voci migliore: {'camerieri': 174, 'quaderni': 451, 'dispensa': 370, 's3': 59, 'lavaggio': 96, 'tra_zone': 32, 'resto': 80}; quaderni sul picco $451
+    voci peggiore: {'camerieri': 181, 'quaderni': 452, 'dispensa': 634, 's3': 59, 'lavaggio': 96, 'tra_zone': 32, 'resto': 80}; quaderni sul picco $902
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 714.0, 'M50': 16.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1548, totale $2299–3246; sovraccarico 51.7 min/mese per shard
+     RAPPORTO centro 92% [curve 92–92], forbice 71–121%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 730.0, 'M50': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1519, totale $2271–3219; sovraccarico 58.9 min/mese per shard
+     RAPPORTO centro 93% [curve 93–93], forbice 71–123%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 365.0, 'M60': 365.0}; taglia di dimensionamento o sopra 50% del tempo; calcolo $4344, totale $5000–5804; sovraccarico 7.8 min/mese per shard
+     RAPPORTO centro 47% [curve 47–47], forbice 40–56%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 38% [curve 38–38], forbice 32–44%
+
+[A 300µs Tencent n=1] media scritture 2533/s, picco 40003/s, k 1.00
+  noi: prezzo centro $2732 (costo $1503); migliore $2470, peggiore $2995
+    voci migliore: {'camerieri': 173, 'quaderni': 452, 'dispensa': 370, 's3': 80, 'lavaggio': 105, 'tra_zone': 99, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 196, 'quaderni': 453, 'dispensa': 634, 's3': 80, 'lavaggio': 105, 'tra_zone': 99, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 688.0, 'M50': 42.0, 'M60': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1601, totale $2350–3294; sovraccarico 25.0 min/mese per shard
+     RAPPORTO centro 97% [curve 97–97], forbice 75–127%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 729.0, 'M50': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1520, totale $2272–3220; sovraccarico 55.0 min/mese per shard
+     RAPPORTO centro 100% [curve 100–100], forbice 77–132%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 29.0, 'M50': 350.0, 'M60': 350.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $4229, totale $4889–5699; sovraccarico 3.9 min/mese per shard
+     RAPPORTO centro 52% [curve 52–52], forbice 43–61%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 41% [curve 41–41], forbice 35–47%
+
+[A 600µs Meta+Twitter n=14] media scritture 19583/s, picco 40018/s, k 1.00
+  noi: prezzo centro $6315 (costo $3473); migliore $5105, peggiore $7525
+    voci migliore: {'camerieri': 654, 'quaderni': 460, 'dispensa': 370, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 1378, 'quaderni': 806, 'dispensa': 634, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 447.0, 'M60': 181.0, 'M40': 14.0}; taglia di dimensionamento o sopra 25% del tempo; calcolo $5344, totale $5968–6723; sovraccarico 1.7 min/mese per shard
+     RAPPORTO centro 99% [curve 80–113], forbice 76–123%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 22.0, 'M50': 479.0, 'M60': 141.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $5137, totale $5768–6534; sovraccarico 18.9 min/mese per shard
+     RAPPORTO centro 95% [curve 82–113], forbice 73–119%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 40.0, 'M60': 689.0, 'M40': 0.0}; taglia di dimensionamento o sopra 94% del tempo; calcolo $8398, totale $8919–9519; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 72% [curve 41–90], forbice 57–88%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 67% [curve 40–90], forbice 52–82%
+
+[A 600µs Meta n=2] media scritture 19995/s, picco 40000/s, k 1.00
+  noi: prezzo centro $6507 (costo $3579); migliore $5221, peggiore $7793
+    voci migliore: {'camerieri': 696, 'quaderni': 459, 'dispensa': 370, 's3': 291, 'lavaggio': 196, 'tra_zone': 780, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 1469, 'quaderni': 837, 'dispensa': 634, 's3': 291, 'lavaggio': 196, 'tra_zone': 780, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 598.0, 'M60': 124.0, 'M40': 8.0}; taglia di dimensionamento o sopra 17% del tempo; calcolo $5085, totale $5717–6486; sovraccarico 52.8 min/mese per shard
+     RAPPORTO centro 107% [curve 103–110], forbice 81–137%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 13.0, 'M50': 621.0, 'M60': 96.0}; taglia di dimensionamento o sopra 13% del tempo; calcolo $4906, totale $5544–6322; sovraccarico 116.9 min/mese per shard
+     RAPPORTO centro 110% [curve 109–110], forbice 83–141%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 134.0, 'M60': 596.0}; taglia di dimensionamento o sopra 82% del tempo; calcolo $7867, totale $8405–9033; sovraccarico 8.0 min/mese per shard
+     RAPPORTO centro 75% [curve 73–77], forbice 58–93%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 5.6 min/mese per shard
+     RAPPORTO centro 69% [curve 66–72], forbice 54–85%
+
+[A 600µs Twitter n=12] media scritture 19583/s, picco 40023/s, k 1.00
+  noi: prezzo centro $6226 (costo $3424); migliore $5056, peggiore $7395
+    voci migliore: {'camerieri': 626, 'quaderni': 460, 'dispensa': 370, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 1319, 'quaderni': 791, 'dispensa': 634, 's3': 286, 'lavaggio': 193, 'tra_zone': 764, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 29.0, 'M50': 438.0, 'M60': 192.0}; taglia di dimensionamento o sopra 26% del tempo; calcolo $5375, totale $5998–6752; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 96% [curve 80–113], forbice 73–121%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 33.0, 'M50': 442.0, 'M60': 177.0}; taglia di dimensionamento o sopra 24% del tempo; calcolo $5278, totale $5903–6662; sovraccarico 11.3 min/mese per shard
+     RAPPORTO centro 94% [curve 82–113], forbice 73–117%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 40.0, 'M60': 689.0, 'M40': 0.0}; taglia di dimensionamento o sopra 94% del tempo; calcolo $8398, totale $8919–9519; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 70% [curve 41–90], forbice 56–86%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 66% [curve 40–90], forbice 52–81%
+
+[A 600µs Alibaba n=1] media scritture 830/s, picco 30771/s, k 1.00
+  noi: prezzo centro $2568 (costo $1412); migliore $2306, peggiore $2829
+    voci migliore: {'camerieri': 179, 'quaderni': 451, 'dispensa': 370, 's3': 59, 'lavaggio': 96, 'tra_zone': 32, 'resto': 80}; quaderni sul picco $451
+    voci peggiore: {'camerieri': 202, 'quaderni': 452, 'dispensa': 634, 's3': 59, 'lavaggio': 96, 'tra_zone': 32, 'resto': 80}; quaderni sul picco $902
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 31.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2367, totale $3092–3999; sovraccarico 55.6 min/mese per shard
+     RAPPORTO centro 72% [curve 72–72], forbice 58–92%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 730.0, 'M50': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2278, totale $3006–3918; sovraccarico 67.4 min/mese per shard
+     RAPPORTO centro 74% [curve 74–74], forbice 59–94%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 27% [curve 27–27], forbice 24–31%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 27% [curve 27–27], forbice 24–31%
+
+[A 600µs Tencent n=1] media scritture 2533/s, picco 40003/s, k 1.00
+  noi: prezzo centro $2841 (costo $1562); migliore $2499, peggiore $3183
+    voci migliore: {'camerieri': 189, 'quaderni': 452, 'dispensa': 370, 's3': 80, 'lavaggio': 105, 'tra_zone': 99, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 300, 'quaderni': 453, 'dispensa': 634, 's3': 80, 'lavaggio': 105, 'tra_zone': 99, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 646.0, 'M50': 83.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2527, totale $3246–4146; sovraccarico 43.3 min/mese per shard
+     RAPPORTO centro 77% [curve 77–77], forbice 60–98%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 729.0, 'M50': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2280, totale $3008–3920; sovraccarico 97.8 min/mese per shard
+     RAPPORTO centro 82% [curve 82–82], forbice 64–106%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 29.0, 'M50': 1.0, 'M60': 700.0}; taglia di dimensionamento o sopra 96% del tempo; calcolo $8395, totale $8916–9517; sovraccarico 9.6 min/mese per shard
+     RAPPORTO centro 31% [curve 31–31], forbice 26–36%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 30% [curve 30–30], forbice 26–35%
+
+===== SHARD SU M50 =====
+
+[A 300µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3486 (costo $1917); migliore $3098, peggiore $3874
+    voci migliore: {'camerieri': 203, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 332, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 496.0, 'M40': 194.0, 'M50': 16.0, 'M60': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $2131, totale $2864–3785; sovraccarico 15.0 min/mese per shard
+     RAPPORTO centro 105% [curve 72–122], forbice 82–135%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 545.0, 'M40': 157.0, 'M50': 5.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1993, totale $2732–3659; sovraccarico 65.0 min/mese per shard
+     RAPPORTO centro 112% [curve 97–131], forbice 86–146%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 51.0, 'M40': 337.0, 'M50': 299.0, 'M60': 0.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $4396, totale $5054–5860; sovraccarico 2.5 min/mese per shard
+     RAPPORTO centro 65% [curve 31–86], forbice 53–79%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5840, totale $6448–7180; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–54], forbice 43–60%
+
+[A 300µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $3639 (costo $2001); migliore $3180, peggiore $4097
+    voci migliore: {'camerieri': 255, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 465, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 469.0, 'M40': 144.0, 'M50': 74.0, 'M60': 43.0}; taglia di dimensionamento o sopra 16% del tempo; calcolo $2887, totale $3595–4477; sovraccarico 309.0 min/mese per shard
+     RAPPORTO centro 97% [curve 72–122], forbice 75–126%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 723.0, 'M40': 7.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1590, totale $2342–3289; sovraccarico 1188.8 min/mese per shard
+     RAPPORTO centro 129% [curve 127–131], forbice 97–175%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 17.0, 'M40': 364.0, 'M50': 0.0, 'M60': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $7069, totale $7636–8307; sovraccarico 10.4 min/mese per shard
+     RAPPORTO centro 59% [curve 31–86], forbice 48–72%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5840, totale $6448–7180; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 53% [curve 52–54], forbice 44–64%
+
+[A 300µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3466 (costo $1906); migliore $3089, peggiore $3843
+    voci migliore: {'camerieri': 197, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 321, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 496.0, 'M40': 194.0, 'M50': 16.0, 'M60': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $2131, totale $2864–3785; sovraccarico 7.8 min/mese per shard
+     RAPPORTO centro 105% [curve 97–120], forbice 82–135%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 528.0, 'M40': 189.0, 'M50': 8.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2051, totale $2787–3712; sovraccarico 60.8 min/mese per shard
+     RAPPORTO centro 109% [curve 97–119], forbice 84–142%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 58.0, 'M40': 337.0, 'M50': 329.0, 'M60': 0.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $4396, totale $5054–5860; sovraccarico 1.4 min/mese per shard
+     RAPPORTO centro 65% [curve 36–86], forbice 53–79%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5840, totale $6448–7180; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–54], forbice 43–60%
+
+[A 600µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3828 (costo $2105); migliore $3281, peggiore $4374
+    voci migliore: {'camerieri': 303, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 607, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 393.0, 'M40': 226.0, 'M50': 69.0, 'M60': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $3847, totale $4525–5364; sovraccarico 18.7 min/mese per shard
+     RAPPORTO centro 76% [curve 53–103], forbice 61–95%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 444.0, 'M40': 167.0, 'M50': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $3605, totale $4293–5143; sovraccarico 84.9 min/mese per shard
+     RAPPORTO centro 81% [curve 67–113], forbice 64–102%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M40': 66.0, 'M50': 590.0, 'M60': 0.0, 'M30': 13.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $8011, totale $8548–9175; sovraccarico 1.8 min/mese per shard
+     RAPPORTO centro 43% [curve 25–72], forbice 36–51%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8760, totale $9272–9860; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 38–45], forbice 33–47%
+
+[A 600µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $4160 (costo $2288); migliore $3480, peggiore $4839
+    voci migliore: {'camerieri': 420, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 873, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 377.0, 'M40': 216.0, 'M50': 69.0, 'M60': 68.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $5009, totale $5648–6427; sovraccarico 229.3 min/mese per shard
+     RAPPORTO centro 77% [curve 53–100], forbice 59–98%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 673.0, 'M40': 57.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2537, totale $3259–4163; sovraccarico 1524.3 min/mese per shard
+     RAPPORTO centro 112% [curve 111–113], forbice 84–148%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M40': 377.0, 'M50': 0.0, 'M60': 349.0, 'M30': 3.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $10645, totale $11095–11589; sovraccarico 119.3 min/mese per shard
+     RAPPORTO centro 49% [curve 25–72], forbice 39–60%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8760, totale $9272–9860; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 35–52%
+
+[A 600µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3798 (costo $2089); migliore $3264, peggiore $4333
+    voci migliore: {'camerieri': 293, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 593, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 393.0, 'M40': 240.0, 'M50': 69.0, 'M60': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $3847, totale $4525–5364; sovraccarico 12.1 min/mese per shard
+     RAPPORTO centro 76% [curve 65–103], forbice 61–95%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 406.0, 'M40': 243.0, 'M50': 62.0}; taglia di dimensionamento o sopra 9% del tempo; calcolo $3823, totale $4503–5342; sovraccarico 79.4 min/mese per shard
+     RAPPORTO centro 79% [curve 67–103], forbice 62–99%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 17.0, 'M40': 66.0, 'M50': 607.0, 'M60': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $8011, totale $8548–9175; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 43% [curve 25–59], forbice 36–51%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8760, totale $9272–9860; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 38–43], forbice 33–47%
+
+[B 300µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 700.0, 'M40': 18.0, 'M50': 12.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1680, totale $2428–3371; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 101% [curve 99–103], forbice 78–131%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 699.0, 'M40': 16.0, 'M50': 16.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1701, totale $2448–3390; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 100% [curve 99–102], forbice 78–130%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 88.0, 'M40': 1.0, 'M50': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5321, totale $5946–6705; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 46% [curve 45–50], forbice 40–54%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5840, totale $6448–7180; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–44], forbice 37–49%
+
+[B 300µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $2907 (costo $1599); migliore $2638, peggiore $3177
+    voci migliore: {'camerieri': 181, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 199, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 704.0, 'M40': 20.0, 'M50': 7.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1656, totale $2406–3350; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 101% [curve 101–101], forbice 79–132%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 701.0, 'M40': 17.0, 'M50': 13.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1684, totale $2432–3375; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 100% [curve 100–100], forbice 78–131%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 88.0, 'M40': 81.0, 'M50': 560.0}; taglia di dimensionamento o sopra 77% del tempo; calcolo $5012, totale $5648–6422; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 48% [curve 46–50], forbice 41–56%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5840, totale $6448–7180; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 43% [curve 42–43], forbice 37–49%
+
+[B 300µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 700.0, 'M40': 17.0, 'M50': 13.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1686, totale $2434–3377; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 100% [curve 99–103], forbice 78–131%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 699.0, 'M40': 15.0, 'M50': 16.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1701, totale $2448–3390; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 100% [curve 99–102], forbice 78–130%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M30': 88.0, 'M40': 1.0, 'M50': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5321, totale $5946–6705; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 46% [curve 45–48], forbice 40–54%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5840, totale $6448–7180; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–44], forbice 37–49%
+
+[B 600µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 290, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 699.0, 'M40': 11.0, 'M50': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2575, totale $3296–4198; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 80% [curve 79–84], forbice 64–102%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 698.0, 'M40': 11.0, 'M50': 23.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2594, totale $3314–4214; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 80% [curve 78–84], forbice 63–101%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 88.0, 'M40': 0.0, 'M50': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7984, totale $8523–9150; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 34% [curve 33–36], forbice 29–39%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8760, totale $9272–9860; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 31% [curve 31–33], forbice 27–36%
+
+[B 600µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $3011 (costo $1656); migliore $2663, peggiore $3358
+    voci migliore: {'camerieri': 195, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 298, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 699.0, 'M40': 12.0, 'M50': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2568, totale $3289–4191; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 81% [curve 80–81], forbice 64–102%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 698.0, 'M40': 11.0, 'M50': 22.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2588, totale $3309–4209; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 80% [curve 79–81], forbice 63–102%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 88.0, 'M40': 0.0, 'M50': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7983, totale $8522–9149; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 34% [curve 34–34], forbice 29–39%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8760, totale $9272–9860; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 31% [curve 31–32], forbice 27–36%
+
+[B 600µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 287, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 699.0, 'M40': 11.0, 'M50': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2577, totale $3298–4199; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 80% [curve 79–84], forbice 64–102%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 697.0, 'M40': 11.0, 'M50': 23.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2594, totale $3314–4214; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 80% [curve 78–84], forbice 63–101%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M30': 88.0, 'M40': 0.0, 'M50': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7984, totale $8523–9150; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 34% [curve 33–36], forbice 29–39%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8760, totale $9272–9860; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 31% [curve 31–33], forbice 27–36%
+
+[C 300µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $6625 (costo $3644); migliore $5587, peggiore $7667
+    voci migliore: {'camerieri': 322, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 626, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 692.0, 'M50': 38.0, 'M60': 0.0}; taglia di dimensionamento o sopra 5% del tempo; calcolo $5571, totale $7394–9679; sovraccarico 14.0 min/mese per shard
+     RAPPORTO centro 77% [curve 71–82], forbice 57–102%
+  Atlas (i_reat): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 713.0, 'M50': 17.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $5429, totale $7257–9549; sovraccarico 31.3 min/mese per shard
+     RAPPORTO centro 79% [curve 72–85], forbice 58–106%
+  Atlas (ii): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 122.0, 'M50': 585.0, 'M60': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $9400, totale $11092–13180; sovraccarico 1.4 min/mese per shard
+     RAPPORTO centro 54% [curve 33–82], forbice 42–69%
+  Atlas (iii): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10220, totale $11884–13930; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–55], forbice 40–65%
+
+[C 300µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $6936 (costo $3815); migliore $5786, peggiore $8087
+    voci migliore: {'camerieri': 449, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 902, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 648.0, 'M50': 81.0, 'M60': 1.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $5880, totale $7693–9962; sovraccarico 69.2 min/mese per shard
+     RAPPORTO centro 79% [curve 76–82], forbice 58–105%
+  Atlas (i_reat): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 730.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5314, totale $7146–9444; sovraccarico 69.2 min/mese per shard
+     RAPPORTO centro 84% [curve 82–85], forbice 61–113%
+  Atlas (ii): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 380.0, 'M50': 0.0, 'M60': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $12429, totale $14020–15956; sovraccarico 53.7 min/mese per shard
+     RAPPORTO centro 57% [curve 33–82], forbice 43–75%
+  Atlas (iii): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10220, totale $11884–13930; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 54% [curve 53–55], forbice 42–68%
+
+[C 300µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $6588 (costo $3624); migliore $5561, peggiore $7620
+    voci migliore: {'camerieri': 312, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 613, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 692.0, 'M50': 38.0, 'M60': 0.0}; taglia di dimensionamento o sopra 5% del tempo; calcolo $5571, totale $7394–9679; sovraccarico 8.6 min/mese per shard
+     RAPPORTO centro 77% [curve 71–81], forbice 57–102%
+  Atlas (i_reat): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 693.0, 'M50': 37.0}; taglia di dimensionamento o sopra 5% del tempo; calcolo $5566, totale $7390–9675; sovraccarico 22.9 min/mese per shard
+     RAPPORTO centro 78% [curve 72–82], forbice 58–104%
+  Atlas (ii): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M40': 122.0, 'M50': 602.0, 'M60': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $9400, totale $11092–13180; sovraccarico 0.3 min/mese per shard
+     RAPPORTO centro 54% [curve 36–79], forbice 42–69%
+  Atlas (iii): 7 shard (min 7 max 7), pavimento M40, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10220, totale $11884–13930; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–54], forbice 40–64%
+
+[C 600µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $7341 (costo $4037); migliore $6029, peggiore $8659
+    voci migliore: {'camerieri': 565, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1177, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 394.0, 'M40': 223.0, 'M50': 73.0, 'M60': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $7713, totale $9470–11655; sovraccarico 17.5 min/mese per shard
+     RAPPORTO centro 69% [curve 49–90], forbice 51–90%
+  Atlas (i_reat): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 445.0, 'M40': 166.0, 'M50': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $7216, totale $8990–11201; sovraccarico 84.6 min/mese per shard
+     RAPPORTO centro 73% [curve 61–101], forbice 54–97%
+  Atlas (ii): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M40': 67.0, 'M50': 590.0, 'M60': 0.0, 'M30': 12.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $16036, totale $17511–19273; sovraccarico 1.6 min/mese per shard
+     RAPPORTO centro 40% [curve 23–65], forbice 31–50%
+  Atlas (iii): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17520, totale $18944–20630; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 35–42], forbice 29–46%
+
+[C 600µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $8008 (costo $4404); migliore $6446, peggiore $9570
+    voci migliore: {'camerieri': 812, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1718, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 377.0, 'M40': 216.0, 'M50': 69.0, 'M60': 68.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $10018, totale $11696–13764; sovraccarico 227.9 min/mese per shard
+     RAPPORTO centro 69% [curve 49–89], forbice 51–92%
+  Atlas (i_reat): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 675.0, 'M40': 55.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5060, totale $6905–9223; sovraccarico 1539.5 min/mese per shard
+     RAPPORTO centro 99% [curve 98–101], forbice 70–139%
+  Atlas (ii): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M40': 377.0, 'M50': 0.0, 'M60': 349.0, 'M30': 3.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $21290, totale $22589–24088; sovraccarico 116.6 min/mese per shard
+     RAPPORTO centro 45% [curve 24–65], forbice 34–57%
+  Atlas (iii): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17520, totale $18944–20630; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–42], forbice 31–51%
+
+[C 600µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $7297 (costo $4013); migliore $5992, peggiore $8602
+    voci migliore: {'camerieri': 552, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1157, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 394.0, 'M40': 236.0, 'M50': 73.0, 'M60': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $7713, totale $9470–11655; sovraccarico 11.9 min/mese per shard
+     RAPPORTO centro 69% [curve 58–90], forbice 51–90%
+  Atlas (i_reat): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 406.0, 'M40': 241.0, 'M50': 59.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $7667, totale $9426–11613; sovraccarico 78.8 min/mese per shard
+     RAPPORTO centro 72% [curve 61–90], forbice 53–95%
+  Atlas (ii): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M30': 14.0, 'M40': 67.0, 'M50': 607.0, 'M60': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $16036, totale $17511–19273; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 40% [curve 23–53], forbice 31–50%
+  Atlas (iii): 12 shard (min 12 max 12), pavimento M30, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17520, totale $18944–20630; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 35–40], forbice 29–45%
+
+===== SHARD SU M80 =====
+
+[A 300µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3486 (costo $1917); migliore $3098, peggiore $3874
+    voci migliore: {'camerieri': 203, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 332, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 503.0, 'M60': 172.0, 'M80': 7.0, 'M140': 0.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2025, totale $2758–3676; sovraccarico 11.1 min/mese per shard
+     RAPPORTO centro 110% [curve 75–128], forbice 85–143%
+  Atlas (i_reat): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 575.0, 'M60': 118.0, 'M80': 3.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1846, totale $2584–3512; sovraccarico 60.0 min/mese per shard
+     RAPPORTO centro 117% [curve 99–137], forbice 90–154%
+  Atlas (ii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M60': 72.0, 'M80': 573.0, 'M140': 0.0, 'M50': 34.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $4759, totale $5362–6087; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 61% [curve 43–90], forbice 51–72%
+  Atlas (iii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5329, totale $5904–6586; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 56% [curve 53–59], forbice 47–66%
+
+[A 300µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $3639 (costo $2001); migliore $3180, peggiore $4097
+    voci migliore: {'camerieri': 255, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 465, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 437.0, 'M60': 156.0, 'M80': 70.0, 'M140': 67.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $2736, totale $3437–4309; sovraccarico 320.6 min/mese per shard
+     RAPPORTO centro 101% [curve 75–128], forbice 78–132%
+  Atlas (i_reat): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 724.0, 'M60': 6.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1472, totale $2223–3171; sovraccarico 1181.7 min/mese per shard
+     RAPPORTO centro 135% [curve 133–137], forbice 100–184%
+  Atlas (ii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M60': 370.0, 'M80': 0.0, 'M140': 349.0, 'M50': 11.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $5322, totale $5926–6651; sovraccarico 7.2 min/mese per shard
+     RAPPORTO centro 66% [curve 43–90], forbice 54–82%
+  Atlas (iii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5329, totale $5904–6586; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 58% [curve 57–59], forbice 48–69%
+
+[A 300µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3466 (costo $1906); migliore $3089, peggiore $3843
+    voci migliore: {'camerieri': 197, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 321, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 503.0, 'M60': 172.0, 'M80': 7.0, 'M140': 0.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2025, totale $2758–3676; sovraccarico 6.1 min/mese per shard
+     RAPPORTO centro 110% [curve 100–125], forbice 85–143%
+  Atlas (i_reat): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 514.0, 'M60': 166.0, 'M80': 9.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1994, totale $2727–3647; sovraccarico 56.7 min/mese per shard
+     RAPPORTO centro 114% [curve 99–127], forbice 87–149%
+  Atlas (ii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 48.0, 'M60': 72.0, 'M80': 588.0, 'M140': 0.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $4759, totale $5362–6087; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 61% [curve 48–89], forbice 51–72%
+  Atlas (iii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5329, totale $5904–6586; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 56% [curve 53–59], forbice 47–65%
+
+[A 600µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3828 (costo $2105); migliore $3281, peggiore $4374
+    voci migliore: {'camerieri': 303, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 607, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 180.0, 'M50': 345.0, 'M60': 162.0, 'M80': 17.0, 'M140': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $3428, totale $4110–4954; sovraccarico 18.1 min/mese per shard
+     RAPPORTO centro 84% [curve 52–107], forbice 66–105%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 170.0, 'M50': 395.0, 'M60': 123.0, 'M80': 3.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $3228, totale $3921–4781; sovraccarico 115.8 min/mese per shard
+     RAPPORTO centro 91% [curve 77–130], forbice 71–116%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 52.0, 'M60': 366.0, 'M80': 287.0, 'M140': 0.0, 'M40': 0.0}; taglia di dimensionamento o sopra 41% del tempo; calcolo $7384, totale $7899–8493; sovraccarico 1.4 min/mese per shard
+     RAPPORTO centro 46% [curve 27–60], forbice 38–55%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $11008–11353; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 34% [curve 33–38], forbice 29–40%
+
+[A 600µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $4160 (costo $2288); migliore $3480, peggiore $4839
+    voci migliore: {'camerieri': 420, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 873, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 172.0, 'M50': 288.0, 'M60': 133.0, 'M80': 70.0, 'M140': 67.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $5049, totale $5667–6413; sovraccarico 328.6 min/mese per shard
+     RAPPORTO centro 79% [curve 52–107], forbice 61–101%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 397.0, 'M50': 324.0, 'M60': 10.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2196, totale $2925–3838; sovraccarico 1372.5 min/mese per shard
+     RAPPORTO centro 123% [curve 120–127], forbice 91–166%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 18.0, 'M60': 362.0, 'M80': 0.0, 'M140': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $10613, totale $11028–11471; sovraccarico 9.2 min/mese per shard
+     RAPPORTO centro 44% [curve 27–60], forbice 35–53%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $11008–11353; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 37% [curve 36–38], forbice 31–44%
+
+[A 600µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3798 (costo $2089); migliore $3264, peggiore $4333
+    voci migliore: {'camerieri': 293, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 593, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 180.0, 'M50': 345.0, 'M60': 162.0, 'M80': 17.0, 'M140': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $3428, totale $4110–4954; sovraccarico 12.5 min/mese per shard
+     RAPPORTO centro 84% [curve 74–105], forbice 66–105%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 151.0, 'M50': 395.0, 'M60': 146.0, 'M80': 7.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $3376, totale $4063–4913; sovraccarico 104.2 min/mese per shard
+     RAPPORTO centro 88% [curve 77–130], forbice 69–112%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 58.0, 'M60': 366.0, 'M80': 294.0, 'M140': 0.0, 'M40': 0.0}; taglia di dimensionamento o sopra 41% del tempo; calcolo $7384, totale $7899–8493; sovraccarico 0.3 min/mese per shard
+     RAPPORTO centro 46% [curve 30–59], forbice 38–55%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $11008–11353; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 34% [curve 33–37], forbice 29–39%
+
+[B 300µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 701.0, 'M60': 18.0, 'M80': 11.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1557, totale $2305–3247; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 105% [curve 104–107], forbice 82–138%
+  Atlas (i_reat): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 698.0, 'M60': 13.0, 'M80': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $1588, totale $2334–3274; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 104% [curve 102–107], forbice 81–137%
+  Atlas (ii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 88.0, 'M60': 1.0, 'M80': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $4858, totale $5455–6169; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 50% [curve 49–54], forbice 43–59%
+  Atlas (iii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5329, totale $5904–6586; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 46–48], forbice 40–54%
+
+[B 300µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $2907 (costo $1599); migliore $2638, peggiore $3177
+    voci migliore: {'camerieri': 181, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 199, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 704.0, 'M60': 20.0, 'M80': 6.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1532, totale $2281–3225; sovraccarico 0.3 min/mese per shard
+     RAPPORTO centro 106% [curve 105–106], forbice 82–139%
+  Atlas (i_reat): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 701.0, 'M60': 16.0, 'M80': 13.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1562, totale $2309–3251; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 105% [curve 104–105], forbice 81–138%
+  Atlas (ii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 88.0, 'M60': 1.0, 'M80': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $4857, totale $5454–6169; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 50% [curve 50–50], forbice 43–58%
+  Atlas (iii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5329, totale $5904–6586; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 47% [curve 46–47], forbice 40–54%
+
+[B 300µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 700.0, 'M60': 16.0, 'M80': 14.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1564, totale $2311–3253; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 105% [curve 104–107], forbice 81–138%
+  Atlas (i_reat): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 698.0, 'M60': 13.0, 'M80': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $1588, totale $2334–3274; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 104% [curve 102–107], forbice 81–137%
+  Atlas (ii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M50': 88.0, 'M60': 1.0, 'M80': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $4858, totale $5455–6170; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–54], forbice 43–59%
+  Atlas (iii): 1 shard (min 1 max 1), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5329, totale $5904–6586; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 46–48], forbice 40–54%
+
+[B 600µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 290, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 695.0, 'M50': 9.0, 'M60': 19.0, 'M80': 7.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1737, totale $2480–3416; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 103% [curve 100–106], forbice 78–136%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 693.0, 'M50': 9.0, 'M60': 17.0, 'M80': 11.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1771, totale $2513–3446; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 101% [curve 99–105], forbice 78–134%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 47.0, 'M80': 594.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $9235, totale $9650–10093; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 31% [curve 29–38], forbice 27–35%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $11008–11353; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 27% [curve 26–28], forbice 24–30%
+
+[B 600µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $3011 (costo $1656); migliore $2663, peggiore $3358
+    voci migliore: {'camerieri': 195, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 298, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 9.0, 'M60': 21.0, 'M80': 4.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1703, totale $2448–3386; sovraccarico 1.7 min/mese per shard
+     RAPPORTO centro 103% [curve 103–103], forbice 79–137%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 695.0, 'M50': 9.0, 'M60': 19.0, 'M80': 8.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1741, totale $2485–3420; sovraccarico 2.1 min/mese per shard
+     RAPPORTO centro 102% [curve 101–103], forbice 78–135%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 162.0, 'M80': 480.0}; taglia di dimensionamento o sopra 66% del tempo; calcolo $8466, totale $8922–9426; sovraccarico 0.3 min/mese per shard
+     RAPPORTO centro 33% [curve 30–36], forbice 29–38%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $11008–11353; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 27% [curve 27–27], forbice 23–31%
+
+[B 600µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 287, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 695.0, 'M50': 9.0, 'M60': 19.0, 'M80': 8.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1738, totale $2482–3417; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 102% [curve 100–106], forbice 78–135%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 693.0, 'M50': 9.0, 'M60': 17.0, 'M80': 11.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1771, totale $2513–3446; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 101% [curve 99–105], forbice 78–134%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 47.0, 'M80': 594.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $9235, totale $9650–10093; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 31% [curve 29–38], forbice 27–35%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $11008–11353; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 27% [curve 26–28], forbice 24–30%
+
+[C 300µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $6625 (costo $3644); migliore $5587, peggiore $7667
+    voci migliore: {'camerieri': 322, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 626, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 523.0, 'M60': 163.0, 'M80': 17.0, 'M140': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $3950, totale $5816–8164; sovraccarico 19.2 min/mese per shard
+     RAPPORTO centro 94% [curve 74–108], forbice 68–131%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 544.0, 'M60': 149.0, 'M80': 5.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $3707, totale $5584–7950; sovraccarico 62.8 min/mese per shard
+     RAPPORTO centro 100% [curve 88–116], forbice 71–140%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 52.0, 'M60': 341.0, 'M80': 303.0, 'M140': 0.0}; taglia di dimensionamento o sopra 42% del tempo; calcolo $7536, totale $9246–11360; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 64% [curve 40–79], forbice 49–83%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $12208–14083; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 50% [curve 48–54], forbice 40–63%
+
+[C 300µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $6936 (costo $3815); migliore $5786, peggiore $8087
+    voci migliore: {'camerieri': 449, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 902, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 462.0, 'M60': 158.0, 'M80': 76.0, 'M140': 34.0}; taglia di dimensionamento o sopra 15% del tempo; calcolo $4946, totale $6768–9052; sovraccarico 296.7 min/mese per shard
+     RAPPORTO centro 91% [curve 74–108], forbice 66–126%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 720.0, 'M60': 10.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2960, totale $4862–7266; sovraccarico 1186.7 min/mese per shard
+     RAPPORTO centro 114% [curve 113–116], forbice 80–166%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 18.0, 'M60': 362.0, 'M80': 0.0, 'M140': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $10614, totale $12222–14184; sovraccarico 13.1 min/mese per shard
+     RAPPORTO centro 59% [curve 40–79], forbice 45–77%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $12208–14083; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 53% [curve 52–54], forbice 41–66%
+
+[C 300µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $6588 (costo $3624); migliore $5561, peggiore $7620
+    voci migliore: {'camerieri': 312, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 613, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 523.0, 'M60': 163.0, 'M80': 17.0, 'M140': 0.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $3950, totale $5816–8164; sovraccarico 14.4 min/mese per shard
+     RAPPORTO centro 94% [curve 89–106], forbice 68–131%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 522.0, 'M60': 171.0, 'M80': 8.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $3873, totale $5744–8100; sovraccarico 57.8 min/mese per shard
+     RAPPORTO centro 98% [curve 88–105], forbice 70–136%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 67.0, 'M60': 341.0, 'M80': 304.0, 'M140': 0.0}; taglia di dimensionamento o sopra 42% del tempo; calcolo $7536, totale $9246–11360; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 64% [curve 44–78], forbice 49–83%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $10658, totale $12208–14083; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 50% [curve 48–53], forbice 39–62%
+
+[C 600µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $7341 (costo $4037); migliore $6029, peggiore $8659
+    voci migliore: {'camerieri': 565, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1177, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 393.0, 'M60': 230.0, 'M80': 70.0, 'M140': 0.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $7205, totale $8954–11128; sovraccarico 18.9 min/mese per shard
+     RAPPORTO centro 72% [curve 58–94], forbice 54–96%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 441.0, 'M60': 176.0, 'M80': 28.0}; taglia di dimensionamento o sopra 4% del tempo; calcolo $6776, totale $8547–10754; sovraccarico 84.6 min/mese per shard
+     RAPPORTO centro 77% [curve 64–106], forbice 56–102%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M60': 66.0, 'M80': 590.0, 'M140': 0.0, 'M50': 13.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $14689, totale $16082–17720; sovraccarico 3.3 min/mese per shard
+     RAPPORTO centro 44% [curve 32–68], forbice 34–54%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $15987, totale $17312–18850; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 41% [curve 39–46], forbice 32–50%
+
+[C 600µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $8008 (costo $4404); migliore $6446, peggiore $9570
+    voci migliore: {'camerieri': 812, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1718, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 377.0, 'M60': 216.0, 'M80': 69.0, 'M140': 68.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $8576, totale $10267–12353; sovraccarico 235.4 min/mese per shard
+     RAPPORTO centro 75% [curve 58–93], forbice 55–101%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 675.0, 'M60': 55.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $4704, totale $6549–8867; sovraccarico 1479.8 min/mese per shard
+     RAPPORTO centro 104% [curve 102–106], forbice 73–146%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M60': 377.0, 'M80': 0.0, 'M140': 349.0, 'M50': 3.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $16010, totale $17420–19084; sovraccarico 127.4 min/mese per shard
+     RAPPORTO centro 50% [curve 33–68], forbice 38–65%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $15987, totale $17312–18850; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 44% [curve 43–46], forbice 34–55%
+
+[C 600µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $7297 (costo $4013); migliore $5992, peggiore $8602
+    voci migliore: {'camerieri': 552, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1157, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 393.0, 'M60': 247.0, 'M80': 70.0, 'M140': 0.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $7205, totale $8954–11128; sovraccarico 9.6 min/mese per shard
+     RAPPORTO centro 72% [curve 64–94], forbice 54–96%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 406.0, 'M60': 239.0, 'M80': 61.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $7097, totale $8848–11026; sovraccarico 79.4 min/mese per shard
+     RAPPORTO centro 75% [curve 64–94], forbice 55–100%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 15.0, 'M60': 66.0, 'M80': 607.0, 'M140': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $14689, totale $16082–17720; sovraccarico 0.7 min/mese per shard
+     RAPPORTO centro 44% [curve 32–56], forbice 34–54%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M80': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $15987, totale $17312–18850; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–44], forbice 32–50%
+
+===== SHARD IN PARI =====
+
+[A 300µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3486 (costo $1917); migliore $3098, peggiore $3874
+    voci migliore: {'camerieri': 203, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 332, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 503.0, 'M50': 172.0, 'M60': 7.0, 'M80': 0.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2082, totale $2815–3734; sovraccarico 11.1 min/mese per shard
+     RAPPORTO centro 108% [curve 67–125], forbice 84–140%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 575.0, 'M50': 118.0, 'M60': 3.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1902, totale $2641–3569; sovraccarico 60.0 min/mese per shard
+     RAPPORTO centro 115% [curve 96–134], forbice 88–151%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 72.0, 'M60': 573.0, 'M80': 0.0, 'M40': 34.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $5120, totale $5750–6515; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 57% [curve 34–89], forbice 48–67%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 52% [curve 49–55], forbice 44–61%
+
+[A 300µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $3639 (costo $2001); migliore $3180, peggiore $4097
+    voci migliore: {'camerieri': 255, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 465, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 437.0, 'M50': 156.0, 'M60': 70.0, 'M80': 67.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $3062, totale $3753–4610; sovraccarico 320.6 min/mese per shard
+     RAPPORTO centro 96% [curve 67–125], forbice 75–125%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 724.0, 'M50': 6.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $1530, totale $2281–3229; sovraccarico 1181.7 min/mese per shard
+     RAPPORTO centro 132% [curve 130–134], forbice 98–180%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M50': 370.0, 'M60': 0.0, 'M80': 349.0, 'M40': 11.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $6602, totale $7137–7760; sovraccarico 7.2 min/mese per shard
+     RAPPORTO centro 61% [curve 34–89], forbice 50–76%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 54% [curve 53–55], forbice 45–64%
+
+[A 300µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3466 (costo $1906); migliore $3089, peggiore $3843
+    voci migliore: {'camerieri': 197, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 321, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 503.0, 'M50': 172.0, 'M60': 7.0, 'M80': 0.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2082, totale $2815–3734; sovraccarico 6.1 min/mese per shard
+     RAPPORTO centro 108% [curve 97–123], forbice 84–140%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 514.0, 'M50': 166.0, 'M60': 9.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2053, totale $2787–3708; sovraccarico 56.7 min/mese per shard
+     RAPPORTO centro 112% [curve 96–124], forbice 86–146%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 48.0, 'M50': 72.0, 'M60': 588.0, 'M80': 0.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $5120, totale $5750–6515; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 57% [curve 39–88], forbice 48–67%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–55], forbice 43–60%
+
+[A 600µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3828 (costo $2105); migliore $3281, peggiore $4374
+    voci migliore: {'camerieri': 303, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 607, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 397.0, 'M50': 222.0, 'M60': 76.0, 'M80': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $3718, totale $4396–5235; sovraccarico 14.4 min/mese per shard
+     RAPPORTO centro 78% [curve 56–106], forbice 62–98%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 451.0, 'M50': 182.0, 'M60': 20.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $3518, totale $4204–5052; sovraccarico 80.6 min/mese per shard
+     RAPPORTO centro 86% [curve 63–118], forbice 67–109%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 63.0, 'M60': 590.0, 'M80': 0.0, 'M40': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $7941, totale $8477–9101; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 43% [curve 25–74], forbice 36–51%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–45], forbice 34–48%
+
+[A 600µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $4160 (costo $2288); migliore $3480, peggiore $4839
+    voci migliore: {'camerieri': 420, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 873, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 372.0, 'M50': 221.0, 'M60': 68.0, 'M80': 69.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $4802, totale $5438–6213; sovraccarico 193.3 min/mese per shard
+     RAPPORTO centro 79% [curve 56–102], forbice 61–101%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 687.0, 'M50': 43.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $2402, totale $3126–4032; sovraccarico 1743.9 min/mese per shard
+     RAPPORTO centro 116% [curve 115–118], forbice 86–155%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M50': 380.0, 'M60': 0.0, 'M80': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $9937, totale $10374–10851; sovraccarico 114.4 min/mese per shard
+     RAPPORTO centro 51% [curve 27–74], forbice 40–62%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 44% [curve 43–45], forbice 36–53%
+
+[A 600µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3798 (costo $2089); migliore $3264, peggiore $4333
+    voci migliore: {'camerieri': 293, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 593, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 397.0, 'M50': 232.0, 'M60': 76.0, 'M80': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $3718, totale $4396–5235; sovraccarico 10.6 min/mese per shard
+     RAPPORTO centro 78% [curve 61–106], forbice 62–98%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 408.0, 'M50': 237.0, 'M60': 46.0}; taglia di dimensionamento o sopra 6% del tempo; calcolo $3632, totale $4314–5156; sovraccarico 78.3 min/mese per shard
+     RAPPORTO centro 83% [curve 63–106], forbice 65–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 6.0, 'M50': 63.0, 'M60': 607.0, 'M80': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $7941, totale $8477–9101; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 43% [curve 25–73], forbice 36–51%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–44], forbice 33–47%
+
+[B 300µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 701.0, 'M50': 18.0, 'M60': 11.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1620, totale $2369–3312; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 103% [curve 101–105], forbice 80–134%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 698.0, 'M50': 13.0, 'M60': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $1656, totale $2403–3344; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 102% [curve 100–104], forbice 79–133%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 1.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5250, totale $5875–6633; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 46–51], forbice 40–54%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 37–50%
+
+[B 300µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $2907 (costo $1599); migliore $2638, peggiore $3177
+    voci migliore: {'camerieri': 181, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 199, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 704.0, 'M50': 20.0, 'M60': 6.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $1593, totale $2342–3287; sovraccarico 0.3 min/mese per shard
+     RAPPORTO centro 103% [curve 103–103], forbice 80–136%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 701.0, 'M50': 16.0, 'M60': 13.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1626, totale $2375–3317; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 102% [curve 102–103], forbice 80–134%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 1.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5248, totale $5874–6632; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 46% [curve 46–47], forbice 40–54%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 43% [curve 43–43], forbice 37–50%
+
+[B 300µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 700.0, 'M50': 16.0, 'M60': 14.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $1629, totale $2377–3320; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 102% [curve 101–105], forbice 80–134%
+  Atlas (i_reat): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 698.0, 'M50': 13.0, 'M60': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $1656, totale $2403–3344; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 102% [curve 100–104], forbice 79–133%
+  Atlas (ii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 1.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $5250, totale $5875–6634; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 46–51], forbice 40–55%
+  Atlas (iii): 2 shard (min 2 max 2), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 37–50%
+
+[B 600µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 290, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 11.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2488, totale $3209–4110; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 82% [curve 81–86], forbice 65–104%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 10.0, 'M60': 23.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2506, totale $3226–4127; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 82% [curve 80–86], forbice 65–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7878, totale $8416–9043; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 35% [curve 34–36], forbice 30–40%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 32% [curve 31–33], forbice 27–37%
+
+[B 600µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $3011 (costo $1656); migliore $2663, peggiore $3358
+    voci migliore: {'camerieri': 195, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 298, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 10.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2492, totale $3213–4114; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 82% [curve 81–83], forbice 65–105%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 10.0, 'M60': 23.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2509, totale $3229–4129; sovraccarico 0.8 min/mese per shard
+     RAPPORTO centro 82% [curve 81–83], forbice 64–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7876, totale $8415–9042; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 34% [curve 34–35], forbice 29–40%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 32% [curve 32–32], forbice 27–37%
+
+[B 600µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 287, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 699.0, 'M50': 11.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2487, totale $3207–4109; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 82% [curve 81–86], forbice 65–104%
+  Atlas (i_reat): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 697.0, 'M50': 10.0, 'M60': 23.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $2506, totale $3226–4127; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 82% [curve 80–86], forbice 65–104%
+  Atlas (ii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M40': 88.0, 'M50': 0.0, 'M60': 641.0}; taglia di dimensionamento o sopra 88% del tempo; calcolo $7878, totale $8416–9043; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 35% [curve 34–36], forbice 30–40%
+  Atlas (iii): 3 shard (min 3 max 3), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 32% [curve 31–33], forbice 27–37%
+
+[C 300µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $6625 (costo $3644); migliore $5587, peggiore $7667
+    voci migliore: {'camerieri': 322, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 626, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 729.0, 'M60': 1.0, 'M80': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5850, totale $7657–9919; sovraccarico 3.9 min/mese per shard
+     RAPPORTO centro 75% [curve 65–77], forbice 56–99%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 729.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5844, totale $7652–9914; sovraccarico 5.6 min/mese per shard
+     RAPPORTO centro 75% [curve 70–81], forbice 56–100%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 142.0, 'M60': 573.0, 'M80': 0.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $10556, totale $12205–14228; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 50% [curve 32–77], forbice 39–63%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 44–50], forbice 37–58%
+
+[C 300µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $6936 (costo $3815); migliore $5786, peggiore $8087
+    voci migliore: {'camerieri': 449, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 902, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 648.0, 'M60': 81.0, 'M80': 1.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $6487, totale $8273–10502; sovraccarico 21.1 min/mese per shard
+     RAPPORTO centro 74% [curve 71–77], forbice 55–98%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 730.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5840, totale $7648–9910; sovraccarico 21.1 min/mese per shard
+     RAPPORTO centro 79% [curve 77–81], forbice 58–106%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 380.0, 'M60': 0.0, 'M80': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $13244, totale $14713–16467; sovraccarico 7.2 min/mese per shard
+     RAPPORTO centro 55% [curve 32–77], forbice 42–71%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 49% [curve 48–50], forbice 38–61%
+
+[C 300µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $6588 (costo $3624); migliore $5561, peggiore $7620
+    voci migliore: {'camerieri': 312, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 613, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 729.0, 'M60': 1.0, 'M80': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5850, totale $7657–9919; sovraccarico 3.9 min/mese per shard
+     RAPPORTO centro 75% [curve 65–77], forbice 56–99%
+  Atlas (i_reat): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 729.0, 'M60': 1.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5845, totale $7653–9915; sovraccarico 5.6 min/mese per shard
+     RAPPORTO centro 75% [curve 70–80], forbice 56–99%
+  Atlas (ii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 142.0, 'M60': 588.0, 'M80': 0.0}; taglia di dimensionamento o sopra 81% del tempo; calcolo $10556, totale $12205–14228; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 50% [curve 35–76], forbice 39–63%
+  Atlas (iii): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 44–49], forbice 37–58%
+
+[C 600µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $7341 (costo $4037); migliore $6029, peggiore $8659
+    voci migliore: {'camerieri': 565, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1177, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 397.0, 'M50': 222.0, 'M60': 76.0, 'M80': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $7435, totale $9193–11380; sovraccarico 14.4 min/mese per shard
+     RAPPORTO centro 71% [curve 52–93], forbice 52–93%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 451.0, 'M50': 182.0, 'M60': 20.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $7036, totale $8807–11014; sovraccarico 80.6 min/mese per shard
+     RAPPORTO centro 77% [curve 57–104], forbice 57–103%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M50': 63.0, 'M60': 590.0, 'M80': 0.0, 'M40': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $15881, totale $17353–19111; sovraccarico 1.1 min/mese per shard
+     RAPPORTO centro 40% [curve 24–67], forbice 31–50%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 38% [curve 36–42], forbice 30–46%
+
+[C 600µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $8008 (costo $4404); migliore $6446, peggiore $9570
+    voci migliore: {'camerieri': 812, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1718, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 372.0, 'M50': 221.0, 'M60': 68.0, 'M80': 69.0}; taglia di dimensionamento o sopra 19% del tempo; calcolo $9604, totale $11262–13300; sovraccarico 193.3 min/mese per shard
+     RAPPORTO centro 71% [curve 52–91], forbice 52–95%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 687.0, 'M50': 43.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $4804, totale $6652–8973; sovraccarico 1743.9 min/mese per shard
+     RAPPORTO centro 102% [curve 101–104], forbice 72–144%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M50': 380.0, 'M60': 0.0, 'M80': 349.0}; taglia di dimensionamento o sopra 48% del tempo; calcolo $19873, totale $21077–22432; sovraccarico 114.4 min/mese per shard
+     RAPPORTO centro 46% [curve 26–67], forbice 35–60%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 41% [curve 39–42], forbice 32–51%
+
+[C 600µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $7297 (costo $4013); migliore $5992, peggiore $8602
+    voci migliore: {'camerieri': 552, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1157, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 397.0, 'M50': 232.0, 'M60': 76.0, 'M80': 0.0}; taglia di dimensionamento o sopra 10% del tempo; calcolo $7435, totale $9193–11380; sovraccarico 10.6 min/mese per shard
+     RAPPORTO centro 71% [curve 56–93], forbice 52–93%
+  Atlas (i_reat): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 408.0, 'M50': 237.0, 'M60': 46.0}; taglia di dimensionamento o sopra 6% del tempo; calcolo $7264, totale $9028–11223; sovraccarico 78.3 min/mese per shard
+     RAPPORTO centro 74% [curve 57–93], forbice 55–98%
+  Atlas (ii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M40': 6.0, 'M50': 63.0, 'M60': 607.0, 'M80': 0.0}; taglia di dimensionamento o sopra 83% del tempo; calcolo $15881, totale $17353–19111; sovraccarico 0.6 min/mese per shard
+     RAPPORTO centro 40% [curve 24–66], forbice 31–50%
+  Atlas (iii): 6 shard (min 6 max 6), pavimento M40, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 36–41], forbice 29–46%
+
+===== PAVIMENTO M50 (RAM) =====
+
+[A 300µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3486 (costo $1917); migliore $3098, peggiore $3874
+    voci migliore: {'camerieri': 203, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 332, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 725.0, 'M60': 5.0, 'M80': 0.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2939, totale $3642–4517; sovraccarico 6.9 min/mese per shard
+     RAPPORTO centro 84% [curve 78–88], forbice 68–105%
+
+[A 300µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $3639 (costo $2001); migliore $3180, peggiore $4097
+    voci migliore: {'camerieri': 255, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 465, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 648.0, 'M60': 81.0, 'M80': 1.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $3244, totale $3937–4796; sovraccarico 24.7 min/mese per shard
+     RAPPORTO centro 84% [curve 79–88], forbice 67–105%
+
+[A 300µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3466 (costo $1906); migliore $3089, peggiore $3843
+    voci migliore: {'camerieri': 197, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 321, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 725.0, 'M60': 5.0, 'M80': 0.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2939, totale $3642–4517; sovraccarico 3.3 min/mese per shard
+     RAPPORTO centro 84% [curve 78–88], forbice 68–105%
+
+[A 600µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3828 (costo $2105); migliore $3281, peggiore $4374
+    voci migliore: {'camerieri': 303, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 607, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 675.0, 'M60': 54.0, 'M80': 0.0}; taglia di dimensionamento o sopra 7% del tempo; calcolo $4704, totale $5349–6136; sovraccarico 9.1 min/mese per shard
+     RAPPORTO centro 67% [curve 60–74], forbice 53–83%
+
+[A 600µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $4160 (costo $2288); migliore $3480, peggiore $4839
+    voci migliore: {'camerieri': 420, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 873, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 648.0, 'M60': 80.0, 'M80': 2.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $4882, totale $5521–6299; sovraccarico 145.0 min/mese per shard
+     RAPPORTO centro 71% [curve 67–74], forbice 55–88%
+
+[A 600µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3798 (costo $2089); migliore $3264, peggiore $4333
+    voci migliore: {'camerieri': 293, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 593, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 675.0, 'M60': 54.0, 'M80': 0.0}; taglia di dimensionamento o sopra 7% del tempo; calcolo $4704, totale $5349–6136; sovraccarico 3.7 min/mese per shard
+     RAPPORTO centro 66% [curve 60–70], forbice 53–81%
+
+[B 300µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 719.0, 'M60': 11.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $2964, totale $3666–4540; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 71% [curve 70–73], forbice 58–87%
+
+[B 300µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $2907 (costo $1599); migliore $2638, peggiore $3177
+    voci migliore: {'camerieri': 181, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 199, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 723.0, 'M60': 7.0}; taglia di dimensionamento o sopra 1% del tempo; calcolo $2949, totale $3652–4527; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 71% [curve 71–71], forbice 58–87%
+
+[B 300µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M50, ore/mese per shard {'M50': 718.0, 'M60': 12.0}; taglia di dimensionamento o sopra 2% del tempo; calcolo $2965, totale $3667–4541; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 71% [curve 70–73], forbice 58–87%
+
+[B 600µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 290, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 709.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $4500, totale $5152–5950; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 54% [curve 53–57], forbice 45–65%
+
+[B 600µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $3011 (costo $1656); migliore $2663, peggiore $3358
+    voci migliore: {'camerieri': 195, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 298, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 711.0, 'M60': 19.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $4490, totale $5142–5941; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 54% [curve 54–55], forbice 45–65%
+
+[B 600µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 287, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M50, ore/mese per shard {'M50': 709.0, 'M60': 21.0}; taglia di dimensionamento o sopra 3% del tempo; calcolo $4502, totale $5154–5952; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 54% [curve 53–57], forbice 45–65%
+
+[C 300µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $6625 (costo $3644); migliore $5587, peggiore $7667
+    voci migliore: {'camerieri': 322, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 626, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 727.0, 'M60': 3.0, 'M80': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5865, totale $7672–9933; sovraccarico 4.2 min/mese per shard
+     RAPPORTO centro 74% [curve 69–77], forbice 56–99%
+
+[C 300µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $6936 (costo $3815); migliore $5786, peggiore $8087
+    voci migliore: {'camerieri': 449, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 902, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 648.0, 'M60': 81.0, 'M80': 1.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $6487, totale $8273–10502; sovraccarico 22.9 min/mese per shard
+     RAPPORTO centro 74% [curve 71–77], forbice 55–98%
+
+[C 300µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $6588 (costo $3624); migliore $5561, peggiore $7620
+    voci migliore: {'camerieri': 312, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 613, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M50, ore/mese per shard {'M50': 727.0, 'M60': 3.0, 'M80': 0.0}; taglia di dimensionamento o sopra 0% del tempo; calcolo $5865, totale $7672–9933; sovraccarico 2.8 min/mese per shard
+     RAPPORTO centro 74% [curve 69–77], forbice 56–99%
+
+[C 600µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $7341 (costo $4037); migliore $6029, peggiore $8659
+    voci migliore: {'camerieri': 565, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1177, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M50, ore/mese per shard {'M50': 675.0, 'M60': 55.0, 'M80': 0.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $9415, totale $11105–13190; sovraccarico 9.2 min/mese per shard
+     RAPPORTO centro 61% [curve 56–67], forbice 46–79%
+
+[C 600µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $8008 (costo $4404); migliore $6446, peggiore $9570
+    voci migliore: {'camerieri': 812, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1718, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 6 shard (min 6 max 6), pavimento M50, ore/mese per shard {'M50': 648.0, 'M60': 80.0, 'M80': 2.0}; taglia di dimensionamento o sopra 11% del tempo; calcolo $9758, totale $11436–13502; sovraccarico 137.3 min/mese per shard
+     RAPPORTO centro 64% [curve 62–67], forbice 48–84%
+
+[C 600µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $7297 (costo $4013); migliore $5992, peggiore $8602
+    voci migliore: {'camerieri': 552, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1157, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M50, ore/mese per shard {'M50': 675.0, 'M60': 55.0, 'M80': 0.0}; taglia di dimensionamento o sopra 8% del tempo; calcolo $9415, totale $11105–13190; sovraccarico 3.3 min/mese per shard
+     RAPPORTO centro 60% [curve 56–63], forbice 45–77%
+
+===== PAVIMENTO M60 (RAM) =====
+
+[A 300µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3486 (costo $1917); migliore $3098, peggiore $3874
+    voci migliore: {'camerieri': 203, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 332, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 52% [curve 49–55], forbice 44–61%
+
+[A 300µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $3639 (costo $2001); migliore $3180, peggiore $4097
+    voci migliore: {'camerieri': 255, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 465, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M60, ore/mese per shard {'M60': 729.0, 'M80': 1.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5771, totale $6379–7110; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 54% [curve 53–55], forbice 45–64%
+
+[A 300µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3466 (costo $1906); migliore $3089, peggiore $3843
+    voci migliore: {'camerieri': 197, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 321, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 51% [curve 49–54], forbice 43–60%
+
+[A 600µs Meta+Twitter n=14] media scritture 8016/s, picco 40054/s, k 2.52
+  noi: prezzo centro $3828 (costo $2105); migliore $3281, peggiore $4374
+    voci migliore: {'camerieri': 303, 'quaderni': 455, 'dispensa': 370, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 607, 'quaderni': 483, 'dispensa': 634, 's3': 146, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–45], forbice 34–48%
+
+[A 600µs Meta n=2] media scritture 7931/s, picco 40000/s, k 2.52
+  noi: prezzo centro $4160 (costo $2288); migliore $3480, peggiore $4839
+    voci migliore: {'camerieri': 420, 'quaderni': 457, 'dispensa': 370, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 873, 'quaderni': 487, 'dispensa': 634, 's3': 145, 'lavaggio': 133, 'tra_zone': 309, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M60, ore/mese per shard {'M60': 728.0, 'M80': 2.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8675, totale $9186–9772; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 44% [curve 43–45], forbice 36–53%
+
+[A 600µs Twitter n=12] media scritture 8033/s, picco 40079/s, k 2.52
+  noi: prezzo centro $3798 (costo $2089); migliore $3264, peggiore $4333
+    voci migliore: {'camerieri': 293, 'quaderni': 455, 'dispensa': 370, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 593, 'quaderni': 483, 'dispensa': 634, 's3': 147, 'lavaggio': 133, 'tra_zone': 313, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 40% [curve 39–44], forbice 33–47%
+
+[B 300µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M60, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 37–50%
+
+[B 300µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $2907 (costo $1599); migliore $2638, peggiore $3177
+    voci migliore: {'camerieri': 181, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 199, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M60, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.1 min/mese per shard
+     RAPPORTO centro 43% [curve 43–43], forbice 37–50%
+
+[B 300µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $2918 (costo $1605); migliore $2649, peggiore $3188
+    voci migliore: {'camerieri': 181, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 197, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 2 shard (min 2 max 2), pavimento M60, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $5767, totale $6375–7107; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 43% [curve 42–45], forbice 37–50%
+
+[B 600µs Meta+Twitter n=14] media scritture 4084/s, picco 40004/s, k 0.55
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 290, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M60, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 32% [curve 31–33], forbice 27–37%
+
+[B 600µs Meta n=2] media scritture 3990/s, picco 40002/s, k 0.59
+  noi: prezzo centro $3011 (costo $1656); migliore $2663, peggiore $3358
+    voci migliore: {'camerieri': 195, 'quaderni': 454, 'dispensa': 370, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 298, 'quaderni': 469, 'dispensa': 634, 's3': 98, 'lavaggio': 112, 'tra_zone': 156, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M60, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.2 min/mese per shard
+     RAPPORTO centro 32% [curve 32–32], forbice 27–37%
+
+[B 600µs Twitter n=12] media scritture 4086/s, picco 40005/s, k 0.54
+  noi: prezzo centro $3012 (costo $1657); migliore $2673, peggiore $3351
+    voci migliore: {'camerieri': 194, 'quaderni': 455, 'dispensa': 370, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $902
+    voci peggiore: {'camerieri': 287, 'quaderni': 471, 'dispensa': 634, 's3': 99, 'lavaggio': 113, 'tra_zone': 159, 'resto': 80}; quaderni sul picco $1353
+  Atlas (i): 3 shard (min 3 max 3), pavimento M60, ore/mese per shard {'M60': 730.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $8651, totale $9163–9751; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 32% [curve 31–33], forbice 27–37%
+
+[C 300µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $6625 (costo $3644); migliore $5587, peggiore $7667
+    voci migliore: {'camerieri': 322, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 626, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 44–50], forbice 37–58%
+
+[C 300µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $6936 (costo $3815); migliore $5786, peggiore $8087
+    voci migliore: {'camerieri': 449, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 902, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 4 shard (min 4 max 4), pavimento M60, ore/mese per shard {'M60': 729.0, 'M80': 1.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11542, totale $13157–15131; sovraccarico 8.3 min/mese per shard
+     RAPPORTO centro 49% [curve 48–50], forbice 38–61%
+
+[C 300µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $6588 (costo $3624); migliore $5561, peggiore $7620
+    voci migliore: {'camerieri': 312, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 613, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 4 shard (min 4 max 4), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $11534, totale $13150–15124; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 47% [curve 44–49], forbice 37–58%
+
+[C 600µs Meta+Twitter n=14] media scritture 16032/s, picco 80108/s, k 2.52
+  noi: prezzo centro $7341 (costo $4037); migliore $6029, peggiore $8659
+    voci migliore: {'camerieri': 565, 'quaderni': 480, 'dispensa': 925, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1177, 'quaderni': 660, 'dispensa': 1585, 's3': 317, 'lavaggio': 312, 'tra_zone': 625, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 38% [curve 36–42], forbice 30–46%
+
+[C 600µs Meta n=2] media scritture 15863/s, picco 80000/s, k 2.52
+  noi: prezzo centro $8008 (costo $4404); migliore $6446, peggiore $9570
+    voci migliore: {'camerieri': 812, 'quaderni': 483, 'dispensa': 925, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1718, 'quaderni': 635, 'dispensa': 1585, 's3': 315, 'lavaggio': 311, 'tra_zone': 619, 'resto': 80}; quaderni sul picco $2255
+  Atlas (i): 6 shard (min 6 max 6), pavimento M60, ore/mese per shard {'M60': 728.0, 'M80': 2.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17343, totale $18765–20448; sovraccarico 10.0 min/mese per shard
+     RAPPORTO centro 41% [curve 39–42], forbice 32–51%
+
+[C 600µs Twitter n=12] media scritture 16065/s, picco 80158/s, k 2.52
+  noi: prezzo centro $7297 (costo $4013); migliore $5992, peggiore $8602
+    voci migliore: {'camerieri': 552, 'quaderni': 480, 'dispensa': 925, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $1353
+    voci peggiore: {'camerieri': 1157, 'quaderni': 669, 'dispensa': 1585, 's3': 318, 'lavaggio': 313, 'tra_zone': 627, 'resto': 80}; quaderni sul picco $2706
+  Atlas (i): 6 shard (min 6 max 6), pavimento M60, ore/mese per shard {'M60': 730.0, 'M80': 0.0}; taglia di dimensionamento o sopra 100% del tempo; calcolo $17301, totale $18725–20411; sovraccarico 0.0 min/mese per shard
+     RAPPORTO centro 37% [curve 36–40], forbice 29–46%
+
+===== SCALA (profilo A, Meta+Twitter, variante i e iii, centro) =====
+  300µs 2 TB fissi picco 10014/s (TB 2.0): noi $2655; i: 1 shard, Atlas $2686, rapporto 99% (forbice 76–131%); iii: 1 shard, Atlas $4026, rapporto 66% (forbice 54–81%)
+  300µs 2 TB fissi picco 20027/s (TB 2.0): noi $2900; i: 1 shard, Atlas $2688, rapporto 107% (forbice 83–142%); iii: 1 shard, Atlas $4026, rapporto 72% (forbice 59–88%)
+  300µs 2 TB fissi picco 40054/s (TB 2.0): noi $3486; i: 2 shard, Atlas $3236, rapporto 107% (forbice 83–138%); iii: 2 shard, Atlas $6741, rapporto 52% (forbice 44–61%)
+  300µs 2 TB fissi picco 80108/s (TB 2.0): noi $4871; i: 4 shard, Atlas $4850, rapporto 99% (forbice 79–124%); iii: 4 shard, Atlas $12172, rapporto 40% (forbice 34–46%)
+  300µs 2 TB fissi picco 160217/s (TB 2.0): noi $7867; i: 7 shard, Atlas $8936, rapporto 89% (forbice 73–107%); iii: 7 shard, Atlas $20444, rapporto 38% (forbice 32–45%)
+  300µs 2 TB fissi picco 320433/s (TB 2.0): noi $13960; i: 13 shard, Atlas $16088, rapporto 87% (forbice 72–102%); iii: 13 shard, Atlas $37746, rapporto 37% (forbice 31–43%)
+  300µs TB proporzionali picco 10014/s (TB 0.6): noi $1851; i: 1 shard, Atlas $1128, rapporto 164% (forbice 139–195%); iii: 1 shard, Atlas $3125, rapporto 59% (forbice 55–64%)
+  300µs TB proporzionali picco 20027/s (TB 1.2): noi $2462; i: 1 shard, Atlas $2197, rapporto 111% (forbice 91–136%); iii: 1 shard, Atlas $3534, rapporto 70% (forbice 60–80%)
+  300µs TB proporzionali picco 40054/s (TB 2.0): noi $3486; i: 2 shard, Atlas $3236, rapporto 107% (forbice 83–138%); iii: 2 shard, Atlas $6741, rapporto 52% (forbice 44–61%)
+  300µs TB proporzionali picco 80108/s (TB 5.0): noi $6625; i: 4 shard, Atlas $8802, rapporto 74% (forbice 56–99%); iii: 4 shard, Atlas $14137, rapporto 47% (forbice 37–58%)
+  300µs TB proporzionali picco 160217/s (TB 10.0): noi $12544; i: 7 shard, Atlas $16671, rapporto 74% (forbice 54–102%); iii: 7 shard, Atlas $25558, rapporto 49% (forbice 38–63%)
+  300µs TB proporzionali picco 320433/s (TB 20.0): noi $24482; i: 13 shard, Atlas $32372, rapporto 76% (forbice 54–104%); iii: 13 shard, Atlas $48402, rapporto 51% (forbice 38–65%)
+  600µs 2 TB fissi picco 10014/s (TB 2.0): noi $2684; i: 1 shard, Atlas $2686, rapporto 100% (forbice 76–133%); iii: 1 shard, Atlas $4026, rapporto 67% (forbice 54–82%)
+  600µs 2 TB fissi picco 20027/s (TB 2.0): noi $3027; i: 2 shard, Atlas $3103, rapporto 97% (forbice 75–128%); iii: 2 shard, Atlas $6741, rapporto 45% (forbice 38–53%)
+  600µs 2 TB fissi picco 40054/s (TB 2.0): noi $3828; i: 3 shard, Atlas $4839, rapporto 78% (forbice 62–97%); iii: 3 shard, Atlas $9457, rapporto 40% (forbice 34–48%)
+  600µs 2 TB fissi picco 80108/s (TB 2.0): noi $5587; i: 6 shard, Atlas $8083, rapporto 69% (forbice 55–85%); iii: 6 shard, Atlas $17603, rapporto 32% (forbice 26–37%)
+  600µs 2 TB fissi picco 160217/s (TB 2.0): noi $9327; i: 12 shard, Atlas $14917, rapporto 62% (forbice 50–76%); iii: 12 shard, Atlas $34862, rapporto 27% (forbice 22–32%)
+  600µs 2 TB fissi picco 320433/s (TB 2.0): noi $16899; i: 23 shard, Atlas $28554, rapporto 60% (forbice 48–72%); iii: 23 shard, Atlas $66581, rapporto 25% (forbice 20–30%)
+  600µs TB proporzionali picco 10014/s (TB 0.6): noi $1880; i: 1 shard, Atlas $1209, rapporto 156% (forbice 132–186%); iii: 1 shard, Atlas $3125, rapporto 60% (forbice 55–65%)
+  600µs TB proporzionali picco 20027/s (TB 1.2): noi $2589; i: 2 shard, Atlas $2611, rapporto 99% (forbice 80–122%); iii: 2 shard, Atlas $6250, rapporto 41% (forbice 36–47%)
+  600µs TB proporzionali picco 40054/s (TB 2.0): noi $3828; i: 3 shard, Atlas $4839, rapporto 78% (forbice 62–97%); iii: 3 shard, Atlas $9457, rapporto 40% (forbice 34–48%)
+  600µs TB proporzionali picco 80108/s (TB 5.0): noi $7341; i: 6 shard, Atlas $10291, rapporto 71% (forbice 52–93%); iii: 6 shard, Atlas $19568, rapporto 38% (forbice 30–46%)
+  600µs TB proporzionali picco 160217/s (TB 10.0): noi $14003; i: 12 shard, Atlas $20622, rapporto 67% (forbice 49–90%); iii: 12 shard, Atlas $39136, rapporto 36% (forbice 28–45%)
+  600µs TB proporzionali picco 320433/s (TB 20.0): noi $27421; i: 23 shard, Atlas $41233, rapporto 66% (forbice 48–89%); iii: 23 shard, Atlas $75557, rapporto 36% (forbice 28–46%)
