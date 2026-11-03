@@ -112,6 +112,19 @@ Cosa vale anche per i database grandi: la coda pesata e la tessera non dipendono
 
 Non fatto. La macchina ha cgroup v1 per la CPU; la gerarchia v2 (`/sys/fs/cgroup/unified`) offre solo `hugetlb`. Come chiede il prompt, non l'ho simulato.
 
+## 4. Correzioni dopo la revisione (C7, 2026-11-03)
+
+Errori provati 1, 2 e 3 del revisore (sessions/2026-11-02-revisore-s4-isolamento), un test ciascuno in `ctl-tests/test_36b_review_fixes.py`.
+
+- **Scarichi.** Il posto tra gli scarichi torna libero quando parte la PUT del WAL del database (non quando S3 risponde): il posto serve per la CPU dell'impacchettamento, non per l'attesa della rete. Prova D del revisore (50 pesanti, PUT a 30 ms, 2 giri): leggero p99 da 184 e 101 ms a 71,5 e 73,7 ms (coda spenta: 66,7 e 69,5); pesanti dal 95% al 101% della coda spenta (MISURATO, `results-isolamento/noisy-c7-prova-D.json`).
+- **getMore.** Passa da quota e coda pesata; restano esenti solo change stream e cursori tailable. Nota: il `find` legge tutto il risultato subito e il cursore lo tiene in memoria, quindi quasi tutto il costo di una lettura a lotti è del `find` (409–501 punti contro 39–80 di 300 getMore, MISURATO).
+- **Chi paga le richieste S3.** Il comando che gira; poi il database che fa la richiesta attraverso la sua vista dello store (`counting::owned`, per scrittore, lettore e compattatore: le letture di un ramo clone sul padre vanno al ramo); poi il percorso. Le richieste di database non aperti si contano.
+- Opzione di prova `MONGO_TEST_PUT_DELAY_MS` (solo con `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`): ogni PUT aspetta tanto prima di partire.
+
+Limiti noti, non corretti (cosa servirebbe: rapporto di C7 in fenvix-brain):
+- La coda pesata non fa la fila quando i vicini fanno solo CPU: la fila vera si forma prima, nella coda dei compiti di tokio (prova E del revisore). Il p99 del leggero è misurato su 184 richieste per prova (intervallo circa 21–30 ms), e la causa "lavori di fondo di SlateDB" non è dimostrata.
+- La scelta del prossimo scorre tutti i database in fila (circa 0,9 ms con 10.000).
+
 ## Test
 
 - ctl-test 36 (`ctl-tests/test_36_isolation_quotas.py`): punti per parte, quota che fa aspettare e poi rifiuta in modo ritentabile senza toccare un altro database, `GET`/`PUT`/`DELETE` della quota, tetto JavaScript per comando, pesi sbagliati che fermano l'avvio.
