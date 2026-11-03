@@ -72,7 +72,7 @@ worker il conteggio cambia, conta solo "trovato sì o no") e lunghezza della tra
 - **SplitSwap** (prima i documenti, poi gli indici, in due scritture del foglio): violata
   NessunDatoPerso (14.493 stati, traccia di 11). Dopo la prima scrittura il foglio ha il documento
   di A ma non la sua voce di indice. Regola: 8.
-- **ReaderTwoSnap** (il lettore rilegge il foglio prima del documento): violata DocHaIndice (444
+- **ReaderTwoSnap** (il lettore rilegge il foglio prima del documento): violata DocHaIndice (421
   stati, traccia di 5). Il lettore legge l'indice vuoto; A scrive 1; il lettore legge il documento
   dalla vista nuova: c'è un documento senza voce di indice. Regola: 18.
 - **ForkNoLedger** (il ramo non eredita la lista dei cancellati): violata RamoCorretto (11.976
