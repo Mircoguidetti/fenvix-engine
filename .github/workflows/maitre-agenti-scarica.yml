@@ -20,7 +20,7 @@ jobs:
           pip install --quiet gdown
           ID=$(python3 -c "import json;print(json.load(open('proto/maitre-agenti/tracce/scarica.json'))['drive_id'])")
           mkdir -p /tmp/dab && cd /tmp/dab
-          gdown --fuzzy "https://drive.google.com/file/d/$ID/view" -O dab.bin || gdown --folder "https://drive.google.com/drive/folders/$ID" -O dabdir
+          gdown "https://drive.google.com/uc?id=$ID" -O dab.bin || gdown "$ID" -O dab.bin || gdown "https://drive.google.com/drive/folders/$ID" -O dabdir
           ls -la /tmp/dab; file /tmp/dab/* || true
       - name: estrai
         run: |
