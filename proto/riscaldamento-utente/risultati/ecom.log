@@ -1,0 +1,5 @@
+tempo1h {"quota_fredde": 38.3, "preceduta_lettore": {"1": 0.0, "5": 0.7, "30": 31.3, "300": 75.8}, "preceduta_stretta": {"1": 0.0, "5": 0.2, "30": 1.8, "300": 5.7}, "preceduta_larga": {"1": 0.0, "5": 0.2, "30": 1.8, "300": 5.7}}
+tempo6h {"quota_fredde": 23.0, "preceduta_lettore": {"1": 0.0, "5": 0.8, "30": 32.1, "300": 78.8}, "preceduta_stretta": {"1": 0.0, "5": 0.2, "30": 2.7, "300": 8.9}, "preceduta_larga": {"1": 0.0, "5": 0.2, "30": 2.7, "300": 8.9}}
+tempo24h {"quota_fredde": 12.6, "preceduta_lettore": {"1": 0.1, "5": 0.9, "30": 32.3, "300": 81.8}, "preceduta_stretta": {"1": 0.1, "5": 0.4, "30": 4.3, "300": 15.0}, "preceduta_larga": {"1": 0.1, "5": 0.4, "30": 4.3, "300": 15.0}}
+bancone10 {"quota_fredde": 22.8, "preceduta_lettore": {"1": 0.0, "5": 0.8, "30": 32.1, "300": 79.3}, "preceduta_stretta": {"1": 0.0, "5": 0.3, "30": 2.8, "300": 9.2}, "preceduta_larga": {"1": 0.0, "5": 0.3, "30": 2.8, "300": 9.2}}
+bancone1 {"quota_fredde": 49.5, "preceduta_lettore": {"1": 0.0, "5": 0.6, "30": 30.2, "300": 73.8}, "preceduta_stretta": {"1": 0.0, "5": 0.2, "30": 1.5, "300": 4.7}, "preceduta_larga": {"1": 0.0, "5": 0.2, "30": 1.5, "300": 4.7}}

@@ -217,3 +217,39 @@ def gh_events(path, sampled_owner=None, with_bots=False):
             ev.append((t, actor, f"{repo}#{area}", owner, "r"))
     ev.sort(key=lambda e: e[0])
     return ev
+
+
+# ---------------------------------------------------------------- REES46 (e-commerce)
+
+def rees46_events(path):
+    """REES46, negozio multi-categoria, ottobre 2019 (10% degli utenti, ora al secondo).
+    view     -> lettura del prodotto (catalogo condiviso), richiesta dell'utente
+    cart     -> lettura del carrello dell'utente (cart|U, suo)
+    purchase -> lettura dello storico ordini dell'utente (orders|U, suo); il carrello letto nella stessa
+                richiesta non conta due volte (sarebbe un segnale finto, nello stesso istante)
+    """
+    from datetime import timezone
+    ev = []
+    gsize = {}
+    objs = set()
+    with gzip.open(path, "rt") as f:
+        for line in f:
+            p = line.rstrip("\n").split("\t")
+            if len(p) < 4:
+                continue
+            t = datetime.strptime(p[0][:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp()
+            u, typ, pid = p[1], p[2], p[3]
+            if typ == "view":
+                o = f"p|{pid}"
+                ev.append((t, u, o, None, "r"))
+                objs.add(o)
+            elif typ == "cart":
+                ev.append((t, u, f"cart|{u}", u, "r"))
+                objs.add(f"cart|{u}")
+            elif typ == "purchase":
+                ev.append((t, u, f"orders|{u}", u, "r"))
+                objs.add(f"orders|{u}")
+            gsize[u] = 2
+    ev.sort(key=lambda e: e[0])
+    return ev, {"eventi": len(ev), "utenti": len(gsize), "oggetti": len(objs), "_gsize": gsize,
+                "giorni": round((ev[-1][0] - ev[0][0]) / 86400, 2)}

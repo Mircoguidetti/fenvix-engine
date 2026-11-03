@@ -77,7 +77,7 @@ def preceded(ev, cold, jitter_same_second=False, seed=1):
     rnd = random.Random(seed)
     last_req = {}     # ultima richiesta della persona
     last_grp = {}     # ultima richiesta che tocca il gruppo (o fatta dal padrone)
-    d = {"lettore": [], "stretta": [], "larga": [], "condivisi": 0, "fredde": 0}
+    d = {"lettore": [], "stretta": [], "larga": [], "stretta_propri": [], "condivisi": 0, "fredde": 0}
 
     def gap(t, lt):
         if lt is None:
@@ -97,6 +97,7 @@ def preceded(ev, cold, jitter_same_second=False, seed=1):
                 d["larga"].append(math.inf)
             else:
                 d["stretta"].append(gap(t, last_req.get(g)))
+                d["stretta_propri"].append(d["stretta"][-1])
                 d["larga"].append(gap(t, last_grp.get(g)))
         if u is not None:
             last_req[u] = t
@@ -153,7 +154,7 @@ class Lat:
 # ---------------------------------------------------------------- riscaldamento
 
 def warm_sim(ev, cold, lat, ttl=1800.0, which="stretta", jitter_same_second=False, seed=3,
-             group_size=None):
+             group_size=None, min_req=1, min_win=600.0):
     """Simula il riscaldamento per gruppo. Ritorna statistiche e i campioni di latenza.
 
     which 'stretta': il gruppo g si scalda a ogni richiesta fatta da g.
@@ -172,6 +173,8 @@ def warm_sim(ev, cold, lat, ttl=1800.0, which="stretta", jitter_same_second=Fals
     served = 0
     pend = 0
     miss = 0
+    own_n = own_srv = own_pend = 0
+    own_waits = []
     touched = defaultdict(set) if which == "lettore" else None
     warm_lat = lat.warm(200000)
     wi = 0
@@ -182,12 +185,21 @@ def warm_sim(ev, cold, lat, ttl=1800.0, which="stretta", jitter_same_second=Fals
         if s[3]:
             useful += 1
 
+    recent = defaultdict(list)
+
     def signal(g, t, tt):
         nonlocal n_warm, wi
         s = state.get(g)
         if s is not None and s[1] >= t:
             s[1] = max(s[1], t + ttl)
             return
+        if min_req > 1:
+            r = recent[g]
+            r.append(t)
+            while r and r[0] < t - min_win:
+                r.pop(0)
+            if len(r) < min_req:
+                return
         if s is not None:
             close(g, s)
         L = warm_lat[wi % len(warm_lat)] / 1e3
@@ -206,6 +218,8 @@ def warm_sim(ev, cold, lat, ttl=1800.0, which="stretta", jitter_same_second=Fals
             ok = s is not None and s[1] >= t
             if ok and which == "lettore":
                 ok = o in s[5]
+            if g is not None:
+                own_n += 1
             if ok:
                 # quando è partito davvero il segnale: con l'ora al secondo, distanza a caso
                 ready = s[0]
@@ -213,11 +227,15 @@ def warm_sim(ev, cold, lat, ttl=1800.0, which="stretta", jitter_same_second=Fals
                     ready = t - rnd.random() + (s[0] - s[2])
                 if ready <= t:
                     served += 1
+                    own_srv += g is not None
                     s[3] = True
                 else:
                     pend += 1
                     s[3] = True
                     pending_wait.append((ready - t) * 1e3)
+                    if g is not None:
+                        own_pend += 1
+                        own_waits.append((ready - t) * 1e3)
             else:
                 miss += 1
         # segnali di questa richiesta
@@ -244,6 +262,10 @@ def warm_sim(ev, cold, lat, ttl=1800.0, which="stretta", jitter_same_second=Fals
         "permanenza_media_s": float(np.mean(resid)) if resid else float("nan"),
         "oggetti_medi_per_risc": float(np.mean(sizes)) if sizes else float("nan"),
         "_attese_ms": pending_wait,
+        "fredde_proprie": own_n,
+        "servite_proprie": own_srv / own_n if own_n else float("nan"),
+        "in_attesa_proprie": own_pend / own_n if own_n else float("nan"),
+        "_attese_proprie_ms": own_waits,
     }
 
 
