@@ -1,0 +1,4 @@
+gruppi (modello, domanda): 270
+query totali 76213, distinte esatte 40759 (53.5%), forme distinte 34573 (45.4%)
+pezzi (sotto-SELECT, tabella+filtro, prefissi di pipeline) totali 71126, distinti 48448 (68.1%)
+quota distinte per gruppo: mediana 47.3%, 10° percentile 20.8%, 90° 75.9%

@@ -1,0 +1,2718 @@
+{
+ "file": [
+  "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json",
+  "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json",
+  "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json",
+  "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json",
+  "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json",
+  "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json",
+  "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json",
+  "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json",
+  "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json",
+  "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json",
+  "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json",
+  "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json"
+ ],
+ "ambiti": {
+  "condiviso": {
+   "insieme": [
+    {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 20567,
+     "letture_al_db": 9776,
+     "scritture": 5541,
+     "picco_risposte_pronte": 760,
+     "picco_byte_pronti": 683555,
+     "collezione": 0.12193126022913257,
+     "intervallo": 0.28467675941080195,
+     "tetto": 0.5589198036006546,
+     "parametri_in_piu": 0.42635024549918166,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 2627,
+       "collezione": 0.0022839741149600305,
+       "intervallo": 0.19185382565664255,
+       "tetto": 0.3338408831366578,
+       "parametri_in_piu": 0.6532165968785687
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 5222,
+       "collezione": 0.10589812332439678,
+       "intervallo": 0.25909613175028723,
+       "tetto": 0.5697050938337802,
+       "parametri_in_piu": 0.4245499808502489
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 1927,
+       "collezione": 0.3284898806434873,
+       "intervallo": 0.4805396990140114,
+       "tetto": 0.8365334717176959,
+       "parametri_in_piu": 0.12195121951219512
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 300,
+     "letture": 30343,
+     "assorbite_app": 20567,
+     "letture_al_db": 9776,
+     "scritture": 5541,
+     "picco_risposte_pronte": 642,
+     "picco_byte_pronti": 561035,
+     "collezione": 0.11364566284779051,
+     "intervallo": 0.266366612111293,
+     "tetto": 0.5296644844517185,
+     "parametri_in_piu": 0.4521276595744681,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 2627,
+       "collezione": 0.0015226494099733537,
+       "intervallo": 0.17282070803197563,
+       "tetto": 0.30072325846973735,
+       "parametri_in_piu": 0.6851922344880091
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 5222,
+       "collezione": 0.0949827652240521,
+       "intervallo": 0.24128686327077747,
+       "tetto": 0.543278437380314,
+       "parametri_in_piu": 0.4500191497510532
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 1927,
+       "collezione": 0.3170731707317073,
+       "intervallo": 0.4618578100674624,
+       "tetto": 0.8048780487804879,
+       "parametri_in_piu": 0.1401141670991178
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 3600,
+     "letture": 30343,
+     "assorbite_app": 20567,
+     "letture_al_db": 9776,
+     "scritture": 5541,
+     "picco_risposte_pronte": 1277,
+     "picco_byte_pronti": 1104486,
+     "collezione": 0.13430851063829788,
+     "intervallo": 0.3570990180032733,
+     "tetto": 0.703355155482815,
+     "parametri_in_piu": 0.28907528641571195,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 2627,
+       "collezione": 0.0026646364674533687,
+       "intervallo": 0.3338408831366578,
+       "tetto": 0.577084126379901,
+       "parametri_in_piu": 0.41416063951275217
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 5222,
+       "collezione": 0.1208349291459211,
+       "intervallo": 0.3071620068939104,
+       "tetto": 0.6886250478743776,
+       "parametri_in_piu": 0.3067790118728457
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 1927,
+       "collezione": 0.3502854177477945,
+       "intervallo": 0.5241307732226258,
+       "tetto": 0.915412558380903,
+       "parametri_in_piu": 0.07057602490918526
+      }
+     }
+    },
+    {
+     "app_ttl": 0,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 0,
+     "letture_al_db": 30343,
+     "scritture": 5541,
+     "picco_risposte_pronte": 760,
+     "picco_byte_pronti": 686886,
+     "collezione": 0.509013611047029,
+     "intervallo": 0.7013808786210988,
+     "tetto": 0.8584846587351284,
+     "parametri_in_piu": 0.13680255742675412,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4278,
+       "collezione": 0.09794296400187004,
+       "intervallo": 0.44413277232351567,
+       "tetto": 0.5946704067321178,
+       "parametri_in_piu": 0.39738195418419825
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10729,
+       "collezione": 0.26880417559884423,
+       "intervallo": 0.5910150060583466,
+       "tetto": 0.7906608257992357,
+       "parametri_in_piu": 0.20654301426041569
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 15336,
+       "collezione": 0.7917318727177882,
+       "intervallo": 0.8503521126760564,
+       "tetto": 0.9795252999478351,
+       "parametri_in_piu": 0.015323422013562859
+      }
+     }
+    }
+   ],
+   "per_file": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1262,
+     "assorbite_app": 204,
+     "letture_al_db": 1058,
+     "scritture": 265,
+     "picco_risposte_pronte": 240,
+     "picco_byte_pronti": 202248,
+     "collezione": 0.004725897920604915,
+     "intervallo": 0.08412098298676748,
+     "tetto": 0.1833648393194707,
+     "parametri_in_piu": 0.8052930056710775,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1262,
+       "al_db": 1058,
+       "collezione": 0.004725897920604915,
+       "intervallo": 0.08412098298676748,
+       "tetto": 0.1833648393194707,
+       "parametri_in_piu": 0.8052930056710775
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2795,
+     "assorbite_app": 1229,
+     "letture_al_db": 1566,
+     "scritture": 705,
+     "picco_risposte_pronte": 285,
+     "picco_byte_pronti": 256261,
+     "collezione": 0.10855683269476372,
+     "intervallo": 0.15197956577266922,
+     "tetto": 0.2222222222222222,
+     "parametri_in_piu": 0.7701149425287356,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2795,
+       "al_db": 1566,
+       "collezione": 0.10855683269476372,
+       "intervallo": 0.15197956577266922,
+       "tetto": 0.2222222222222222,
+       "parametri_in_piu": 0.7701149425287356
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2282,
+     "assorbite_app": 1455,
+     "letture_al_db": 827,
+     "scritture": 523,
+     "picco_risposte_pronte": 10,
+     "picco_byte_pronti": 4490,
+     "collezione": 0.35308343409915355,
+     "intervallo": 0.5489721886336155,
+     "tetto": 0.9153567110036276,
+     "parametri_in_piu": 0.05199516324062878,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2282,
+       "al_db": 827,
+       "collezione": 0.35308343409915355,
+       "intervallo": 0.5489721886336155,
+       "tetto": 0.9153567110036276,
+       "parametri_in_piu": 0.05199516324062878
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1143,
+     "assorbite_app": 631,
+     "letture_al_db": 512,
+     "scritture": 205,
+     "picco_risposte_pronte": 300,
+     "picco_byte_pronti": 222896,
+     "collezione": 0.0,
+     "intervallo": 0.23828125,
+     "tetto": 0.4140625,
+     "parametri_in_piu": 0.57421875,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1143,
+       "al_db": 512,
+       "collezione": 0.0,
+       "intervallo": 0.23828125,
+       "tetto": 0.4140625,
+       "parametri_in_piu": 0.57421875
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2698,
+     "assorbite_app": 1601,
+     "letture_al_db": 1097,
+     "scritture": 673,
+     "picco_risposte_pronte": 315,
+     "picco_byte_pronti": 288579,
+     "collezione": 0.09571558796718323,
+     "intervallo": 0.29535095715587967,
+     "tetto": 0.7128532360984503,
+     "parametri_in_piu": 0.28167730173199634,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2698,
+       "al_db": 1097,
+       "collezione": 0.09571558796718323,
+       "intervallo": 0.29535095715587967,
+       "tetto": 0.7128532360984503,
+       "parametri_in_piu": 0.28167730173199634
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2437,
+     "assorbite_app": 2295,
+     "letture_al_db": 142,
+     "scritture": 440,
+     "picco_risposte_pronte": 18,
+     "picco_byte_pronti": 9266,
+     "collezione": 0.28169014084507044,
+     "intervallo": 0.3873239436619718,
+     "tetto": 0.8732394366197183,
+     "parametri_in_piu": 0.09154929577464789,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2437,
+       "al_db": 142,
+       "collezione": 0.28169014084507044,
+       "intervallo": 0.3873239436619718,
+       "tetto": 0.8732394366197183,
+       "parametri_in_piu": 0.09154929577464789
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1116,
+     "assorbite_app": 607,
+     "letture_al_db": 509,
+     "scritture": 259,
+     "picco_risposte_pronte": 286,
+     "picco_byte_pronti": 209698,
+     "collezione": 0.0019646365422396855,
+     "intervallo": 0.25147347740667975,
+     "tetto": 0.4381139489194499,
+     "parametri_in_piu": 0.550098231827112,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1116,
+       "al_db": 509,
+       "collezione": 0.0019646365422396855,
+       "intervallo": 0.25147347740667975,
+       "tetto": 0.4381139489194499,
+       "parametri_in_piu": 0.550098231827112
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2811,
+     "assorbite_app": 1559,
+     "letture_al_db": 1252,
+     "scritture": 631,
+     "picco_risposte_pronte": 369,
+     "picco_byte_pronti": 305343,
+     "collezione": 0.09824281150159744,
+     "intervallo": 0.3011182108626198,
+     "tetto": 0.7052715654952076,
+     "parametri_in_piu": 0.28993610223642174,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2811,
+       "al_db": 1252,
+       "collezione": 0.09824281150159744,
+       "intervallo": 0.3011182108626198,
+       "tetto": 0.7052715654952076,
+       "parametri_in_piu": 0.28993610223642174
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 7689,
+     "assorbite_app": 7317,
+     "letture_al_db": 372,
+     "scritture": 403,
+     "picco_risposte_pronte": 23,
+     "picco_byte_pronti": 10867,
+     "collezione": 0.34946236559139787,
+     "intervallo": 0.5053763440860215,
+     "tetto": 0.8790322580645161,
+     "parametri_in_piu": 0.08870967741935484,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 7689,
+       "al_db": 372,
+       "collezione": 0.34946236559139787,
+       "intervallo": 0.5053763440860215,
+       "tetto": 0.8790322580645161,
+       "parametri_in_piu": 0.08870967741935484
+      }
+     }
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 757,
+     "assorbite_app": 209,
+     "letture_al_db": 548,
+     "scritture": 165,
+     "picco_risposte_pronte": 206,
+     "picco_byte_pronti": 186386,
+     "collezione": 0.0,
+     "intervallo": 0.3010948905109489,
+     "tetto": 0.45255474452554745,
+     "parametri_in_piu": 0.5291970802919708,
+     "per_gruppo": {
+      "airline": {
+       "letture": 757,
+       "al_db": 548,
+       "collezione": 0.0,
+       "intervallo": 0.3010948905109489,
+       "tetto": 0.45255474452554745,
+       "parametri_in_piu": 0.5291970802919708
+      }
+     }
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2425,
+     "assorbite_app": 1118,
+     "letture_al_db": 1307,
+     "scritture": 631,
+     "picco_risposte_pronte": 343,
+     "picco_byte_pronti": 282566,
+     "collezione": 0.11859219586840092,
+     "intervallo": 0.31675592960979343,
+     "tetto": 0.7360367253251722,
+     "parametri_in_piu": 0.2593726090283091,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2425,
+       "al_db": 1307,
+       "collezione": 0.11859219586840092,
+       "intervallo": 0.31675592960979343,
+       "tetto": 0.7360367253251722,
+       "parametri_in_piu": 0.2593726090283091
+      }
+     }
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2928,
+     "assorbite_app": 2342,
+     "letture_al_db": 586,
+     "scritture": 641,
+     "picco_risposte_pronte": 33,
+     "picco_byte_pronti": 11303,
+     "collezione": 0.29180887372013653,
+     "intervallo": 0.39078498293515357,
+     "tetto": 0.689419795221843,
+     "parametri_in_piu": 0.24914675767918087,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2928,
+       "al_db": 586,
+       "collezione": 0.29180887372013653,
+       "intervallo": 0.39078498293515357,
+       "tetto": 0.689419795221843,
+       "parametri_in_piu": 0.24914675767918087
+      }
+     }
+    }
+   },
+   "conteggi": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1262,
+     "scritture": 265,
+     "scritture_fallite": 27,
+     "altri": 124
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2795,
+     "scritture": 705,
+     "scritture_fallite": 51,
+     "altri": 40
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2282,
+     "scritture": 523,
+     "scritture_fallite": 1,
+     "altri": 5936
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1143,
+     "scritture": 205,
+     "scritture_fallite": 17,
+     "altri": 166
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2698,
+     "scritture": 673,
+     "scritture_fallite": 70,
+     "altri": 63
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2437,
+     "scritture": 440,
+     "scritture_fallite": 4,
+     "altri": 5747
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1116,
+     "scritture": 259,
+     "scritture_fallite": 61,
+     "altri": 151
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2811,
+     "scritture": 631,
+     "scritture_fallite": 134,
+     "altri": 67
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 7689,
+     "scritture": 403,
+     "scritture_fallite": 18,
+     "altri": 5442
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 757,
+     "scritture": 165,
+     "scritture_fallite": 9,
+     "altri": 102
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2425,
+     "scritture": 631,
+     "scritture_fallite": 25,
+     "altri": 51
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2928,
+     "scritture": 641,
+     "scritture_fallite": 195,
+     "altri": 5792
+    }
+   }
+  },
+  "clienti": {
+   "insieme": [
+    {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 7613,
+     "assorbite_app": 4891,
+     "letture_al_db": 2722,
+     "scritture": 1386,
+     "picco_risposte_pronte": 555,
+     "picco_byte_pronti": 496749,
+     "collezione": 0.07016899338721529,
+     "intervallo": 0.10764144011756062,
+     "tetto": 0.17891256429096253,
+     "parametri_in_piu": 0.7902277736958119,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1130,
+       "al_db": 920,
+       "collezione": 0.0010869565217391304,
+       "intervallo": 0.02391304347826087,
+       "tetto": 0.0391304347826087,
+       "parametri_in_piu": 0.9326086956521739
+      },
+      "retail": {
+       "letture": 2679,
+       "al_db": 1331,
+       "collezione": 0.03906836964688205,
+       "intervallo": 0.051840721262208865,
+       "tetto": 0.07588279489105935,
+       "parametri_in_piu": 0.9060856498873028
+      },
+      "telecom": {
+       "letture": 3804,
+       "al_db": 471,
+       "collezione": 0.2929936305732484,
+       "intervallo": 0.4288747346072187,
+       "tetto": 0.7430997876857749,
+       "parametri_in_piu": 0.18471337579617833
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 300,
+     "letture": 7613,
+     "assorbite_app": 4891,
+     "letture_al_db": 2722,
+     "scritture": 1386,
+     "picco_risposte_pronte": 531,
+     "picco_byte_pronti": 454211,
+     "collezione": 0.06355620867009552,
+     "intervallo": 0.09551800146950772,
+     "tetto": 0.16054371785451874,
+     "parametri_in_piu": 0.8063923585598824,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1130,
+       "al_db": 920,
+       "collezione": 0.0010869565217391304,
+       "intervallo": 0.011956521739130435,
+       "tetto": 0.017391304347826087,
+       "parametri_in_piu": 0.9543478260869566
+      },
+      "retail": {
+       "letture": 2679,
+       "al_db": 1331,
+       "collezione": 0.03305785123966942,
+       "intervallo": 0.04432757325319309,
+       "tetto": 0.06686701728024042,
+       "parametri_in_piu": 0.9151014274981217
+      },
+      "telecom": {
+       "letture": 3804,
+       "al_db": 471,
+       "collezione": 0.27176220806794055,
+       "intervallo": 0.4033970276008493,
+       "tetto": 0.7048832271762208,
+       "parametri_in_piu": 0.21019108280254778
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 3600,
+     "letture": 7613,
+     "assorbite_app": 4891,
+     "letture_al_db": 2722,
+     "scritture": 1386,
+     "picco_risposte_pronte": 790,
+     "picco_byte_pronti": 696940,
+     "collezione": 0.07494489346069066,
+     "intervallo": 0.11462160176340926,
+     "tetto": 0.1884643644379133,
+     "parametri_in_piu": 0.7854518736223365,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1130,
+       "al_db": 920,
+       "collezione": 0.0010869565217391304,
+       "intervallo": 0.025,
+       "tetto": 0.042391304347826085,
+       "parametri_in_piu": 0.933695652173913
+      },
+      "retail": {
+       "letture": 2679,
+       "al_db": 1331,
+       "collezione": 0.039819684447783624,
+       "intervallo": 0.05259203606311044,
+       "tetto": 0.07663410969196092,
+       "parametri_in_piu": 0.9053343350864012
+      },
+      "telecom": {
+       "letture": 3804,
+       "al_db": 471,
+       "collezione": 0.3184713375796178,
+       "intervallo": 0.46496815286624205,
+       "tetto": 0.7898089171974523,
+       "parametri_in_piu": 0.15711252653927812
+      }
+     }
+    },
+    {
+     "app_ttl": 0,
+     "window": 600,
+     "letture": 7613,
+     "assorbite_app": 0,
+     "letture_al_db": 7613,
+     "scritture": 1386,
+     "picco_risposte_pronte": 557,
+     "picco_byte_pronti": 499895,
+     "collezione": 0.5260738210954945,
+     "intervallo": 0.6314199395770392,
+     "tetto": 0.7064232234336004,
+     "parametri_in_piu": 0.282543018520951,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1130,
+       "al_db": 1130,
+       "collezione": 0.06283185840707965,
+       "intervallo": 0.18672566371681415,
+       "tetto": 0.2176991150442478,
+       "parametri_in_piu": 0.7592920353982301
+      },
+      "retail": {
+       "letture": 2679,
+       "al_db": 2679,
+       "collezione": 0.3299738708473311,
+       "intervallo": 0.5035460992907801,
+       "tetto": 0.5408734602463606,
+       "parametri_in_piu": 0.4501679731243001
+      },
+      "telecom": {
+       "letture": 3804,
+       "al_db": 3804,
+       "collezione": 0.8017875920084122,
+       "intervallo": 0.8535751840168244,
+       "tetto": 0.9681913774973712,
+       "parametri_in_piu": 0.022870662460567823
+      }
+     }
+    }
+   ],
+   "per_file": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 338,
+     "assorbite_app": 49,
+     "letture_al_db": 289,
+     "scritture": 66,
+     "picco_risposte_pronte": 227,
+     "picco_byte_pronti": 199665,
+     "collezione": 0.0034602076124567475,
+     "intervallo": 0.0726643598615917,
+     "tetto": 0.12110726643598616,
+     "parametri_in_piu": 0.8581314878892734,
+     "per_gruppo": {
+      "airline": {
+       "letture": 338,
+       "al_db": 289,
+       "collezione": 0.0034602076124567475,
+       "intervallo": 0.0726643598615917,
+       "tetto": 0.12110726643598616,
+       "parametri_in_piu": 0.8581314878892734
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 694,
+     "assorbite_app": 315,
+     "letture_al_db": 379,
+     "scritture": 175,
+     "picco_risposte_pronte": 260,
+     "picco_byte_pronti": 240661,
+     "collezione": 0.09234828496042216,
+     "intervallo": 0.1266490765171504,
+     "tetto": 0.1820580474934037,
+     "parametri_in_piu": 0.8021108179419525,
+     "per_gruppo": {
+      "retail": {
+       "letture": 694,
+       "al_db": 379,
+       "collezione": 0.09234828496042216,
+       "intervallo": 0.1266490765171504,
+       "tetto": 0.1820580474934037,
+       "parametri_in_piu": 0.8021108179419525
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 626,
+     "assorbite_app": 452,
+     "letture_al_db": 174,
+     "scritture": 125,
+     "picco_risposte_pronte": 10,
+     "picco_byte_pronti": 4363,
+     "collezione": 0.3563218390804598,
+     "intervallo": 0.5459770114942529,
+     "tetto": 0.8908045977011494,
+     "parametri_in_piu": 0.05747126436781609,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 626,
+       "al_db": 174,
+       "collezione": 0.3563218390804598,
+       "intervallo": 0.5459770114942529,
+       "tetto": 0.8908045977011494,
+       "parametri_in_piu": 0.05747126436781609
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 298,
+     "assorbite_app": 59,
+     "letture_al_db": 239,
+     "scritture": 55,
+     "picco_risposte_pronte": 239,
+     "picco_byte_pronti": 177122,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0,
+     "parametri_in_piu": 0.9748953974895398,
+     "per_gruppo": {
+      "airline": {
+       "letture": 298,
+       "al_db": 239,
+       "collezione": 0.0,
+       "intervallo": 0.0,
+       "tetto": 0.0,
+       "parametri_in_piu": 0.9748953974895398
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 675,
+     "assorbite_app": 368,
+     "letture_al_db": 307,
+     "scritture": 166,
+     "picco_risposte_pronte": 305,
+     "picco_byte_pronti": 279815,
+     "collezione": 0.003257328990228013,
+     "intervallo": 0.003257328990228013,
+     "tetto": 0.006514657980456026,
+     "parametri_in_piu": 0.9739413680781759,
+     "per_gruppo": {
+      "retail": {
+       "letture": 675,
+       "al_db": 307,
+       "collezione": 0.003257328990228013,
+       "intervallo": 0.003257328990228013,
+       "tetto": 0.006514657980456026,
+       "parametri_in_piu": 0.9739413680781759
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 624,
+     "assorbite_app": 583,
+     "letture_al_db": 41,
+     "scritture": 110,
+     "picco_risposte_pronte": 17,
+     "picco_byte_pronti": 7265,
+     "collezione": 0.24390243902439024,
+     "intervallo": 0.34146341463414637,
+     "tetto": 0.5853658536585366,
+     "parametri_in_piu": 0.2926829268292683,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 624,
+       "al_db": 41,
+       "collezione": 0.24390243902439024,
+       "intervallo": 0.34146341463414637,
+       "tetto": 0.5853658536585366,
+       "parametri_in_piu": 0.2926829268292683
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 276,
+     "assorbite_app": 63,
+     "letture_al_db": 213,
+     "scritture": 61,
+     "picco_risposte_pronte": 213,
+     "picco_byte_pronti": 181064,
+     "collezione": 0.0,
+     "intervallo": 0.0,
+     "tetto": 0.0,
+     "parametri_in_piu": 0.9765258215962441,
+     "per_gruppo": {
+      "airline": {
+       "letture": 276,
+       "al_db": 213,
+       "collezione": 0.0,
+       "intervallo": 0.0,
+       "tetto": 0.0,
+       "parametri_in_piu": 0.9765258215962441
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 703,
+     "assorbite_app": 380,
+     "letture_al_db": 323,
+     "scritture": 154,
+     "picco_risposte_pronte": 318,
+     "picco_byte_pronti": 273147,
+     "collezione": 0.0030959752321981426,
+     "intervallo": 0.0030959752321981426,
+     "tetto": 0.009287925696594427,
+     "parametri_in_piu": 0.9721362229102167,
+     "per_gruppo": {
+      "retail": {
+       "letture": 703,
+       "al_db": 323,
+       "collezione": 0.0030959752321981426,
+       "intervallo": 0.0030959752321981426,
+       "tetto": 0.009287925696594427,
+       "parametri_in_piu": 0.9721362229102167
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1781,
+     "assorbite_app": 1701,
+     "letture_al_db": 80,
+     "scritture": 98,
+     "picco_risposte_pronte": 21,
+     "picco_byte_pronti": 9538,
+     "collezione": 0.275,
+     "intervallo": 0.375,
+     "tetto": 0.6125,
+     "parametri_in_piu": 0.275,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 1781,
+       "al_db": 80,
+       "collezione": 0.275,
+       "intervallo": 0.375,
+       "tetto": 0.6125,
+       "parametri_in_piu": 0.275
+      }
+     }
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 218,
+     "assorbite_app": 39,
+     "letture_al_db": 179,
+     "scritture": 50,
+     "picco_risposte_pronte": 174,
+     "picco_byte_pronti": 159596,
+     "collezione": 0.0,
+     "intervallo": 0.00558659217877095,
+     "tetto": 0.00558659217877095,
+     "parametri_in_piu": 0.9441340782122905,
+     "per_gruppo": {
+      "airline": {
+       "letture": 218,
+       "al_db": 179,
+       "collezione": 0.0,
+       "intervallo": 0.00558659217877095,
+       "tetto": 0.00558659217877095,
+       "parametri_in_piu": 0.9441340782122905
+      }
+     }
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 607,
+     "assorbite_app": 285,
+     "letture_al_db": 322,
+     "scritture": 161,
+     "picco_risposte_pronte": 295,
+     "picco_byte_pronti": 256088,
+     "collezione": 0.046583850931677016,
+     "intervallo": 0.059006211180124224,
+     "tetto": 0.08385093167701864,
+     "parametri_in_piu": 0.8975155279503105,
+     "per_gruppo": {
+      "retail": {
+       "letture": 607,
+       "al_db": 322,
+       "collezione": 0.046583850931677016,
+       "intervallo": 0.059006211180124224,
+       "tetto": 0.08385093167701864,
+       "parametri_in_piu": 0.8975155279503105
+      }
+     }
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 773,
+     "assorbite_app": 597,
+     "letture_al_db": 176,
+     "scritture": 165,
+     "picco_risposte_pronte": 27,
+     "picco_byte_pronti": 10657,
+     "collezione": 0.25,
+     "intervallo": 0.35795454545454547,
+     "tetto": 0.6931818181818182,
+     "parametri_in_piu": 0.24431818181818182,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 773,
+       "al_db": 176,
+       "collezione": 0.25,
+       "intervallo": 0.35795454545454547,
+       "tetto": 0.6931818181818182,
+       "parametri_in_piu": 0.24431818181818182
+      }
+     }
+    }
+   },
+   "conteggi": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 50,
+     "letture": 338,
+     "scritture": 66,
+     "scritture_fallite": 5,
+     "altri": 47
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 694,
+     "scritture": 175,
+     "scritture_fallite": 11,
+     "altri": 14
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 626,
+     "scritture": 125,
+     "scritture_fallite": 1,
+     "altri": 1486
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 50,
+     "letture": 298,
+     "scritture": 55,
+     "scritture_fallite": 4,
+     "altri": 39
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 675,
+     "scritture": 166,
+     "scritture_fallite": 16,
+     "altri": 14
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 624,
+     "scritture": 110,
+     "scritture_fallite": 1,
+     "altri": 1466
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 50,
+     "letture": 276,
+     "scritture": 61,
+     "scritture_fallite": 14,
+     "altri": 29
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 703,
+     "scritture": 154,
+     "scritture_fallite": 27,
+     "altri": 17
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 1781,
+     "scritture": 98,
+     "scritture_fallite": 5,
+     "altri": 1353
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 50,
+     "letture": 218,
+     "scritture": 50,
+     "scritture_fallite": 2,
+     "altri": 22
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 607,
+     "scritture": 161,
+     "scritture_fallite": 7,
+     "altri": 12
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 114,
+     "letture": 773,
+     "scritture": 165,
+     "scritture_fallite": 50,
+     "altri": 1508
+    }
+   }
+  },
+  "compito": {
+   "insieme": [
+    {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 7426,
+     "letture_al_db": 22917,
+     "scritture": 5541,
+     "picco_risposte_pronte": 1678,
+     "picco_byte_pronti": 1365762,
+     "collezione": 0.17506654448662565,
+     "intervallo": 0.2762577998865471,
+     "tetto": 0.39979054850111273,
+     "parametri_in_piu": 0.2662215822315312,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 3124,
+       "collezione": 0.08962868117797695,
+       "intervallo": 0.18886043533930857,
+       "tetto": 0.2791293213828425,
+       "parametri_in_piu": 0.3866837387964149
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 9849,
+       "collezione": 0.13371915930551326,
+       "intervallo": 0.31069144075540667,
+       "tetto": 0.4987308356178292,
+       "parametri_in_piu": 0.19514671540257894
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 9944,
+       "collezione": 0.24286001609010457,
+       "intervallo": 0.26960981496379727,
+       "tetto": 0.3397023330651649,
+       "parametri_in_piu": 0.2987731295253419
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 300,
+     "letture": 30343,
+     "assorbite_app": 7426,
+     "letture_al_db": 22917,
+     "scritture": 5541,
+     "picco_risposte_pronte": 1415,
+     "picco_byte_pronti": 1131877,
+     "collezione": 0.15058690055417376,
+     "intervallo": 0.24763276170528428,
+     "tetto": 0.3663655801370162,
+     "parametri_in_piu": 0.28018501549068375,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 3124,
+       "collezione": 0.08386683738796415,
+       "intervallo": 0.1824583866837388,
+       "tetto": 0.2711267605633803,
+       "parametri_in_piu": 0.3886043533930858
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 9849,
+       "collezione": 0.13219616204690832,
+       "intervallo": 0.3062239821301655,
+       "tetto": 0.49274037973398316,
+       "parametri_in_piu": 0.19961417402782008
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 9944,
+       "collezione": 0.1897626709573612,
+       "intervallo": 0.21007642799678197,
+       "tetto": 0.2711182622687047,
+       "parametri_in_piu": 0.32592518101367657
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 3600,
+     "letture": 30343,
+     "assorbite_app": 7426,
+     "letture_al_db": 22917,
+     "scritture": 5541,
+     "picco_risposte_pronte": 2413,
+     "picco_byte_pronti": 2122854,
+     "collezione": 0.2523017847013134,
+     "intervallo": 0.3968669546624776,
+     "tetto": 0.5738098354933019,
+     "parametri_in_piu": 0.20129161757647163,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 3124,
+       "collezione": 0.16037131882202305,
+       "intervallo": 0.36427656850192064,
+       "tetto": 0.5560179257362355,
+       "parametri_in_piu": 0.25704225352112675
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 9849,
+       "collezione": 0.16742816529596913,
+       "intervallo": 0.3888719666971266,
+       "tetto": 0.6295055335567062,
+       "parametri_in_piu": 0.1500659965478729
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 9944,
+       "collezione": 0.36524537409493163,
+       "intervallo": 0.4150241351568785,
+       "tetto": 0.5242357200321802,
+       "parametri_in_piu": 0.2345132743362832
+      }
+     }
+    },
+    {
+     "app_ttl": 0,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 0,
+     "letture_al_db": 30343,
+     "scritture": 5541,
+     "picco_risposte_pronte": 1744,
+     "picco_byte_pronti": 1377808,
+     "collezione": 0.34673565567017106,
+     "intervallo": 0.4365422008370959,
+     "tetto": 0.546979533994661,
+     "parametri_in_piu": 0.2009689219918927,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4278,
+       "collezione": 0.2760635811126695,
+       "intervallo": 0.38382421692379615,
+       "tetto": 0.47545582047685836,
+       "parametri_in_piu": 0.28190743338008417
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10729,
+       "collezione": 0.1588218846117998,
+       "intervallo": 0.34448690465094606,
+       "tetto": 0.5398452791499674,
+       "parametri_in_piu": 0.17914064684499953
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 15336,
+       "collezione": 0.4979134063641106,
+       "intervallo": 0.5156494522691706,
+       "tetto": 0.5719222743870631,
+       "parametri_in_piu": 0.1936619718309859
+      }
+     }
+    }
+   ],
+   "per_file": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1262,
+     "assorbite_app": 74,
+     "letture_al_db": 1188,
+     "scritture": 265,
+     "picco_risposte_pronte": 301,
+     "picco_byte_pronti": 248659,
+     "collezione": 0.017676767676767676,
+     "intervallo": 0.020202020202020204,
+     "tetto": 0.030303030303030304,
+     "parametri_in_piu": 0.5033670033670034,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1262,
+       "al_db": 1188,
+       "collezione": 0.017676767676767676,
+       "intervallo": 0.020202020202020204,
+       "tetto": 0.030303030303030304,
+       "parametri_in_piu": 0.5033670033670034
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2795,
+     "assorbite_app": 97,
+     "letture_al_db": 2698,
+     "scritture": 705,
+     "picco_risposte_pronte": 557,
+     "picco_byte_pronti": 554245,
+     "collezione": 0.00037064492216456633,
+     "intervallo": 0.004447739065974796,
+     "tetto": 0.004818383988139363,
+     "parametri_in_piu": 0.3654558932542624,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2795,
+       "al_db": 2698,
+       "collezione": 0.00037064492216456633,
+       "intervallo": 0.004447739065974796,
+       "tetto": 0.004818383988139363,
+       "parametri_in_piu": 0.3654558932542624
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2282,
+     "assorbite_app": 145,
+     "letture_al_db": 2137,
+     "scritture": 523,
+     "picco_risposte_pronte": 234,
+     "picco_byte_pronti": 93379,
+     "collezione": 0.011230697239120261,
+     "intervallo": 0.011230697239120261,
+     "tetto": 0.021993448759943846,
+     "parametri_in_piu": 0.4155357978474497,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2282,
+       "al_db": 2137,
+       "collezione": 0.011230697239120261,
+       "intervallo": 0.011230697239120261,
+       "tetto": 0.021993448759943846,
+       "parametri_in_piu": 0.4155357978474497
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1143,
+     "assorbite_app": 498,
+     "letture_al_db": 645,
+     "scritture": 205,
+     "picco_risposte_pronte": 378,
+     "picco_byte_pronti": 287474,
+     "collezione": 0.09767441860465116,
+     "intervallo": 0.27286821705426356,
+     "tetto": 0.413953488372093,
+     "parametri_in_piu": 0.36589147286821705,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1143,
+       "al_db": 645,
+       "collezione": 0.09767441860465116,
+       "intervallo": 0.27286821705426356,
+       "tetto": 0.413953488372093,
+       "parametri_in_piu": 0.36589147286821705
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2698,
+     "assorbite_app": 429,
+     "letture_al_db": 2269,
+     "scritture": 673,
+     "picco_risposte_pronte": 715,
+     "picco_byte_pronti": 737625,
+     "collezione": 0.17320405464962538,
+     "intervallo": 0.42177170559717936,
+     "tetto": 0.6844424856765094,
+     "parametri_in_piu": 0.12692816218598502,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2698,
+       "al_db": 2269,
+       "collezione": 0.17320405464962538,
+       "intervallo": 0.42177170559717936,
+       "tetto": 0.6844424856765094,
+       "parametri_in_piu": 0.12692816218598502
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2437,
+     "assorbite_app": 390,
+     "letture_al_db": 2047,
+     "scritture": 440,
+     "picco_risposte_pronte": 689,
+     "picco_byte_pronti": 275318,
+     "collezione": 0.3693209574987787,
+     "intervallo": 0.4513922813873962,
+     "tetto": 0.6472887151929653,
+     "parametri_in_piu": 0.19394235466536394,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2437,
+       "al_db": 2047,
+       "collezione": 0.3693209574987787,
+       "intervallo": 0.4513922813873962,
+       "tetto": 0.6472887151929653,
+       "parametri_in_piu": 0.19394235466536394
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1116,
+     "assorbite_app": 487,
+     "letture_al_db": 629,
+     "scritture": 259,
+     "picco_risposte_pronte": 358,
+     "picco_byte_pronti": 277145,
+     "collezione": 0.09062003179650238,
+     "intervallo": 0.27503974562798095,
+     "tetto": 0.43084260731319557,
+     "parametri_in_piu": 0.3275039745627981,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1116,
+       "al_db": 629,
+       "collezione": 0.09062003179650238,
+       "intervallo": 0.27503974562798095,
+       "tetto": 0.43084260731319557,
+       "parametri_in_piu": 0.3275039745627981
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2811,
+     "assorbite_app": 343,
+     "letture_al_db": 2468,
+     "scritture": 631,
+     "picco_risposte_pronte": 774,
+     "picco_byte_pronti": 769042,
+     "collezione": 0.18922204213938412,
+     "intervallo": 0.4339546191247974,
+     "tetto": 0.6673419773095624,
+     "parametri_in_piu": 0.14708265802269044,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2811,
+       "al_db": 2468,
+       "collezione": 0.18922204213938412,
+       "intervallo": 0.4339546191247974,
+       "tetto": 0.6673419773095624,
+       "parametri_in_piu": 0.14708265802269044
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 7689,
+     "assorbite_app": 4058,
+     "letture_al_db": 3631,
+     "scritture": 403,
+     "picco_risposte_pronte": 895,
+     "picco_byte_pronti": 346809,
+     "collezione": 0.3976865877168824,
+     "intervallo": 0.4246763976865877,
+     "tetto": 0.47948223629854037,
+     "parametri_in_piu": 0.2588818507298265,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 7689,
+       "al_db": 3631,
+       "collezione": 0.3976865877168824,
+       "intervallo": 0.4246763976865877,
+       "tetto": 0.47948223629854037,
+       "parametri_in_piu": 0.2588818507298265
+      }
+     }
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 757,
+     "assorbite_app": 95,
+     "letture_al_db": 662,
+     "scritture": 165,
+     "picco_risposte_pronte": 256,
+     "picco_byte_pronti": 243921,
+     "collezione": 0.20996978851963746,
+     "intervallo": 0.32779456193353473,
+     "tetto": 0.4501510574018127,
+     "parametri_in_piu": 0.2537764350453172,
+     "per_gruppo": {
+      "airline": {
+       "letture": 757,
+       "al_db": 662,
+       "collezione": 0.20996978851963746,
+       "intervallo": 0.32779456193353473,
+       "tetto": 0.4501510574018127,
+       "parametri_in_piu": 0.2537764350453172
+      }
+     }
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2425,
+     "assorbite_app": 11,
+     "letture_al_db": 2414,
+     "scritture": 631,
+     "picco_risposte_pronte": 704,
+     "picco_byte_pronti": 676229,
+     "collezione": 0.18889809444904723,
+     "intervallo": 0.4225352112676056,
+     "tetto": 0.703811101905551,
+     "parametri_in_piu": 0.11806130903065451,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2425,
+       "al_db": 2414,
+       "collezione": 0.18889809444904723,
+       "intervallo": 0.4225352112676056,
+       "tetto": 0.703811101905551,
+       "parametri_in_piu": 0.11806130903065451
+      }
+     }
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2928,
+     "assorbite_app": 799,
+     "letture_al_db": 2129,
+     "scritture": 641,
+     "picco_risposte_pronte": 353,
+     "picco_byte_pronti": 152917,
+     "collezione": 0.08971348050728041,
+     "intervallo": 0.08971348050728041,
+     "tetto": 0.12447158290277126,
+     "parametri_in_piu": 0.3503992484734617,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2928,
+       "al_db": 2129,
+       "collezione": 0.08971348050728041,
+       "intervallo": 0.08971348050728041,
+       "tetto": 0.12447158290277126,
+       "parametri_in_piu": 0.3503992484734617
+      }
+     }
+    }
+   },
+   "conteggi": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1262,
+     "scritture": 265,
+     "scritture_fallite": 27,
+     "altri": 124
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2795,
+     "scritture": 705,
+     "scritture_fallite": 51,
+     "altri": 40
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2282,
+     "scritture": 523,
+     "scritture_fallite": 1,
+     "altri": 5936
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1143,
+     "scritture": 205,
+     "scritture_fallite": 17,
+     "altri": 166
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2698,
+     "scritture": 673,
+     "scritture_fallite": 70,
+     "altri": 63
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2437,
+     "scritture": 440,
+     "scritture_fallite": 4,
+     "altri": 5747
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1116,
+     "scritture": 259,
+     "scritture_fallite": 61,
+     "altri": 151
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2811,
+     "scritture": 631,
+     "scritture_fallite": 134,
+     "altri": 67
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 7689,
+     "scritture": 403,
+     "scritture_fallite": 18,
+     "altri": 5442
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 757,
+     "scritture": 165,
+     "scritture_fallite": 9,
+     "altri": 102
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2425,
+     "scritture": 631,
+     "scritture_fallite": 25,
+     "altri": 51
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2928,
+     "scritture": 641,
+     "scritture_fallite": 195,
+     "altri": 5792
+    }
+   }
+  },
+  "paralleli": {
+   "insieme": [
+    {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 21060,
+     "letture_al_db": 9283,
+     "scritture": 5541,
+     "picco_risposte_pronte": 2020,
+     "picco_byte_pronti": 1311321,
+     "collezione": 0.10212215878487559,
+     "intervallo": 0.11364860497683939,
+     "tetto": 0.15264461919638048,
+     "parametri_in_piu": 0.41161262522891306,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 1421,
+       "collezione": 0.00844475721323012,
+       "intervallo": 0.02040816326530612,
+       "tetto": 0.03237156931738212,
+       "parametri_in_piu": 0.5573539760731879
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 3036,
+       "collezione": 0.005599472990777339,
+       "intervallo": 0.011857707509881422,
+       "tetto": 0.020750988142292492,
+       "parametri_in_piu": 0.4041501976284585
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 4826,
+       "collezione": 0.1904268545379196,
+       "intervallo": 0.20513883133029423,
+       "tetto": 0.27103191048487363,
+       "parametri_in_piu": 0.37339411520928306
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 300,
+     "letture": 30343,
+     "assorbite_app": 21060,
+     "letture_al_db": 9283,
+     "scritture": 5541,
+     "picco_risposte_pronte": 1206,
+     "picco_byte_pronti": 1029276,
+     "collezione": 0.10072174943445007,
+     "intervallo": 0.11224819562641387,
+     "tetto": 0.15070559086502208,
+     "parametri_in_piu": 0.4112894538403533,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 1421,
+       "collezione": 0.00844475721323012,
+       "intervallo": 0.02040816326530612,
+       "tetto": 0.03237156931738212,
+       "parametri_in_piu": 0.5573539760731879
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 3036,
+       "collezione": 0.005599472990777339,
+       "intervallo": 0.011857707509881422,
+       "tetto": 0.020750988142292492,
+       "parametri_in_piu": 0.4041501976284585
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 4826,
+       "collezione": 0.18773311230832987,
+       "intervallo": 0.20244508910070452,
+       "tetto": 0.2673021135515955,
+       "parametri_in_piu": 0.37277248238707006
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 3600,
+     "letture": 30343,
+     "assorbite_app": 21060,
+     "letture_al_db": 9283,
+     "scritture": 5541,
+     "picco_risposte_pronte": 2413,
+     "picco_byte_pronti": 1677483,
+     "collezione": 0.11440267155014543,
+     "intervallo": 0.12722180329634816,
+     "tetto": 0.1722503501023376,
+     "parametri_in_piu": 0.4067650544005171,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 1421,
+       "collezione": 0.00844475721323012,
+       "intervallo": 0.02040816326530612,
+       "tetto": 0.03237156931738212,
+       "parametri_in_piu": 0.5573539760731879
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 3036,
+       "collezione": 0.005599472990777339,
+       "intervallo": 0.011857707509881422,
+       "tetto": 0.020750988142292492,
+       "parametri_in_piu": 0.4041501976284585
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 4826,
+       "collezione": 0.21404890178201408,
+       "intervallo": 0.23124740986324077,
+       "tetto": 0.3087443016991297,
+       "parametri_in_piu": 0.36406962287608785
+      }
+     }
+    },
+    {
+     "app_ttl": 0,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 0,
+     "letture_al_db": 30343,
+     "scritture": 5541,
+     "picco_risposte_pronte": 2020,
+     "picco_byte_pronti": 1310874,
+     "collezione": 0.6715222621362423,
+     "intervallo": 0.695976007645915,
+     "tetto": 0.7407639323731997,
+     "parametri_in_piu": 0.12599281547638663,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4278,
+       "collezione": 0.5956054230949042,
+       "intervallo": 0.6498363721365124,
+       "tetto": 0.6785881252921926,
+       "parametri_in_piu": 0.18513323983169705
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10729,
+       "collezione": 0.6610122098984061,
+       "intervallo": 0.6913039425855159,
+       "tetto": 0.7229005499114549,
+       "parametri_in_piu": 0.11436294156025725
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 15336,
+       "collezione": 0.7000521648408973,
+       "intervallo": 0.7121152842983829,
+       "tetto": 0.770605112154408,
+       "parametri_in_piu": 0.11763171622326551
+      }
+     }
+    }
+   ],
+   "per_file": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1262,
+     "assorbite_app": 859,
+     "letture_al_db": 403,
+     "scritture": 265,
+     "picco_risposte_pronte": 337,
+     "picco_byte_pronti": 298012,
+     "collezione": 0.01240694789081886,
+     "intervallo": 0.034739454094292806,
+     "tetto": 0.05955334987593052,
+     "parametri_in_piu": 0.5384615384615384,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1262,
+       "al_db": 403,
+       "collezione": 0.01240694789081886,
+       "intervallo": 0.034739454094292806,
+       "tetto": 0.05955334987593052,
+       "parametri_in_piu": 0.5384615384615384
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2795,
+     "assorbite_app": 2063,
+     "letture_al_db": 732,
+     "scritture": 705,
+     "picco_risposte_pronte": 564,
+     "picco_byte_pronti": 575661,
+     "collezione": 0.001366120218579235,
+     "intervallo": 0.00546448087431694,
+     "tetto": 0.015027322404371584,
+     "parametri_in_piu": 0.3975409836065574,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2795,
+       "al_db": 732,
+       "collezione": 0.001366120218579235,
+       "intervallo": 0.00546448087431694,
+       "tetto": 0.015027322404371584,
+       "parametri_in_piu": 0.3975409836065574
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2282,
+     "assorbite_app": 1515,
+     "letture_al_db": 767,
+     "scritture": 523,
+     "picco_risposte_pronte": 271,
+     "picco_byte_pronti": 122645,
+     "collezione": 0.07170795306388526,
+     "intervallo": 0.09256844850065189,
+     "tetto": 0.16688396349413298,
+     "parametri_in_piu": 0.379400260756193,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2282,
+       "al_db": 767,
+       "collezione": 0.07170795306388526,
+       "intervallo": 0.09256844850065189,
+       "tetto": 0.16688396349413298,
+       "parametri_in_piu": 0.379400260756193
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1143,
+     "assorbite_app": 761,
+     "letture_al_db": 382,
+     "scritture": 205,
+     "picco_risposte_pronte": 376,
+     "picco_byte_pronti": 283410,
+     "collezione": 0.005235602094240838,
+     "intervallo": 0.005235602094240838,
+     "tetto": 0.010471204188481676,
+     "parametri_in_piu": 0.6178010471204188,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1143,
+       "al_db": 382,
+       "collezione": 0.005235602094240838,
+       "intervallo": 0.005235602094240838,
+       "tetto": 0.010471204188481676,
+       "parametri_in_piu": 0.6178010471204188
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2698,
+     "assorbite_app": 1971,
+     "letture_al_db": 727,
+     "scritture": 673,
+     "picco_risposte_pronte": 716,
+     "picco_byte_pronti": 739103,
+     "collezione": 0.005502063273727648,
+     "intervallo": 0.009628610729023384,
+     "tetto": 0.015130674002751032,
+     "parametri_in_piu": 0.39614855570839064,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2698,
+       "al_db": 727,
+       "collezione": 0.005502063273727648,
+       "intervallo": 0.009628610729023384,
+       "tetto": 0.015130674002751032,
+       "parametri_in_piu": 0.39614855570839064
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2437,
+     "assorbite_app": 1534,
+     "letture_al_db": 903,
+     "scritture": 440,
+     "picco_risposte_pronte": 720,
+     "picco_byte_pronti": 282364,
+     "collezione": 0.1184939091915836,
+     "intervallo": 0.14285714285714285,
+     "tetto": 0.2026578073089701,
+     "parametri_in_piu": 0.43853820598006643,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2437,
+       "al_db": 903,
+       "collezione": 0.1184939091915836,
+       "intervallo": 0.14285714285714285,
+       "tetto": 0.2026578073089701,
+       "parametri_in_piu": 0.43853820598006643
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1116,
+     "assorbite_app": 747,
+     "letture_al_db": 369,
+     "scritture": 259,
+     "picco_risposte_pronte": 358,
+     "picco_byte_pronti": 277145,
+     "collezione": 0.0027100271002710027,
+     "intervallo": 0.016260162601626018,
+     "tetto": 0.02981029810298103,
+     "parametri_in_piu": 0.5582655826558266,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1116,
+       "al_db": 369,
+       "collezione": 0.0027100271002710027,
+       "intervallo": 0.016260162601626018,
+       "tetto": 0.02981029810298103,
+       "parametri_in_piu": 0.5582655826558266
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2811,
+     "assorbite_app": 1966,
+     "letture_al_db": 845,
+     "scritture": 631,
+     "picco_risposte_pronte": 821,
+     "picco_byte_pronti": 856367,
+     "collezione": 0.008284023668639054,
+     "intervallo": 0.01775147928994083,
+     "tetto": 0.028402366863905324,
+     "parametri_in_piu": 0.42958579881656805,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2811,
+       "al_db": 845,
+       "collezione": 0.008284023668639054,
+       "intervallo": 0.01775147928994083,
+       "tetto": 0.028402366863905324,
+       "parametri_in_piu": 0.42958579881656805
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 7689,
+     "assorbite_app": 5652,
+     "letture_al_db": 2037,
+     "scritture": 403,
+     "picco_risposte_pronte": 1210,
+     "picco_byte_pronti": 467551,
+     "collezione": 0.2773686794305351,
+     "intervallo": 0.28325969563082964,
+     "tetto": 0.32547864506627394,
+     "parametri_in_piu": 0.3549337260677467,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 7689,
+       "al_db": 2037,
+       "collezione": 0.2773686794305351,
+       "intervallo": 0.28325969563082964,
+       "tetto": 0.32547864506627394,
+       "parametri_in_piu": 0.3549337260677467
+      }
+     }
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 757,
+     "assorbite_app": 490,
+     "letture_al_db": 267,
+     "scritture": 165,
+     "picco_risposte_pronte": 260,
+     "picco_byte_pronti": 245907,
+     "collezione": 0.0149812734082397,
+     "intervallo": 0.026217228464419477,
+     "tetto": 0.026217228464419477,
+     "parametri_in_piu": 0.49812734082397003,
+     "per_gruppo": {
+      "airline": {
+       "letture": 757,
+       "al_db": 267,
+       "collezione": 0.0149812734082397,
+       "intervallo": 0.026217228464419477,
+       "tetto": 0.026217228464419477,
+       "parametri_in_piu": 0.49812734082397003
+      }
+     }
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2425,
+     "assorbite_app": 1693,
+     "letture_al_db": 732,
+     "scritture": 631,
+     "picco_risposte_pronte": 714,
+     "picco_byte_pronti": 678418,
+     "collezione": 0.006830601092896175,
+     "intervallo": 0.01366120218579235,
+     "tetto": 0.023224043715846996,
+     "parametri_in_piu": 0.38934426229508196,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2425,
+       "al_db": 732,
+       "collezione": 0.006830601092896175,
+       "intervallo": 0.01366120218579235,
+       "tetto": 0.023224043715846996,
+       "parametri_in_piu": 0.38934426229508196
+      }
+     }
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2928,
+     "assorbite_app": 1809,
+     "letture_al_db": 1119,
+     "scritture": 641,
+     "picco_risposte_pronte": 302,
+     "picco_byte_pronti": 137942,
+     "collezione": 0.17158176943699732,
+     "intervallo": 0.1903485254691689,
+     "tetto": 0.29848078641644327,
+     "parametri_in_piu": 0.35031277926720283,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2928,
+       "al_db": 1119,
+       "collezione": 0.17158176943699732,
+       "intervallo": 0.1903485254691689,
+       "tetto": 0.29848078641644327,
+       "parametri_in_piu": 0.35031277926720283
+      }
+     }
+    }
+   },
+   "conteggi": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1262,
+     "scritture": 265,
+     "scritture_fallite": 27,
+     "altri": 124
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2795,
+     "scritture": 705,
+     "scritture_fallite": 51,
+     "altri": 40
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2282,
+     "scritture": 523,
+     "scritture_fallite": 1,
+     "altri": 5936
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1143,
+     "scritture": 205,
+     "scritture_fallite": 17,
+     "altri": 166
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2698,
+     "scritture": 673,
+     "scritture_fallite": 70,
+     "altri": 63
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2437,
+     "scritture": 440,
+     "scritture_fallite": 4,
+     "altri": 5747
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1116,
+     "scritture": 259,
+     "scritture_fallite": 61,
+     "altri": 151
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2811,
+     "scritture": 631,
+     "scritture_fallite": 134,
+     "altri": 67
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 7689,
+     "scritture": 403,
+     "scritture_fallite": 18,
+     "altri": 5442
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 757,
+     "scritture": 165,
+     "scritture_fallite": 9,
+     "altri": 102
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2425,
+     "scritture": 631,
+     "scritture_fallite": 25,
+     "altri": 51
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2928,
+     "scritture": 641,
+     "scritture_fallite": 195,
+     "altri": 5792
+    }
+   }
+  },
+  "sessione": {
+   "insieme": [
+    {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 5642,
+     "letture_al_db": 24701,
+     "scritture": 5541,
+     "picco_risposte_pronte": 4039,
+     "picco_byte_pronti": 3849714,
+     "collezione": 0.03963402291405206,
+     "intervallo": 0.04072709606898506,
+     "tetto": 0.04882393425367394,
+     "parametri_in_piu": 0.3941540828306546,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4141,
+       "collezione": 0.0014489253803429123,
+       "intervallo": 0.0028978507606858247,
+       "tetto": 0.005071238831200193,
+       "parametri_in_piu": 0.5165418980922483
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10521,
+       "collezione": 0.000190095998479232,
+       "intervallo": 0.0021861039825111683,
+       "tetto": 0.002756391977948864,
+       "parametri_in_piu": 0.3614675411082597
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 10039,
+       "collezione": 0.09672278115350134,
+       "intervallo": 0.09672278115350134,
+       "tetto": 0.11515091144536309,
+       "parametri_in_piu": 0.3779260882558024
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 300,
+     "letture": 30343,
+     "assorbite_app": 5642,
+     "letture_al_db": 24701,
+     "scritture": 5541,
+     "picco_risposte_pronte": 2763,
+     "picco_byte_pronti": 2750602,
+     "collezione": 0.03951257034128173,
+     "intervallo": 0.040605643496214726,
+     "tetto": 0.048661997489980166,
+     "parametri_in_piu": 0.3940731144488077,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4141,
+       "collezione": 0.0014489253803429123,
+       "intervallo": 0.0028978507606858247,
+       "tetto": 0.005071238831200193,
+       "parametri_in_piu": 0.5165418980922483
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10521,
+       "collezione": 0.000190095998479232,
+       "intervallo": 0.0021861039825111683,
+       "tetto": 0.002756391977948864,
+       "parametri_in_piu": 0.3614675411082597
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 10039,
+       "collezione": 0.09642394660822791,
+       "intervallo": 0.09642394660822791,
+       "tetto": 0.1147524653849985,
+       "parametri_in_piu": 0.3777268652256201
+      }
+     }
+    },
+    {
+     "app_ttl": 60,
+     "window": 3600,
+     "letture": 30343,
+     "assorbite_app": 5642,
+     "letture_al_db": 24701,
+     "scritture": 5541,
+     "picco_risposte_pronte": 6671,
+     "picco_byte_pronti": 5164748,
+     "collezione": 0.04275130561515728,
+     "intervallo": 0.04384437877009028,
+     "tetto": 0.053074774300635605,
+     "parametri_in_piu": 0.39391117768511397,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4141,
+       "collezione": 0.0014489253803429123,
+       "intervallo": 0.0028978507606858247,
+       "tetto": 0.005071238831200193,
+       "parametri_in_piu": 0.5165418980922483
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10521,
+       "collezione": 0.000190095998479232,
+       "intervallo": 0.0021861039825111683,
+       "tetto": 0.002756391977948864,
+       "parametri_in_piu": 0.3614675411082597
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 10039,
+       "collezione": 0.10439286781551947,
+       "intervallo": 0.10439286781551947,
+       "tetto": 0.12561012052993326,
+       "parametri_in_piu": 0.3773284191652555
+      }
+     }
+    },
+    {
+     "app_ttl": 0,
+     "window": 600,
+     "letture": 30343,
+     "assorbite_app": 0,
+     "letture_al_db": 30343,
+     "scritture": 5541,
+     "picco_risposte_pronte": 4041,
+     "picco_byte_pronti": 3850673,
+     "collezione": 0.2075931845895264,
+     "intervallo": 0.2109217941535115,
+     "tetto": 0.22568631974425732,
+     "parametri_in_piu": 0.3208647793560294,
+     "per_gruppo": {
+      "airline": {
+       "letture": 4278,
+       "al_db": 4278,
+       "collezione": 0.02431042543244507,
+       "intervallo": 0.03225806451612903,
+       "tetto": 0.03693314633006078,
+       "parametri_in_piu": 0.5
+      },
+      "retail": {
+       "letture": 10729,
+       "al_db": 10729,
+       "collezione": 0.01332836238232827,
+       "intervallo": 0.019573119582440117,
+       "tetto": 0.022089663528753845,
+       "parametri_in_piu": 0.354459875104856
+      },
+      "telecom": {
+       "letture": 15336,
+       "al_db": 15336,
+       "collezione": 0.39462702138758476,
+       "intervallo": 0.39462702138758476,
+       "tetto": 0.42077464788732394,
+       "parametri_in_piu": 0.24739175795513824
+      }
+     }
+    }
+   ],
+   "per_file": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1262,
+     "assorbite_app": 74,
+     "letture_al_db": 1188,
+     "scritture": 265,
+     "picco_risposte_pronte": 302,
+     "picco_byte_pronti": 250131,
+     "collezione": 0.0025252525252525255,
+     "intervallo": 0.003367003367003367,
+     "tetto": 0.009259259259259259,
+     "parametri_in_piu": 0.5084175084175084,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1262,
+       "al_db": 1188,
+       "collezione": 0.0025252525252525255,
+       "intervallo": 0.003367003367003367,
+       "tetto": 0.009259259259259259,
+       "parametri_in_piu": 0.5084175084175084
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2795,
+     "assorbite_app": 97,
+     "letture_al_db": 2698,
+     "scritture": 705,
+     "picco_risposte_pronte": 557,
+     "picco_byte_pronti": 554245,
+     "collezione": 0.00037064492216456633,
+     "intervallo": 0.004447739065974796,
+     "tetto": 0.004818383988139363,
+     "parametri_in_piu": 0.3654558932542624,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2795,
+       "al_db": 2698,
+       "collezione": 0.00037064492216456633,
+       "intervallo": 0.004447739065974796,
+       "tetto": 0.004818383988139363,
+       "parametri_in_piu": 0.3654558932542624
+      }
+     }
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2282,
+     "assorbite_app": 145,
+     "letture_al_db": 2137,
+     "scritture": 523,
+     "picco_risposte_pronte": 234,
+     "picco_byte_pronti": 93379,
+     "collezione": 0.011230697239120261,
+     "intervallo": 0.011230697239120261,
+     "tetto": 0.021993448759943846,
+     "parametri_in_piu": 0.4155357978474497,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2282,
+       "al_db": 2137,
+       "collezione": 0.011230697239120261,
+       "intervallo": 0.011230697239120261,
+       "tetto": 0.021993448759943846,
+       "parametri_in_piu": 0.4155357978474497
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1143,
+     "assorbite_app": 36,
+     "letture_al_db": 1107,
+     "scritture": 205,
+     "picco_risposte_pronte": 1105,
+     "picco_byte_pronti": 878310,
+     "collezione": 0.0018066847335140017,
+     "intervallo": 0.0018066847335140017,
+     "tetto": 0.0018066847335140017,
+     "parametri_in_piu": 0.5636856368563685,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1143,
+       "al_db": 1107,
+       "collezione": 0.0018066847335140017,
+       "intervallo": 0.0018066847335140017,
+       "tetto": 0.0018066847335140017,
+       "parametri_in_piu": 0.5636856368563685
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2698,
+     "assorbite_app": 45,
+     "letture_al_db": 2653,
+     "scritture": 673,
+     "picco_risposte_pronte": 2619,
+     "picco_byte_pronti": 2595384,
+     "collezione": 0.0,
+     "intervallo": 0.0011307953260459858,
+     "tetto": 0.0015077271013946476,
+     "parametri_in_piu": 0.36675461741424803,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2698,
+       "al_db": 2653,
+       "collezione": 0.0,
+       "intervallo": 0.0011307953260459858,
+       "tetto": 0.0015077271013946476,
+       "parametri_in_piu": 0.36675461741424803
+      }
+     }
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2437,
+     "assorbite_app": 366,
+     "letture_al_db": 2071,
+     "scritture": 440,
+     "picco_risposte_pronte": 1777,
+     "picco_byte_pronti": 762639,
+     "collezione": 0.02317720907774022,
+     "intervallo": 0.02317720907774022,
+     "tetto": 0.036214389183969097,
+     "parametri_in_piu": 0.44084983099951713,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2437,
+       "al_db": 2071,
+       "collezione": 0.02317720907774022,
+       "intervallo": 0.02317720907774022,
+       "tetto": 0.036214389183969097,
+       "parametri_in_piu": 0.44084983099951713
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 1116,
+     "assorbite_app": 20,
+     "letture_al_db": 1096,
+     "scritture": 259,
+     "picco_risposte_pronte": 1089,
+     "picco_byte_pronti": 923983,
+     "collezione": 0.0,
+     "intervallo": 0.004562043795620438,
+     "tetto": 0.006386861313868613,
+     "parametri_in_piu": 0.5437956204379562,
+     "per_gruppo": {
+      "airline": {
+       "letture": 1116,
+       "al_db": 1096,
+       "collezione": 0.0,
+       "intervallo": 0.004562043795620438,
+       "tetto": 0.006386861313868613,
+       "parametri_in_piu": 0.5437956204379562
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2811,
+     "assorbite_app": 55,
+     "letture_al_db": 2756,
+     "scritture": 631,
+     "picco_risposte_pronte": 2633,
+     "picco_byte_pronti": 2566316,
+     "collezione": 0.000362844702467344,
+     "intervallo": 0.0021770682148040637,
+     "tetto": 0.00362844702467344,
+     "parametri_in_piu": 0.38062409288824384,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2811,
+       "al_db": 2756,
+       "collezione": 0.000362844702467344,
+       "intervallo": 0.0021770682148040637,
+       "tetto": 0.00362844702467344,
+       "parametri_in_piu": 0.38062409288824384
+      }
+     }
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 7689,
+     "assorbite_app": 3987,
+     "letture_al_db": 3702,
+     "scritture": 403,
+     "picco_risposte_pronte": 1297,
+     "picco_byte_pronti": 501387,
+     "collezione": 0.19151809832522962,
+     "intervallo": 0.19151809832522962,
+     "tetto": 0.20799567801188545,
+     "parametri_in_piu": 0.33684494867639114,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 7689,
+       "al_db": 3702,
+       "collezione": 0.19151809832522962,
+       "intervallo": 0.19151809832522962,
+       "tetto": 0.20799567801188545,
+       "parametri_in_piu": 0.33684494867639114
+      }
+     }
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 757,
+     "assorbite_app": 7,
+     "letture_al_db": 750,
+     "scritture": 165,
+     "picco_risposte_pronte": 639,
+     "picco_byte_pronti": 617086,
+     "collezione": 0.0013333333333333333,
+     "intervallo": 0.0013333333333333333,
+     "tetto": 0.0013333333333333333,
+     "parametri_in_piu": 0.42,
+     "per_gruppo": {
+      "airline": {
+       "letture": 757,
+       "al_db": 750,
+       "collezione": 0.0013333333333333333,
+       "intervallo": 0.0013333333333333333,
+       "tetto": 0.0013333333333333333,
+       "parametri_in_piu": 0.42
+      }
+     }
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2425,
+     "assorbite_app": 11,
+     "letture_al_db": 2414,
+     "scritture": 631,
+     "picco_risposte_pronte": 2055,
+     "picco_byte_pronti": 1970554,
+     "collezione": 0.0,
+     "intervallo": 0.0008285004142502071,
+     "tetto": 0.0008285004142502071,
+     "parametri_in_piu": 0.32932891466445735,
+     "per_gruppo": {
+      "retail": {
+       "letture": 2425,
+       "al_db": 2414,
+       "collezione": 0.0,
+       "intervallo": 0.0008285004142502071,
+       "tetto": 0.0008285004142502071,
+       "parametri_in_piu": 0.32932891466445735
+      }
+     }
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "app_ttl": 60,
+     "window": 600,
+     "letture": 2928,
+     "assorbite_app": 799,
+     "letture_al_db": 2129,
+     "scritture": 641,
+     "picco_risposte_pronte": 353,
+     "picco_byte_pronti": 152917,
+     "collezione": 0.08924377642085486,
+     "intervallo": 0.08924377642085486,
+     "tetto": 0.1240018788163457,
+     "parametri_in_piu": 0.3503992484734617,
+     "per_gruppo": {
+      "telecom": {
+       "letture": 2928,
+       "al_db": 2129,
+       "collezione": 0.08924377642085486,
+       "intervallo": 0.08924377642085486,
+       "tetto": 0.1240018788163457,
+       "parametri_in_piu": 0.3503992484734617
+      }
+     }
+    }
+   },
+   "conteggi": {
+    "claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1262,
+     "scritture": 265,
+     "scritture_fallite": 27,
+     "altri": 124
+    },
+    "claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2795,
+     "scritture": 705,
+     "scritture_fallite": 51,
+     "altri": 40
+    },
+    "claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2282,
+     "scritture": 523,
+     "scritture_fallite": 1,
+     "altri": 5936
+    },
+    "gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1143,
+     "scritture": 205,
+     "scritture_fallite": 17,
+     "altri": 166
+    },
+    "gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2698,
+     "scritture": 673,
+     "scritture_fallite": 70,
+     "altri": 63
+    },
+    "gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2437,
+     "scritture": 440,
+     "scritture_fallite": 4,
+     "altri": 5747
+    },
+    "gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 1116,
+     "scritture": 259,
+     "scritture_fallite": 61,
+     "altri": 151
+    },
+    "gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2811,
+     "scritture": 631,
+     "scritture_fallite": 134,
+     "altri": 67
+    },
+    "gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 7689,
+     "scritture": 403,
+     "scritture_fallite": 18,
+     "altri": 5442
+    },
+    "o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 200,
+     "letture": 757,
+     "scritture": 165,
+     "scritture_fallite": 9,
+     "altri": 102
+    },
+    "o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2425,
+     "scritture": 631,
+     "scritture_fallite": 25,
+     "altri": 51
+    },
+    "o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trials.json": {
+     "conversazioni": 456,
+     "letture": 2928,
+     "scritture": 641,
+     "scritture_fallite": 195,
+     "altri": 5792
+    }
+   }
+  }
+ }
+}

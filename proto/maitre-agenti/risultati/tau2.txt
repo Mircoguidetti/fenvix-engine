@@ -1,0 +1,85 @@
+== tau2 ambito=condiviso (12 file insieme, ognuno il suo database)
+cache_app=60s W=600s letture=30343 assorbite_app=20567 al_db=9776 scritture=5541 | collezione=12.2% intervallo=28.5% tetto=55.9% | +parametri=42.6% | picco_pronte=760 picco_byte=683555
+cache_app=60s W=300s letture=30343 assorbite_app=20567 al_db=9776 scritture=5541 | collezione=11.4% intervallo=26.6% tetto=53.0% | +parametri=45.2% | picco_pronte=642 picco_byte=561035
+cache_app=60s W=3600s letture=30343 assorbite_app=20567 al_db=9776 scritture=5541 | collezione=13.4% intervallo=35.7% tetto=70.3% | +parametri=28.9% | picco_pronte=1277 picco_byte=1104486
+cache_app=0s W=600s letture=30343 assorbite_app=0 al_db=30343 scritture=5541 | collezione=50.9% intervallo=70.1% tetto=85.8% | +parametri=13.7% | picco_pronte=760 picco_byte=686886
+   claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-1 al_db= 1058 coll=0.5% int=8.4% tetto=18.3% +param=80.5%
+   claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14 al_db= 1566 coll=10.9% int=15.2% tetto=22.2% +param=77.0%
+   claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-1 al_db=  827 coll=35.3% int=54.9% tetto=91.5% +param=5.2%
+   gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trial al_db=  512 coll=0.0% int=23.8% tetto=41.4% +param=57.4%
+   gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials al_db= 1097 coll=9.6% int=29.5% tetto=71.3% +param=28.2%
+   gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trial al_db=  142 coll=28.2% int=38.7% tetto=87.3% +param=9.2%
+   gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4tri al_db=  509 coll=0.2% int=25.1% tetto=43.8% +param=55.0%
+   gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4tria al_db= 1252 coll=9.8% int=30.1% tetto=70.5% +param=29.0%
+   gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4tri al_db=  372 coll=34.9% int=50.5% tetto=87.9% +param=8.9%
+   o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trial al_db=  548 coll=0.0% int=30.1% tetto=45.3% +param=52.9%
+   o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials al_db= 1307 coll=11.9% int=31.7% tetto=73.6% +param=25.9%
+   o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trial al_db=  586 coll=29.2% int=39.1% tetto=68.9% +param=24.9%
+== tau2 ambito=clienti (12 file insieme, ognuno il suo database)
+cache_app=60s W=600s letture=7613 assorbite_app=4891 al_db=2722 scritture=1386 | collezione=7.0% intervallo=10.8% tetto=17.9% | +parametri=79.0% | picco_pronte=555 picco_byte=496749
+cache_app=60s W=300s letture=7613 assorbite_app=4891 al_db=2722 scritture=1386 | collezione=6.4% intervallo=9.6% tetto=16.1% | +parametri=80.6% | picco_pronte=531 picco_byte=454211
+cache_app=60s W=3600s letture=7613 assorbite_app=4891 al_db=2722 scritture=1386 | collezione=7.5% intervallo=11.5% tetto=18.8% | +parametri=78.5% | picco_pronte=790 picco_byte=696940
+cache_app=0s W=600s letture=7613 assorbite_app=0 al_db=7613 scritture=1386 | collezione=52.6% intervallo=63.1% tetto=70.6% | +parametri=28.3% | picco_pronte=557 picco_byte=499895
+   claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-1 al_db=  289 coll=0.3% int=7.3% tetto=12.1% +param=85.8%
+   claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14 al_db=  379 coll=9.2% int=12.7% tetto=18.2% +param=80.2%
+   claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-1 al_db=  174 coll=35.6% int=54.6% tetto=89.1% +param=5.7%
+   gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trial al_db=  239 coll=0.0% int=0.0% tetto=0.0% +param=97.5%
+   gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials al_db=  307 coll=0.3% int=0.3% tetto=0.7% +param=97.4%
+   gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trial al_db=   41 coll=24.4% int=34.1% tetto=58.5% +param=29.3%
+   gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4tri al_db=  213 coll=0.0% int=0.0% tetto=0.0% +param=97.7%
+   gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4tria al_db=  323 coll=0.3% int=0.3% tetto=0.9% +param=97.2%
+   gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4tri al_db=   80 coll=27.5% int=37.5% tetto=61.3% +param=27.5%
+   o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trial al_db=  179 coll=0.0% int=0.6% tetto=0.6% +param=94.4%
+   o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials al_db=  322 coll=4.7% int=5.9% tetto=8.4% +param=89.8%
+   o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trial al_db=  176 coll=25.0% int=35.8% tetto=69.3% +param=24.4%
+== tau2 ambito=compito (12 file insieme, ognuno il suo database)
+cache_app=60s W=600s letture=30343 assorbite_app=7426 al_db=22917 scritture=5541 | collezione=17.5% intervallo=27.6% tetto=40.0% | +parametri=26.6% | picco_pronte=1678 picco_byte=1365762
+cache_app=60s W=300s letture=30343 assorbite_app=7426 al_db=22917 scritture=5541 | collezione=15.1% intervallo=24.8% tetto=36.6% | +parametri=28.0% | picco_pronte=1415 picco_byte=1131877
+cache_app=60s W=3600s letture=30343 assorbite_app=7426 al_db=22917 scritture=5541 | collezione=25.2% intervallo=39.7% tetto=57.4% | +parametri=20.1% | picco_pronte=2413 picco_byte=2122854
+cache_app=0s W=600s letture=30343 assorbite_app=0 al_db=30343 scritture=5541 | collezione=34.7% intervallo=43.7% tetto=54.7% | +parametri=20.1% | picco_pronte=1744 picco_byte=1377808
+   claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-1 al_db= 1188 coll=1.8% int=2.0% tetto=3.0% +param=50.3%
+   claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14 al_db= 2698 coll=0.0% int=0.4% tetto=0.5% +param=36.5%
+   claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-1 al_db= 2137 coll=1.1% int=1.1% tetto=2.2% +param=41.6%
+   gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trial al_db=  645 coll=9.8% int=27.3% tetto=41.4% +param=36.6%
+   gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials al_db= 2269 coll=17.3% int=42.2% tetto=68.4% +param=12.7%
+   gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trial al_db= 2047 coll=36.9% int=45.1% tetto=64.7% +param=19.4%
+   gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4tri al_db=  629 coll=9.1% int=27.5% tetto=43.1% +param=32.8%
+   gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4tria al_db= 2468 coll=18.9% int=43.4% tetto=66.7% +param=14.7%
+   gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4tri al_db= 3631 coll=39.8% int=42.5% tetto=47.9% +param=25.9%
+   o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trial al_db=  662 coll=21.0% int=32.8% tetto=45.0% +param=25.4%
+   o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials al_db= 2414 coll=18.9% int=42.3% tetto=70.4% +param=11.8%
+   o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trial al_db= 2129 coll=9.0% int=9.0% tetto=12.4% +param=35.0%
+== tau2 ambito=paralleli (12 file insieme, ognuno il suo database)
+cache_app=60s W=600s letture=30343 assorbite_app=21060 al_db=9283 scritture=5541 | collezione=10.2% intervallo=11.4% tetto=15.3% | +parametri=41.2% | picco_pronte=2020 picco_byte=1311321
+cache_app=60s W=300s letture=30343 assorbite_app=21060 al_db=9283 scritture=5541 | collezione=10.1% intervallo=11.2% tetto=15.1% | +parametri=41.1% | picco_pronte=1206 picco_byte=1029276
+cache_app=60s W=3600s letture=30343 assorbite_app=21060 al_db=9283 scritture=5541 | collezione=11.4% intervallo=12.7% tetto=17.2% | +parametri=40.7% | picco_pronte=2413 picco_byte=1677483
+cache_app=0s W=600s letture=30343 assorbite_app=0 al_db=30343 scritture=5541 | collezione=67.2% intervallo=69.6% tetto=74.1% | +parametri=12.6% | picco_pronte=2020 picco_byte=1310874
+   claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-1 al_db=  403 coll=1.2% int=3.5% tetto=6.0% +param=53.8%
+   claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14 al_db=  732 coll=0.1% int=0.5% tetto=1.5% +param=39.8%
+   claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-1 al_db=  767 coll=7.2% int=9.3% tetto=16.7% +param=37.9%
+   gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trial al_db=  382 coll=0.5% int=0.5% tetto=1.0% +param=61.8%
+   gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials al_db=  727 coll=0.6% int=1.0% tetto=1.5% +param=39.6%
+   gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trial al_db=  903 coll=11.8% int=14.3% tetto=20.3% +param=43.9%
+   gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4tri al_db=  369 coll=0.3% int=1.6% tetto=3.0% +param=55.8%
+   gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4tria al_db=  845 coll=0.8% int=1.8% tetto=2.8% +param=43.0%
+   gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4tri al_db= 2037 coll=27.7% int=28.3% tetto=32.5% +param=35.5%
+   o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trial al_db=  267 coll=1.5% int=2.6% tetto=2.6% +param=49.8%
+   o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials al_db=  732 coll=0.7% int=1.4% tetto=2.3% +param=38.9%
+   o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trial al_db= 1119 coll=17.2% int=19.0% tetto=29.8% +param=35.0%
+== tau2 ambito=sessione (12 file insieme, ognuno il suo database)
+cache_app=60s W=600s letture=30343 assorbite_app=5642 al_db=24701 scritture=5541 | collezione=4.0% intervallo=4.1% tetto=4.9% | +parametri=39.4% | picco_pronte=4039 picco_byte=3849714
+cache_app=60s W=300s letture=30343 assorbite_app=5642 al_db=24701 scritture=5541 | collezione=4.0% intervallo=4.1% tetto=4.9% | +parametri=39.4% | picco_pronte=2763 picco_byte=2750602
+cache_app=60s W=3600s letture=30343 assorbite_app=5642 al_db=24701 scritture=5541 | collezione=4.3% intervallo=4.4% tetto=5.3% | +parametri=39.4% | picco_pronte=6671 picco_byte=5164748
+cache_app=0s W=600s letture=30343 assorbite_app=0 al_db=30343 scritture=5541 | collezione=20.8% intervallo=21.1% tetto=22.6% | +parametri=32.1% | picco_pronte=4041 picco_byte=3850673
+   claude-3-7-sonnet-20250219_airline_default_gpt-4.1-2025-04-1 al_db= 1188 coll=0.3% int=0.3% tetto=0.9% +param=50.8%
+   claude-3-7-sonnet-20250219_retail_default_gpt-4.1-2025-04-14 al_db= 2698 coll=0.0% int=0.4% tetto=0.5% +param=36.5%
+   claude-3-7-sonnet-20250219_telecom_default_gpt-4.1-2025-04-1 al_db= 2137 coll=1.1% int=1.1% tetto=2.2% +param=41.6%
+   gpt-4.1-2025-04-14_airline_default_gpt-4.1-2025-04-14_4trial al_db= 1107 coll=0.2% int=0.2% tetto=0.2% +param=56.4%
+   gpt-4.1-2025-04-14_retail_default_gpt-4.1-2025-04-14_4trials al_db= 2653 coll=0.0% int=0.1% tetto=0.2% +param=36.7%
+   gpt-4.1-2025-04-14_telecom_default_gpt-4.1-2025-04-14_4trial al_db= 2071 coll=2.3% int=2.3% tetto=3.6% +param=44.1%
+   gpt-4.1-mini-2025-04-14_airline_base_gpt-4.1-2025-04-14_4tri al_db= 1096 coll=0.0% int=0.5% tetto=0.6% +param=54.4%
+   gpt-4.1-mini-2025-04-14_retail_base_gpt-4.1-2025-04-14_4tria al_db= 2756 coll=0.0% int=0.2% tetto=0.4% +param=38.1%
+   gpt-4.1-mini-2025-04-14_telecom_base_gpt-4.1-2025-04-14_4tri al_db= 3702 coll=19.2% int=19.2% tetto=20.8% +param=33.7%
+   o4-mini-2025-04-16_airline_default_gpt-4.1-2025-04-14_4trial al_db=  750 coll=0.1% int=0.1% tetto=0.1% +param=42.0%
+   o4-mini-2025-04-16_retail_default_gpt-4.1-2025-04-14_4trials al_db= 2414 coll=0.0% int=0.1% tetto=0.1% +param=32.9%
+   o4-mini-2025-04-16_telecom_default_gpt-4.1-2025-04-14_4trial al_db= 2129 coll=8.9% int=8.9% tetto=12.4% +param=35.0%
