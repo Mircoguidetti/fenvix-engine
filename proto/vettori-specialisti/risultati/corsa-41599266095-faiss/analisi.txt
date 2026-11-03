@@ -1,0 +1,29 @@
+
+===== job faiss =====
+faiss | HNSW32,Flat | filtro=False | max richiamo 0.980 | @0.9: 8940/s lordo (richiamo 0.902, {'ef': 24}) | @0.95: 5245/s lordo (richiamo 0.955, {'ef': 48})
+faiss | HNSW32,Flat | filtro=True | max richiamo 0.981 | @0.9: 3076/s lordo (richiamo 0.921, {'ef': 96}) | @0.95: 2384/s lordo (richiamo 0.952, {'ef': 128})
+faiss | IVF4096,PQ192x4fs,RFlat | filtro=False | max richiamo 0.926 | @0.9: 1988/s lordo (richiamo 0.907, {'nprobe': 96, 'k_factor': 8}) | @0.95: non arriva
+faiss | IVF4096,PQ192x4fs,RFlat | filtro=True | max richiamo 0.932 | @0.9: 1803/s lordo (richiamo 0.909, {'nprobe': 192, 'k_factor': 8}) | @0.95: non arriva
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=False | max richiamo 0.982 | @0.9: 8260/s lordo (richiamo 0.919, {'ef': 48, 'k_factor': 1}) | @0.95: 4639/s lordo (richiamo 0.958, {'ef': 96, 'k_factor': 2})
+noi (faiss) | HNSW SQ8+ricalcolo, 1 pezzo | filtro=True | max richiamo 0.977 | @0.9: 3579/s lordo (richiamo 0.916, {'ef': 128, 'k_factor': 2}) | @0.95: 2557/s lordo (richiamo 0.951, {'ef': 192, 'k_factor': 2})
+-- rapporti nello stesso job (noi faiss / avversario; senza protocollo, e lordo) --
+filtro=False @0.9: noi 8260/s contro faiss HNSW32,Flat 8940/s -> 0.92x (lordo 0.92x)
+filtro=False @0.9: noi 8260/s contro faiss IVF4096,PQ192x4fs,RFlat 1988/s -> 4.16x (lordo 4.16x)
+filtro=False @0.95: noi 4639/s contro faiss HNSW32,Flat 5245/s -> 0.88x (lordo 0.88x)
+filtro=False @0.95: faiss IVF4096,PQ192x4fs,RFlat: non arriva (noi 4639/s)
+filtro=True @0.9: noi 3579/s contro faiss HNSW32,Flat 3076/s -> 1.16x (lordo 1.16x)
+filtro=True @0.9: noi 3579/s contro faiss IVF4096,PQ192x4fs,RFlat 1803/s -> 1.98x (lordo 1.98x)
+filtro=True @0.95: noi 2557/s contro faiss HNSW32,Flat 2384/s -> 1.07x (lordo 1.07x)
+filtro=True @0.95: faiss IVF4096,PQ192x4fs,RFlat: non arriva (noi 2557/s)
+
+===== tutti gli avversari, rapporto noi/avversario (sotto 1 = l'avversario usa meno CPU) =====
+filtro=False @0.95: 0.88x (lordo 0.88x) faiss HNSW32,Flat [job faiss: noi 4639/s, loro 5245/s]
+filtro=False @0.9: 0.92x (lordo 0.92x) faiss HNSW32,Flat [job faiss: noi 8260/s, loro 8940/s]
+filtro=False @0.9: 4.16x (lordo 4.16x) faiss IVF4096,PQ192x4fs,RFlat [job faiss: noi 8260/s, loro 1988/s]
+filtro=True @0.95: 1.07x (lordo 1.07x) faiss HNSW32,Flat [job faiss: noi 2557/s, loro 2384/s]
+filtro=True @0.9: 1.16x (lordo 1.16x) faiss HNSW32,Flat [job faiss: noi 3579/s, loro 3076/s]
+filtro=True @0.9: 1.98x (lordo 1.98x) faiss IVF4096,PQ192x4fs,RFlat [job faiss: noi 3579/s, loro 1803/s]
+
+===== costruzione e protocollo =====
+{"job": "faiss", "engine": "faiss", "config": "HNSW32,Flat", "kind": "build", "build_s": 12.096484184265137}
+{"job": "faiss", "engine": "faiss", "config": "IVF4096,PQ192x4fs,RFlat", "kind": "build", "build_s": 91.94208478927612}

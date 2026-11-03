@@ -1,0 +1,17 @@
+== noi inizio
+faiss HNSW SQ8 + refine costruito in 9s
+== noi finito in 11s
+               total        used        free      shared  buff/cache   available
+Mem:            7931        1026        5927          47        1292        6904
+Swap:           3071           0        3071
+== faiss_hnsw inizio
+== faiss_hnsw finito in 13s
+               total        used        free      shared  buff/cache   available
+Mem:            7931         886        6067          47        1293        7045
+Swap:           3071           0        3071
+== faiss_ivfpq inizio
+WARNING clustering 50000 points to 4096 centroids: please provide at least 159744 training points
+== faiss_ivfpq finito in 99s
+               total        used        free      shared  buff/cache   available
+Mem:            7931         921        6028          47        1297        7010
+Swap:           3071           0        3071
