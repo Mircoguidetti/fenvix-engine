@@ -1,0 +1,11 @@
+--- a/src/reader.rs (slatedb 0.17.0)
++++ b/src/reader.rs
+@@ -302,7 +302,7 @@
+             }
+         };
+         let total_ssts: usize = segments.iter().map(|s| s.tree.total_ssts()).sum();
+-        let max_parallel = total_ssts.clamp(1, 4);
++        let max_parallel = total_ssts.clamp(1, 64);
+ 
+         let context = SegmentScanContext {
+             table_store: self.table_store.clone(),

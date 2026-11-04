@@ -1,0 +1,15 @@
+fotografia: 8 pile (5 L0), MB [2, 3, 3, 3, 3, 11, 34, 207]; sul bancone con la quota 0.02: 5 pile, 15 MB
+riscaldo 4 s, 60 clienti, 609 GET: indici 444 KB, filtri 4626 KB
+parallelo dormienti (30): Q1 freddo p50 51.2 p99 86.5; Q2 82.8 136.7; Q3 51.9 88.3; caldo Q1 p50 0.31; GET per find 2.08; doppie 0.000
+parallelo attivi (30): Q1 freddo p50 72.3 p99 138.1; Q2 79.2 188.5; Q3 67.6 167.1; caldo Q1 p50 0.40; GET per find 6.53; doppie 0.000
+parallelo+bancone+doppia+ra256 dormienti (30): Q1 freddo p50 46.2 p99 107.9; Q2 89.9 145.9; Q3 42.2 81.3; caldo Q1 p50 0.30; GET per find 1.36; doppie 0.108
+parallelo+bancone+doppia+ra256 attivi (30): Q1 freddo p50 56.3 p99 120.9; Q2 88.8 145.3; Q3 52.6 113.3; caldo Q1 p50 0.35; GET per find 2.91; doppie 0.158
+insieme 10 Q1: p50 108.3 p99 137.8
+insieme 10 Q2: p50 186.0 p99 228.9
+insieme 10 Q3: p50 87.8 p99 185.1
+Q5 indice_100: freddo p50 832.1 ms p99 866.8, GET p50 79, documenti p50 100
+Q5 indice_tutte: freddo p50 NaN ms p99 NaN, GET p50 NaN, documenti p50 NaN
+
+real	0m40.766s
+user	0m2.593s
+sys	0m0.983s
