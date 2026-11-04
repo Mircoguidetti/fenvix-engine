@@ -1,0 +1,80 @@
+# Compaction warm-up (M27)
+
+## The problem
+
+A compaction pass rewrites SSTs. slatedb's block cache is keyed by (cache scope, SST id, block offset), so every block of
+a new SST is a miss until someone reads it back from object storage, even when the same rows were hot a second before.
+The engine compacts with a standalone `CompactorBuilder` (`lifecycle::compact_tenant_within`), which in slatedb 0.17 has
+no cache at all. Measured (`warm::tests::hot_reads_stay_in_cache_after_compaction`, in-memory store behind
+`CountingStore`): 400 hot keys spread over a 20 MB database, 100% served by the cache before a pass, **0%** after it
+(406 SST GETs for 400 reads).
+
+## What slatedb 0.17 offers
+
+* `BlockCachePolicy::with_compaction_output_targets`: caches compaction output as it is written, but only for the
+  compactor embedded in a `Db` (`Settings::compactor_options`), and only for key ranges fixed when the `Db` is built.
+  Our writers run with the embedded compactor off.
+* `CompactorBuilder` (standalone): no `DbCache`, no policy.
+* `DbCacheManagerOps::warm_sst` / `evict_cached_sst` on `Db` and `DbReader`: warm or drop the cache entries of one SST
+  that is in that handle's manifest. Contiguous blocks are read with one range GET.
+* `SstReader` (index and blocks of one SST, through an optional cache) and the public serde form of `CachedKey`.
+
+## What the engine does now (`src/warm.rs`)
+
+1. Before the pass: the open writer's manifest (its SSTs).
+2. After the compactor wrote the new manifest, before the writer reads it: for each consumed SST, its index (from the
+   shared metadata cache, under the writer's scope) and a probe of the block cache for every block; the keys of the hot
+   blocks (read from the cache, no request).
+3. A `DbReader` opened with the writer's cache scope sees the new manifest; for each new SST holding hot keys,
+   `warm_sst(index, filters, data runs)`. The entries land under the writer's scope.
+4. The writer refreshes its manifest (as before) and the consumed SSTs are evicted from its cache.
+
+`--compaction-warm false` turns it off. Counters in `tenantStats`
+(`maintenance.compactionWarm`). After the fix the same test measures **100%** after the first pass and **99.2%** after a
+second pass (65.2% without); cold keys stay cold (0/400 served), so only what was hot is loaded.
+
+## Bounds (C9)
+
+The C8 review measured the first version on a 200 MB database (200,000 keys of 1 KB, 2% hot keys spread out) with every
+GET 20 ms slower: 45.5% of the hot reads served after the pass, and the pass 22.3 s instead of 2.4 s, because slatedb's
+`warm_sst` reads the ranges of one call one after the other and there were at most 8 calls (one per SST). Now:
+
+* **Parallel:** 2 ranges per `warm_sst` call, `--compaction-warm-concurrency` calls in flight (128). The new SSTs'
+  indexes are read in parallel too, and in place (no copy of an index).
+* **One short time limit:** `--compaction-warm-ms` (3000) covers the whole warm-up. Past it the warm-up stops where it is
+  (the blocks already read stay in the cache), its `DbReader` is closed, and the writer switches to the new manifest
+  anyway. Counted in `compactionWarm.timeouts`; `compactionWarm.readersOpen` must be 0 between passes.
+* **A part instead of none:** at most `--compaction-warm-max-key-mb` (32) MB of hot keys are kept (copied out of their
+  blocks) and at most 200,000 ranges read; past a cap the rest is not warmed (`compactionWarm.truncated`), the pass goes on.
+
+Test: `warm::tests::big_db_slow_store` (ignored by default, run with `--ignored`).
+
+## Giving way to the writer and to S3 (C11, after the C9 review)
+
+* **The writer's L0 first (E1).** Until the writer switches to the new manifest it still counts the L0 SSTs the pass
+  consumed; at `l0_max_ssts` (8 in production) its memtable flushes stop, and past `max_unflushed_bytes` its writes. The
+  C9 review measured the slowest L0 flush during a pass at about 5 s with the warm-up against about 2 s without
+  (`rev_c9::writes_during_slow_warm`, `RC9_L0MAX=8 RC9_FLUSH_MS=250`). Now the warm-up watches the writer's L0
+  (`Db::manifest().l0()`, every 25 ms): it does not start when the L0 is at `l0_max_ssts - 1` already and stops where it
+  is as soon as it gets there; the writer then switches at once. Counted in `compactionWarm.l0Stops`.
+* **One rate for the whole process (E2).** 128 calls per warm-up are 6,400 GETs/s at 20 ms per GET, 12,000 with the two
+  passes the maintenance runs at once, over S3's 5,500 GET/s of one partition (a new bucket can hold every database's
+  prefix in one partition). Every GET of every warm-up now takes a slot of one shared token bucket,
+  `--compaction-warm-gets-per-sec` (3000, 0 = no limit; at most 1/20 of a second of slots at once after an idle time).
+  Waits are counted in `compactionWarm.throttled`. The compactor's own GETs are not in the bucket.
+* Measured (C11, in-memory store, GETs 20-40 ms slower): the slowest L0 flush during a pass with `l0_max_ssts` 8 and a
+  flush every 250 ms is now within 0.22 s of the pass without warm-up in 6 rounds out of 6 (about 3 s more before); two
+  passes of 400 MB at once make at most 3,148 GETs in one second (11,899 before), and warm about half of their hot set
+  (3 s at 3,000 GETs/s is about 9,000 GETs for both); the 200 MB pass of `big_db_slow_store` still warms 100%, 1.6-1.7 s
+  longer than without.
+
+## Limits
+
+* The warm-up reads from object storage the blocks the reads would have read: it moves the GETs off the read path, it does
+  not save them (two passes: 738 GETs with it, 174 without, of which about 540 are the warm-up).
+* Window: the writer can switch on its own (manifest poll every `--writer-poll-secs`, or its own L0 flush) before the
+  warm-up ends; those reads miss as before.
+* Only the cache of this process, only open writers (not read-only `DbReader` tenants).
+* For a large database whose pass rewrites gigabytes of hot data, the right place is inside the compactor (the bytes are in
+  its memory as it writes them: zero GETs). That needs the standalone compactor to accept a cache and a hot-key predicate,
+  a change to slatedb.

@@ -192,6 +192,26 @@ struct Args {
     /// cache scope per open). Blocks are still cached when read.
     #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     cache_flushed_blocks: bool,
+    /// After a compaction pass of an open database, read into the shared block cache the new blocks that hold the keys of
+    /// the blocks it had cached, before the database switches to the new manifest (`src/warm.rs`). Off: every compaction
+    /// cooled the cache, the hot reads went back to object storage (M27: 0% of the hot reads served by the cache after a pass).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    compaction_warm: bool,
+    /// Longest warm-up after one compaction pass, in milliseconds; past it the warm-up stops where it is (what it read
+    /// stays in the cache) and the database switches to the new manifest anyway.
+    #[arg(long, default_value_t = 3000)]
+    compaction_warm_ms: u64,
+    /// Warm-up reads in flight at once per warm-up (`warm_sst` calls of 2 range GETs each). The rate of all warm-ups
+    /// together is bounded by `--compaction-warm-gets-per-sec`.
+    #[arg(long, default_value_t = 128)]
+    compaction_warm_concurrency: u64,
+    /// Most MB of hot keys one warm-up keeps in memory; past it only a part of the hot blocks is warmed.
+    #[arg(long, default_value_t = 32)]
+    compaction_warm_max_key_mb: u64,
+    /// Most warm-up GETs per second for the whole process, all compaction warm-ups together (one shared token bucket; 0 =
+    /// no limit). Under S3's 5,500 GET/s of one partition with room for the other requests of the same prefixes.
+    #[arg(long, default_value_t = 3000)]
+    compaction_warm_gets_per_sec: u64,
     /// A cursor (find, aggregate, tailable, change stream) that no getMore used for this long is closed and its buffered
     /// results freed, as mongod's `cursorTimeoutMillis` (10 minutes). Before, an abandoned cursor stayed until the process
     /// stopped. 0 = never.
@@ -599,6 +619,11 @@ async fn run() -> Result<()> {
     changes::MAX_BYTES.store(args.change_log_max_mb << 20, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::MEMTABLE_MAX_AGE_SECS.store(args.memtable_max_age_secs, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::CACHE_FLUSHED_BLOCKS.store(args.cache_flushed_blocks, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM.store(args.compaction_warm, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM_MS.store(args.compaction_warm_ms, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM_CONCURRENCY.store(args.compaction_warm_concurrency, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM_MAX_KEY_BYTES.store(args.compaction_warm_max_key_mb << 20, std::sync::atomic::Ordering::Relaxed);
+    tenant_bench::warm::COMPACTION_WARM_GETS_PER_SEC.store(args.compaction_warm_gets_per_sec, std::sync::atomic::Ordering::Relaxed);
     cmd::CURSOR_TIMEOUT_SECS.store(args.cursor_timeout_secs, std::sync::atomic::Ordering::Relaxed);
     ctl::durability::install(args.relaxed_flush_ms)?;
     fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight, args.fair_max_flushing, args.db_quota_pts, args.db_burst_pts, args.db_quota_queue, &args.unit_weights).map_err(|e| anyhow::anyhow!(e))?;
