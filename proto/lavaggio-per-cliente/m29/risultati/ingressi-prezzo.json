@@ -1,0 +1,17 @@
+{
+ "_fonte": "M29, tutto MISURATO in locale salvo dove scritto; vedi risultati/riassunto.jsonl",
+ "k_lettore_m26_q1": 1.366, "_k_lettore_m26_q1": "8 GB, lettore 64 KB x4, Q1 9,56 GET / 7 pile",
+ "k_lettore_m26_q3": 1.031, "_k_lettore_m26_q3": "8 GB, Q3 7,21 / 7",
+ "k_lettore_regolato": 1.0, "_k_lettore_regolato": "1 GB 1,00 (Q1 e Q3); 8 GB 0,92: uso 1,0, prudente",
+ "k_s3_con_bancone": 1.0, "_k_s3_con_bancone": "8 GB: Q1 2,0 GET con 2 pile su S3",
+ "q2_con_bancone": 2.0,
+ "correzione_pile": 2.6, "_correzione_pile": "8 GB: 7,20 vere contro 4,58 simulate (revisore), +2,62",
+ "rapporto_lz4": 2.41, "_rapporto_lz4": "byte scritti nelle scatole a 1 GB, 64 KB: 11,66 / 4,83 volte i byte dell'utente",
+ "rapporto_zstd1": 3.40, "_rapporto_zstd1": "11,66 / 3,43",
+ "put_meno_lz4": 1.98, "_put_meno_lz4": "PUT del lavaggio per GB dell'utente: (1802-179) / (999-179)",
+ "put_meno_zstd1": 2.46, "_put_meno_zstd1": "(1802-179) / (840-179)",
+ "get_meno_lz4": 1.59, "_get_meno_lz4": "GET del lavaggio per GB: 8056 / 5058",
+ "get_meno_zstd1": 1.83, "_get_meno_zstd1": "8056 / 4409",
+ "cpu_extra_lz4": 4.1, "_cpu_extra_lz4": "(333,3 - 290,8) s per GB dell'utente / 10,4 GB scritti dal lavaggio per GB dell'utente",
+ "cpu_extra_zstd1": 5.65, "_cpu_extra_zstd1": "(349,6 - 290,8) / 10,4"
+}
