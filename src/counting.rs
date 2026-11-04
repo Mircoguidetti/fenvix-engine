@@ -156,6 +156,28 @@ impl Snapshot {
     }
 }
 
+/// Called for every PUT-class (`true`: put, copy, list page) and GET-class (`false`: get, head) request with the object
+/// path, so the server can charge it to the database it belongs to (`tenants/{db}/...`). Set once at start.
+pub static ON_REQUEST: std::sync::OnceLock<fn(&str, bool)> = std::sync::OnceLock::new();
+
+fn on_request(path: &str, put: bool) {
+    if let Some(f) = ON_REQUEST.get() {
+        f(path, put);
+    }
+}
+
+/// Tests only: every PUT waits this long before it is sent (`MONGO_TEST_PUT_DELAY_MS`, honoured only with
+/// `MONGO_ALLOW_UNSAFE_TEST_FLAGS=1`), to play S3's latency on a store that has none (review of S4, test D).
+fn test_put_delay() -> Option<std::time::Duration> {
+    static D: std::sync::OnceLock<Option<std::time::Duration>> = std::sync::OnceLock::new();
+    *D.get_or_init(|| {
+        if std::env::var("MONGO_ALLOW_UNSAFE_TEST_FLAGS").as_deref() != Ok("1") {
+            return None;
+        }
+        std::env::var("MONGO_TEST_PUT_DELAY_MS").ok().and_then(|v| v.parse::<u64>().ok()).filter(|ms| *ms > 0).map(std::time::Duration::from_millis)
+    })
+}
+
 /// Phase labels for traced calls: set by the server around the part of a command that is running. Process-wide, like
 /// the trace itself, so only meaningful on a quiet server.
 pub const PHASES: [&str; 6] = ["other", "index_scan", "doc_fetch", "collection_scan", "metadata", "wake"];
@@ -333,6 +355,10 @@ impl fmt::Display for CountingStore {
 impl ObjectStore for CountingStore {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
         self.counters.put.fetch_add(1, Relaxed);
+        on_request(location.as_ref(), true);
+        if let Some(d) = test_put_delay() {
+            tokio::time::sleep(d).await;
+        }
         let op = match opts.mode {
             PutMode::Create => "PUT(create)",
             PutMode::Update(_) => "PUT(update)",
@@ -370,6 +396,7 @@ impl ObjectStore for CountingStore {
             &self.counters.get
         };
         counter.fetch_add(1, Relaxed);
+        on_request(location.as_ref(), false);
         self.counters.get_cat[category(location.as_ref())].fetch_add(1, Relaxed);
         let op = if options.head {
             "HEAD"
@@ -432,17 +459,20 @@ impl ObjectStore for CountingStore {
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let stream = self.count_list(self.inner.list(prefix));
         self.trace_list("LIST", prefix, stream)
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let stream = self.count_list(self.inner.list_with_offset(prefix, offset));
         self.trace_list("LIST", prefix, stream)
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
         self.counters.list.fetch_add(1, Relaxed);
+        on_request(prefix.map(|p| p.as_ref()).unwrap_or(""), true);
         let token = self.trace.begin("LIST", &prefix.map(|p| p.to_string()).unwrap_or_default());
         let res = self.inner.list_with_delimiter(prefix).await;
         self.trace.end(token, 0);
@@ -451,6 +481,7 @@ impl ObjectStore for CountingStore {
 
     async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
         self.counters.copy.fetch_add(1, Relaxed);
+        on_request(to.as_ref(), true);
         let token = self.trace.begin("COPY", to.as_ref());
         let res = self.inner.copy_opts(from, to, options).await;
         self.trace.end(token, 0);
@@ -462,6 +493,75 @@ impl ObjectStore for CountingStore {
         self.counters.copy.fetch_add(1, Relaxed);
         self.counters.delete.fetch_add(1, Relaxed);
         self.inner.rename_opts(from, to, options).await
+    }
+}
+
+tokio::task_local! {
+    /// The database whose store made the request being polled (see [`owned`]).
+    static REQUEST_OWNER: Arc<str>;
+}
+
+/// The database whose own store (see [`owned`]) is making the current request, if any. A branch made with fork "clone"
+/// reads its parent's objects (`tenants/{parent}/...`) through its own store: the path names the parent, the owner
+/// names the branch.
+pub fn request_owner() -> Option<Arc<str>> {
+    REQUEST_OWNER.try_with(Arc::clone).ok()
+}
+
+/// A database's view of the shared store: every request it makes is made with [`request_owner`] = `owner`, so the
+/// server can charge it to the database that asked for it, not to the one whose path it reads (review of S4, error 3).
+#[derive(Debug)]
+pub struct OwnedStore {
+    inner: Arc<dyn ObjectStore>,
+    owner: Arc<str>,
+}
+
+pub fn owned(store: &Arc<dyn ObjectStore>, owner: &str) -> Arc<dyn ObjectStore> {
+    Arc::new(OwnedStore { inner: Arc::clone(store), owner: Arc::from(owner) })
+}
+
+impl fmt::Display for OwnedStore {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OwnedStore({}, {})", self.owner, self.inner)
+    }
+}
+
+#[async_trait]
+impl ObjectStore for OwnedStore {
+    async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
+        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.put_opts(location, payload, opts)).await
+    }
+
+    async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>> {
+        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.put_multipart_opts(location, opts)).await
+    }
+
+    async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
+        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.get_opts(location, options)).await
+    }
+
+    fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>> {
+        self.inner.delete_stream(locations)
+    }
+
+    fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        REQUEST_OWNER.sync_scope(Arc::clone(&self.owner), || self.inner.list(prefix))
+    }
+
+    fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        REQUEST_OWNER.sync_scope(Arc::clone(&self.owner), || self.inner.list_with_offset(prefix, offset))
+    }
+
+    async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
+        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.list_with_delimiter(prefix)).await
+    }
+
+    async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()> {
+        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.copy_opts(from, to, options)).await
+    }
+
+    async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()> {
+        REQUEST_OWNER.scope(Arc::clone(&self.owner), self.inner.rename_opts(from, to, options)).await
     }
 }
 

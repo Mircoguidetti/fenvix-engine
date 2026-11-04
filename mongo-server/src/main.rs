@@ -236,17 +236,37 @@ struct Args {
     /// Fair queue between databases, only while the server is saturated: when the runtime runs a 10 ms timer late by more
     /// than this (moving average, ms), new commands wait in their database's queue and start in turn (wakes first) as
     /// others finish; below it every command starts at once. 0 = off. See fair.rs.
-    #[arg(long, default_value_t = 10.0)]
+    #[arg(long, default_value_t = 2.0)]
     fair_lag_ms: f64,
-    /// While saturated (see --fair-lag-ms), at most this many commands run at once; the others wait in turn (0 = 4 per CPU).
+    /// While saturated (see --fair-lag-ms), at most this many commands run at once; the others wait in turn (0 = 8 per CPU).
     #[arg(long, default_value_t = 0)]
     fair_max_inflight: u64,
+    /// While saturated, at most this many commands at once have their written data flushed (the flush is CPU work in the
+    /// database's background tasks); the others wait in turn, least used databases first (0 = 4 per CPU).
+    #[arg(long, default_value_t = 0)]
+    fair_max_flushing: u64,
     /// Safety limit per database, only against runaway clients: commands running or queued at once (0 = none).
     #[arg(long, default_value_t = 10_000)]
     db_max_inflight: u64,
     /// Safety limit per database, only against runaway clients: commands in one second (0 = none).
     #[arg(long, default_value_t = 100_000)]
     db_max_rate: u64,
+    /// Quota per database in points per second (the unit of fair.rs: CPU, bytes written and read, S3 requests), for
+    /// databases without their own (PUT /v1/databases/{db}/quota). Over it a database's commands wait in its own queue. 0 = none.
+    #[arg(long, default_value_t = 0.0)]
+    db_quota_pts: f64,
+    /// Burst credit per database in points: how far a database may go over its quota for a while (0 = 10 s of quota).
+    #[arg(long, default_value_t = 0.0)]
+    db_burst_pts: f64,
+    /// Commands of one database that may wait over its quota; beyond, a new one gets the retryable error 462 at once.
+    #[arg(long, default_value_t = 256)]
+    db_quota_queue: u64,
+    /// Weights of the unit, points per: CPU ms, KiB written, KiB read, S3 PUT-class request, S3 GET-class request (empty = defaults, see fair.rs).
+    #[arg(long, default_value = "")]
+    unit_weights: String,
+    /// Longest total time one command may spend running JavaScript ($where, $function, $accumulator, mapReduce), in ms; over it the command fails with error 50 MaxTimeMSExpired. 0 = no limit (each call still has internalQueryJavaScriptFnTimeoutMillis).
+    #[arg(long, default_value_t = 30_000)]
+    js_command_max_ms: u64,
     /// Test control only: never treat a lease as expired or lost. Demonstrates what the ownership checks prevent.
     #[arg(long)]
     unsafe_skip_ownership_checks: bool,
@@ -516,7 +536,12 @@ fn main() -> Result<()> {
     #[cfg(feature = "heap-prof")]
     heap_prof_thread();
     // The futures of the command handlers are large: the workers get stacks that are not the 2 MiB default.
-    tokio::runtime::Builder::new_multi_thread().enable_all().thread_stack_size(64 << 20).build()?.block_on(run())
+    // ISO_EVENT_INTERVAL (test only, docs/isolamento.md): how many tasks a worker runs between two looks at the network.
+    let mut b = tokio::runtime::Builder::new_multi_thread();
+    if let Some(n) = std::env::var("ISO_EVENT_INTERVAL").ok().and_then(|v| v.parse::<u32>().ok()) {
+        b.event_interval(n);
+    }
+    b.enable_all().thread_stack_size(64 << 20).build()?.block_on(run())
 }
 
 async fn run() -> Result<()> {
@@ -576,7 +601,8 @@ async fn run() -> Result<()> {
     tenant_bench::lifecycle::CACHE_FLUSHED_BLOCKS.store(args.cache_flushed_blocks, std::sync::atomic::Ordering::Relaxed);
     cmd::CURSOR_TIMEOUT_SECS.store(args.cursor_timeout_secs, std::sync::atomic::Ordering::Relaxed);
     ctl::durability::install(args.relaxed_flush_ms)?;
-    fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight);
+    fair::install(args.fair_lag_ms, args.db_max_inflight, args.db_max_rate, args.fair_max_inflight, args.fair_max_flushing, args.db_quota_pts, args.db_burst_pts, args.db_quota_queue, &args.unit_weights).map_err(|e| anyhow::anyhow!(e))?;
+    js::COMMAND_MAX_MS.store(args.js_command_max_ms, std::sync::atomic::Ordering::Relaxed);
     let local_log_old = if args.local_log_dir.is_empty() { None } else { Some(locallog::install(&args.local_log_dir, args.local_log_upload_secs)?) };
     tenant_bench::lifecycle::ADAPTIVE.store(args.adaptive_group_commit, std::sync::atomic::Ordering::Relaxed);
     tenant_bench::lifecycle::ADAPTIVE_MAX_US.store(args.adaptive_group_commit_max_us, std::sync::atomic::Ordering::Relaxed);

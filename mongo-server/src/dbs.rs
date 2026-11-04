@@ -169,6 +169,29 @@ pub struct Entry {
     meta: Mutex<MetaCache>,
 }
 
+/// Bytes (keys and values) a read returned: the "KiB read" of the unit of cost (fair.rs).
+trait ReadBytes {
+    fn read_bytes(&self) -> u64;
+}
+
+impl ReadBytes for Option<Bytes> {
+    fn read_bytes(&self) -> u64 {
+        self.as_ref().map(|v| v.len() as u64).unwrap_or(0)
+    }
+}
+
+impl ReadBytes for Vec<Option<Bytes>> {
+    fn read_bytes(&self) -> u64 {
+        self.iter().map(|v| v.read_bytes()).sum()
+    }
+}
+
+impl ReadBytes for Vec<(Bytes, Bytes)> {
+    fn read_bytes(&self) -> u64 {
+        self.iter().map(|(k, v)| (k.len() + v.len()) as u64).sum()
+    }
+}
+
 /// MongoDB database names may not be empty, contain `/\. "$*<>:|?` or a NUL byte.
 pub fn valid_db_name(name: &str) -> bool {
     !name.is_empty() && name.len() < 64 && !name.chars().any(|c| "/\\. \"$*<>:|?\0".contains(c))
@@ -631,6 +654,14 @@ impl Entry {
     }
 
     pub async fn get(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
+        let r = self.get_uncounted(key).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn get_uncounted(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
         if !self.ensure_open().await? {
             return Ok(None);
         }
@@ -648,6 +679,14 @@ impl Entry {
 
     /// Like [`Entry::get`] but always reads the latest committed state, not the command's snapshot.
     pub async fn get_live(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
+        let r = self.get_live_uncounted(key).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn get_live_uncounted(&mut self, key: &[u8]) -> Result<Option<Bytes>> {
         if !self.ensure_open().await? {
             return Ok(None);
         }
@@ -655,12 +694,20 @@ impl Entry {
     }
 
     pub async fn scan(&mut self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        let r = self.scan_uncounted(prefix).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn scan_uncounted(&mut self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
         if self.snap.is_some() {
             let end = crate::keyenc::prefix_end(prefix);
-            return self.scan_range(prefix, end.as_deref(), false, None, 4 << 20).await;
+            return self.scan_range_uncounted(prefix, end.as_deref(), false, None, 4 << 20).await;
         }
         self.tenant.as_ref().unwrap().scan_prefix(prefix).await
     }
@@ -735,7 +782,10 @@ impl Entry {
             let _ = PENDING.try_with(|p| p.borrow_mut().push(slot.take().unwrap()));
         }
         match slot {
-            Some(commit) => commit.wait().await,
+            Some(commit) => {
+                let _flushing = crate::fair::io_wait().await;
+                commit.wait().await
+            }
             None => Ok(()),
         }
     }
@@ -970,6 +1020,14 @@ impl Entry {
     }
 
     pub async fn scan_range(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        let r = self.scan_range_uncounted(start, end, reverse, limit, read_ahead).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn scan_range_uncounted(&mut self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
@@ -1000,6 +1058,14 @@ impl Entry {
 
     /// [`Entry::scan_range`] on the latest committed state.
     pub async fn scan_range_live(&mut self, start: &[u8], end: Option<&[u8]>, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
+        let r = self.scan_range_live_uncounted(start, end, limit).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn scan_range_live_uncounted(&mut self, start: &[u8], end: Option<&[u8]>, limit: Option<usize>) -> Result<Vec<(Bytes, Bytes)>> {
         if !self.ensure_open().await? {
             return Ok(vec![]);
         }
@@ -1051,6 +1117,14 @@ impl Entry {
 
     /// Point reads in parallel, in key order.
     pub async fn get_many(&mut self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
+        let r = self.get_many_uncounted(keys).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn get_many_uncounted(&mut self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
         if keys.is_empty() || !self.ensure_open().await? {
             return Ok(vec![None; keys.len()]);
         }
@@ -1120,6 +1194,14 @@ impl ReadView {
     }
 
     pub async fn scan(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
+        let r = self.scan_uncounted(prefix).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn scan_uncounted(&self, prefix: &[u8]) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let t = g.tenant.as_ref().unwrap();
         let r = if durable_reads(&g.name) { t.scan_prefix_durable(prefix).await? } else { t.scan_prefix(prefix).await? };
@@ -1127,6 +1209,14 @@ impl ReadView {
     }
 
     pub async fn get(&self, key: &[u8]) -> Result<Option<Bytes>> {
+        let r = self.get_uncounted(key).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn get_uncounted(&self, key: &[u8]) -> Result<Option<Bytes>> {
         let Some(g) = &self.g else { return Ok(None) };
         let t = g.tenant.as_ref().unwrap();
         if META_CACHE.load(Relaxed) && is_meta_key(key) {
@@ -1141,6 +1231,14 @@ impl ReadView {
     }
 
     pub async fn get_many(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
+        let r = self.get_many_uncounted(keys).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn get_many_uncounted(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Bytes>>> {
         let Some(g) = &self.g else { return Ok(vec![None; keys.len()]) };
         if keys.is_empty() {
             return Ok(vec![]);
@@ -1152,6 +1250,14 @@ impl ReadView {
     }
 
     pub async fn scan_range(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
+        let r = self.scan_range_uncounted(start, end, reverse, limit, read_ahead).await;
+        if let Ok(v) = &r {
+            crate::fair::note_read(v.read_bytes());
+        }
+        r
+    }
+
+    async fn scan_range_uncounted(&self, start: &[u8], end: Option<&[u8]>, reverse: bool, limit: Option<usize>, read_ahead: usize) -> Result<Vec<(Bytes, Bytes)>> {
         let Some(g) = &self.g else { return Ok(vec![]) };
         let r = g.tenant.as_ref().unwrap().scan_range(start, end, reverse, limit, read_ahead).await?;
         self.done(r)
