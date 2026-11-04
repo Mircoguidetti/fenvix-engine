@@ -249,6 +249,8 @@ fn magazzino(a: &Args, dir: &str) -> Result<Arc<dyn ObjectStore>> {
                 .with_bucket_name(bucket)
                 .with_conditional_put(object_store::aws::S3ConditionalPut::ETagMatch)
                 .build()?;
+            // revisore M31, C7 (R2): freno sulle richieste a S3 (vero o finto) per questo processo
+            conta::accendi_freno();
             let prefisso = a.s("prefisso", std::path::Path::new(dir).file_name().and_then(|x| x.to_str()).unwrap_or("m31"));
             Ok(Arc::new(object_store::prefix::PrefixStore::new(s3, prefisso.as_str())))
         }
@@ -426,14 +428,25 @@ struct ClienteM31 {
     q2: (u64, u8, i64),
     /// (hi, lo) inclusi
     q3: Vec<(i64, i64)>,
-    /// Q4 (aggiunta del fondatore): non vuota se il cliente ha almeno 500 messaggi (Q4 legge gli ultimi 500)
+    /// Q4 come p1-1.5 (revisore M31, C5; A2 correzione 6): finestre a caso di 60 giorni dentro la storia dei messaggi
+    /// del cliente, `limit 500`, dal più nuovo. (hi, lo, documenti attesi = min(500, messaggi nella finestra)), date incluse.
     #[serde(default)]
-    q4: Vec<(i64, i64)>,
+    q4w: Vec<(i64, i64, u32)>,
+    /// Q1 con la data a caso (C5; A2 correzione 5): i 20 messaggi più recenti con `ts < data`. Date scelte a caso tra
+    /// il ventesimo messaggio più vecchio e il più nuovo, quindi ce ne sono sempre almeno 20 prima.
+    #[serde(default)]
+    q1d: Vec<i64>,
 }
 
 const MESSAGGI_Q4: usize = 500;
+const GIORNI_Q4: i64 = 60;
 
 const EVENTI_Q3: usize = 85;
+
+/// Le find misurate da `tempi`, una dopo l'altra per ogni cliente. Q1 (ultimi 20) resta accanto a Q1d (data a caso).
+const QUERY_TEMPI: [&str; 5] = ["Q1", "Q1d", "Q2", "Q3", "Q4"];
+/// Clienti minimi per gruppo in Q4 (come p1-1.5): sotto, il riassunto lo dice.
+const MIN_Q4: usize = 60;
 
 fn verita_m31(fifo: &VecDeque<Rec>, base: u64, vivi: &[[u32; 3]], _ultimo: &[i64], dormiente: &[bool], rng: &mut SmallRng) -> Vec<ClienteM31> {
     let n = vivi.len();
@@ -459,7 +472,7 @@ fn verita_m31(fifo: &VecDeque<Rec>, base: u64, vivi: &[[u32; 3]], _ultimo: &[i64
     }
     let mut out = Vec::new();
     for c in 0..n {
-        if vivi[c][0] < 20 || ev[c].len() < EVENTI_Q3 || q2[c].is_none() {
+        if vivi[c][0] < 20 || ms[c].len() < 20 || ev[c].len() < EVENTI_Q3 || q2[c].is_none() {
             continue;
         }
         let e = &mut ev[c];
@@ -472,17 +485,24 @@ fn verita_m31(fifo: &VecDeque<Rec>, base: u64, vivi: &[[u32; 3]], _ultimo: &[i64
             .collect();
         let m = &mut ms[c];
         m.sort_unstable_by(|a, b| b.cmp(a));
-        let q4 = if m.len() >= MESSAGGI_Q4 {
-            (0..2)
-                .map(|_| {
-                    let i = rng.gen_range(0..=m.len() - MESSAGGI_Q4);
-                    (m[i], m[i + MESSAGGI_Q4 - 1])
-                })
-                .collect()
-        } else {
-            Vec::new()
-        };
-        out.push(ClienteM31 { c: c as u32, dormiente: dormiente[c], msgs: vivi[c][0], q2: q2[c].unwrap(), q3, q4 });
+        // m è dal più nuovo al più vecchio. Q4: finestra di 60 giorni a caso dentro la storia dei messaggi del cliente.
+        let finestra = GIORNI_Q4 * 86_400_000;
+        let (m_new, m_old) = (m[0], m[m.len() - 1]);
+        let mut q4w = Vec::new();
+        for _ in 0..8 {
+            if q4w.len() == 2 {
+                break;
+            }
+            let lo = rng.gen_range(m_old..=(m_new - finestra + 1).max(m_old));
+            let hi = lo + finestra - 1;
+            let dentro = m.iter().filter(|&&t| t >= lo && t <= hi).count();
+            if dentro > 0 {
+                q4w.push((hi, lo, dentro.min(MESSAGGI_Q4) as u32));
+            }
+        }
+        // Q1 con la data a caso: almeno 20 messaggi con ts < data
+        let q1d = (0..2).map(|_| rng.gen_range(m[19] + 1..=m_new + 1)).collect();
+        out.push(ClienteM31 { c: c as u32, dormiente: dormiente[c], msgs: vivi[c][0], q2: q2[c].unwrap(), q3, q4w, q1d });
     }
     out
 }
@@ -1235,6 +1255,11 @@ fn pct(v: &[f64], p: f64) -> f64 {
     s[k.min(s.len() - 1)]
 }
 
+/// p-esimo percentile del freddo di una find, o NaN se non misurata.
+fn p_q<T>(m: &HashMap<&str, (Vec<f64>, T, T, T, T, T, T)>, q: &str, p: f64) -> f64 {
+    m.get(q).map(|e| pct(&e.0, p)).unwrap_or(f64::NAN)
+}
+
 fn riassunto(v: &[f64]) -> serde_json::Value {
     let n = v.len().max(1) as f64;
     serde_json::json!({"n": v.len(), "p50": pct(v, 50.0), "p95": pct(v, 95.0), "p99": pct(v, 99.0), "max": pct(v, 100.0),
@@ -1270,12 +1295,26 @@ async fn find_m31(l: &Lettore, ch: &Chiavi, q: &str, c: &ClienteM31, k: usize) -
             anyhow::ensure!(d.len() == EVENTI_Q3, "Q3 {} documenti invece di {EVENTI_Q3}", d.len());
             Ok(d.len())
         }
-        "Q4" => {
-            // come Q4 di P1 (comando estese di prova_infinite.py): gli ultimi 500 messaggi del cliente
-            let _ = k;
-            let d = documenti(l, ch, c.c, MSGS, i64::MAX, i64::MIN, MESSAGGI_Q4).await?;
+        "Q1d" => {
+            // come p1-1.5 (A2 correzione 5): i 20 messaggi più recenti prima di una data a caso (ts < data, ts −1, limit 20)
+            let data = c.q1d[k % c.q1d.len()];
+            let d = documenti(l, ch, c.c, MSGS, data - 1, i64::MIN, 20).await?;
             verifica(&d, c.c, MSGS)?;
-            anyhow::ensure!(d.len() == MESSAGGI_Q4, "Q4 {} documenti invece di {MESSAGGI_Q4}", d.len());
+            anyhow::ensure!(d.len() == 20, "Q1d {} documenti", d.len());
+            anyhow::ensure!(d.iter().all(|x| val_ts(x) < data), "Q1d dopo la data");
+            Ok(20)
+        }
+        "Q4" => {
+            // come p1-1.5 (A2 correzione 6, revisore B punto G): finestra a caso di 60 giorni, dal più nuovo, limit 500.
+            // NON più "gli ultimi 500" del comando `estese`, che è sbagliato (revisore M31, C5).
+            let (hi, lo, attesi) = c.q4w[k % c.q4w.len()];
+            let d = documenti(l, ch, c.c, MSGS, hi, lo, MESSAGGI_Q4).await?;
+            verifica(&d, c.c, MSGS)?;
+            for x in &d {
+                let t = val_ts(x);
+                anyhow::ensure!(t <= hi && t >= lo, "Q4 fuori finestra");
+            }
+            anyhow::ensure!(d.len() == attesi as usize, "Q4 {} documenti invece di {attesi}", d.len());
             Ok(d.len())
         }
         _ => unreachable!(),
@@ -1400,8 +1439,8 @@ async fn tempi(a: &Args) -> Result<()> {
             for k in 0..quanti {
                 let c = gruppo[(inizio + k) % gruppo.len()];
                 *usati.entry(c.c).or_default() += 1;
-                for q in ["Q1", "Q2", "Q3", "Q4"] {
-                    if q == "Q4" && c.q4.is_empty() {
+                for q in QUERY_TEMPI {
+                    if (q == "Q4" && c.q4w.is_empty()) || (q == "Q1d" && c.q1d.is_empty()) {
                         continue;
                     }
                     banco.svuota_dati();
@@ -1436,7 +1475,7 @@ async fn tempi(a: &Args) -> Result<()> {
                 }
             }
             let mut ris = serde_json::Map::new();
-            for q in ["Q1", "Q2", "Q3", "Q4"] {
+            for q in QUERY_TEMPI {
                 let Some(e) = per_q.get(q) else { continue };
                 let p50f = pct(&e.0, 50.0);
                 let p50c = pct(&e.1, 50.0);
@@ -1444,8 +1483,12 @@ async fn tempi(a: &Args) -> Result<()> {
                     "freddo_ms": riassunto(&e.0), "caldo_ms": riassunto(&e.1), "freddo_meno_caldo_ms": riassunto(&e.2),
                     "p50_freddo_meno_p50_caldo": p50f - p50c,
                     "get_per_find": riassunto(&e.3), "byte_per_get": riassunto(&e.4), "get_dal_bancone_per_find": riassunto(&e.5),
-                    "documenti_media": e.6.iter().sum::<f64>() / e.6.len().max(1) as f64,
+                    "documenti_media": e.6.iter().sum::<f64>() / e.6.len().max(1) as f64, "clienti": e.0.len(),
                 }));
+            }
+            let n_q4 = per_q.get("Q4").map(|e| e.0.len()).unwrap_or(0);
+            if n_q4 < MIN_Q4 {
+                eprintln!("AVVISO {var} {gnome}: Q4 su {n_q4} clienti, meno dei {MIN_Q4} di p1-1.5");
             }
             let finds = per_q.values().map(|e| e.0.len()).sum::<usize>() as f64;
             let j = serde_json::json!({
@@ -1459,11 +1502,13 @@ async fn tempi(a: &Args) -> Result<()> {
                 "get_in_piu_doppia_pct": if get_tot > doppie { 100.0 * doppie as f64 / (get_tot - doppie) as f64 } else { 0.0 },
                 "indici_filtri_mancati_per_find": meta_mancate as f64 / finds, "max_get_in_volo": max_volo, "get_a_caldo_totali": caldo_get,
                 "secondi": t_var.elapsed().as_secs_f64(), "ms_apertura_lettore": ms_apri, "get_riscaldo": get_riscaldo,
+                "q4_clienti": n_q4, "q4_almeno_60": n_q4 >= MIN_Q4,
             });
             eprintln!(
-                "{var} {gnome} ({quanti}): Q1 freddo p50 {:.1} p99 {:.1}; Q2 {:.1} {:.1}; Q3 {:.1} {:.1}; caldo Q1 p50 {:.2}; GET per find {:.2}; doppie {:.3}",
-                pct(&per_q["Q1"].0, 50.0), pct(&per_q["Q1"].0, 99.0), pct(&per_q["Q2"].0, 50.0), pct(&per_q["Q2"].0, 99.0),
-                pct(&per_q["Q3"].0, 50.0), pct(&per_q["Q3"].0, 99.0), pct(&per_q["Q1"].1, 50.0), get_tot as f64 / finds, doppie as f64 / finds
+                "{var} {gnome} ({quanti}): Q1 freddo p50 {:.1} p99 {:.1}; Q1d {:.1} {:.1}; Q2 {:.1} {:.1}; Q3 {:.1} {:.1}; Q4 ({n_q4}) {:.1} {:.1}; caldo Q1 p50 {:.2}; GET per find {:.2}; doppie {:.3}",
+                pct(&per_q["Q1"].0, 50.0), pct(&per_q["Q1"].0, 99.0), p_q(&per_q, "Q1d", 50.0), p_q(&per_q, "Q1d", 99.0),
+                pct(&per_q["Q2"].0, 50.0), pct(&per_q["Q2"].0, 99.0), pct(&per_q["Q3"].0, 50.0), pct(&per_q["Q3"].0, 99.0),
+                p_q(&per_q, "Q4", 50.0), p_q(&per_q, "Q4", 99.0), pct(&per_q["Q1"].1, 50.0), get_tot as f64 / finds, doppie as f64 / finds
             );
             writeln!(f, "{j}")?;
             println!("{j}");
@@ -1480,13 +1525,23 @@ async fn tempi(a: &Args) -> Result<()> {
         for q in ["Q1", "Q2", "Q3"] {
             let mut ms = Vec::new();
             let mut giri = Vec::new();
+            let (mut letti_prima, mut tot_cl) = (0usize, 0usize);
             for giro in 0..a.n("giri-insieme", 3) as usize {
                 let r = insieme(&l, &ch, &conta, &banco, gruppo_ins, k, q, giro + 7).await?;
                 ms.extend(r["find_ms"].as_array().unwrap().iter().map(|x| x.as_f64().unwrap()));
+                // revisore M31, C7: i clienti di "insieme" possono essere già stati letti nelle varianti (il bancone è
+                // svuotato, quindi dentro il processo sono freddi; se S3 risponde prima a un oggetto letto da poco NON SO)
+                for cl in r["clienti"].as_array().unwrap() {
+                    tot_cl += 1;
+                    if usati.contains_key(&(cl.as_u64().unwrap() as u32)) {
+                        letti_prima += 1;
+                    }
+                }
                 giri.push(serde_json::json!({"muro_s": r["muro_s"], "get": r["get"], "get_al_secondo": r["get_al_secondo"], "max_get_in_volo": r["max_get_in_volo"]}));
             }
-            let j = serde_json::json!({"etichetta": etichetta, "tipo": "insieme", "magazzino": a.s("magazzino", "locale"), "finto": a.s("finto", ""), "k": k, "q": q, "find_ms": riassunto(&ms), "giri": giri});
-            eprintln!("insieme {k} {q}: p50 {:.1} p99 {:.1}", pct(&ms, 50.0), pct(&ms, 99.0));
+            let j = serde_json::json!({"etichetta": etichetta, "tipo": "insieme", "magazzino": a.s("magazzino", "locale"), "finto": a.s("finto", ""), "k": k, "q": q, "find_ms": riassunto(&ms), "giri": giri,
+                "find_su_clienti_gia_letti_nelle_varianti": letti_prima, "find_totali": tot_cl});
+            eprintln!("insieme {k} {q}: p50 {:.1} p99 {:.1} ({letti_prima} find su {tot_cl} con clienti già letti nelle varianti)", pct(&ms, 50.0), pct(&ms, 99.0));
             writeln!(f, "{j}")?;
             println!("{j}");
         }
@@ -1497,10 +1552,13 @@ async fn tempi(a: &Args) -> Result<()> {
     let mut q5 = serde_json::Map::new();
     for (nome, quante) in [("indice_100", 100usize), ("indice_tutte", usize::MAX)] {
         let (mut fr, mut ca, mut gg, mut bb, mut voci) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
-        let giri = if quante == usize::MAX { a.n("q5-n-tutte", 3) } else { a.n("q5-n", 20) };
+        let giri = if quante == usize::MAX { a.n("q5-n-tutte", 3) } else { a.n("q5-n", 60) };
+        // finestre diverse a ogni giro (fredde), spostate di 7 giorni all'indietro; se 7 giorni per giro escono dalla
+        // storia (60 finestre sono 420 giorni, la storia è circa un anno), il passo si accorcia e le finestre si
+        // sovrappongono un poco, ma restano tutte dentro la storia
+        let passo = sette.min((v.ts_max - v.ts_min - sette).max(0) / giri.max(1) as i64).max(1);
         for i in 0..giri {
-            // finestre diverse a ogni giro (fredde), spostate di 7 giorni all'indietro
-            let hi = v.ts_max - i as i64 * sette;
+            let hi = v.ts_max - i as i64 * passo;
             let lo = hi - sette;
             banco.svuota_dati();
             conta.azzera();
@@ -1514,7 +1572,7 @@ async fn tempi(a: &Args) -> Result<()> {
             q5_indice(&l, &ch, stato, hi, lo, quante).await?;
             ca.push(t1.elapsed().as_secs_f64() * 1000.0);
         }
-        q5.insert(nome.into(), serde_json::json!({"freddo_ms": riassunto(&fr), "caldo_ms": riassunto(&ca), "get": riassunto(&gg), "byte": riassunto(&bb), "documenti": riassunto(&voci)}));
+        q5.insert(nome.into(), serde_json::json!({"finestre": giri, "passo_giorni": passo as f64 / 86_400_000.0, "freddo_ms": riassunto(&fr), "caldo_ms": riassunto(&ca), "get": riassunto(&gg), "byte": riassunto(&bb), "documenti": riassunto(&voci)}));
         eprintln!("Q5 {nome}: freddo p50 {:.1} ms p99 {:.1}, GET p50 {:.0}, documenti p50 {:.0}", pct(&fr, 50.0), pct(&fr, 99.0), pct(&gg, 50.0), pct(&voci, 50.0));
     }
     if a.n("q5-senza-indice", 1) == 1 {
@@ -1599,7 +1657,7 @@ async fn insieme(l: &Lettore, ch: &Chiavi, conta: &Conta, banco: &Bancone, grupp
     .await?;
     let muro = t0.elapsed().as_secs_f64();
     let g = conta.c.get_totali();
-    Ok(serde_json::json!({"k": scelti.len(), "q": q, "find_ms": ms, "muro_s": muro, "get": g, "get_al_secondo": g as f64 / muro, "max_get_in_volo": conta.c.max_in_volo.load(Relaxed)}))
+    Ok(serde_json::json!({"k": scelti.len(), "q": q, "find_ms": ms, "clienti": scelti.iter().map(|c| c.c).collect::<Vec<_>>(), "muro_s": muro, "get": g, "get_al_secondo": g as f64 / muro, "max_get_in_volo": conta.c.max_in_volo.load(Relaxed)}))
 }
 
 /// Scritture come su Atlas P1 (aggiunta del fondatore): documenti da circa 1,9 KB, singole e a lotti, con il WAL di

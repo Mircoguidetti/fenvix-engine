@@ -6,8 +6,12 @@
 #   "smonta"   = solo pulizia e verifica.
 # Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (mascherato); la macchina usa il suo ruolo fenvix-m31-macchina.
 # Comandi e risultati passano da un bucket nuovo fenvix-m31-<run>. Spesa: riga "SPESA" ogni minuto nel log.
-# Tetti: la macchina si spegne e si cancella da sola dopo 240 minuti (shutdown -h +240, comportamento "terminate");
-# il job ferma e smonta tutto a 250 minuti; pulizia e verifica girano sempre (if: always()).
+# Tetti: la macchina si spegne e si cancella da sola dopo 240 minuti (shutdown -h +240, comportamento "terminate"),
+# programmato come prima riga dello user-data; se lo scaricamento o il tar falliscono si spegne subito; il job smette
+# di aspettare dopo 15 minuti senza passi.log ("MACCHINA MUTA") e comunque a 250 minuti; i risultati si ricopiano con
+# credenziali fresche prima della pulizia; pulizia e verifica girano sempre (if: always()).
+# FRENO D'EMERGENZA durante una giornata: il bottone "Cancel workflow" nella pagina della run (la pulizia gira lo
+# stesso). Un comando.json "smonta" NON ferma una giornata in corso: aspetta in coda la sua fine (concurrency).
 name: m31-freddo-s3
 on:
   push:
@@ -96,6 +100,10 @@ jobs:
           aws-region: eu-west-1
           role-duration-seconds: 3600
           mask-aws-account-id: true
+
+      - name: Recupero dei risultati con le credenziali fresche, prima della pulizia (revisore M31, C3)
+        if: always() && steps.mode.outputs.modo == 'prova'
+        run: bash $G/recupera.sh
 
       - name: Pulizia (macchine con il tag, bucket fenvix-m31-*) e verifica
         if: always()

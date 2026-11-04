@@ -76,11 +76,17 @@ Nel ruolo GitHub: Aggiungi autorizzazioni → Crea policy inline → JSON → in
       }
     },
     {
+      "Sid": "SoloImmaginiDiCanonical",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:eu-west-1::image/*",
+      "Condition": { "StringEquals": { "ec2:Owner": "099720109477" } }
+    },
+    {
       "Sid": "MacchinaRisorseDiServizio",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
       "Resource": [
-        "arn:aws:ec2:eu-west-1::image/*",
         "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:subnet/*",
         "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:network-interface/*",
         "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:security-group/*"
@@ -127,6 +133,11 @@ Nel ruolo GitHub: Aggiungi autorizzazioni → Crea policy inline → JSON → in
 }
 ```
 
+`099720109477` non è un numero nostro: è l'account di Canonical che pubblica le immagini Ubuntu ufficiali (DICHIARATO,
+documentazione Ubuntu "Find Ubuntu images on AWS", https://ubuntu.com/aws/docs/aws-how-to/instances/find-ubuntu-images/).
+Con questa condizione la macchina può partire solo da un'immagine di Canonical, mai da una del Marketplace a pagamento
+(revisore M31, R4).
+
 **Attenzione** (da S13): se sul ruolo GitHub c'è ancora la policy di walbench con un `Deny` su "tutto tranne
 c6i.large", quel divieto blocca anche la c7i.xlarge (un Deny vince sempre). Va tolta quella policy (walbench ha
 finito) o almeno il suo `Deny`.
@@ -144,7 +155,17 @@ CloudWatch.
 2. Se tutti presenti: modifica lo stesso file in `{"modo": "prova"}` e fai commit. Parte la giornata (circa
    1,5–2 ore). Il log scrive ogni minuto la riga "SPESA". Alla fine i risultati arrivano da soli sul branch in
    `proto/lavaggio-per-cliente/m31/risultati/aws-<numero>/` e la pulizia scrive "RIMASTO: niente".
-3. Se qualcosa resta acceso: modifica il file in `{"modo": "smonta"}` e fai commit.
+3. **Durante la giornata il freno è il bottone "Cancel workflow"** nella pagina della run in Actions (in alto a
+   destra): la run si ferma e la pulizia gira lo stesso (cancella macchina e bucket, scrive "RIMASTO: niente").
+   `{"modo": "smonta"}` serve solo **dopo**, se la pulizia ha scritto "ALLARME": durante una giornata in corso
+   aspetterebbe in coda la sua fine e non fermerebbe niente.
+4. **Non fare due volte il commit di `{"modo": "prova"}`**: il secondo non annulla il primo, parte una seconda
+   giornata in coda dopo la prima (circa 0,5 $ in più). Per rifare una giornata, aspetta che la prima sia finita e
+   che la pulizia abbia scritto "RIMASTO: niente".
+5. Da sola la giornata si ferma anche così: la macchina si spegne (e si cancella) subito se non riesce a scaricare o
+   aprire il programma, e comunque dopo 240 minuti; il workflow smette di aspettare se dopo 15 minuti la macchina non
+   ha scritto niente ("MACCHINA MUTA"); il programma si ferma se le richieste a S3 passano 500.000 GET o 100.000 PUT
+   in un passo ("FRENO").
 
 Il coordinatore può fare i passi 1–3 al posto del fondatore (sono commit sul branch), ma solo dopo il sì del
 fondatore sulla cifra.

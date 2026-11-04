@@ -1,0 +1,12 @@
+#!/bin/bash
+# Prova locale M31 · finto `shutdown` della macchina: scrive cosa gli chiedono; "now" = la macchina si spegne, cioè
+# (spegnimento = cancellazione) terminate-instances su moto e fine dei suoi processi. "+N" si registra soltanto
+# (240 minuti veri non si aspettano in una prova).
+echo "$(date +%T) shutdown $*" >> "$(dirname "$M31_DIR")/shutdown.log"
+for a in "$@"; do
+  if [ "$a" = now ]; then
+    aws ec2 terminate-instances --instance-ids "$M31_ID" > /dev/null 2>&1
+    exit 0
+  fi
+done
+exit 0

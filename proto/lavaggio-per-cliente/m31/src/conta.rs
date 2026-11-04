@@ -17,9 +17,44 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
-use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
+
+// ---------------------------------------------------------------- freno (revisore M31, C7 / R2)
+// Contatori di tutto il processo, mai azzerati: se le richieste a S3 passano il tetto (un errore che le fa
+// esplodere), il programma si ferma subito con il codice 97 e la riga "FRENO". esegui.sh allora salta alla fine.
+// Vale solo quando il magazzino è S3 (`accendi_freno`), non per il disco locale. Tetti da M31_FRENO_GET e
+// M31_FRENO_PUT, di serie 500.000 GET (0,20 $) e 100.000 PUT (0,50 $) per processo.
+static FRENO_ACCESO: AtomicBool = AtomicBool::new(false);
+static FRENO_GET: AtomicU64 = AtomicU64::new(0);
+static FRENO_PUT: AtomicU64 = AtomicU64::new(0);
+static TETTO_GET: AtomicU64 = AtomicU64::new(500_000);
+static TETTO_PUT: AtomicU64 = AtomicU64::new(100_000);
+pub const CODICE_FRENO: i32 = 97;
+
+pub fn accendi_freno() {
+    let leggi = |k: &str, d: u64| std::env::var(k).ok().and_then(|x| x.parse().ok()).unwrap_or(d);
+    TETTO_GET.store(leggi("M31_FRENO_GET", 500_000), Relaxed);
+    TETTO_PUT.store(leggi("M31_FRENO_PUT", 100_000), Relaxed);
+    FRENO_ACCESO.store(true, Relaxed);
+}
+
+/// Conta una richiesta di classe GET (`get`) o PUT/LIST (`!get`) e ferma il processo oltre il tetto.
+pub fn freno(get: bool) {
+    if !FRENO_ACCESO.load(Relaxed) {
+        return;
+    }
+    let (n, tetto, nome) = if get {
+        (FRENO_GET.fetch_add(1, Relaxed) + 1, TETTO_GET.load(Relaxed), "GET")
+    } else {
+        (FRENO_PUT.fetch_add(1, Relaxed) + 1, TETTO_PUT.load(Relaxed), "PUT")
+    };
+    if n > tetto {
+        eprintln!("FRENO: {n} richieste {nome} a S3 in questo processo, oltre il tetto {tetto}: mi fermo");
+        std::process::exit(CODICE_FRENO);
+    }
+}
 
 #[derive(Default, Debug)]
 pub struct Contatori {
@@ -219,6 +254,7 @@ impl fmt::Display for Conta {
 impl ObjectStore for Conta {
     async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult> {
         let n = payload.content_length() as u64;
+        freno(false);
         self.c.put.fetch_add(1, Relaxed);
         self.c.put_byte.fetch_add(n, Relaxed);
         if location.as_ref().contains("/compacted/") {
@@ -229,6 +265,7 @@ impl ObjectStore for Conta {
     }
 
     async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>> {
+        freno(false);
         self.c.put.fetch_add(1, Relaxed);
         let sst = location.as_ref().contains("/compacted/");
         if sst {
@@ -250,6 +287,7 @@ impl ObjectStore for Conta {
                 }
             }
         }
+        freno(true);
         if options.head {
             self.c.head.fetch_add(1, Relaxed);
         } else if options.range.is_some() {
@@ -275,6 +313,7 @@ impl ObjectStore for Conta {
                     _ = tokio::time::sleep(soglia) => {
                         // la prima tarda: parte la seconda, uguale; vince chi arriva prima
                         self.c.doppie.fetch_add(1, Relaxed);
+                        freno(true);
                         let seconda = Self::una_get(self.inner.clone(), location.clone(), options.clone(), self.ritardo_finto(attesi));
                         tokio::pin!(seconda);
                         tokio::select! {
@@ -317,16 +356,19 @@ impl ObjectStore for Conta {
     }
 
     fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>> {
+        freno(false);
         self.c.list.fetch_add(1, Relaxed);
         self.inner.list(prefix)
     }
 
     fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>> {
+        freno(false);
         self.c.list.fetch_add(1, Relaxed);
         self.inner.list_with_offset(prefix, offset)
     }
 
     async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult> {
+        freno(false);
         self.c.list.fetch_add(1, Relaxed);
         self.inner.list_with_delimiter(prefix).await
     }
@@ -351,6 +393,7 @@ struct Parti {
 #[async_trait]
 impl MultipartUpload for Parti {
     fn put_part(&mut self, data: PutPayload) -> object_store::UploadPart {
+        freno(false);
         let n = data.content_length() as u64;
         self.c.put.fetch_add(1, Relaxed);
         self.c.put_byte.fetch_add(n, Relaxed);
