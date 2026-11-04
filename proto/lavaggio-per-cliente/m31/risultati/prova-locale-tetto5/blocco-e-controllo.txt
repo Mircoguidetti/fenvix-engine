@@ -1,0 +1,44 @@
+== (a) spesa finta oltre 5 $ dopo pochi minuti finti: BLOCCO, pulizia, RIMASTO: niente
+OK      ogni riga SPESA dice 'tetto 5,00 $' (tetto di serie)
+OK      nessuna riga dice più 'tetto 1,50'
+OK      riga 'BLOCCO: spesa stimata X $ ≥ 5,00 $'
+OK      esito BLOCCO_SPESA in giornata.json
+OK      il blocco arriva dopo pochi minuti finti (meno di 8), non al tetto di tempo (40)
+OK      la SPESA del blocco è almeno 5 e quella del giro prima sotto 5
+OK      la macchina è cancellata subito dal blocco, prima della pulizia
+OK      stima per eccesso: macchina 6.00 $ ≥ vero 4.40 $ (vita della macchina in minuti finti × 1 $)
+OK      il riassunto della giornata comincia con il BLOCCO
+OK      annotazione ::warning:: BLOCCO_SPESA
+OK      recupero: i passi della macchina sono in mano
+OK      pulizia: RIMASTO: niente
+OK      controllo finale: RIMASTO: niente, codice 0
+   (SPESA: 6,64 $ finora a 5 minuti (stima per eccesso: macchine 6,00 per 0,1 ore-macchina, disco 0,001, IPv4 0,001, S3 0,64 = tetto dei freni), tetto 5,00 $)
+   (BLOCCO: spesa stimata 6,64 $ ≥ 5,00 $: smetto di aspettare, cancello la macchina, parte la pulizia)
+   (attesa: 28 s = 5 minuti finti da 5 s; controllo: RIMASTO: niente (controllo finale: macchine, dischi, indirizzi IP, bucket in eu-west-1, dal 2026-11-04T18:16:57Z))
+== (a2) come (a), con una seconda macchina col tag rimasta da prima: la stima la conta due volte
+OK      BLOCCO_SPESA anche qui
+OK      una macchina: stima macchina 6.00 $ = (minuti 5 + 1) × 1 $
+OK      due macchine: stima macchina 6.00 $ = 2 × (minuti 2 + 1) × 1 $ (la seconda si paga)
+OK      pulizia: cancellate tutte e due le macchine
+OK      controllo finale: RIMASTO: niente, codice 0
+== (b) pulizia che lascia di proposito un bucket e una macchina: ALLARME e job fallito
+OK      la giornata era finita (FINITA)
+OK      la pulizia guasta ha davvero lasciato macchina e bucket
+OK      controllo finale: riga 'ALLARME: rimasto …'
+OK      nell'elenco c'è la macchina i-bc4c3af1044f416af
+OK      nell'elenco c'è il bucket fenvix-coldread-1770619305
+OK      nell'elenco c'è l'Elastic IP 127.125.116.149
+OK      nell'elenco c'è il disco non attaccato vol-fdf0c479203341b37 (creato nella giornata)
+OK      nell'elenco c'è il disco col tag della macchina rimasta
+OK      NON c'è il disco non attaccato creato prima della giornata (vol-b0764733a5795dc3c)
+OK      annotazione ::error:: (in cima alla pagina della run)
+OK      il riassunto del passo comincia con l'ALLARME
+OK      codice 1: il job fallisce
+OK      workflow: controllo finale ultimo passo, if: always(), senza continue-on-error, credenziali fresche subito prima
+   (ALLARME: rimasto macchina i-bc4c3af1044f416af (running, c7i.xlarge); disco vol-434126f47ae96ad31 (in-use, 60 GB, tag); disco vol-fdf0c479203341b37 (available, 60 GB, non attaccato, creato nella giornata); indirizzo 127.125.116.149 (eipalloc-c3855422e309ae763); bucket fenvix-coldread-1770619305)
+OK      dopo la pulizia vera e a mano: RIMASTO: niente, codice 0
+== (b2) lettura che non riesce (credenziali scadute): ALLARME con NON SO, job fallito
+OK      ALLARME con 'NON SO, lettura non riuscita' e codice 1
+== (b3) risposta rotta con codice 0 (JSON non leggibile): ALLARME con NON SO, mai 'niente'
+OK      ALLARME 'NON SO … macchine EC2: risposta non leggibile' e codice 1
+== RISULTATO: 0 controlli falliti

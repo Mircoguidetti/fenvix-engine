@@ -17,12 +17,30 @@ rinnova() { # credenziali OIDC nuove per un'altra ora, senza uscire dallo step
   echo "::add-mask::$AWS_SECRET_ACCESS_KEY"; echo "::add-mask::$AWS_SESSION_TOKEN"
   ULTIMO_RINNOVO=$(date +%s)
 }
-spesa() { # stima per eccesso: macchina, disco 60 GB gp3, IPv4 pubblico, richieste S3 al tetto previsto dal programma
-  python3 - "$1" "$PREZZO_ORA" <<'PY'
-import sys; m=float(sys.argv[1]); p=float(sys.argv[2]); h=m/60
-ec2=h*p; ebs=60*0.088*h/730; ip=0.005*h; s3=min(0.40, 0.0016*m)  # richieste: circa 0,25-0,40 $ in tutta la giornata
-print(f"SPESA: {ec2+ebs+ip+s3:.2f} $ finora (stima: macchina {ec2:.2f}, disco {ebs:.3f}, IPv4 {ip:.3f}, S3 {s3:.2f}), tetto 1,50 $")
+# Spesa stimata PER ECCESSO (regola del fondatore 2026-11-04: blocco a TETTO_DOLLARI, di serie 5 $).
+# MAC_MIN = minuti-macchina accumulati: ogni minuto si contano le macchine con il tag ancora vive (almeno 1, la nostra,
+# anche se la lettura fallisce), quindi una macchina in più rimasta da prima o lanciata due volte si paga nella stima.
+# Per ogni macchina: c7i.xlarge al prezzo DICHIARATO, disco 60 GB gp3, IPv4 pubblico. S3: subito tutta la somma dei
+# tetti del freno (650.000 GET + 70.000 PUT/LIST = 0,61 $) più 0,03 $ di copie e controlli, perché le richieste non si
+# vedono minuto per minuto: così la stima non può stare sotto il vero finché il freno di esegui.sh regge.
+TETTO_DOLLARI=${TETTO_DOLLARI:-5}; MAC_MIN=0; N_MAC=1
+spesa() { # spesa MINUTI -> stampa la riga SPESA e mette in SPESA_ORA il numero (punto decimale)
+  local riga
+  riga=$(python3 - "$1" "$MAC_MIN" "$PREZZO_ORA" "$TETTO_DOLLARI" <<'PY'
+import sys; m=float(sys.argv[1]); mm=float(sys.argv[2]); p=float(sys.argv[3]); t=float(sys.argv[4]); h=mm/60
+ec2=h*p; ebs=60*0.088*h/730; ip=0.005*h; s3=0.64; tot=ec2+ebs+ip+s3
+v=lambda x,d=2: f"{x:.{d}f}".replace(".", ",")
+print(f"{tot:.4f}|SPESA: {v(tot)} $ finora a {m:.0f} minuti (stima per eccesso: macchine {v(ec2)} per {v(h,1)} ore-macchina, disco {v(ebs,3)}, IPv4 {v(ip,3)}, S3 {v(s3)} = tetto dei freni), tetto {v(t)} $")
 PY
+)
+  SPESA_ORA=${riga%%|*}; echo "${riga#*|}"
+}
+virgola() { python3 -c "import sys; print(f'{float(sys.argv[1]):.2f}'.replace('.', ','))" "$1"; }
+oltre_tetto() { python3 -c "import sys; sys.exit(0 if float(sys.argv[1]) >= float(sys.argv[2]) else 1)" "$SPESA_ORA" "$TETTO_DOLLARI"; }
+conta_macchine() { # macchine con il tag non ancora cancellate; se la lettura fallisce resta il numero di prima (almeno 1)
+  local n
+  n=$(aws ec2 describe-instances --filters Name=tag:project,Values=fenvix-coldread Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down --query 'length(Reservations[].Instances[])' --output text 2>/dev/null) || n=""
+  [[ "$n" =~ ^[0-9]+$ ]] && N_MAC=$(( n > 0 ? n : 1 ))
 }
 echo "1/5 bucket $BUCKET"
 aws s3api create-bucket --bucket "$BUCKET" --create-bucket-configuration LocationConstraint=eu-west-1 >/dev/null || exit 1
@@ -48,12 +66,20 @@ ID=$(aws ec2 run-instances --image-id "$AMI" --instance-type "$TIPO" --subnet-id
 rm -f "$UD"
 echo "macchina: $ID"
 echo "5/5 attesa (ogni minuto: passo, spesa)"
-esito=TETTO; visto_passi=0
+esito=TETTO; visto_passi=0; m_prima=0
 while :; do
   sleep "$MINUTO_S"
   m=$(( ($(date +%s) - T0) / MINUTO_S ))
   [ $(( $(date +%s) - ULTIMO_RINNOVO )) -gt "$RINNOVO_S" ] && { rinnova || echo "rinnovo delle credenziali fallito"; }
+  conta_macchine
+  # minuti-macchina: dall'inizio dello script (prima del lancio, quindi per eccesso), arrotondati per eccesso al minuto
+  MAC_MIN=$(( MAC_MIN + N_MAC * (m - m_prima + 1) )); m_prima=$(( m + 1 ))
   spesa "$m"
+  if oltre_tetto; then
+    echo "BLOCCO: spesa stimata $(virgola "$SPESA_ORA") $ ≥ $(virgola "$TETTO_DOLLARI") $: smetto di aspettare, cancello la macchina, parte la pulizia"
+    aws ec2 terminate-instances --instance-ids "$ID" >/dev/null 2>&1 || echo "cancellazione subito non riuscita: la rifà pulizia.sh"
+    esito=BLOCCO_SPESA; break
+  fi
   if riga=$(aws s3 cp "s3://$BUCKET/risultati/passi.log" - 2>/dev/null | tail -1) && [ -n "$riga" ]; then visto_passi=1; echo "$riga"; fi
   # C2: dopo MUTA_MIN minuti senza passi.log nel bucket la macchina è muta (avvio rotto, ruolo senza permessi, S3
   # irraggiungibile): non si aspetta fino al tetto; si esce e la pulizia la cancella
@@ -68,8 +94,12 @@ echo "esito: $esito"
 # fresche della pulizia, prima di cancellare il bucket (revisore M31, C3)
 aws s3 cp "s3://$BUCKET/risultati/" "$OUT/" --recursive --only-show-errors || echo "copia dei risultati fallita: la rifà recupera.sh"
 m=$(( ($(date +%s) - T0) / MINUTO_S ))
+# fino a qui, più 10 minuti per recupero, pulizia e controllo finale (la macchina può essere ancora viva), per eccesso
+MAC_MIN=$(( MAC_MIN + N_MAC * (m - m_prima + 1 + 10) ))
 spesa "$m" | tee "$OUT/spesa.txt"
 echo "{\"esito\": \"$esito\", \"minuti\": $m, \"macchina\": \"$TIPO\", \"id\": \"$ID\"}" > "$OUT/giornata.json"
 grep -rl "$M31_ACCT" "$OUT" 2>/dev/null | xargs -r sed -i "s/$M31_ACCT/<ACCOUNT_ID>/g"
-{ echo "## M31 giornata: $esito, $m minuti"; cat "$OUT/spesa.txt"; tail -20 "$OUT/passi.log" 2>/dev/null; } >> "$GITHUB_STEP_SUMMARY"
+{ [ "$esito" = BLOCCO_SPESA ] && echo "# BLOCCO: spesa stimata arrivata al tetto di $TETTO_DOLLARI \$"
+  echo "## M31 giornata: $esito, $m minuti"; cat "$OUT/spesa.txt"; tail -20 "$OUT/passi.log" 2>/dev/null; } >> "$GITHUB_STEP_SUMMARY"
+[ "$esito" = BLOCCO_SPESA ] && echo "::warning title=BLOCCO_SPESA::spesa stimata ≥ $TETTO_DOLLARI \$: giornata fermata, pulizia partita"
 [ "$esito" = FINITA ]

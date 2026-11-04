@@ -13,11 +13,16 @@ import fnmatch, json, re, sys, pathlib
 ACCT = "123456789012"
 P = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent / "PERMESSI.md")
 testo = P.read_text().replace("<ACCOUNT_ID>", ACCT)
-blocchi = re.findall(r"```json\n(.*?)```", testo, re.S)
-macchina = json.loads(blocchi[0])
-github = json.loads(blocchi[1])
-canonical = json.loads(blocchi[2].strip().rstrip(","))
-assert canonical["Sid"] == "SoloImmaginiDiCanonical"
+blocchi = [json.loads(b.strip().rstrip(",")) for b in re.findall(r"```json\n(.*?)```", testo, re.S)]
+# i blocchi si riconoscono dal contenuto, non dall'ordine: policy intere (macchina: 1 regola; GitHub: tante) e pezzi
+macchina = next(b for b in blocchi if "Statement" in b and len(b["Statement"]) == 1)
+creata = next(b for b in blocchi if "Statement" in b and len(b["Statement"]) > 1)
+canonical = next(b for b in blocchi if b.get("Sid") == "SoloImmaginiDiCanonical")
+letture_nuove = next(b for b in blocchi if b.get("Sid") == "Letture")  # il blocco "DA FARE" in cima (M31 tetto 5 $)
+# la policy dopo la modifica "DA FARE": il blocco Letture sostituito da quello nuovo
+github = json.loads(json.dumps(creata))
+github["Statement"] = [letture_nuove if s.get("Sid") == "Letture" else s for s in github["Statement"]]
+assert sum(s.get("Sid") == "Letture" for s in github["Statement"]) == 1
 
 # la policy GitHub col restringimento: senza image/* nei servizi, più la regola di Canonical
 ristretta = json.loads(json.dumps(github))
@@ -98,6 +103,7 @@ def bucket(b):
 richieste_github = (
     [("ssm:GetParameter", "arn:aws:ssm:eu-west-1::parameter/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id", {}),
      ("ec2:DescribeVpcs", "*", {}), ("ec2:DescribeSubnets", "*", {}), ("ec2:DescribeInstances", "*", {}),
+     ("ec2:DescribeVolumes", "*", {}), ("ec2:DescribeAddresses", "*", {}),  # controllo finale (M31 tetto 5 $)
      ("iam:GetInstanceProfile", f"arn:aws:iam::{ACCT}:instance-profile/fenvix-coldread-machine", {}),
      ("s3:ListAllMyBuckets", "*", {}),
      ("ec2:TerminateInstances", f"{E}:instance/i-0123", {"ec2:ResourceTag/project": "fenvix-coldread"})]
@@ -135,14 +141,20 @@ def conta(ok, riga):
     falliti += 0 if ok else 1
 
 
-for nome, pol in (("fenvix-coldread-test (creata dal fondatore)", github), ("fenvix-coldread-test + SoloImmaginiDiCanonical", ristretta)):
+print("== fenvix-coldread-test com'è oggi (prima della modifica DA FARE): le due letture nuove mancano, tutto il resto c'è")
+for a, r, c in richieste_github:
+    nuova = a in ("ec2:DescribeVolumes", "ec2:DescribeAddresses")
+    conta(permesso(creata, a, r, c) != nuova, ("manca      " if nuova else "permesso   ") + f"{a} {r}")
+conta(not any(s.get("Effect") == "Allow" and any(x for x in lista(s["Action"]) if not x.startswith(("ec2:Describe", "s3:ListAllMyBuckets")))
+              for s in [letture_nuove]) and letture_nuove["Resource"] == "*", "il blocco nuovo ha solo letture (Describe e ListAllMyBuckets) su \"*\"")
+for nome, pol in (("fenvix-coldread-test dopo la modifica DA FARE", github), ("fenvix-coldread-test dopo la modifica + SoloImmaginiDiCanonical", ristretta)):
     print(f"== {nome}")
     for a, r, c in richieste_github:
         conta(permesso(pol, a, r, c), f"permesso   {a} {r}")
     for desc, (a, r, c) in rifiuti_github:
         conta(not permesso(pol, a, r, c), f"rifiutato  {desc}")
     altra = run_instances(owner="679593333241")[2]  # un'immagine del Marketplace (account di esempio, non Canonical)
-    atteso = pol is github  # la policy creata la permette; il restringimento la rifiuta
+    atteso = pol is github  # la policy senza restringimento la permette; il restringimento la rifiuta
     conta(permesso(pol, *altra) == atteso, ("permessa" if atteso else "rifiutata") + "  immagine non di Canonical")
 print("== coldread-buckets-only (macchina)")
 for a, r, c in richieste_macchina:

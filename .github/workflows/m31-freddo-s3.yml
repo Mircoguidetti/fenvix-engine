@@ -5,11 +5,13 @@
 #   "prova"    = la giornata: una c7i.xlarge nella stessa regione del bucket fa carico, copia su S3, tempi, scritture;
 #   "smonta"   = solo pulizia e verifica.
 # Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (mascherato); la macchina usa il suo ruolo fenvix-coldread-machine.
-# Comandi e risultati passano da un bucket nuovo fenvix-coldread-<run>. Spesa: riga "SPESA" ogni minuto nel log.
+# Comandi e risultati passano da un bucket nuovo fenvix-coldread-<run>. Spesa: riga "SPESA" ogni minuto nel log, stima
+# per eccesso; quando arriva a TETTO_DOLLARI (5 $, regola del fondatore 2026-11-04) "BLOCCO", esito BLOCCO_SPESA, pulizia.
 # Tetti: la macchina si spegne e si cancella da sola dopo 240 minuti (shutdown -h +240, comportamento "terminate"),
 # programmato come prima riga dello user-data; se lo scaricamento o il tar falliscono si spegne subito; il job smette
 # di aspettare dopo 15 minuti senza passi.log ("MACCHINA MUTA") e comunque a 250 minuti; i risultati si ricopiano con
-# credenziali fresche prima della pulizia; pulizia e verifica girano sempre (if: always()).
+# credenziali fresche prima della pulizia; pulizia e verifica girano sempre (if: always()). Ultimo passo, sempre, con
+# credenziali fresche: controllo finale (macchine, dischi, Elastic IP, bucket): "RIMASTO: niente" o ALLARME e job rosso.
 # FRENO D'EMERGENZA durante una giornata: il bottone "Cancel workflow" nella pagina della run (la pulizia gira lo
 # stesso). Un comando.json "smonta" NON ferma una giornata in corso: aspetta in coda la sua fine (concurrency).
 name: m31-freddo-s3
@@ -37,6 +39,7 @@ jobs:
       M: proto/lavaggio-per-cliente/m31
       TIPO: c7i.xlarge
       PREZZO_ORA: "0.1915"       # c7i.xlarge on-demand eu-west-1, DICHIARATO (doit.com, 2026-11-04)
+      TETTO_DOLLARI: "5"         # blocco della spesa stimata (fondatore, RULES.md 2026-11-04)
       RUOLO_MACCHINA: fenvix-coldread-machine
       BUCKET: fenvix-coldread-${{ github.run_id }}
     steps:
@@ -51,6 +54,7 @@ jobs:
           acct=$(cut -d: -f5 <<<"$M31_ROLE"); role=${M31_ROLE##*/}
           echo "::add-mask::$acct"; echo "::add-mask::$role"
           echo "M31_ACCT=$acct" >> "$GITHUB_ENV"
+          echo "M31_INIZIO=$(date -u -d '2 minutes ago' +%FT%TZ)" >> "$GITHUB_ENV"   # per il controllo finale dei dischi
           modo=$(jq -r '.modo // "smonta"' $G/comando.json 2>/dev/null || echo smonta)
           # solo un comando.json aggiunto o cambiato in questo commit può far partire una prova a pagamento
           git diff --name-only --diff-filter=AM HEAD~1 HEAD | grep -qx $G/comando.json || modo=smonta
@@ -129,3 +133,16 @@ jobs:
           path: /tmp/m31-out
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Credenziali fresche per il controllo finale
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 900
+          mask-aws-account-id: true
+
+      - name: Controllo finale (macchine, dischi, Elastic IP, bucket) - RIMASTO niente oppure ALLARME e job rosso
+        if: always()
+        run: bash $G/controllo-finale.sh

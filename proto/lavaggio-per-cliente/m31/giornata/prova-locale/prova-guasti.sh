@@ -1,7 +1,7 @@
 #!/bin/bash
 # Prova locale M31 · i tre guasti del revisore (C1, C2, C3), simulati con moto e una "macchina" locale.
 # Uso: bash prova-guasti.sh [cartella di lavoro]   (0 $: nessuna chiamata ad AWS vero)
-# Ogni scenario gira i passi veri del workflow: giornata-ci.sh, poi recupera.sh, poi pulizia.sh.
+# Ogni scenario gira i passi veri del workflow: giornata-ci.sh, poi recupera.sh, pulizia.sh e controllo-finale.sh.
 set -u
 source "$(dirname "$0")/comune.sh"
 BASE=${1:-/tmp/m31-guasti}; mkdir -p "$BASE"; export SANDBOX_BASE=$BASE
@@ -18,6 +18,8 @@ export -f stato_moto viva
 dopo() { # recupera e pulizia, come gli ultimi passi del workflow (credenziali fresche)
   AWS_ACCESS_KEY_ID=fresca bash "$G_DIR/recupera.sh" > "$SANDBOX/recupera.log" 2>&1
   AWS_ACCESS_KEY_ID=fresca bash "$G_DIR/pulizia.sh" > "$SANDBOX/pulizia.log" 2>&1
+  AWS_ACCESS_KEY_ID=fresca bash "$G_DIR/controllo-finale.sh" > "$SANDBOX/controllo.log" 2>&1  # ultimo passo (M31 tetto 5 $)
+  controlla "controllo finale: RIMASTO: niente" grep -q "^RIMASTO: niente" "$SANDBOX/controllo.log"
 }
 
 echo "== C1a · scaricamento fallito: la macchina deve spegnersi subito"

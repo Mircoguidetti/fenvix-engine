@@ -1,0 +1,36 @@
+== C1a · scaricamento fallito: la macchina deve spegnersi subito
+OK      prima riga dello user-data (dopo #!/bin/bash): spegnimento a 240 minuti
+OK      spegnimento +240 chiesto per primo
+OK      poi spegnimento subito per scaricamento fallito
+OK      la macchina è cancellata (moto: terminated)
+OK      il workflow lo vede: esito MACCHINA_SPENTA
+OK      controllo finale: RIMASTO: niente
+OK      pulizia: RIMASTO: niente
+   (attesa del workflow: 17 s; macchina: 18:14:41 shutdown -h +240 M31: tetto|18:14:46 shutdown -h now M31: scaricamento fallito|)
+== C1b · tar fallito (pacco rotto): la macchina deve spegnersi subito
+OK      spegnimento +240 chiesto per primo
+OK      poi spegnimento subito per tar fallito
+OK      la macchina è cancellata (moto: terminated)
+OK      controllo finale: RIMASTO: niente
+OK      pulizia: RIMASTO: niente
+== C2 · macchina muta (parte ma non scrive mai passi.log): il workflow smette di aspettare dopo 15 minuti
+OK      riga MACCHINA MUTA nel log
+OK      esito MACCHINA_MUTA
+OK      uscita a 15 minuti, non a 40 (tetto della prova)
+OK      prima della pulizia la macchina è ancora accesa
+OK      controllo finale: RIMASTO: niente
+OK      dopo la pulizia la macchina è cancellata (moto)
+OK      dopo la pulizia i suoi processi sono finiti
+OK      pulizia: RIMASTO: niente
+   (attesa del workflow: 33 s = 16 minuti finti)
+== C3 · rinnovo delle credenziali fallito: i risultati devono restare
+OK      il rinnovo è fallito (come nel caso del revisore)
+OK      la copia di fine giornata è fallita: niente risultati in mano
+OK      controllo finale: RIMASTO: niente
+OK      recupera.sh con credenziali fresche: tempi.jsonl c'è
+OK      recupera.sh: fine.json e passi.log ci sono
+OK      poi la pulizia ha cancellato il bucket
+OK      e i risultati restano in mano
+OK      pulizia: RIMASTO: niente
+   (log del recupero: RECUPERO: 5 file in /tmp/m31-prova/guasti/c3-credenziali/out )
+== RISULTATO: 0 controlli falliti

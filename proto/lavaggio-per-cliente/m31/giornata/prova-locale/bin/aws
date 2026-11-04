@@ -4,6 +4,10 @@
 # finto; `ec2 terminate-instances` uccide anche i processi della macchina. Guasti a comando:
 #   $SANDBOX/guasto-presign  -> `s3 presign` dà un link rotto (scaricamento fallito, C1)
 #   $SANDBOX/scadute         -> le credenziali "vecchia" sono scadute (rinnovo fallito, C3)
+#   $SANDBOX/guasto-pulizia  -> `ec2 terminate-instances` e `s3 rb` dicono "fatto" ma non fanno niente (pulizia che
+#                               lascia di proposito macchine e bucket: il controllo finale deve scrivere ALLARME);
+#                               `ec2 wait` fallisce subito invece che dopo 10 minuti
+#   $SANDBOX/guasto-json     -> `ec2 describe-instances` risponde con un JSON rotto e codice 0
 # Non tocca AWS vero: senza MOTO_URL si rifiuta.
 set -u
 VERO=${AWS_VERO:-/usr/local/bin/aws}
@@ -13,6 +17,15 @@ if [ -e "$SANDBOX/scadute" ] && [ "${AWS_ACCESS_KEY_ID:-}" = vecchia ]; then
 fi
 echo "$(date +%T) ${AWS_ACCESS_KEY_ID:-?} $*" >> "$SANDBOX/aws-chiamate.log"
 reale() { "$VERO" --endpoint-url "$MOTO_URL" "$@"; }
+if [ -e "$SANDBOX/guasto-pulizia" ] && { [ "$1 ${2:-}" = "ec2 terminate-instances" ] || [ "$1 ${2:-}" = "s3 rb" ]; }; then
+  echo "$(date +%T) GUASTO-PULIZIA finta: $*" >> "$SANDBOX/aws-chiamate.log"; exit 0
+fi
+if [ -e "$SANDBOX/guasto-json" ] && [ "$1 ${2:-}" = "ec2 describe-instances" ]; then
+  echo '{"Reservations": [ rotto'; exit 0   # risposta rotta con codice 0: il controllo finale deve dire NON SO
+fi
+if [ -e "$SANDBOX/guasto-pulizia" ] && [ "$1 ${2:-}" = "ec2 wait" ]; then
+  echo "Waiter InstanceTerminated failed (guasto-pulizia finta)" >&2; exit 255   # un vero waiter fallirebbe dopo 10 minuti
+fi
 case "$1 ${2:-}" in
   "ssm get-parameter")
     # moto non ha i parametri pubblici di Canonical: un'immagine qualsiasi di moto

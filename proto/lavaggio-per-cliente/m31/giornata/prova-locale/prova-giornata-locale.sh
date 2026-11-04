@@ -2,7 +2,7 @@
 # Prova locale M31 · tutta la giornata dall'inizio alla fine, in piccolo, con moto al posto di AWS e il ritardo finto
 # delle GET. Stessi passi e stessi script del workflow m31-freddo-s3.yml, nello stesso ordine:
 #   permessi.sh -> pacco del programma -> giornata-ci.sh (bucket, macchina = user-data qui, attesa) -> recupera.sh ->
-#   pulizia.sh -> copia dei risultati senza l'account.
+#   pulizia.sh -> controllo-finale.sh -> copia dei risultati senza l'account.
 # Uso: bash prova-giornata-locale.sh [cartella di lavoro]   (0 $: nessuna chiamata ad AWS vero)
 set -u
 source "$(dirname "$0")/comune.sh"
@@ -16,7 +16,7 @@ export FINTO=${FINTO:-25:0.6:90} SALI_S=${SALI_S:-10}
 # attesa del workflow: un "minuto" = 5 s
 export MINUTO_S=${MINUTO_S:-5} MUTA_MIN=15 TETTO_MIN=${TETTO_MIN:-400}
 export ACTIONS_ID_TOKEN_REQUEST_URL="http://127.0.0.1:9/token?x=1" ACTIONS_ID_TOKEN_REQUEST_TOKEN=finto RINNOVO_S=100000
-export GITHUB_RUN_ID=locale
+export GITHUB_RUN_ID=locale M31_INIZIO=$(date -u +%FT%TZ)
 
 echo "1. permessi.sh"; bash "$G_DIR/permessi.sh" > "$SANDBOX/permessi.log" 2>&1; echo "   codice $? ($(tail -1 "$SANDBOX/permessi.log"))"
 echo "2. pacco (come il workflow: programma già costruito con --locked, strip)"
@@ -27,7 +27,8 @@ M31_PACCO=$SANDBOX/m31-giornata.tar.gz bash "$G_DIR/giornata-ci.sh" > "$SANDBOX/
 echo "   codice $rc, $(( $(date +%s) - t0 )) s; $(cat "$M31_OUT/giornata.json")"
 echo "4. recupera.sh"; bash "$G_DIR/recupera.sh" 2>&1 | sed 's/^/   /'
 echo "5. pulizia.sh"; bash "$G_DIR/pulizia.sh" 2>&1 | sed 's/^/   /'
-echo "6. risultati senza l'account"
+echo "6. controllo-finale.sh (ultimo passo del job)"; bash "$G_DIR/controllo-finale.sh" 2>&1 | sed 's/^/   /'; echo "   codice ${PIPESTATUS[0]}"
+echo "7. risultati senza l'account"
 R=$BASE/risultati; rm -rf "$R"; mkdir -p "$R"; cp -r "$M31_OUT/." "$R/"
 grep -rl "$M31_ACCT" "$R" | xargs -r sed -i "s/$M31_ACCT/<ACCOUNT_ID>/g"
 ! grep -rq "$M31_ACCT" "$R" && echo "   nessun numero dell'account" || echo "   ACCOUNT ANCORA NEI RISULTATI"

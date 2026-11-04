@@ -1,7 +1,30 @@
 # M31 · i permessi in AWS per la giornata (nomi "coldread")
 
+## DA FARE PRIMA DELLA GIORNATA (M31 blocco a 5 $ e controllo finale, 2026-11-04): una modifica
+
+Il controllo finale (ultimo passo del job) deve leggere anche i dischi EBS e gli indirizzi Elastic IP. Servono due
+letture in più, `ec2:DescribeVolumes` e `ec2:DescribeAddresses` (solo Describe, quindi `Resource` `"*"`). Nient'altro.
+
+Dove: console IAM → Roles → `fenvix-gha-tests` → Permissions → policy inline `fenvix-coldread-test` → Edit → JSON.
+Cosa: **sostituisci** il blocco con `"Sid": "Letture"` (il primo della lista `Statement`) con questo, virgola finale
+compresa:
+
+```json
+    {
+      "Sid": "Letture",
+      "Effect": "Allow",
+      "Action": ["ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeInstances", "ec2:DescribeVolumes", "ec2:DescribeAddresses", "s3:ListAllMyBuckets"],
+      "Resource": "*"
+    },
+```
+
+Poi "Next" e "Save changes". Il resto della policy non cambia. Il comando `{"modo": "permessi"}` lo controlla (0 $):
+senza questa modifica scrive "MANCA ec2:DescribeVolumes" e "MANCA ec2:DescribeAddresses". Senza la modifica una
+giornata partirebbe lo stesso, ma il controllo finale non potrebbe leggere dischi e indirizzi: scriverebbe ALLARME
+("NON SO, lettura non riuscita") e il job finirebbe rosso anche con tutto pulito.
+
 **Già fatto dal fondatore il 2026-11-04** (alle 18:15, dalla console IAM). Questo file dice cosa c'è, con il testo
-esatto delle policy create; non c'è niente da rifare. Regione: eu-west-1. `<ACCOUNT_ID>` sta al posto del numero
+esatto delle policy create; non c'è niente da rifare tranne la modifica "DA FARE" qui sopra. Regione: eu-west-1. `<ACCOUNT_ID>` sta al posto del numero
 dell'account (12 cifre).
 
 I nomi in AWS:
@@ -153,7 +176,7 @@ CloudWatch.
 
 ## Come si lancia (link e passi, uno per volta)
 
-1. I permessi ci sono già (sopra). Crea il file di comando dal sito di GitHub:
+1. I permessi ci sono già (sotto), più la modifica "DA FARE" in cima a questo file. Crea il file di comando dal sito di GitHub:
    https://github.com/Mircoguidetti/fenvix-engine/new/freddo-s3/proto/lavaggio-per-cliente/m31/giornata
    nome `comando.json`, contenuto `{"modo": "permessi"}`, "Commit directly to the freddo-s3 branch".
    Questo costa 0 $ e dice in Actions (https://github.com/Mircoguidetti/fenvix-engine/actions/workflows/m31-freddo-s3.yml)
@@ -161,7 +184,11 @@ CloudWatch.
 2. Se tutti presenti: modifica lo stesso file in `{"modo": "prova"}` e fai commit. Parte la giornata (circa
    1,5–2 ore). Il log scrive ogni minuto la riga "SPESA". Alla fine i risultati arrivano da soli sul branch in
    `proto/lavaggio-per-cliente/m31/risultati/aws-<numero>/` e la pulizia scrive "RIMASTO: niente".
-3. **Durante la giornata il freno è il bottone "Cancel workflow"** nella pagina della run in Actions (in alto a
+3. Freno automatico: quando la spesa stimata (per eccesso) arriva a 5 $ il log scrive "BLOCCO: spesa stimata … ≥ 5,00 $",
+   la macchina si cancella e parte la pulizia (esito BLOCCO_SPESA). Con i freni di oggi la giornata non dovrebbe
+   arrivarci (tetto calcolato circa 1,5 $, STIMATO). L'ultimo passo del job, sempre, è il controllo finale: "RIMASTO:
+   niente" oppure "ALLARME: rimasto …" con l'elenco, in rosso in cima alla pagina della run e job fallito.
+   **Durante la giornata il freno a mano è il bottone "Cancel workflow"** nella pagina della run in Actions (in alto a
    destra): la run si ferma e la pulizia gira lo stesso (cancella macchina e bucket, scrive "RIMASTO: niente").
    `{"modo": "smonta"}` serve solo **dopo**, se la pulizia ha scritto "ALLARME": durante una giornata in corso
    aspetterebbe in coda la sua fine e non fermerebbe niente.

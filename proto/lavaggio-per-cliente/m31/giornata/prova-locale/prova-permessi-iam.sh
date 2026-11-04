@@ -4,7 +4,7 @@
 # Limite di moto: controlla la risorsa solo per S3; per EC2, IAM e SSM confronta la policy con la risorsa "*", quindi
 # le regole con un ARN preciso (RunInstances, PassRole, GetInstanceProfile) qui risultano sempre "MANCA". Quelle le
 # controlla controlla-policy.py. Questa prova serve per S3 (bucket fenvix-coldread-*) e per le letture.
-# Uso: bash prova-permessi-iam.sh policy.json [porta]
+# Uso: bash prova-permessi-iam.sh policy.json [porta]   (SCRIPT=controllo-finale.sh per provare il controllo finale)
 set -u
 POL=$(cd "$(dirname "$1")" && pwd)/$(basename "$1"); PORTA=${2:-5056}
 G_DIR=$(cd "$(dirname "$0")/.." && pwd)
@@ -31,6 +31,6 @@ $A iam put-user-policy --user-name gha --policy-name fenvix-coldread-test --poli
 K=$($A iam create-access-key --user-name gha --output json)
 export AWS_ACCESS_KEY_ID=$(jq -r .AccessKey.AccessKeyId <<<"$K") AWS_SECRET_ACCESS_KEY=$(jq -r .AccessKey.SecretAccessKey <<<"$K")
 export AMI_FILE=$W/ami.txt PATH=$W/bin:$PATH TIPO=c7i.xlarge RUOLO_MACCHINA=fenvix-coldread-machine GITHUB_RUN_ID=iam
-bash "$G_DIR/permessi.sh"; rc=$?
+bash "$G_DIR/${SCRIPT:-permessi.sh}"; rc=$?
 pkill -f "moto_server -p $PORTA" 2>/dev/null; rm -rf "$W"
 exit $rc
