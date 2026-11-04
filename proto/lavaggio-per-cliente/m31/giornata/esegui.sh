@@ -27,7 +27,7 @@ fine() {
 # allora la giornata non va avanti: si salta alla fine e la macchina si spegne
 # Tetti per passo (richieste a S3 di quel processo), circa 3-4 volte il previsto, scelti perché la somma dei tetti di
 # tutta la giornata resti sotto 1,50 $ (vedi RAPPORTO-2): tempi p1 250.000 GET (previste circa 70.000), tempi d2k
-# 100.000, ogni scrivi 100.000 GET e 25.000 PUT (previsti al massimo circa 12.000); 5.000 PUT/LIST per i tempi.
+# 100.000, ogni scrivi 100.000 GET e 20.000 PUT (previsti al massimo circa 12.000); 5.000 PUT/LIST per i tempi.
 freno() { local rc=$1; shift; if [ "$rc" = 97 ]; then passo "FRENO: richieste a S3 oltre il tetto in $*; salto alla fine"; fine; fi
   [ "$rc" = 0 ] || passo "ERRORE $* (codice $rc)"; }
 passo "inizio; macchina $(nproc) vCPU, $(free -g | awk '/Mem/{print $2}') GB"
@@ -64,7 +64,7 @@ sali
 for x in "1 100" "1 10" "100 100"; do
   set -- $x
   passo "scrivi lotto $1 flush $2"
-  M31_FRENO_GET=${FRENO_GET_SCRIVI:-100000} M31_FRENO_PUT=${FRENO_PUT_SCRIVI:-25000} ./m31 scrivi --magazzino s3 --prefisso scrivi-l$1-f$2 --dir data/scrivi --secondi ${SECONDI_SCRIVI:-120} --fili 32 --lotto $1 --flush-ms $2 --attesa-lavaggio ${ATTESA_LAVAGGIO:-60} \
+  M31_FRENO_GET=${FRENO_GET_SCRIVI:-100000} M31_FRENO_PUT=${FRENO_PUT_SCRIVI:-20000} ./m31 scrivi --magazzino s3 --prefisso scrivi-l$1-f$2 --dir data/scrivi --secondi ${SECONDI_SCRIVI:-120} --fili 32 --lotto $1 --flush-ms $2 --attesa-lavaggio ${ATTESA_LAVAGGIO:-60} \
     --etichetta aws-scrivi-l$1-f$2 --out out/scritture.jsonl > /dev/null 2> out/scrivi-l$1-f$2.log; freno $? scrivi $1 $2
 done
 sali
