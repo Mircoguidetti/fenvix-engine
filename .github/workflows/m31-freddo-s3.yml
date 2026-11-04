@@ -1,0 +1,123 @@
+# M31 · i nostri millisecondi a freddo su S3 vero, eu-west-1. Comandi AWS CLI diretti, niente CDK, niente CloudShell.
+# Un solo innesco: un push sul branch freddo-s3 che aggiunge o cambia proto/lavaggio-per-cliente/m31/giornata/comando.json.
+# Il campo "modo" dice cosa fare:
+#   "permessi" = solo controllo dei permessi, 0 $ (letture, --dry-run, bucket vuoto creato e cancellato subito);
+#   "prova"    = la giornata: una c7i.xlarge nella stessa regione del bucket fa carico, copia su S3, tempi, scritture;
+#   "smonta"   = solo pulizia e verifica.
+# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (mascherato); la macchina usa il suo ruolo fenvix-m31-macchina.
+# Comandi e risultati passano da un bucket nuovo fenvix-m31-<run>. Spesa: riga "SPESA" ogni minuto nel log.
+# Tetti: la macchina si spegne e si cancella da sola dopo 240 minuti (shutdown -h +240, comportamento "terminate");
+# il job ferma e smonta tutto a 250 minuti; pulizia e verifica girano sempre (if: always()).
+name: m31-freddo-s3
+on:
+  push:
+    branches: [freddo-s3]
+    paths: ['proto/lavaggio-per-cliente/m31/giornata/comando.json']
+permissions:
+  id-token: write
+  contents: write
+concurrency:
+  group: fenvix-m31
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 320
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_REGION: eu-west-1
+      M31_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      G: proto/lavaggio-per-cliente/m31/giornata
+      M: proto/lavaggio-per-cliente/m31
+      TIPO: c7i.xlarge
+      PREZZO_ORA: "0.1915"       # c7i.xlarge on-demand eu-west-1, DICHIARATO (doit.com, 2026-11-04)
+      RUOLO_MACCHINA: fenvix-m31-macchina
+      BUCKET: fenvix-m31-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Maschera account e ruolo; modo dal file di comando
+        id: mode
+        run: |
+          [ -n "$M31_ROLE" ] || { echo "secret AWS_ROLE_ARN mancante"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$M31_ROLE"); role=${M31_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          echo "M31_ACCT=$acct" >> "$GITHUB_ENV"
+          modo=$(jq -r '.modo // "smonta"' $G/comando.json 2>/dev/null || echo smonta)
+          # solo un comando.json aggiunto o cambiato in questo commit può far partire una prova a pagamento
+          git diff --name-only --diff-filter=AM HEAD~1 HEAD | grep -qx $G/comando.json || modo=smonta
+          case "$modo" in permessi|prova|smonta) ;; *) modo=smonta;; esac
+          echo "modo=$modo" | tee -a "$GITHUB_OUTPUT" "$GITHUB_STEP_SUMMARY"
+
+      - name: Credenziali AWS (OIDC, 1 h; l'attesa le rinnova da sola) - per prime, così un ruolo che rifiuta ferma tutto subito
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Controllo dei permessi (0 $)
+        if: steps.mode.outputs.modo != 'smonta'
+        run: bash $G/permessi.sh
+
+      - name: Costruisco il programma (sul runner, niente AWS)
+        if: steps.mode.outputs.modo == 'prova'
+        run: |
+          cd $M && cargo build --release --locked
+          mkdir -p /tmp/pacco && cp target/release/m31 giornata/esegui.sh /tmp/pacco/ && strip /tmp/pacco/m31
+          tar czf /tmp/m31-giornata.tar.gz -C /tmp/pacco m31 esegui.sh
+          sha256sum /tmp/m31-giornata.tar.gz | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Credenziali fresche per la giornata
+        if: steps.mode.outputs.modo == 'prova'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: La giornata (bucket, macchina, attesa con la spesa ogni minuto, risultati)
+        id: prova
+        if: steps.mode.outputs.modo == 'prova'
+        continue-on-error: true
+        run: bash $G/giornata-ci.sh
+
+      - name: Credenziali per la pulizia
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Pulizia (macchine con il tag, bucket fenvix-m31-*) e verifica
+        if: always()
+        run: bash $G/pulizia.sh
+
+      - name: Pubblico i risultati sul branch (senza l'account)
+        if: always() && steps.mode.outputs.modo == 'prova'
+        run: |
+          R=$M/risultati/aws-${{ github.run_id }}
+          [ -d /tmp/m31-out ] || exit 0
+          mkdir -p $R && cp -r /tmp/m31-out/. $R/
+          grep -rl "$M31_ACCT" $R | xargs -r sed -i "s/$M31_ACCT/<ACCOUNT_ID>/g"
+          ! grep -rq "$M31_ACCT" $R || { echo "account ancora nei risultati: non pubblico"; exit 1; }
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          git add $R && git commit -qm "M31 giornata AWS run ${{ github.run_id }}: risultati" || true
+          for i in 1 2 3; do git pull --rebase -q origin freddo-s3 && git push -q origin HEAD:freddo-s3 && break; sleep 5; done
+
+      - name: Copia dei risultati come artifact (se il push non riesce)
+        if: always() && steps.mode.outputs.modo == 'prova'
+        uses: actions/upload-artifact@v4
+        with:
+          name: m31-risultati-${{ github.run_id }}
+          path: /tmp/m31-out
+          if-no-files-found: ignore
+          retention-days: 7

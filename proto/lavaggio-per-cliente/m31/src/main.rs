@@ -426,7 +426,7 @@ struct ClienteM31 {
     q2: (u64, u8, i64),
     /// (hi, lo) inclusi
     q3: Vec<(i64, i64)>,
-    /// Q4 (aggiunta del fondatore): finestre con esattamente 500 messaggi, vuota se il cliente ne ha meno
+    /// Q4 (aggiunta del fondatore): non vuota se il cliente ha almeno 500 messaggi (Q4 legge gli ultimi 500)
     #[serde(default)]
     q4: Vec<(i64, i64)>,
 }
@@ -1271,8 +1271,9 @@ async fn find_m31(l: &Lettore, ch: &Chiavi, q: &str, c: &ClienteM31, k: usize) -
             Ok(d.len())
         }
         "Q4" => {
-            let (hi, lo) = c.q4[k % c.q4.len()];
-            let d = documenti(l, ch, c.c, MSGS, hi, lo, 2 * MESSAGGI_Q4).await?;
+            // come Q4 di P1 (comando estese di prova_infinite.py): gli ultimi 500 messaggi del cliente
+            let _ = k;
+            let d = documenti(l, ch, c.c, MSGS, i64::MAX, i64::MIN, MESSAGGI_Q4).await?;
             verifica(&d, c.c, MSGS)?;
             anyhow::ensure!(d.len() == MESSAGGI_Q4, "Q4 {} documenti invece di {MESSAGGI_Q4}", d.len());
             Ok(d.len())

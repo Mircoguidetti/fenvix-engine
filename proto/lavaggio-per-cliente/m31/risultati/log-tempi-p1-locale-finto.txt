@@ -1,0 +1,28 @@
+fotografia: 11 pile (5 L0), MB [0, 3, 3, 3, 3, 13, 13, 63, 222, 753, 3600]; sul bancone con la quota 0.02: 8 pile, 104 MB
+riscaldo 1 s, 400 clienti, 3492 GET: indici 6928 KB, filtri 76895 KB
+serie dormienti (150): Q1 freddo p50 33.8 p99 163.7; Q2 58.7 199.9; Q3 32.6 126.5; caldo Q1 p50 0.30; GET per find 1.58; doppie 0.000
+serie attivi (150): Q1 freddo p50 322.4 p99 510.5; Q2 65.4 176.0; Q3 318.1 489.0; caldo Q1 p50 0.41; GET per find 8.17; doppie 0.000
+parallelo dormienti (150): Q1 freddo p50 31.7 p99 108.9; Q2 65.3 155.4; Q3 27.7 86.6; caldo Q1 p50 0.31; GET per find 1.53; doppie 0.000
+parallelo attivi (150): Q1 freddo p50 75.2 p99 207.7; Q2 60.4 203.2; Q3 75.6 182.7; caldo Q1 p50 0.41; GET per find 8.09; doppie 0.000
+parallelo+ra256 dormienti (150): Q1 freddo p50 34.7 p99 111.9; Q2 65.6 143.1; Q3 27.6 86.0; caldo Q1 p50 0.30; GET per find 1.40; doppie 0.000
+parallelo+ra256 attivi (150): Q1 freddo p50 72.6 p99 138.0; Q2 64.7 168.7; Q3 75.7 164.0; caldo Q1 p50 0.43; GET per find 8.15; doppie 0.000
+parallelo+bancone dormienti (150): Q1 freddo p50 28.4 p99 109.9; Q2 60.5 189.3; Q3 27.5 97.7; caldo Q1 p50 0.29; GET per find 1.42; doppie 0.000
+parallelo+bancone attivi (150): Q1 freddo p50 45.5 p99 122.5; Q2 57.7 150.6; Q3 47.0 116.7; caldo Q1 p50 0.40; GET per find 2.75; doppie 0.000
+parallelo+doppia dormienti (150): Q1 freddo p50 31.7 p99 111.3; Q2 58.4 211.9; Q3 30.8 106.3; caldo Q1 p50 0.31; GET per find 1.63; doppie 0.070
+parallelo+doppia attivi (150): Q1 freddo p50 69.5 p99 118.6; Q2 60.5 143.0; Q3 67.3 119.8; caldo Q1 p50 0.42; GET per find 8.50; doppie 0.387
+parallelo+bancone+doppia dormienti (150): Q1 freddo p50 31.6 p99 96.0; Q2 68.5 180.0; Q3 28.3 103.1; caldo Q1 p50 0.33; GET per find 1.50; doppie 0.095
+parallelo+bancone+doppia attivi (150): Q1 freddo p50 43.1 p99 99.6; Q2 57.5 130.3; Q3 41.1 103.2; caldo Q1 p50 0.47; GET per find 2.86; doppie 0.127
+parallelo+bancone+doppia+ra256 dormienti (150): Q1 freddo p50 32.0 p99 82.3; Q2 59.9 124.0; Q3 26.9 88.6; caldo Q1 p50 0.36; GET per find 1.32; doppie 0.055
+parallelo+bancone+doppia+ra256 attivi (150): Q1 freddo p50 43.7 p99 96.4; Q2 58.3 147.9; Q3 42.9 106.3; caldo Q1 p50 0.49; GET per find 2.89; doppie 0.143
+insieme 10 Q1: p50 29.9 p99 134.2
+insieme 10 Q2: p50 54.4 p99 156.3
+insieme 10 Q3: p50 22.6 p99 99.7
+insieme 50 Q1: p50 28.3 p99 113.9
+insieme 50 Q2: p50 61.0 p99 180.3
+insieme 50 Q3: p50 27.5 p99 97.3
+insieme 100 Q1: p50 30.7 p99 128.7
+insieme 100 Q2: p50 59.4 p99 151.5
+insieme 100 Q3: p50 32.0 p99 131.9
+Q5 indice_100: freddo p50 487.2 ms p99 591.4, GET p50 118, documenti p50 100
+Q5 indice_tutte: freddo p50 46971.2 ms p99 50032.2, GET p50 5387, documenti p50 37942
+Q5 senza indice: 72230 ms, 254 GET, 3770 MB, trovati 40606
