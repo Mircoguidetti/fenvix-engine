@@ -17,7 +17,7 @@ for f in sys.argv[1:]:
             for k, r in j["q5"].items():
                 if k == "senza_indice":
                     print(f"Q5 {j['etichetta']} senza indice: {r['ms']:.0f} ms, {r['get']} GET, {r['byte']/2**20:.0f} MB, trovati {r['trovati']}")
-                else:
+                elif r["freddo_ms"]["n"]:
                     print(f"Q5 {j['etichetta']} {k}: freddo p50 {r['freddo_ms']['p50']:.0f} p99 {r['freddo_ms']['p99']:.0f} caldo p50 {r['caldo_ms']['p50']:.1f} | GET p50 {r['get']['p50']:.0f} | byte p50 {r['byte']['p50']/2**20:.1f} MB | documenti p50 {r['documenti']['p50']:.0f}")
         elif t == "scritture":
             la = j["latenza_fino_a_s3_ms"]; c = j["con_il_lavaggio"]
