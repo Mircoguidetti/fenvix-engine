@@ -36,6 +36,26 @@ enum Cmd {
     Load(LoadArgs),
     Run(Box<RunArgs>),
     Hot(HotArgs),
+    Noisy(NoisyArgs),
+}
+
+/// Heavy neighbours for the isolation test (tools/isolamento/noisy_quota.py): every database in `--dbs` gets
+/// `--conns-per-db` loops sending back to back, half `find_one({_id: rand < 200})` on `items`, half `insert_one` of
+/// about 1 KB on `ev` (the load of tools/round3/noisy.py, from a client cheap enough that one CPU saturates the server).
+#[derive(Args)]
+struct NoisyArgs {
+    #[command(flatten)]
+    common: Common,
+    #[arg(long)]
+    dbs: String,
+    #[arg(long, default_value_t = 4)]
+    conns_per_db: usize,
+    #[arg(long, default_value_t = 40)]
+    secs: u64,
+    #[arg(long, default_value_t = 50)]
+    read_pct: u32,
+    #[arg(long)]
+    out: PathBuf,
 }
 
 #[derive(Args)]
@@ -255,6 +275,58 @@ fn tname(prefix: &str, idx: u64) -> String {
 
 fn unix_ms() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
+}
+
+async fn noisy(a: NoisyArgs) -> Result<()> {
+    let uri = a.common.uris.split(',').next().unwrap().to_string();
+    let hist = Arc::new(Mutex::new(Histogram::<u64>::new_with_bounds(1, 600_000_000, 3).unwrap()));
+    let errs = Arc::new(AtomicU64::new(0));
+    let start = Instant::now();
+    let end = start + Duration::from_secs(a.secs);
+    let pad = "y".repeat(900);
+    let mut tasks = Vec::new();
+    for (di, db) in a.dbs.split(',').filter(|d| !d.is_empty()).enumerate() {
+        let client = make_client(&uri, a.conns_per_db as u32 + 2).await?;
+        for k in 0..a.conns_per_db {
+            let (client, db, hist, errs, pad) = (client.clone(), db.to_string(), Arc::clone(&hist), Arc::clone(&errs), pad.clone());
+            let read_pct = a.read_pct;
+            tasks.push(tokio::spawn(async move {
+                let mut rng = StdRng::seed_from_u64((di * 1000 + k) as u64);
+                let items = client.database(&db).collection::<Document>("items");
+                let ev = client.database(&db).collection::<Document>("ev");
+                let mut i = 0u64;
+                let mut local = Histogram::<u64>::new_with_bounds(1, 600_000_000, 3).unwrap();
+                while Instant::now() < end {
+                    i += 1;
+                    let t0 = Instant::now();
+                    let r = if rng.gen_range(0..100) < read_pct {
+                        items.find_one(doc! { "_id": rng.gen_range(0..200) }).await.map(|_| ())
+                    } else {
+                        ev.insert_one(doc! { "_id": format!("{}-{k}-{i}", start.elapsed().as_nanos()), "pad": &pad }).await.map(|_| ())
+                    };
+                    match r {
+                        Ok(()) => {
+                            let _ = local.record(t0.elapsed().as_micros().max(1) as u64);
+                        }
+                        Err(_) => {
+                            errs.fetch_add(1, Relaxed);
+                            tokio::time::sleep(Duration::from_millis(10)).await;
+                        }
+                    }
+                }
+                hist.lock().unwrap().add(&local).unwrap();
+            }));
+        }
+    }
+    for t in tasks {
+        t.await?;
+    }
+    let secs = start.elapsed().as_secs_f64();
+    let h = hist.lock().unwrap();
+    let out = json!({ "ops": h.len(), "secs": secs, "errors": errs.load(Relaxed),
+        "p50_ms": h.value_at_quantile(0.5) as f64 / 1000.0, "p99_ms": h.value_at_quantile(0.99) as f64 / 1000.0 });
+    std::fs::write(&a.out, serde_json::to_string(&out)?)?;
+    Ok(())
 }
 
 async fn make_client(uri: &str, pool: u32) -> Result<Client> {
@@ -949,6 +1021,7 @@ fn main() -> Result<()> {
         Cmd::Load(a) => a.common.worker_threads,
         Cmd::Run(a) => a.common.worker_threads,
         Cmd::Hot(a) => a.common.worker_threads,
+        Cmd::Noisy(a) => a.common.worker_threads,
     };
     let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(threads).enable_all().build()?;
     rt.block_on(async {
@@ -956,6 +1029,7 @@ fn main() -> Result<()> {
             Cmd::Load(a) => load(a).await,
             Cmd::Run(a) => run(*a).await,
             Cmd::Hot(a) => hot(a).await,
+            Cmd::Noisy(a) => noisy(a).await,
         }
     })
 }

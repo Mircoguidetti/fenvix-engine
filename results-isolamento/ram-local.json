@@ -1,0 +1,66 @@
+{
+ "ram": [
+  {
+   "databases": 300,
+   "kb_per_open_db": 51.4,
+   "marks": [
+    [
+     60,
+     28592
+    ],
+    [
+     120,
+     30788
+    ],
+    [
+     180,
+     32576
+    ],
+    [
+     240,
+     35000
+    ],
+    [
+     300,
+     36672
+    ]
+   ],
+   "open_reported": 300,
+   "ram": "ramsmall",
+   "rss_after_kb": 36672,
+   "rss_base_kb": 21260
+  },
+  {
+   "databases": 300,
+   "kb_per_open_db": 278.2,
+   "marks": [
+    [
+     60,
+     43516
+    ],
+    [
+     120,
+     59000
+    ],
+    [
+     180,
+     74316
+    ],
+    [
+     240,
+     89800
+    ],
+    [
+     300,
+     105132
+    ]
+   ],
+   "open_reported": 300,
+   "ram": "ramfull",
+   "rss_after_kb": 104692,
+   "rss_base_kb": 21228
+  }
+ ],
+ "store": "local",
+ "workloads": []
+}

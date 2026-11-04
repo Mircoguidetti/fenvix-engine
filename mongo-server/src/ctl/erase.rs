@@ -156,6 +156,9 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
     if !left.is_empty() {
         return Err(ApiError::new(500, "erase_incomplete", format!("objects remain after the erase: {left:?}")));
     }
+    // After the erase's last S3 request: its own requests (deletes, proof listings) charged the database's counters until
+    // here; now they go (C9: forgotten earlier, they were made again by the requests that followed).
+    crate::fair::forget(db);
     Ok(report)
 }
 

@@ -411,7 +411,7 @@ pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb:
         // Durable writes flush explicitly; the periodic flush only has to bound the relaxed ones.
         settings.flush_interval = Some(relaxed);
     }
-    let b = Db::builder(tenant_path(id), Arc::clone(store)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
+    let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
     match cache_scope() {
         Some((c, scope)) => {
             WRITER_SCOPE.lock().unwrap().insert(id.to_string(), scope);
@@ -456,7 +456,7 @@ fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
 }
 
 async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool) -> Result<DbReader> {
-    let b = DbReader::builder(tenant_path(id), Arc::clone(store)).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
+    let b = DbReader::builder(tenant_path(&id), crate::counting::owned(store, &id.to_string())).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
     let b = match cache_scope() {
         Some((c, scope)) => b.with_db_cache(c, scope),
         None => b,
@@ -657,21 +657,30 @@ pub static GROUP_WINDOW_US: std::sync::atomic::AtomicU64 = std::sync::atomic::At
 pub static GROUP_COMMITS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub static GROUP_FLUSHES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// A staged write batch waiting to become durable.
+/// A staged write batch waiting to become durable. A clone waits for the same batch: a command that answers from a
+/// record written by an earlier command (a repeated commit, a retried write) waits on a clone of that command's commit,
+/// so it never acknowledges data that is not durable yet (C8).
+#[derive(Clone)]
 pub struct Commit {
     db: Db,
     handle: WriteHandle,
     group: Arc<GroupFlush>,
     tenant: String,
     /// Local log (prototype): the batch is durable once this resolves (its record is on the local disk).
-    local: Option<oneshot::Receiver<std::result::Result<(), String>>>,
+    local: Option<futures::future::Shared<futures::future::BoxFuture<'static, std::result::Result<(), String>>>>,
 }
 
 impl Commit {
     /// Make the batch's durability the local log's fsync instead of the WAL flush to object storage.
     pub fn with_local(mut self, rx: oneshot::Receiver<std::result::Result<(), String>>) -> Self {
-        self.local = Some(rx);
+        use futures::FutureExt;
+        self.local = Some(rx.map(|r| r.unwrap_or_else(|_| Err("local log stopped".to_string()))).boxed().shared());
         self
+    }
+
+    /// Sequence number of the batch in its database's writer.
+    pub fn seqnum(&self) -> u64 {
+        self.handle.seqnum()
     }
 
     /// The database the batch was written to.
@@ -693,7 +702,7 @@ impl Commit {
         use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
         if let Some(rx) = self.local.take() {
             GROUP_COMMITS.fetch_add(1, Relaxed);
-            rx.await.map_err(|_| anyhow!("local log stopped"))?.map_err(|e| anyhow!(e))?;
+            rx.await.map_err(|e| anyhow!(e))?;
             // The record is on the local disk, but this process may have lost the database meanwhile (frozen between the
             // ownership check and the fsync, its lease lapsed, another process took over): then the write is not acknowledged.
             if !owner_valid(&self.tenant) {
@@ -1171,7 +1180,7 @@ pub(crate) async fn compact_tenant_pass(
     worker.compactions_poll_interval = Duration::from_millis(50);
     opts.worker = Some(worker);
     let started = Instant::now();
-    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), store).with_options(opts).build());
+    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), crate::counting::owned(&store, id)).with_options(opts).build());
     let mut runner = {
         let c = Arc::clone(&compactor);
         tokio::spawn(async move { c.run().await })

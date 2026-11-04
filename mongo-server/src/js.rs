@@ -26,6 +26,10 @@ type R<T> = Result<T, MongoError>;
 pub static TIMEOUT_MS: AtomicU64 = AtomicU64::new(60_000);
 /// `jsHeapLimitMB`
 pub static HEAP_MB: AtomicU64 = AtomicU64::new(1100);
+/// `--js-command-max-ms`: total JavaScript time of one command, across all its calls (0 = no limit). On a server shared
+/// by many databases a `$where` over a large collection would otherwise hold a worker thread for one per-call timeout
+/// per document. Over it the command fails with error 50 `MaxTimeMSExpired`.
+pub static COMMAND_MAX_MS: AtomicU64 = AtomicU64::new(30_000);
 
 const PRELUDE: &str = include_str!("js_prelude.js");
 const MAX_BSON: usize = 16_793_600;
@@ -35,6 +39,8 @@ tokio::task_local! {
     /// The command being executed (so that it gets a JS context of its own) and the hash of its database (`$where`
     /// uses a context per database that lives across commands, as mongod's pooled scopes do).
     static SCOPE: (u64, u64);
+    /// JavaScript time (µs) the current command has used so far.
+    static JS_USED_US: Cell<u64>;
 }
 
 static NEXT_SCOPE: AtomicU64 = AtomicU64::new(1);
@@ -45,7 +51,7 @@ pub fn scoped<F: std::future::Future>(db: &str, fut: F) -> impl std::future::Fut
     use std::hash::{Hash, Hasher};
     let mut h = std::collections::hash_map::DefaultHasher::new();
     db.hash(&mut h);
-    SCOPE.scope((NEXT_SCOPE.fetch_add(1, Relaxed), h.finish() | (1 << 63)), fut)
+    SCOPE.scope((NEXT_SCOPE.fetch_add(1, Relaxed), h.finish() | (1 << 63)), JS_USED_US.scope(Cell::new(0), fut))
 }
 
 fn scope_id(pooled: bool) -> u64 {
@@ -69,6 +75,9 @@ thread_local! {
     static ENGINES: RefCell<Engines> = RefCell::new(Engines { rt: None, by_scope: HashMap::new(), tick: 0 });
     static DEADLINE: Cell<Option<Instant>> = const { Cell::new(None) };
     static TIMED_OUT: Cell<bool> = const { Cell::new(false) };
+    /// End of the current command's JavaScript budget (`COMMAND_MAX_MS`), and whether it was the limit that interrupted.
+    static CMD_DEADLINE: Cell<Option<Instant>> = const { Cell::new(None) };
+    static CMD_OVER: Cell<bool> = const { Cell::new(false) };
 }
 
 fn code_name(code: i32) -> &'static str {
@@ -148,9 +157,13 @@ fn with_scope<T>(pooled: bool, f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
             let rt = native(Runtime::new())?;
             rt.set_max_stack_size(512 << 10);
             rt.set_interrupt_handler(Some(Box::new(|| {
-                let over = DEADLINE.with(|d| d.get().map(|t| Instant::now() > t).unwrap_or(false)) || crate::diag::current_killed();
+                let now = Instant::now();
+                let over = DEADLINE.with(|d| d.get().map(|t| now > t).unwrap_or(false)) || crate::diag::current_killed();
                 if over {
                     TIMED_OUT.with(|t| t.set(true));
+                    if CMD_DEADLINE.with(|d| d.get().map(|t| now > t).unwrap_or(false)) {
+                        CMD_OVER.with(|c| c.set(true));
+                    }
                 }
                 over
             })));
@@ -171,16 +184,38 @@ fn with_scope<T>(pooled: bool, f: impl FnOnce(&mut Engine) -> R<T>) -> R<T> {
         }
         let e = en.by_scope.get_mut(&sid).unwrap();
         e.used = tick;
+        let started = Instant::now();
+        let max = COMMAND_MAX_MS.load(Relaxed);
+        let used = JS_USED_US.try_with(|u| u.get()).ok();
+        if let Some(u) = used {
+            // short calls end before QuickJS ever asks the interrupt handler: check the budget before each call too
+            if max > 0 && u >= max * 1000 {
+                return Err(command_over());
+            }
+        }
+        CMD_DEADLINE.with(|d| d.set(match used {
+            Some(u) if max > 0 => Some(started + Duration::from_micros((max * 1000).saturating_sub(u))),
+            _ => None,
+        }));
+        CMD_OVER.with(|c| c.set(false));
         set_deadline();
         TIMED_OUT.with(|t| t.set(false));
         let r = f(e);
         DEADLINE.with(|d| d.set(None));
+        CMD_DEADLINE.with(|d| d.set(None));
+        let _ = JS_USED_US.try_with(|u| u.set(u.get() + started.elapsed().as_micros() as u64));
         r
     })
 }
 
 fn set_deadline() {
-    DEADLINE.with(|d| d.set(Some(Instant::now() + Duration::from_millis(TIMEOUT_MS.load(Relaxed)))));
+    let call = Instant::now() + Duration::from_millis(TIMEOUT_MS.load(Relaxed));
+    let cmd = CMD_DEADLINE.with(|d| d.get());
+    DEADLINE.with(|d| d.set(Some(cmd.map(|c| c.min(call)).unwrap_or(call))));
+}
+
+fn command_over() -> MongoError {
+    MongoError::new(50, "MaxTimeMSExpired", format!("the command ran JavaScript for more than the server limit of {} ms per command (--js-command-max-ms)", COMMAND_MAX_MS.load(Relaxed)))
 }
 
 /// Drop the context of the current command (called when it finishes, where possible).
@@ -238,6 +273,9 @@ impl Engine {
 fn exception(c: &rquickjs::Ctx, e: rquickjs::Error) -> MongoError {
     if TIMED_OUT.with(|t| t.get()) {
         let _ = c.catch();
+        if CMD_OVER.with(|o| o.get()) {
+            return command_over();
+        }
         return MongoError::new(11601, "Interrupted", "JavaScript execution interrupted".into());
     }
     match e {
@@ -895,6 +933,21 @@ mod tests {
         assert!(eval_where(&Bson::String("this.a.b.c".into()), &doc! {}).is_err());
         assert!(eval_where(&Bson::String("throw new Error('x')".into()), &doc! {}).is_err());
         assert_eq!(eval_where(&Bson::String("throw 'boom'".into()), &doc! {}).unwrap_err().code, 8);
+    }
+
+    #[test]
+    fn command_budget_spans_calls() {
+        // each call spins 40 ms; the per-call timeout (60 s) never trips, the command budget of 100 ms does
+        COMMAND_MAX_MS.store(100, Relaxed);
+        let spin = Bson::String("var t = Date.now(); while (Date.now() - t < 40) {} return true;".into());
+        let errs = futures::executor::block_on(scoped("budget", async {
+            (0..5).map(|_| eval_where(&spin, &doc! {})).filter_map(|r| r.err()).collect::<Vec<_>>()
+        }));
+        COMMAND_MAX_MS.store(30_000, Relaxed);
+        assert!(!errs.is_empty(), "5 calls of 40 ms passed a 100 ms command budget");
+        assert!(errs.iter().all(|e| e.code == 50), "{:?}", errs.iter().map(|e| e.code).collect::<Vec<_>>());
+        // outside a command (no scope) only the per-call timeout applies
+        assert!(eval_where(&spin, &doc! {}).is_ok());
     }
 
     #[test]
