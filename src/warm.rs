@@ -1473,6 +1473,74 @@ mod tests {
             close(p).await;
         }
 
+        /// C11 (E1): la guardia ferma un riscaldamento già partito. Il cameriere non scarica durante il lavaggio; appena il
+        /// riscaldamento è aperto scarica una scatola L0 ogni 50 ms (il primo scarico gli fa vedere il lavaggio, poi le L0
+        /// risalgono). Con `l0_max_ssts` 8 il riscaldamento deve fermarsi a 7 L0, molto prima del tetto, chiudere il lettore,
+        /// e nessuno scarico deve restare fermo.
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn l0_watch_stops_a_running_warm_up() {
+            std::env::set_var("RC9_L0MAX", "8");
+            let n: usize = env("RC9_KEYS", 200_000);
+            let p = prepare("c11-l0-stop", n, 1000, Hot::Sparse).await;
+            let probe = Arc::new(Probe::default());
+            let (c0, ms0) = (COMPACTION_WARM_CONCURRENCY.load(Relaxed), COMPACTION_WARM_MS.load(Relaxed));
+            // un riscaldamento lento (4 chiamate insieme, 40 ms per GET) e un tetto lungo: se non lo ferma la guardia, dura 10 s
+            COMPACTION_WARM_CONCURRENCY.store(4, Relaxed);
+            COMPACTION_WARM_MS.store(10_000, Relaxed);
+            let (stops0, t0) = (WARM_L0_STOPS.load(Relaxed), WARM_TIMEOUTS.load(Relaxed));
+            let flushes = Arc::new(Mutex::new(Vec::<u64>::new()));
+            let l0max = Arc::new(AtomicU64::new(0));
+            let stop = Arc::new(AtomicBool::new(false));
+            let w = {
+                let (db, flushes, stop, l0max) = (p.db.clone(), Arc::clone(&flushes), Arc::clone(&stop), Arc::clone(&l0max));
+                tokio::spawn(async move {
+                    while WARM_READERS_OPEN.load(Relaxed) == 0 && !stop.load(Relaxed) {
+                        tokio::time::sleep(Duration::from_millis(5)).await;
+                    }
+                    let mut j = 0usize;
+                    // solo mentre il riscaldamento è aperto: qui nessun lavaggio libera le L0 dopo, e la nona scatola fermerebbe
+                    // lo scarico per sempre
+                    while !stop.load(Relaxed) && WARM_READERS_OPEN.load(Relaxed) > 0 {
+                        for _ in 0..50 {
+                            db.put(&key(HOT_EVERY / 2 + j * HOT_EVERY), &val(j, 1000, 9)).await.unwrap();
+                            j += 1;
+                        }
+                        let t = Instant::now();
+                        db.flush_with_options(FlushOptions { flush_type: FlushType::MemTable }).await.unwrap();
+                        flushes.lock().unwrap().push(t.elapsed().as_millis() as u64);
+                        l0max.fetch_max(db.manifest().l0().len() as u64, Relaxed);
+                        tokio::time::sleep(Duration::from_millis(50)).await;
+                    }
+                })
+            };
+            let o = pass(&p, &probe, 40, false, true).await;
+            let l0_after = p.db.manifest().l0().len();
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            stop.store(true, Relaxed);
+            w.await.unwrap();
+            COMPACTION_WARM_CONCURRENCY.store(c0, Relaxed);
+            COMPACTION_WARM_MS.store(ms0, Relaxed);
+            let fl = flushes.lock().unwrap().clone();
+            let stops = WARM_L0_STOPS.load(Relaxed) - stops0;
+            let timeouts = WARM_TIMEOUTS.load(Relaxed) - t0;
+            println!(
+                "C11 l0 watch: lavaggio {:.2} s ok {}, fermato dalla guardia {stops}, tetto scaduto {timeouts}, lettori aperti {}, L0 alla fine {l0_after}, L0 massimo visto {}, scarichi {} (piu' lento {} ms)",
+                o.secs,
+                o.ok,
+                WARM_READERS_OPEN.load(Relaxed),
+                l0max.load(Relaxed),
+                fl.len(),
+                fl.iter().max().copied().unwrap_or(0)
+            );
+            assert!(o.ok);
+            assert_eq!(stops, 1, "la guardia non ha fermato il riscaldamento");
+            assert_eq!(timeouts, 0);
+            assert_eq!(WARM_READERS_OPEN.load(Relaxed), 0);
+            assert!(fl.iter().all(|&d| d < 500), "uno scarico e' rimasto fermo: {fl:?}");
+            close(p).await;
+        }
+
         /// Punto 2e e 2f: scritture e letture mentre il lavaggio e il riscaldamento girano con le GET del lavaggio lente (una
         /// volta, `RC9_GET_MS`); il cameriere scrive di continuo e scarica una scatola L0 ogni `RC9_FLUSH_MS`. Nessuna lettura
         /// vecchia; latenza delle scritture (p50, p99, massimo) con e senza riscaldamento.
