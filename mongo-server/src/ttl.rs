@@ -120,7 +120,7 @@ impl Dbs {
             loop {
                 tokio::time::sleep(every).await;
                 for e in me.entries_snapshot() {
-                    let Ok(mut g) = e.try_write() else { continue };
+                    let Some(mut g) = Dbs::try_lock_outside(&e) else { continue };
                     if g.is_writer_open() && g.ttl_seen.load(std::sync::atomic::Ordering::Relaxed) {
                         match sweep_entry(&mut g, crate::cmd_data::now_ms(), 10).await {
                             Ok(n) => {
@@ -172,7 +172,7 @@ impl Dbs {
         for (db, _) in names {
             st.due.fetch_add(1, Relaxed);
             let handle = self.lock_handle(&db);
-            let Ok(mut g) = handle.try_write() else {
+            let Some(mut g) = Dbs::try_lock_outside(&handle) else {
                 st.skipped_open.fetch_add(1, Relaxed);
                 continue;
             };

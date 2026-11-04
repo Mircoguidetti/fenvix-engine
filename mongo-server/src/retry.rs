@@ -115,8 +115,10 @@ impl Sess {
     }
 
     /// Merge what `db` stores of the session (its retryable-write record and its transaction outcome) into this memory.
-    /// If the memory's current number came from `db`, the database is the authority (what this process wrote there and
-    /// was not made durable is not there, what another owner wrote is); otherwise a higher stored number replaces the
+    /// If the memory's current number came from `db`, the database is the authority for that number and higher ones (what
+    /// this process wrote there and was not made durable is not there, what another owner wrote is), but a lower stored
+    /// number never takes the memory back: the memory keeps its number and drops only its statements (C12 review, section
+    /// 2: a started number stays used, as on mongod); otherwise a higher stored number replaces the
     /// memory's, and the same retryable write keeps the statements of both. The session's last use is the latest of the
     /// two, and a session idle past the TTL is forgotten afterwards ([`Server::session_load`]): a stored number that expired
     /// is not taken with the time of the read (C10 review, section 6: an expired outcome alone gave its number to a fresh
@@ -154,6 +156,16 @@ impl Sess {
             last = last.max(d.get_i64("last").unwrap_or(0));
         }
         let from_here = self.src.as_deref() == Some(db);
+        if from_here && number < self.number {
+            // The memory's number came from this database but never reached its record (a transaction aborted or never
+            // committed, a write that did not become durable). A started number stays used, as on mongod: going back to
+            // the record's lower number would let an old retry in another database (not reloaded) run again. Only the
+            // memory's statements go: they are written nowhere.
+            let (n, t, l) = (self.number, self.txn, self.last);
+            self.reset(n, t);
+            self.last = l;
+            return;
+        }
         if from_here || number > self.number {
             // the memory's last use counts only for the same number, or for a number of another database
             let last = if self.number >= 0 && (!from_here || number == self.number) { self.last.max(last) } else { last };

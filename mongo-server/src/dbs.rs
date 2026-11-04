@@ -317,7 +317,7 @@ impl Dbs {
             while let Some(id) = rx.recv().await {
                 let e = me.entries.lock().unwrap().get(&id).cloned();
                 if let Some(e) = e {
-                    let mut g = e.write().await;
+                    let mut g = Dbs::lock_outside(&e).await;
                     g.abandon().await;
                 }
             }
@@ -390,10 +390,25 @@ impl Dbs {
         // Outside `handle` there is no scope to hold the token: it is dropped (and the count decremented) at once.
         let _ = TOKENS.try_with(|t| t.borrow_mut().push(token));
         let mut g = self.entry(name).write_owned().await;
-        g.snap = None;
-        g.absent = false;
-        g.require_opening = None;
+        g.new_holder();
         g
+    }
+
+    /// Take a database's entry exclusively outside a command, waiting for it: the only way to do so for maintenance
+    /// (TTL sweeps, idle closes, lease loss, shutdown). Like [`Dbs::lock`] it drops what the previous command left on the
+    /// entry for its own later steps ([`Entry::new_holder`]): a maintenance write must not be refused by the ticket of a
+    /// retryable write that ended long ago (C12 review, section 3), nor read through a transaction's old snapshot.
+    pub(crate) async fn lock_outside(e: &Arc<AsyncMutex<Entry>>) -> OwnedRwLockWriteGuard<Entry> {
+        let mut g = Arc::clone(e).write_owned().await;
+        g.new_holder();
+        g
+    }
+
+    /// [`Dbs::lock_outside`] without waiting: `None` if the entry is in use.
+    pub(crate) fn try_lock_outside(e: &Arc<AsyncMutex<Entry>>) -> Option<OwnedRwLockWriteGuard<Entry>> {
+        let mut g = Arc::clone(e).try_write_owned().ok()?;
+        g.new_holder();
+        Some(g)
     }
 
     /// Open the database for reading and share it with other readers: reads of one tenant run concurrently with
@@ -403,7 +418,7 @@ impl Dbs {
         let e = self.entry(name);
         if !SHARED_READS.load(Relaxed) {
             let mut w = Arc::clone(&e).write_owned().await;
-            w.absent = false;
+            w.new_holder();
             if !w.ensure_open().await? {
                 return Ok(ReadView { g: None, copts: Default::default() });
             }
@@ -419,7 +434,7 @@ impl Dbs {
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
-            w.absent = false;
+            w.new_holder();
             if !w.ensure_open().await? {
                 return Ok(ReadView { g: None, copts: Default::default() });
             }
@@ -456,7 +471,7 @@ impl Dbs {
                     let idle = me.idle;
                     tokio::spawn(async move {
                         let _p = permit;
-                        if let Ok(mut g) = e.try_write_owned() {
+                        if let Some(mut g) = Dbs::try_lock_outside(&e) {
                             if g.tenant.is_some() && g.active_txns == 0 && g.idle_for() >= idle {
                                 if let Err(err) = g.close().await {
                                     eprintln!("idle close of {} failed: {err:#}", g.name);
@@ -473,7 +488,7 @@ impl Dbs {
         let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
         futures::stream::iter(entries)
             .for_each_concurrent(CLOSE_CONCURRENCY, |e| async move {
-                let mut g = e.write().await;
+                let mut g = Dbs::lock_outside(&e).await;
                 if let Err(err) = g.close().await {
                     eprintln!("close of {} failed: {err:#}", g.name);
                 }
@@ -496,6 +511,16 @@ impl Dbs {
 }
 
 impl Entry {
+    /// A new holder took the entry exclusively: drop what the previous command left for its own later steps (its
+    /// transaction snapshot, "the database does not exist", the opening its batches rely on). They are right only while
+    /// that command holds the entry; every exclusive taking goes through here ([`Dbs::lock`], [`Dbs::lock_outside`],
+    /// [`Dbs::try_lock_outside`], the opening paths of [`Dbs::read`]).
+    pub(crate) fn new_holder(&mut self) {
+        self.snap = None;
+        self.absent = false;
+        self.require_opening = None;
+    }
+
     /// Empty the metadata cache (and free its memory).
     fn meta_clear(&self) {
         let mut m = self.meta.lock().unwrap();
