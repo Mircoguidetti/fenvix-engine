@@ -1702,4 +1702,68 @@ mod probe_cost {
         let ns = t0.elapsed().as_nanos() as f64 / n as f64;
         println!("M27 probe: {ns:.0} ns per block ({found} found)");
     }
+
+    /// Revisore di C11: il secchio di gettoni (`take_token`) da solo. Ritmo, gettoni persi dopo che i riscaldamenti in
+    /// attesa vengono fermati, e ritorno al normale dopo una pausa. Si lancia da solo (il secchio è uno per processo).
+    mod rev_c11 {
+        use super::super::*;
+        use std::time::Instant;
+
+        #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+        #[ignore]
+        async fn token_bucket() {
+            COMPACTION_WARM_GETS_PER_SEC.store(3000, Relaxed);
+            *BUCKET.lock().unwrap() = None;
+            // 1. ritmo: 6.000 GET da 256 chiamate insieme
+            let t = Instant::now();
+            let done = Arc::new(AtomicU64::new(0));
+            let hs: Vec<_> = (0..256)
+                .map(|_| {
+                    let done = Arc::clone(&done);
+                    tokio::spawn(async move {
+                        loop {
+                            if done.fetch_add(1, Relaxed) >= 6000 {
+                                break;
+                            }
+                            take_token().await;
+                        }
+                    })
+                })
+                .collect();
+            for h in hs {
+                h.await.unwrap();
+            }
+            let secs = t.elapsed().as_secs_f64();
+            println!("RC11 bucket: 6000 gettoni in {secs:.3} s, ritmo {:.0}/s", 6000.0 / secs);
+            // 2. 512 chiamate in attesa, fermate dopo 10 ms (come un riscaldamento fermato dal tetto o dalla guardia)
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            let hs: Vec<_> = (0..512).map(|_| tokio::spawn(async { take_token().await })).collect();
+            tokio::time::sleep(Duration::from_millis(10)).await;
+            for h in &hs {
+                h.abort();
+            }
+            let t = Instant::now();
+            take_token().await;
+            let wait_now = t.elapsed().as_secs_f64() * 1000.0;
+            // 3. dopo una pausa i gettoni persi non contano più
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            let t = Instant::now();
+            for _ in 0..100 {
+                take_token().await;
+            }
+            let wait_later = t.elapsed().as_secs_f64() * 1000.0;
+            println!("RC11 bucket: dopo 512 attese fermate, il gettone dopo aspetta {wait_now:.1} ms; 300 ms dopo, 100 gettoni in {wait_later:.1} ms");
+            assert!((2700.0..3300.0).contains(&(6000.0 / secs)));
+            assert!(wait_now < 200.0);
+            assert!(wait_later < 5.0);
+            // 4. 0 = nessun tetto
+            COMPACTION_WARM_GETS_PER_SEC.store(0, Relaxed);
+            let t = Instant::now();
+            for _ in 0..100_000 {
+                take_token().await;
+            }
+            println!("RC11 bucket: tetto 0, 100000 gettoni in {:.1} ms", t.elapsed().as_secs_f64() * 1000.0);
+            COMPACTION_WARM_GETS_PER_SEC.store(3000, Relaxed);
+        }
+    }
 }
