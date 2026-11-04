@@ -128,6 +128,8 @@ pub struct Dbs {
     pub ttl: Arc<crate::ttl::TtlStats>,
     pub changes: Arc<crate::changes::ChangeLog>,
     inflight: Mutex<HashMap<String, Arc<AtomicU64>>>,
+    /// The opening each database is in now in this process (0: closed), readable without its lock (C12).
+    openings: Mutex<HashMap<String, Arc<AtomicU64>>>,
 }
 
 pub struct Entry {
@@ -167,6 +169,33 @@ pub struct Entry {
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
     /// Stored metadata values of the open tenant (see [`META_CACHE`]); cleared with `copts`.
     meta: Mutex<MetaCache>,
+    /// Which opening of the tenant this is: unique in the process, new at every wake or creation (C12). What this process
+    /// remembers about the database (session records, open transactions) is right only for the opening it was learned in:
+    /// between two openings another process may have owned the database and written to it.
+    pub(crate) opening: u64,
+    /// The current opening created the database in this process (it did not exist): nothing of another process is in it.
+    created_here: bool,
+    /// Set by a command whose writes rely on what it learned in one opening (a retryable write's session record, a
+    /// transaction's snapshot): every batch of the command is refused if the tenant is not in that opening any more (see
+    /// [`Opening`]). Cleared when the next command takes the lock.
+    pub(crate) require_opening: Option<Opening>,
+    /// `opening` while the tenant is open, 0 when closed: what [`Dbs::opening_hint`] reads.
+    opening_cell: Arc<AtomicU64>,
+}
+
+/// What a command learned about a database was learned in this opening of it (C12).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Opening {
+    /// The tenant was open in opening `n`.
+    Open(u64),
+    /// The database did not exist: right as long as the tenant that receives the batch was created by this process.
+    Absent,
+}
+
+static NEXT_OPENING: AtomicU64 = AtomicU64::new(1);
+
+fn next_opening() -> u64 {
+    NEXT_OPENING.fetch_add(1, Relaxed)
 }
 
 /// Bytes (keys and values) a read returned: the "KiB read" of the unit of cost (fair.rs).
@@ -204,7 +233,7 @@ impl Dbs {
     }
 
     pub fn new(lc: Arc<Lifecycle>, raw: Arc<dyn ObjectStore>, idle: Duration, leases: Arc<Leases>, global: Arc<tenant_bench::counting::CountingStore>) -> Arc<Self> {
-        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default(), inflight: Mutex::new(HashMap::new()) })
+        Arc::new(Self { lc, raw, entries: Mutex::new(HashMap::new()), idle, leases, global, readers: Arc::new(AtomicI64::new(0)), writers: Arc::new(AtomicI64::new(0)), ttl: Arc::new(Default::default()), changes: crate::changes::arc_default(), inflight: Mutex::new(HashMap::new()), openings: Mutex::new(HashMap::new()) })
     }
 
     /// Entries that currently exist (open or not).
@@ -244,9 +273,13 @@ impl Dbs {
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
                     inflight: self.inflight_counter(name),
+                    opening_cell: self.opening_cell(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
                     meta: Default::default(),
+                    opening: 0,
+                    created_here: false,
+                    require_opening: None,
                 }))
             })
             .clone()
@@ -284,7 +317,7 @@ impl Dbs {
             while let Some(id) = rx.recv().await {
                 let e = me.entries.lock().unwrap().get(&id).cloned();
                 if let Some(e) = e {
-                    let mut g = e.write().await;
+                    let mut g = Dbs::lock_outside(&e).await;
                     g.abandon().await;
                 }
             }
@@ -320,13 +353,28 @@ impl Dbs {
                     locks: HashMap::new(),
                     changes: Arc::clone(&self.changes),
                         inflight: self.inflight_counter(name),
+                        opening_cell: self.opening_cell(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
                     meta: Default::default(),
+                    opening: 0,
+                    created_here: false,
+                    require_opening: None,
                     }))
                 })
                 .clone()
         }
+    }
+
+    fn opening_cell(&self, name: &str) -> Arc<AtomicU64> {
+        Arc::clone(self.openings.lock().unwrap().entry(name.to_string()).or_default())
+    }
+
+    /// Without waiting: the opening the database is in now in this process, `None` when it is closed. A hint: the database
+    /// may be closed or opened again right after; a batch that relies on it sets [`Entry::require_opening`].
+    pub fn opening_hint(&self, name: &str) -> Option<u64> {
+        let n = self.openings.lock().unwrap().get(name).map(|c| c.load(Relaxed)).unwrap_or(0);
+        (n != 0).then_some(n)
     }
 
     fn inflight_counter(&self, name: &str) -> Arc<AtomicU64> {
@@ -342,9 +390,25 @@ impl Dbs {
         // Outside `handle` there is no scope to hold the token: it is dropped (and the count decremented) at once.
         let _ = TOKENS.try_with(|t| t.borrow_mut().push(token));
         let mut g = self.entry(name).write_owned().await;
-        g.snap = None;
-        g.absent = false;
+        g.new_holder();
         g
+    }
+
+    /// Take a database's entry exclusively outside a command, waiting for it: the only way to do so for maintenance
+    /// (TTL sweeps, idle closes, lease loss, shutdown). Like [`Dbs::lock`] it drops what the previous command left on the
+    /// entry for its own later steps ([`Entry::new_holder`]): a maintenance write must not be refused by the ticket of a
+    /// retryable write that ended long ago (C12 review, section 3), nor read through a transaction's old snapshot.
+    pub(crate) async fn lock_outside(e: &Arc<AsyncMutex<Entry>>) -> OwnedRwLockWriteGuard<Entry> {
+        let mut g = Arc::clone(e).write_owned().await;
+        g.new_holder();
+        g
+    }
+
+    /// [`Dbs::lock_outside`] without waiting: `None` if the entry is in use.
+    pub(crate) fn try_lock_outside(e: &Arc<AsyncMutex<Entry>>) -> Option<OwnedRwLockWriteGuard<Entry>> {
+        let mut g = Arc::clone(e).try_write_owned().ok()?;
+        g.new_holder();
+        Some(g)
     }
 
     /// Open the database for reading and share it with other readers: reads of one tenant run concurrently with
@@ -354,7 +418,7 @@ impl Dbs {
         let e = self.entry(name);
         if !SHARED_READS.load(Relaxed) {
             let mut w = Arc::clone(&e).write_owned().await;
-            w.absent = false;
+            w.new_holder();
             if !w.ensure_open().await? {
                 return Ok(ReadView { g: None, copts: Default::default() });
             }
@@ -370,7 +434,7 @@ impl Dbs {
                 }
             }
             let mut w = Arc::clone(&e).write_owned().await;
-            w.absent = false;
+            w.new_holder();
             if !w.ensure_open().await? {
                 return Ok(ReadView { g: None, copts: Default::default() });
             }
@@ -407,7 +471,7 @@ impl Dbs {
                     let idle = me.idle;
                     tokio::spawn(async move {
                         let _p = permit;
-                        if let Ok(mut g) = e.try_write_owned() {
+                        if let Some(mut g) = Dbs::try_lock_outside(&e) {
                             if g.tenant.is_some() && g.active_txns == 0 && g.idle_for() >= idle {
                                 if let Err(err) = g.close().await {
                                     eprintln!("idle close of {} failed: {err:#}", g.name);
@@ -424,7 +488,7 @@ impl Dbs {
         let entries: Vec<Arc<AsyncMutex<Entry>>> = self.entries.lock().unwrap().values().cloned().collect();
         futures::stream::iter(entries)
             .for_each_concurrent(CLOSE_CONCURRENCY, |e| async move {
-                let mut g = e.write().await;
+                let mut g = Dbs::lock_outside(&e).await;
                 if let Err(err) = g.close().await {
                     eprintln!("close of {} failed: {err:#}", g.name);
                 }
@@ -447,6 +511,16 @@ impl Dbs {
 }
 
 impl Entry {
+    /// A new holder took the entry exclusively: drop what the previous command left for its own later steps (its
+    /// transaction snapshot, "the database does not exist", the opening its batches rely on). They are right only while
+    /// that command holds the entry; every exclusive taking goes through here ([`Dbs::lock`], [`Dbs::lock_outside`],
+    /// [`Dbs::try_lock_outside`], the opening paths of [`Dbs::read`]).
+    pub(crate) fn new_holder(&mut self) {
+        self.snap = None;
+        self.absent = false;
+        self.require_opening = None;
+    }
+
     /// Empty the metadata cache (and free its memory).
     fn meta_clear(&self) {
         let mut m = self.meta.lock().unwrap();
@@ -518,6 +592,7 @@ impl Entry {
     }
 
     fn sync_gauges(&mut self) {
+        self.opening_cell.store(if self.tenant.is_some() { self.opening } else { 0 }, Relaxed);
         let now = match &self.tenant {
             None => 0,
             Some(t) if t.is_writer() => 2,
@@ -560,6 +635,7 @@ impl Entry {
         }
         let mut closed = true;
         if let Some(t) = self.tenant.take() {
+            self.opening_cell.store(0, Relaxed);
             closed = t.abandon().await;
             self.closes += 1;
         }
@@ -611,6 +687,8 @@ impl Entry {
         self.copts.clear();
         self.meta_clear();
                 self.tenant = Some(t);
+                self.opening = next_opening();
+                self.created_here = false;
                 self.wakes += 1;
                 self.sync_gauges();
                 crate::fair::register(&self.name);
@@ -637,6 +715,7 @@ impl Entry {
         self.copts.clear();
         self.meta_clear();
         if let Some(t) = self.tenant.take() {
+            self.opening_cell.store(0, Relaxed);
             crate::fair::note_written(&self.name, 0, true);
             let r = t.close().await;
             if r.is_ok() {
@@ -745,9 +824,22 @@ impl Entry {
         self.copts.clear();
         self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
+            self.opening = next_opening();
+            self.created_here = true;
             self.absent = false;
             self.wakes += 1;
             self.sync_gauges();
+        }
+        if let Some(want) = self.require_opening {
+            let same = match want {
+                Opening::Open(n) => self.opening == n,
+                Opening::Absent => self.created_here,
+            };
+            if !same {
+                // another process may have owned the database since the command read what its batch relies on: refused,
+                // retryable (the retry reads it again)
+                return Err(lease::LeaseHeld { tenant: self.name.clone(), holder: "(the database was opened again during the request)".into(), remaining_ms: 0 }.into());
+            }
         }
         self.touch();
         self.seq += 1;
@@ -812,6 +904,7 @@ impl Entry {
         self.copts.clear();
         self.meta_clear();
         if let Some(t) = self.tenant.take() {
+            self.opening_cell.store(0, Relaxed);
             t.close().await?;
             self.closes += 1;
             self.sync_gauges();
@@ -837,6 +930,11 @@ impl Entry {
             None => crate::ctl::erase::forget_in_memory(&self.name),
         }
         Ok(())
+    }
+
+    /// The opening the database is in now, after [`Entry::ensure_open`] (`Absent`: the database does not exist).
+    pub(crate) async fn current_opening(&mut self) -> Result<Opening> {
+        Ok(if self.ensure_open().await? { Opening::Open(self.opening) } else { Opening::Absent })
     }
 
     pub(crate) fn is_writer_open(&self) -> bool {
@@ -1081,6 +1179,8 @@ impl Entry {
         self.copts.clear();
         self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
+            self.opening = next_opening();
+            self.created_here = true;
             self.absent = false;
             self.wakes += 1;
             self.sync_gauges();

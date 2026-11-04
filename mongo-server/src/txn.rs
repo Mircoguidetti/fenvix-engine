@@ -25,6 +25,16 @@ pub struct Txn {
     pub snap: Arc<slatedb::DbSnapshot>,
     pub seq: u64,
     pub started: Instant,
+    /// The opening of the database the snapshot was taken in (C12). Once the database was opened again, another process
+    /// may have owned it and written to it, which the conflict check (writes of this process only) cannot see: the
+    /// transaction is aborted, as mongod aborts open transactions when the primary changes.
+    pub opening: u64,
+}
+
+/// The open transaction lost its database in between (see [`Txn::opening`]): `NoSuchTransaction`, whose
+/// `TransientTransactionError` label makes the drivers run the whole transaction again.
+fn moved(number: i64) -> MongoError {
+    no_such(format!("Transaction with {{ txnNumber: {number} }} has been aborted: its database was opened again (another process may have written to it)."))
 }
 
 /// How far a running commit is, published by the commit that runs it to the repeated commits that wait for it.
@@ -172,34 +182,61 @@ impl Server {
         if !tc.start {
             self.retry_txn_continue(&tc.lsid, &tc.lsid_doc, tc.number).await?;
             let retry_n = self.retry_session_number(&tc.lsid).await;
-            let mut m = self.sessions.m.lock().unwrap();
-            let Some(s) = m.get_mut(&tc.lsid) else {
-                return Err(no_such(given_msg(&tc, retry_n)));
+            let taken = {
+                let mut m = self.sessions.m.lock().unwrap();
+                let Some(s) = m.get_mut(&tc.lsid) else {
+                    return Err(no_such(given_msg(&tc, retry_n)));
+                };
+                if s.number > tc.number {
+                    return Err(too_old(&tc, s.number));
+                }
+                if s.number != tc.number {
+                    return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
+                }
+                match std::mem::replace(&mut s.state, State::Active(None)) {
+                    State::Active(Some(t)) => Ok(t),
+                    State::Active(None) => Err(MongoError::new(117, "ConflictingOperationInProgress", "Another operation of this transaction is in progress".into())),
+                    State::Aborted => {
+                        s.state = State::Aborted;
+                        Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)))
+                    }
+                    State::Committed => {
+                        s.state = State::Committed;
+                        Err(no_such(format!("Transaction {} has been committed.", tc.number)))
+                    }
+                    committing @ State::Committing(_) => {
+                        s.state = committing;
+                        Err(no_such(format!("Transaction {} has been committed.", tc.number)))
+                    }
+                }
             };
-            if s.number > tc.number {
-                return Err(too_old(&tc, s.number));
-            }
-            if s.number != tc.number {
-                return Err(no_such(given_msg(&tc, s.number.max(retry_n))));
-            }
-            return match std::mem::replace(&mut s.state, State::Active(None)) {
-                State::Active(Some(t)) => Ok(t),
-                State::Active(None) => Err(MongoError::new(117, "ConflictingOperationInProgress", "Another operation of this transaction is in progress".into())),
-                State::Aborted => {
-                    s.state = State::Aborted;
-                    Err(no_such(format!("Transaction with {{ txnNumber: {} }} has been aborted.", tc.number)))
+            let t = taken?;
+            // the database must still be in the opening the snapshot was taken in (C12); the commit checks it again
+            let still = if self.dbs.opening_hint(&t.db) == Some(t.opening) {
+                Ok(true)
+            } else {
+                let mut g = self.dbs.lock(&t.db).await;
+                match g.current_opening().await {
+                    Ok(crate::dbs::Opening::Open(n)) => Ok(n == t.opening),
+                    Ok(crate::dbs::Opening::Absent) => Ok(false),
+                    Err(e) => Err(MongoError::from(e)),
                 }
-                State::Committed => {
-                    s.state = State::Committed;
-                    Err(no_such(format!("Transaction {} has been committed.", tc.number)))
+            };
+            return match still {
+                Ok(true) => Ok(t),
+                Ok(false) => {
+                    let number = t.number;
+                    self.txn_release(tc, Some(t), false).await;
+                    Err(moved(number))
                 }
-                committing @ State::Committing(_) => {
-                    s.state = committing;
-                    Err(no_such(format!("Transaction {} has been committed.", tc.number)))
+                // not owned now (another process holds it): the transaction stays, the error is retryable
+                Err(e) => {
+                    self.txn_release(tc, Some(t), true).await;
+                    Err(e)
                 }
             };
         }
-        self.retry_txn_start(&tc.lsid, &tc.lsid_doc, tc.number).await?;
+        self.retry_txn_start(db, &tc.lsid, &tc.lsid_doc, tc.number).await?;
         // Start: abort an older transaction of the session first.
         let old = {
             let mut m = self.sessions.m.lock().unwrap();
@@ -223,11 +260,12 @@ impl Server {
         let started = async {
             let mut g = self.dbs.lock(db).await;
             let (snap, seq) = g.begin_snapshot().await?;
+            let opening = g.opening;
             let mut w = Writes::new();
             w.snap_seq = Some(seq);
             let id = self.next_txn_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             w.txn_id = Some(id);
-            Ok::<_, MongoError>(Txn { id, lsid_doc: tc.lsid_doc.clone(), db: db.to_string(), number: tc.number, w, snap, seq, started: Instant::now() })
+            Ok::<_, MongoError>(Txn { id, lsid_doc: tc.lsid_doc.clone(), db: db.to_string(), number: tc.number, w, snap, seq, started: Instant::now(), opening })
         }
         .await;
         match started {
@@ -340,9 +378,24 @@ impl Server {
         let hinted = if writes { self.txn_hint(&tc.lsid, &txn.db).await } else { Ok(()) };
         let db = txn.db.clone();
         let mut g = self.dbs.lock(&db).await;
+        // the database must still be in the opening the snapshot was taken in (C12), now and when the batch is applied
+        let reopened = if hinted.is_ok() {
+            match g.current_opening().await {
+                Ok(crate::dbs::Opening::Open(n)) => Ok(n != txn.opening),
+                Ok(crate::dbs::Opening::Absent) => Ok(true),
+                Err(e) => Err(MongoError::from(e)),
+            }
+        } else {
+            Ok(false)
+        };
+        g.require_opening = Some(crate::dbs::Opening::Open(txn.opening));
         let conflict = txn.w.ov.keys().any(|k| g.modified_after(k, txn.seq));
         let result = if let Err(e) = hinted {
             Err(e)
+        } else if let Err(e) = reopened {
+            Err(e)
+        } else if matches!(reopened, Ok(true)) {
+            Err(moved(txn.number))
         } else if conflict {
             Err(MongoError::write_conflict())
         } else {
