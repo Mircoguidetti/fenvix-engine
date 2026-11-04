@@ -1168,7 +1168,12 @@ pub(crate) async fn compact_tenant_pass(
     let warm_from = if warm {
         let writer = WRITER_DBS.lock().unwrap().get(id).cloned();
         match (writer, shared_cache(), writer_scope(id)) {
-            (Some(db), Some(cache), Some(scope)) => Some((cache, scope, crate::warm::before(&db.manifest()))),
+            (Some(db), Some(cache), Some(scope)) => {
+                let before = crate::warm::before(&db.manifest());
+                // The warm-up gives way to the writer's flushes before its L0 is full (C9 review, E1).
+                let watch = crate::warm::L0Watch { db, stop_at: writer_settings().l0_max_ssts.saturating_sub(1).max(1) };
+                Some((cache, scope, before, watch))
+            }
             _ => None,
         }
     } else {
@@ -1249,19 +1254,22 @@ pub(crate) async fn compact_tenant_pass(
     COMPACTED.lock().unwrap().insert(id.to_string());
     COMPACTED_SINCE_FULL.lock().unwrap().insert(id.to_string());
     // Before the writer switches to the new manifest, its cache gets the new blocks that replace the ones it had (`warm.rs`).
-    // Bounded: past `COMPACTION_WARM_MS` the warm-up stops where it is (what it read stays in the cache, its reader is
-    // closed) and the writer switches anyway; on an error the reads not warmed miss, as without it.
-    let mut consumed = Vec::new();
-    if let Some((cache, scope, before)) = &warm_from {
+    // Bounded: past `COMPACTION_WARM_MS`, or once the writer's L0 is one SST from full, the warm-up stops where it is (what
+    // it read stays in the cache, its reader is closed) and the writer switches anyway; on an error the reads not warmed
+    // miss, as without it.
+    if let Some((cache, scope, before, watch)) = &warm_from {
         let limit = Duration::from_millis(crate::warm::COMPACTION_WARM_MS.load(std::sync::atomic::Ordering::Relaxed));
-        match crate::warm::warm_compaction_output(&cleanup_store, &tenant_path(id), cache, *scope, before, limit).await {
-            Ok((c, rec)) => {
-                consumed = c;
+        let watch = crate::warm::COMPACTION_WARM_L0_WATCH.load(std::sync::atomic::Ordering::Relaxed).then_some(watch);
+        match crate::warm::warm_compaction_output(&cleanup_store, &tenant_path(id), cache, *scope, before, limit, watch).await {
+            Ok(rec) => {
                 if rec.timed_out {
                     eprintln!(
                         "compaction warm-up of tenant {id}: stopped after {limit:?} ({} of {} reads done; reader open at {:.2} s, hot keys at {:.2} s, plan at {:.2} s)",
                         rec.calls_done, rec.calls, rec.secs_open, rec.secs_hot, rec.secs_plan
                     );
+                }
+                if rec.l0_stopped {
+                    eprintln!("compaction warm-up of tenant {id}: stopped at {:.2} s, the writer's L0 is one SST from full ({} of {} reads done)", rec.secs, rec.calls_done, rec.calls);
                 }
             }
             Err(e) => {
@@ -1276,8 +1284,11 @@ pub(crate) async fn compact_tenant_pass(
     if let Some(db) = writer {
         let refreshed = db.refresh_manifest().await.is_ok();
         // The consumed SSTs are no longer in the writer's manifest: their blocks would only age out of the cache.
-        if refreshed && !consumed.is_empty() {
-            crate::warm::evict_consumed(&db, &consumed).await;
+        if let (true, Some((_, _, before, _))) = (refreshed, &warm_from) {
+            let consumed = before.consumed(&db.manifest());
+            if !consumed.is_empty() {
+                crate::warm::evict_consumed(&db, &consumed).await;
+            }
         }
     }
     anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");

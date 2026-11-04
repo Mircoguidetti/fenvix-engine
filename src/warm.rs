@@ -31,8 +31,10 @@
 
 use anyhow::Result;
 use bytes::Bytes;
+use futures::stream::BoxStream;
 use futures::StreamExt;
-use object_store::ObjectStore;
+use object_store::path::Path;
+use object_store::{CopyOptions, GetOptions, GetResult, ListResult, MultipartUpload, ObjectMeta, ObjectStore, PutMultipartOptions, PutOptions, PutPayload, PutResult};
 use slatedb::config::DbReaderOptions;
 use slatedb::db_cache::{CachedEntry, CachedKey, DbCache};
 use slatedb::manifest::{SsTableHandle, SsTableId};
@@ -51,7 +53,7 @@ pub static COMPACTION_WARM: AtomicBool = AtomicBool::new(true);
 pub static COMPACTION_WARM_MS: AtomicU64 = AtomicU64::new(3000);
 /// Warm-up requests in flight at once (`--compaction-warm-concurrency`). slatedb's `warm_sst` reads the ranges of one
 /// call one after the other, so the parallelism is the number of calls in flight (C8: at most 8 calls, one per SST, gave
-/// about 2 GETs at a time). 128 calls at about 40 ms per GET stay under S3's 5,500 GET/s per prefix.
+/// about 2 GETs at a time). Per warm-up; the rate of all warm-ups together is `COMPACTION_WARM_GETS_PER_SEC`.
 pub static COMPACTION_WARM_CONCURRENCY: AtomicU64 = AtomicU64::new(128);
 /// Most bytes of hot keys one warm-up keeps in memory (`--compaction-warm-max-key-mb`). Past it the remaining hot blocks
 /// are not warmed (counted in `WARM_TRUNCATED`): a part of the hot set is warmed instead of none.
@@ -60,6 +62,16 @@ pub static COMPACTION_WARM_MAX_KEY_BYTES: AtomicU64 = AtomicU64::new(32 << 20);
 pub static COMPACTION_WARM_MAX_RANGES: AtomicU64 = AtomicU64::new(200_000);
 /// Data ranges per `warm_sst` call: a call reads its ranges one after the other, calls run in parallel. Tests change it.
 pub static RANGES_PER_CALL: AtomicU64 = AtomicU64::new(2);
+/// Most warm-up GETs per second for the whole process, all warm-ups together (`--compaction-warm-gets-per-sec`, 0 = no
+/// limit). C9 review (E2): 128 calls per warm-up at 20 ms per GET are 6,400 GETs/s for one database and 12,265 for the
+/// two passes the maintenance runs at once, over S3's 5,500 GET/s of one partition; a new bucket can hold every
+/// database's prefix in one partition. One shared token bucket keeps all warm-ups under this rate.
+pub static COMPACTION_WARM_GETS_PER_SEC: AtomicU64 = AtomicU64::new(3000);
+/// The warm-up stops when the writer's L0 is one SST from full (C9 review, E1). Only tests turn it off, to measure the
+/// version without it.
+pub static COMPACTION_WARM_L0_WATCH: AtomicBool = AtomicBool::new(true);
+/// Writer L0 polling period during a warm-up (C9 review, E1).
+const L0_POLL: Duration = Duration::from_millis(25);
 /// Longest wait for the warm-up reader to close (it has no work left once the warm-up is over).
 const READER_CLOSE_LIMIT: Duration = Duration::from_secs(5);
 /// Totals: warm-ups run, hot blocks found in the consumed SSTs, hot ranges warmed, warm-ups failed, warm-ups stopped by
@@ -71,6 +83,97 @@ pub static WARM_FAILS: AtomicU64 = AtomicU64::new(0);
 pub static WARM_TIMEOUTS: AtomicU64 = AtomicU64::new(0);
 pub static WARM_TRUNCATED: AtomicU64 = AtomicU64::new(0);
 pub static WARM_READERS_OPEN: AtomicU64 = AtomicU64::new(0);
+/// Warm-ups stopped (or not started) because the writer's L0 reached `l0_max_ssts - 1`, and warm-up GETs that waited
+/// for the shared rate limit.
+pub static WARM_L0_STOPS: AtomicU64 = AtomicU64::new(0);
+pub static WARM_THROTTLED: AtomicU64 = AtomicU64::new(0);
+
+/// The open writer whose L0 bounds a warm-up (C9 review, E1). Until the writer switches to the new manifest it still
+/// counts the L0 SSTs the pass consumed, and once its L0 reaches `l0_max_ssts` its memtable flushes stop (and then its
+/// writes, past `max_unflushed_bytes`). The warm-up does not start when the writer's L0 is at `stop_at` already, and
+/// stops where it is as soon as it gets there, so the writer switches before its flushes block.
+pub struct L0Watch {
+    pub db: Db,
+    /// `l0_max_ssts - 1`.
+    pub stop_at: usize,
+}
+
+impl L0Watch {
+    fn full(&self) -> bool {
+        self.db.manifest().l0().len() >= self.stop_at
+    }
+    /// Resolves once the writer's L0 is at `stop_at` (never without a watch).
+    async fn filled(w: Option<&L0Watch>) {
+        let Some(w) = w else { return std::future::pending().await };
+        while !w.full() {
+            tokio::time::sleep(L0_POLL).await;
+        }
+    }
+}
+
+/// The shared token bucket of the warm-up GETs (GCRA: each GET takes the next free slot of `1 / rate`; at most
+/// `rate / 20` can go at once after an idle time). A slot taken by a GET whose warm-up was stopped is lost: at most the
+/// calls in flight, a few tens of milliseconds at the default rate.
+static BUCKET: std::sync::Mutex<Option<tokio::time::Instant>> = std::sync::Mutex::new(None);
+
+async fn take_token() {
+    let rate = COMPACTION_WARM_GETS_PER_SEC.load(Relaxed);
+    if rate == 0 {
+        return;
+    }
+    let step = Duration::from_secs_f64(1.0 / rate as f64);
+    let burst = step * (rate as u32 / 20).max(1);
+    let now = tokio::time::Instant::now();
+    let at = {
+        let mut next = BUCKET.lock().unwrap();
+        let at = next.map_or(now, |n| n.max(now.checked_sub(burst).unwrap_or(now)));
+        *next = Some(at + step);
+        at
+    };
+    if at > now {
+        WARM_THROTTLED.fetch_add(1, Relaxed);
+        tokio::time::sleep_until(at).await;
+    }
+}
+
+/// The object store of the warm-up: every GET (and HEAD) waits for the shared token bucket first.
+#[derive(Debug)]
+struct Throttled(Arc<dyn ObjectStore>);
+
+impl std::fmt::Display for Throttled {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Throttled({})", self.0)
+    }
+}
+
+#[async_trait::async_trait]
+impl ObjectStore for Throttled {
+    async fn put_opts(&self, l: &Path, p: PutPayload, o: PutOptions) -> object_store::Result<PutResult> {
+        self.0.put_opts(l, p, o).await
+    }
+    async fn put_multipart_opts(&self, l: &Path, o: PutMultipartOptions) -> object_store::Result<Box<dyn MultipartUpload>> {
+        self.0.put_multipart_opts(l, o).await
+    }
+    async fn get_opts(&self, l: &Path, o: GetOptions) -> object_store::Result<GetResult> {
+        take_token().await;
+        self.0.get_opts(l, o).await
+    }
+    fn delete_stream(&self, s: BoxStream<'static, object_store::Result<Path>>) -> BoxStream<'static, object_store::Result<Path>> {
+        self.0.delete_stream(s)
+    }
+    fn list(&self, p: Option<&Path>) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        self.0.list(p)
+    }
+    fn list_with_offset(&self, p: Option<&Path>, o: &Path) -> BoxStream<'static, object_store::Result<ObjectMeta>> {
+        self.0.list_with_offset(p, o)
+    }
+    async fn list_with_delimiter(&self, p: Option<&Path>) -> object_store::Result<ListResult> {
+        self.0.list_with_delimiter(p).await
+    }
+    async fn copy_opts(&self, f: &Path, t: &Path, o: CopyOptions) -> object_store::Result<()> {
+        self.0.copy_opts(f, t, o).await
+    }
+}
 
 /// The block-cache key of block `offset` of SST `id` under `scope`. slatedb keeps the fields of `CachedKey` private and
 /// builds keys only for its own scope; its serialized form (`db_cache/serde.rs`, for disk caches) is public and stable:
@@ -150,6 +253,14 @@ pub fn before(m: &VersionedManifest) -> Before {
     Before { ssts: m.all_sst_views().map(|v| (v.sst.id, v.sst.clone())).collect() }
 }
 
+impl Before {
+    /// The SSTs the writer had and `m` (its manifest after the switch) no longer has: their blocks can be evicted.
+    pub fn consumed(&self, m: &VersionedManifest) -> Vec<SsTableHandle> {
+        let now: HashSet<SsTableId> = m.all_sst_views().map(|v| v.sst.id).collect();
+        self.ssts.iter().filter(|(id, _)| !now.contains(id)).map(|(_, h)| h.clone()).collect()
+    }
+}
+
 /// Memory one kept key costs, besides its bytes (the `Bytes` handle and its allocation).
 const KEY_OVERHEAD: usize = 48;
 
@@ -161,7 +272,7 @@ async fn hot_keys(reader: &SstReader, cache: &Arc<dyn DbCache>, scope: u64, cons
     let mut keys = Vec::new();
     let mut hot = 0u64;
     let mut bytes = 0usize;
-    'ssts: for h in consumed {
+    for h in consumed {
         let file = reader.open_with_handle(h.clone())?;
         let index = file.index().await?;
         for i in 0..index.len() {
@@ -186,7 +297,8 @@ async fn hot_keys(reader: &SstReader, cache: &Arc<dyn DbCache>, scope: u64, cons
                 keys.dedup();
                 bytes = keys.iter().map(|k| k.len() + KEY_OVERHEAD).sum();
                 if bytes > max_bytes {
-                    break 'ssts;
+                    // the rest of the hot blocks is left out: a part of the hot set (C9 review: this exit did not say so)
+                    return Ok((keys, hot, true));
                 }
             }
         }
@@ -268,26 +380,52 @@ pub struct WarmRecord {
     pub timed_out: bool,
     /// The key-bytes or the range limit left a part of the hot set out.
     pub truncated: bool,
+    /// The writer's L0 reached `l0_max_ssts - 1`: the warm-up stopped (or did not start) so the writer can switch.
+    pub l0_stopped: bool,
     /// Time to open the reader, to find the hot keys, to plan the reads (new indexes), and in total.
     pub secs_open: f64,
     pub secs_hot: f64,
     pub secs_plan: f64,
+    /// Time to close the reader.
+    pub secs_close: f64,
     pub secs: f64,
 }
 
 /// Warm, under `scope`, the new SSTs of the latest manifest of the database at `path` (those not in `before`) for the hot
-/// keys of the SSTs `before` had and the latest manifest no longer has, for at most `limit`. Returns the consumed SSTs (to
-/// evict once the writer has switched) and what was done. Past `limit` the warm-up stops where it is and still returns
-/// (`timed_out`); its reader is closed in every case before this returns.
-pub async fn warm_compaction_output(store: &Arc<dyn ObjectStore>, path: &str, cache: &Arc<dyn DbCache>, scope: u64, before: &Before, limit: Duration) -> Result<(Vec<SsTableHandle>, WarmRecord)> {
+/// keys of the SSTs `before` had and the latest manifest no longer has, for at most `limit`, and only while the writer of
+/// `watch` has room in L0. Returns what was done. Past `limit`, or once the writer's L0 is at `watch.stop_at`, the warm-up
+/// stops where it is and still returns (`timed_out`, `l0_stopped`); it does not start when that L0 is there already. Its
+/// reader is closed in every case before this returns. Every GET of the warm-up waits for the process-wide token bucket
+/// (`COMPACTION_WARM_GETS_PER_SEC`).
+pub async fn warm_compaction_output(store: &Arc<dyn ObjectStore>, path: &str, cache: &Arc<dyn DbCache>, scope: u64, before: &Before, limit: Duration, watch: Option<&L0Watch>) -> Result<WarmRecord> {
     let t0 = Instant::now();
     let deadline = tokio::time::Instant::now() + limit;
+    if watch.is_some_and(L0Watch::full) {
+        // The writer's flushes are about to block on its L0: it switches now, nothing is warmed.
+        WARM_L0_STOPS.fetch_add(1, Relaxed);
+        WARM_RUNS.fetch_add(1, Relaxed);
+        return Ok(WarmRecord { l0_stopped: true, ..Default::default() });
+    }
+    let store: Arc<dyn ObjectStore> = Arc::new(Throttled(Arc::clone(store)));
+    let store = &store;
     let mut o = DbReaderOptions::default();
     o.skip_wal_replay = true;
     o.manifest_poll_interval = Duration::from_secs(3600);
     let build = DbReader::builder(path.to_string(), Arc::clone(store)).with_reader_mode(DbReaderMode::FollowLatest).with_options(o).with_db_cache(Arc::clone(cache), scope).build();
-    let reader = match tokio::time::timeout_at(deadline, build).await {
-        Ok(r) => Arc::new(r?),
+    let opened = tokio::time::timeout_at(deadline, async {
+        tokio::select! {
+            r = build => Some(r),
+            _ = L0Watch::filled(watch) => None,
+        }
+    })
+    .await;
+    let reader = match opened {
+        Ok(Some(r)) => Arc::new(r?),
+        Ok(None) => {
+            WARM_L0_STOPS.fetch_add(1, Relaxed);
+            WARM_RUNS.fetch_add(1, Relaxed);
+            return Ok(WarmRecord { l0_stopped: true, secs: t0.elapsed().as_secs_f64(), ..Default::default() });
+        }
         Err(_) => {
             WARM_TIMEOUTS.fetch_add(1, Relaxed);
             anyhow::bail!("warm-up reader not open after {limit:?}")
@@ -378,8 +516,16 @@ pub async fn warm_compaction_output(store: &Arc<dyn ObjectStore>, path: &str, ca
         }
         Ok::<_, anyhow::Error>(())
     };
-    // The limit stops the work where it is: the calls in flight are dropped, the blocks already read stay in the cache.
-    let outcome = tokio::time::timeout_at(deadline, work).await;
+    // The limit, or the writer's L0, stops the work where it is: the calls in flight are dropped, the blocks already read
+    // stay in the cache.
+    let outcome = tokio::time::timeout_at(deadline, async {
+        tokio::select! {
+            r = work => Some(r),
+            _ = L0Watch::filled(watch) => None,
+        }
+    })
+    .await;
+    let t_close = Instant::now();
     // Close the reader in every case (its manifest poller is a background task of its own).
     match tokio::time::timeout(READER_CLOSE_LIMIT, reader.close()).await {
         Ok(_) => {
@@ -388,8 +534,13 @@ pub async fn warm_compaction_output(store: &Arc<dyn ObjectStore>, path: &str, ca
         Err(_) => eprintln!("compaction warm-up of {path}: reader not closed after {READER_CLOSE_LIMIT:?}"),
     }
     drop(reader);
+    rec.secs_close = t_close.elapsed().as_secs_f64();
     match outcome {
-        Ok(r) => r?,
+        Ok(Some(r)) => r?,
+        Ok(None) => {
+            rec.l0_stopped = true;
+            WARM_L0_STOPS.fetch_add(1, Relaxed);
+        }
         Err(_) => {
             rec.timed_out = true;
             WARM_TIMEOUTS.fetch_add(1, Relaxed);
@@ -402,7 +553,7 @@ pub async fn warm_compaction_output(store: &Arc<dyn ObjectStore>, path: &str, ca
     WARM_RUNS.fetch_add(1, Relaxed);
     WARM_HOT_BLOCKS.fetch_add(rec.hot_blocks, Relaxed);
     WARM_RANGES.fetch_add(rec.ranges as u64, Relaxed);
-    Ok((consumed, rec))
+    Ok(rec)
 }
 
 /// Drop from the writer's cache the entries of SSTs it no longer reads (call after it switched to the new manifest).
@@ -1027,6 +1178,13 @@ mod tests {
         fn env<T: std::str::FromStr>(k: &str, d: T) -> T {
             std::env::var(k).ok().and_then(|v| v.parse().ok()).unwrap_or(d)
         }
+        /// C11: `RC9_PRIMA=1` misura la versione di prima (C9): niente guardia sulle L0 del cameriere, niente tetto al ritmo.
+        fn prima() {
+            if env("RC9_PRIMA", 0u8) == 1 {
+                COMPACTION_WARM_L0_WATCH.store(false, Relaxed);
+                COMPACTION_WARM_GETS_PER_SEC.store(0, Relaxed);
+            }
+        }
         fn val(i: usize, len: usize, version: u8) -> Vec<u8> {
             (0..len).map(|j| (i.wrapping_mul(31).wrapping_add(j * 7) as u8) ^ version).collect()
         }
@@ -1059,6 +1217,7 @@ mod tests {
         }
 
         async fn prepare(id: &str, n: usize, vlen: usize, hot: Hot) -> Prepared {
+            prima();
             crate::lifecycle::L0_SST_BYTES_OVERRIDE.store(1 << 30, Relaxed);
             crate::lifecycle::L0_MAX_SSTS_OVERRIDE.store(env("RC9_L0MAX", 64), Relaxed);
             crate::lifecycle::MEMTABLE_MAX_BYTES.store(1 << 30, Relaxed);
@@ -1324,6 +1483,8 @@ mod tests {
             let flush_ms: u64 = env("RC9_FLUSH_MS", 500);
             let n: usize = env("RC9_KEYS", 200_000);
             let rounds: usize = env("RC9_ROUNDS", 2);
+            // C11: lo scarico L0 più lento di ogni giro, senza e con riscaldamento
+            let mut slowest: Vec<(usize, bool, f64)> = Vec::new();
             for round in 0..rounds {
                 for warm in [false, true] {
                     let probe = Arc::new(Probe::default());
@@ -1398,10 +1559,14 @@ mod tests {
                         })
                     };
                     let o = pass(&p, &probe, delay, false, warm).await;
+                    let tend = Instant::now();
                     let n1 = lats.lock().unwrap().len();
-                    let fl: Vec<u64> = flat.lock().unwrap().iter().filter(|(t, _)| *t >= tp).map(|(_, d)| *d).collect();
                     let l0_end_pass = p.db.manifest().l0().len();
                     tokio::time::sleep(Duration::from_millis(500)).await;
+                    // C11: gli scarichi che si sovrappongono al lavaggio, letti dopo l'attesa, così conta anche quello rimasto
+                    // fermo sulle L0 piene fino al cambio del foglio (prima si leggevano subito alla fine del lavaggio e quello
+                    // non era ancora finito: senza riscaldamento il più lento risultava spesso 1 ms).
+                    let fl: Vec<u64> = flat.lock().unwrap().iter().filter(|(t, d)| *t <= tend && *t + Duration::from_micros(*d) >= tp).map(|(_, d)| *d).collect();
                     stop.store(true, Relaxed);
                     w.await.unwrap();
                     r.await.unwrap();
@@ -1426,7 +1591,19 @@ mod tests {
                         fl.iter().max().copied().unwrap_or(0) as f64 / 1000.0
                     );
                     assert_eq!(stale.load(Relaxed), 0, "una lettura vecchia");
+                    slowest.push((round, warm, fl.iter().max().copied().unwrap_or(0) as f64 / 1000.0));
                     close(p).await;
+                }
+            }
+            // C11 (E1): con `RC9_FLUSH_GAP_MS` il test fallisce se in un giro lo scarico più lento con riscaldamento supera
+            // quello senza di più di tanto (la prova che decide: 500 ms con `RC9_L0MAX=8 RC9_FLUSH_MS=250`).
+            let gap: Option<f64> = std::env::var("RC9_FLUSH_GAP_MS").ok().and_then(|v| v.parse().ok());
+            for round in 0..rounds {
+                let get = |w: bool| slowest.iter().find(|(r, x, _)| *r == round && *x == w).map_or(0.0, |s| s.2);
+                let (off, on) = (get(false), get(true));
+                println!("RC9 switch giro {round}: scarico piu' lento senza {off:.0} ms, con {on:.0} ms, differenza {:.0} ms", on - off);
+                if let Some(g) = gap {
+                    assert!(on <= off + g, "giro {round}: lo scarico piu' lento con riscaldamento ({on:.0} ms) supera quello senza ({off:.0} ms) di piu' di {g} ms");
                 }
             }
         }

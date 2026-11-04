@@ -49,6 +49,20 @@ GET 20 ms slower: 45.5% of the hot reads served after the pass, and the pass 22.
 
 Test: `warm::tests::big_db_slow_store` (ignored by default, run with `--ignored`).
 
+## Giving way to the writer and to S3 (C11, after the C9 review)
+
+* **The writer's L0 first (E1).** Until the writer switches to the new manifest it still counts the L0 SSTs the pass
+  consumed; at `l0_max_ssts` (8 in production) its memtable flushes stop, and past `max_unflushed_bytes` its writes. The
+  C9 review measured the slowest L0 flush during a pass at about 5 s with the warm-up against about 2 s without
+  (`rev_c9::writes_during_slow_warm`, `RC9_L0MAX=8 RC9_FLUSH_MS=250`). Now the warm-up watches the writer's L0
+  (`Db::manifest().l0()`, every 25 ms): it does not start when the L0 is at `l0_max_ssts - 1` already and stops where it
+  is as soon as it gets there; the writer then switches at once. Counted in `compactionWarm.l0Stops`.
+* **One rate for the whole process (E2).** 128 calls per warm-up are 6,400 GETs/s at 20 ms per GET, 12,000 with the two
+  passes the maintenance runs at once, over S3's 5,500 GET/s of one partition (a new bucket can hold every database's
+  prefix in one partition). Every GET of every warm-up now takes a slot of one shared token bucket,
+  `--compaction-warm-gets-per-sec` (3000, 0 = no limit; at most 1/20 of a second of slots at once after an idle time).
+  Waits are counted in `compactionWarm.throttled`. The compactor's own GETs are not in the bucket.
+
 ## Limits
 
 * The warm-up reads from object storage the blocks the reads would have read: it moves the GETs off the read path, it does
