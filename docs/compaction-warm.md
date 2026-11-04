@@ -62,6 +62,11 @@ Test: `warm::tests::big_db_slow_store` (ignored by default, run with `--ignored`
   prefix in one partition). Every GET of every warm-up now takes a slot of one shared token bucket,
   `--compaction-warm-gets-per-sec` (3000, 0 = no limit; at most 1/20 of a second of slots at once after an idle time).
   Waits are counted in `compactionWarm.throttled`. The compactor's own GETs are not in the bucket.
+* Measured (C11, in-memory store, GETs 20-40 ms slower): the slowest L0 flush during a pass with `l0_max_ssts` 8 and a
+  flush every 250 ms is now within 0.22 s of the pass without warm-up in 6 rounds out of 6 (about 3 s more before); two
+  passes of 400 MB at once make at most 3,148 GETs in one second (11,899 before), and warm about half of their hot set
+  (3 s at 3,000 GETs/s is about 9,000 GETs for both); the 200 MB pass of `big_db_slow_store` still warms 100%, 1.6-1.7 s
+  longer than without.
 
 ## Limits
 
