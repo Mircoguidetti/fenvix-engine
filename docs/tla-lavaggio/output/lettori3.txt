@@ -1,0 +1,38 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=34575 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+TLC2 Version 2026.11.02.164701 (rev: dc6a944)
+Running breadth-first search Model-Checking with fp 99 and seed 2341477175976335487 with 4 workers on 4 cores with 9102MB heap and 64MB offheap memory [pid: 5549] (Linux 6.18.44-fc-v230 amd64, Ubuntu 21.0.12.1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/user/fenvix-engine/docs/tla-lavaggio/LavaggioPerCliente.tla
+Parsing file /tmp/tlc-1292843109523968257/Naturals.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-1292843109523968257/FiniteSets.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-1292843109523968257/TLC.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-1292843109523968257/_TLCTrace.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/_TLCTrace.tla)
+Parsing file /tmp/tlc-1292843109523968257/Sequences.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-1292843109523968257/TLCExt.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/TLCExt.tla)
+Parsing file /tmp/tlc-1292843109523968257/Integers.tla (jar:file:/home/user/tlatools/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Integers
+Semantic processing of module TLCExt
+Semantic processing of module _TLCTrace
+Semantic processing of module LavaggioPerCliente
+Linting of module TLCExt
+Linting of module _TLCTrace
+Linting of module LavaggioPerCliente
+Starting... (2026-11-03 15:38:03)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-03 15:38:04.
+Progress(11) at 2026-11-03 15:38:07: 42,611 states generated (42,611 s/min), 22,603 distinct states found (22,603 ds/min), 11,602 states left on queue.
+Progress(20) at 2026-11-03 15:39:07: 3,272,765 states generated (3,230,154 s/min), 1,285,575 distinct states found (1,262,972 ds/min), 289,853 states left on queue.
+Progress(24) at 2026-11-03 15:40:07: 6,952,138 states generated (3,679,373 s/min), 2,529,422 distinct states found (1,243,847 ds/min), 330,859 states left on queue.
+Progress(29) at 2026-11-03 15:41:07: 10,807,058 states generated (3,854,920 s/min), 3,714,025 distinct states found (1,184,603 ds/min), 187,111 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 2.1E-6
+  based on the actual fingerprints:  val = 2.2E-6
+13365327 states generated, 4446591 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 48.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 7 and the 95th percentile is 3).
+Finished in 03min 42s at (2026-11-03 15:41:46)
