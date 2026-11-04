@@ -712,7 +712,7 @@ impl Server {
             v
         });
         if let Some(b) = &rr {
-            b.run.stage(&mut w, &b.key);
+            b.run.stage(&mut g, &mut w, &b.key);
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
         self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
@@ -821,7 +821,7 @@ impl Server {
             v
         });
         if let Some(b) = &rr {
-            b.run.stage(&mut w, &b.key);
+            b.run.stage(&mut g, &mut w, &b.key);
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
         self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
@@ -948,7 +948,7 @@ impl Server {
                     w.delete(&mut g, db, coll, &indexes, &old).await?;
                     if let Some(b) = rr.as_mut() {
                         b.run.record(0, doc! { "t": "f", "lo": { "n": 1 }, "v": old.clone() });
-                        b.run.stage(&mut w, &b.key);
+                        b.run.stage(&mut g, &mut w, &b.key);
                         w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
                     }
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
@@ -968,7 +968,7 @@ impl Server {
                     w.put(&mut g, coll, &ns, &mut indexes, &new, Some(&old)).await?;
                     if let Some(b) = rr.as_mut() {
                         b.run.record(0, doc! { "t": "f", "lo": { "n": 1, "updatedExisting": true }, "v": if want_new { new.clone() } else { old.clone() } });
-                        b.run.stage(&mut w, &b.key);
+                        b.run.stage(&mut g, &mut w, &b.key);
                         w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
                     }
                     self.commit(&mut g, coll, w, &indexes, None, tx).await?;
@@ -1000,7 +1000,7 @@ impl Server {
                         d.insert("v", nd.clone());
                     }
                     b.run.record(0, d);
-                    b.run.stage(&mut w, &b.key);
+                    b.run.stage(&mut g, &mut w, &b.key);
                     w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
                 }
                 self.commit(&mut g, coll, w, &indexes, new_coll, tx).await?;
@@ -1065,7 +1065,7 @@ impl Server {
             }
         }
         if let Some(b) = &rr {
-            b.run.stage(&mut w, &b.key);
+            b.run.stage(&mut g, &mut w, &b.key);
             w.extra.extend(self.session_sweep_ops(&mut g, db, &b.key).await);
         }
         self.commit(&mut g, coll, w, &indexes, None, tx).await?;

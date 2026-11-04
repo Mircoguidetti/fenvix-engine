@@ -96,7 +96,12 @@ pub struct Sess {
     /// The current number belongs to a multi-document transaction, not to a retryable write.
     txn: bool,
     last: i64,
-    loaded: bool,
+    /// The database the current number belongs to (`None`: no number, or not known).
+    src: Option<String>,
+    /// For each database the session was used in: the opening of the database whose records this memory includes (C12).
+    /// A database opened again since (another process may have owned it and written the session's records there) is read
+    /// again on the next use of the session in it; one that stayed open is not.
+    seen: HashMap<String, crate::dbs::Opening>,
     ins: BTreeSet<i32>,
     stmts: BTreeMap<i32, Document>,
     /// The commit of the batch that last wrote this record, until it is known durable: a retry answered from the record
@@ -106,7 +111,64 @@ pub struct Sess {
 
 impl Sess {
     fn new() -> Self {
-        Sess { number: -1, txn: false, last: now_ms(), loaded: false, ins: BTreeSet::new(), stmts: BTreeMap::new(), durable: None }
+        Sess { number: -1, txn: false, last: now_ms(), src: None, seen: HashMap::new(), ins: BTreeSet::new(), stmts: BTreeMap::new(), durable: None }
+    }
+
+    /// Merge what `db` stores of the session (its retryable-write record and its transaction outcome) into this memory.
+    /// If the memory's current number came from `db`, the database is the authority (what this process wrote there and
+    /// was not made durable is not there, what another owner wrote is); otherwise a higher stored number replaces the
+    /// memory's, and the same retryable write keeps the statements of both. The session's last use is the latest of the
+    /// two, and a session idle past the TTL is forgotten afterwards ([`Server::session_load`]): a stored number that expired
+    /// is not taken with the time of the read (C10 review, section 6: an expired outcome alone gave its number to a fresh
+    /// session).
+    fn merge_stored(&mut self, db: &str, rec: Option<bytes::Bytes>, outcome: Option<bytes::Bytes>) {
+        let mut number = -1i64;
+        let mut txn = false;
+        let mut last = 0i64;
+        let mut ins = BTreeSet::new();
+        let mut stmts = BTreeMap::new();
+        if let Some(d) = rec.and_then(|b| Document::from_reader(&b[..]).ok()) {
+            number = d.get_i64("number").unwrap_or(-1);
+            txn = d.get_bool("txn").unwrap_or(false);
+            last = d.get_i64("last").unwrap_or(0);
+            ins = d.get_array("ins").map(|a| a.iter().filter_map(|x| if let Bson::Int32(i) = x { Some(*i) } else { None }).collect()).unwrap_or_default();
+            for e in d.get_array("stmts").into_iter().flatten() {
+                if let Bson::Document(e) = e {
+                    if let Ok(id) = e.get_i32("id") {
+                        let mut e = e.clone();
+                        e.remove("id");
+                        stmts.insert(id, e);
+                    }
+                }
+            }
+        }
+        // a transaction committed after the latest retryable write: the session's number is the transaction's
+        if let Some(d) = outcome.and_then(|b| Document::from_reader(&b[..]).ok()) {
+            let n = d.get_i64("number").unwrap_or(-1);
+            if n > number {
+                number = n;
+                txn = true;
+                ins.clear();
+                stmts.clear();
+            }
+            last = last.max(d.get_i64("last").unwrap_or(0));
+        }
+        let from_here = self.src.as_deref() == Some(db);
+        if from_here || number > self.number {
+            // the memory's last use counts only for the same number, or for a number of another database
+            let last = if self.number >= 0 && (!from_here || number == self.number) { self.last.max(last) } else { last };
+            self.reset(number, txn);
+            self.ins = ins;
+            self.stmts = stmts;
+            self.src = (number >= 0).then(|| db.to_string());
+            self.last = last;
+        } else if number == self.number && !txn && !self.txn {
+            self.ins.extend(ins);
+            for (id, d) in stmts {
+                self.stmts.entry(id).or_insert(d);
+            }
+            self.last = self.last.max(last);
+        }
     }
 
     fn reset(&mut self, number: i64, txn: bool) {
@@ -254,6 +316,8 @@ pub struct Run {
     /// Statement ids answered from the record.
     pub retried: Vec<i32>,
     dirty: bool,
+    /// The opening of the database that the session's memory was checked against (C12).
+    opening: crate::dbs::Opening,
 }
 
 impl Run {
@@ -285,8 +349,11 @@ impl Run {
         Bson::Array(self.retried.iter().map(|x| Bson::Int32(*x)).collect())
     }
 
-    /// Put the session's record into the batch that applies the statements.
-    pub fn stage(&self, w: &mut Writes, key: &str) {
+    /// Put the session's record into the batch that applies the statements. The batch is refused if the database was
+    /// opened again since the session's memory was checked against it (C12: another process may have run the same
+    /// statements meanwhile).
+    pub fn stage(&self, g: &mut crate::dbs::Entry, w: &mut Writes, key: &str) {
+        g.require_opening = Some(self.opening);
         if self.new_ins.is_empty() && self.new_stmts.is_empty() && !self.dirty {
             return;
         }
@@ -350,7 +417,7 @@ impl Server {
         let lsid = cmd.get_document("lsid").cloned().unwrap_or_default();
         let sess = self.session_entry(&key);
         let mut guard = sess.lock_owned().await;
-        self.session_load(&mut guard, db, &key).await?;
+        let opening = self.session_load(&mut guard, db, &key).await?;
         let mut dirty = false;
         if number < guard.number {
             return Err(too_old(number, &lsid, guard.number, guard.txn));
@@ -360,6 +427,7 @@ impl Server {
         }
         if number > guard.number {
             guard.reset(number, false);
+            guard.src = Some(db.to_string());
             dirty = true;
         }
         // a retry of the current write: what it answers from the record must be durable first, as on mongod, where the
@@ -374,7 +442,7 @@ impl Server {
             }
         }
         guard.last = now_ms();
-        Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty }, key }))
+        Ok(Some(Begun { run: Run { guard, number, ids, new_ins: Vec::new(), new_stmts: Vec::new(), retried: Vec::new(), dirty, opening }, key }))
     }
 
     fn session_entry(&self, key: &str) -> Arc<AMutex<Sess>> {
@@ -386,42 +454,41 @@ impl Server {
         Arc::clone(m.entry(key.to_string()).or_insert_with(|| Arc::new(AMutex::new(Sess::new()))))
     }
 
-    /// Read the session's record back from the database on first use after a restart; forget an expired one.
-    async fn session_load(&self, s: &mut Sess, db: &str, key: &str) -> R<()> {
-        if !s.loaded {
-            s.loaded = true;
-            let mut g = self.dbs.lock(db).await;
-            let outcome = g.get_live(&outcome_key(key)).await?;
-            if let Some(bytes) = g.get_live(&session_key(key)).await? {
-                if let Ok(d) = Document::from_reader(&bytes[..]) {
-                    s.number = d.get_i64("number").unwrap_or(-1);
-                    s.txn = d.get_bool("txn").unwrap_or(false);
-                    s.last = d.get_i64("last").unwrap_or(0);
-                    s.ins = d.get_array("ins").map(|a| a.iter().filter_map(|x| if let Bson::Int32(i) = x { Some(*i) } else { None }).collect()).unwrap_or_default();
-                    for e in d.get_array("stmts").into_iter().flatten() {
-                        if let Bson::Document(e) = e {
-                            if let Ok(id) = e.get_i32("id") {
-                                let mut e = e.clone();
-                                e.remove("id");
-                                s.stmts.insert(id, e);
-                            }
-                        }
-                    }
+    /// Bring the session's memory up to date with its records in `db`, and forget an expired session. The records are read
+    /// when this memory does not include the current opening of the database: the first use after a restart, the first
+    /// use in that database, or the first use after the database was opened again (C12: before, a session was read once,
+    /// from whichever database came first, and a process trusted that memory after the database had been owned and
+    /// written by another process: a retryable write retried there ran twice). Costs nothing while the database stays
+    /// open: no read, whatever the number of sessions; after a reopening, two point reads at the first use of each session.
+    /// Returns the opening checked against, which the batch of the command must still be in ([`Run::stage`]).
+    async fn session_load(&self, s: &mut Sess, db: &str, key: &str) -> R<crate::dbs::Opening> {
+        // the database is open in the opening this memory already includes: nothing to read, no lock taken (if it is opened
+        // again before the command's batch, the batch is refused, see `Run::stage`)
+        if let Some(n) = self.dbs.opening_hint(db) {
+            if s.seen.get(db) == Some(&crate::dbs::Opening::Open(n)) {
+                if s.number >= 0 && s.last < now_ms() - session_ttl_ms() {
+                    s.reset(-1, false);
+                    s.src = None;
                 }
+                return Ok(crate::dbs::Opening::Open(n));
             }
-            // a transaction committed after the latest retryable write: the session's number is the transaction's
-            if let Some(d) = outcome.and_then(|b| Document::from_reader(&b[..]).ok()) {
-                let (n, last) = (d.get_i64("number").unwrap_or(-1), d.get_i64("last").unwrap_or(0));
-                if n > s.number {
-                    s.reset(n, true);
-                }
-                s.last = s.last.max(last);
-            }
+        }
+        let mut g = self.dbs.lock(db).await;
+        let opening = g.current_opening().await.map_err(MongoError::from)?;
+        if s.seen.get(db) != Some(&opening) {
+            let (rec, outcome) = match opening {
+                crate::dbs::Opening::Open(_) => (g.get_live(&session_key(key)).await?, g.get_live(&outcome_key(key)).await?),
+                crate::dbs::Opening::Absent => (None, None),
+            };
+            drop(g);
+            s.merge_stored(db, rec, outcome);
+            s.seen.insert(db.to_string(), opening);
         }
         if s.number >= 0 && s.last < now_ms() - session_ttl_ms() {
             s.reset(-1, false);
+            s.src = None;
         }
-        Ok(())
+        Ok(opening)
     }
 
     /// A statement of a transaction (not its start) at a number below the session's latest retryable write.
@@ -440,9 +507,11 @@ impl Server {
     }
 
     /// A multi-document transaction starts at `number` on a session: it shares the number space with retryable writes.
-    pub(crate) async fn retry_txn_start(&self, lsid_key: &str, lsid: &Document, number: i64) -> R<()> {
+    pub(crate) async fn retry_txn_start(&self, db: &str, lsid_key: &str, lsid: &Document, number: i64) -> R<()> {
         let sess = self.session_entry(lsid_key);
         let mut s = sess.lock().await;
+        // what the database stores of the session first (C12): another process may have used its numbers there
+        self.session_load(&mut s, db, lsid_key).await?;
         if !s.txn && number < s.number {
             return Err(MongoError::new(225, "TransactionTooOld", format!("Cannot start transaction with {{ txnNumber: {number} }} on session {} because a newer retryable write with txnNumberAndRetryCounter {{ txnNumber: {}, txnRetryCounter: -1 }} has already started on this session.", lsid_text(lsid), s.number)));
         }
@@ -451,8 +520,8 @@ impl Server {
         }
         if number > s.number {
             s.reset(number, true);
+            s.src = Some(db.to_string());
         }
-        s.loaded = true;
         s.last = now_ms();
         Ok(())
     }
