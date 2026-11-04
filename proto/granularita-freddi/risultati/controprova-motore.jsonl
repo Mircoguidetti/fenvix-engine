@@ -1,0 +1,3 @@
+{"tipo": "motore", "carico": "chat 600.000 messaggi, 20.000 utenti, 30 giorni, mongo-server di main (46e8dd3), store locale, --block-cache-mb 1 --meta-cache-mb 64", "stato": {"byte_filtri":2250611,"byte_indici_blocchi":3521848,"byte_scatole":300068829,"l0":0,"sorted_run":7}}
+{"tipo": "motore", "q": "Q1", "n": 300, "get_media": 27.066666666666666, "get_p50": 27, "get_p90": 28, "get_max": 30, "get_del_contatore": 0}
+{"tipo": "motore", "q": "Q2", "n": 300, "get_media": 1.0233333333333334, "get_p50": 1, "get_p90": 1, "get_max": 2, "get_del_contatore": 0}

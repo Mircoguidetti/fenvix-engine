@@ -1,0 +1,278 @@
+[
+ {
+  "caso": "lettore M26, senza bancone, senza compressione",
+  "find_peggiore": 9.66,
+  "rapporto": 1.0,
+  "costo": 2065,
+  "prezzo": 3754,
+  "pct_centro": 44.5,
+  "pct_forchetta": [
+   34.6,
+   47.1
+  ],
+  "lavaggio": {
+   "put": 300.6,
+   "get": 15.6,
+   "cpu": 115.1,
+   "spazio": 33.0,
+   "vcpu": 5.5,
+   "totale": 464.4
+  },
+  "bancone_pile": 0.0,
+  "spazio_delta": 0.0,
+  "get_find": 355.5
+ },
+ {
+  "caso": "lettore regolato, senza bancone, senza compressione",
+  "find_peggiore": 7.62,
+  "rapporto": 1.0,
+  "costo": 1990,
+  "prezzo": 3618,
+  "pct_centro": 42.9,
+  "pct_forchetta": [
+   33.3,
+   45.3
+  ],
+  "lavaggio": {
+   "put": 300.6,
+   "get": 15.6,
+   "cpu": 115.1,
+   "spazio": 33.0,
+   "vcpu": 5.5,
+   "totale": 464.4
+  },
+  "bancone_pile": 0.0,
+  "spazio_delta": 0.0,
+  "get_find": 280.5
+ },
+ {
+  "caso": "regolato + pile recenti sul bancone (200 GB, 1 copia)",
+  "find_peggiore": 3.37,
+  "rapporto": 1.0,
+  "costo": 1867,
+  "prezzo": 3395,
+  "pct_centro": 40.3,
+  "pct_forchetta": [
+   31.3,
+   42.6
+  ],
+  "lavaggio": {
+   "put": 300.6,
+   "get": 15.6,
+   "cpu": 115.1,
+   "spazio": 33.0,
+   "vcpu": 5.5,
+   "totale": 464.4
+  },
+  "bancone_pile": 34.0,
+  "spazio_delta": 0.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone (3 copie)",
+  "find_peggiore": 3.37,
+  "rapporto": 1.0,
+  "costo": 1935,
+  "prezzo": 3519,
+  "pct_centro": 41.7,
+  "pct_forchetta": [
+   32.4,
+   44.1
+  ],
+  "lavaggio": {
+   "put": 300.6,
+   "get": 15.6,
+   "cpu": 115.1,
+   "spazio": 33.0,
+   "vcpu": 5.5,
+   "totale": 464.4
+  },
+  "bancone_pile": 102.0,
+  "spazio_delta": 0.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + lz4: PUT e GET del lavaggio misurati, spazio con il rapporto 2 di B13",
+  "find_peggiore": 3.37,
+  "rapporto": 1.98,
+  "costo": 1732,
+  "prezzo": 3149,
+  "pct_centro": 37.4,
+  "pct_forchetta": [
+   29.0,
+   39.5
+  ],
+  "lavaggio": {
+   "put": 151.8,
+   "get": 9.8,
+   "cpu": 134.4,
+   "spazio": 33.0,
+   "vcpu": 6.4,
+   "totale": 329.0
+  },
+  "bancone_pile": 34.0,
+  "spazio_delta": 0.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + lz4: anche lo spazio con il rapporto misurato",
+  "find_peggiore": 3.37,
+  "rapporto": 1.98,
+  "costo": 1666,
+  "prezzo": 3030,
+  "pct_centro": 35.9,
+  "pct_forchetta": [
+   27.9,
+   38.0
+  ],
+  "lavaggio": {
+   "put": 151.8,
+   "get": 9.8,
+   "cpu": 134.4,
+   "spazio": 27.4,
+   "vcpu": 6.4,
+   "totale": 323.4
+  },
+  "bancone_pile": 14.1,
+  "spazio_delta": -40.1,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + lz4 + parti PUT da 64 MB (spazio rapporto 2)",
+  "find_peggiore": 3.37,
+  "rapporto": 1.98,
+  "costo": 1604,
+  "prezzo": 2916,
+  "pct_centro": 34.6,
+  "pct_forchetta": [
+   26.9,
+   36.6
+  ],
+  "lavaggio": {
+   "put": 23.7,
+   "get": 9.8,
+   "cpu": 134.4,
+   "spazio": 33.0,
+   "vcpu": 6.4,
+   "totale": 200.9
+  },
+  "bancone_pile": 34.0,
+  "spazio_delta": 0.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + zstd1: PUT e GET del lavaggio misurati, spazio con il rapporto 2 di B13",
+  "find_peggiore": 3.37,
+  "rapporto": 2.46,
+  "costo": 1708,
+  "prezzo": 3106,
+  "pct_centro": 36.9,
+  "pct_forchetta": [
+   28.6,
+   38.9
+  ],
+  "lavaggio": {
+   "put": 122.2,
+   "get": 8.5,
+   "cpu": 141.6,
+   "spazio": 33.0,
+   "vcpu": 6.7,
+   "totale": 305.4
+  },
+  "bancone_pile": 34.0,
+  "spazio_delta": 0.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + zstd1: anche lo spazio con il rapporto misurato",
+  "find_peggiore": 3.37,
+  "rapporto": 2.46,
+  "costo": 1574,
+  "prezzo": 2861,
+  "pct_centro": 34.0,
+  "pct_forchetta": [
+   26.4,
+   35.9
+  ],
+  "lavaggio": {
+   "put": 122.2,
+   "get": 8.5,
+   "cpu": 141.6,
+   "spazio": 19.4,
+   "vcpu": 6.7,
+   "totale": 291.8
+  },
+  "bancone_pile": 10.0,
+  "spazio_delta": -97.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + zstd1 + parti PUT da 64 MB (spazio rapporto 2)",
+  "find_peggiore": 3.37,
+  "rapporto": 2.46,
+  "costo": 1605,
+  "prezzo": 2918,
+  "pct_centro": 34.6,
+  "pct_forchetta": [
+   26.9,
+   36.6
+  ],
+  "lavaggio": {
+   "put": 19.1,
+   "get": 8.5,
+   "cpu": 141.6,
+   "spazio": 33.0,
+   "vcpu": 6.7,
+   "totale": 202.3
+  },
+  "bancone_pile": 34.0,
+  "spazio_delta": 0.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + zstd1 misurato (anche spazio) + parti PUT da 64 MB",
+  "find_peggiore": 3.37,
+  "rapporto": 2.46,
+  "costo": 1471,
+  "prezzo": 2674,
+  "pct_centro": 31.7,
+  "pct_forchetta": [
+   24.6,
+   33.5
+  ],
+  "lavaggio": {
+   "put": 19.1,
+   "get": 8.5,
+   "cpu": 141.6,
+   "spazio": 19.4,
+   "vcpu": 6.7,
+   "totale": 188.7
+  },
+  "bancone_pile": 10.0,
+  "spazio_delta": -97.0,
+  "get_find": 123.9
+ },
+ {
+  "caso": "regolato + bancone + lz4 misurato (anche spazio) + parti PUT da 64 MB",
+  "find_peggiore": 3.37,
+  "rapporto": 1.98,
+  "costo": 1538,
+  "prezzo": 2797,
+  "pct_centro": 33.2,
+  "pct_forchetta": [
+   25.8,
+   35.1
+  ],
+  "lavaggio": {
+   "put": 23.7,
+   "get": 9.8,
+   "cpu": 134.4,
+   "spazio": 27.4,
+   "vcpu": 6.4,
+   "totale": 195.3
+  },
+  "bancone_pile": 14.1,
+  "spazio_delta": -40.1,
+  "get_find": 123.9
+ }
+]

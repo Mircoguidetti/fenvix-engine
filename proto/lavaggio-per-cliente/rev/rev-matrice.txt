@@ -1,0 +1,13 @@
+16:03:17 inizio rev-v4-1gb
+1.3G	data/rev-v4-1gb
+16:30:17 fine rev-v4-1gb
+16:30:18 inizio rev-v0-1gb
+3.4G	data/rev-v0-1gb
+16:57:17 fine rev-v0-1gb
+16:57:19 inizio rev-v4-0.5gb-pochi
+672M	data/rev-v4-0.5gb-pochi
+17:11:06 fine rev-v4-0.5gb-pochi
+17:11:07 inizio rev-v4-8gb
+9.9G	data/rev-v4-8gb
+19:35:12 fine rev-v4-8gb
+19:35:12 tutto fatto

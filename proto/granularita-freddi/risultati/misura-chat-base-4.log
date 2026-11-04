@@ -1,0 +1,5 @@
+{"byte_filtri":20000441,"byte_indici_blocchi":37074272,"byte_scatole":3027262873,"etichetta":"chat-base-4","l0":2,"run":[[4,60970207],[4,30547137],[4,212506908],[4,219906933],[12,2491824002]],"scatole":30,"sorted_run":5,"tipo":"stato"}
+{"byte_filtri":20000441,"byte_indici_blocchi":37074272,"byte_scatole":3027262873,"etichetta":"chat-base-4","l0":2,"run":[[4,60970207],[4,30547137],[4,212506908],[4,219906933],[12,2491824002]],"scatole":30,"sorted_run":5,"tipo":"stato"}
+riscaldo: 1500 query in 3 s; bancone: indici 30 voci 37074152 byte, filtri 29 voci 17829567 byte, stat 0 voci
+{"byte_filtri":20000441,"byte_indici_blocchi":37074272,"byte_scatole":3027262873,"etichetta":"chat-base-4","l0":2,"run":[[4,60970207],[4,30547137],[4,212506908],[4,219906933],[12,2491824002]],"scatole":30,"sorted_run":5,"tipo":"stato"}
+riscaldo: 1500 query in 2 s; bancone: indici 30 voci 37074152 byte, filtri 29 voci 17829567 byte, stat 0 voci
