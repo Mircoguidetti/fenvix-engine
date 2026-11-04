@@ -8,7 +8,7 @@ BASE=${1:-/tmp/m31-freno}; mkdir -p "$BASE"; export SANDBOX_BASE=$BASE
 nuova_sandbox "$BASE/freno"; FALLITE=0
 aws s3api create-bucket --bucket "$BUCKET" --create-bucket-configuration LocationConstraint=eu-west-1 > /dev/null
 D=$SANDBOX/macchina; mkdir -p "$D"; cp "$M_DIR/target/release/m31" "$G_DIR/esegui.sh" "$D/"
-( cd "$D" && PROVA_LOCALE=1 M31_FRENO_GET=300 GB_P1=0.1 CLIENTI_P1=100 RITMO=20 N=10 RISCALDO=20 INSIEME=10 \
+( cd "$D" && PROVA_LOCALE=1 FRENO_GET_P1=300 GB_P1=0.1 CLIENTI_P1=100 RITMO=20 N=10 RISCALDO=20 INSIEME=10 \
   FINTO=25:0.6:90 SALI_S=5 bash ./esegui.sh "$BUCKET" > esegui.log 2>&1 )
 P=$D/out/passi.log
 controlla "tempi p1 fermato dal freno (codice 97)" grep -q "FRENO: richieste a S3 oltre il tetto in tempi p1" "$P"

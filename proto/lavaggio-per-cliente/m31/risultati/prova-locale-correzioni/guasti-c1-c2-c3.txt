@@ -5,7 +5,7 @@ OK      poi spegnimento subito per scaricamento fallito
 OK      la macchina è cancellata (moto: terminated)
 OK      il workflow lo vede: esito MACCHINA_SPENTA
 OK      pulizia: RIMASTO: niente
-   (attesa del workflow: 14 s; macchina: 17:03:51 shutdown -h +240 M31: tetto|17:03:56 shutdown -h now M31: scaricamento fallito|)
+   (attesa del workflow: 15 s; macchina: 17:14:54 shutdown -h +240 M31: tetto|17:14:59 shutdown -h now M31: scaricamento fallito|)
 == C1b · tar fallito (pacco rotto): la macchina deve spegnersi subito
 OK      spegnimento +240 chiesto per primo
 OK      poi spegnimento subito per tar fallito

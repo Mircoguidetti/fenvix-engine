@@ -164,7 +164,7 @@ CloudWatch.
    che la pulizia abbia scritto "RIMASTO: niente".
 5. Da sola la giornata si ferma anche così: la macchina si spegne (e si cancella) subito se non riesce a scaricare o
    aprire il programma, e comunque dopo 240 minuti; il workflow smette di aspettare se dopo 15 minuti la macchina non
-   ha scritto niente ("MACCHINA MUTA"); il programma si ferma se le richieste a S3 passano 500.000 GET o 100.000 PUT
+   ha scritto niente ("MACCHINA MUTA"); il programma si ferma se le richieste a S3 passano i tetti di esegui.sh
    in un passo ("FRENO").
 
 Il coordinatore può fare i passi 1–3 al posto del fondatore (sono commit sul branch), ma solo dopo il sì del

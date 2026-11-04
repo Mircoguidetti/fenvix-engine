@@ -2,9 +2,8 @@ OK      tempi p1 fermato dal freno (codice 97)
 OK      riga FRENO del programma nel suo log
 OK      poi subito la fine
 OK      niente carico d2k né scritture dopo il freno
-2026-11-04 17:12:51         15 fine.json
+2026-11-04 17:14:46         15 fine.json
 OK      fine.json nel bucket (il workflow vede FINITA)
-   passi: 2026-11-04T17:12:35Z inizio; macchina 2 vCPU, 7 GB|2026-11-04T17:12:35Z carica p1|2026-11-04T17:12:47Z copia p1|2026-11-04T17:12:47Z tempi p1|2026-11-04T17:12:51Z FRENO: richieste a S3 oltre il tetto in tempi p1; salto alla fine|2026-11-04T17:12:51Z fine|
+   passi: 2026-11-04T17:14:27Z inizio; macchina 2 vCPU, 7 GB|2026-11-04T17:14:27Z carica p1|2026-11-04T17:14:41Z copia p1|2026-11-04T17:14:42Z tempi p1|2026-11-04T17:14:46Z FRENO: richieste a S3 oltre il tetto in tempi p1; salto alla fine|2026-11-04T17:14:46Z fine|
    programma: FRENO: 301 richieste GET a S3 in questo processo, oltre il tetto 300: mi fermo
-FRENO: 302 richieste GET a S3 in questo processo, oltre il tetto 300: mi fermo
 == RISULTATO: 0 controlli falliti
