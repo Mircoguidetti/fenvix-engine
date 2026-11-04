@@ -4,8 +4,8 @@
 #   "permessi" = solo controllo dei permessi, 0 $ (letture, --dry-run, bucket vuoto creato e cancellato subito);
 #   "prova"    = la giornata: una c7i.xlarge nella stessa regione del bucket fa carico, copia su S3, tempi, scritture;
 #   "smonta"   = solo pulizia e verifica.
-# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (mascherato); la macchina usa il suo ruolo fenvix-m31-macchina.
-# Comandi e risultati passano da un bucket nuovo fenvix-m31-<run>. Spesa: riga "SPESA" ogni minuto nel log.
+# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (mascherato); la macchina usa il suo ruolo fenvix-coldread-machine.
+# Comandi e risultati passano da un bucket nuovo fenvix-coldread-<run>. Spesa: riga "SPESA" ogni minuto nel log.
 # Tetti: la macchina si spegne e si cancella da sola dopo 240 minuti (shutdown -h +240, comportamento "terminate"),
 # programmato come prima riga dello user-data; se lo scaricamento o il tar falliscono si spegne subito; il job smette
 # di aspettare dopo 15 minuti senza passi.log ("MACCHINA MUTA") e comunque a 250 minuti; i risultati si ricopiano con
@@ -37,8 +37,8 @@ jobs:
       M: proto/lavaggio-per-cliente/m31
       TIPO: c7i.xlarge
       PREZZO_ORA: "0.1915"       # c7i.xlarge on-demand eu-west-1, DICHIARATO (doit.com, 2026-11-04)
-      RUOLO_MACCHINA: fenvix-m31-macchina
-      BUCKET: fenvix-m31-${{ github.run_id }}
+      RUOLO_MACCHINA: fenvix-coldread-machine
+      BUCKET: fenvix-coldread-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -105,7 +105,7 @@ jobs:
         if: always() && steps.mode.outputs.modo == 'prova'
         run: bash $G/recupera.sh
 
-      - name: Pulizia (macchine con il tag, bucket fenvix-m31-*) e verifica
+      - name: Pulizia (macchine con il tag, bucket fenvix-coldread-*) e verifica
         if: always()
         run: bash $G/pulizia.sh
 

@@ -1,0 +1,18 @@
+OK    sts:GetCallerIdentity
+OK    ssm:GetParameter (AMI Ubuntu 24.04 pubblica)
+OK    ec2:DescribeVpcs
+OK    ec2:DescribeSubnets
+OK    ec2:DescribeInstances
+OK    iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore)
+OK    ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso) (dry-run)
+OK    s3:CreateBucket
+OK    s3:PutBucketPublicAccessBlock
+OK    s3:PutBucketTagging
+OK    s3:PutLifecycleConfiguration
+OK    s3:PutObject
+OK    s3:GetObject
+OK    s3:ListBucket
+OK    s3:DeleteObject
+OK    s3:DeleteBucket
+OK    s3:ListAllMyBuckets
+PERMESSI: tutti presenti

@@ -1,34 +1,28 @@
-# M31 · cosa aggiungere in AWS prima della giornata (il fondatore, dalla console IAM)
+# M31 · i permessi in AWS per la giornata (nomi "coldread")
 
-Sostituisci `<ACCOUNT_ID>` con il numero dell'account (12 cifre). Regione: eu-west-1. Tre passi.
+**Già fatto dal fondatore il 2026-11-04** (alle 18:15, dalla console IAM). Questo file dice cosa c'è, con il testo
+esatto delle policy create; non c'è niente da rifare. Regione: eu-west-1. `<ACCOUNT_ID>` sta al posto del numero
+dell'account (12 cifre).
+
+I nomi in AWS:
+- ruolo e profilo della macchina: `fenvix-coldread-machine`;
+- policy inline della macchina: `coldread-buckets-only`;
+- bucket: prefisso `fenvix-coldread-` (per esempio `fenvix-coldread-<run>`);
+- etichetta su macchina e disco (messa al lancio, letta dalla pulizia e da TerminateInstances): `project` = `fenvix-coldread`;
+- ruolo GitHub: `fenvix-gha-tests` (il suo ARN sta nel secret `AWS_ROLE_ARN`); policy inline su quel ruolo: `fenvix-coldread-test`.
 
 ## 1. Serratura del ruolo GitHub (trust policy)
 
-Ruolo: quello il cui ARN sta nel secret `AWS_ROLE_ARN` di `fenvix-engine`. IAM → Ruoli → quel ruolo → scheda
-"Relazioni di attendibilità" → Modifica. Nella condizione su `token.actions.githubusercontent.com:sub` aggiungi
-alla lista questo valore (lascia quelli che ci sono):
+Nella condizione su `token.actions.githubusercontent.com:sub` del ruolo `fenvix-gha-tests` c'è il branch `freddo-s3`:
 
 ```
 repo:Mircoguidetti/fenvix-engine:ref:refs/heads/freddo-s3
 ```
 
-Se oggi la condizione è un solo valore con `StringEquals`, diventa una lista, per esempio:
+## 2. Ruolo della macchina: `fenvix-coldread-machine`
 
-```json
-"Condition": {
-  "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-  "StringLike": { "token.actions.githubusercontent.com:sub": [
-    "repo:Mircoguidetti/fenvix-engine:ref:refs/heads/round3",
-    "repo:Mircoguidetti/fenvix-engine:ref:refs/heads/freddo-s3"
-  ] }
-}
-```
-
-## 2. Ruolo nuovo per la macchina: `fenvix-m31-macchina`
-
-IAM → Ruoli → Crea ruolo → "Servizio AWS" → "EC2" → Avanti → nessuna policy → nome `fenvix-m31-macchina` → Crea
-(la console crea anche il profilo dell'istanza con lo stesso nome). Poi nel ruolo: Aggiungi autorizzazioni →
-Crea policy inline → JSON → incolla → nome `solo-bucket-m31`:
+Ruolo per il servizio EC2, con il profilo dell'istanza dello stesso nome. Una sola policy inline,
+`coldread-buckets-only`:
 
 ```json
 {
@@ -37,17 +31,18 @@ Crea policy inline → JSON → incolla → nome `solo-bucket-m31`:
     {
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload", "s3:ListBucket"],
-      "Resource": ["arn:aws:s3:::fenvix-m31-*", "arn:aws:s3:::fenvix-m31-*/*"]
+      "Resource": ["arn:aws:s3:::fenvix-coldread-*", "arn:aws:s3:::fenvix-coldread-*/*"]
     }
   ]
 }
 ```
 
-La macchina legge e scrive solo nei bucket `fenvix-m31-*`. Nient'altro.
+La macchina legge e scrive solo nei bucket `fenvix-coldread-*`. Nient'altro.
 
-## 3. Policy inline `fenvix-m31` sul ruolo GitHub
+## 3. Policy inline `fenvix-coldread-test` sul ruolo GitHub `fenvix-gha-tests`
 
-Nel ruolo GitHub: Aggiungi autorizzazioni → Crea policy inline → JSON → incolla → nome `fenvix-m31`:
+Testo creato (quello di prima delle correzioni del revisore, con i nomi nuovi; i `Sid` sono solo etichette e non li
+usa nessuno script):
 
 ```json
 {
@@ -71,22 +66,16 @@ Nel ruolo GitHub: Aggiungi autorizzazioni → Crea policy inline → JSON → in
       "Action": "ec2:RunInstances",
       "Resource": ["arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:instance/*", "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:volume/*"],
       "Condition": {
-        "StringEquals": { "aws:RequestTag/progetto": "fenvix-m31" },
+        "StringEquals": { "aws:RequestTag/project": "fenvix-coldread" },
         "StringEqualsIfExists": { "ec2:InstanceType": "c7i.xlarge" }
       }
-    },
-    {
-      "Sid": "SoloImmaginiDiCanonical",
-      "Effect": "Allow",
-      "Action": "ec2:RunInstances",
-      "Resource": "arn:aws:ec2:eu-west-1::image/*",
-      "Condition": { "StringEquals": { "ec2:Owner": "099720109477" } }
     },
     {
       "Sid": "MacchinaRisorseDiServizio",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
       "Resource": [
+        "arn:aws:ec2:eu-west-1::image/*",
         "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:subnet/*",
         "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:network-interface/*",
         "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:security-group/*"
@@ -104,20 +93,20 @@ Nel ruolo GitHub: Aggiungi autorizzazioni → Crea policy inline → JSON → in
       "Effect": "Allow",
       "Action": "ec2:TerminateInstances",
       "Resource": "arn:aws:ec2:eu-west-1:<ACCOUNT_ID>:instance/*",
-      "Condition": { "StringEquals": { "ec2:ResourceTag/progetto": "fenvix-m31" } }
+      "Condition": { "StringEquals": { "ec2:ResourceTag/project": "fenvix-coldread" } }
     },
     {
       "Sid": "PassareSoloIlRuoloDellaMacchina",
       "Effect": "Allow",
       "Action": "iam:PassRole",
-      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/fenvix-m31-macchina",
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/fenvix-coldread-machine",
       "Condition": { "StringEquals": { "iam:PassedToService": "ec2.amazonaws.com" } }
     },
     {
       "Sid": "LeggereIlProfiloDellaMacchina",
       "Effect": "Allow",
       "Action": "iam:GetInstanceProfile",
-      "Resource": "arn:aws:iam::<ACCOUNT_ID>:instance-profile/fenvix-m31-macchina"
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:instance-profile/fenvix-coldread-machine"
     },
     {
       "Sid": "BucketDellaProva",
@@ -127,27 +116,44 @@ Nel ruolo GitHub: Aggiungi autorizzazioni → Crea policy inline → JSON → in
         "s3:PutBucketPublicAccessBlock", "s3:ListBucket", "s3:ListBucketMultipartUploads",
         "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload"
       ],
-      "Resource": ["arn:aws:s3:::fenvix-m31-*", "arn:aws:s3:::fenvix-m31-*/*"]
+      "Resource": ["arn:aws:s3:::fenvix-coldread-*", "arn:aws:s3:::fenvix-coldread-*/*"]
     }
   ]
 }
 ```
 
-`099720109477` non è un numero nostro: è l'account di Canonical che pubblica le immagini Ubuntu ufficiali (DICHIARATO,
-documentazione Ubuntu "Find Ubuntu images on AWS", https://ubuntu.com/aws/docs/aws-how-to/instances/find-ubuntu-images/).
-Con questa condizione la macchina può partire solo da un'immagine di Canonical, mai da una del Marketplace a pagamento
-(revisore M31, R4).
+Con questa policy la giornata funziona: `permessi.sh` la controlla al primo comando "permessi".
 
-**Attenzione** (da S13): se sul ruolo GitHub c'è ancora la policy di walbench con un `Deny` su "tutto tranne
-c6i.large", quel divieto blocca anche la c7i.xlarge (un Deny vince sempre). Va tolta quella policy (walbench ha
-finito) o almeno il suo `Deny`.
+### Restringimento facoltativo: solo immagini di Canonical (non obbligatorio)
+
+Oggi l'immagine può essere di chiunque (`image/*` in `MacchinaRisorseDiServizio`). Gli script usano sempre l'immagine
+Ubuntu ufficiale letta da SSM, quindi la giornata va bene così. Per chiudere anche la porta alle immagini a pagamento
+del Marketplace (revisore M31, R4) servono **due** modifiche insieme, altrimenti non cambia niente (le Allow si
+sommano): togliere la riga `"arn:aws:ec2:eu-west-1::image/*",` da `MacchinaRisorseDiServizio` e aggiungere questo
+blocco nella lista `Statement`:
+
+```json
+    {
+      "Sid": "SoloImmaginiDiCanonical",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:eu-west-1::image/*",
+      "Condition": { "StringEquals": { "ec2:Owner": "099720109477" } }
+    },
+```
+
+`099720109477` è l'account di Canonical che pubblica le immagini Ubuntu ufficiali (DICHIARATO, documentazione Ubuntu
+"Find Ubuntu images on AWS", https://ubuntu.com/aws/docs/aws-how-to/instances/find-ubuntu-images/).
+
+**walbench**: il divieto (`Deny`) di walbench sul ruolo GitHub ora ammette c6i.large e c7i.xlarge (fondatore,
+2026-11-04), quindi non blocca la macchina della giornata.
 
 Non servono: security group nuovi (si usa quello di serie della VPC di serie), chiavi SSH, SSM sulla macchina,
 CloudWatch.
 
 ## Come si lancia (link e passi, uno per volta)
 
-1. Dopo i tre passi sopra, crea il file di comando dal sito di GitHub:
+1. I permessi ci sono già (sopra). Crea il file di comando dal sito di GitHub:
    https://github.com/Mircoguidetti/fenvix-engine/new/freddo-s3/proto/lavaggio-per-cliente/m31/giornata
    nome `comando.json`, contenuto `{"modo": "permessi"}`, "Commit directly to the freddo-s3 branch".
    Questo costa 0 $ e dice in Actions (https://github.com/Mircoguidetti/fenvix-engine/actions/workflows/m31-freddo-s3.yml)

@@ -11,7 +11,7 @@ unset AWS_SESSION_TOKEN AWS_PROFILE
 # per il programma m31 (object_store): lo stesso moto
 export AWS_ENDPOINT=$MOTO_URL AWS_ALLOW_HTTP=true
 # come nel workflow
-export TIPO=c7i.xlarge PREZZO_ORA=0.1915 RUOLO_MACCHINA=fenvix-m31-macchina
+export TIPO=c7i.xlarge PREZZO_ORA=0.1915 RUOLO_MACCHINA=fenvix-coldread-machine
 export M31_ACCT=123456789012 M31_ROLE=arn:aws:iam::123456789012:role/finto
 
 avvia_moto() {
@@ -27,11 +27,11 @@ nuova_sandbox() {
   export SANDBOX=$1; rm -rf "$SANDBOX"; mkdir -p "$SANDBOX"
   cp -r "$QUI_PL/bin" "$QUI_PL/bin-macchina" "$SANDBOX/"; chmod +x "$SANDBOX"/bin/* "$SANDBOX"/bin-macchina/*
   export PATH="$SANDBOX/bin:${PATH_ORIG:=$PATH}"
-  export M31_OUT=$SANDBOX/out GITHUB_STEP_SUMMARY=$SANDBOX/summary.md BUCKET=fenvix-m31-$RANDOM$RANDOM
+  export M31_OUT=$SANDBOX/out GITHUB_STEP_SUMMARY=$SANDBOX/summary.md BUCKET=fenvix-coldread-$RANDOM$RANDOM
   avvia_moto
-  aws iam create-role --role-name fenvix-m31-macchina --assume-role-policy-document '{"Version":"2012-10-17","Statement":[]}' > /dev/null
-  aws iam create-instance-profile --instance-profile-name fenvix-m31-macchina > /dev/null
-  aws iam add-role-to-instance-profile --instance-profile-name fenvix-m31-macchina --role-name fenvix-m31-macchina
+  aws iam create-role --role-name fenvix-coldread-machine --assume-role-policy-document '{"Version":"2012-10-17","Statement":[]}' > /dev/null
+  aws iam create-instance-profile --instance-profile-name fenvix-coldread-machine > /dev/null
+  aws iam add-role-to-instance-profile --instance-profile-name fenvix-coldread-machine --role-name fenvix-coldread-machine
 }
 
 # il pacco come lo fa il workflow, da un programma e un esegui.sh dati

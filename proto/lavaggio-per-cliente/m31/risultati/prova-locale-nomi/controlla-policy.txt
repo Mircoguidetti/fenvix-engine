@@ -1,0 +1,100 @@
+== fenvix-coldread-test (creata dal fondatore)
+OK      permesso   ssm:GetParameter arn:aws:ssm:eu-west-1::parameter/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+OK      permesso   ec2:DescribeVpcs *
+OK      permesso   ec2:DescribeSubnets *
+OK      permesso   ec2:DescribeInstances *
+OK      permesso   iam:GetInstanceProfile arn:aws:iam::123456789012:instance-profile/fenvix-coldread-machine
+OK      permesso   s3:ListAllMyBuckets *
+OK      permesso   ec2:TerminateInstances arn:aws:ec2:eu-west-1:123456789012:instance/i-0123
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:instance/*
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:volume/*
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1::image/ami-0123456789abcdef0
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-0123
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:network-interface/*
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:security-group/sg-0123
+OK      permesso   ec2:CreateTags arn:aws:ec2:eu-west-1:123456789012:instance/*
+OK      permesso   ec2:CreateTags arn:aws:ec2:eu-west-1:123456789012:volume/*
+OK      permesso   iam:PassRole arn:aws:iam::123456789012:role/fenvix-coldread-machine
+OK      permesso   s3:CreateBucket arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutBucketPublicAccessBlock arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutBucketTagging arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutLifecycleConfiguration arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutObject arn:aws:s3:::fenvix-coldread-permessi-12345/programma/coldread-giornata.tar.gz
+OK      permesso   s3:GetObject arn:aws:s3:::fenvix-coldread-permessi-12345/risultati/passi.log
+OK      permesso   s3:ListBucket arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:DeleteObject arn:aws:s3:::fenvix-coldread-permessi-12345/risultati/passi.log
+OK      permesso   s3:DeleteBucket arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:CreateBucket arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutBucketPublicAccessBlock arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutBucketTagging arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutLifecycleConfiguration arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutObject arn:aws:s3:::fenvix-coldread-12345/programma/coldread-giornata.tar.gz
+OK      permesso   s3:GetObject arn:aws:s3:::fenvix-coldread-12345/risultati/passi.log
+OK      permesso   s3:ListBucket arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:DeleteObject arn:aws:s3:::fenvix-coldread-12345/risultati/passi.log
+OK      permesso   s3:DeleteBucket arn:aws:s3:::fenvix-coldread-12345
+OK      rifiutato  macchina più grande (c7i.2xlarge)
+OK      rifiutato  macchina senza etichetta project
+OK      rifiutato  macchina con l'etichetta vecchia progetto=fenvix-m31
+OK      rifiutato  cancellare una macchina senza etichetta
+OK      rifiutato  cancellare una macchina con l'etichetta vecchia
+OK      rifiutato  passare il ruolo vecchio fenvix-m31-macchina
+OK      rifiutato  leggere il profilo vecchio
+OK      rifiutato  bucket col prefisso vecchio fenvix-m31-
+OK      rifiutato  bucket di un altro progetto
+OK      permessa  immagine non di Canonical
+== fenvix-coldread-test + SoloImmaginiDiCanonical
+OK      permesso   ssm:GetParameter arn:aws:ssm:eu-west-1::parameter/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+OK      permesso   ec2:DescribeVpcs *
+OK      permesso   ec2:DescribeSubnets *
+OK      permesso   ec2:DescribeInstances *
+OK      permesso   iam:GetInstanceProfile arn:aws:iam::123456789012:instance-profile/fenvix-coldread-machine
+OK      permesso   s3:ListAllMyBuckets *
+OK      permesso   ec2:TerminateInstances arn:aws:ec2:eu-west-1:123456789012:instance/i-0123
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:instance/*
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:volume/*
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1::image/ami-0123456789abcdef0
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-0123
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:network-interface/*
+OK      permesso   ec2:RunInstances arn:aws:ec2:eu-west-1:123456789012:security-group/sg-0123
+OK      permesso   ec2:CreateTags arn:aws:ec2:eu-west-1:123456789012:instance/*
+OK      permesso   ec2:CreateTags arn:aws:ec2:eu-west-1:123456789012:volume/*
+OK      permesso   iam:PassRole arn:aws:iam::123456789012:role/fenvix-coldread-machine
+OK      permesso   s3:CreateBucket arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutBucketPublicAccessBlock arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutBucketTagging arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutLifecycleConfiguration arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:PutObject arn:aws:s3:::fenvix-coldread-permessi-12345/programma/coldread-giornata.tar.gz
+OK      permesso   s3:GetObject arn:aws:s3:::fenvix-coldread-permessi-12345/risultati/passi.log
+OK      permesso   s3:ListBucket arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:DeleteObject arn:aws:s3:::fenvix-coldread-permessi-12345/risultati/passi.log
+OK      permesso   s3:DeleteBucket arn:aws:s3:::fenvix-coldread-permessi-12345
+OK      permesso   s3:CreateBucket arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutBucketPublicAccessBlock arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutBucketTagging arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutLifecycleConfiguration arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:PutObject arn:aws:s3:::fenvix-coldread-12345/programma/coldread-giornata.tar.gz
+OK      permesso   s3:GetObject arn:aws:s3:::fenvix-coldread-12345/risultati/passi.log
+OK      permesso   s3:ListBucket arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:DeleteObject arn:aws:s3:::fenvix-coldread-12345/risultati/passi.log
+OK      permesso   s3:DeleteBucket arn:aws:s3:::fenvix-coldread-12345
+OK      rifiutato  macchina più grande (c7i.2xlarge)
+OK      rifiutato  macchina senza etichetta project
+OK      rifiutato  macchina con l'etichetta vecchia progetto=fenvix-m31
+OK      rifiutato  cancellare una macchina senza etichetta
+OK      rifiutato  cancellare una macchina con l'etichetta vecchia
+OK      rifiutato  passare il ruolo vecchio fenvix-m31-macchina
+OK      rifiutato  leggere il profilo vecchio
+OK      rifiutato  bucket col prefisso vecchio fenvix-m31-
+OK      rifiutato  bucket di un altro progetto
+OK      rifiutata  immagine non di Canonical
+== coldread-buckets-only (macchina)
+OK      permesso   s3:GetObject arn:aws:s3:::fenvix-coldread-12345/p1/x.sst
+OK      permesso   s3:PutObject arn:aws:s3:::fenvix-coldread-12345/risultati/fine.json
+OK      permesso   s3:ListBucket arn:aws:s3:::fenvix-coldread-12345
+OK      permesso   s3:DeleteObject arn:aws:s3:::fenvix-coldread-12345/scrivi-l1-f5/x
+OK      permesso   s3:AbortMultipartUpload arn:aws:s3:::fenvix-coldread-12345/p1/grande
+OK      rifiutato  bucket col prefisso vecchio
+OK      rifiutato  creare bucket
+OK      rifiutato  macchine
+POLICY: 0 controlli falliti
