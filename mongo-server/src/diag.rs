@@ -1654,7 +1654,7 @@ pub fn waiter_stats() -> Document {
     let mut w = doc! {
         "trips": ld(&ss::TRIPS.trips), "reads": ld(&ss::TRIPS.reads),
         "chains": ss::CHAIN.lock().unwrap().chains as i64, "lastChainDepth": ss::CHAIN.lock().unwrap().last_chain_depth as i64, "readsInFlight": ld(&ss::TRIPS.inflight), "maxReadsInFlight": ld(&ss::TRIPS.max_inflight),
-        "splitGets": ld(&ss::SPLIT_GETS), "splitPieces": ld(&ss::SPLIT_PIECES), "hedges": ld(&ss::HEDGES), "hedgeWins": ld(&ss::HEDGE_WINS),
+        "splitGets": ld(&ss::SPLIT_GETS), "splitPieces": ld(&ss::SPLIT_PIECES), "hedges": ld(&ss::HEDGES), "hedgeWins": ld(&ss::HEDGE_WINS), "nextBlockHits": ld(&ss::NEXT_BLOCK_HITS),
         "readAhead": {
             "first": ld(&crate::prefetch::FIRST), "next": ld(&crate::prefetch::NEXT), "docs": ld(&crate::prefetch::DOCS),
             "fails": ld(&crate::prefetch::FAILS), "busy": ld(&crate::prefetch::BUSY),

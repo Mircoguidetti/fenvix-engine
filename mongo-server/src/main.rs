@@ -257,6 +257,10 @@ struct Args {
     /// then waits for one read, not two in a row (T1).
     #[arg(long, default_value_t = 10)]
     filter_bits_per_key: u32,
+    /// Next-block read-along (--waiter-tools): a small ranged GET of an SST also brings this many KiB after it (T1:
+    /// slatedb reads the block before a key that starts a block first; this keeps both in one trip). 0 = off.
+    #[arg(long, default_value_t = 8)]
+    next_block_kb: u64,
     /// Read ahead on a signal (T1, prefetch.rs): the first indexed read of a key prefix brings this many more entries'
     /// documents in the background, and a read that goes past them brings the next ones. 0 = off.
     #[arg(long, default_value_t = 200)]
@@ -669,6 +673,7 @@ async fn run() -> Result<()> {
         tenant_bench::simstore::SPLIT_GET_MIN.store(args.split_get_min_kb << 10, std::sync::atomic::Ordering::Relaxed);
         tenant_bench::simstore::SPLIT_GET_PIECE.store(args.split_get_piece_kb << 10, std::sync::atomic::Ordering::Relaxed);
         tenant_bench::simstore::HEDGE_AFTER_MS.store(args.hedge_after_ms, std::sync::atomic::Ordering::Relaxed);
+        tenant_bench::simstore::NEXT_BLOCK_BYTES.store(args.next_block_kb << 10, std::sync::atomic::Ordering::Relaxed);
         prefetch::READ_AHEAD_DOCS.store(args.read_ahead_docs, std::sync::atomic::Ordering::Relaxed);
         dbs::GET_MANY_PARALLEL.store(512, std::sync::atomic::Ordering::Relaxed);
     } else {

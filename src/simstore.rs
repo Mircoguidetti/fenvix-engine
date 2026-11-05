@@ -232,6 +232,50 @@ pub static HEDGE_AFTER_MS: AtomicU64 = AtomicU64::new(0);
 pub static HEDGES: AtomicU64 = AtomicU64::new(0);
 pub static HEDGE_WINS: AtomicU64 = AtomicU64::new(0);
 
+/// Next-block read-along (`--next-block-kb`, 0 = off): a small ranged GET of an SST also brings this many bytes after the
+/// range, kept for `NEXT_KEEP` in a small side buffer; a GET inside them is answered from there. Why (T1, measured):
+/// slatedb 0.17 reads, for a point read of a key that is the first of its block, the block before it first and then
+/// that block, one after the other (about one document in ten with 4 KiB blocks). Same trip, a few KiB more.
+pub static NEXT_BLOCK_BYTES: AtomicU64 = AtomicU64::new(0);
+/// GETs answered from the side buffer.
+pub static NEXT_BLOCK_HITS: AtomicU64 = AtomicU64::new(0);
+const NEXT_KEEP: Duration = Duration::from_secs(10);
+const NEXT_MAX_ENTRIES: usize = 50_000;
+/// Ranges up to this size get the read-along (data blocks, not large reads).
+const NEXT_MAX_RANGE: u64 = 64 << 10;
+
+struct Extra {
+    start: u64,
+    bytes: Bytes,
+    meta: ObjectMeta,
+    at: std::time::Instant,
+}
+
+static EXTRAS: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<(Path, u64), Extra>>> = std::sync::LazyLock::new(Default::default);
+
+fn extra_lookup(loc: &Path, r: &std::ops::Range<u64>) -> Option<(ObjectMeta, Bytes)> {
+    let m = EXTRAS.lock().unwrap();
+    let e = m.get(&(loc.clone(), r.start))?;
+    if e.at.elapsed() > NEXT_KEEP || r.end - e.start > e.bytes.len() as u64 {
+        return None;
+    }
+    Some((e.meta.clone(), e.bytes.slice(0..(r.end - r.start) as usize)))
+}
+
+fn extra_store(loc: &Path, start: u64, bytes: Bytes, meta: ObjectMeta) {
+    if bytes.is_empty() {
+        return;
+    }
+    let mut m = EXTRAS.lock().unwrap();
+    if m.len() >= NEXT_MAX_ENTRIES {
+        m.retain(|_, e| e.at.elapsed() <= NEXT_KEEP);
+        if m.len() >= NEXT_MAX_ENTRIES {
+            m.clear();
+        }
+    }
+    m.insert((loc.clone(), start), Extra { start, bytes, meta, at: std::time::Instant::now() });
+}
+
 /// One ranged GET with its body, hedged when `HEDGE_AFTER_MS` > 0.
 async fn get_body(inner: &Arc<dyn ObjectStore>, loc: &Path, o: GetOptions) -> Result<(ObjectMeta, Bytes, object_store::Attributes)> {
     let one = |o: GetOptions| {
@@ -303,9 +347,40 @@ impl ObjectStore for SplitGetStore {
         let piece = SPLIT_GET_PIECE.load(Relaxed).max(4096);
         let (start, end) = match &options.range {
             Some(GetRange::Bounded(b)) if min > 0 && !options.head && b.end.saturating_sub(b.start) >= min.max(2 * piece) => (b.start, b.end),
-            Some(GetRange::Bounded(b)) if !options.head && HEDGE_AFTER_MS.load(Relaxed) > 0 => {
+            Some(GetRange::Bounded(b))
+                if !options.head && (HEDGE_AFTER_MS.load(Relaxed) > 0 || NEXT_BLOCK_BYTES.load(Relaxed) > 0 && location.as_ref().ends_with(".sst")) =>
+            {
                 let r = b.clone();
-                let (meta, body, attributes) = get_body(&self.inner, location, options).await?;
+                if let Some((meta, body)) = extra_lookup(location, &r) {
+                    NEXT_BLOCK_HITS.fetch_add(1, Relaxed);
+                    let stream = futures::stream::once(async move { Ok(body) }).boxed();
+                    return Ok(GetResult { payload: GetResultPayload::Stream(stream), meta, range: r, attributes: Default::default(), extensions: Default::default() });
+                }
+                let more = NEXT_BLOCK_BYTES.load(Relaxed);
+                let along = more > 0 && location.as_ref().ends_with(".sst") && r.end - r.start <= NEXT_MAX_RANGE;
+                let mut o = options.clone();
+                if along {
+                    o.range = Some(GetRange::Bounded(r.start..r.end + more));
+                }
+                let (meta, mut body, attributes) = match get_body(&self.inner, location, o).await {
+                    Ok(x) => x,
+                    // past the end of the object (the range was its last bytes): the GET as asked
+                    Err(_) if along => {
+                        let (m, b, a) = get_body(&self.inner, location, options).await?;
+                        let stream = futures::stream::once(async move { Ok(b) }).boxed();
+                        return Ok(GetResult { payload: GetResultPayload::Stream(stream), meta: m, range: r, attributes: a, extensions: Default::default() });
+                    }
+                    Err(e) => return Err(e),
+                };
+                if along {
+                    let want = (r.end - r.start) as usize;
+                    // S3 clamps a range past the end: a shorter body is fine as long as the asked part is there
+                    if body.len() < want {
+                        return Err(object_store::Error::Generic { store: "SplitGetStore", source: "short read".into() });
+                    }
+                    extra_store(location, r.end, body.slice(want..), meta.clone());
+                    body.truncate(want);
+                }
                 let stream = futures::stream::once(async move { Ok(body) }).boxed();
                 return Ok(GetResult { payload: GetResultPayload::Stream(stream), meta, range: r, attributes, extensions: Default::default() });
             }
