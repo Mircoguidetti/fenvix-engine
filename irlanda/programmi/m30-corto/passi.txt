@@ -1,0 +1,8 @@
+# Giro M30 corto (decisione del fondatore 2026-11-05): solo le prove che dal Mac non valevano o mancavano:
+# letture fredde una alla volta (p95/p99), parallelo 10/50/100 attivi e dormienti, carico massimo. Il resto di M30 e' gia' valido dal Mac.
+giro m30s --db app_data_4 --nuova-cartella --giro m30_singoli --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 --dorm-q1 300 --dorm-q1d 300 --dorm-q4 300
+giro m30p --db app_data_6 --nuova-cartella --giro m30_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
+dormienti m30p --db app_data_6 --nuova-cartella --giro m30_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
+giro m30s --db app_data_4 --nuova-cartella --giro m30_fine_s --solo-fasi fine
+giro m30p --db app_data_6 --nuova-cartella --giro m30_fine_p --solo-fasi fine
+massimo m30s 5 --db app_data_4 --nuova-cartella --solo-fasi carico_massimo
