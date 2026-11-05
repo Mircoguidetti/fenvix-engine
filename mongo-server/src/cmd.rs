@@ -217,6 +217,7 @@ impl Server {
         }
         // K1: the object-store reads (meter.rs) and the examined keys and documents (coll.rs) of this command, for its profiler entry
         let meter = std::sync::Arc::new(tenant_bench::meter::OpMeter::default());
+        let _registered = tenant_bench::meter::register(db, &meter);
         let ((r, op_time), note) = tenant_bench::meter::OP_METER
             .scope(std::sync::Arc::clone(&meter), crate::coll::EXEC_NOTE.scope(std::cell::RefCell::new(Default::default()), async {
                 let out = crate::fair::timed(db, permit.as_mut(), crate::changes::OP_TIME.scope(std::cell::Cell::new(None), async { let r = self.run_command(db, &name, &cmd, conn_id, opid, kill, killable).await; (r, crate::changes::OP_TIME.with(|c| c.get())) })).await;
@@ -226,7 +227,8 @@ impl Server {
         let r: R<Document> = r;
         let micros = t0.elapsed().as_micros() as i64;
         self.diag.end(opid, db, &name, &cmd, &r, micros);
-        if let Some(entry) = self.profile_record(db, &name, &cmd, &r, micros, conn_id, meter.read(), &note) {
+        drop(_registered);
+        if let Some(entry) = self.profile_record(db, &name, &cmd, &r, micros, conn_id, (meter.read(), meter.is_shared()), &note) {
             // written after the reply, not before it (it was an insert before the reply: one more S3 write per operation)
             self.profile_enqueue(db, entry);
         }

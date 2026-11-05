@@ -5,7 +5,11 @@
 //!   holds and counts its lookups;
 //! - [`OpMeter`] is set around one command ([`OP_METER`]): every GET the counting store makes while that command's
 //!   future is polled adds its bytes and its time (from the request to the end of the response headers; the body of a
-//!   small range arrives with them). Reads that slatedb hands to a task of its own (read-ahead of a scan) are not seen.
+//!   small range arrives with them). The block reads of a scan run in tasks slatedb spawns (no task-local there): a GET
+//!   made outside any command, for a database (the owner of the request, `counting::request_owner`) that has commands
+//!   running ([`register`]), is charged to them: in full when one command runs on that database, split evenly and marked
+//!   `shared` when several do. The compactor's reads are not charged (its store is marked background); other reads of
+//!   the database made outside a command while one runs would be (none known besides the compactor).
 
 use async_trait::async_trait;
 use slatedb::db_cache::{CacheFetch, CacheLoader, CacheLookup, CachedEntry, CachedKey, DbCache};
@@ -168,12 +172,51 @@ pub struct OpMeter {
     pub gets: AtomicU64,
     pub bytes: AtomicU64,
     pub micros: AtomicU64,
+    /// Some reads were split with other commands running on the same database (the numbers are an estimate).
+    pub shared: std::sync::atomic::AtomicBool,
 }
 
 impl OpMeter {
     pub fn read(&self) -> (u64, u64, u64) {
         (self.gets.load(Relaxed), self.bytes.load(Relaxed), self.micros.load(Relaxed))
     }
+
+    pub fn is_shared(&self) -> bool {
+        self.shared.load(Relaxed)
+    }
+
+    fn add(&self, gets: u64, bytes: u64, micros: u64) {
+        self.gets.fetch_add(gets, Relaxed);
+        self.bytes.fetch_add(bytes, Relaxed);
+        self.micros.fetch_add(micros, Relaxed);
+    }
+}
+
+/// The meters of the commands running on each database (see the module comment).
+static ACTIVE: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<String, Vec<Arc<OpMeter>>>>> = std::sync::LazyLock::new(Default::default);
+
+/// Keeps a command's meter registered for its database while it runs.
+pub struct Registered {
+    db: String,
+    m: Arc<OpMeter>,
+}
+
+impl Drop for Registered {
+    fn drop(&mut self) {
+        let mut a = ACTIVE.lock().unwrap();
+        if let Some(v) = a.get_mut(&self.db) {
+            v.retain(|x| !Arc::ptr_eq(x, &self.m));
+            if v.is_empty() {
+                a.remove(&self.db);
+            }
+        }
+    }
+}
+
+/// Register a command's meter for the database it runs on, until the returned guard is dropped.
+pub fn register(db: &str, m: &Arc<OpMeter>) -> Registered {
+    ACTIVE.lock().unwrap().entry(db.to_string()).or_default().push(Arc::clone(m));
+    Registered { db: db.to_string(), m: Arc::clone(m) }
 }
 
 tokio::task_local! {
@@ -181,13 +224,26 @@ tokio::task_local! {
     pub static OP_METER: Arc<OpMeter>;
 }
 
-/// Called by the counting store after each GET (and ranged GET): charge it to the current operation, if one is metered.
+/// Called by the counting store after each GET (and ranged GET): charge it to the current operation, if one is metered,
+/// otherwise to the commands running on the database that made the request (see the module comment).
 pub fn note_get(bytes: u64, elapsed: std::time::Duration) {
-    let _ = OP_METER.try_with(|m| {
-        m.gets.fetch_add(1, Relaxed);
-        m.bytes.fetch_add(bytes, Relaxed);
-        m.micros.fetch_add(elapsed.as_micros() as u64, Relaxed);
-    });
+    let us = elapsed.as_micros() as u64;
+    if OP_METER.try_with(|m| m.add(1, bytes, us)).is_ok() {
+        return;
+    }
+    if crate::counting::is_background_request() {
+        return;
+    }
+    let Some(owner) = crate::counting::request_owner() else { return };
+    let a = ACTIVE.lock().unwrap();
+    let Some(v) = a.get(&*owner) else { return };
+    let n = v.len() as u64;
+    for m in v {
+        m.add(1, bytes / n, us / n);
+        if n > 1 {
+            m.shared.store(true, Relaxed);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -206,6 +262,29 @@ mod tests {
             })
             .await;
         assert_eq!(m.read(), (2, 150, 50));
+    }
+
+    #[tokio::test]
+    async fn spawned_reads_go_to_the_commands_of_their_database() {
+        let a = Arc::new(OpMeter::default());
+        let ra = register("dba", &a);
+        // a read made by a task slatedb spawned for "dba": no meter in scope, the owner names the database
+        crate::counting::with_owner_for_test("dba", || note_get(100, std::time::Duration::from_micros(40)));
+        assert_eq!(a.read(), (1, 100, 40));
+        assert!(!a.is_shared());
+        let b = Arc::new(OpMeter::default());
+        let _rb = register("dba", &b);
+        crate::counting::with_owner_for_test("dba", || note_get(100, std::time::Duration::from_micros(40)));
+        assert_eq!(a.read(), (2, 150, 60));
+        assert_eq!(b.read(), (1, 50, 20));
+        assert!(a.is_shared() && b.is_shared());
+        // another database's read is not charged
+        crate::counting::with_owner_for_test("dbz", || note_get(999, std::time::Duration::from_micros(1)));
+        assert_eq!(b.read(), (1, 50, 20));
+        drop(ra);
+        crate::counting::with_owner_for_test("dba", || note_get(10, std::time::Duration::from_micros(2)));
+        assert_eq!(a.read(), (2, 150, 60));
+        assert_eq!(b.read(), (2, 60, 22));
     }
 
     #[test]

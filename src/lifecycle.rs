@@ -1188,7 +1188,7 @@ pub(crate) async fn compact_tenant_pass(
     worker.compactions_poll_interval = Duration::from_millis(50);
     opts.worker = Some(worker);
     let started = Instant::now();
-    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), crate::counting::owned(&store, id)).with_options(opts).build());
+    let compactor = Arc::new(CompactorBuilder::new(tenant_path(id), crate::counting::owned_background(&store, id)).with_options(opts).build());
     let mut runner = {
         let c = Arc::clone(&compactor);
         tokio::spawn(async move { c.run().await })

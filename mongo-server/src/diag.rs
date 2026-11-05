@@ -1155,7 +1155,8 @@ impl Server {
     /// `io` is what the command read from the object store (requests, bytes, microseconds: `storage.data`), `note` the keys
     /// and documents its reads examined and the plan of the first one (K1: they were 0 and COLLSCAN).
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn profile_record(&self, db: &str, name: &str, cmd: &Document, r: &R<Document>, micros: i64, conn: i64, io: (u64, u64, u64), note: &crate::coll::ExecNote) -> Option<Document> {
+    pub(crate) fn profile_record(&self, db: &str, name: &str, cmd: &Document, r: &R<Document>, micros: i64, conn: i64, io: ((u64, u64, u64), bool), note: &crate::coll::ExecNote) -> Option<Document> {
+        let (io, io_shared) = io;
         let p = self.diag.prof_of(db);
         if p.level == 0 || db == "admin" && name == "profile" || matches!(name, "profile" | "hello" | "isMaster" | "ismaster" | "ping" | "saslStart" | "saslContinue" | "endSessions") {
             return None;
@@ -1226,6 +1227,10 @@ impl Server {
         // (No `cpuNanos`: it was the elapsed time written as CPU time; the CPU of the process is in serverStatus.)
         e.insert("storage", doc! { "data": { "bytesRead": Bson::Int64(io.1 as i64), "timeReadingMicros": Bson::Int64(io.2 as i64) } });
         e.insert("fenvixS3Gets", Bson::Int64(io.0 as i64));
+        if io_shared {
+            // some reads were split with other commands running on the same database at the same time (meter.rs)
+            e.insert("fenvixS3Shared", true);
+        }
         e.insert("ts", Bson::DateTime(bson::DateTime::now()));
         e.insert("client", client);
         e.insert("allUsers", Vec::<Bson>::new());
