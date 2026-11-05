@@ -1,0 +1,24 @@
+{
+ "nome": "m30_fine_s",
+ "cartella": "/opt/irlanda/lavoro/dati/m30s/giro_finale_m30_fine_s_20261105T190253Z",
+ "versione": "p1-1.6.2",
+ "fasi": {
+  "fine": [
+   {
+    "inizio": "2026-11-05T19:02:53.332033Z",
+    "sessione": "20261105T190253Z",
+    "file": "fase_23_fine.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T19:02:53.449905Z"
+   }
+  ]
+ },
+ "sessioni": [
+  {
+   "inizio": "2026-11-05T19:02:53.315880Z",
+   "fasi_chieste": [
+    "fine"
+   ]
+  }
+ ]
+}

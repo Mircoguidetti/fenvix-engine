@@ -1,0 +1,102 @@
+{
+ "quando": "2026-11-05T19:02:53Z",
+ "versione": "p1-1.6.2",
+ "dbStats": {
+  "objects": 9805531,
+  "dataSize": 4412993464.0,
+  "storageSize": null,
+  "indexSize": null,
+  "totalSize": null,
+  "fsUsedSize": null,
+  "fsTotalSize": null
+ },
+ "dbStats_completo": {
+  "db": "app_data_4",
+  "collections": 4,
+  "views": 0,
+  "objects": 9805531,
+  "avgObjSize": 450.0514519815398,
+  "dataSize": 4412993464.0,
+  "indexes": 9,
+  "scaleFactor": 1,
+  "ok": 1.0,
+  "$clusterTime": {
+   "clusterTime": {
+    "$timestamp": {
+     "t": 1793905372,
+     "i": 1
+    }
+   },
+   "signature": {
+    "hash": {
+     "$binary": {
+      "base64": "3A8IC0iVVCaDKZhzjkCSFDn/94M=",
+      "subType": "00"
+     }
+    },
+    "keyId": 7704230336049184770
+   }
+  },
+  "operationTime": {
+   "$timestamp": {
+    "t": 1793905372,
+    "i": 1
+   }
+  }
+ },
+ "collezioni": {
+  "eventi": {
+   "count": 3195938,
+   "size": 745731564,
+   "storageSize": null,
+   "totalIndexSize": 181389548,
+   "indexSizes": {
+    "_id_": 83723708,
+    "cliente_ts": 97665840
+   },
+   "avgObjSize": 233
+  },
+  "events_large": {
+   "count": 677000,
+   "size": 1313492006,
+   "storageSize": null,
+   "totalIndexSize": 38881342,
+   "indexSizes": {
+    "_id_": 17257456,
+    "cliente_ts": 21623886
+   },
+   "avgObjSize": 1940
+  },
+  "messaggi": {
+   "count": 4564342,
+   "size": 1553274022,
+   "storageSize": null,
+   "totalIndexSize": 254930081,
+   "indexSizes": {
+    "_id_": 118499272,
+    "cliente_ts": 136430809
+   },
+   "avgObjSize": 340
+  },
+  "ordini": {
+   "count": 1368251,
+   "size": 800495872,
+   "storageSize": null,
+   "totalIndexSize": 119066090,
+   "indexSizes": {
+    "_id_": 36600474,
+    "cliente_ts": 44938859,
+    "stato_ts": 37526757
+   },
+   "avgObjSize": 585
+  }
+ },
+ "oplog": {
+  "count": 504475,
+  "size": 32619642909,
+  "storageSize": null,
+  "maxSize": 16777216
+ },
+ "oplog_finestra_ore": 28.89,
+ "oplog_prima_voce": "2026-11-04T14:09:29Z"
+}

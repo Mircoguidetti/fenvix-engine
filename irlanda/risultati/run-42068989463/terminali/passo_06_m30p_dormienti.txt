@@ -1,0 +1,73 @@
+===== 2026-11-05T18:41:27.954963Z prova_infinite.py giro --file risultati_p1.json --cartella-dati /opt/irlanda/lavoro/dati/m30p --db app_data_6 --nuova-cartella --giro m30_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
+Giro finale 'm30_parallelo_dorm' (versione p1-1.6.2). Clienti attivi mai letti 1980, dormienti mai letti 0.
+Il piano usa 1800 clienti attivi mai letti su 1980 e 0 dormienti su 0 (ogni cliente in una sola fase).
+Ordine delle fasi e minuti STIMATI (pausa di 2 minuti compresa dove c'e'):
+   1. parallelo         16.0 min  (a  16.0)  1800 ricerche/clienti
+Totale STIMATO: circa 16 minuti (0.3 ore), piu' circa 6 se la collezione fredda e' accettata.
+[18:41:28] Dati grezzi in: /opt/irlanda/lavoro/dati/m30p/giro_finale_m30_parallelo_dorm_20261105T184128Z
+[18:41:28] Pausa di 120 s prima della fase parallelo (i grafici di Atlas si separano per fase).
+[18:43:28] ===== parallelo (fase 1 di 1; STIMATO 16 minuti) =====
+[18:43:29]   10 insieme: connessioni aperte e scaldate 15 (servono 10)
+[18:43:29] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793904208, 1), 'signature': {'hash': b':\nVs\x1b\x9b\xc1\xbf\xfeP\xed\x8a\t\xb7l\xddh\xdcA\xb6', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793904208, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[18:43:29]   PARALLELO 10 INSIEME INIZIO 18:43:29 ora del Mac (2026-11-05T18:43:29Z): 600 clienti in 60 lotti (Q2, Q3, Q1 a turno), uno ogni 1.5 s
+[18:44:59]   PARALLELO 10 INSIEME FINE 18:44:59 ora del Mac (2026-11-05T18:44:59Z), 60 lotti
+[18:45:00]   Pausa di 120 s prima del livello 50 insieme.
+[18:47:02]   50 insieme: connessioni aperte e scaldate 100 (servono 50)
+[18:47:02] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793904421, 1), 'signature': {'hash': b'\xd2\xe5\x93\x0eY\xa8\x11t\x1bc\xac\x99"\xe9\x86s\x8c\xc6*\xf1', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793904421, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[18:47:02]   PARALLELO 50 INSIEME INIZIO 18:47:02 ora del Mac (2026-11-05T18:47:02Z): 600 clienti in 12 lotti (Q2, Q3, Q1 a turno), uno ogni 7.5 s
+[18:48:32]   PARALLELO 50 INSIEME FINE 18:48:32 ora del Mac (2026-11-05T18:48:32Z), 12 lotti
+[18:48:32]   Pausa di 120 s prima del livello 100 insieme.
+[18:50:37]   100 insieme: connessioni aperte e scaldate 200 (servono 100)
+[18:50:37] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793904636, 1), 'signature': {'hash': b'v}\x18\xba\x8f\x15\xee\x1aR\xd0\xe3W\xe1\xc1\xe59u\t\x00M', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793904636, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[18:50:37]   PARALLELO 100 INSIEME INIZIO 18:50:37 ora del Mac (2026-11-05T18:50:37Z): 600 clienti in 6 lotti (Q2, Q3, Q1 a turno), uno ogni 15.0 s
+[18:52:07]   PARALLELO 100 INSIEME FINE 18:52:07 ora del Mac (2026-11-05T18:52:07Z), 6 lotti
+
+=== FASE parallelo (letture fredde di clienti diversi che partono insieme): 2026-11-05T18:43:28.357016Z - 2026-11-05T18:52:07.880042Z UTC ===
+   Il giudizio si fa sul tempo lato server (profiler). Il tempo lato cliente e' la rete del Mac.
+   10 insieme: 600 clienti, 60 lotti, connessioni aperte prima 15; 2026-11-05T18:43:29.454698Z - 2026-11-05T18:44:59.455886Z
+     Q1 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.96 p99 8.93 ms]
+     Q1 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.68 p99 8.69 ms]
+     Q2 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.79 p99 11.29 ms]
+     Q2 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.15 p99 7.77 ms]
+   50 insieme: 600 clienti, 12 lotti, connessioni aperte prima 100; 2026-11-05T18:47:02.255591Z - 2026-11-05T18:48:32.258805Z
+     Q1 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 14.23 p99 26.00 ms]
+     Q1 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 14.03 p99 24.22 ms]
+     Q2 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 14.03 p99 25.01 ms]
+     Q2 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 13.59 p99 24.09 ms]
+   100 insieme: 600 clienti, 6 lotti, connessioni aperte prima 200; 2026-11-05T18:50:37.165719Z - 2026-11-05T18:52:07.170232Z
+     Q1 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 25.53 p99 44.09 ms]
+     Q1 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 23.68 p99 41.91 ms]
+     Q2 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 23.92 p99 44.14 ms]
+     Q2 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 21.55 p99 40.00 ms]
+
+
+=== RIASSUNTO DEL GIRO FINALE 'm30_parallelo_dorm' (dai dati grezzi; si rifa' con: riassunto --cartella /opt/irlanda/lavoro/dati/m30p/giro_finale_m30_parallelo_dorm_20261105T184128Z) ===
+
+=== FASE parallelo (letture fredde di clienti diversi che partono insieme): 2026-11-05T18:43:28.357016Z - 2026-11-05T18:52:07.880042Z UTC ===
+   Il giudizio si fa sul tempo lato server (profiler). Il tempo lato cliente e' la rete del Mac.
+   10 insieme: 600 clienti, 60 lotti, connessioni aperte prima 15; 2026-11-05T18:43:29.454698Z - 2026-11-05T18:44:59.455886Z
+     Q1 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.96 p99 8.93 ms]
+     Q1 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.68 p99 8.69 ms]
+     Q2 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.79 p99 11.29 ms]
+     Q2 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 4.15 p99 7.77 ms]
+   50 insieme: 600 clienti, 12 lotti, connessioni aperte prima 100; 2026-11-05T18:47:02.255591Z - 2026-11-05T18:48:32.258805Z
+     Q1 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 14.23 p99 26.00 ms]
+     Q1 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 14.03 p99 24.22 ms]
+     Q2 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 14.03 p99 25.01 ms]
+     Q2 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 13.59 p99 24.09 ms]
+   100 insieme: 600 clienti, 6 lotti, connessioni aperte prima 200; 2026-11-05T18:50:37.165719Z - 2026-11-05T18:52:07.170232Z
+     Q1 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 25.53 p99 44.09 ms]
+     Q1 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 23.68 p99 41.91 ms]
+     Q2 freddo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 23.92 p99 44.14 ms]
+     Q2 caldo: server millis p50 - p95 - p99 -; lettura storage p50 - p99 - ms; profiler 0/300; a 0 byte dalla dispensa 0/0; solo byte>0: millis p50 -; errori 0; [rete del Mac: p50 21.55 p99 40.00 ms]
+
+
+Stato delle fasi:
+  parallelo        fatta      fase_12_parallelo.json 
+
+Fasi non riuscite: atlas_inizio, inizio, Q2, Q3, Q1, Q1d, Q4, Q5, spiega, condizioni, mentre_scrivi, carico_massimo, scritture, cancellazione, grandi_carica, grandi_lavaggio, grandi_Q2, grandi_Q1, grandi_Q3, grandi_Q4, freddo, fine, atlas_fine. Si rifanno una per una con:  python3 prova_infinite.py giro --solo-fasi atlas_inizio,inizio,Q2,Q3,Q1,Q1d,Q4,Q5,spiega,condizioni,mentre_scrivi,carico_massimo,scritture,cancellazione,grandi_carica,grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4,freddo,fine,atlas_fine
+
+=== NUMERI DERIVATI (STIMATI, solo dai dati grezzi; dettaglio in RIASSUNTO.json) ===
+  parallelo: CPU 2.6% di un core, us per lettura 3256.43, per scrittura 16348.83
+
+Cartella: /opt/irlanda/lavoro/dati/m30p/giro_finale_m30_parallelo_dorm_20261105T184128Z (6 file, elencati con SHA-256 in INDICE.json)

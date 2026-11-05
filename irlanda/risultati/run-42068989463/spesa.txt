@@ -1,0 +1,1 @@
+SPESA: 1,02 $ finora a 143 minuti (stima per eccesso: macchine 0,98 per 2,6 ore-macchina, disco 0,006, IPv4 0,013, S3 0,02), tetto 5,00 $

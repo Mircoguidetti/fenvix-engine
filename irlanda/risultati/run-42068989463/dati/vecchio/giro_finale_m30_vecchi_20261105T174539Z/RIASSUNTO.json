@@ -1,0 +1,3078 @@
+{
+ "versione": "p1-1.6.2",
+ "scritto": "2026-11-05T18:08:12.083719Z",
+ "analisi": {
+  "nota": "STIMATO: numeri derivati dai dati grezzi; le misure dell'API sono medie al minuto",
+  "origini_api": [],
+  "fasi": [
+   {
+    "fase": "Q2",
+    "inizio": "2026-11-05T17:47:40.108367Z",
+    "fine": "2026-11-05T17:50:10.108493Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.052,
+     "cpu_us": 3282093,
+     "operazioni": {
+      "query": 316,
+      "getmore": 0,
+      "insert": 0,
+      "update": 160,
+      "delete": 17,
+      "command": 4193
+     },
+     "documenti": {
+      "returned": 548,
+      "inserted": 0,
+      "updated": 158,
+      "deleted": 2
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1709377587,
+     "cpu_us_per_lettura": 10386.37,
+     "cpu_us_per_scrittura": 18542.9,
+     "cpu_us_per_documento": 4635.72,
+     "cpu_percento_di_un_core": 2.2,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 50,
+     "find_al_secondo": 1.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q3",
+    "inizio": "2026-11-05T17:52:10.276367Z",
+    "fine": "2026-11-05T17:54:40.276526Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.052,
+     "cpu_us": 4660227,
+     "operazioni": {
+      "query": 316,
+      "getmore": 0,
+      "insert": 0,
+      "update": 166,
+      "delete": 17,
+      "command": 4326
+     },
+     "documenti": {
+      "returned": 11647,
+      "inserted": 0,
+      "updated": 162,
+      "deleted": 2
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1710926479,
+     "cpu_us_per_lettura": 14747.55,
+     "cpu_us_per_scrittura": 25465.72,
+     "cpu_us_per_documento": 394.57,
+     "cpu_percento_di_un_core": 3.1,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 50,
+     "find_al_secondo": 1.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q1",
+    "inizio": "2026-11-05T17:56:40.454391Z",
+    "fine": "2026-11-05T17:59:10.454525Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.053,
+     "cpu_us": 3533098,
+     "operazioni": {
+      "query": 313,
+      "getmore": 0,
+      "insert": 0,
+      "update": 161,
+      "delete": 16,
+      "command": 4349
+     },
+     "documenti": {
+      "returned": 3515,
+      "inserted": 0,
+      "updated": 159,
+      "deleted": 2
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1712629570,
+     "cpu_us_per_lettura": 11287.85,
+     "cpu_us_per_scrittura": 19961.01,
+     "cpu_us_per_documento": 961.13,
+     "cpu_percento_di_un_core": 2.4,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 49,
+     "find_al_secondo": 0.98,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q1d",
+    "inizio": "2026-11-05T18:01:10.630784Z",
+    "fine": "2026-11-05T18:03:40.630917Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.053,
+     "cpu_us": 3752441,
+     "operazioni": {
+      "query": 313,
+      "getmore": 0,
+      "insert": 0,
+      "update": 150,
+      "delete": 0,
+      "command": 4320
+     },
+     "documenti": {
+      "returned": 3353,
+      "inserted": 0,
+      "updated": 150,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1716010641,
+     "cpu_us_per_lettura": 11988.63,
+     "cpu_us_per_scrittura": 25016.27,
+     "cpu_us_per_documento": 1071.21,
+     "cpu_percento_di_un_core": 2.5,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 49,
+     "find_al_secondo": 0.98,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q4",
+    "inizio": "2026-11-05T18:05:40.833010Z",
+    "fine": "2026-11-05T18:08:10.833193Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.049,
+     "cpu_us": 9446743,
+     "operazioni": {
+      "query": 313,
+      "getmore": 0,
+      "insert": 0,
+      "update": 150,
+      "delete": 0,
+      "command": 4317
+     },
+     "documenti": {
+      "returned": 61735,
+      "inserted": 0,
+      "updated": 150,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1711323237,
+     "cpu_us_per_lettura": 30181.29,
+     "cpu_us_per_scrittura": 62978.29,
+     "cpu_us_per_documento": 152.65,
+     "cpu_percento_di_un_core": 6.3,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 49,
+     "find_al_secondo": 0.98,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   }
+  ]
+ },
+ "fasi": [
+  {
+   "fase": "Q2",
+   "inizio": "2026-11-05T17:47:40.108367Z",
+   "fine": "2026-11-05T17:50:10.108493Z",
+   "n": 50,
+   "con_freddo": 50,
+   "errori": 0,
+   "controlli_ok": 50,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 50,
+    "p50": 2.895,
+    "p95": 3.03,
+    "p99": 3.119,
+    "media": 2.881,
+    "min": 2.293,
+    "max": 3.146
+   },
+   "caldo_ms": {
+    "n": 50,
+    "p50": 1.266,
+    "p95": 1.318,
+    "p99": 1.324,
+    "media": 1.248,
+    "min": 1.109,
+    "max": 1.327
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 50,
+    "p50": 1.464,
+    "p95": 1.677,
+    "p99": 1.687,
+    "media": 1.449,
+    "min": 0.719,
+    "max": 1.689
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 50,
+    "p50": 0.127,
+    "p95": 0.199,
+    "p99": 0.255,
+    "media": 0.124,
+    "min": -0.037,
+    "max": 0.287
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 50,
+    "p50": 1.673,
+    "p95": 1.78,
+    "p99": 1.822,
+    "media": 1.633,
+    "min": 0.984,
+    "max": 1.825
+   },
+   "p50_freddo_meno_p50_caldo": 1.628,
+   "documenti_freddo": {
+    "n": 50,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "media": 1.0,
+    "min": 1,
+    "max": 1
+   },
+   "documenti_caldo": {
+    "n": 50,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "media": 1.0,
+    "min": 1,
+    "max": 1
+   },
+   "byte_freddo": {
+    "n": 50,
+    "p50": 562.0,
+    "p95": 800.7,
+    "p99": 829.75,
+    "media": 565.56,
+    "min": 348,
+    "max": 842
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 1.6256,
+     "freddo_meno_hello_p50": 1.4789
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 1.6907999999999999,
+     "freddo_meno_hello_p50": 1.4610999999999998
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 50,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 50,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 46,
+     "con_freddo": 46,
+     "errori": 0,
+     "controlli_ok": 46,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 46,
+      "p50": 2.895,
+      "p95": 3.026,
+      "p99": 3.095,
+      "media": 2.88,
+      "min": 2.293,
+      "max": 3.146
+     },
+     "caldo_ms": {
+      "n": 46,
+      "p50": 1.266,
+      "p95": 1.319,
+      "p99": 1.324,
+      "media": 1.245,
+      "min": 1.109,
+      "max": 1.327
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 1.464,
+      "p95": 1.68,
+      "p99": 1.687,
+      "media": 1.453,
+      "min": 0.719,
+      "max": 1.689
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 0.128,
+      "p95": 0.208,
+      "p99": 0.258,
+      "media": 0.124,
+      "min": -0.037,
+      "max": 0.287
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 46,
+      "p50": 1.673,
+      "p95": 1.772,
+      "p99": 1.822,
+      "media": 1.635,
+      "min": 0.984,
+      "max": 1.825
+     },
+     "p50_freddo_meno_p50_caldo": 1.629,
+     "documenti_freddo": {
+      "n": 46,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "documenti_caldo": {
+      "n": 46,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "byte_freddo": {
+      "n": 46,
+      "p50": 575.5,
+      "p95": 807.5,
+      "p99": 830.75,
+      "media": 570.37,
+      "min": 348,
+      "max": 842
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 1.6256,
+       "freddo_meno_hello_p50": 1.4789
+      },
+      {
+       "da": 25,
+       "a": 46,
+       "freddo_meno_caldo_p50": 1.6909,
+       "freddo_meno_hello_p50": 1.4610999999999998
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 4,
+     "con_freddo": 4,
+     "errori": 0,
+     "controlli_ok": 4,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 4,
+      "p50": 2.922,
+      "p95": 3.078,
+      "p99": 3.089,
+      "media": 2.901,
+      "min": 2.67,
+      "max": 3.091
+     },
+     "caldo_ms": {
+      "n": 4,
+      "p50": 1.284,
+      "p95": 1.303,
+      "p99": 1.305,
+      "media": 1.288,
+      "min": 1.278,
+      "max": 1.306
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 4,
+      "p50": 1.369,
+      "p95": 1.64,
+      "p99": 1.658,
+      "media": 1.401,
+      "min": 1.201,
+      "max": 1.663
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 4,
+      "p50": 0.117,
+      "p95": 0.137,
+      "p99": 0.139,
+      "media": 0.119,
+      "min": 0.105,
+      "max": 0.139
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 4,
+      "p50": 1.638,
+      "p95": 1.775,
+      "p99": 1.784,
+      "media": 1.613,
+      "min": 1.391,
+      "max": 1.786
+     },
+     "p50_freddo_meno_p50_caldo": 1.638,
+     "documenti_freddo": {
+      "n": 4,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "documenti_caldo": {
+      "n": 4,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "byte_freddo": {
+      "n": 4,
+      "p50": 485.5,
+      "p95": 638.3,
+      "p99": 654.86,
+      "media": 510.25,
+      "min": 411,
+      "max": 659
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 4,
+       "freddo_meno_caldo_p50": 1.63835,
+       "freddo_meno_hello_p50": 1.3690499999999999
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 4,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 4,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-002928",
+    "cli-000923",
+    "cli-004803",
+    "cli-002701",
+    "cli-002936",
+    "cli-002158",
+    "cli-004665",
+    "cli-004763",
+    "cli-003381",
+    "cli-003956",
+    "cli-000279",
+    "cli-000069",
+    "cli-003124",
+    "cli-004291",
+    "cli-002412",
+    "cli-001012",
+    "cli-000720",
+    "cli-000962",
+    "cli-001306",
+    "cli-001031",
+    "cli-003765",
+    "cli-001987",
+    "cli-002321",
+    "cli-001219",
+    "cli-003911",
+    "cli-002594",
+    "cli-001097",
+    "cli-004661",
+    "cli-002663",
+    "cli-000005",
+    "cli-002682",
+    "cli-002358",
+    "cli-003869",
+    "cli-002643",
+    "cli-003353",
+    "cli-002419",
+    "cli-005114",
+    "cli-000781",
+    "cli-001343",
+    "cli-003659",
+    "cli-005021",
+    "cli-001046",
+    "cli-001542",
+    "cli-000014",
+    "cli-004703",
+    "cli-000675",
+    "cli-002148",
+    "cli-003894",
+    "cli-004406",
+    "cli-004608"
+   ]
+  },
+  {
+   "fase": "Q3",
+   "inizio": "2026-11-05T17:52:10.276367Z",
+   "fine": "2026-11-05T17:54:40.276526Z",
+   "n": 50,
+   "con_freddo": 50,
+   "errori": 0,
+   "controlli_ok": 50,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 50,
+    "p50": 38.378,
+    "p95": 47.026,
+    "p99": 48.036,
+    "media": 34.572,
+    "min": 12.58,
+    "max": 48.187
+   },
+   "caldo_ms": {
+    "n": 50,
+    "p50": 1.603,
+    "p95": 1.741,
+    "p99": 2.105,
+    "media": 1.608,
+    "min": 1.377,
+    "max": 2.421
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 50,
+    "p50": 36.953,
+    "p95": 44.74,
+    "p99": 46.676,
+    "media": 33.07,
+    "min": 11.225,
+    "max": 46.863
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 50,
+    "p50": 0.496,
+    "p95": 0.669,
+    "p99": 1.005,
+    "media": 0.51,
+    "min": 0.271,
+    "max": 1.188
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 50,
+    "p50": 36.755,
+    "p95": 45.35,
+    "p99": 46.358,
+    "media": 32.964,
+    "min": 11.201,
+    "max": 46.532
+   },
+   "p50_freddo_meno_p50_caldo": 36.775,
+   "documenti_freddo": {
+    "n": 50,
+    "p50": 85.5,
+    "p95": 100.0,
+    "p99": 100.0,
+    "media": 74.88,
+    "min": 23,
+    "max": 100
+   },
+   "documenti_caldo": {
+    "n": 50,
+    "p50": 85.5,
+    "p95": 100.0,
+    "p99": 100.0,
+    "media": 74.88,
+    "min": 23,
+    "max": 100
+   },
+   "byte_freddo": {
+    "n": 50,
+    "p50": 19751.5,
+    "p95": 23731.3,
+    "p99": 23849.36,
+    "media": 17544.18,
+    "min": 5317,
+    "max": 23867
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 38.1459,
+     "freddo_meno_hello_p50": 38.4425
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 33.4597,
+     "freddo_meno_hello_p50": 33.5935
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 50,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 50,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 46,
+     "con_freddo": 46,
+     "errori": 0,
+     "controlli_ok": 46,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 46,
+      "p50": 38.226,
+      "p95": 47.242,
+      "p99": 48.048,
+      "media": 33.981,
+      "min": 12.58,
+      "max": 48.187
+     },
+     "caldo_ms": {
+      "n": 46,
+      "p50": 1.603,
+      "p95": 1.719,
+      "p99": 1.767,
+      "media": 1.592,
+      "min": 1.377,
+      "max": 1.776
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 36.792,
+      "p95": 44.869,
+      "p99": 46.692,
+      "media": 32.47,
+      "min": 11.225,
+      "max": 46.863
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 0.495,
+      "p95": 0.65,
+      "p99": 0.754,
+      "media": 0.496,
+      "min": 0.271,
+      "max": 0.815
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 46,
+      "p50": 36.589,
+      "p95": 45.544,
+      "p99": 46.372,
+      "media": 32.389,
+      "min": 11.201,
+      "max": 46.532
+     },
+     "p50_freddo_meno_p50_caldo": 36.623,
+     "documenti_freddo": {
+      "n": 46,
+      "p50": 83.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 73.413,
+      "min": 23,
+      "max": 100
+     },
+     "documenti_caldo": {
+      "n": 46,
+      "p50": 83.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 73.413,
+      "min": 23,
+      "max": 100
+     },
+     "byte_freddo": {
+      "n": 46,
+      "p50": 19285.5,
+      "p95": 23446.75,
+      "p99": 23807.6,
+      "media": 17185.783,
+      "min": 5317,
+      "max": 23831
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 36.6061,
+       "freddo_meno_hello_p50": 36.765499999999996
+      },
+      {
+       "da": 25,
+       "a": 46,
+       "freddo_meno_caldo_p50": 36.5724,
+       "freddo_meno_hello_p50": 36.8181
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 4,
+     "con_freddo": 4,
+     "errori": 0,
+     "controlli_ok": 4,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 4,
+      "p50": 44.07,
+      "p95": 44.633,
+      "p99": 44.642,
+      "media": 41.367,
+      "min": 32.684,
+      "max": 44.644
+     },
+     "caldo_ms": {
+      "n": 4,
+      "p50": 1.621,
+      "p95": 2.305,
+      "p99": 2.398,
+      "media": 1.799,
+      "min": 1.532,
+      "max": 2.421
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 4,
+      "p50": 42.651,
+      "p95": 43.222,
+      "p99": 43.254,
+      "media": 39.962,
+      "min": 31.285,
+      "max": 43.262
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 4,
+      "p50": 0.516,
+      "p95": 1.09,
+      "p99": 1.169,
+      "media": 0.67,
+      "min": 0.461,
+      "max": 1.188
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 4,
+      "p50": 42.036,
+      "p95": 42.914,
+      "p99": 43.022,
+      "media": 39.568,
+      "min": 31.152,
+      "max": 43.049
+     },
+     "p50_freddo_meno_p50_caldo": 42.449,
+     "documenti_freddo": {
+      "n": 4,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 91.75,
+      "min": 67,
+      "max": 100
+     },
+     "documenti_caldo": {
+      "n": 4,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 91.75,
+      "min": 67,
+      "max": 100
+     },
+     "byte_freddo": {
+      "n": 4,
+      "p50": 23422.0,
+      "p95": 23837.9,
+      "p99": 23861.18,
+      "media": 21665.75,
+      "min": 15952,
+      "max": 23867
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 4,
+       "freddo_meno_caldo_p50": 42.03605,
+       "freddo_meno_hello_p50": 42.6507
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 4,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 4,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "primi_50_freddo_vero": {
+    "n": 50,
+    "con_freddo": 50,
+    "errori": 0,
+    "controlli_ok": 50,
+    "controlli_falliti": 0,
+    "freddo_ms": {
+     "n": 50,
+     "p50": 38.378,
+     "p95": 47.026,
+     "p99": 48.036,
+     "media": 34.572,
+     "min": 12.58,
+     "max": 48.187
+    },
+    "caldo_ms": {
+     "n": 50,
+     "p50": 1.603,
+     "p95": 1.741,
+     "p99": 2.105,
+     "media": 1.608,
+     "min": 1.377,
+     "max": 2.421
+    },
+    "freddo_meno_hello_accoppiato": {
+     "n": 50,
+     "p50": 36.953,
+     "p95": 44.74,
+     "p99": 46.676,
+     "media": 33.07,
+     "min": 11.225,
+     "max": 46.863
+    },
+    "caldo_meno_hello_accoppiato": {
+     "n": 50,
+     "p50": 0.496,
+     "p95": 0.669,
+     "p99": 1.005,
+     "media": 0.51,
+     "min": 0.271,
+     "max": 1.188
+    },
+    "freddo_meno_caldo_stessa_ricerca": {
+     "n": 50,
+     "p50": 36.755,
+     "p95": 45.35,
+     "p99": 46.358,
+     "media": 32.964,
+     "min": 11.201,
+     "max": 46.532
+    },
+    "p50_freddo_meno_p50_caldo": 36.775,
+    "documenti_freddo": {
+     "n": 50,
+     "p50": 85.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 74.88,
+     "min": 23,
+     "max": 100
+    },
+    "documenti_caldo": {
+     "n": 50,
+     "p50": 85.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 74.88,
+     "min": 23,
+     "max": 100
+    },
+    "byte_freddo": {
+     "n": 50,
+     "p50": 19751.5,
+     "p95": 23731.3,
+     "p99": 23849.36,
+     "media": 17544.18,
+     "min": 5317,
+     "max": 23867
+    },
+    "getmore_freddo_totale": 0,
+    "blocchi_25": [
+     {
+      "da": 0,
+      "a": 25,
+      "freddo_meno_caldo_p50": 38.1459,
+      "freddo_meno_hello_p50": 38.4425
+     },
+     {
+      "da": 25,
+      "a": 50,
+      "freddo_meno_caldo_p50": 33.4597,
+      "freddo_meno_hello_p50": 33.5935
+     }
+    ],
+    "profiler_freddo": {
+     "ricerche_trovate_nel_profiler": 0,
+     "ricerche": 50,
+     "millis": {
+      "n": 0
+     },
+     "storage_byte_letti": {
+      "n": 0
+     },
+     "storage_ms_di_lettura": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "storage_byte_letti_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_ms_di_lettura_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "millis_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_non_riportato_da_atlas": 0,
+     "docsExamined": {
+      "n": 0
+     },
+     "keysExamined": {
+      "n": 0
+     },
+     "piani": []
+    },
+    "profiler_caldo": {
+     "ricerche_trovate_nel_profiler": 0,
+     "ricerche": 50,
+     "millis": {
+      "n": 0
+     },
+     "storage_byte_letti": {
+      "n": 0
+     },
+     "storage_ms_di_lettura": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "storage_byte_letti_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_ms_di_lettura_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "millis_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_non_riportato_da_atlas": 0,
+     "docsExamined": {
+      "n": 0
+     },
+     "keysExamined": {
+      "n": 0
+     },
+     "piani": []
+    }
+   },
+   "clienti": [
+    "cli-002129",
+    "cli-002118",
+    "cli-003683",
+    "cli-002614",
+    "cli-004862",
+    "cli-002689",
+    "cli-001048",
+    "cli-002601",
+    "cli-001997",
+    "cli-003914",
+    "cli-002180",
+    "cli-002801",
+    "cli-004280",
+    "cli-000191",
+    "cli-002806",
+    "cli-002026",
+    "cli-004060",
+    "cli-001381",
+    "cli-002512",
+    "cli-000064",
+    "cli-003012",
+    "cli-000619",
+    "cli-003495",
+    "cli-005092",
+    "cli-004031",
+    "cli-004063",
+    "cli-001101",
+    "cli-003906",
+    "cli-004226",
+    "cli-002893",
+    "cli-002164",
+    "cli-001578",
+    "cli-000671",
+    "cli-001757",
+    "cli-004320",
+    "cli-001035",
+    "cli-002179",
+    "cli-004849",
+    "cli-001799",
+    "cli-004748",
+    "cli-004568",
+    "cli-002894",
+    "cli-003037",
+    "cli-002566",
+    "cli-000532",
+    "cli-002362",
+    "cli-003475",
+    "cli-000273",
+    "cli-001455",
+    "cli-001735"
+   ]
+  },
+  {
+   "fase": "Q1",
+   "inizio": "2026-11-05T17:56:40.454391Z",
+   "fine": "2026-11-05T17:59:10.454525Z",
+   "n": 49,
+   "con_freddo": 49,
+   "errori": 0,
+   "controlli_ok": 49,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 49,
+    "p50": 10.044,
+    "p95": 13.194,
+    "p99": 14.505,
+    "media": 9.935,
+    "min": 5.087,
+    "max": 14.843
+   },
+   "caldo_ms": {
+    "n": 49,
+    "p50": 1.351,
+    "p95": 1.455,
+    "p99": 1.59,
+    "media": 1.359,
+    "min": 1.162,
+    "max": 1.675
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 49,
+    "p50": 8.692,
+    "p95": 11.848,
+    "p99": 13.107,
+    "media": 8.566,
+    "min": 3.664,
+    "max": 13.433
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 49,
+    "p50": 0.292,
+    "p95": 0.412,
+    "p99": 0.432,
+    "media": 0.297,
+    "min": 0.121,
+    "max": 0.446
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 49,
+    "p50": 8.689,
+    "p95": 11.786,
+    "p99": 13.113,
+    "media": 8.576,
+    "min": 3.631,
+    "max": 13.424
+   },
+   "p50_freddo_meno_p50_caldo": 8.693,
+   "documenti_freddo": {
+    "n": 49,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "documenti_caldo": {
+    "n": 49,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "byte_freddo": {
+    "n": 49,
+    "p50": 6861.0,
+    "p95": 7438.4,
+    "p99": 7639.88,
+    "media": 6817.122,
+    "min": 6112,
+    "max": 7649
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 8.939400000000001,
+     "freddo_meno_hello_p50": 8.8635
+    },
+    {
+     "da": 25,
+     "a": 49,
+     "freddo_meno_caldo_p50": 7.65045,
+     "freddo_meno_hello_p50": 7.671150000000001
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 49,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 49,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 46,
+     "con_freddo": 46,
+     "errori": 0,
+     "controlli_ok": 46,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 46,
+      "p50": 9.968,
+      "p95": 12.651,
+      "p99": 13.171,
+      "media": 9.675,
+      "min": 5.087,
+      "max": 13.372
+     },
+     "caldo_ms": {
+      "n": 46,
+      "p50": 1.35,
+      "p95": 1.455,
+      "p99": 1.595,
+      "media": 1.358,
+      "min": 1.162,
+      "max": 1.675
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 8.632,
+      "p95": 11.284,
+      "p99": 11.822,
+      "media": 8.306,
+      "min": 3.664,
+      "max": 12.057
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 0.291,
+      "p95": 0.413,
+      "p99": 0.433,
+      "media": 0.297,
+      "min": 0.121,
+      "max": 0.446
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 46,
+      "p50": 8.53,
+      "p95": 11.307,
+      "p99": 11.769,
+      "media": 8.317,
+      "min": 3.631,
+      "max": 11.923
+     },
+     "p50_freddo_meno_p50_caldo": 8.618,
+     "documenti_freddo": {
+      "n": 46,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 46,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 46,
+      "p50": 6859.5,
+      "p95": 7459.25,
+      "p99": 7640.45,
+      "media": 6809.804,
+      "min": 6112,
+      "max": 7649
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 8.7388,
+       "freddo_meno_hello_p50": 8.733
+      },
+      {
+       "da": 25,
+       "a": 46,
+       "freddo_meno_caldo_p50": 7.1226,
+       "freddo_meno_hello_p50": 7.0826
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 3,
+     "con_freddo": 3,
+     "errori": 0,
+     "controlli_ok": 3,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 3,
+      "p50": 14.14,
+      "p95": 14.772,
+      "p99": 14.829,
+      "media": 13.915,
+      "min": 12.764,
+      "max": 14.843
+     },
+     "caldo_ms": {
+      "n": 3,
+      "p50": 1.364,
+      "p95": 1.413,
+      "p99": 1.417,
+      "media": 1.369,
+      "min": 1.326,
+      "max": 1.418
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 3,
+      "p50": 12.753,
+      "p95": 13.365,
+      "p99": 13.42,
+      "media": 12.545,
+      "min": 11.448,
+      "max": 13.433
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 3,
+      "p50": 0.304,
+      "p95": 0.343,
+      "p99": 0.347,
+      "media": 0.299,
+      "min": 0.245,
+      "max": 0.347
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 3,
+      "p50": 12.776,
+      "p95": 13.36,
+      "p99": 13.411,
+      "media": 12.546,
+      "min": 11.438,
+      "max": 13.424
+     },
+     "p50_freddo_meno_p50_caldo": 12.776,
+     "documenti_freddo": {
+      "n": 3,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 3,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 3,
+      "p50": 7049.0,
+      "p95": 7317.2,
+      "p99": 7341.04,
+      "media": 6929.333,
+      "min": 6392,
+      "max": 7347
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 3,
+       "freddo_meno_caldo_p50": 12.776,
+       "freddo_meno_hello_p50": 12.7531
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 3,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 3,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-004794",
+    "cli-000636",
+    "cli-000105",
+    "cli-001379",
+    "cli-004374",
+    "cli-004690",
+    "cli-004109",
+    "cli-002159",
+    "cli-002862",
+    "cli-000132",
+    "cli-003942",
+    "cli-001404",
+    "cli-002340",
+    "cli-000830",
+    "cli-001113",
+    "cli-002013",
+    "cli-005027",
+    "cli-003970",
+    "cli-000164",
+    "cli-000789",
+    "cli-005080",
+    "cli-002399",
+    "cli-003740",
+    "cli-002672",
+    "cli-004662",
+    "cli-004359",
+    "cli-003482",
+    "cli-005015",
+    "cli-001901",
+    "cli-003647",
+    "cli-002874",
+    "cli-004589",
+    "cli-004995",
+    "cli-002797",
+    "cli-002817",
+    "cli-002058",
+    "cli-000773",
+    "cli-000645",
+    "cli-003534",
+    "cli-002855",
+    "cli-005054",
+    "cli-003561",
+    "cli-000994",
+    "cli-000511",
+    "cli-003574",
+    "cli-003866",
+    "cli-001758",
+    "cli-001793",
+    "cli-001464"
+   ]
+  },
+  {
+   "fase": "Q1d",
+   "inizio": "2026-11-05T18:01:10.630784Z",
+   "fine": "2026-11-05T18:03:40.630917Z",
+   "n": 49,
+   "con_freddo": 49,
+   "errori": 0,
+   "controlli_ok": 49,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 49,
+    "p50": 12.993,
+    "p95": 14.12,
+    "p99": 14.95,
+    "media": 12.987,
+    "min": 11.115,
+    "max": 15.37
+   },
+   "caldo_ms": {
+    "n": 49,
+    "p50": 1.409,
+    "p95": 1.531,
+    "p99": 1.547,
+    "media": 1.427,
+    "min": 1.281,
+    "max": 1.555
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 49,
+    "p50": 11.521,
+    "p95": 12.601,
+    "p99": 13.604,
+    "media": 11.546,
+    "min": 9.693,
+    "max": 14.183
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 49,
+    "p50": 0.322,
+    "p95": 0.395,
+    "p99": 0.51,
+    "media": 0.326,
+    "min": 0.224,
+    "max": 0.556
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 49,
+    "p50": 11.533,
+    "p95": 12.667,
+    "p99": 13.592,
+    "media": 11.561,
+    "min": 9.77,
+    "max": 13.979
+   },
+   "p50_freddo_meno_p50_caldo": 11.584,
+   "documenti_freddo": {
+    "n": 49,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "documenti_caldo": {
+    "n": 49,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "byte_freddo": {
+    "n": 49,
+    "p50": 6786.0,
+    "p95": 7370.8,
+    "p99": 7489.0,
+    "media": 6816.306,
+    "min": 6094,
+    "max": 7489
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 11.9542,
+     "freddo_meno_hello_p50": 11.8802
+    },
+    {
+     "da": 25,
+     "a": 49,
+     "freddo_meno_caldo_p50": 11.16245,
+     "freddo_meno_hello_p50": 11.08775
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 49,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 49,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 46,
+     "con_freddo": 46,
+     "errori": 0,
+     "controlli_ok": 46,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 46,
+      "p50": 12.953,
+      "p95": 14.124,
+      "p99": 14.976,
+      "media": 12.991,
+      "min": 11.115,
+      "max": 15.37
+     },
+     "caldo_ms": {
+      "n": 46,
+      "p50": 1.418,
+      "p95": 1.533,
+      "p99": 1.547,
+      "media": 1.428,
+      "min": 1.281,
+      "max": 1.555
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 11.504,
+      "p95": 12.606,
+      "p99": 13.64,
+      "media": 11.55,
+      "min": 9.693,
+      "max": 14.183
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 0.322,
+      "p95": 0.396,
+      "p99": 0.513,
+      "media": 0.328,
+      "min": 0.224,
+      "max": 0.556
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 46,
+      "p50": 11.519,
+      "p95": 12.692,
+      "p99": 13.616,
+      "media": 11.564,
+      "min": 9.77,
+      "max": 13.979
+     },
+     "p50_freddo_meno_p50_caldo": 11.534,
+     "documenti_freddo": {
+      "n": 46,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 46,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 46,
+      "p50": 6775.0,
+      "p95": 7299.5,
+      "p99": 7489.0,
+      "media": 6785.652,
+      "min": 6094,
+      "max": 7489
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 11.8767,
+       "freddo_meno_hello_p50": 11.8734
+      },
+      {
+       "da": 25,
+       "a": 46,
+       "freddo_meno_caldo_p50": 11.2161,
+       "freddo_meno_hello_p50": 11.161
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 3,
+     "con_freddo": 3,
+     "errori": 0,
+     "controlli_ok": 3,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 3,
+      "p50": 13.083,
+      "p95": 13.388,
+      "p99": 13.415,
+      "media": 12.922,
+      "min": 12.26,
+      "max": 13.422
+     },
+     "caldo_ms": {
+      "n": 3,
+      "p50": 1.395,
+      "p95": 1.461,
+      "p99": 1.466,
+      "media": 1.405,
+      "min": 1.353,
+      "max": 1.468
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 3,
+      "p50": 11.689,
+      "p95": 11.861,
+      "p99": 11.876,
+      "media": 11.479,
+      "min": 10.868,
+      "max": 11.88
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 3,
+      "p50": 0.325,
+      "p95": 0.343,
+      "p99": 0.345,
+      "media": 0.304,
+      "min": 0.241,
+      "max": 0.346
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 3,
+      "p50": 11.689,
+      "p95": 11.928,
+      "p99": 11.949,
+      "media": 11.517,
+      "min": 10.907,
+      "max": 11.954
+     },
+     "p50_freddo_meno_p50_caldo": 11.689,
+     "documenti_freddo": {
+      "n": 3,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 3,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 3,
+      "p50": 7339.0,
+      "p95": 7386.7,
+      "p99": 7390.94,
+      "media": 7286.333,
+      "min": 7128,
+      "max": 7392
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 3,
+       "freddo_meno_caldo_p50": 11.6886,
+       "freddo_meno_hello_p50": 11.6886
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 3,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 3,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-001179",
+    "cli-000894",
+    "cli-004522",
+    "cli-004183",
+    "cli-002603",
+    "cli-004146",
+    "cli-001185",
+    "cli-002401",
+    "cli-001596",
+    "cli-002335",
+    "cli-000793",
+    "cli-001334",
+    "cli-004292",
+    "cli-003334",
+    "cli-003392",
+    "cli-004169",
+    "cli-004972",
+    "cli-000980",
+    "cli-003296",
+    "cli-004298",
+    "cli-003352",
+    "cli-001643",
+    "cli-003758",
+    "cli-001672",
+    "cli-002661",
+    "cli-003290",
+    "cli-002794",
+    "cli-002462",
+    "cli-000283",
+    "cli-002253",
+    "cli-002504",
+    "cli-002568",
+    "cli-001283",
+    "cli-004542",
+    "cli-001469",
+    "cli-003846",
+    "cli-002283",
+    "cli-003664",
+    "cli-004114",
+    "cli-002046",
+    "cli-003137",
+    "cli-003337",
+    "cli-000631",
+    "cli-001210",
+    "cli-000462",
+    "cli-004019",
+    "cli-002946",
+    "cli-002607",
+    "cli-003993"
+   ]
+  },
+  {
+   "fase": "Q4",
+   "inizio": "2026-11-05T18:05:40.833010Z",
+   "fine": "2026-11-05T18:08:10.833193Z",
+   "n": 49,
+   "con_freddo": 49,
+   "errori": 0,
+   "controlli_ok": 49,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 49,
+    "p50": 180.057,
+    "p95": 242.872,
+    "p99": 262.113,
+    "media": 171.856,
+    "min": 66.113,
+    "max": 266.907
+   },
+   "caldo_ms": {
+    "n": 49,
+    "p50": 3.529,
+    "p95": 4.125,
+    "p99": 18.798,
+    "media": 3.9,
+    "min": 2.053,
+    "max": 31.899
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 49,
+    "p50": 178.586,
+    "p95": 241.35,
+    "p99": 260.599,
+    "media": 170.385,
+    "min": 64.604,
+    "max": 265.347
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 49,
+    "p50": 2.333,
+    "p95": 2.715,
+    "p99": 17.371,
+    "media": 2.7,
+    "min": 0.969,
+    "max": 30.689
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 49,
+    "p50": 176.676,
+    "p95": 239.28,
+    "p99": 257.887,
+    "media": 167.956,
+    "min": 63.851,
+    "max": 262.301
+   },
+   "p50_freddo_meno_p50_caldo": 176.528,
+   "documenti_freddo": {
+    "n": 49,
+    "p50": 498.0,
+    "p95": 500.0,
+    "p99": 500.0,
+    "media": 416.449,
+    "min": 138,
+    "max": 500
+   },
+   "documenti_caldo": {
+    "n": 49,
+    "p50": 498.0,
+    "p95": 500.0,
+    "p99": 500.0,
+    "media": 416.449,
+    "min": 138,
+    "max": 500
+   },
+   "byte_freddo": {
+    "n": 49,
+    "p50": 166672.0,
+    "p95": 172788.8,
+    "p99": 173948.44,
+    "media": 141198.939,
+    "min": 47234,
+    "max": 174307
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 185.1266,
+     "freddo_meno_hello_p50": 187.8076
+    },
+    {
+     "da": 25,
+     "a": 49,
+     "freddo_meno_caldo_p50": 172.2679,
+     "freddo_meno_hello_p50": 174.2364
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 49,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 49,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 46,
+     "con_freddo": 46,
+     "errori": 0,
+     "controlli_ok": 46,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 46,
+      "p50": 179.86,
+      "p95": 240.84,
+      "p99": 256.086,
+      "media": 168.38,
+      "min": 66.113,
+      "max": 266.907
+     },
+     "caldo_ms": {
+      "n": 46,
+      "p50": 3.519,
+      "p95": 4.127,
+      "p99": 19.617,
+      "media": 3.918,
+      "min": 2.053,
+      "max": 31.899
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 178.288,
+      "p95": 239.313,
+      "p99": 254.534,
+      "media": 166.91,
+      "min": 64.604,
+      "max": 265.347
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 46,
+      "p50": 2.327,
+      "p95": 2.728,
+      "p99": 18.203,
+      "media": 2.718,
+      "min": 0.969,
+      "max": 30.689
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 46,
+      "p50": 176.387,
+      "p95": 237.205,
+      "p99": 251.92,
+      "media": 164.461,
+      "min": 63.851,
+      "max": 262.301
+     },
+     "p50_freddo_meno_p50_caldo": 176.341,
+     "documenti_freddo": {
+      "n": 46,
+      "p50": 492.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 411.022,
+      "min": 138,
+      "max": 500
+     },
+     "documenti_caldo": {
+      "n": 46,
+      "p50": 492.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 411.022,
+      "min": 138,
+      "max": 500
+     },
+     "byte_freddo": {
+      "n": 46,
+      "p50": 166164.5,
+      "p95": 172882.25,
+      "p99": 173970.85,
+      "media": 139429.674,
+      "min": 47234,
+      "max": 174307
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 196.3003,
+       "freddo_meno_hello_p50": 198.33329999999998
+      },
+      {
+       "da": 25,
+       "a": 46,
+       "freddo_meno_caldo_p50": 164.559,
+       "freddo_meno_hello_p50": 168.0423
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 46,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 3,
+     "con_freddo": 3,
+     "errori": 0,
+     "controlli_ok": 3,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 3,
+      "p50": 242.88,
+      "p95": 255.515,
+      "p99": 256.639,
+      "media": 225.159,
+      "min": 175.678,
+      "max": 256.919
+     },
+     "caldo_ms": {
+      "n": 3,
+      "p50": 3.568,
+      "p95": 3.79,
+      "p99": 3.81,
+      "media": 3.627,
+      "min": 3.498,
+      "max": 3.815
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 3,
+      "p50": 241.37,
+      "p95": 254.046,
+      "p99": 255.173,
+      "media": 223.665,
+      "min": 174.169,
+      "max": 255.455
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 3,
+      "p50": 2.337,
+      "p95": 2.593,
+      "p99": 2.616,
+      "media": 2.422,
+      "min": 2.308,
+      "max": 2.622
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 3,
+      "p50": 239.311,
+      "p95": 251.725,
+      "p99": 252.829,
+      "media": 221.532,
+      "min": 172.18,
+      "max": 253.105
+     },
+     "p50_freddo_meno_p50_caldo": 239.311,
+     "documenti_freddo": {
+      "n": 3,
+      "p50": 500.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 499.667,
+      "min": 499,
+      "max": 500
+     },
+     "documenti_caldo": {
+      "n": 3,
+      "p50": 500.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 499.667,
+      "min": 499,
+      "max": 500
+     },
+     "byte_freddo": {
+      "n": 3,
+      "p50": 168110.0,
+      "p95": 169830.8,
+      "p99": 169983.76,
+      "media": 168327.667,
+      "min": 166851,
+      "max": 170022
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 3,
+       "freddo_meno_caldo_p50": 239.3115,
+       "freddo_meno_hello_p50": 241.37030000000001
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 3,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 3,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-001605",
+    "cli-002036",
+    "cli-004635",
+    "cli-000945",
+    "cli-002786",
+    "cli-002965",
+    "cli-000676",
+    "cli-000724",
+    "cli-004818",
+    "cli-003555",
+    "cli-000334",
+    "cli-004331",
+    "cli-003071",
+    "cli-000030",
+    "cli-003583",
+    "cli-003308",
+    "cli-005072",
+    "cli-000432",
+    "cli-003862",
+    "cli-000343",
+    "cli-003565",
+    "cli-002185",
+    "cli-004788",
+    "cli-005048",
+    "cli-004820",
+    "cli-002516",
+    "cli-001080",
+    "cli-001003",
+    "cli-000461",
+    "cli-001850",
+    "cli-004338",
+    "cli-003580",
+    "cli-002163",
+    "cli-002788",
+    "cli-002388",
+    "cli-004769",
+    "cli-004509",
+    "cli-000158",
+    "cli-002850",
+    "cli-003070",
+    "cli-000126",
+    "cli-004261",
+    "cli-002110",
+    "cli-000359",
+    "cli-003194",
+    "cli-000110",
+    "cli-003191",
+    "cli-001627",
+    "cli-002619"
+   ]
+  }
+ ]
+}

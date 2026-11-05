@@ -1,0 +1,595 @@
+===== 2026-11-05T17:23:02.413869Z prova_infinite.py giro --file risultati_p1.json --cartella-dati /opt/irlanda/lavoro/dati/m10s --db app_data_1 --nuova-cartella --giro m30_singoli_b --solo-fasi Q2,Q3,Q1,Q1d,Q4 --n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 --dorm-q1 300 --dorm-q1d 300 --dorm-q4 300
+Giro finale 'm30_singoli_b' (versione p1-1.6.2). Clienti attivi mai letti 1730, dormienti mai letti 1649.
+Il piano usa 1500 clienti attivi mai letti su 1730 e 1500 dormienti su 1649 (ogni cliente in una sola fase).
+Ordine delle fasi e minuti STIMATI (pausa di 2 minuti compresa dove c'e'):
+   1. Q2                 5.0 min  (a   5.0)  600 ricerche/clienti
+   2. Q3                 5.0 min  (a  10.0)  600 ricerche/clienti
+   3. Q1                 5.0 min  (a  15.0)  600 ricerche/clienti
+   4. Q1d                5.0 min  (a  20.0)  600 ricerche/clienti
+   5. Q4                 5.0 min  (a  25.0)  600 ricerche/clienti
+Totale STIMATO: circa 25 minuti (0.4 ore), piu' circa 6 se la collezione fredda e' accettata.
+[17:23:02] Dati grezzi in: /opt/irlanda/lavoro/dati/m10s/giro_finale_m30_singoli_b_20261105T172302Z
+[17:23:02] Pausa di 120 s prima della fase Q2 (i grafici di Atlas si separano per fase).
+[17:25:02] ===== Q2 (fase 1 di 5; STIMATO 5 minuti) =====
+[17:25:02] Fase Q2: istantanea prima (hello, replSetGetStatus, serverStatus, dbStats, collStats)...
+[17:25:02] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793899502, 1), 'signature': {'hash': b'\x1d\xdd\xf1j\xc7\x02\x9f\x0b\xa8\x89\xde{\xf9\xba\x1a\x08\xbb\xd0\x91$', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793899502, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[17:25:02] FASE Q2 INIZIO 17:25:02 ora del Mac (2026-11-05T17:25:02Z), 600 ricerche
+[17:25:08]   Q2: 25/600; ultimi 25: freddo meno caldo p50 2.47 ms, freddo meno hello p50 2.22 ms
+[17:25:15]   Q2: 50/600; ultimi 25: freddo meno caldo p50 2.04 ms, freddo meno hello p50 1.83 ms
+[17:25:21]   Q2: 75/600; ultimi 25: freddo meno caldo p50 2.05 ms, freddo meno hello p50 1.81 ms
+[17:25:27]   Q2: 100/600; ultimi 25: freddo meno caldo p50 1.86 ms, freddo meno hello p50 1.63 ms
+[17:25:33]   Q2: 125/600; ultimi 25: freddo meno caldo p50 1.87 ms, freddo meno hello p50 1.66 ms
+[17:25:40]   Q2: 150/600; ultimi 25: freddo meno caldo p50 1.84 ms, freddo meno hello p50 1.65 ms
+[17:25:46]   Q2: 175/600; ultimi 25: freddo meno caldo p50 1.98 ms, freddo meno hello p50 1.72 ms
+[17:25:52]   Q2: 200/600; ultimi 25: freddo meno caldo p50 1.66 ms, freddo meno hello p50 1.49 ms
+[17:25:58]   Q2: 225/600; ultimi 25: freddo meno caldo p50 1.53 ms, freddo meno hello p50 1.31 ms
+[17:26:05]   Q2: 250/600; ultimi 25: freddo meno caldo p50 1.61 ms, freddo meno hello p50 1.42 ms
+[17:26:11]   Q2: 275/600; ultimi 25: freddo meno caldo p50 1.56 ms, freddo meno hello p50 1.39 ms
+[17:26:17]   Q2: 300/600; ultimi 25: freddo meno caldo p50 1.72 ms, freddo meno hello p50 1.44 ms
+[17:26:23]   Q2: 325/600; ultimi 25: freddo meno caldo p50 1.56 ms, freddo meno hello p50 1.36 ms
+[17:26:30]   Q2: 350/600; ultimi 25: freddo meno caldo p50 1.61 ms, freddo meno hello p50 1.39 ms
+[17:26:36]   Q2: 375/600; ultimi 25: freddo meno caldo p50 1.64 ms, freddo meno hello p50 1.42 ms
+[17:26:42]   Q2: 400/600; ultimi 25: freddo meno caldo p50 1.64 ms, freddo meno hello p50 1.36 ms
+[17:26:48]   Q2: 425/600; ultimi 25: freddo meno caldo p50 1.52 ms, freddo meno hello p50 1.32 ms
+[17:26:55]   Q2: 450/600; ultimi 25: freddo meno caldo p50 1.32 ms, freddo meno hello p50 1.12 ms
+[17:27:01]   Q2: 475/600; ultimi 25: freddo meno caldo p50 1.41 ms, freddo meno hello p50 1.18 ms
+[17:27:07]   Q2: 500/600; ultimi 25: freddo meno caldo p50 1.44 ms, freddo meno hello p50 1.24 ms
+[17:27:13]   Q2: 525/600; ultimi 25: freddo meno caldo p50 1.43 ms, freddo meno hello p50 1.21 ms
+[17:27:20]   Q2: 550/600; ultimi 25: freddo meno caldo p50 1.38 ms, freddo meno hello p50 1.16 ms
+[17:27:26]   Q2: 575/600; ultimi 25: freddo meno caldo p50 1.37 ms, freddo meno hello p50 1.18 ms
+[17:27:32]   Q2: 600/600; ultimi 25: freddo meno caldo p50 1.40 ms, freddo meno hello p50 1.20 ms
+[17:27:32] FASE Q2 FINE 17:27:32 ora del Mac (2026-11-05T17:27:32Z), 600 ricerche
+
+=== FASE Q2 (un ordine per _id): 2026-11-05T17:25:02.846367Z - 2026-11-05T17:27:32.846499Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 2.81  p95 3.55  p99 3.93 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.21  p95 1.34  p99 1.39 ms (n=600)
+   freddo meno hello accoppiato  : p50 1.38  p95 2.14  p99 2.46 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.12  p95 0.19  p99 0.25 ms (n=600)
+   freddo meno caldo (accoppiato): p50 1.57  p95 2.36  p99 2.67 ms (n=600)
+   p50 freddo meno p50 caldo: 1.598 ms; documenti freddo p50 1.00, caldo p50 1.00; byte freddo p50 596.50; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 2.5, 2.0, 2.1, 1.9, 1.9, 1.8, 2.0, 1.7, 1.5, 1.6, 1.6, 1.7, 1.6, 1.6, 1.6, 1.6, 1.5, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.83  p95 3.53  p99 3.93 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.21  p95 1.34  p99 1.40 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.40  p95 2.14  p99 2.46 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.12  p95 0.18  p99 0.24 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.61  p95 2.38  p99 2.67 ms (n=300)
+      p50 freddo meno p50 caldo: 1.629 ms; documenti freddo p50 1.00, caldo p50 1.00; byte freddo p50 586.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 2.1, 2.0, 1.9, 1.9, 1.6, 1.6, 1.6, 1.7, 1.4, 1.4, 1.5, 1.4
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 2.79  p95 3.59  p99 3.89 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.21  p95 1.34  p99 1.36 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.36  p95 2.14  p99 2.42 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.13  p95 0.20  p99 0.26 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.56  p95 2.33  p99 2.64 ms (n=300)
+      p50 freddo meno p50 caldo: 1.582 ms; documenti freddo p50 1.00, caldo p50 1.00; byte freddo p50 601.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 2.2, 1.9, 1.8, 1.9, 1.5, 1.6, 1.6, 1.6, 1.5, 1.4, 1.4, 1.4
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+[17:27:33] Pausa di 120 s prima della fase Q3 (i grafici di Atlas si separano per fase).
+[17:29:33] ===== Q3 (fase 2 di 5; STIMATO 5 minuti) =====
+[17:29:33] Fase Q3: istantanea prima (hello, replSetGetStatus, serverStatus, dbStats, collStats)...
+[17:29:33] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793899773, 1), 'signature': {'hash': b'sH\x86+M*\xab\x8d!\xeb\xec\xbd\xdbs\xe2}\x06)\xc6\x95', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793899772, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[17:29:33] FASE Q3 INIZIO 17:29:33 ora del Mac (2026-11-05T17:29:33Z), 600 ricerche
+[17:29:39]   Q3: 25/600; ultimi 25: freddo meno caldo p50 20.75 ms, freddo meno hello p50 20.87 ms
+[17:29:45]   Q3: 50/600; ultimi 25: freddo meno caldo p50 1.95 ms, freddo meno hello p50 1.72 ms
+[17:29:51]   Q3: 75/600; ultimi 25: freddo meno caldo p50 13.24 ms, freddo meno hello p50 13.38 ms
+[17:29:58]   Q3: 100/600; ultimi 25: freddo meno caldo p50 7.20 ms, freddo meno hello p50 7.17 ms
+[17:30:04]   Q3: 125/600; ultimi 25: freddo meno caldo p50 14.65 ms, freddo meno hello p50 14.79 ms
+[17:30:10]   Q3: 150/600; ultimi 25: freddo meno caldo p50 9.72 ms, freddo meno hello p50 9.94 ms
+[17:30:16]   Q3: 175/600; ultimi 25: freddo meno caldo p50 9.55 ms, freddo meno hello p50 9.55 ms
+[17:30:23]   Q3: 200/600; ultimi 25: freddo meno caldo p50 12.24 ms, freddo meno hello p50 12.46 ms
+[17:30:29]   Q3: 225/600; ultimi 25: freddo meno caldo p50 1.18 ms, freddo meno hello p50 1.01 ms
+[17:30:35]   Q3: 250/600; ultimi 25: freddo meno caldo p50 1.14 ms, freddo meno hello p50 1.12 ms
+[17:30:41]   Q3: 275/600; ultimi 25: freddo meno caldo p50 3.34 ms, freddo meno hello p50 3.44 ms
+[17:30:48]   Q3: 300/600; ultimi 25: freddo meno caldo p50 7.62 ms, freddo meno hello p50 7.77 ms
+[17:30:54]   Q3: 325/600; ultimi 25: freddo meno caldo p50 1.12 ms, freddo meno hello p50 1.03 ms
+[17:31:00]   Q3: 350/600; ultimi 25: freddo meno caldo p50 1.15 ms, freddo meno hello p50 0.97 ms
+[17:31:06]   Q3: 375/600; ultimi 25: freddo meno caldo p50 3.63 ms, freddo meno hello p50 3.69 ms
+[17:31:13]   Q3: 400/600; ultimi 25: freddo meno caldo p50 4.32 ms, freddo meno hello p50 4.49 ms
+[17:31:19]   Q3: 425/600; ultimi 25: freddo meno caldo p50 4.94 ms, freddo meno hello p50 5.08 ms
+[17:31:25]   Q3: 450/600; ultimi 25: freddo meno caldo p50 3.14 ms, freddo meno hello p50 3.21 ms
+[17:31:31]   Q3: 475/600; ultimi 25: freddo meno caldo p50 2.82 ms, freddo meno hello p50 3.03 ms
+[17:31:38]   Q3: 500/600; ultimi 25: freddo meno caldo p50 3.99 ms, freddo meno hello p50 4.27 ms
+[17:31:44]   Q3: 525/600; ultimi 25: freddo meno caldo p50 3.59 ms, freddo meno hello p50 3.82 ms
+[17:31:50]   Q3: 550/600; ultimi 25: freddo meno caldo p50 1.16 ms, freddo meno hello p50 1.14 ms
+[17:31:56]   Q3: 575/600; ultimi 25: freddo meno caldo p50 1.29 ms, freddo meno hello p50 1.24 ms
+[17:32:03]   Q3: 600/600; ultimi 25: freddo meno caldo p50 2.19 ms, freddo meno hello p50 2.46 ms
+[17:32:03] FASE Q3 FINE 17:32:03 ora del Mac (2026-11-05T17:32:03Z), 600 ricerche
+
+=== FASE Q3 (eventi in 14 giorni, limit 100): 2026-11-05T17:29:33.310819Z - 2026-11-05T17:32:03.310961Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 5.25  p95 29.17  p99 38.08 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.48  p95 1.79  p99 1.88 ms (n=600)
+   freddo meno hello accoppiato  : p50 3.76  p95 27.71  p99 36.59 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.35  p95 0.61  p99 0.72 ms (n=600)
+   freddo meno caldo (accoppiato): p50 3.62  p95 27.48  p99 36.28 ms (n=600)
+   p50 freddo meno p50 caldo: 3.778 ms; documenti freddo p50 36.00, caldo p50 36.00; byte freddo p50 8381.00; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 20.7, 1.9, 13.2, 7.2, 14.6, 9.7, 9.6, 12.2, 1.2, 1.1, 3.3, 7.6, 1.1, 1.2, 3.6, 4.3, 4.9, 3.1, 2.8, 4.0, 3.6, 1.2, 1.3, 2.2
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- primi 50 clienti (freddo vero):
+      freddo                        : p50 9.97  p95 40.65  p99 44.78 ms (n=50)
+      caldo (stessa ricerca, subito): p50 1.55  p95 1.89  p99 1.97 ms (n=50)
+      freddo meno hello accoppiato  : p50 8.54  p95 39.18  p99 43.30 ms (n=50)
+      caldo meno hello accoppiato   : p50 0.34  p95 0.67  p99 0.76 ms (n=50)
+      freddo meno caldo (accoppiato): p50 8.22  p95 38.80  p99 42.99 ms (n=50)
+      p50 freddo meno p50 caldo: 8.415 ms; documenti freddo p50 17.00, caldo p50 17.00; byte freddo p50 3981.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 20.7, 1.9
+      profiler freddo: trovate 0 su 50; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 50; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.47  p95 20.96  p99 34.69 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.36  p95 1.74  p99 1.89 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.04  p95 19.40  p99 33.35 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.20  p95 0.55  p99 0.72 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.16  p95 19.19  p99 33.07 ms (n=300)
+      p50 freddo meno p50 caldo: 1.108 ms; documenti freddo p50 0.00, caldo p50 0.00; byte freddo p50 0.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 1.5, 1.6, 1.2, 1.1, 1.1, 2.0, 1.0, 1.2, 1.2, 1.2, 1.1, 1.1
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 8.73  p95 31.32  p99 39.42 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.61  p95 1.82  p99 1.86 ms (n=300)
+      freddo meno hello accoppiato  : p50 7.29  p95 29.70  p99 37.92 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.47  p95 0.63  p99 0.72 ms (n=300)
+      freddo meno caldo (accoppiato): p50 7.05  p95 29.55  p99 37.59 ms (n=300)
+      p50 freddo meno p50 caldo: 7.12 ms; documenti freddo p50 71.00, caldo p50 71.00; byte freddo p50 16270.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 26.3, 18.5, 19.1, 16.1, 6.3, 9.3, 8.9, 7.1, 5.7, 5.6, 4.3, 4.7
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+[17:32:03] Pausa di 120 s prima della fase Q1 (i grafici di Atlas si separano per fase).
+[17:34:03] ===== Q1 (fase 3 di 5; STIMATO 5 minuti) =====
+[17:34:03] Fase Q1: istantanea prima (hello, replSetGetStatus, serverStatus, dbStats, collStats)...
+[17:34:03] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793900043, 1), 'signature': {'hash': b'W52\x9b\xac\xe3P\xc9\x01\xb0j\xf6x\xe6\x1c\xee\xdc\x84\x92D', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793900043, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[17:34:03] FASE Q1 INIZIO 17:34:03 ora del Mac (2026-11-05T17:34:03Z), 600 ricerche
+[17:34:09]   Q1: 25/600; ultimi 25: freddo meno caldo p50 8.36 ms, freddo meno hello p50 8.31 ms
+[17:34:16]   Q1: 50/600; ultimi 25: freddo meno caldo p50 5.13 ms, freddo meno hello p50 5.11 ms
+[17:34:22]   Q1: 75/600; ultimi 25: freddo meno caldo p50 3.30 ms, freddo meno hello p50 3.33 ms
+[17:34:28]   Q1: 100/600; ultimi 25: freddo meno caldo p50 1.98 ms, freddo meno hello p50 1.93 ms
+[17:34:34]   Q1: 125/600; ultimi 25: freddo meno caldo p50 1.55 ms, freddo meno hello p50 1.50 ms
+[17:34:41]   Q1: 150/600; ultimi 25: freddo meno caldo p50 1.42 ms, freddo meno hello p50 1.39 ms
+[17:34:47]   Q1: 175/600; ultimi 25: freddo meno caldo p50 2.34 ms, freddo meno hello p50 2.33 ms
+[17:34:53]   Q1: 200/600; ultimi 25: freddo meno caldo p50 1.69 ms, freddo meno hello p50 1.62 ms
+[17:34:59]   Q1: 225/600; ultimi 25: freddo meno caldo p50 1.30 ms, freddo meno hello p50 1.28 ms
+[17:35:06]   Q1: 250/600; ultimi 25: freddo meno caldo p50 1.32 ms, freddo meno hello p50 1.25 ms
+[17:35:12]   Q1: 275/600; ultimi 25: freddo meno caldo p50 1.27 ms, freddo meno hello p50 1.24 ms
+[17:35:18]   Q1: 300/600; ultimi 25: freddo meno caldo p50 1.05 ms, freddo meno hello p50 1.01 ms
+[17:35:24]   Q1: 325/600; ultimi 25: freddo meno caldo p50 1.06 ms, freddo meno hello p50 1.00 ms
+[17:35:31]   Q1: 350/600; ultimi 25: freddo meno caldo p50 1.08 ms, freddo meno hello p50 1.03 ms
+[17:35:37]   Q1: 375/600; ultimi 25: freddo meno caldo p50 1.12 ms, freddo meno hello p50 1.08 ms
+[17:35:43]   Q1: 400/600; ultimi 25: freddo meno caldo p50 1.12 ms, freddo meno hello p50 1.05 ms
+[17:35:49]   Q1: 425/600; ultimi 25: freddo meno caldo p50 1.09 ms, freddo meno hello p50 1.04 ms
+[17:35:56]   Q1: 450/600; ultimi 25: freddo meno caldo p50 1.08 ms, freddo meno hello p50 0.99 ms
+[17:36:02]   Q1: 475/600; ultimi 25: freddo meno caldo p50 1.03 ms, freddo meno hello p50 1.02 ms
+[17:36:08]   Q1: 500/600; ultimi 25: freddo meno caldo p50 1.07 ms, freddo meno hello p50 1.04 ms
+[17:36:14]   Q1: 525/600; ultimi 25: freddo meno caldo p50 1.05 ms, freddo meno hello p50 1.00 ms
+[17:36:21]   Q1: 550/600; ultimi 25: freddo meno caldo p50 1.03 ms, freddo meno hello p50 0.99 ms
+[17:36:27]   Q1: 575/600; ultimi 25: freddo meno caldo p50 1.18 ms, freddo meno hello p50 1.10 ms
+[17:36:33]   Q1: 600/600; ultimi 25: freddo meno caldo p50 1.05 ms, freddo meno hello p50 0.97 ms
+[17:36:33] FASE Q1 FINE 17:36:33 ora del Mac (2026-11-05T17:36:33Z), 600 ricerche
+
+=== FASE Q1 (gli ultimi 20 messaggi del cliente): 2026-11-05T17:34:03.887036Z - 2026-11-05T17:36:33.887188Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 2.58  p95 8.10  p99 11.48 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.37  p95 1.52  p99 1.55 ms (n=600)
+   freddo meno hello accoppiato  : p50 1.15  p95 6.71  p99 9.96 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.29  p95 0.36  p99 0.41 ms (n=600)
+   freddo meno caldo (accoppiato): p50 1.18  p95 6.72  p99 9.98 ms (n=600)
+   p50 freddo meno p50 caldo: 1.214 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6801.00; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 8.4, 5.1, 3.3, 2.0, 1.6, 1.4, 2.3, 1.7, 1.3, 1.3, 1.3, 1.0, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.0, 1.1, 1.0, 1.0, 1.2, 1.0
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.85  p95 9.11  p99 11.72 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.38  p95 1.52  p99 1.55 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.43  p95 7.69  p99 10.41 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.29  p95 0.36  p99 0.41 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.44  p95 7.72  p99 10.17 ms (n=300)
+      p50 freddo meno p50 caldo: 1.473 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6813.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 7.4, 3.2, 1.5, 3.1, 1.5, 1.4, 1.1, 1.2, 1.1, 1.1, 1.1, 1.2
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 2.50  p95 7.29  p99 10.49 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.36  p95 1.51  p99 1.54 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.04  p95 5.84  p99 8.83 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.29  p95 0.36  p99 0.42 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.10  p95 5.88  p99 8.98 ms (n=300)
+      p50 freddo meno p50 caldo: 1.138 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6777.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 6.3, 2.0, 1.4, 1.2, 1.2, 1.0, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+[17:36:34] Pausa di 120 s prima della fase Q1d (i grafici di Atlas si separano per fase).
+[17:38:34] ===== Q1d (fase 4 di 5; STIMATO 5 minuti) =====
+[17:38:34] Fase Q1d: istantanea prima (hello, replSetGetStatus, serverStatus, dbStats, collStats)...
+[17:38:34] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793900313, 2), 'signature': {'hash': b'\x8eW\xaf\x16\xddI|\xb8\xd9\xe8\xb9\xbe\x8c\xc3@\xdb\xa6\xc0\xfc\x00', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793900313, 2)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[17:38:34] FASE Q1d INIZIO 17:38:34 ora del Mac (2026-11-05T17:38:34Z), 600 ricerche
+[17:38:40]   Q1d: 25/600; ultimi 25: freddo meno caldo p50 5.99 ms, freddo meno hello p50 5.97 ms
+[17:38:46]   Q1d: 50/600; ultimi 25: freddo meno caldo p50 8.54 ms, freddo meno hello p50 8.54 ms
+[17:38:52]   Q1d: 75/600; ultimi 25: freddo meno caldo p50 3.98 ms, freddo meno hello p50 3.90 ms
+[17:38:59]   Q1d: 100/600; ultimi 25: freddo meno caldo p50 9.59 ms, freddo meno hello p50 9.90 ms
+[17:39:05]   Q1d: 125/600; ultimi 25: freddo meno caldo p50 11.66 ms, freddo meno hello p50 11.72 ms
+[17:39:11]   Q1d: 150/600; ultimi 25: freddo meno caldo p50 9.74 ms, freddo meno hello p50 9.75 ms
+[17:39:17]   Q1d: 175/600; ultimi 25: freddo meno caldo p50 6.10 ms, freddo meno hello p50 6.11 ms
+[17:39:24]   Q1d: 200/600; ultimi 25: freddo meno caldo p50 3.12 ms, freddo meno hello p50 3.12 ms
+[17:39:30]   Q1d: 225/600; ultimi 25: freddo meno caldo p50 8.34 ms, freddo meno hello p50 8.26 ms
+[17:39:36]   Q1d: 250/600; ultimi 25: freddo meno caldo p50 8.52 ms, freddo meno hello p50 8.55 ms
+[17:39:42]   Q1d: 275/600; ultimi 25: freddo meno caldo p50 7.58 ms, freddo meno hello p50 7.62 ms
+[17:39:49]   Q1d: 300/600; ultimi 25: freddo meno caldo p50 3.37 ms, freddo meno hello p50 3.32 ms
+[17:39:55]   Q1d: 325/600; ultimi 25: freddo meno caldo p50 8.03 ms, freddo meno hello p50 8.06 ms
+[17:40:01]   Q1d: 350/600; ultimi 25: freddo meno caldo p50 9.01 ms, freddo meno hello p50 9.04 ms
+[17:40:07]   Q1d: 375/600; ultimi 25: freddo meno caldo p50 8.61 ms, freddo meno hello p50 8.64 ms
+[17:40:14]   Q1d: 400/600; ultimi 25: freddo meno caldo p50 7.17 ms, freddo meno hello p50 7.20 ms
+[17:40:20]   Q1d: 425/600; ultimi 25: freddo meno caldo p50 1.19 ms, freddo meno hello p50 1.14 ms
+[17:40:26]   Q1d: 450/600; ultimi 25: freddo meno caldo p50 6.91 ms, freddo meno hello p50 6.87 ms
+[17:40:32]   Q1d: 475/600; ultimi 25: freddo meno caldo p50 6.48 ms, freddo meno hello p50 6.50 ms
+[17:40:39]   Q1d: 500/600; ultimi 25: freddo meno caldo p50 5.88 ms, freddo meno hello p50 5.98 ms
+[17:40:45]   Q1d: 525/600; ultimi 25: freddo meno caldo p50 7.58 ms, freddo meno hello p50 7.54 ms
+[17:40:51]   Q1d: 550/600; ultimi 25: freddo meno caldo p50 6.23 ms, freddo meno hello p50 6.22 ms
+[17:40:57]   Q1d: 575/600; ultimi 25: freddo meno caldo p50 2.93 ms, freddo meno hello p50 2.92 ms
+[17:41:04]   Q1d: 600/600; ultimi 25: freddo meno caldo p50 7.75 ms, freddo meno hello p50 7.82 ms
+[17:41:04] FASE Q1d FINE 17:41:04 ora del Mac (2026-11-05T17:41:04Z), 600 ricerche
+
+=== FASE Q1d (20 messaggi piu' recenti prima di una data a caso): 2026-11-05T17:38:34.445278Z - 2026-11-05T17:41:04.445415Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 9.05  p95 13.94  p99 15.56 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.46  p95 1.56  p99 1.61 ms (n=600)
+   freddo meno hello accoppiato  : p50 7.53  p95 12.58  p99 14.17 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.32  p95 0.39  p99 0.48 ms (n=600)
+   freddo meno caldo (accoppiato): p50 7.51  p95 12.52  p99 14.20 ms (n=600)
+   p50 freddo meno p50 caldo: 7.591 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6750.00; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 6.0, 8.5, 4.0, 9.6, 11.7, 9.7, 6.1, 3.1, 8.3, 8.5, 7.6, 3.4, 8.0, 9.0, 8.6, 7.2, 1.2, 6.9, 6.5, 5.9, 7.6, 6.2, 2.9, 7.7
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 3.50  p95 13.54  p99 15.90 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.46  p95 1.55  p99 1.58 ms (n=300)
+      freddo meno hello accoppiato  : p50 2.05  p95 12.17  p99 14.71 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.31  p95 0.38  p99 0.46 ms (n=300)
+      freddo meno caldo (accoppiato): p50 2.08  p95 12.12  p99 14.54 ms (n=300)
+      p50 freddo meno p50 caldo: 2.045 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6743.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 1.2, 1.4, 9.2, 2.4, 8.2, 3.5, 1.3, 1.2, 1.2, 1.4, 2.9, 2.0
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 9.91  p95 14.33  p99 15.21 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.47  p95 1.57  p99 1.68 ms (n=300)
+      freddo meno hello accoppiato  : p50 8.50  p95 12.94  p99 13.74 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.32  p95 0.40  p99 0.48 ms (n=300)
+      freddo meno caldo (accoppiato): p50 8.46  p95 12.93  p99 13.70 ms (n=300)
+      p50 freddo meno p50 caldo: 8.445 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6750.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 10.1, 9.6, 11.0, 8.6, 8.8, 8.0, 9.2, 9.0, 7.0, 7.1, 7.9, 8.5
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+[17:41:04] Pausa di 120 s prima della fase Q4 (i grafici di Atlas si separano per fase).
+[17:43:04] ===== Q4 (fase 5 di 5; STIMATO 5 minuti) =====
+[17:43:04] Fase Q4: istantanea prima (hello, replSetGetStatus, serverStatus, dbStats, collStats)...
+[17:43:05] ATTENZIONE: il profiler non si accende (Profile level 1 is not supported in this storage mode: Disaggregated Storage, full error: {'ok': 0.0, 'errmsg': 'Profile level 1 is not supported in this storage mode: Disaggregated Storage', 'code': 115, 'codeName': 'CommandNotSupported', '$clusterTime': {'clusterTime': Timestamp(1793900584, 1), 'signature': {'hash': b'\xaf\x81_K\x84n]\xf9v\xfc \xd7\xc5\xb9\x92\xee8ub:', 'keyId': 7704230336049184770}}, 'operationTime': Timestamp(1793900584, 1)}). Vado avanti senza: restano i tempi lato cliente e i grafici di Atlas.
+[17:43:05] FASE Q4 INIZIO 17:43:05 ora del Mac (2026-11-05T17:43:05Z), 600 ricerche
+[17:43:11]   Q4: 25/600; ultimi 25: freddo meno caldo p50 50.71 ms, freddo meno hello p50 51.44 ms
+[17:43:17]   Q4: 50/600; ultimi 25: freddo meno caldo p50 54.03 ms, freddo meno hello p50 55.03 ms
+[17:43:23]   Q4: 75/600; ultimi 25: freddo meno caldo p50 39.56 ms, freddo meno hello p50 41.05 ms
+[17:43:29]   Q4: 100/600; ultimi 25: freddo meno caldo p50 38.88 ms, freddo meno hello p50 41.09 ms
+[17:43:36]   Q4: 125/600; ultimi 25: freddo meno caldo p50 16.73 ms, freddo meno hello p50 18.77 ms
+[17:43:42]   Q4: 150/600; ultimi 25: freddo meno caldo p50 18.88 ms, freddo meno hello p50 20.95 ms
+[17:43:48]   Q4: 175/600; ultimi 25: freddo meno caldo p50 13.21 ms, freddo meno hello p50 14.78 ms
+[17:43:54]   Q4: 200/600; ultimi 25: freddo meno caldo p50 12.63 ms, freddo meno hello p50 13.94 ms
+[17:44:01]   Q4: 225/600; ultimi 25: freddo meno caldo p50 4.06 ms, freddo meno hello p50 5.37 ms
+[17:44:07]   Q4: 250/600; ultimi 25: freddo meno caldo p50 4.46 ms, freddo meno hello p50 6.25 ms
+[17:44:13]   Q4: 275/600; ultimi 25: freddo meno caldo p50 4.62 ms, freddo meno hello p50 6.33 ms
+[17:44:19]   Q4: 300/600; ultimi 25: freddo meno caldo p50 3.40 ms, freddo meno hello p50 5.20 ms
+[17:44:26]   Q4: 325/600; ultimi 25: freddo meno caldo p50 2.77 ms, freddo meno hello p50 3.54 ms
+[17:44:32]   Q4: 350/600; ultimi 25: freddo meno caldo p50 4.68 ms, freddo meno hello p50 6.88 ms
+[17:44:38]   Q4: 375/600; ultimi 25: freddo meno caldo p50 1.39 ms, freddo meno hello p50 2.89 ms
+[17:44:44]   Q4: 400/600; ultimi 25: freddo meno caldo p50 2.96 ms, freddo meno hello p50 4.45 ms
+[17:44:51]   Q4: 425/600; ultimi 25: freddo meno caldo p50 2.91 ms, freddo meno hello p50 4.53 ms
+[17:44:57]   Q4: 450/600; ultimi 25: freddo meno caldo p50 2.16 ms, freddo meno hello p50 3.11 ms
+[17:45:03]   Q4: 475/600; ultimi 25: freddo meno caldo p50 2.85 ms, freddo meno hello p50 4.62 ms
+[17:45:09]   Q4: 500/600; ultimi 25: freddo meno caldo p50 1.82 ms, freddo meno hello p50 2.77 ms
+[17:45:16]   Q4: 525/600; ultimi 25: freddo meno caldo p50 2.52 ms, freddo meno hello p50 4.17 ms
+[17:45:22]   Q4: 550/600; ultimi 25: freddo meno caldo p50 2.11 ms, freddo meno hello p50 3.55 ms
+[17:45:28]   Q4: 575/600; ultimi 25: freddo meno caldo p50 2.34 ms, freddo meno hello p50 3.79 ms
+[17:45:34]   Q4: 600/600; ultimi 25: freddo meno caldo p50 2.33 ms, freddo meno hello p50 4.28 ms
+[17:45:35] FASE Q4 FINE 17:45:35 ora del Mac (2026-11-05T17:45:35Z), 600 ricerche
+
+=== FASE Q4 (finestra di 60 giorni, limit 500): 2026-11-05T17:43:05.006534Z - 2026-11-05T17:45:35.006665Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 6.85  p95 67.11  p99 112.06 ms (n=600)
+   caldo (stessa ricerca, subito): p50 2.81  p95 3.77  p99 5.57 ms (n=600)
+   freddo meno hello accoppiato  : p50 5.39  p95 65.64  p99 110.63 ms (n=600)
+   caldo meno hello accoppiato   : p50 1.63  p95 2.50  p99 3.97 ms (n=600)
+   freddo meno caldo (accoppiato): p50 3.81  p95 64.62  p99 108.43 ms (n=600)
+   p50 freddo meno p50 caldo: 4.042 ms; documenti freddo p50 295.00, caldo p50 295.00; byte freddo p50 100125.50; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 50.7, 54.0, 39.6, 38.9, 16.7, 18.9, 13.2, 12.6, 4.1, 4.5, 4.6, 3.4, 2.8, 4.7, 1.4, 3.0, 2.9, 2.2, 2.9, 1.8, 2.5, 2.1, 2.3, 2.3
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.54  p95 47.81  p99 85.63 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.95  p95 3.96  p99 5.76 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.10  p95 46.25  p99 84.16 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.77  p95 2.66  p99 4.29 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.10  p95 44.99  p99 82.67 ms (n=300)
+      p50 freddo meno p50 caldo: 0.593 ms; documenti freddo p50 0.00, caldo p50 0.00; byte freddo p50 0.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 0.9, 29.3, 5.8, 4.3, 1.2, 0.9, 1.1, 1.0, 1.2, 1.0, 1.1, 1.0
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 10.16  p95 87.60  p99 124.15 ms (n=300)
+      caldo (stessa ricerca, subito): p50 3.33  p95 3.71  p99 4.51 ms (n=300)
+      freddo meno hello accoppiato  : p50 8.74  p95 86.15  p99 122.81 ms (n=300)
+      caldo meno hello accoppiato   : p50 2.22  p95 2.48  p99 3.29 ms (n=300)
+      freddo meno caldo (accoppiato): p50 6.77  p95 83.87  p99 120.57 ms (n=300)
+      p50 freddo meno p50 caldo: 6.822 ms; documenti freddo p50 483.00, caldo p50 483.00; byte freddo p50 164121.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 92.1, 48.2, 23.3, 19.5, 7.4, 7.2, 6.7, 4.5, 4.0, 3.3, 2.9, 3.1
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+
+=== RIASSUNTO DEL GIRO FINALE 'm30_singoli_b' (dai dati grezzi; si rifa' con: riassunto --cartella /opt/irlanda/lavoro/dati/m10s/giro_finale_m30_singoli_b_20261105T172302Z) ===
+
+=== FASE Q2 (un ordine per _id): 2026-11-05T17:25:02.846367Z - 2026-11-05T17:27:32.846499Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 2.81  p95 3.55  p99 3.93 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.21  p95 1.34  p99 1.39 ms (n=600)
+   freddo meno hello accoppiato  : p50 1.38  p95 2.14  p99 2.46 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.12  p95 0.19  p99 0.25 ms (n=600)
+   freddo meno caldo (accoppiato): p50 1.57  p95 2.36  p99 2.67 ms (n=600)
+   p50 freddo meno p50 caldo: 1.598 ms; documenti freddo p50 1.00, caldo p50 1.00; byte freddo p50 596.50; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 2.5, 2.0, 2.1, 1.9, 1.9, 1.8, 2.0, 1.7, 1.5, 1.6, 1.6, 1.7, 1.6, 1.6, 1.6, 1.6, 1.5, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.83  p95 3.53  p99 3.93 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.21  p95 1.34  p99 1.40 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.40  p95 2.14  p99 2.46 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.12  p95 0.18  p99 0.24 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.61  p95 2.38  p99 2.67 ms (n=300)
+      p50 freddo meno p50 caldo: 1.629 ms; documenti freddo p50 1.00, caldo p50 1.00; byte freddo p50 586.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 2.1, 2.0, 1.9, 1.9, 1.6, 1.6, 1.6, 1.7, 1.4, 1.4, 1.5, 1.4
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 2.79  p95 3.59  p99 3.89 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.21  p95 1.34  p99 1.36 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.36  p95 2.14  p99 2.42 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.13  p95 0.20  p99 0.26 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.56  p95 2.33  p99 2.64 ms (n=300)
+      p50 freddo meno p50 caldo: 1.582 ms; documenti freddo p50 1.00, caldo p50 1.00; byte freddo p50 601.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 2.2, 1.9, 1.8, 1.9, 1.5, 1.6, 1.6, 1.6, 1.5, 1.4, 1.4, 1.4
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+
+=== FASE Q3 (eventi in 14 giorni, limit 100): 2026-11-05T17:29:33.310819Z - 2026-11-05T17:32:03.310961Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 5.25  p95 29.17  p99 38.08 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.48  p95 1.79  p99 1.88 ms (n=600)
+   freddo meno hello accoppiato  : p50 3.76  p95 27.71  p99 36.59 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.35  p95 0.61  p99 0.72 ms (n=600)
+   freddo meno caldo (accoppiato): p50 3.62  p95 27.48  p99 36.28 ms (n=600)
+   p50 freddo meno p50 caldo: 3.778 ms; documenti freddo p50 36.00, caldo p50 36.00; byte freddo p50 8381.00; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 20.7, 1.9, 13.2, 7.2, 14.6, 9.7, 9.6, 12.2, 1.2, 1.1, 3.3, 7.6, 1.1, 1.2, 3.6, 4.3, 4.9, 3.1, 2.8, 4.0, 3.6, 1.2, 1.3, 2.2
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- primi 50 clienti (freddo vero):
+      freddo                        : p50 9.97  p95 40.65  p99 44.78 ms (n=50)
+      caldo (stessa ricerca, subito): p50 1.55  p95 1.89  p99 1.97 ms (n=50)
+      freddo meno hello accoppiato  : p50 8.54  p95 39.18  p99 43.30 ms (n=50)
+      caldo meno hello accoppiato   : p50 0.34  p95 0.67  p99 0.76 ms (n=50)
+      freddo meno caldo (accoppiato): p50 8.22  p95 38.80  p99 42.99 ms (n=50)
+      p50 freddo meno p50 caldo: 8.415 ms; documenti freddo p50 17.00, caldo p50 17.00; byte freddo p50 3981.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 20.7, 1.9
+      profiler freddo: trovate 0 su 50; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 50; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.47  p95 20.96  p99 34.69 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.36  p95 1.74  p99 1.89 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.04  p95 19.40  p99 33.35 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.20  p95 0.55  p99 0.72 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.16  p95 19.19  p99 33.07 ms (n=300)
+      p50 freddo meno p50 caldo: 1.108 ms; documenti freddo p50 0.00, caldo p50 0.00; byte freddo p50 0.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 1.5, 1.6, 1.2, 1.1, 1.1, 2.0, 1.0, 1.2, 1.2, 1.2, 1.1, 1.1
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 8.73  p95 31.32  p99 39.42 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.61  p95 1.82  p99 1.86 ms (n=300)
+      freddo meno hello accoppiato  : p50 7.29  p95 29.70  p99 37.92 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.47  p95 0.63  p99 0.72 ms (n=300)
+      freddo meno caldo (accoppiato): p50 7.05  p95 29.55  p99 37.59 ms (n=300)
+      p50 freddo meno p50 caldo: 7.12 ms; documenti freddo p50 71.00, caldo p50 71.00; byte freddo p50 16270.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 26.3, 18.5, 19.1, 16.1, 6.3, 9.3, 8.9, 7.1, 5.7, 5.6, 4.3, 4.7
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+
+=== FASE Q1 (gli ultimi 20 messaggi del cliente): 2026-11-05T17:34:03.887036Z - 2026-11-05T17:36:33.887188Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 2.58  p95 8.10  p99 11.48 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.37  p95 1.52  p99 1.55 ms (n=600)
+   freddo meno hello accoppiato  : p50 1.15  p95 6.71  p99 9.96 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.29  p95 0.36  p99 0.41 ms (n=600)
+   freddo meno caldo (accoppiato): p50 1.18  p95 6.72  p99 9.98 ms (n=600)
+   p50 freddo meno p50 caldo: 1.214 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6801.00; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 8.4, 5.1, 3.3, 2.0, 1.6, 1.4, 2.3, 1.7, 1.3, 1.3, 1.3, 1.0, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.0, 1.1, 1.0, 1.0, 1.2, 1.0
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.85  p95 9.11  p99 11.72 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.38  p95 1.52  p99 1.55 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.43  p95 7.69  p99 10.41 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.29  p95 0.36  p99 0.41 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.44  p95 7.72  p99 10.17 ms (n=300)
+      p50 freddo meno p50 caldo: 1.473 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6813.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 7.4, 3.2, 1.5, 3.1, 1.5, 1.4, 1.1, 1.2, 1.1, 1.1, 1.1, 1.2
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 2.50  p95 7.29  p99 10.49 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.36  p95 1.51  p99 1.54 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.04  p95 5.84  p99 8.83 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.29  p95 0.36  p99 0.42 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.10  p95 5.88  p99 8.98 ms (n=300)
+      p50 freddo meno p50 caldo: 1.138 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6777.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 6.3, 2.0, 1.4, 1.2, 1.2, 1.0, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+
+=== FASE Q1d (20 messaggi piu' recenti prima di una data a caso): 2026-11-05T17:38:34.445278Z - 2026-11-05T17:41:04.445415Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 9.05  p95 13.94  p99 15.56 ms (n=600)
+   caldo (stessa ricerca, subito): p50 1.46  p95 1.56  p99 1.61 ms (n=600)
+   freddo meno hello accoppiato  : p50 7.53  p95 12.58  p99 14.17 ms (n=600)
+   caldo meno hello accoppiato   : p50 0.32  p95 0.39  p99 0.48 ms (n=600)
+   freddo meno caldo (accoppiato): p50 7.51  p95 12.52  p99 14.20 ms (n=600)
+   p50 freddo meno p50 caldo: 7.591 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6750.00; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 6.0, 8.5, 4.0, 9.6, 11.7, 9.7, 6.1, 3.1, 8.3, 8.5, 7.6, 3.4, 8.0, 9.0, 8.6, 7.2, 1.2, 6.9, 6.5, 5.9, 7.6, 6.2, 2.9, 7.7
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 3.50  p95 13.54  p99 15.90 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.46  p95 1.55  p99 1.58 ms (n=300)
+      freddo meno hello accoppiato  : p50 2.05  p95 12.17  p99 14.71 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.31  p95 0.38  p99 0.46 ms (n=300)
+      freddo meno caldo (accoppiato): p50 2.08  p95 12.12  p99 14.54 ms (n=300)
+      p50 freddo meno p50 caldo: 2.045 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6743.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 1.2, 1.4, 9.2, 2.4, 8.2, 3.5, 1.3, 1.2, 1.2, 1.4, 2.9, 2.0
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 9.91  p95 14.33  p99 15.21 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.47  p95 1.57  p99 1.68 ms (n=300)
+      freddo meno hello accoppiato  : p50 8.50  p95 12.94  p99 13.74 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.32  p95 0.40  p99 0.48 ms (n=300)
+      freddo meno caldo (accoppiato): p50 8.46  p95 12.93  p99 13.70 ms (n=300)
+      p50 freddo meno p50 caldo: 8.445 ms; documenti freddo p50 20.00, caldo p50 20.00; byte freddo p50 6750.50; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 10.1, 9.6, 11.0, 8.6, 8.8, 8.0, 9.2, 9.0, 7.0, 7.1, 7.9, 8.5
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+
+=== FASE Q4 (finestra di 60 giorni, limit 500): 2026-11-05T17:43:05.006534Z - 2026-11-05T17:45:35.006665Z UTC ===
+   ricerche 600, errori 0, controlli ok 600, falliti 0
+   freddo                        : p50 6.85  p95 67.11  p99 112.06 ms (n=600)
+   caldo (stessa ricerca, subito): p50 2.81  p95 3.77  p99 5.57 ms (n=600)
+   freddo meno hello accoppiato  : p50 5.39  p95 65.64  p99 110.63 ms (n=600)
+   caldo meno hello accoppiato   : p50 1.63  p95 2.50  p99 3.97 ms (n=600)
+   freddo meno caldo (accoppiato): p50 3.81  p95 64.62  p99 108.43 ms (n=600)
+   p50 freddo meno p50 caldo: 4.042 ms; documenti freddo p50 295.00, caldo p50 295.00; byte freddo p50 100125.50; getMore 0
+   freddo meno caldo p50 a blocchi di 25: 50.7, 54.0, 39.6, 38.9, 16.7, 18.9, 13.2, 12.6, 4.1, 4.5, 4.6, 3.4, 2.8, 4.7, 1.4, 3.0, 2.9, 2.2, 2.9, 1.8, 2.5, 2.1, 2.3, 2.3
+   profiler freddo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   profiler caldo: trovate 0 su 600; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+   profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo attivi:
+      freddo                        : p50 2.54  p95 47.81  p99 85.63 ms (n=300)
+      caldo (stessa ricerca, subito): p50 1.95  p95 3.96  p99 5.76 ms (n=300)
+      freddo meno hello accoppiato  : p50 1.10  p95 46.25  p99 84.16 ms (n=300)
+      caldo meno hello accoppiato   : p50 0.77  p95 2.66  p99 4.29 ms (n=300)
+      freddo meno caldo (accoppiato): p50 1.10  p95 44.99  p99 82.67 ms (n=300)
+      p50 freddo meno p50 caldo: 0.593 ms; documenti freddo p50 0.00, caldo p50 0.00; byte freddo p50 0.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 0.9, 29.3, 5.8, 4.3, 1.2, 0.9, 1.1, 1.0, 1.2, 1.0, 1.1, 1.0
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+   --- gruppo dormienti:
+      freddo                        : p50 10.16  p95 87.60  p99 124.15 ms (n=300)
+      caldo (stessa ricerca, subito): p50 3.33  p95 3.71  p99 4.51 ms (n=300)
+      freddo meno hello accoppiato  : p50 8.74  p95 86.15  p99 122.81 ms (n=300)
+      caldo meno hello accoppiato   : p50 2.22  p95 2.48  p99 3.29 ms (n=300)
+      freddo meno caldo (accoppiato): p50 6.77  p95 83.87  p99 120.57 ms (n=300)
+      p50 freddo meno p50 caldo: 6.822 ms; documenti freddo p50 483.00, caldo p50 483.00; byte freddo p50 164121.00; getMore 0
+      freddo meno caldo p50 a blocchi di 25: 92.1, 48.2, 23.3, 19.5, 7.4, 7.2, 6.7, 4.5, 4.0, 3.3, 2.9, 3.1
+      profiler freddo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler freddo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+      profiler caldo: trovate 0 su 300; millis p50 - p99 -; letti dallo storage p50 - byte; tempo di lettura dallo storage p50 - p95 - p99 - ms piani []
+      profiler caldo: find a 0 byte dalla dispensa 0 su 0; solo quelle con byte > 0: lettura dallo storage p50 - p99 - ms, byte p50 -
+
+
+Stato delle fasi:
+  Q2               fatta      fase_03_Q2.json 
+  Q3               fatta      fase_04_Q3.json 
+  Q1               fatta      fase_05_Q1.json 
+  Q1d              fatta      fase_06_Q1d.json 
+  Q4               fatta      fase_07_Q4.json 
+
+Fasi non riuscite: atlas_inizio, inizio, Q5, spiega, condizioni, mentre_scrivi, parallelo, carico_massimo, scritture, cancellazione, grandi_carica, grandi_lavaggio, grandi_Q2, grandi_Q1, grandi_Q3, grandi_Q4, freddo, fine, atlas_fine. Si rifanno una per una con:  python3 prova_infinite.py giro --solo-fasi atlas_inizio,inizio,Q5,spiega,condizioni,mentre_scrivi,parallelo,carico_massimo,scritture,cancellazione,grandi_carica,grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4,freddo,fine,atlas_fine
+
+=== NUMERI DERIVATI (STIMATI, solo dai dati grezzi; dettaglio in RIASSUNTO.json) ===
+  Q2: find fredde a 0 byte 0/0; find/s 12.0; byte letti dallo storage per find fredda p50 -; pagine per find fredda None (API: None); us per pagina None CPU 2.9% di un core, us per lettura 2230.26, per scrittura 22393.66
+  Q3: find fredde a 0 byte 0/0; find/s 12.0; byte letti dallo storage per find fredda p50 -; pagine per find fredda None (API: None); us per pagina None CPU 5.0% di un core, us per lettura 3825.56, per scrittura 40674.96
+  Q1: find fredde a 0 byte 0/0; find/s 12.0; byte letti dallo storage per find fredda p50 -; pagine per find fredda None (API: None); us per pagina None CPU 3.3% di un core, us per lettura 2488.86, per scrittura 25378.67
+  Q1d: find fredde a 0 byte 0/0; find/s 12.0; byte letti dallo storage per find fredda p50 -; pagine per find fredda None (API: None); us per pagina None CPU 4.2% di un core, us per lettura 3175.46, per scrittura 29324.6
+  Q4: find fredde a 0 byte 0/0; find/s 12.0; byte letti dallo storage per find fredda p50 -; pagine per find fredda None (API: None); us per pagina None CPU 7.9% di un core, us per lettura 6021.2, per scrittura 53377.14
+
+Cartella: /opt/irlanda/lavoro/dati/m10s/giro_finale_m30_singoli_b_20261105T172302Z (10 file, elencati con SHA-256 in INDICE.json)

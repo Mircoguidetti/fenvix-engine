@@ -1,0 +1,1026 @@
+{
+ "versione": "p1-1.6.2",
+ "scritto": "2026-11-05T18:41:27.553974Z",
+ "analisi": {
+  "nota": "STIMATO: numeri derivati dai dati grezzi; le misure dell'API sono medie al minuto",
+  "origini_api": [],
+  "fasi": [
+   {
+    "fase": "parallelo",
+    "inizio": "2026-11-05T18:32:45.151213Z",
+    "fine": "2026-11-05T18:41:25.113213Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 519.998,
+     "cpu_us": 16961713,
+     "operazioni": {
+      "query": 5971,
+      "getmore": 0,
+      "insert": 0,
+      "update": 686,
+      "delete": 139,
+      "command": 15076
+     },
+     "documenti": {
+      "returned": 65830,
+      "inserted": 0,
+      "updated": 571,
+      "deleted": 13
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1709083309,
+     "cpu_us_per_lettura": 2840.68,
+     "cpu_us_per_scrittura": 20559.65,
+     "cpu_us_per_documento": 255.39,
+     "cpu_percento_di_un_core": 3.3,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "livelli": [
+     {
+      "livello": 10,
+      "api_primario": {
+       "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+      },
+      "cpu": {
+       "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+       "secondi": 90.015,
+       "cpu_us": 4237022,
+       "operazioni": {
+        "query": 1898,
+        "getmore": 0,
+        "insert": 0,
+        "update": 109,
+        "delete": 17,
+        "command": 2413
+       },
+       "documenti": {
+        "returned": 21915,
+        "inserted": 0,
+        "updated": 105,
+        "deleted": 2
+       },
+       "pagine_lette_nel_bancone": null,
+       "byte_letti_nel_bancone": null,
+       "byte_scritti_dal_bancone": null,
+       "bancone_byte_dopo": 1711631414,
+       "cpu_us_per_lettura": 2232.36,
+       "cpu_us_per_scrittura": 33627.16,
+       "cpu_us_per_documento": 192.4,
+       "cpu_percento_di_un_core": 4.7,
+       "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+      }
+     },
+     {
+      "livello": 50,
+      "api_primario": {
+       "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+      },
+      "cpu": {
+       "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+       "secondi": 90.015,
+       "cpu_us": 3211503,
+       "operazioni": {
+        "query": 1898,
+        "getmore": 0,
+        "insert": 0,
+        "update": 90,
+        "delete": 0,
+        "command": 2408
+       },
+       "documenti": {
+        "returned": 22133,
+        "inserted": 0,
+        "updated": 90,
+        "deleted": 0
+       },
+       "pagine_lette_nel_bancone": null,
+       "byte_letti_nel_bancone": null,
+       "byte_scritti_dal_bancone": null,
+       "bancone_byte_dopo": 1715975132,
+       "cpu_us_per_lettura": 1692.05,
+       "cpu_us_per_scrittura": 35683.37,
+       "cpu_us_per_documento": 144.51,
+       "cpu_percento_di_un_core": 3.6,
+       "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+      }
+     },
+     {
+      "livello": 100,
+      "api_primario": {
+       "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+      },
+      "cpu": {
+       "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+       "secondi": 90.015,
+       "cpu_us": 2963392,
+       "operazioni": {
+        "query": 1899,
+        "getmore": 0,
+        "insert": 0,
+        "update": 199,
+        "delete": 71,
+        "command": 2418
+       },
+       "documenti": {
+        "returned": 21217,
+        "inserted": 0,
+        "updated": 98,
+        "deleted": 3
+       },
+       "pagine_lette_nel_bancone": null,
+       "byte_letti_nel_bancone": null,
+       "byte_scritti_dal_bancone": null,
+       "bancone_byte_dopo": 1709082686,
+       "cpu_us_per_lettura": 1560.5,
+       "cpu_us_per_scrittura": 10975.53,
+       "cpu_us_per_documento": 139.01,
+       "cpu_percento_di_un_core": 3.3,
+       "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "fasi": [
+  {
+   "fase": "parallelo",
+   "inizio": "2026-11-05T18:32:45.151213Z",
+   "fine": "2026-11-05T18:41:25.113213Z",
+   "livelli": [
+    {
+     "insieme": 10,
+     "clienti": 900,
+     "clienti_previsti": 900,
+     "lotti": 90,
+     "connessioni_aperte_prima": 17,
+     "inizio": "2026-11-05T18:32:46.281633Z",
+     "fine": "2026-11-05T18:34:16.282953Z",
+     "errore": null,
+     "per_query": {
+      "Q1": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 6.516,
+         "p95": 17.27,
+         "p99": 29.293,
+         "media": 7.786,
+         "min": 2.307,
+         "max": 39.114
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 20.0,
+         "p95": 20.0,
+         "p99": 20.0,
+         "media": 20.0,
+         "min": 20,
+         "max": 20
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 4.519,
+         "p95": 7.23,
+         "p99": 8.626,
+         "media": 4.639,
+         "min": 1.396,
+         "max": 9.416
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 20.0,
+         "p95": 20.0,
+         "p99": 20.0,
+         "media": 20.0,
+         "min": 20,
+         "max": 20
+        }
+       },
+       "controlli_falliti": 0
+      },
+      "Q2": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 5.012,
+         "p95": 8.003,
+         "p99": 9.108,
+         "media": 5.237,
+         "min": 2.344,
+         "max": 9.925
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 1.0,
+         "p95": 1.0,
+         "p99": 1.0,
+         "media": 1.0,
+         "min": 1,
+         "max": 1
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 4.079,
+         "p95": 6.757,
+         "p99": 7.563,
+         "media": 4.248,
+         "min": 1.403,
+         "max": 8.197
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 1.0,
+         "p95": 1.0,
+         "p99": 1.0,
+         "media": 1.0,
+         "min": 1,
+         "max": 1
+        }
+       },
+       "controlli_falliti": 0
+      },
+      "Q3": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 5.213,
+         "p95": 33.561,
+         "p99": 40.375,
+         "media": 9.833,
+         "min": 2.099,
+         "max": 55.343
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 0.0,
+         "p95": 79.0,
+         "p99": 100.0,
+         "media": 15.243,
+         "min": 0,
+         "max": 100
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 4.926,
+         "p95": 7.661,
+         "p99": 8.65,
+         "media": 4.841,
+         "min": 1.327,
+         "max": 9.28
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 0.0,
+         "p95": 79.0,
+         "p99": 100.0,
+         "media": 15.243,
+         "min": 0,
+         "max": 100
+        }
+       },
+       "controlli_falliti": 0
+      }
+     },
+     "serverStatus_cpu_e_operazioni": {
+      "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+      "secondi": 90.015,
+      "cpu_us": 4237022,
+      "operazioni": {
+       "query": 1898,
+       "getmore": 0,
+       "insert": 0,
+       "update": 109,
+       "delete": 17,
+       "command": 2413
+      },
+      "documenti": {
+       "returned": 21915,
+       "inserted": 0,
+       "updated": 105,
+       "deleted": 2
+      },
+      "pagine_lette_nel_bancone": null,
+      "byte_letti_nel_bancone": null,
+      "byte_scritti_dal_bancone": null,
+      "bancone_byte_dopo": 1711631414,
+      "cpu_us_per_lettura": 2232.36,
+      "cpu_us_per_scrittura": 33627.16,
+      "cpu_us_per_documento": 192.4,
+      "cpu_percento_di_un_core": 4.7,
+      "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+     }
+    },
+    {
+     "insieme": 50,
+     "clienti": 900,
+     "clienti_previsti": 900,
+     "lotti": 18,
+     "connessioni_aperte_prima": 100,
+     "inizio": "2026-11-05T18:36:19.112581Z",
+     "fine": "2026-11-05T18:37:49.115332Z",
+     "errore": null,
+     "per_query": {
+      "Q1": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 14.783,
+         "p95": 22.373,
+         "p99": 26.1,
+         "media": 14.672,
+         "min": 3.137,
+         "max": 27.368
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 20.0,
+         "p95": 20.0,
+         "p99": 20.0,
+         "media": 20.0,
+         "min": 20,
+         "max": 20
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 13.243,
+         "p95": 21.191,
+         "p99": 24.409,
+         "media": 13.352,
+         "min": 2.698,
+         "max": 25.385
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 20.0,
+         "p95": 20.0,
+         "p99": 20.0,
+         "media": 20.0,
+         "min": 20,
+         "max": 20
+        }
+       },
+       "controlli_falliti": 0
+      },
+      "Q2": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 13.635,
+         "p95": 22.008,
+         "p99": 23.8,
+         "media": 13.908,
+         "min": 3.16,
+         "max": 24.667
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 1.0,
+         "p95": 1.0,
+         "p99": 1.0,
+         "media": 1.0,
+         "min": 1,
+         "max": 1
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 13.065,
+         "p95": 20.472,
+         "p99": 23.154,
+         "media": 13.251,
+         "min": 1.497,
+         "max": 26.07
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 1.0,
+         "p95": 1.0,
+         "p99": 1.0,
+         "media": 1.0,
+         "min": 1,
+         "max": 1
+        }
+       },
+       "controlli_falliti": 0
+      },
+      "Q3": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 18.123,
+         "p95": 46.285,
+         "p99": 53.653,
+         "media": 22.367,
+         "min": 5.324,
+         "max": 62.434
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 0.0,
+         "p95": 79.1,
+         "p99": 100.0,
+         "media": 15.42,
+         "min": 0,
+         "max": 100
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 13.463,
+         "p95": 37.759,
+         "p99": 41.312,
+         "media": 15.85,
+         "min": 2.91,
+         "max": 45.441
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 0.0,
+         "p95": 79.1,
+         "p99": 100.0,
+         "media": 15.42,
+         "min": 0,
+         "max": 100
+        }
+       },
+       "controlli_falliti": 0
+      }
+     },
+     "serverStatus_cpu_e_operazioni": {
+      "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+      "secondi": 90.015,
+      "cpu_us": 3211503,
+      "operazioni": {
+       "query": 1898,
+       "getmore": 0,
+       "insert": 0,
+       "update": 90,
+       "delete": 0,
+       "command": 2408
+      },
+      "documenti": {
+       "returned": 22133,
+       "inserted": 0,
+       "updated": 90,
+       "deleted": 0
+      },
+      "pagine_lette_nel_bancone": null,
+      "byte_letti_nel_bancone": null,
+      "byte_scritti_dal_bancone": null,
+      "bancone_byte_dopo": 1715975132,
+      "cpu_us_per_lettura": 1692.05,
+      "cpu_us_per_scrittura": 35683.37,
+      "cpu_us_per_documento": 144.51,
+      "cpu_percento_di_un_core": 3.6,
+      "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+     }
+    },
+    {
+     "insieme": 100,
+     "clienti": 900,
+     "clienti_previsti": 900,
+     "lotti": 9,
+     "connessioni_aperte_prima": 200,
+     "inizio": "2026-11-05T18:39:54.182406Z",
+     "fine": "2026-11-05T18:41:24.187061Z",
+     "errore": null,
+     "per_query": {
+      "Q1": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 24.864,
+         "p95": 38.28,
+         "p99": 42.267,
+         "media": 25.572,
+         "min": 9.175,
+         "max": 46.972
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 20.0,
+         "p95": 20.0,
+         "p99": 20.0,
+         "media": 20.0,
+         "min": 20,
+         "max": 20
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 24.222,
+         "p95": 37.166,
+         "p99": 43.12,
+         "media": 24.429,
+         "min": 5.552,
+         "max": 43.852
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 20.0,
+         "p95": 20.0,
+         "p99": 20.0,
+         "media": 20.0,
+         "min": 20,
+         "max": 20
+        }
+       },
+       "controlli_falliti": 0
+      },
+      "Q2": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 23.674,
+         "p95": 36.535,
+         "p99": 40.723,
+         "media": 24.5,
+         "min": 5.956,
+         "max": 43.755
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 1.0,
+         "p95": 1.0,
+         "p99": 1.0,
+         "media": 1.0,
+         "min": 1,
+         "max": 1
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 22.525,
+         "p95": 34.884,
+         "p99": 41.663,
+         "media": 22.735,
+         "min": 2.948,
+         "max": 42.591
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 1.0,
+         "p95": 1.0,
+         "p99": 1.0,
+         "media": 1.0,
+         "min": 1,
+         "max": 1
+        }
+       },
+       "controlli_falliti": 0
+      },
+      "Q3": {
+       "freddo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 33.259,
+         "p95": 66.157,
+         "p99": 76.109,
+         "media": 35.753,
+         "min": 6.538,
+         "max": 78.826
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 0.0,
+         "p95": 82.0,
+         "p99": 100.0,
+         "media": 14.08,
+         "min": 0,
+         "max": 100
+        }
+       },
+       "caldo": {
+        "n": 300,
+        "errori": 0,
+        "server_profiler_millis": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage": {
+         "n": 0
+        },
+        "server_byte_letti_storage": {
+         "n": 0
+        },
+        "find_a_0_byte": 0,
+        "su": 0,
+        "server_profiler_millis_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "server_ms_di_lettura_storage_solo_byte_maggiori_di_0": {
+         "n": 0
+        },
+        "trovate_nel_profiler": 0,
+        "cliente_ms_RETE_DEL_MAC": {
+         "n": 300,
+         "p50": 23.148,
+         "p95": 37.051,
+         "p99": 41.222,
+         "media": 24.111,
+         "min": 4.596,
+         "max": 43.243
+        },
+        "documenti": {
+         "n": 300,
+         "p50": 0.0,
+         "p95": 82.0,
+         "p99": 100.0,
+         "media": 14.08,
+         "min": 0,
+         "max": 100
+        }
+       },
+       "controlli_falliti": 0
+      }
+     },
+     "serverStatus_cpu_e_operazioni": {
+      "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+      "secondi": 90.015,
+      "cpu_us": 2963392,
+      "operazioni": {
+       "query": 1899,
+       "getmore": 0,
+       "insert": 0,
+       "update": 199,
+       "delete": 71,
+       "command": 2418
+      },
+      "documenti": {
+       "returned": 21217,
+       "inserted": 0,
+       "updated": 98,
+       "deleted": 3
+      },
+      "pagine_lette_nel_bancone": null,
+      "byte_letti_nel_bancone": null,
+      "byte_scritti_dal_bancone": null,
+      "bancone_byte_dopo": 1709082686,
+      "cpu_us_per_lettura": 1560.5,
+      "cpu_us_per_scrittura": 10975.53,
+      "cpu_us_per_documento": 139.01,
+      "cpu_percento_di_un_core": 3.3,
+      "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+     }
+    }
+   ]
+  }
+ ]
+}

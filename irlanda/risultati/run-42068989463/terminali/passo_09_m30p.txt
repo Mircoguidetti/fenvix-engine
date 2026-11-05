@@ -1,0 +1,30 @@
+===== 2026-11-05T19:02:53.860684Z prova_infinite.py giro --file risultati_p1.json --cartella-dati /opt/irlanda/lavoro/dati/m30p --db app_data_6 --nuova-cartella --giro m30_fine_p --solo-fasi fine
+Giro finale 'm30_fine_p' (versione p1-1.6.2). Clienti attivi mai letti 271, dormienti mai letti 180.
+Il piano usa 0 clienti attivi mai letti su 271 e 0 dormienti su 180 (ogni cliente in una sola fase).
+Ordine delle fasi e minuti STIMATI (pausa di 2 minuti compresa dove c'e'):
+   1. fine               3.0 min  (a   3.0)
+Totale STIMATO: circa 3 minuti (0.1 ore), piu' circa 6 se la collezione fredda e' accettata.
+[19:02:54] Dati grezzi in: /opt/irlanda/lavoro/dati/m30p/giro_finale_m30_fine_p_20261105T190254Z
+[19:02:54] ===== fine (fase 1 di 1; STIMATO 3 minuti) =====
+[19:02:54] FASE fine INIZIO 19:02:54 ora del Mac (2026-11-05T19:02:54Z)
+Database 'app_data_6': 9,078,595 documenti; dati 2.871 GB, spazio dati non riportato, indici non riportato, totale non riportato
+  eventi: 3,176,006 documenti, dati 0.690 GB, spazio non riportato, indici 0.171 GB {'_id_': 83181185, 'cliente_ts': 99909336}
+  messaggi: 4,541,345 documenti, dati 1.439 GB, spazio non riportato, indici 0.239 GB {'_id_': 117933696, 'cliente_ts': 138993619}
+  ordini: 1,361,244 documenti, dati 0.742 GB, spazio non riportato, indici 0.111 GB {'_id_': 36407755, 'cliente_ts': 45918154, 'stato_ts': 37058458}
+Oplog: 504,477 voci, dati 30.379 GB, spazio non riportato, tetto 0.016 GB
+Oplog: finestra di 28.9 ore (dalla voce piu' vecchia alla piu' nuova, la piu' vecchia e' del 2026-11-04T14:09:29Z)
+[19:02:54]   Collezioni dello script cancellate: nessuna da cancellare; nessuna collezione dello script rimasta. Restano: ['eventi', 'messaggi', 'ordini']
+[19:02:54] FASE fine FINE 19:02:54 ora del Mac (2026-11-05T19:02:54Z)
+
+=== RIASSUNTO DEL GIRO FINALE 'm30_fine_p' (dai dati grezzi; si rifa' con: riassunto --cartella /opt/irlanda/lavoro/dati/m30p/giro_finale_m30_fine_p_20261105T190254Z) ===
+=== FASE fine: 2026-11-05T19:02:54.247192Z - 2026-11-05T19:02:54.270421Z UTC
+
+Stato delle fasi:
+  fine             fatta      fase_23_fine.json 
+
+Fasi non riuscite: atlas_inizio, inizio, Q2, Q3, Q1, Q1d, Q4, Q5, spiega, condizioni, mentre_scrivi, parallelo, carico_massimo, scritture, cancellazione, grandi_carica, grandi_lavaggio, grandi_Q2, grandi_Q1, grandi_Q3, grandi_Q4, freddo, atlas_fine. Si rifanno una per una con:  python3 prova_infinite.py giro --solo-fasi atlas_inizio,inizio,Q2,Q3,Q1,Q1d,Q4,Q5,spiega,condizioni,mentre_scrivi,parallelo,carico_massimo,scritture,cancellazione,grandi_carica,grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4,freddo,atlas_fine
+
+=== NUMERI DERIVATI (STIMATI, solo dai dati grezzi; dettaglio in RIASSUNTO.json) ===
+  fine: CPU 38.9% di un core, us per lettura 11666.5, per scrittura None
+
+Cartella: /opt/irlanda/lavoro/dati/m30p/giro_finale_m30_fine_p_20261105T190254Z (6 file, elencati con SHA-256 in INDICE.json)

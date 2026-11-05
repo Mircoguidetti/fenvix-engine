@@ -1,0 +1,35 @@
+Chi manda il carico non deve essere il limite (RULES.md 2026-11-05): per ogni fase, CPU del processo dello
+script (% di un core, ogni 5 s) e di tutta la macchina (% di tutte le vCPU). VALIDA se p95 del processo < 80 e
+massimo della macchina < 80. Le fasi lunghe meno di 10 s hanno pochi campioni: guardare il massimo.
+
+non misura passo  1 passo_01_m30s                inizio           (caricamento o controllo: non conta)
+VALIDA     passo  1 passo_01_m30s                Q2               processo p95 1.6 max 8.4 (campioni 32), macchina max 2.0
+VALIDA     passo  1 passo_01_m30s                Q3               processo p95 2.2 max 9.8 (campioni 31), macchina max 1.2
+VALIDA     passo  1 passo_01_m30s                Q1               processo p95 2.4 max 10.2 (campioni 31), macchina max 2.7
+VALIDA     passo  1 passo_01_m30s                Q1d              processo p95 1.8 max 10.4 (campioni 31), macchina max 2.3
+VALIDA     passo  1 passo_01_m30s                Q4               processo p95 3.8 max 41.6 (campioni 31), macchina max 6.1
+VALIDA     passo  2 passo_02_m10s                Q2               processo p95 1.6 max 8.6 (campioni 31), macchina max 2.4
+VALIDA     passo  2 passo_02_m10s                Q3               processo p95 2.4 max 11.2 (campioni 31), macchina max 2.5
+VALIDA     passo  2 passo_02_m10s                Q1               processo p95 2.4 max 9.2 (campioni 32), macchina max 2.2
+VALIDA     passo  2 passo_02_m10s                Q1d              processo p95 2.4 max 9.8 (campioni 32), macchina max 2.3
+VALIDA     passo  2 passo_02_m10s                Q4               processo p95 3.6 max 76.6 (campioni 32), macchina max 10.5
+VALIDA     passo  3 passo_03_vecchio             Q2               processo p95 0.8 max 1.8 (campioni 31), macchina max 2.5
+VALIDA     passo  3 passo_03_vecchio             Q3               processo p95 0.8 max 2.0 (campioni 31), macchina max 2.8
+VALIDA     passo  3 passo_03_vecchio             Q1               processo p95 0.6 max 2.0 (campioni 31), macchina max 2.6
+VALIDA     passo  3 passo_03_vecchio             Q1d              processo p95 0.8 max 2.4 (campioni 31), macchina max 2.8
+VALIDA     passo  3 passo_03_vecchio             Q4               processo p95 1.0 max 1.0 (campioni 30), macchina max 3.0
+VALIDA     passo  4 passo_04_vecchio             Q2               processo p95 0.6 max 2.0 (campioni 31), macchina max 2.7
+VALIDA     passo  4 passo_04_vecchio             Q3               processo p95 0.6 max 2.2 (campioni 31), macchina max 2.7
+VALIDA     passo  4 passo_04_vecchio             Q1               processo p95 0.8 max 2.0 (campioni 31), macchina max 2.2
+VALIDA     passo  4 passo_04_vecchio             Q1d              processo p95 0.6 max 2.6 (campioni 31), macchina max 2.8
+VALIDA     passo  4 passo_04_vecchio             Q4               processo p95 0.8 max 12.4 (campioni 31), macchina max 2.8
+VALIDA     passo  5 passo_05_m30p                parallelo        processo p95 4.0 max 15.4 (campioni 104), macchina max 6.0
+VALIDA     passo  6 passo_06_m30p_dormienti      parallelo        processo p95 3.6 max 26.6 (campioni 105), macchina max 4.3
+VALIDA     passo  7 passo_07_m10p                parallelo        processo p95 3.2 max 13.2 (campioni 104), macchina max 11.7
+non misura passo  8 passo_08_m30s                fine             (caricamento o controllo: non conta)
+non misura passo  9 passo_09_m30p                fine             (caricamento o controllo: non conta)
+non misura passo 10 passo_10_m10s                fine             (caricamento o controllo: non conta)
+non misura passo 11 passo_11_m10p                fine             (caricamento o controllo: non conta)
+NON VALIDA passo 12 passo_12_massimo             carico_massimo   processo p95 124.8 max 125.6 (campioni 780), macchina max 81.6
+
+MACCHINA: ATTENZIONE: almeno una fase NON VALIDA

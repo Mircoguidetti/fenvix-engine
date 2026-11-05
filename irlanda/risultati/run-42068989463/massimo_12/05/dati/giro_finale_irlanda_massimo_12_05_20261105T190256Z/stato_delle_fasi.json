@@ -1,0 +1,45 @@
+{
+ "nome": "irlanda_massimo_12_05",
+ "cartella": "dati/giro_finale_irlanda_massimo_12_05_20261105T190256Z",
+ "versione": "p1-1.6.2",
+ "fasi": {
+  "fine": [
+   {
+    "inizio": "2026-11-05T19:02:53.332033Z",
+    "sessione": "20261105T190253Z",
+    "file": "fase_23_fine.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T19:02:53.449905Z"
+   }
+  ],
+  "pausa prima di carico_massimo": [
+   {
+    "inizio": "2026-11-05T19:02:57.213049Z",
+    "fine": "2026-11-05T19:04:57.213183Z"
+   }
+  ],
+  "carico_massimo": [
+   {
+    "inizio": "2026-11-05T19:04:57.213215Z",
+    "sessione": "20261105T190257Z",
+    "file": "fase_13_carico_massimo.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T19:16:01.534420Z"
+   }
+  ]
+ },
+ "sessioni": [
+  {
+   "inizio": "2026-11-05T19:02:53.315880Z",
+   "fasi_chieste": [
+    "fine"
+   ]
+  },
+  {
+   "inizio": "2026-11-05T19:02:57.091202Z",
+   "fasi_chieste": [
+    "carico_massimo"
+   ]
+  }
+ ]
+}

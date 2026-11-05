@@ -1,0 +1,147 @@
+{
+ "copie": 5,
+ "core_atlas": 2,
+ "parti": {
+  "letture": {
+   "copie": 5,
+   "somma_semplice": 12576.2,
+   "finestra_comune_s": 179.62565994262695,
+   "operazioni_al_secondo_comune": 12577.429151660936,
+   "documenti_al_secondo_comune": 12577.429151660936,
+   "errori": 0,
+   "cpu_macchina_media": 79.07777777777778,
+   "cpu_macchina_max": 81.6,
+   "cpu_copia_mediana": 123.1,
+   "cpu_atlas_mediana": 160.1,
+   "p50_ms": 22.377,
+   "p99_ms": 57.736,
+   "verdetto": "MACCHINA: la CPU della macchina e' arrivata a 81,6% (soglia 80%): il limite puo' essere la macchina, il numero NON e' il limite di Atlas",
+   "per_copia": {
+    "01": {
+     "operazioni_al_secondo": 2505.2,
+     "cpu_copia": 123.3,
+     "inizio": "2026-11-05T19:04:56.954860Z",
+     "fine": "2026-11-05T19:07:57.738112Z"
+    },
+    "02": {
+     "operazioni_al_secondo": 2515.0,
+     "cpu_copia": 122.7,
+     "inizio": "2026-11-05T19:04:57.901202Z",
+     "fine": "2026-11-05T19:07:58.679640Z"
+    },
+    "03": {
+     "operazioni_al_secondo": 2515.8,
+     "cpu_copia": 123.3,
+     "inizio": "2026-11-05T19:04:56.930525Z",
+     "fine": "2026-11-05T19:07:57.721839Z"
+    },
+    "04": {
+     "operazioni_al_secondo": 2520.0,
+     "cpu_copia": 123.1,
+     "inizio": "2026-11-05T19:04:56.960223Z",
+     "fine": "2026-11-05T19:07:57.854890Z"
+    },
+    "05": {
+     "operazioni_al_secondo": 2520.2,
+     "cpu_copia": 122.5,
+     "inizio": "2026-11-05T19:04:58.096179Z",
+     "fine": "2026-11-05T19:07:58.952297Z"
+    }
+   }
+  },
+  "lotti_w1": {
+   "copie": 5,
+   "somma_semplice": 1137.1,
+   "finestra_comune_s": 178.82042813301086,
+   "operazioni_al_secondo_comune": 1136.2416831677433,
+   "documenti_al_secondo_comune": 113624.16831677433,
+   "errori": 0,
+   "cpu_macchina_media": 39.61944444444445,
+   "cpu_macchina_max": 53.5,
+   "cpu_copia_mediana": 63.9,
+   "cpu_atlas_mediana": 179.9,
+   "p50_ms": 256.887,
+   "p99_ms": 750.628,
+   "verdetto": "ATLAS: macchina sotto l'80% (al massimo 53,5%), copie sotto il 85% di un core (63,9%), CPU del primario di Atlas 179,9% di un core su 2 core: il limite e' la CPU di Atlas",
+   "per_copia": {
+    "01": {
+     "operazioni_al_secondo": 228.8,
+     "cpu_copia": 64.1,
+     "inizio": "2026-11-05T19:08:57.945195Z",
+     "fine": "2026-11-05T19:11:58.675070Z"
+    },
+    "02": {
+     "operazioni_al_secondo": 226.2,
+     "cpu_copia": 63.1,
+     "inizio": "2026-11-05T19:08:59.391994Z",
+     "fine": "2026-11-05T19:11:59.817544Z"
+    },
+    "03": {
+     "operazioni_al_secondo": 228.8,
+     "cpu_copia": 63.9,
+     "inizio": "2026-11-05T19:08:57.928489Z",
+     "fine": "2026-11-05T19:11:58.690076Z"
+    },
+    "04": {
+     "operazioni_al_secondo": 228.6,
+     "cpu_copia": 64.0,
+     "inizio": "2026-11-05T19:08:58.072313Z",
+     "fine": "2026-11-05T19:11:58.722495Z"
+    },
+    "05": {
+     "operazioni_al_secondo": 224.7,
+     "cpu_copia": 62.8,
+     "inizio": "2026-11-05T19:08:59.854642Z",
+     "fine": "2026-11-05T19:12:00.506853Z"
+    }
+   }
+  },
+  "lotti_majority": {
+   "copie": 5,
+   "somma_semplice": 1125.7,
+   "finestra_comune_s": 178.03643488883972,
+   "operazioni_al_secondo_comune": 1124.9690647371567,
+   "documenti_al_secondo_comune": 112496.90647371567,
+   "errori": 0,
+   "cpu_macchina_media": 41.52,
+   "cpu_macchina_max": 45.3,
+   "cpu_copia_mediana": 65.5,
+   "cpu_atlas_mediana": 136.6,
+   "p50_ms": 254.766,
+   "p99_ms": 621.505,
+   "verdetto": "ATLAS (non la CPU): macchina e copie con margine (al massimo 45,3%, copie 65,5% di un core) e CPU di Atlas non piena (136,6% di un core su 2 core): le copie aspettano le risposte (p50 254,77 ms, p99 621,50 ms): il limite e' dentro Atlas ma non e' la CPU (code, ticket, disco o rete del cluster). NON SO quale",
+   "per_copia": {
+    "01": {
+     "operazioni_al_secondo": 225.5,
+     "cpu_copia": 65.8,
+     "inizio": "2026-11-05T19:12:58.784502Z",
+     "fine": "2026-11-05T19:16:00.011053Z"
+    },
+    "02": {
+     "operazioni_al_secondo": 223.4,
+     "cpu_copia": 64.9,
+     "inizio": "2026-11-05T19:13:00.402288Z",
+     "fine": "2026-11-05T19:16:01.312602Z"
+    },
+    "03": {
+     "operazioni_al_secondo": 225.7,
+     "cpu_copia": 65.5,
+     "inizio": "2026-11-05T19:12:58.806652Z",
+     "fine": "2026-11-05T19:16:00.047531Z"
+    },
+    "04": {
+     "operazioni_al_secondo": 227.3,
+     "cpu_copia": 66.0,
+     "inizio": "2026-11-05T19:12:58.869315Z",
+     "fine": "2026-11-05T19:15:59.232962Z"
+    },
+    "05": {
+     "operazioni_al_secondo": 223.8,
+     "cpu_copia": 64.9,
+     "inizio": "2026-11-05T19:13:01.196527Z",
+     "fine": "2026-11-05T19:16:01.328694Z"
+    }
+   }
+  }
+ }
+}

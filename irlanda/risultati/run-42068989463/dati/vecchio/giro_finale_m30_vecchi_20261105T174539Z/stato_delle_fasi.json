@@ -1,0 +1,94 @@
+{
+ "nome": "m30_vecchi",
+ "cartella": "/opt/irlanda/lavoro/dati/vecchio/giro_finale_m30_vecchi_20261105T174539Z",
+ "versione": "p1-1.6.2",
+ "fasi": {
+  "pausa prima di Q2": [
+   {
+    "inizio": "2026-11-05T17:45:40.055030Z",
+    "fine": "2026-11-05T17:47:40.055185Z"
+   }
+  ],
+  "Q2": [
+   {
+    "inizio": "2026-11-05T17:47:40.055230Z",
+    "sessione": "20261105T174540Z",
+    "file": "fase_03_Q2.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:50:10.208654Z"
+   }
+  ],
+  "pausa prima di Q3": [
+   {
+    "inizio": "2026-11-05T17:50:10.224480Z",
+    "fine": "2026-11-05T17:52:10.224666Z"
+   }
+  ],
+  "Q3": [
+   {
+    "inizio": "2026-11-05T17:52:10.224714Z",
+    "sessione": "20261105T174540Z",
+    "file": "fase_04_Q3.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:54:40.386063Z"
+   }
+  ],
+  "pausa prima di Q1": [
+   {
+    "inizio": "2026-11-05T17:54:40.401690Z",
+    "fine": "2026-11-05T17:56:40.401848Z"
+   }
+  ],
+  "Q1": [
+   {
+    "inizio": "2026-11-05T17:56:40.401893Z",
+    "sessione": "20261105T174540Z",
+    "file": "fase_05_Q1.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:59:10.561830Z"
+   }
+  ],
+  "pausa prima di Q1d": [
+   {
+    "inizio": "2026-11-05T17:59:10.577742Z",
+    "fine": "2026-11-05T18:01:10.577880Z"
+   }
+  ],
+  "Q1d": [
+   {
+    "inizio": "2026-11-05T18:01:10.577922Z",
+    "sessione": "20261105T174540Z",
+    "file": "fase_06_Q1d.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T18:03:40.767541Z"
+   }
+  ],
+  "pausa prima di Q4": [
+   {
+    "inizio": "2026-11-05T18:03:40.783625Z",
+    "fine": "2026-11-05T18:05:40.783783Z"
+   }
+  ],
+  "Q4": [
+   {
+    "inizio": "2026-11-05T18:05:40.783814Z",
+    "sessione": "20261105T174540Z",
+    "file": "fase_07_Q4.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T18:08:10.940508Z"
+   }
+  ]
+ },
+ "sessioni": [
+  {
+   "inizio": "2026-11-05T17:45:40.026431Z",
+   "fasi_chieste": [
+    "Q2",
+    "Q3",
+    "Q1",
+    "Q1d",
+    "Q4"
+   ]
+  }
+ ]
+}

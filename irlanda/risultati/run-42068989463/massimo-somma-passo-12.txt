@@ -1,0 +1,16 @@
+CARICO MASSIMO a piu' copie: 5 copie dello script, ognuna con 64 fili; vCPU della macchina 8; core del primario di Atlas 2 (hostInfo)
+
+letture: 5 copie; somma semplice 12.576,2 operazioni/s; nella finestra comune di 180 s 12.577,4 operazioni/s (12.577 documenti/s); errori 0
+  macchina: CPU media 79,1%, massima 81,6% (campioni 36); copie: CPU per copia mediana 123,1% di un core (min 122,5, max 123,3); tempi visti dalla macchina p50 22,38 ms, p99 57,74 ms
+  Atlas: CPU del primario 160,1% di un core (mediana delle copie), core 2
+  VERDETTO: MACCHINA: la CPU della macchina e' arrivata a 81,6% (soglia 80%): il limite puo' essere la macchina, il numero NON e' il limite di Atlas
+
+lotti_w1: 5 copie; somma semplice 1.137,1 operazioni/s; nella finestra comune di 179 s 1.136,2 operazioni/s (113.624 documenti/s); errori 0
+  macchina: CPU media 39,6%, massima 53,5% (campioni 36); copie: CPU per copia mediana 63,9% di un core (min 62,8, max 64,1); tempi visti dalla macchina p50 256,89 ms, p99 750,63 ms
+  Atlas: CPU del primario 179,9% di un core (mediana delle copie), core 2
+  VERDETTO: ATLAS: macchina sotto l'80% (al massimo 53,5%), copie sotto il 85% di un core (63,9%), CPU del primario di Atlas 179,9% di un core su 2 core: il limite e' la CPU di Atlas
+
+lotti_majority: 5 copie; somma semplice 1.125,7 operazioni/s; nella finestra comune di 178 s 1.125,0 operazioni/s (112.497 documenti/s); errori 0
+  macchina: CPU media 41,5%, massima 45,3% (campioni 35); copie: CPU per copia mediana 65,5% di un core (min 64,9, max 66,0); tempi visti dalla macchina p50 254,77 ms, p99 621,50 ms
+  Atlas: CPU del primario 136,6% di un core (mediana delle copie), core 2
+  VERDETTO: ATLAS (non la CPU): macchina e copie con margine (al massimo 45,3%, copie 65,5% di un core) e CPU di Atlas non piena (136,6% di un core su 2 core): le copie aspettano le risposte (p50 254,77 ms, p99 621,50 ms): il limite e' dentro Atlas ma non e' la CPU (code, ticket, disco o rete del cluster). NON SO quale

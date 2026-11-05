@@ -1,0 +1,160 @@
+{
+ "versione": "p1-1.6.2",
+ "scritto": "2026-11-05T19:16:02.307192Z",
+ "analisi": {
+  "nota": "STIMATO: numeri derivati dai dati grezzi; le misure dell'API sono medie al minuto",
+  "origini_api": [],
+  "fasi": [
+   {
+    "fase": "carico_massimo",
+    "inizio": "2026-11-05T19:04:57.293749Z",
+    "fine": "2026-11-05T19:16:01.382546Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 664.21,
+     "cpu_us": 868928273,
+     "operazioni": {
+      "query": 2275024,
+      "getmore": 0,
+      "insert": 40892500,
+      "update": 1807,
+      "delete": 847,
+      "command": 22506
+     },
+     "documenti": {
+      "returned": 23873822,
+      "inserted": 40892500,
+      "updated": 771,
+      "deleted": 654
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1706862274,
+     "cpu_us_per_lettura": 381.94,
+     "cpu_us_per_scrittura": 21.25,
+     "cpu_us_per_documento": 13.42,
+     "cpu_percento_di_un_core": 130.8,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "livelli": [
+     {
+      "livello": "letture",
+      "api_primario": {
+       "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+      },
+      "cpu": {
+       "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+       "secondi": 180.882,
+       "cpu_us": 288036419,
+       "operazioni": {
+        "query": 2270260,
+        "getmore": 0,
+        "insert": 0,
+        "update": 543,
+        "delete": 132,
+        "command": 5908
+       },
+       "documenti": {
+        "returned": 23834910,
+        "inserted": 0,
+        "updated": 205,
+        "deleted": 6
+       },
+       "pagine_lette_nel_bancone": null,
+       "byte_letti_nel_bancone": null,
+       "byte_scritti_dal_bancone": null,
+       "bancone_byte_dopo": 1710648728,
+       "cpu_us_per_lettura": 126.87,
+       "cpu_us_per_scrittura": 426720.62,
+       "cpu_us_per_documento": 12.08,
+       "cpu_percento_di_un_core": 159.2,
+       "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+      }
+     },
+     {
+      "livello": "lotti_w1",
+      "api_primario": {
+       "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+      },
+      "cpu": {
+       "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+       "secondi": 180.444,
+       "cpu_us": 324823525,
+       "operazioni": {
+        "query": 468,
+        "getmore": 0,
+        "insert": 20376600,
+        "update": 548,
+        "delete": 341,
+        "command": 6382
+       },
+       "documenti": {
+        "returned": 340,
+        "inserted": 20376600,
+        "updated": 200,
+        "deleted": 323
+       },
+       "pagine_lette_nel_bancone": null,
+       "byte_letti_nel_bancone": null,
+       "byte_scritti_dal_bancone": null,
+       "bancone_byte_dopo": 1707904073,
+       "cpu_us_per_lettura": 694067.36,
+       "cpu_us_per_scrittura": 15.94,
+       "cpu_us_per_documento": 15.94,
+       "cpu_percento_di_un_core": 180.0,
+       "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+      }
+     },
+     {
+      "livello": "lotti_majority",
+      "api_primario": {
+       "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+      },
+      "cpu": {
+       "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+       "secondi": 180.938,
+       "cpu_us": 246521139,
+       "operazioni": {
+        "query": 465,
+        "getmore": 0,
+        "insert": 20182900,
+        "update": 584,
+        "delete": 358,
+        "command": 6384
+       },
+       "documenti": {
+        "returned": 446,
+        "inserted": 20183100,
+        "updated": 236,
+        "deleted": 323
+       },
+       "pagine_lette_nel_bancone": null,
+       "byte_letti_nel_bancone": null,
+       "byte_scritti_dal_bancone": null,
+       "bancone_byte_dopo": 1706861539,
+       "cpu_us_per_lettura": 530152.99,
+       "cpu_us_per_scrittura": 12.21,
+       "cpu_us_per_documento": 12.21,
+       "cpu_percento_di_un_core": 136.2,
+       "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "fasi": [
+  {
+   "fase": "carico_massimo",
+   "inizio": "2026-11-05T19:04:57.293749Z",
+   "fine": "2026-11-05T19:16:01.382546Z",
+   "riassunto": null,
+   "esito": null,
+   "accettata": null
+  }
+ ]
+}

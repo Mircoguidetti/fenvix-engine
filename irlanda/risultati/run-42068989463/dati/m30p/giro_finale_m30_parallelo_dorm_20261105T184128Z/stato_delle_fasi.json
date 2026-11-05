@@ -1,0 +1,35 @@
+{
+ "nome": "m30_parallelo_dorm",
+ "cartella": "/opt/irlanda/lavoro/dati/m30p/giro_finale_m30_parallelo_dorm_20261105T184128Z",
+ "versione": "p1-1.6.2",
+ "fasi": {
+  "pausa prima di parallelo": [
+   {
+    "inizio": "2026-11-05T18:41:28.319429Z",
+    "fine": "2026-11-05T18:43:28.319588Z"
+   }
+  ],
+  "parallelo": [
+   {
+    "inizio": "2026-11-05T18:43:28.319622Z",
+    "sessione": "20261105T184128Z",
+    "file": "fase_12_parallelo.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T18:52:08.445719Z"
+   }
+  ]
+ },
+ "sessioni": [
+  {
+   "inizio": "2026-11-05T18:41:28.302776Z",
+   "fasi_chieste": [
+    "parallelo"
+   ]
+  }
+ ],
+ "parallelo_livelli_fatti": [
+  "L10",
+  "L50",
+  "L100"
+ ]
+}

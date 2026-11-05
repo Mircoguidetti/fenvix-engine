@@ -1,0 +1,37 @@
+{
+ "scritto": "2026-11-05T19:16:01.118546Z",
+ "versione": "p1-1.6.2",
+ "file": [
+  {
+   "file": "RIASSUNTO.json",
+   "byte": 4887,
+   "sha256": "3c9a7e780f145c5cac5f233aaad7434c84bf5dde04757d002895eb1806b216a9"
+  },
+  {
+   "file": "fase_13_carico_massimo.json",
+   "byte": 1713098,
+   "sha256": "b28e220c2666f9a4741d2148603bab490f89a8effdb8ecf337cfd1464c34145d"
+  },
+  {
+   "file": "sessione_20261105T190256Z_eventi_driver.json",
+   "byte": 195303,
+   "sha256": "a2a690d09a1359531212a172ae3553a476d61dc75d76d5d341871481eedcf401"
+  },
+  {
+   "file": "sessione_20261105T190256Z_serverStatus_ogni_30s.json",
+   "byte": 1428299,
+   "sha256": "c0b65094e5654264aea4b62748209b6717979a8f37abaac8bd316d91e2872996"
+  },
+  {
+   "file": "stato_delle_fasi.json",
+   "byte": 924,
+   "sha256": "a2a075cd16ffc9132cd5cd03a1d988570222a8dab24e40ad4f611ed435e0b5c0"
+  },
+  {
+   "file": "tutto.json.gz",
+   "byte": 263449,
+   "sha256": "3ad74a21e31f33c19ddc2493f2f9a243278a32e8c1ad7ff8f7340bbeb292622b"
+  }
+ ],
+ "totale_byte": 3605960
+}

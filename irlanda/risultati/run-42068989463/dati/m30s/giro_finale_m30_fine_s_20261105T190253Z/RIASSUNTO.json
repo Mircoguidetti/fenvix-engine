@@ -1,0 +1,56 @@
+{
+ "versione": "p1-1.6.2",
+ "scritto": "2026-11-05T19:02:53.801061Z",
+ "analisi": {
+  "nota": "STIMATO: numeri derivati dai dati grezzi; le misure dell'API sono medie al minuto",
+  "origini_api": [],
+  "fasi": [
+   {
+    "fase": "fine",
+    "inizio": "2026-11-05T19:02:53.375670Z",
+    "fine": "2026-11-05T19:02:53.403578Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 0.071,
+     "cpu_us": 30295,
+     "operazioni": {
+      "query": 2,
+      "getmore": 0,
+      "insert": 0,
+      "update": 0,
+      "delete": 0,
+      "command": 25
+     },
+     "documenti": {
+      "returned": 15,
+      "inserted": 0,
+      "updated": 0,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1715247699,
+     "cpu_us_per_lettura": 15147.5,
+     "cpu_us_per_scrittura": null,
+     "cpu_us_per_documento": 2019.67,
+     "cpu_percento_di_un_core": 42.7,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    }
+   }
+  ]
+ },
+ "fasi": [
+  {
+   "fase": "fine",
+   "inizio": "2026-11-05T19:02:53.375670Z",
+   "fine": "2026-11-05T19:02:53.403578Z",
+   "riassunto": null,
+   "esito": null,
+   "accettata": null
+  }
+ ]
+}

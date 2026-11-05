@@ -1,0 +1,9026 @@
+{
+ "fase": "fine",
+ "tipo": "fine",
+ "versione": "p1-1.6.2",
+ "giro": "m30_fine_b_p",
+ "file": "fase_23_fine.json",
+ "prima": {
+  "etichetta": "prima di fine",
+  "inizio": "2026-11-05T19:02:55.964309Z",
+  "fase": "fine",
+  "hello": {
+   "compression": [
+    "zstd",
+    "zlib"
+   ],
+   "topologyVersion": {
+    "processId": {
+     "$oid": "6aecb29b08508cfc2b14a3a3"
+    },
+    "counter": 4
+   },
+   "hosts": [
+    "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "cluster0-shard-00-02.7lvmgr.mongodb.net:27017"
+   ],
+   "setName": "atlas-qear04-shard-0",
+   "setVersion": 1,
+   "isWritablePrimary": true,
+   "secondary": false,
+   "primary": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+   "tags": {
+    "cacheState": "READY",
+    "diskState": "READY",
+    "provider": "AWS",
+    "nodeType": "ELECTABLE",
+    "workloadType": "OPERATIONAL",
+    "availabilityZone": "euw1-az2",
+    "region": "EU_WEST_1"
+   },
+   "me": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+   "electionId": {
+    "$oid": "7fffffff0000000000000015"
+   },
+   "lastWrite": {
+    "opTime": {
+     "ts": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "t": 21
+    },
+    "lastWriteDate": {
+     "$date": "2026-11-05T19:02:55Z"
+    },
+    "majorityOpTime": {
+     "ts": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "t": 21
+    },
+    "majorityWriteDate": {
+     "$date": "2026-11-05T19:02:55Z"
+    }
+   },
+   "maxBsonObjectSize": 16777216,
+   "maxMessageSizeBytes": 48000000,
+   "maxWriteBatchSize": 100000,
+   "localTime": {
+    "$date": "2026-11-05T19:02:55.965Z"
+   },
+   "logicalSessionTimeoutMinutes": 30,
+   "connectionId": 2594,
+   "minWireVersion": 0,
+   "maxWireVersion": 30,
+   "readOnly": false,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "replSetGetStatus": {
+   "set": "atlas-qear04-shard-0",
+   "date": {
+    "$date": "2026-11-05T19:02:55.966Z"
+   },
+   "myState": 1,
+   "members": [
+    {
+     "_id": 0,
+     "name": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "health": 1.0,
+     "state": 1,
+     "stateStr": "PRIMARY",
+     "uptime": 8260,
+     "self": true
+    },
+    {
+     "_id": 2,
+     "name": "atlas-qear04-shard-00-02.7lvmgr.mongodb.net:27017",
+     "health": 1.0,
+     "state": 2,
+     "stateStr": "SECONDARY",
+     "uptime": 8260,
+     "self": false
+    }
+   ],
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "hostInfo": {
+   "system": {
+    "currentTime": {
+     "$date": "2026-11-05T19:02:55.967Z"
+    },
+    "hostname": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+    "cpuAddrSize": 64,
+    "memSizeMB": 7767,
+    "memLimitMB": 7767,
+    "numCores": 2
+   },
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "serverStatus": {
+   "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+   "version": "9.1.0",
+   "process": "mongod",
+   "uptime": 8260.0,
+   "uptimeMillis": 8256194,
+   "uptimeEstimate": 8256,
+   "localTime": {
+    "$date": "2026-11-05T19:02:55.968Z"
+   },
+   "asserts": {
+    "regular": 0,
+    "warning": 0,
+    "msg": 0,
+    "user": 2676,
+    "tripwire": 0,
+    "rollovers": 0
+   },
+   "catalogStats": {
+    "collections": 22,
+    "capped": 0,
+    "clustered": 0,
+    "timeseries": 0,
+    "views": 0,
+    "internalCollections": 16,
+    "internalViews": 0,
+    "csfle": 0,
+    "queryableEncryption": 0,
+    "systemProfile": 0
+   },
+   "changeStreamPreImages": {
+    "numDocs": 0,
+    "docsInserted": 0
+   },
+   "connections": {
+    "current": 65,
+    "available": 2935,
+    "totalCreated": 2574,
+    "rejected": 0,
+    "active": 6,
+    "queuedForEstablishment": 0,
+    "establishmentRateLimit": {
+     "rejected": 0,
+     "exempted": 1996,
+     "interruptedDueToClientDisconnect": 0
+    },
+    "threaded": 65,
+    "limitExempt": 58,
+    "exhaustIsMaster": 0,
+    "exhaustHello": 3,
+    "awaitingTopologyChanges": 5,
+    "backpressureVersions": {
+     "activeCount": {
+      "NoBackpressure": 7,
+      "1": 44,
+      "Other": 14
+     },
+     "totalCount": {
+      "NoBackpressure": 12,
+      "1": 1411,
+      "Other": 585
+     }
+    },
+    "loadBalanced": 0,
+    "priority": 0
+   },
+   "extra_info": {
+    "user_time_us": 184354095,
+    "system_time_us": 60508230
+   },
+   "featureCompatibilityVersion": {
+    "major": 9,
+    "minor": 0,
+    "transitioning": 0
+   },
+   "flowControl": {
+    "isLagged": false
+   },
+   "indexStats": {
+    "count": 51,
+    "features": {
+     "2d": {
+      "count": 0,
+      "accesses": 0
+     },
+     "2dsphere": {
+      "count": 0,
+      "accesses": 0
+     },
+     "2dsphere_bucket": {
+      "count": 0,
+      "accesses": 0
+     },
+     "collation": {
+      "count": 0,
+      "accesses": 0
+     },
+     "compound": {
+      "count": 29,
+      "accesses": 34200
+     },
+     "hashed": {
+      "count": 0,
+      "accesses": 0
+     },
+     "id": {
+      "count": 22,
+      "accesses": 9300
+     },
+     "normal": {
+      "count": 29,
+      "accesses": 34200
+     },
+     "partial": {
+      "count": 0,
+      "accesses": 0
+     },
+     "prepareUnique": {
+      "count": 0,
+      "accesses": 0
+     },
+     "single": {
+      "count": 0,
+      "accesses": 0
+     },
+     "sparse": {
+      "count": 0,
+      "accesses": 0
+     },
+     "text": {
+      "count": 0,
+      "accesses": 0
+     },
+     "ttl": {
+      "count": 0,
+      "accesses": 0
+     },
+     "unique": {
+      "count": 0,
+      "accesses": 0
+     },
+     "wildcard": {
+      "count": 0,
+      "accesses": 0
+     }
+    }
+   },
+   "messageFilter": {
+    "version": "20261029.221353.bac11a37c5feea1dab70f4f9aac1aa23b5706351",
+    "rejectedMessages": 0,
+    "suspiciousMessages": 0,
+    "successfulPluginLoads": 1,
+    "failedPluginLoads": 0
+   },
+   "network": {
+    "bytesIn": 107417325,
+    "bytesOut": 5126766953,
+    "physicalBytesIn": 105698382,
+    "physicalBytesOut": 4767782744,
+    "egress": {
+     "bytesIn": 13359392,
+     "bytesOut": 9795413,
+     "physicalBytesIn": 8880575,
+     "physicalBytesOut": 7512716,
+     "numRequests": 28107
+    },
+    "numRequests": 279351,
+    "compression": {
+     "snappy": {
+      "compressor": {
+       "bytesIn": 11853791,
+       "bytesOut": 8691653
+      },
+      "decompressor": {
+       "bytesIn": 8600815,
+       "bytesOut": 13470271
+      }
+     },
+     "zstd": {
+      "compressor": {
+       "bytesIn": 548313915,
+       "bytesOut": 189573081
+      },
+      "decompressor": {
+       "bytesIn": 12857470,
+       "bytesOut": 14121680
+      }
+     },
+     "zlib": {
+      "compressor": {
+       "bytesIn": 0,
+       "bytesOut": 0
+      },
+      "decompressor": {
+       "bytesIn": 0,
+       "bytesOut": 0
+      }
+     }
+    },
+    "ingressRequestRateLimiter": {
+     "addedToQueue": 0,
+     "rejectedAdmissions": 0,
+     "exemptedAdmissions": 211569,
+     "successfulAdmissions": 67762,
+     "attemptedAdmissions": 67762,
+     "averageTimeQueuedMicros": 0.0,
+     "totalTimeQueuedMicros": 0,
+     "currentQueueDepth": 0
+    }
+   },
+   "opLatencies": {
+    "commands": {
+     "latency": 95000074,
+     "ops": 215936,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "reads": {
+     "latency": 108314339,
+     "ops": 55163,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "writes": {
+     "latency": 19642444,
+     "ops": 8246,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "transactions": {
+     "latency": 0,
+     "ops": 0,
+     "queryableEncryptionLatencyMicros": 0
+    }
+   },
+   "opWorkingTime": {
+    "commands": {
+     "latency": 54686000,
+     "ops": 215936,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "reads": {
+     "latency": 70661000,
+     "ops": 55163,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "writes": {
+     "latency": 15600000,
+     "ops": 8246,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "transactions": {
+     "latency": 0,
+     "ops": 0,
+     "queryableEncryptionLatencyMicros": 0
+    }
+   },
+   "opWriteConcernCounters": {
+    "insert": {
+     "wmajority": 0,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 0,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {}
+      }
+     }
+    },
+    "update": {
+     "wmajority": 9090,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 1,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {
+        "1": 1
+       }
+      }
+     }
+    },
+    "delete": {
+     "wmajority": 1466,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 0,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {}
+      }
+     }
+    }
+   },
+   "opcounters": {
+    "insert": 0,
+    "query": 42970,
+    "update": 9091,
+    "delete": 1466,
+    "getmore": 0,
+    "command": 254484,
+    "aggregate": 11057
+   },
+   "queryAnalyzers": {
+    "activeCollections": 0,
+    "totalCollections": 0
+   },
+   "querySettings": {
+    "count": 0,
+    "size": 0,
+    "rejectCount": 0,
+    "backfill": {
+     "bufferedRepresentativeQueries": 0
+    }
+   },
+   "queues": {
+    "ingressSessionEstablishment": {
+     "rejectedAdmissions": 0,
+     "successfulAdmissions": 578,
+     "attemptedAdmissions": 578
+    }
+   },
+   "readConcernCounters": {
+    "nonTransactionOps": {
+     "none": 54338,
+     "noneInfo": {
+      "CWRC": {
+       "local": 0,
+       "available": 0,
+       "majority": 0
+      },
+      "implicitDefault": {
+       "local": 54338,
+       "available": 0
+      }
+     },
+     "local": 824,
+     "available": 0,
+     "majority": 0,
+     "snapshot": {
+      "withClusterTime": 0,
+      "withoutClusterTime": 0
+     },
+     "linearizable": 0
+    },
+    "transactionOps": {
+     "none": 0,
+     "noneInfo": {
+      "CWRC": {
+       "local": 0,
+       "majority": 0
+      },
+      "implicitDefault": {
+       "local": 0
+      }
+     },
+     "local": 0,
+     "majority": 0,
+     "snapshot": {
+      "withClusterTime": 0,
+      "withoutClusterTime": 0
+     }
+    }
+   },
+   "readPreferenceCounters": {
+    "executedOnPrimary": {
+     "primary": {
+      "internal": 28,
+      "external": 43920
+     },
+     "primaryPreferred": {
+      "internal": 191,
+      "external": 9946
+     },
+     "secondary": {
+      "internal": 0,
+      "external": 0
+     },
+     "secondaryPreferred": {
+      "internal": 0,
+      "external": 0
+     },
+     "nearest": {
+      "internal": 0,
+      "external": 1215
+     },
+     "tagged": {
+      "internal": 0,
+      "external": 0
+     }
+    },
+    "executedOnSecondary": {
+     "primary": {
+      "internal": 0,
+      "external": 0
+     },
+     "primaryPreferred": {
+      "internal": 7,
+      "external": 70
+     },
+     "secondary": {
+      "internal": 0,
+      "external": 0
+     },
+     "secondaryPreferred": {
+      "internal": 0,
+      "external": 0
+     },
+     "nearest": {
+      "internal": 5,
+      "external": 8
+     },
+     "tagged": {
+      "internal": 0,
+      "external": 0
+     }
+    }
+   },
+   "repl": {
+    "hosts": [
+     "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "cluster0-shard-00-02.7lvmgr.mongodb.net:27017"
+    ],
+    "setName": "atlas-qear04-shard-0",
+    "isWritablePrimary": true,
+    "secondary": false,
+    "primary": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "tags": {
+     "provider": "AWS",
+     "nodeType": "ELECTABLE",
+     "workloadType": "OPERATIONAL",
+     "availabilityZone": "euw1-az2",
+     "region": "EU_WEST_1",
+     "cacheState": "READY",
+     "diskState": "READY"
+    },
+    "me": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+   },
+   "scramCache": {
+    "SCRAM-SHA-1": {
+     "count": 0,
+     "hits": 0,
+     "misses": 0
+    },
+    "SCRAM-SHA-256": {
+     "count": 3,
+     "hits": 17,
+     "misses": 3
+    }
+   },
+   "security": {
+    "authentication": {
+     "saslSupportedMechsReceived": 736,
+     "mechanisms": {
+      "GSSAPI": {
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-AWS": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-OIDC": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-X509": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "PLAIN": {
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "SCRAM-SHA-1": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 718,
+         "successful": 718
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 718,
+         "successful": 718
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "SCRAM-SHA-256": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 734,
+         "successful": 734
+        },
+        "clusterAuthenticate": {
+         "total": 208,
+         "successful": 208
+        },
+        "authenticate": {
+         "total": 736,
+         "successful": 736
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 18,
+         "successful": 18
+        },
+        "authenticate": {
+         "total": 20,
+         "successful": 20
+        }
+       }
+      }
+     },
+     "totalIngressAuthenticationTimeMicros": 3389668,
+     "totalEgressAuthenticationTimeMicros": 3858
+    },
+    "SSLServerSubjectName": "CN=*.7lvmgr.mongodb.net",
+    "SSLServerCertificateExpirationDate": {
+     "$date": "2027-02-02T07:23:07Z"
+    }
+   },
+   "transactions": {
+    "retryableCommandsCount": 0,
+    "retriedCommandsCount": 0,
+    "retriedStatementsCount": 0,
+    "transactionsCollectionWriteCount": 0,
+    "currentActive": 0,
+    "currentInactive": 0,
+    "currentOpen": 0,
+    "totalAborted": 0,
+    "totalAbortedInternal": 0,
+    "totalAbortedExternal": 0,
+    "totalCommitted": 0,
+    "totalCommittedInternal": 0,
+    "totalCommittedExternal": 0,
+    "totalStarted": 0,
+    "totalStartedInternal": 0,
+    "totalStartedExternal": 0,
+    "totalPrepared": 0,
+    "totalPreparedInternal": 0,
+    "totalPreparedExternal": 0,
+    "totalPreparedThenCommitted": 0,
+    "totalPreparedThenCommittedInternal": 0,
+    "totalPreparedThenCommittedExternal": 0,
+    "totalPreparedThenAborted": 0,
+    "totalPreparedThenAbortedInternal": 0,
+    "totalPreparedThenAbortedExternal": 0,
+    "currentPrepared": 0,
+    "retriedWritesDelayMillis": [
+     {
+      "lowerBound": 0,
+      "count": 0
+     },
+     {
+      "lowerBound": 1,
+      "count": 0
+     },
+     {
+      "lowerBound": 10,
+      "count": 0
+     },
+     {
+      "lowerBound": 100,
+      "count": 0
+     },
+     {
+      "lowerBound": 500,
+      "count": 0
+     },
+     {
+      "lowerBound": 1000,
+      "count": 0
+     },
+     {
+      "lowerBound": 5000,
+      "count": 0
+     },
+     {
+      "lowerBound": 10000,
+      "count": 0
+     },
+     {
+      "lowerBound": 30000,
+      "count": 0
+     },
+     {
+      "lowerBound": 60000,
+      "count": 0
+     },
+     {
+      "lowerBound": 180000,
+      "count": 0
+     },
+     {
+      "lowerBound": 300000,
+      "count": 0
+     },
+     {
+      "lowerBound": 600000,
+      "count": 0
+     },
+     {
+      "lowerBound": 1200000,
+      "count": 0
+     }
+    ]
+   },
+   "transportSecurity": {
+    "1.0": 0,
+    "1.1": 0,
+    "1.2": 0,
+    "1.3": 2312,
+    "unknown": 0
+   },
+   "wiredTiger": {
+    "cache": {
+     "bytes currently in the cache": 1715250865,
+     "maximum bytes configured": 2147483648,
+     "tracked dirty bytes in the cache": 363579
+    },
+    "load-control": {
+     "read load at the system level": 84,
+     "write load at the system level": 0
+    }
+   },
+   "mem": {
+    "bits": 64,
+    "resident": 3095,
+    "virtual": 7096,
+    "supported": true,
+    "secureAllocByteCount": 1304,
+    "secureAllocBytesInPages": 49152
+   },
+   "metrics": {
+    "apiVersions": {
+     "mongotune 1.19.1+6cd235f": [
+      "default"
+     ],
+     "": [
+      "default"
+     ],
+     "MongoDB Automation Agent v1000.1.3.11500 (git: 9b85ce74b9d61ede3ecdc0a53ce64b29bec2a70c)": [
+      "default"
+     ],
+     "MongoDB Monitoring Module v1000.1.3.11500 (git: 9b85ce74b9d61ede3ecdc0a53ce64b29bec2a70c)": [
+      "default"
+     ],
+     "app-demo": [
+      "default"
+     ],
+     "connection pool": [
+      "default"
+     ]
+    },
+    "aggStageCounters": {
+     "$addFields": 3,
+     "$bucket": 0,
+     "$bucketAuto": 0,
+     "$changeStream": 0,
+     "$changeStreamSplitLargeEvent": 0,
+     "$collStats": 10802,
+     "$count": 0,
+     "$currentOp": 5,
+     "$densify": 0,
+     "$documents": 0,
+     "$facet": 0,
+     "$fill": 0,
+     "$geoNear": 0,
+     "$graphLookup": 0,
+     "$group": 5,
+     "$indexStats": 206,
+     "$limit": 14,
+     "$listCachedAndActiveUsers": 0,
+     "$listCatalog": 0,
+     "$listClusterCatalog": 12,
+     "$listExtensions": 0,
+     "$listLocalSessions": 0,
+     "$listMqlEntities": 0,
+     "$listSampledQueries": 0,
+     "$listSearchIndexes": 0,
+     "$listSessions": 0,
+     "$lookup": 0,
+     "$match": 34,
+     "$merge": 0,
+     "$mergeCursors": 0,
+     "$out": 0,
+     "$planCacheStats": 0,
+     "$project": 26,
+     "$querySettings": 0,
+     "$queryStats": 29,
+     "$queue": 0,
+     "$rankFusion": 0,
+     "$redact": 0,
+     "$replaceRoot": 0,
+     "$replaceWith": 0,
+     "$sample": 0,
+     "$score": 0,
+     "$scoreFusion": 0,
+     "$search": 0,
+     "$searchBeta": 0,
+     "$searchMeta": 0,
+     "$set": 1796,
+     "$setMetadata": 0,
+     "$setVariableFromSubPipeline": 0,
+     "$setWindowFields": 0,
+     "$shardedDataDistribution": 0,
+     "$skip": 0,
+     "$sort": 17,
+     "$sortByCount": 0,
+     "$unionWith": 0,
+     "$unset": 3,
+     "$unwind": 0,
+     "$vectorSearch": 0
+    },
+    "changeStreams": {
+     "cursor": {
+      "batchesReturned": 0,
+      "bytesRead": 0,
+      "bytesReturned": 0,
+      "docsExamined": 0,
+      "docsReturned": 0,
+      "lifespan": {
+       "average": 0.0,
+       "totalCount": 0
+      },
+      "totalOpened": 0,
+      "open": {
+       "pinned": 0,
+       "total": 0
+      }
+     },
+     "error": {
+      "nonRetriable": {
+       "bsonObjectTooLarge": 0,
+       "changeStreamFatalError": 0,
+       "changeStreamHistoryLost": 0,
+       "other": 0
+      },
+      "retriable": {
+       "interruptedDueToReplStateChange": 0,
+       "other": 0
+      }
+     },
+     "option": {
+      "ignoreRemovedShards": 0,
+      "matchCollectionUUIDForUpdateLookup": 0,
+      "resumeAfter": 0,
+      "showExpandedEvents": 0,
+      "showMigrationEvents": 0,
+      "showRawUpdateDescription": 0,
+      "showSystemEvents": 0,
+      "startAfter": 0,
+      "startAtOperationTime": 0,
+      "cursor": {
+       "batchSize": {
+        "(-inf, 1)": {
+         "count": 0
+        },
+        "[1, 10)": {
+         "count": 0
+        },
+        "[10, 100)": {
+         "count": 0
+        },
+        "[100, 1000)": {
+         "count": 0
+        },
+        "[1000, 10000)": {
+         "count": 0
+        },
+        "[10000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "maxTimeMS": {
+        "(-inf, 100)": {
+         "count": 0
+        },
+        "[100, 200)": {
+         "count": 0
+        },
+        "[200, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2000)": {
+         "count": 0
+        },
+        "[2000, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 20000)": {
+         "count": 0
+        },
+        "[20000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 200000)": {
+         "count": 0
+        },
+        "[200000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       }
+      },
+      "fullDocument": {
+       "required": 0,
+       "updateLookup": 0,
+       "whenAvailable": 0
+      },
+      "fullDocumentBeforeChange": {
+       "required": 0,
+       "whenAvailable": 0
+      }
+     },
+     "scope": {
+      "cluster": 0,
+      "collection": 0,
+      "db": 0
+     },
+     "updateLookup": {
+      "enrichBatchesStarted": 0,
+      "aggregation": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      },
+      "express": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      },
+      "sbe": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      }
+     }
+    },
+    "commands": {
+     "<UNKNOWN>": 0,
+     "abortTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "aggregate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 2814,
+      "withExtension": {
+       "failed": 0,
+       "succeeded": 0
+      }
+     },
+     "analyze": {
+      "failed": 0,
+      "micros": 0,
+      "rejected": 0,
+      "total": 0,
+      "histograms": {
+       "micros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 256,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        }
+       ]
+      }
+     },
+     "analyzeShardKey": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "appendOplogNote": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "applyOps": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "authenticate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "autoSplitVector": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "buildInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 758
+     },
+     "bulkWrite": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "checkShardingIndex": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "cleanupOrphaned": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "cloneCollectionAsCapped": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterAbortTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterAggregate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0,
+      "withExtension": {
+       "failed": 0,
+       "succeeded": 0
+      }
+     },
+     "clusterBulkWrite": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterCommitTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterCount": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterDelete": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterFind": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterGetMore": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterInsert": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterUpdate": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "collMod": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0,
+      "validationLevel": {
+       "constraint": 0,
+       "default": 0,
+       "moderate": 0,
+       "off": 0,
+       "strict": 0
+      },
+      "validator": {
+       "failed": 0,
+       "jsonSchema": 0,
+       "total": 0
+      }
+     },
+     "collStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 279
+     },
+     "commitTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "configureQueryAnalyzer": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "connPoolStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 941
+     },
+     "connectionStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 5
+     },
+     "convertToCapped": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "count": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 9618
+     },
+     "create": {
+      "failed": 29,
+      "rejected": 0,
+      "total": 30,
+      "validationLevel": {
+       "constraint": 0,
+       "default": 0,
+       "moderate": 0,
+       "off": 0,
+       "strict": 0
+      },
+      "validator": {
+       "failed": 0,
+       "jsonSchema": 0,
+       "total": 0
+      }
+     },
+     "createIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 3
+     },
+     "currentOp": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dataSize": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 27905
+     },
+     "dbStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 118
+     },
+     "delete": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 54
+     },
+     "distinct": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "drop": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 34
+     },
+     "dropDatabase": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dropIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "endSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 506
+     },
+     "eseRotateActiveKEK": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "explain": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "exportCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "filemd5": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "find": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 42970
+     },
+     "findAndModify": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "flushRouterConfig": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getClusterParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getCmdLineOpts": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 516
+     },
+     "getDatabaseVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getDefaultRWConcern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 196
+     },
+     "getESECMKIdentifierListStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 189
+     },
+     "getESERotateActiveKEKStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getLog": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 117
+     },
+     "getMore": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 10510
+     },
+     "getShardMap": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getShardVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "grantPrivilegesToRole": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "grantRolesToRole": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "hello": {
+      "failed": 31,
+      "rejected": 0,
+      "total": 34876
+     },
+     "hostInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 173
+     },
+     "importCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "insert": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "internalRenameIfOptionsAndIndexesMatch": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "isMaster": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 24709
+     },
+     "killAllSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killAllSessionsByPattern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killCursors": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killOp": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "listCollections": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 274
+     },
+     "listCommands": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 8
+     },
+     "listDatabases": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 33
+     },
+     "listDatabasesForAllTenants": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "listIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 80
+     },
+     "listSearchIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "lockInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "logout": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "mapReduce": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "oidcListKeys": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "oidcRefreshKeys": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "ping": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 69811
+     },
+     "planCacheClear": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheClearFilters": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheListFilters": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheSetFilter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "profile": {
+      "failed": 58,
+      "rejected": 0,
+      "total": 87
+     },
+     "reIndex": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "refreshSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "removeQuerySettings": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "renameCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "replSetGetConfig": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 509
+     },
+     "replSetGetStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 19662
+     },
+     "rolesInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "saslContinue": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 1454
+     },
+     "saslStart": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 2
+     },
+     "serverStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 48315
+     },
+     "setClusterParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setDefaultRWConcern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setFeatureCompatibilityVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setQuerySettings": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setUserWriteBlockMode": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 1
+     },
+     "shardingState": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "startSession": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "top": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 29
+     },
+     "transitionToShardedCluster": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "update": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 898,
+      "rejected": 0,
+      "total": 8247
+     },
+     "updateESECMKIdentifierList": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "validate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "validateDBMetadata": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "whatsmyuri": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     }
+    },
+    "cursor": {
+     "moreThanOneBatch": 0,
+     "timedOut": 0,
+     "totalOpened": 0,
+     "lifespan": {
+      "greaterThanOrEqual10Minutes": 0,
+      "lessThan10Minutes": 0,
+      "lessThan15Seconds": 0,
+      "lessThan1Minute": 0,
+      "lessThan1Second": 0,
+      "lessThan30Seconds": 0,
+      "lessThan5Seconds": 0
+     },
+     "open": {
+      "multiTarget": 0,
+      "noTimeout": 0,
+      "pinned": 0,
+      "queuedData": 0,
+      "singleTarget": 0,
+      "total": 0
+     }
+    },
+    "disagg": {
+     "oplog": {
+      "totalBytes": 4540261,
+      "totalEntries": 9657,
+      "uncompressedBytes": 3073874
+     }
+    },
+    "disaggStorage": {
+     "catalog": {
+      "activeCollectionsAndIndexes": 105
+     },
+     "logicalSize": {
+      "bytesHot": 70809446181,
+      "bytesOplog": 32619636649
+     },
+     "pali": {
+      "baseRateMBPerSec": 0,
+      "bytesRead": 4137526522,
+      "bytesWritten": 16920895,
+      "readOperations": 153171,
+      "throughputUtilization": 9.357938587674916e-06,
+      "writeOperations": 10263
+     },
+     "replStatus": {
+      "myState": 1
+     }
+    },
+    "document": {
+     "deleted": 267,
+     "inserted": 0,
+     "returned": 1617697,
+     "updated": 8774
+    },
+    "dotsAndDollarsFields": {
+     "inserts": 0,
+     "updates": 0
+    },
+    "getLastError": {
+     "wtimeouts": 0,
+     "default": {
+      "unsatisfiable": 0,
+      "wtimeouts": 0
+     },
+     "wtime": {
+      "num": 8303,
+      "totalMillis": 13614
+     }
+    },
+    "logging": {
+     "count": 17299
+    },
+    "operatorCounters": {
+     "expressions": {
+      "$abs": 0,
+      "$acos": 0,
+      "$acosh": 0,
+      "$add": 0,
+      "$allElementsTrue": 0,
+      "$and": 24,
+      "$anyElementTrue": 0,
+      "$arrayElemAt": 0,
+      "$arrayToObject": 12,
+      "$asin": 0,
+      "$asinh": 0,
+      "$atan": 0,
+      "$atan2": 0,
+      "$atanh": 0,
+      "$avg": 0,
+      "$binarySize": 0,
+      "$bitAnd": 0,
+      "$bitNot": 0,
+      "$bitOr": 0,
+      "$bitXor": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$bsonSize": 0,
+      "$ceil": 0,
+      "$cmp": 0,
+      "$concat": 12,
+      "$concatArrays": 0,
+      "$cond": 24,
+      "$const": 42,
+      "$convert": 0,
+      "$cos": 0,
+      "$cosh": 0,
+      "$createObjectId": 0,
+      "$createUUID": 0,
+      "$currentDate": 0,
+      "$dateAdd": 0,
+      "$dateDiff": 0,
+      "$dateFromParts": 0,
+      "$dateFromString": 0,
+      "$dateSubtract": 0,
+      "$dateToParts": 0,
+      "$dateToString": 0,
+      "$dateTrunc": 0,
+      "$dayOfMonth": 0,
+      "$dayOfWeek": 0,
+      "$dayOfYear": 0,
+      "$degreesToRadians": 0,
+      "$deserializeEJSON": 0,
+      "$divide": 0,
+      "$eq": 36,
+      "$exp": 0,
+      "$expr": 0,
+      "$filter": 0,
+      "$first": 12,
+      "$firstN": 0,
+      "$floor": 0,
+      "$function": 0,
+      "$getField": 0,
+      "$gt": 0,
+      "$gte": 0,
+      "$hash": 0,
+      "$hexHash": 0,
+      "$hour": 0,
+      "$ifNull": 0,
+      "$in": 0,
+      "$indexOfArray": 0,
+      "$indexOfBytes": 12,
+      "$indexOfCP": 0,
+      "$isArray": 0,
+      "$isNumber": 0,
+      "$isoDayOfWeek": 0,
+      "$isoWeek": 0,
+      "$isoWeekYear": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$let": 0,
+      "$literal": 0,
+      "$ln": 0,
+      "$log": 0,
+      "$log10": 0,
+      "$lt": 12,
+      "$lte": 0,
+      "$ltrim": 0,
+      "$map": 15,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$meta": 0,
+      "$millisecond": 0,
+      "$min": 0,
+      "$minN": 0,
+      "$minute": 0,
+      "$mod": 0,
+      "$month": 0,
+      "$multiply": 0,
+      "$ne": 36,
+      "$not": 0,
+      "$objectToArray": 15,
+      "$or": 12,
+      "$percentile": 0,
+      "$pow": 0,
+      "$radiansToDegrees": 0,
+      "$rand": 0,
+      "$range": 0,
+      "$reduce": 0,
+      "$regexFind": 0,
+      "$regexFindAll": 0,
+      "$regexMatch": 0,
+      "$replaceAll": 0,
+      "$replaceOne": 0,
+      "$reverseArray": 0,
+      "$round": 0,
+      "$rtrim": 0,
+      "$second": 0,
+      "$serializeEJSON": 0,
+      "$setDifference": 0,
+      "$setEquals": 0,
+      "$setField": 0,
+      "$setIntersection": 0,
+      "$setIsSubset": 0,
+      "$setUnion": 0,
+      "$sigmoid": 0,
+      "$similarityCosine": 0,
+      "$similarityDotProduct": 0,
+      "$similarityEuclidean": 0,
+      "$sin": 0,
+      "$sinh": 0,
+      "$size": 0,
+      "$slice": 0,
+      "$sortArray": 0,
+      "$split": 0,
+      "$sqrt": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$strLenBytes": 24,
+      "$strLenCP": 0,
+      "$strcasecmp": 0,
+      "$substr": 0,
+      "$substrBytes": 48,
+      "$substrCP": 0,
+      "$subtract": 24,
+      "$subtype": 0,
+      "$sum": 0,
+      "$switch": 12,
+      "$tan": 0,
+      "$tanh": 0,
+      "$toArray": 0,
+      "$toBool": 0,
+      "$toDate": 0,
+      "$toDecimal": 0,
+      "$toDouble": 0,
+      "$toHashedIndexKey": 0,
+      "$toInt": 0,
+      "$toLong": 0,
+      "$toLower": 0,
+      "$toObject": 0,
+      "$toObjectId": 0,
+      "$toString": 0,
+      "$toUUID": 0,
+      "$toUpper": 0,
+      "$top": 0,
+      "$topN": 0,
+      "$trim": 0,
+      "$trunc": 0,
+      "$tsIncrement": 0,
+      "$tsSecond": 0,
+      "$type": 0,
+      "$unsetField": 0,
+      "$week": 0,
+      "$year": 0,
+      "$zip": 0
+     },
+     "groupAccumulators": {
+      "$accumulator": 0,
+      "$addToSet": 0,
+      "$avg": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$concatArrays": 0,
+      "$count": 0,
+      "$first": 0,
+      "$firstN": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$min": 0,
+      "$minN": 0,
+      "$percentile": 0,
+      "$push": 0,
+      "$setUnion": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$sum": 5,
+      "$top": 0,
+      "$topN": 0
+     },
+     "match": {
+      "$all": 0,
+      "$alwaysFalse": 0,
+      "$alwaysTrue": 0,
+      "$and": 0,
+      "$bitsAllClear": 0,
+      "$bitsAllSet": 0,
+      "$bitsAnyClear": 0,
+      "$bitsAnySet": 0,
+      "$comment": 0,
+      "$elemMatch": 0,
+      "$eq": 42558,
+      "$exists": 0,
+      "$expr": 0,
+      "$geoIntersects": 0,
+      "$geoWithin": 0,
+      "$gt": 6,
+      "$gte": 11394,
+      "$in": 26,
+      "$jsonSchema": 0,
+      "$lt": 15315,
+      "$lte": 0,
+      "$mod": 0,
+      "$ne": 13,
+      "$near": 0,
+      "$nearSphere": 0,
+      "$nin": 0,
+      "$nor": 0,
+      "$not": 5,
+      "$or": 0,
+      "$regex": 5,
+      "$sampleRate": 0,
+      "$size": 0,
+      "$text": 0,
+      "$type": 0,
+      "$where": 0
+     },
+     "windowAccumulators": {
+      "$addToSet": 0,
+      "$avg": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$concatArrays": 0,
+      "$count": 0,
+      "$covariancePop": 0,
+      "$covarianceSamp": 0,
+      "$denseRank": 0,
+      "$derivative": 0,
+      "$documentNumber": 0,
+      "$expMovingAvg": 0,
+      "$first": 0,
+      "$firstN": 0,
+      "$integral": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$linearFill": 0,
+      "$locf": 0,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$min": 0,
+      "$minMaxScaler": 0,
+      "$minN": 0,
+      "$percentile": 0,
+      "$push": 0,
+      "$rank": 0,
+      "$setUnion": 0,
+      "$shift": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$sum": 0,
+      "$top": 0,
+      "$topN": 0
+     }
+    },
+    "query": {
+     "allowDiskUseFalse": 0,
+     "deleteManyCount": 0,
+     "deleteOneNonTargetedShardedCount": 0,
+     "deleteOneTargetedShardedCount": 0,
+     "deleteOneUnshardedCount": 0,
+     "deleteOneWithoutShardKeyWithIdCount": 0,
+     "deleteOneWithoutShardKeyWithIdRetryCount": 0,
+     "externalRetryableWriteCount": 0,
+     "findAndModifyNonTargetedShardedCount": 0,
+     "findAndModifyTargetedShardedCount": 0,
+     "findAndModifyUnshardedCount": 0,
+     "internalRetryableWriteCount": 0,
+     "nonRetryableDeleteOneWithoutShardKeyWithIdCount": 0,
+     "nonRetryableUpdateOneWithoutShardKeyWithIdCount": 0,
+     "totalSlowQueryLogs": 246,
+     "updateDeleteManyDocumentsMaxCount": 0,
+     "updateDeleteManyDocumentsTotalCount": 0,
+     "updateDeleteManyDurationMaxMs": 0,
+     "updateDeleteManyDurationTotalMs": 0,
+     "updateManyCount": 0,
+     "updateOneNonTargetedShardedCount": 0,
+     "updateOneOpStyleBroadcastWithExactIDCount": 0,
+     "updateOneTargetedShardedCount": 0,
+     "updateOneUnshardedCount": 0,
+     "updateOneWithoutShardKeyWithIdCount": 0,
+     "updateOneWithoutShardKeyWithIdRetryCount": 0,
+     "aggregation": {
+      "nonTicketed": {
+       "intervals": 0,
+       "maxMillis": 0,
+       "queries": 0,
+       "totalMillis": 0
+      }
+     },
+     "bucketAuto": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "cbr": {
+      "choseWinningPlan": 0,
+      "count": 0,
+      "micros": 0,
+      "numPlans": 0,
+      "numPlansFailedCostEstimation": 0,
+      "numPlansTiedCostEstimation": 0,
+      "samplingMicros": 0,
+      "histograms": {
+       "micros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ],
+       "numPlans": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 2,
+         "count": 0
+        },
+        {
+         "lowerBound": 4,
+         "count": 0
+        },
+        {
+         "lowerBound": 8,
+         "count": 0
+        },
+        {
+         "lowerBound": 16,
+         "count": 0
+        },
+        {
+         "lowerBound": 32,
+         "count": 0
+        }
+       ],
+       "samplingMicros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ]
+      }
+     },
+     "expressionSimplifier": {
+      "abortedTooLarge": 0,
+      "notSimplified": 25699,
+      "simplified": 0,
+      "trivial": 28977
+     },
+     "geoNear": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "graphLookup": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "group": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "hashJoin": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "lookup": {
+      "dynamicIndexedLoopJoin": 0,
+      "hashLookup": 0,
+      "hashLookupSpillToDisk": 0,
+      "hashLookupSpillToDiskBytes": 0,
+      "hashLookupSpilledBytes": 0,
+      "hashLookupSpilledDataStorageSize": 0,
+      "hashLookupSpilledRecords": 0,
+      "hashLookupSpills": 0,
+      "indexedLoopJoin": 0,
+      "nestedLoopJoin": 0
+     },
+     "lookupUnwind": {
+      "dynamicIndexedLoopJoin": 0,
+      "hashLookup": 0,
+      "indexedLoopJoin": 0,
+      "localCollscan": 0,
+      "localComplex": 0,
+      "localIxscanFetch": 0,
+      "nestedLoopJoin": 0
+     },
+     "maxEstimatedScanBytes": {
+      "dryRunWouldReject": 0,
+      "rejected": 0,
+      "rejectedAndOverridden": 0
+     },
+     "multiPlanner": {
+      "allPlansHitMemoryLimit": 0,
+      "choseWinningPlan": 0,
+      "classicCount": 0,
+      "classicMicros": 0,
+      "classicNumPlans": 0,
+      "classicWorks": 0,
+      "switchedToBackupPlan": 0,
+      "histograms": {
+       "classicMicros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ],
+       "classicNumPlans": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 2,
+         "count": 0
+        },
+        {
+         "lowerBound": 4,
+         "count": 0
+        },
+        {
+         "lowerBound": 8,
+         "count": 0
+        },
+        {
+         "lowerBound": 16,
+         "count": 0
+        },
+        {
+         "lowerBound": 32,
+         "count": 0
+        }
+       ],
+       "classicWorks": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 128,
+         "count": 0
+        },
+        {
+         "lowerBound": 256,
+         "count": 0
+        },
+        {
+         "lowerBound": 512,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 2048,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 8192,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 32768,
+         "count": 0
+        }
+       ]
+      },
+      "rateLimiter": {
+       "allowed": 0,
+       "delayed": 0,
+       "released": 0
+      },
+      "stoppingCondition": {
+       "hitEof": 0,
+       "hitResultsLimit": 0,
+       "hitWorksLimit": 0
+      }
+     },
+     "planCache": {
+      "totalQueryShapes": 0,
+      "totalSizeEstimateBytes": 0,
+      "classic": {
+       "cached_plans_evicted": 0,
+       "hits": 0,
+       "inactive_cached_plans_replaced": 0,
+       "misses": 35771,
+       "replanned": 0,
+       "replanned_plan_is_cached_plan": 0,
+       "skipped": 18622
+      },
+      "join": {
+       "hits": 0,
+       "invalidations": 0,
+       "misses": 0
+      },
+      "sbe": {
+       "cached_plans_evicted": 0,
+       "hits": 0,
+       "inactive_cached_plans_replaced": 0,
+       "misses": 0,
+       "replanned": 0,
+       "replanned_plan_is_cached_plan": 0,
+       "skipped": 0
+      }
+     },
+     "planning": {
+      "invocationCount": 36167,
+      "fastPath": {
+       "express": 1664,
+       "idHack": 26629
+      }
+     },
+     "queryFramework": {
+      "aggregate": {
+       "classicHybrid": 3,
+       "classicOnly": 2811,
+       "sbeHybrid": 0,
+       "sbeOnly": 0
+      },
+      "find": {
+       "classic": 42970,
+       "sbe": 0
+      }
+     },
+     "setWindowFields": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "sort": {
+      "spillToDisk": 0,
+      "spillToDiskBytes": 0,
+      "totalBytesSorted": 901638,
+      "totalKeysSorted": 514
+     },
+     "spilling": {
+      "fileSpilledStorageSize": 0
+     },
+     "subPlanner": {
+      "classicChoseWinningPlan": 0
+     },
+     "textOr": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     }
+    },
+    "queryExecutor": {
+     "scanned": 2554207,
+     "scannedObjects": 1612754,
+     "collectionScans": {
+      "nonTailable": 427,
+      "total": 427
+     }
+    },
+    "queryStats": {
+     "maxSizeBytes": 81445437,
+     "numEntries": 61,
+     "numEvicted": 0,
+     "numHmacApplicationErrors": 0,
+     "numPartitions": 5,
+     "numQueryStatsStoreWriteErrors": 0,
+     "numRateLimitedRequests": 73704,
+     "numTopKOptimizations": 14,
+     "queryStatsStoreSizeEstimateBytes": 161198
+    },
+    "timeseries": {
+     "directDeleted": 0,
+     "directUpdated": 0,
+     "measurementDelete": 0,
+     "measurementUpdate": 0,
+     "metaDelete": 0,
+     "metaUpdate": 0
+    },
+    "ttl": {
+     "deletedDocuments": 81,
+     "deletedKeys": 162,
+     "durationMicros": 15087,
+     "examinedDocuments": 81,
+     "examinedKeys": 81,
+     "invalidTTLIndexSkips": 0,
+     "lowPriorityTicketAdmissions": 0,
+     "passes": 137,
+     "queuedForTickets": 0,
+     "subPasses": 137,
+     "ticketAdmissions": 548,
+     "timeProcessingWithTicketsMicros": 25203,
+     "timeQueuedForTicketsMicros": 0
+    }
+   },
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "dbStats": {
+   "db": "app_data_3",
+   "collections": 3,
+   "views": 0,
+   "objects": 9044744,
+   "avgObjSize": 339.4841939141672,
+   "dataSize": 3070547626.0,
+   "indexes": 7,
+   "scaleFactor": 1,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "listCollections": [
+   {
+    "name": "ordini",
+    "type": "collection",
+    "options": {},
+    "info": {
+     "readOnly": false,
+     "uuid": {
+      "$binary": {
+       "base64": "N0LurcuTRQGcTgryJdfVdA==",
+       "subType": "04"
+      }
+     }
+    },
+    "idIndex": {
+     "v": 2,
+     "key": {
+      "_id": 1
+     },
+     "name": "_id_"
+    }
+   },
+   {
+    "name": "eventi",
+    "type": "collection",
+    "options": {},
+    "info": {
+     "readOnly": false,
+     "uuid": {
+      "$binary": {
+       "base64": "UkKSJUfFSD6j6qnzKPM/xA==",
+       "subType": "04"
+      }
+     }
+    },
+    "idIndex": {
+     "v": 2,
+     "key": {
+      "_id": 1
+     },
+     "name": "_id_"
+    }
+   },
+   {
+    "name": "messaggi",
+    "type": "collection",
+    "options": {},
+    "info": {
+     "readOnly": false,
+     "uuid": {
+      "$binary": {
+       "base64": "aM4uhsviTlOuGqcGc3oKeA==",
+       "subType": "04"
+      }
+     }
+    },
+    "idIndex": {
+     "v": 2,
+     "key": {
+      "_id": 1
+     },
+     "name": "_id_"
+    }
+   }
+  ],
+  "collStats": {
+   "eventi": {
+    "ns": "app_data_3.eventi",
+    "size": 738655783,
+    "count": 3165387,
+    "avgObjSize": 233,
+    "numOrphanDocs": 0,
+    "capped": false,
+    "wiredTiger": {
+     "type": "layered"
+    },
+    "nindexes": 2,
+    "indexBuilds": [],
+    "totalIndexSize": 182596550,
+    "indexSizes": {
+     "_id_": 82962054,
+     "cliente_ts": 99634496
+    },
+    "scaleFactor": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "signature": {
+      "hash": {
+       "$binary": {
+        "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+        "subType": "00"
+       }
+      },
+      "keyId": 7704230336049184770
+     }
+    },
+    "operationTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    }
+   },
+   "messaggi": {
+    "ns": "app_data_3.messaggi",
+    "size": 1539529188,
+    "count": 4524152,
+    "avgObjSize": 340,
+    "numOrphanDocs": 0,
+    "capped": false,
+    "wiredTiger": {
+     "type": "layered"
+    },
+    "nindexes": 2,
+    "indexBuilds": [],
+    "totalIndexSize": 255858066,
+    "indexSizes": {
+     "_id_": 117465771,
+     "cliente_ts": 138392295
+    },
+    "scaleFactor": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "signature": {
+      "hash": {
+       "$binary": {
+        "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+        "subType": "00"
+       }
+      },
+      "keyId": 7704230336049184770
+     }
+    },
+    "operationTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    }
+   },
+   "ordini": {
+    "ns": "app_data_3.ordini",
+    "size": 792362655,
+    "count": 1355205,
+    "avgObjSize": 584,
+    "numOrphanDocs": 0,
+    "capped": false,
+    "wiredTiger": {
+     "type": "layered"
+    },
+    "nindexes": 3,
+    "indexBuilds": [],
+    "totalIndexSize": 118772693,
+    "indexSizes": {
+     "_id_": 36241489,
+     "cliente_ts": 45691042,
+     "stato_ts": 36840162
+    },
+    "scaleFactor": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "signature": {
+      "hash": {
+       "$binary": {
+        "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+        "subType": "00"
+       }
+      },
+      "keyId": 7704230336049184770
+     }
+    },
+    "operationTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    }
+   }
+  },
+  "$collStats": {
+   "eventi": [
+    {
+     "ns": "app_data_3.eventi",
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "localTime": {
+      "$date": "2026-11-05T19:02:55.979Z"
+     },
+     "latencyStats": {
+      "commands": {
+       "histogram": [
+        {
+         "micros": 16,
+         "count": 1
+        },
+        {
+         "micros": 1024,
+         "count": 3
+        }
+       ],
+       "latency": 5416,
+       "ops": 4,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "reads": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 9
+        },
+        {
+         "micros": 16,
+         "count": 11
+        },
+        {
+         "micros": 32,
+         "count": 495
+        },
+        {
+         "micros": 64,
+         "count": 207
+        },
+        {
+         "micros": 128,
+         "count": 193
+        },
+        {
+         "micros": 256,
+         "count": 19
+        },
+        {
+         "micros": 512,
+         "count": 219
+        },
+        {
+         "micros": 1024,
+         "count": 143
+        },
+        {
+         "micros": 2048,
+         "count": 17
+        },
+        {
+         "micros": 3072,
+         "count": 10
+        },
+        {
+         "micros": 4096,
+         "count": 14
+        },
+        {
+         "micros": 6144,
+         "count": 16
+        },
+        {
+         "micros": 8192,
+         "count": 34
+        },
+        {
+         "micros": 12288,
+         "count": 96
+        },
+        {
+         "micros": 16384,
+         "count": 140
+        },
+        {
+         "micros": 24576,
+         "count": 89
+        },
+        {
+         "micros": 32768,
+         "count": 100
+        },
+        {
+         "micros": 49152,
+         "count": 30
+        },
+        {
+         "micros": 65536,
+         "count": 4
+        }
+       ],
+       "latency": 13717859,
+       "ops": 1846,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "writes": {
+       "histogram": [],
+       "latency": 0,
+       "ops": 0,
+       "queryableEncryptionLatencyMicros": 0
+      }
+     },
+     "storageStats": {
+      "size": 738655783,
+      "count": 3165387,
+      "avgObjSize": 233,
+      "capped": false,
+      "wiredTiger": {
+       "type": "layered"
+      },
+      "nindexes": 2,
+      "indexBuilds": [],
+      "totalIndexSize": 182596550,
+      "indexSizes": {
+       "_id_": 82962054,
+       "cliente_ts": 99634496
+      },
+      "scaleFactor": 1
+     },
+     "count": 3165387,
+     "queryExecStats": {
+      "collectionScans": {
+       "total": 0,
+       "nonTailable": 0
+      }
+     }
+    }
+   ],
+   "messaggi": [
+    {
+     "ns": "app_data_3.messaggi",
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "localTime": {
+      "$date": "2026-11-05T19:02:55.986Z"
+     },
+     "latencyStats": {
+      "commands": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 1
+        },
+        {
+         "micros": 1024,
+         "count": 3
+        }
+       ],
+       "latency": 5096,
+       "ops": 4,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "reads": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 8
+        },
+        {
+         "micros": 16,
+         "count": 14
+        },
+        {
+         "micros": 32,
+         "count": 40
+        },
+        {
+         "micros": 64,
+         "count": 832
+        },
+        {
+         "micros": 128,
+         "count": 31
+        },
+        {
+         "micros": 256,
+         "count": 1
+        },
+        {
+         "micros": 512,
+         "count": 129
+        },
+        {
+         "micros": 1024,
+         "count": 192
+        },
+        {
+         "micros": 2048,
+         "count": 113
+        },
+        {
+         "micros": 3072,
+         "count": 84
+        },
+        {
+         "micros": 4096,
+         "count": 129
+        },
+        {
+         "micros": 6144,
+         "count": 99
+        },
+        {
+         "micros": 8192,
+         "count": 112
+        },
+        {
+         "micros": 12288,
+         "count": 45
+        },
+        {
+         "micros": 16384,
+         "count": 16
+        },
+        {
+         "micros": 24576,
+         "count": 1
+        }
+       ],
+       "latency": 4468027,
+       "ops": 1846,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "writes": {
+       "histogram": [],
+       "latency": 0,
+       "ops": 0,
+       "queryableEncryptionLatencyMicros": 0
+      }
+     },
+     "storageStats": {
+      "size": 1539529188,
+      "count": 4524152,
+      "avgObjSize": 340,
+      "capped": false,
+      "wiredTiger": {
+       "type": "layered"
+      },
+      "nindexes": 2,
+      "indexBuilds": [],
+      "totalIndexSize": 255858066,
+      "indexSizes": {
+       "_id_": 117465771,
+       "cliente_ts": 138392295
+      },
+      "scaleFactor": 1
+     },
+     "count": 4524152,
+     "queryExecStats": {
+      "collectionScans": {
+       "total": 0,
+       "nonTailable": 0
+      }
+     }
+    }
+   ],
+   "ordini": [
+    {
+     "ns": "app_data_3.ordini",
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "localTime": {
+      "$date": "2026-11-05T19:02:55.993Z"
+     },
+     "latencyStats": {
+      "commands": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 1
+        },
+        {
+         "micros": 2048,
+         "count": 3
+        }
+       ],
+       "latency": 6739,
+       "ops": 4,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "reads": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 9
+        },
+        {
+         "micros": 16,
+         "count": 769
+        },
+        {
+         "micros": 32,
+         "count": 156
+        },
+        {
+         "micros": 64,
+         "count": 14
+        },
+        {
+         "micros": 256,
+         "count": 19
+        },
+        {
+         "micros": 512,
+         "count": 151
+        },
+        {
+         "micros": 1024,
+         "count": 485
+        },
+        {
+         "micros": 2048,
+         "count": 112
+        },
+        {
+         "micros": 3072,
+         "count": 34
+        },
+        {
+         "micros": 4096,
+         "count": 44
+        },
+        {
+         "micros": 6144,
+         "count": 40
+        },
+        {
+         "micros": 8192,
+         "count": 13
+        }
+       ],
+       "latency": 1899458,
+       "ops": 1846,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "writes": {
+       "histogram": [],
+       "latency": 0,
+       "ops": 0,
+       "queryableEncryptionLatencyMicros": 0
+      }
+     },
+     "storageStats": {
+      "size": 792362655,
+      "count": 1355205,
+      "avgObjSize": 584,
+      "capped": false,
+      "wiredTiger": {
+       "type": "layered"
+      },
+      "nindexes": 3,
+      "indexBuilds": [],
+      "totalIndexSize": 118772693,
+      "indexSizes": {
+       "_id_": 36241489,
+       "cliente_ts": 45691042,
+       "stato_ts": 36840162
+      },
+      "scaleFactor": 1
+     },
+     "count": 1355205,
+     "queryExecStats": {
+      "collectionScans": {
+       "total": 0,
+       "nonTailable": 0
+      }
+     }
+    }
+   ]
+  },
+  "$indexStats": {
+   "eventi": [
+    {
+     "name": "_id_",
+     "key": {
+      "_id": 1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_"
+     }
+    },
+    {
+     "name": "cliente_ts",
+     "key": {
+      "cliente": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 1800,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "cliente": 1,
+       "ts": -1
+      },
+      "name": "cliente_ts"
+     }
+    }
+   ],
+   "messaggi": [
+    {
+     "name": "_id_",
+     "key": {
+      "_id": 1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_"
+     }
+    },
+    {
+     "name": "cliente_ts",
+     "key": {
+      "cliente": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 1800,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "cliente": 1,
+       "ts": -1
+      },
+      "name": "cliente_ts"
+     }
+    }
+   ],
+   "ordini": [
+    {
+     "name": "cliente_ts",
+     "key": {
+      "cliente": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "cliente": 1,
+       "ts": -1
+      },
+      "name": "cliente_ts"
+     }
+    },
+    {
+     "name": "_id_",
+     "key": {
+      "_id": 1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 1800,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_"
+     }
+    },
+    {
+     "name": "stato_ts",
+     "key": {
+      "stato": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "stato": 1,
+       "ts": -1
+      },
+      "name": "stato_ts"
+     }
+    }
+   ]
+  },
+  "oplog_collStats": {
+   "ns": "local.oplog.rs",
+   "size": 32619644184,
+   "count": 504480,
+   "avgObjSize": 64659,
+   "numOrphanDocs": 0,
+   "capped": true,
+   "max": 0,
+   "maxSize": 16777216,
+   "wiredTiger": {
+    "type": "layered"
+   },
+   "nindexes": 0,
+   "indexBuilds": [],
+   "totalIndexSize": 0,
+   "indexSizes": {},
+   "scaleFactor": 1,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "fine": "2026-11-05T19:02:55.999878Z"
+ },
+ "inizio": "2026-11-05T19:02:55.999899Z",
+ "composizione": {
+  "quando": "2026-11-05T19:02:55Z",
+  "versione": "p1-1.6.2",
+  "dbStats": {
+   "objects": 9044744,
+   "dataSize": 3070547626.0,
+   "storageSize": null,
+   "indexSize": null,
+   "totalSize": null,
+   "fsUsedSize": null,
+   "fsTotalSize": null
+  },
+  "dbStats_completo": {
+   "db": "app_data_3",
+   "collections": 3,
+   "views": 0,
+   "objects": 9044744,
+   "avgObjSize": 339.4841939141672,
+   "dataSize": 3070547626.0,
+   "indexes": 7,
+   "scaleFactor": 1,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "collezioni": {
+   "eventi": {
+    "count": 3165387,
+    "size": 738655783,
+    "storageSize": null,
+    "totalIndexSize": 182596550,
+    "indexSizes": {
+     "_id_": 82962054,
+     "cliente_ts": 99634496
+    },
+    "avgObjSize": 233
+   },
+   "messaggi": {
+    "count": 4524152,
+    "size": 1539529188,
+    "storageSize": null,
+    "totalIndexSize": 255858066,
+    "indexSizes": {
+     "_id_": 117465771,
+     "cliente_ts": 138392295
+    },
+    "avgObjSize": 340
+   },
+   "ordini": {
+    "count": 1355205,
+    "size": 792362655,
+    "storageSize": null,
+    "totalIndexSize": 118772693,
+    "indexSizes": {
+     "_id_": 36241489,
+     "cliente_ts": 45691042,
+     "stato_ts": 36840162
+    },
+    "avgObjSize": 584
+   }
+  },
+  "oplog": {
+   "count": 504480,
+   "size": 32619644184,
+   "storageSize": null,
+   "maxSize": 16777216
+  },
+  "oplog_finestra_ore": 28.89,
+  "oplog_prima_voce": "2026-11-04T14:09:29Z"
+ },
+ "collezioni_dello_script_trovate": [],
+ "cancellate": {},
+ "system_profile": {
+  "ok": 1.0,
+  "$clusterTime": {
+   "clusterTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   },
+   "signature": {
+    "hash": {
+     "$binary": {
+      "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+      "subType": "00"
+     }
+    },
+    "keyId": 7704230336049184770
+   }
+  },
+  "operationTime": {
+   "$timestamp": {
+    "t": 1793905375,
+    "i": 2
+   }
+  }
+ },
+ "collezioni_dopo": [
+  "eventi",
+  "messaggi",
+  "ordini"
+ ],
+ "prova_cancellazione": "nessuna collezione dello script rimasta",
+ "fine": "2026-11-05T19:02:56.024302Z",
+ "dopo": {
+  "etichetta": "dopo fine",
+  "inizio": "2026-11-05T19:02:56.024321Z",
+  "fase": "fine",
+  "hello": {
+   "compression": [
+    "zstd",
+    "zlib"
+   ],
+   "topologyVersion": {
+    "processId": {
+     "$oid": "6aecb29b08508cfc2b14a3a3"
+    },
+    "counter": 4
+   },
+   "hosts": [
+    "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "cluster0-shard-00-02.7lvmgr.mongodb.net:27017"
+   ],
+   "setName": "atlas-qear04-shard-0",
+   "setVersion": 1,
+   "isWritablePrimary": true,
+   "secondary": false,
+   "primary": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+   "tags": {
+    "cacheState": "READY",
+    "diskState": "READY",
+    "availabilityZone": "euw1-az2",
+    "workloadType": "OPERATIONAL",
+    "region": "EU_WEST_1",
+    "nodeType": "ELECTABLE",
+    "provider": "AWS"
+   },
+   "me": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+   "electionId": {
+    "$oid": "7fffffff0000000000000015"
+   },
+   "lastWrite": {
+    "opTime": {
+     "ts": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "t": 21
+    },
+    "lastWriteDate": {
+     "$date": "2026-11-05T19:02:55Z"
+    },
+    "majorityOpTime": {
+     "ts": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "t": 21
+    },
+    "majorityWriteDate": {
+     "$date": "2026-11-05T19:02:55Z"
+    }
+   },
+   "maxBsonObjectSize": 16777216,
+   "maxMessageSizeBytes": 48000000,
+   "maxWriteBatchSize": 100000,
+   "localTime": {
+    "$date": "2026-11-05T19:02:56.025Z"
+   },
+   "logicalSessionTimeoutMinutes": 30,
+   "connectionId": 2594,
+   "minWireVersion": 0,
+   "maxWireVersion": 30,
+   "readOnly": false,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "replSetGetStatus": {
+   "set": "atlas-qear04-shard-0",
+   "date": {
+    "$date": "2026-11-05T19:02:56.027Z"
+   },
+   "myState": 1,
+   "members": [
+    {
+     "_id": 0,
+     "name": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "health": 1.0,
+     "state": 1,
+     "stateStr": "PRIMARY",
+     "uptime": 8261,
+     "self": true
+    },
+    {
+     "_id": 2,
+     "name": "atlas-qear04-shard-00-02.7lvmgr.mongodb.net:27017",
+     "health": 1.0,
+     "state": 2,
+     "stateStr": "SECONDARY",
+     "uptime": 8261,
+     "self": false
+    }
+   ],
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "hostInfo": {
+   "system": {
+    "currentTime": {
+     "$date": "2026-11-05T19:02:56.028Z"
+    },
+    "hostname": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+    "cpuAddrSize": 64,
+    "memSizeMB": 7767,
+    "memLimitMB": 7767,
+    "numCores": 2
+   },
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "serverStatus": {
+   "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+   "version": "9.1.0",
+   "process": "mongod",
+   "uptime": 8261.0,
+   "uptimeMillis": 8256255,
+   "uptimeEstimate": 8256,
+   "localTime": {
+    "$date": "2026-11-05T19:02:56.029Z"
+   },
+   "asserts": {
+    "regular": 0,
+    "warning": 0,
+    "msg": 0,
+    "user": 2676,
+    "tripwire": 0,
+    "rollovers": 0
+   },
+   "catalogStats": {
+    "collections": 22,
+    "capped": 0,
+    "clustered": 0,
+    "timeseries": 0,
+    "views": 0,
+    "internalCollections": 16,
+    "internalViews": 0,
+    "csfle": 0,
+    "queryableEncryption": 0,
+    "systemProfile": 0
+   },
+   "changeStreamPreImages": {
+    "numDocs": 0,
+    "docsInserted": 0
+   },
+   "connections": {
+    "current": 65,
+    "available": 2935,
+    "totalCreated": 2574,
+    "rejected": 0,
+    "active": 6,
+    "queuedForEstablishment": 0,
+    "establishmentRateLimit": {
+     "rejected": 0,
+     "exempted": 1996,
+     "interruptedDueToClientDisconnect": 0
+    },
+    "threaded": 65,
+    "limitExempt": 58,
+    "exhaustIsMaster": 0,
+    "exhaustHello": 3,
+    "awaitingTopologyChanges": 5,
+    "backpressureVersions": {
+     "activeCount": {
+      "NoBackpressure": 7,
+      "1": 44,
+      "Other": 14
+     },
+     "totalCount": {
+      "NoBackpressure": 12,
+      "1": 1411,
+      "Other": 585
+     }
+    },
+    "loadBalanced": 0,
+    "priority": 0
+   },
+   "extra_info": {
+    "user_time_us": 184380490,
+    "system_time_us": 60508230
+   },
+   "featureCompatibilityVersion": {
+    "major": 9,
+    "minor": 0,
+    "transitioning": 0
+   },
+   "flowControl": {
+    "isLagged": false
+   },
+   "indexStats": {
+    "count": 51,
+    "features": {
+     "2d": {
+      "count": 0,
+      "accesses": 0
+     },
+     "2dsphere": {
+      "count": 0,
+      "accesses": 0
+     },
+     "2dsphere_bucket": {
+      "count": 0,
+      "accesses": 0
+     },
+     "collation": {
+      "count": 0,
+      "accesses": 0
+     },
+     "compound": {
+      "count": 29,
+      "accesses": 34200
+     },
+     "hashed": {
+      "count": 0,
+      "accesses": 0
+     },
+     "id": {
+      "count": 22,
+      "accesses": 9300
+     },
+     "normal": {
+      "count": 29,
+      "accesses": 34200
+     },
+     "partial": {
+      "count": 0,
+      "accesses": 0
+     },
+     "prepareUnique": {
+      "count": 0,
+      "accesses": 0
+     },
+     "single": {
+      "count": 0,
+      "accesses": 0
+     },
+     "sparse": {
+      "count": 0,
+      "accesses": 0
+     },
+     "text": {
+      "count": 0,
+      "accesses": 0
+     },
+     "ttl": {
+      "count": 0,
+      "accesses": 0
+     },
+     "unique": {
+      "count": 0,
+      "accesses": 0
+     },
+     "wildcard": {
+      "count": 0,
+      "accesses": 0
+     }
+    }
+   },
+   "messageFilter": {
+    "version": "20261029.221353.bac11a37c5feea1dab70f4f9aac1aa23b5706351",
+    "rejectedMessages": 0,
+    "suspiciousMessages": 0,
+    "successfulPluginLoads": 1,
+    "failedPluginLoads": 0
+   },
+   "network": {
+    "bytesIn": 107424061,
+    "bytesOut": 5126822657,
+    "physicalBytesIn": 105705035,
+    "physicalBytesOut": 4767802745,
+    "egress": {
+     "bytesIn": 13359842,
+     "bytesOut": 9795990,
+     "physicalBytesIn": 8880870,
+     "physicalBytesOut": 7513150,
+     "numRequests": 28108
+    },
+    "numRequests": 279380,
+    "compression": {
+     "snappy": {
+      "compressor": {
+       "bytesIn": 11854352,
+       "bytesOut": 8692062
+      },
+      "decompressor": {
+       "bytesIn": 8601085,
+       "bytesOut": 13470705
+      }
+     },
+     "zstd": {
+      "compressor": {
+       "bytesIn": 548368049,
+       "bytesOut": 189591260
+      },
+      "decompressor": {
+       "bytesIn": 12863233,
+       "bytesOut": 14127778
+      }
+     },
+     "zlib": {
+      "compressor": {
+       "bytesIn": 0,
+       "bytesOut": 0
+      },
+      "decompressor": {
+       "bytesIn": 0,
+       "bytesOut": 0
+      }
+     }
+    },
+    "ingressRequestRateLimiter": {
+     "addedToQueue": 0,
+     "rejectedAdmissions": 0,
+     "exemptedAdmissions": 211569,
+     "successfulAdmissions": 67791,
+     "attemptedAdmissions": 67791,
+     "averageTimeQueuedMicros": 0.0,
+     "totalTimeQueuedMicros": 0,
+     "currentQueueDepth": 0
+    }
+   },
+   "opLatencies": {
+    "commands": {
+     "latency": 95015502,
+     "ops": 215957,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "reads": {
+     "latency": 108320433,
+     "ops": 55171,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "writes": {
+     "latency": 19642444,
+     "ops": 8246,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "transactions": {
+     "latency": 0,
+     "ops": 0,
+     "queryableEncryptionLatencyMicros": 0
+    }
+   },
+   "opWorkingTime": {
+    "commands": {
+     "latency": 54695000,
+     "ops": 215957,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "reads": {
+     "latency": 70665000,
+     "ops": 55171,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "writes": {
+     "latency": 15600000,
+     "ops": 8246,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "transactions": {
+     "latency": 0,
+     "ops": 0,
+     "queryableEncryptionLatencyMicros": 0
+    }
+   },
+   "opWriteConcernCounters": {
+    "insert": {
+     "wmajority": 0,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 0,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {}
+      }
+     }
+    },
+    "update": {
+     "wmajority": 9090,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 1,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {
+        "1": 1
+       }
+      }
+     }
+    },
+    "delete": {
+     "wmajority": 1466,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 0,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {}
+      }
+     }
+    }
+   },
+   "opcounters": {
+    "insert": 0,
+    "query": 42972,
+    "update": 9091,
+    "delete": 1466,
+    "getmore": 0,
+    "command": 254507,
+    "aggregate": 11064
+   },
+   "queryAnalyzers": {
+    "activeCollections": 0,
+    "totalCollections": 0
+   },
+   "querySettings": {
+    "count": 0,
+    "size": 0,
+    "rejectCount": 0,
+    "backfill": {
+     "bufferedRepresentativeQueries": 0
+    }
+   },
+   "queues": {
+    "ingressSessionEstablishment": {
+     "rejectedAdmissions": 0,
+     "successfulAdmissions": 578,
+     "attemptedAdmissions": 578
+    }
+   },
+   "readConcernCounters": {
+    "nonTransactionOps": {
+     "none": 54346,
+     "noneInfo": {
+      "CWRC": {
+       "local": 0,
+       "available": 0,
+       "majority": 0
+      },
+      "implicitDefault": {
+       "local": 54346,
+       "available": 0
+      }
+     },
+     "local": 824,
+     "available": 0,
+     "majority": 0,
+     "snapshot": {
+      "withClusterTime": 0,
+      "withoutClusterTime": 0
+     },
+     "linearizable": 0
+    },
+    "transactionOps": {
+     "none": 0,
+     "noneInfo": {
+      "CWRC": {
+       "local": 0,
+       "majority": 0
+      },
+      "implicitDefault": {
+       "local": 0
+      }
+     },
+     "local": 0,
+     "majority": 0,
+     "snapshot": {
+      "withClusterTime": 0,
+      "withoutClusterTime": 0
+     }
+    }
+   },
+   "readPreferenceCounters": {
+    "executedOnPrimary": {
+     "primary": {
+      "internal": 28,
+      "external": 43928
+     },
+     "primaryPreferred": {
+      "internal": 191,
+      "external": 9946
+     },
+     "secondary": {
+      "internal": 0,
+      "external": 0
+     },
+     "secondaryPreferred": {
+      "internal": 0,
+      "external": 0
+     },
+     "nearest": {
+      "internal": 0,
+      "external": 1215
+     },
+     "tagged": {
+      "internal": 0,
+      "external": 0
+     }
+    },
+    "executedOnSecondary": {
+     "primary": {
+      "internal": 0,
+      "external": 0
+     },
+     "primaryPreferred": {
+      "internal": 7,
+      "external": 70
+     },
+     "secondary": {
+      "internal": 0,
+      "external": 0
+     },
+     "secondaryPreferred": {
+      "internal": 0,
+      "external": 0
+     },
+     "nearest": {
+      "internal": 5,
+      "external": 8
+     },
+     "tagged": {
+      "internal": 0,
+      "external": 0
+     }
+    }
+   },
+   "repl": {
+    "hosts": [
+     "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "cluster0-shard-00-02.7lvmgr.mongodb.net:27017"
+    ],
+    "setName": "atlas-qear04-shard-0",
+    "isWritablePrimary": true,
+    "secondary": false,
+    "primary": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "tags": {
+     "availabilityZone": "euw1-az2",
+     "diskState": "READY",
+     "nodeType": "ELECTABLE",
+     "cacheState": "READY",
+     "provider": "AWS",
+     "workloadType": "OPERATIONAL",
+     "region": "EU_WEST_1"
+    },
+    "me": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+   },
+   "scramCache": {
+    "SCRAM-SHA-1": {
+     "count": 0,
+     "hits": 0,
+     "misses": 0
+    },
+    "SCRAM-SHA-256": {
+     "count": 3,
+     "hits": 17,
+     "misses": 3
+    }
+   },
+   "security": {
+    "authentication": {
+     "saslSupportedMechsReceived": 736,
+     "mechanisms": {
+      "GSSAPI": {
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-AWS": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-OIDC": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-X509": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "PLAIN": {
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "SCRAM-SHA-1": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 718,
+         "successful": 718
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 718,
+         "successful": 718
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "SCRAM-SHA-256": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 734,
+         "successful": 734
+        },
+        "clusterAuthenticate": {
+         "total": 208,
+         "successful": 208
+        },
+        "authenticate": {
+         "total": 736,
+         "successful": 736
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 18,
+         "successful": 18
+        },
+        "authenticate": {
+         "total": 20,
+         "successful": 20
+        }
+       }
+      }
+     },
+     "totalIngressAuthenticationTimeMicros": 3389668,
+     "totalEgressAuthenticationTimeMicros": 3858
+    },
+    "SSLServerSubjectName": "CN=*.7lvmgr.mongodb.net",
+    "SSLServerCertificateExpirationDate": {
+     "$date": "2027-02-02T07:23:07Z"
+    }
+   },
+   "transactions": {
+    "retryableCommandsCount": 0,
+    "retriedCommandsCount": 0,
+    "retriedStatementsCount": 0,
+    "transactionsCollectionWriteCount": 0,
+    "currentActive": 0,
+    "currentInactive": 0,
+    "currentOpen": 0,
+    "totalAborted": 0,
+    "totalAbortedInternal": 0,
+    "totalAbortedExternal": 0,
+    "totalCommitted": 0,
+    "totalCommittedInternal": 0,
+    "totalCommittedExternal": 0,
+    "totalStarted": 0,
+    "totalStartedInternal": 0,
+    "totalStartedExternal": 0,
+    "totalPrepared": 0,
+    "totalPreparedInternal": 0,
+    "totalPreparedExternal": 0,
+    "totalPreparedThenCommitted": 0,
+    "totalPreparedThenCommittedInternal": 0,
+    "totalPreparedThenCommittedExternal": 0,
+    "totalPreparedThenAborted": 0,
+    "totalPreparedThenAbortedInternal": 0,
+    "totalPreparedThenAbortedExternal": 0,
+    "currentPrepared": 0,
+    "retriedWritesDelayMillis": [
+     {
+      "lowerBound": 0,
+      "count": 0
+     },
+     {
+      "lowerBound": 1,
+      "count": 0
+     },
+     {
+      "lowerBound": 10,
+      "count": 0
+     },
+     {
+      "lowerBound": 100,
+      "count": 0
+     },
+     {
+      "lowerBound": 500,
+      "count": 0
+     },
+     {
+      "lowerBound": 1000,
+      "count": 0
+     },
+     {
+      "lowerBound": 5000,
+      "count": 0
+     },
+     {
+      "lowerBound": 10000,
+      "count": 0
+     },
+     {
+      "lowerBound": 30000,
+      "count": 0
+     },
+     {
+      "lowerBound": 60000,
+      "count": 0
+     },
+     {
+      "lowerBound": 180000,
+      "count": 0
+     },
+     {
+      "lowerBound": 300000,
+      "count": 0
+     },
+     {
+      "lowerBound": 600000,
+      "count": 0
+     },
+     {
+      "lowerBound": 1200000,
+      "count": 0
+     }
+    ]
+   },
+   "transportSecurity": {
+    "1.0": 0,
+    "1.1": 0,
+    "1.2": 0,
+    "1.3": 2312,
+    "unknown": 0
+   },
+   "wiredTiger": {
+    "cache": {
+     "bytes currently in the cache": 1715250865,
+     "maximum bytes configured": 2147483648,
+     "tracked dirty bytes in the cache": 363579
+    },
+    "load-control": {
+     "read load at the system level": 84,
+     "write load at the system level": 0
+    }
+   },
+   "mem": {
+    "bits": 64,
+    "resident": 3095,
+    "virtual": 7096,
+    "supported": true,
+    "secureAllocByteCount": 1304,
+    "secureAllocBytesInPages": 49152
+   },
+   "metrics": {
+    "apiVersions": {
+     "mongotune 1.19.1+6cd235f": [
+      "default"
+     ],
+     "": [
+      "default"
+     ],
+     "MongoDB Automation Agent v1000.1.3.11500 (git: 9b85ce74b9d61ede3ecdc0a53ce64b29bec2a70c)": [
+      "default"
+     ],
+     "MongoDB Monitoring Module v1000.1.3.11500 (git: 9b85ce74b9d61ede3ecdc0a53ce64b29bec2a70c)": [
+      "default"
+     ],
+     "app-demo": [
+      "default"
+     ],
+     "connection pool": [
+      "default"
+     ]
+    },
+    "aggStageCounters": {
+     "$addFields": 3,
+     "$bucket": 0,
+     "$bucketAuto": 0,
+     "$changeStream": 0,
+     "$changeStreamSplitLargeEvent": 0,
+     "$collStats": 10806,
+     "$count": 0,
+     "$currentOp": 5,
+     "$densify": 0,
+     "$documents": 0,
+     "$facet": 0,
+     "$fill": 0,
+     "$geoNear": 0,
+     "$graphLookup": 0,
+     "$group": 5,
+     "$indexStats": 209,
+     "$limit": 14,
+     "$listCachedAndActiveUsers": 0,
+     "$listCatalog": 0,
+     "$listClusterCatalog": 12,
+     "$listExtensions": 0,
+     "$listLocalSessions": 0,
+     "$listMqlEntities": 0,
+     "$listSampledQueries": 0,
+     "$listSearchIndexes": 0,
+     "$listSessions": 0,
+     "$lookup": 0,
+     "$match": 34,
+     "$merge": 0,
+     "$mergeCursors": 0,
+     "$out": 0,
+     "$planCacheStats": 0,
+     "$project": 26,
+     "$querySettings": 0,
+     "$queryStats": 29,
+     "$queue": 0,
+     "$rankFusion": 0,
+     "$redact": 0,
+     "$replaceRoot": 0,
+     "$replaceWith": 0,
+     "$sample": 0,
+     "$score": 0,
+     "$scoreFusion": 0,
+     "$search": 0,
+     "$searchBeta": 0,
+     "$searchMeta": 0,
+     "$set": 1796,
+     "$setMetadata": 0,
+     "$setVariableFromSubPipeline": 0,
+     "$setWindowFields": 0,
+     "$shardedDataDistribution": 0,
+     "$skip": 0,
+     "$sort": 17,
+     "$sortByCount": 0,
+     "$unionWith": 0,
+     "$unset": 3,
+     "$unwind": 0,
+     "$vectorSearch": 0
+    },
+    "changeStreams": {
+     "cursor": {
+      "batchesReturned": 0,
+      "bytesRead": 0,
+      "bytesReturned": 0,
+      "docsExamined": 0,
+      "docsReturned": 0,
+      "lifespan": {
+       "average": 0.0,
+       "totalCount": 0
+      },
+      "totalOpened": 0,
+      "open": {
+       "pinned": 0,
+       "total": 0
+      }
+     },
+     "error": {
+      "nonRetriable": {
+       "bsonObjectTooLarge": 0,
+       "changeStreamFatalError": 0,
+       "changeStreamHistoryLost": 0,
+       "other": 0
+      },
+      "retriable": {
+       "interruptedDueToReplStateChange": 0,
+       "other": 0
+      }
+     },
+     "option": {
+      "ignoreRemovedShards": 0,
+      "matchCollectionUUIDForUpdateLookup": 0,
+      "resumeAfter": 0,
+      "showExpandedEvents": 0,
+      "showMigrationEvents": 0,
+      "showRawUpdateDescription": 0,
+      "showSystemEvents": 0,
+      "startAfter": 0,
+      "startAtOperationTime": 0,
+      "cursor": {
+       "batchSize": {
+        "(-inf, 1)": {
+         "count": 0
+        },
+        "[1, 10)": {
+         "count": 0
+        },
+        "[10, 100)": {
+         "count": 0
+        },
+        "[100, 1000)": {
+         "count": 0
+        },
+        "[1000, 10000)": {
+         "count": 0
+        },
+        "[10000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "maxTimeMS": {
+        "(-inf, 100)": {
+         "count": 0
+        },
+        "[100, 200)": {
+         "count": 0
+        },
+        "[200, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2000)": {
+         "count": 0
+        },
+        "[2000, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 20000)": {
+         "count": 0
+        },
+        "[20000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 200000)": {
+         "count": 0
+        },
+        "[200000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       }
+      },
+      "fullDocument": {
+       "required": 0,
+       "updateLookup": 0,
+       "whenAvailable": 0
+      },
+      "fullDocumentBeforeChange": {
+       "required": 0,
+       "whenAvailable": 0
+      }
+     },
+     "scope": {
+      "cluster": 0,
+      "collection": 0,
+      "db": 0
+     },
+     "updateLookup": {
+      "enrichBatchesStarted": 0,
+      "aggregation": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      },
+      "express": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      },
+      "sbe": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      }
+     }
+    },
+    "commands": {
+     "<UNKNOWN>": 0,
+     "abortTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "aggregate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 2820,
+      "withExtension": {
+       "failed": 0,
+       "succeeded": 0
+      }
+     },
+     "analyze": {
+      "failed": 0,
+      "micros": 0,
+      "rejected": 0,
+      "total": 0,
+      "histograms": {
+       "micros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 256,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        }
+       ]
+      }
+     },
+     "analyzeShardKey": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "appendOplogNote": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "applyOps": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "authenticate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "autoSplitVector": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "buildInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 758
+     },
+     "bulkWrite": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "checkShardingIndex": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "cleanupOrphaned": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "cloneCollectionAsCapped": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterAbortTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterAggregate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0,
+      "withExtension": {
+       "failed": 0,
+       "succeeded": 0
+      }
+     },
+     "clusterBulkWrite": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterCommitTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterCount": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterDelete": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterFind": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterGetMore": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterInsert": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterUpdate": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "collMod": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0,
+      "validationLevel": {
+       "constraint": 0,
+       "default": 0,
+       "moderate": 0,
+       "off": 0,
+       "strict": 0
+      },
+      "validator": {
+       "failed": 0,
+       "jsonSchema": 0,
+       "total": 0
+      }
+     },
+     "collStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 287
+     },
+     "commitTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "configureQueryAnalyzer": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "connPoolStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 941
+     },
+     "connectionStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 5
+     },
+     "convertToCapped": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "count": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 9618
+     },
+     "create": {
+      "failed": 29,
+      "rejected": 0,
+      "total": 30,
+      "validationLevel": {
+       "constraint": 0,
+       "default": 0,
+       "moderate": 0,
+       "off": 0,
+       "strict": 0
+      },
+      "validator": {
+       "failed": 0,
+       "jsonSchema": 0,
+       "total": 0
+      }
+     },
+     "createIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 3
+     },
+     "currentOp": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dataSize": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 27907
+     },
+     "dbStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 120
+     },
+     "delete": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 54
+     },
+     "distinct": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "drop": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 35
+     },
+     "dropDatabase": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dropIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "endSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 506
+     },
+     "eseRotateActiveKEK": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "explain": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "exportCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "filemd5": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "find": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 42972
+     },
+     "findAndModify": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "flushRouterConfig": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getClusterParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getCmdLineOpts": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 516
+     },
+     "getDatabaseVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getDefaultRWConcern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 196
+     },
+     "getESECMKIdentifierListStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 189
+     },
+     "getESERotateActiveKEKStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getLog": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 117
+     },
+     "getMore": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 10510
+     },
+     "getShardMap": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getShardVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "grantPrivilegesToRole": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "grantRolesToRole": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "hello": {
+      "failed": 31,
+      "rejected": 0,
+      "total": 34877
+     },
+     "hostInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 174
+     },
+     "importCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "insert": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "internalRenameIfOptionsAndIndexesMatch": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "isMaster": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 24709
+     },
+     "killAllSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killAllSessionsByPattern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killCursors": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killOp": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "listCollections": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 279
+     },
+     "listCommands": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 8
+     },
+     "listDatabases": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 33
+     },
+     "listDatabasesForAllTenants": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "listIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 80
+     },
+     "listSearchIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "lockInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "logout": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "mapReduce": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "oidcListKeys": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "oidcRefreshKeys": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "ping": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 69812
+     },
+     "planCacheClear": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheClearFilters": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheListFilters": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheSetFilter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "profile": {
+      "failed": 58,
+      "rejected": 0,
+      "total": 87
+     },
+     "reIndex": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "refreshSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "removeQuerySettings": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "renameCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "replSetGetConfig": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 509
+     },
+     "replSetGetStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 19663
+     },
+     "rolesInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "saslContinue": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 1454
+     },
+     "saslStart": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 2
+     },
+     "serverStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 48316
+     },
+     "setClusterParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setDefaultRWConcern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setFeatureCompatibilityVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setQuerySettings": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setUserWriteBlockMode": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 1
+     },
+     "shardingState": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "startSession": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "top": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 29
+     },
+     "transitionToShardedCluster": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "update": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 898,
+      "rejected": 0,
+      "total": 8247
+     },
+     "updateESECMKIdentifierList": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "validate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "validateDBMetadata": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "whatsmyuri": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     }
+    },
+    "cursor": {
+     "moreThanOneBatch": 0,
+     "timedOut": 0,
+     "totalOpened": 0,
+     "lifespan": {
+      "greaterThanOrEqual10Minutes": 0,
+      "lessThan10Minutes": 0,
+      "lessThan15Seconds": 0,
+      "lessThan1Minute": 0,
+      "lessThan1Second": 0,
+      "lessThan30Seconds": 0,
+      "lessThan5Seconds": 0
+     },
+     "open": {
+      "multiTarget": 0,
+      "noTimeout": 0,
+      "pinned": 0,
+      "queuedData": 0,
+      "singleTarget": 0,
+      "total": 0
+     }
+    },
+    "disagg": {
+     "oplog": {
+      "totalBytes": 4540261,
+      "totalEntries": 9657,
+      "uncompressedBytes": 3073874
+     }
+    },
+    "disaggStorage": {
+     "catalog": {
+      "activeCollectionsAndIndexes": 105
+     },
+     "logicalSize": {
+      "bytesHot": 70809446181,
+      "bytesOplog": 32619636649
+     },
+     "pali": {
+      "baseRateMBPerSec": 0,
+      "bytesRead": 4137526522,
+      "bytesWritten": 16920895,
+      "readOperations": 153171,
+      "throughputUtilization": 9.357938587674916e-06,
+      "writeOperations": 10263
+     },
+     "replStatus": {
+      "myState": 1
+     }
+    },
+    "document": {
+     "deleted": 267,
+     "inserted": 0,
+     "returned": 1617709,
+     "updated": 8774
+    },
+    "dotsAndDollarsFields": {
+     "inserts": 0,
+     "updates": 0
+    },
+    "getLastError": {
+     "wtimeouts": 0,
+     "default": {
+      "unsatisfiable": 0,
+      "wtimeouts": 0
+     },
+     "wtime": {
+      "num": 8303,
+      "totalMillis": 13614
+     }
+    },
+    "logging": {
+     "count": 17304
+    },
+    "operatorCounters": {
+     "expressions": {
+      "$abs": 0,
+      "$acos": 0,
+      "$acosh": 0,
+      "$add": 0,
+      "$allElementsTrue": 0,
+      "$and": 24,
+      "$anyElementTrue": 0,
+      "$arrayElemAt": 0,
+      "$arrayToObject": 12,
+      "$asin": 0,
+      "$asinh": 0,
+      "$atan": 0,
+      "$atan2": 0,
+      "$atanh": 0,
+      "$avg": 0,
+      "$binarySize": 0,
+      "$bitAnd": 0,
+      "$bitNot": 0,
+      "$bitOr": 0,
+      "$bitXor": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$bsonSize": 0,
+      "$ceil": 0,
+      "$cmp": 0,
+      "$concat": 12,
+      "$concatArrays": 0,
+      "$cond": 24,
+      "$const": 42,
+      "$convert": 0,
+      "$cos": 0,
+      "$cosh": 0,
+      "$createObjectId": 0,
+      "$createUUID": 0,
+      "$currentDate": 0,
+      "$dateAdd": 0,
+      "$dateDiff": 0,
+      "$dateFromParts": 0,
+      "$dateFromString": 0,
+      "$dateSubtract": 0,
+      "$dateToParts": 0,
+      "$dateToString": 0,
+      "$dateTrunc": 0,
+      "$dayOfMonth": 0,
+      "$dayOfWeek": 0,
+      "$dayOfYear": 0,
+      "$degreesToRadians": 0,
+      "$deserializeEJSON": 0,
+      "$divide": 0,
+      "$eq": 36,
+      "$exp": 0,
+      "$expr": 0,
+      "$filter": 0,
+      "$first": 12,
+      "$firstN": 0,
+      "$floor": 0,
+      "$function": 0,
+      "$getField": 0,
+      "$gt": 0,
+      "$gte": 0,
+      "$hash": 0,
+      "$hexHash": 0,
+      "$hour": 0,
+      "$ifNull": 0,
+      "$in": 0,
+      "$indexOfArray": 0,
+      "$indexOfBytes": 12,
+      "$indexOfCP": 0,
+      "$isArray": 0,
+      "$isNumber": 0,
+      "$isoDayOfWeek": 0,
+      "$isoWeek": 0,
+      "$isoWeekYear": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$let": 0,
+      "$literal": 0,
+      "$ln": 0,
+      "$log": 0,
+      "$log10": 0,
+      "$lt": 12,
+      "$lte": 0,
+      "$ltrim": 0,
+      "$map": 15,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$meta": 0,
+      "$millisecond": 0,
+      "$min": 0,
+      "$minN": 0,
+      "$minute": 0,
+      "$mod": 0,
+      "$month": 0,
+      "$multiply": 0,
+      "$ne": 36,
+      "$not": 0,
+      "$objectToArray": 15,
+      "$or": 12,
+      "$percentile": 0,
+      "$pow": 0,
+      "$radiansToDegrees": 0,
+      "$rand": 0,
+      "$range": 0,
+      "$reduce": 0,
+      "$regexFind": 0,
+      "$regexFindAll": 0,
+      "$regexMatch": 0,
+      "$replaceAll": 0,
+      "$replaceOne": 0,
+      "$reverseArray": 0,
+      "$round": 0,
+      "$rtrim": 0,
+      "$second": 0,
+      "$serializeEJSON": 0,
+      "$setDifference": 0,
+      "$setEquals": 0,
+      "$setField": 0,
+      "$setIntersection": 0,
+      "$setIsSubset": 0,
+      "$setUnion": 0,
+      "$sigmoid": 0,
+      "$similarityCosine": 0,
+      "$similarityDotProduct": 0,
+      "$similarityEuclidean": 0,
+      "$sin": 0,
+      "$sinh": 0,
+      "$size": 0,
+      "$slice": 0,
+      "$sortArray": 0,
+      "$split": 0,
+      "$sqrt": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$strLenBytes": 24,
+      "$strLenCP": 0,
+      "$strcasecmp": 0,
+      "$substr": 0,
+      "$substrBytes": 48,
+      "$substrCP": 0,
+      "$subtract": 24,
+      "$subtype": 0,
+      "$sum": 0,
+      "$switch": 12,
+      "$tan": 0,
+      "$tanh": 0,
+      "$toArray": 0,
+      "$toBool": 0,
+      "$toDate": 0,
+      "$toDecimal": 0,
+      "$toDouble": 0,
+      "$toHashedIndexKey": 0,
+      "$toInt": 0,
+      "$toLong": 0,
+      "$toLower": 0,
+      "$toObject": 0,
+      "$toObjectId": 0,
+      "$toString": 0,
+      "$toUUID": 0,
+      "$toUpper": 0,
+      "$top": 0,
+      "$topN": 0,
+      "$trim": 0,
+      "$trunc": 0,
+      "$tsIncrement": 0,
+      "$tsSecond": 0,
+      "$type": 0,
+      "$unsetField": 0,
+      "$week": 0,
+      "$year": 0,
+      "$zip": 0
+     },
+     "groupAccumulators": {
+      "$accumulator": 0,
+      "$addToSet": 0,
+      "$avg": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$concatArrays": 0,
+      "$count": 0,
+      "$first": 0,
+      "$firstN": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$min": 0,
+      "$minN": 0,
+      "$percentile": 0,
+      "$push": 0,
+      "$setUnion": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$sum": 5,
+      "$top": 0,
+      "$topN": 0
+     },
+     "match": {
+      "$all": 0,
+      "$alwaysFalse": 0,
+      "$alwaysTrue": 0,
+      "$and": 0,
+      "$bitsAllClear": 0,
+      "$bitsAllSet": 0,
+      "$bitsAnyClear": 0,
+      "$bitsAnySet": 0,
+      "$comment": 0,
+      "$elemMatch": 0,
+      "$eq": 42558,
+      "$exists": 0,
+      "$expr": 0,
+      "$geoIntersects": 0,
+      "$geoWithin": 0,
+      "$gt": 6,
+      "$gte": 11394,
+      "$in": 26,
+      "$jsonSchema": 0,
+      "$lt": 15315,
+      "$lte": 0,
+      "$mod": 0,
+      "$ne": 13,
+      "$near": 0,
+      "$nearSphere": 0,
+      "$nin": 0,
+      "$nor": 0,
+      "$not": 5,
+      "$or": 0,
+      "$regex": 5,
+      "$sampleRate": 0,
+      "$size": 0,
+      "$text": 0,
+      "$type": 0,
+      "$where": 0
+     },
+     "windowAccumulators": {
+      "$addToSet": 0,
+      "$avg": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$concatArrays": 0,
+      "$count": 0,
+      "$covariancePop": 0,
+      "$covarianceSamp": 0,
+      "$denseRank": 0,
+      "$derivative": 0,
+      "$documentNumber": 0,
+      "$expMovingAvg": 0,
+      "$first": 0,
+      "$firstN": 0,
+      "$integral": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$linearFill": 0,
+      "$locf": 0,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$min": 0,
+      "$minMaxScaler": 0,
+      "$minN": 0,
+      "$percentile": 0,
+      "$push": 0,
+      "$rank": 0,
+      "$setUnion": 0,
+      "$shift": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$sum": 0,
+      "$top": 0,
+      "$topN": 0
+     }
+    },
+    "query": {
+     "allowDiskUseFalse": 0,
+     "deleteManyCount": 0,
+     "deleteOneNonTargetedShardedCount": 0,
+     "deleteOneTargetedShardedCount": 0,
+     "deleteOneUnshardedCount": 0,
+     "deleteOneWithoutShardKeyWithIdCount": 0,
+     "deleteOneWithoutShardKeyWithIdRetryCount": 0,
+     "externalRetryableWriteCount": 0,
+     "findAndModifyNonTargetedShardedCount": 0,
+     "findAndModifyTargetedShardedCount": 0,
+     "findAndModifyUnshardedCount": 0,
+     "internalRetryableWriteCount": 0,
+     "nonRetryableDeleteOneWithoutShardKeyWithIdCount": 0,
+     "nonRetryableUpdateOneWithoutShardKeyWithIdCount": 0,
+     "totalSlowQueryLogs": 246,
+     "updateDeleteManyDocumentsMaxCount": 0,
+     "updateDeleteManyDocumentsTotalCount": 0,
+     "updateDeleteManyDurationMaxMs": 0,
+     "updateDeleteManyDurationTotalMs": 0,
+     "updateManyCount": 0,
+     "updateOneNonTargetedShardedCount": 0,
+     "updateOneOpStyleBroadcastWithExactIDCount": 0,
+     "updateOneTargetedShardedCount": 0,
+     "updateOneUnshardedCount": 0,
+     "updateOneWithoutShardKeyWithIdCount": 0,
+     "updateOneWithoutShardKeyWithIdRetryCount": 0,
+     "aggregation": {
+      "nonTicketed": {
+       "intervals": 0,
+       "maxMillis": 0,
+       "queries": 0,
+       "totalMillis": 0
+      }
+     },
+     "bucketAuto": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "cbr": {
+      "choseWinningPlan": 0,
+      "count": 0,
+      "micros": 0,
+      "numPlans": 0,
+      "numPlansFailedCostEstimation": 0,
+      "numPlansTiedCostEstimation": 0,
+      "samplingMicros": 0,
+      "histograms": {
+       "micros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ],
+       "numPlans": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 2,
+         "count": 0
+        },
+        {
+         "lowerBound": 4,
+         "count": 0
+        },
+        {
+         "lowerBound": 8,
+         "count": 0
+        },
+        {
+         "lowerBound": 16,
+         "count": 0
+        },
+        {
+         "lowerBound": 32,
+         "count": 0
+        }
+       ],
+       "samplingMicros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ]
+      }
+     },
+     "expressionSimplifier": {
+      "abortedTooLarge": 0,
+      "notSimplified": 25699,
+      "simplified": 0,
+      "trivial": 28979
+     },
+     "geoNear": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "graphLookup": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "group": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "hashJoin": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "lookup": {
+      "dynamicIndexedLoopJoin": 0,
+      "hashLookup": 0,
+      "hashLookupSpillToDisk": 0,
+      "hashLookupSpillToDiskBytes": 0,
+      "hashLookupSpilledBytes": 0,
+      "hashLookupSpilledDataStorageSize": 0,
+      "hashLookupSpilledRecords": 0,
+      "hashLookupSpills": 0,
+      "indexedLoopJoin": 0,
+      "nestedLoopJoin": 0
+     },
+     "lookupUnwind": {
+      "dynamicIndexedLoopJoin": 0,
+      "hashLookup": 0,
+      "indexedLoopJoin": 0,
+      "localCollscan": 0,
+      "localComplex": 0,
+      "localIxscanFetch": 0,
+      "nestedLoopJoin": 0
+     },
+     "maxEstimatedScanBytes": {
+      "dryRunWouldReject": 0,
+      "rejected": 0,
+      "rejectedAndOverridden": 0
+     },
+     "multiPlanner": {
+      "allPlansHitMemoryLimit": 0,
+      "choseWinningPlan": 0,
+      "classicCount": 0,
+      "classicMicros": 0,
+      "classicNumPlans": 0,
+      "classicWorks": 0,
+      "switchedToBackupPlan": 0,
+      "histograms": {
+       "classicMicros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ],
+       "classicNumPlans": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 2,
+         "count": 0
+        },
+        {
+         "lowerBound": 4,
+         "count": 0
+        },
+        {
+         "lowerBound": 8,
+         "count": 0
+        },
+        {
+         "lowerBound": 16,
+         "count": 0
+        },
+        {
+         "lowerBound": 32,
+         "count": 0
+        }
+       ],
+       "classicWorks": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 128,
+         "count": 0
+        },
+        {
+         "lowerBound": 256,
+         "count": 0
+        },
+        {
+         "lowerBound": 512,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 2048,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 8192,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 32768,
+         "count": 0
+        }
+       ]
+      },
+      "rateLimiter": {
+       "allowed": 0,
+       "delayed": 0,
+       "released": 0
+      },
+      "stoppingCondition": {
+       "hitEof": 0,
+       "hitResultsLimit": 0,
+       "hitWorksLimit": 0
+      }
+     },
+     "planCache": {
+      "totalQueryShapes": 0,
+      "totalSizeEstimateBytes": 0,
+      "classic": {
+       "cached_plans_evicted": 0,
+       "hits": 0,
+       "inactive_cached_plans_replaced": 0,
+       "misses": 35771,
+       "replanned": 0,
+       "replanned_plan_is_cached_plan": 0,
+       "skipped": 18624
+      },
+      "join": {
+       "hits": 0,
+       "invalidations": 0,
+       "misses": 0
+      },
+      "sbe": {
+       "cached_plans_evicted": 0,
+       "hits": 0,
+       "inactive_cached_plans_replaced": 0,
+       "misses": 0,
+       "replanned": 0,
+       "replanned_plan_is_cached_plan": 0,
+       "skipped": 0
+      }
+     },
+     "planning": {
+      "invocationCount": 36169,
+      "fastPath": {
+       "express": 1664,
+       "idHack": 26629
+      }
+     },
+     "queryFramework": {
+      "aggregate": {
+       "classicHybrid": 3,
+       "classicOnly": 2817,
+       "sbeHybrid": 0,
+       "sbeOnly": 0
+      },
+      "find": {
+       "classic": 42972,
+       "sbe": 0
+      }
+     },
+     "setWindowFields": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "sort": {
+      "spillToDisk": 0,
+      "spillToDiskBytes": 0,
+      "totalBytesSorted": 901638,
+      "totalKeysSorted": 514
+     },
+     "spilling": {
+      "fileSpilledStorageSize": 0
+     },
+     "subPlanner": {
+      "classicChoseWinningPlan": 0
+     },
+     "textOr": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     }
+    },
+    "queryExecutor": {
+     "scanned": 2554207,
+     "scannedObjects": 1612756,
+     "collectionScans": {
+      "nonTailable": 429,
+      "total": 429
+     }
+    },
+    "queryStats": {
+     "maxSizeBytes": 81445437,
+     "numEntries": 61,
+     "numEvicted": 0,
+     "numHmacApplicationErrors": 0,
+     "numPartitions": 5,
+     "numQueryStatsStoreWriteErrors": 0,
+     "numRateLimitedRequests": 73713,
+     "numTopKOptimizations": 14,
+     "queryStatsStoreSizeEstimateBytes": 161198
+    },
+    "timeseries": {
+     "directDeleted": 0,
+     "directUpdated": 0,
+     "measurementDelete": 0,
+     "measurementUpdate": 0,
+     "metaDelete": 0,
+     "metaUpdate": 0
+    },
+    "ttl": {
+     "deletedDocuments": 81,
+     "deletedKeys": 162,
+     "durationMicros": 15087,
+     "examinedDocuments": 81,
+     "examinedKeys": 81,
+     "invalidTTLIndexSkips": 0,
+     "lowPriorityTicketAdmissions": 0,
+     "passes": 137,
+     "queuedForTickets": 0,
+     "subPasses": 137,
+     "ticketAdmissions": 548,
+     "timeProcessingWithTicketsMicros": 25203,
+     "timeQueuedForTicketsMicros": 0
+    }
+   },
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "dbStats": {
+   "db": "app_data_3",
+   "collections": 3,
+   "views": 0,
+   "objects": 9044744,
+   "avgObjSize": 339.4841939141672,
+   "dataSize": 3070547626.0,
+   "indexes": 7,
+   "scaleFactor": 1,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "listCollections": [
+   {
+    "name": "ordini",
+    "type": "collection",
+    "options": {},
+    "info": {
+     "readOnly": false,
+     "uuid": {
+      "$binary": {
+       "base64": "N0LurcuTRQGcTgryJdfVdA==",
+       "subType": "04"
+      }
+     }
+    },
+    "idIndex": {
+     "v": 2,
+     "key": {
+      "_id": 1
+     },
+     "name": "_id_"
+    }
+   },
+   {
+    "name": "eventi",
+    "type": "collection",
+    "options": {},
+    "info": {
+     "readOnly": false,
+     "uuid": {
+      "$binary": {
+       "base64": "UkKSJUfFSD6j6qnzKPM/xA==",
+       "subType": "04"
+      }
+     }
+    },
+    "idIndex": {
+     "v": 2,
+     "key": {
+      "_id": 1
+     },
+     "name": "_id_"
+    }
+   },
+   {
+    "name": "messaggi",
+    "type": "collection",
+    "options": {},
+    "info": {
+     "readOnly": false,
+     "uuid": {
+      "$binary": {
+       "base64": "aM4uhsviTlOuGqcGc3oKeA==",
+       "subType": "04"
+      }
+     }
+    },
+    "idIndex": {
+     "v": 2,
+     "key": {
+      "_id": 1
+     },
+     "name": "_id_"
+    }
+   }
+  ],
+  "collStats": {
+   "eventi": {
+    "ns": "app_data_3.eventi",
+    "size": 738655783,
+    "count": 3165387,
+    "avgObjSize": 233,
+    "numOrphanDocs": 0,
+    "capped": false,
+    "wiredTiger": {
+     "type": "layered"
+    },
+    "nindexes": 2,
+    "indexBuilds": [],
+    "totalIndexSize": 182596550,
+    "indexSizes": {
+     "_id_": 82962054,
+     "cliente_ts": 99634496
+    },
+    "scaleFactor": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "signature": {
+      "hash": {
+       "$binary": {
+        "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+        "subType": "00"
+       }
+      },
+      "keyId": 7704230336049184770
+     }
+    },
+    "operationTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    }
+   },
+   "messaggi": {
+    "ns": "app_data_3.messaggi",
+    "size": 1539529188,
+    "count": 4524152,
+    "avgObjSize": 340,
+    "numOrphanDocs": 0,
+    "capped": false,
+    "wiredTiger": {
+     "type": "layered"
+    },
+    "nindexes": 2,
+    "indexBuilds": [],
+    "totalIndexSize": 255858066,
+    "indexSizes": {
+     "_id_": 117465771,
+     "cliente_ts": 138392295
+    },
+    "scaleFactor": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "signature": {
+      "hash": {
+       "$binary": {
+        "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+        "subType": "00"
+       }
+      },
+      "keyId": 7704230336049184770
+     }
+    },
+    "operationTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    }
+   },
+   "ordini": {
+    "ns": "app_data_3.ordini",
+    "size": 792362655,
+    "count": 1355205,
+    "avgObjSize": 584,
+    "numOrphanDocs": 0,
+    "capped": false,
+    "wiredTiger": {
+     "type": "layered"
+    },
+    "nindexes": 3,
+    "indexBuilds": [],
+    "totalIndexSize": 118772693,
+    "indexSizes": {
+     "_id_": 36241489,
+     "cliente_ts": 45691042,
+     "stato_ts": 36840162
+    },
+    "scaleFactor": 1,
+    "ok": 1.0,
+    "$clusterTime": {
+     "clusterTime": {
+      "$timestamp": {
+       "t": 1793905375,
+       "i": 2
+      }
+     },
+     "signature": {
+      "hash": {
+       "$binary": {
+        "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+        "subType": "00"
+       }
+      },
+      "keyId": 7704230336049184770
+     }
+    },
+    "operationTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    }
+   }
+  },
+  "$collStats": {
+   "eventi": [
+    {
+     "ns": "app_data_3.eventi",
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "localTime": {
+      "$date": "2026-11-05T19:02:56.039Z"
+     },
+     "latencyStats": {
+      "commands": {
+       "histogram": [
+        {
+         "micros": 16,
+         "count": 1
+        },
+        {
+         "micros": 1024,
+         "count": 5
+        }
+       ],
+       "latency": 8974,
+       "ops": 6,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "reads": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 9
+        },
+        {
+         "micros": 16,
+         "count": 12
+        },
+        {
+         "micros": 32,
+         "count": 496
+        },
+        {
+         "micros": 64,
+         "count": 207
+        },
+        {
+         "micros": 128,
+         "count": 193
+        },
+        {
+         "micros": 256,
+         "count": 19
+        },
+        {
+         "micros": 512,
+         "count": 219
+        },
+        {
+         "micros": 1024,
+         "count": 145
+        },
+        {
+         "micros": 2048,
+         "count": 17
+        },
+        {
+         "micros": 3072,
+         "count": 10
+        },
+        {
+         "micros": 4096,
+         "count": 14
+        },
+        {
+         "micros": 6144,
+         "count": 16
+        },
+        {
+         "micros": 8192,
+         "count": 34
+        },
+        {
+         "micros": 12288,
+         "count": 96
+        },
+        {
+         "micros": 16384,
+         "count": 140
+        },
+        {
+         "micros": 24576,
+         "count": 89
+        },
+        {
+         "micros": 32768,
+         "count": 100
+        },
+        {
+         "micros": 49152,
+         "count": 30
+        },
+        {
+         "micros": 65536,
+         "count": 4
+        }
+       ],
+       "latency": 13721443,
+       "ops": 1850,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "writes": {
+       "histogram": [],
+       "latency": 0,
+       "ops": 0,
+       "queryableEncryptionLatencyMicros": 0
+      }
+     },
+     "storageStats": {
+      "size": 738655783,
+      "count": 3165387,
+      "avgObjSize": 233,
+      "capped": false,
+      "wiredTiger": {
+       "type": "layered"
+      },
+      "nindexes": 2,
+      "indexBuilds": [],
+      "totalIndexSize": 182596550,
+      "indexSizes": {
+       "_id_": 82962054,
+       "cliente_ts": 99634496
+      },
+      "scaleFactor": 1
+     },
+     "count": 3165387,
+     "queryExecStats": {
+      "collectionScans": {
+       "total": 0,
+       "nonTailable": 0
+      }
+     }
+    }
+   ],
+   "messaggi": [
+    {
+     "ns": "app_data_3.messaggi",
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "localTime": {
+      "$date": "2026-11-05T19:02:56.046Z"
+     },
+     "latencyStats": {
+      "commands": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 1
+        },
+        {
+         "micros": 1024,
+         "count": 5
+        }
+       ],
+       "latency": 8502,
+       "ops": 6,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "reads": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 8
+        },
+        {
+         "micros": 16,
+         "count": 16
+        },
+        {
+         "micros": 32,
+         "count": 40
+        },
+        {
+         "micros": 64,
+         "count": 832
+        },
+        {
+         "micros": 128,
+         "count": 31
+        },
+        {
+         "micros": 256,
+         "count": 1
+        },
+        {
+         "micros": 512,
+         "count": 129
+        },
+        {
+         "micros": 1024,
+         "count": 194
+        },
+        {
+         "micros": 2048,
+         "count": 113
+        },
+        {
+         "micros": 3072,
+         "count": 84
+        },
+        {
+         "micros": 4096,
+         "count": 129
+        },
+        {
+         "micros": 6144,
+         "count": 99
+        },
+        {
+         "micros": 8192,
+         "count": 112
+        },
+        {
+         "micros": 12288,
+         "count": 45
+        },
+        {
+         "micros": 16384,
+         "count": 16
+        },
+        {
+         "micros": 24576,
+         "count": 1
+        }
+       ],
+       "latency": 4471496,
+       "ops": 1850,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "writes": {
+       "histogram": [],
+       "latency": 0,
+       "ops": 0,
+       "queryableEncryptionLatencyMicros": 0
+      }
+     },
+     "storageStats": {
+      "size": 1539529188,
+      "count": 4524152,
+      "avgObjSize": 340,
+      "capped": false,
+      "wiredTiger": {
+       "type": "layered"
+      },
+      "nindexes": 2,
+      "indexBuilds": [],
+      "totalIndexSize": 255858066,
+      "indexSizes": {
+       "_id_": 117465771,
+       "cliente_ts": 138392295
+      },
+      "scaleFactor": 1
+     },
+     "count": 4524152,
+     "queryExecStats": {
+      "collectionScans": {
+       "total": 0,
+       "nonTailable": 0
+      }
+     }
+    }
+   ],
+   "ordini": [
+    {
+     "ns": "app_data_3.ordini",
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "localTime": {
+      "$date": "2026-11-05T19:02:56.053Z"
+     },
+     "latencyStats": {
+      "commands": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 1
+        },
+        {
+         "micros": 2048,
+         "count": 5
+        }
+       ],
+       "latency": 11161,
+       "ops": 6,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "reads": {
+       "histogram": [
+        {
+         "micros": 8,
+         "count": 9
+        },
+        {
+         "micros": 16,
+         "count": 771
+        },
+        {
+         "micros": 32,
+         "count": 156
+        },
+        {
+         "micros": 64,
+         "count": 14
+        },
+        {
+         "micros": 256,
+         "count": 19
+        },
+        {
+         "micros": 512,
+         "count": 151
+        },
+        {
+         "micros": 1024,
+         "count": 485
+        },
+        {
+         "micros": 2048,
+         "count": 114
+        },
+        {
+         "micros": 3072,
+         "count": 34
+        },
+        {
+         "micros": 4096,
+         "count": 44
+        },
+        {
+         "micros": 6144,
+         "count": 40
+        },
+        {
+         "micros": 8192,
+         "count": 13
+        }
+       ],
+       "latency": 1903956,
+       "ops": 1850,
+       "queryableEncryptionLatencyMicros": 0
+      },
+      "writes": {
+       "histogram": [],
+       "latency": 0,
+       "ops": 0,
+       "queryableEncryptionLatencyMicros": 0
+      }
+     },
+     "storageStats": {
+      "size": 792362655,
+      "count": 1355205,
+      "avgObjSize": 584,
+      "capped": false,
+      "wiredTiger": {
+       "type": "layered"
+      },
+      "nindexes": 3,
+      "indexBuilds": [],
+      "totalIndexSize": 118772693,
+      "indexSizes": {
+       "_id_": 36241489,
+       "cliente_ts": 45691042,
+       "stato_ts": 36840162
+      },
+      "scaleFactor": 1
+     },
+     "count": 1355205,
+     "queryExecStats": {
+      "collectionScans": {
+       "total": 0,
+       "nonTailable": 0
+      }
+     }
+    }
+   ]
+  },
+  "$indexStats": {
+   "eventi": [
+    {
+     "name": "_id_",
+     "key": {
+      "_id": 1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_"
+     }
+    },
+    {
+     "name": "cliente_ts",
+     "key": {
+      "cliente": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 1800,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "cliente": 1,
+       "ts": -1
+      },
+      "name": "cliente_ts"
+     }
+    }
+   ],
+   "messaggi": [
+    {
+     "name": "cliente_ts",
+     "key": {
+      "cliente": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 1800,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "cliente": 1,
+       "ts": -1
+      },
+      "name": "cliente_ts"
+     }
+    },
+    {
+     "name": "_id_",
+     "key": {
+      "_id": 1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_"
+     }
+    }
+   ],
+   "ordini": [
+    {
+     "name": "cliente_ts",
+     "key": {
+      "cliente": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "cliente": 1,
+       "ts": -1
+      },
+      "name": "cliente_ts"
+     }
+    },
+    {
+     "name": "_id_",
+     "key": {
+      "_id": 1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 1800,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "_id": 1
+      },
+      "name": "_id_"
+     }
+    },
+    {
+     "name": "stato_ts",
+     "key": {
+      "stato": 1,
+      "ts": -1
+     },
+     "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net:27017",
+     "accesses": {
+      "ops": 0,
+      "since": {
+       "$date": "2026-11-05T16:45:33.178Z"
+      }
+     },
+     "spec": {
+      "v": 2,
+      "key": {
+       "stato": 1,
+       "ts": -1
+      },
+      "name": "stato_ts"
+     }
+    }
+   ]
+  },
+  "oplog_collStats": {
+   "ns": "local.oplog.rs",
+   "size": 32619644184,
+   "count": 504480,
+   "avgObjSize": 64659,
+   "numOrphanDocs": 0,
+   "capped": true,
+   "max": 0,
+   "maxSize": 16777216,
+   "wiredTiger": {
+    "type": "layered"
+   },
+   "nindexes": 0,
+   "indexBuilds": [],
+   "totalIndexSize": 0,
+   "indexSizes": {},
+   "scaleFactor": 1,
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793905375,
+      "i": 2
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "PvZqn1m0XQ0vjv7ungYNMcHoGY4=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793905375,
+     "i": 2
+    }
+   }
+  },
+  "fine": "2026-11-05T19:02:56.059696Z"
+ },
+ "eventi_driver": [
+  {
+   "client": "misure",
+   "comandi": [
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.021716Z",
+     "comando": "drop",
+     "request_id": -2027097765,
+     "operation_id": 885305180,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2590,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.022904Z",
+     "comando": "drop",
+     "request_id": -2027097765,
+     "operation_id": 885305180,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2590,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1183,
+     "errore": null
+    }
+   ],
+   "pool": [
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.021615Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.021629Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 1,
+     "motivo": null,
+     "durata_s": 1.4819000170973595e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.022931Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 1,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    }
+   ],
+   "topologia": []
+  },
+  {
+   "client": "controllo",
+   "comandi": [
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.000073Z",
+     "comando": "dbStats",
+     "request_id": 1614720828,
+     "operation_id": 1829081949,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.001424Z",
+     "comando": "dbStats",
+     "request_id": 1614720828,
+     "operation_id": 1829081949,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1345,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.001656Z",
+     "comando": "listCollections",
+     "request_id": -403814649,
+     "operation_id": -716846243,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.002664Z",
+     "comando": "listCollections",
+     "request_id": -403814649,
+     "operation_id": -716846243,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1002,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.002842Z",
+     "comando": "collStats",
+     "request_id": 1217799495,
+     "operation_id": 2145093807,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.005692Z",
+     "comando": "collStats",
+     "request_id": 1217799495,
+     "operation_id": 2145093807,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 2844,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.005883Z",
+     "comando": "collStats",
+     "request_id": 795065653,
+     "operation_id": 907848686,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.008600Z",
+     "comando": "collStats",
+     "request_id": 795065653,
+     "operation_id": 907848686,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 2711,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.008793Z",
+     "comando": "collStats",
+     "request_id": -215752745,
+     "operation_id": 743715782,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.011993Z",
+     "comando": "collStats",
+     "request_id": -215752745,
+     "operation_id": 743715782,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 3195,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.012187Z",
+     "comando": "collStats",
+     "request_id": 904372214,
+     "operation_id": -211287742,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.013856Z",
+     "comando": "collStats",
+     "request_id": 904372214,
+     "operation_id": -211287742,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1663,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.014168Z",
+     "comando": "find",
+     "request_id": 690673938,
+     "operation_id": 554716562,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.015277Z",
+     "comando": "find",
+     "request_id": 690673938,
+     "operation_id": 554716562,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1103,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.015540Z",
+     "comando": "find",
+     "request_id": -1293295463,
+     "operation_id": 1914530553,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.016563Z",
+     "comando": "find",
+     "request_id": -1293295463,
+     "operation_id": 1914530553,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1018,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.020425Z",
+     "comando": "listCollections",
+     "request_id": -1669370468,
+     "operation_id": 336219978,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.021454Z",
+     "comando": "listCollections",
+     "request_id": -1669370468,
+     "operation_id": 336219978,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1024,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.023096Z",
+     "comando": "listCollections",
+     "request_id": 544995060,
+     "operation_id": -689858611,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.024210Z",
+     "comando": "listCollections",
+     "request_id": 544995060,
+     "operation_id": -689858611,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1108,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.024485Z",
+     "comando": "ping",
+     "request_id": 913015876,
+     "operation_id": -449206987,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.025450Z",
+     "comando": "ping",
+     "request_id": 913015876,
+     "operation_id": -449206987,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 961,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.025611Z",
+     "comando": "hello",
+     "request_id": 1303455736,
+     "operation_id": 1143701283,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.026577Z",
+     "comando": "hello",
+     "request_id": 1303455736,
+     "operation_id": 1143701283,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 960,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.026746Z",
+     "comando": "replSetGetStatus",
+     "request_id": 995036607,
+     "operation_id": 1566612504,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.027772Z",
+     "comando": "replSetGetStatus",
+     "request_id": 995036607,
+     "operation_id": 1566612504,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1021,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.027943Z",
+     "comando": "hostInfo",
+     "request_id": -1106365771,
+     "operation_id": 871838985,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.028938Z",
+     "comando": "hostInfo",
+     "request_id": -1106365771,
+     "operation_id": 871838985,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 990,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.029104Z",
+     "comando": "serverStatus",
+     "request_id": -1187982136,
+     "operation_id": -1085420789,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.032115Z",
+     "comando": "serverStatus",
+     "request_id": -1187982136,
+     "operation_id": -1085420789,
+     "db": "admin",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 3005,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.032280Z",
+     "comando": "dbStats",
+     "request_id": -1181988050,
+     "operation_id": 596348228,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.033686Z",
+     "comando": "dbStats",
+     "request_id": -1181988050,
+     "operation_id": 596348228,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1400,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.033876Z",
+     "comando": "listCollections",
+     "request_id": 1424467409,
+     "operation_id": 905862137,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.034894Z",
+     "comando": "listCollections",
+     "request_id": 1424467409,
+     "operation_id": 905862137,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1012,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.035095Z",
+     "comando": "listCollections",
+     "request_id": 1761324259,
+     "operation_id": 1637010016,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.036066Z",
+     "comando": "listCollections",
+     "request_id": 1761324259,
+     "operation_id": 1637010016,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 965,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.036246Z",
+     "comando": "collStats",
+     "request_id": -1096365793,
+     "operation_id": -477320685,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.038965Z",
+     "comando": "collStats",
+     "request_id": -1096365793,
+     "operation_id": -477320685,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 2712,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.039165Z",
+     "comando": "aggregate",
+     "request_id": -31345047,
+     "operation_id": -1700180154,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.041970Z",
+     "comando": "aggregate",
+     "request_id": -31345047,
+     "operation_id": -1700180154,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 2799,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.042176Z",
+     "comando": "aggregate",
+     "request_id": 515079045,
+     "operation_id": 1433325444,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.043113Z",
+     "comando": "aggregate",
+     "request_id": 515079045,
+     "operation_id": 1433325444,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 932,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.043291Z",
+     "comando": "collStats",
+     "request_id": 1965388479,
+     "operation_id": -2143347251,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.045854Z",
+     "comando": "collStats",
+     "request_id": 1965388479,
+     "operation_id": -2143347251,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 2557,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.046039Z",
+     "comando": "aggregate",
+     "request_id": 1261249824,
+     "operation_id": 2039114280,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.048856Z",
+     "comando": "aggregate",
+     "request_id": 1261249824,
+     "operation_id": 2039114280,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 2810,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.049060Z",
+     "comando": "aggregate",
+     "request_id": -1443497086,
+     "operation_id": 611170947,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.049978Z",
+     "comando": "aggregate",
+     "request_id": -1443497086,
+     "operation_id": 611170947,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 916,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.050106Z",
+     "comando": "collStats",
+     "request_id": 811462668,
+     "operation_id": -2136429908,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.053317Z",
+     "comando": "collStats",
+     "request_id": 811462668,
+     "operation_id": -2136429908,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 3203,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.053551Z",
+     "comando": "aggregate",
+     "request_id": 509963090,
+     "operation_id": -1314503231,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.056872Z",
+     "comando": "aggregate",
+     "request_id": 509963090,
+     "operation_id": -1314503231,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 3314,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.057078Z",
+     "comando": "aggregate",
+     "request_id": -776336091,
+     "operation_id": 105824230,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.057959Z",
+     "comando": "aggregate",
+     "request_id": -776336091,
+     "operation_id": 105824230,
+     "db": "app_data_3",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 879,
+     "errore": null
+    },
+    {
+     "evento": "inizio",
+     "t": "2026-11-05T19:02:56.058104Z",
+     "comando": "collStats",
+     "request_id": 1630533650,
+     "operation_id": 1637099534,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": null,
+     "errore": null
+    },
+    {
+     "evento": "fatto",
+     "t": "2026-11-05T19:02:56.059656Z",
+     "comando": "collStats",
+     "request_id": 1630533650,
+     "operation_id": 1637099534,
+     "db": "local",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione_server": 2594,
+     "thread": "MainThread",
+     "commento": null,
+     "durata_us": 1543,
+     "errore": null
+    }
+   ],
+   "pool": [
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:55.999987Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:55.999999Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1628000720520504e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.001448Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.001548Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.001560Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1671000720525626e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.002698Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.002759Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.002770Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0577000466582831e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.005716Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.005795Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.005808Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.140000040322775e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.008628Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.008707Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.008719Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0955000107060187e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.012017Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.012102Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.012113Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0849999853235204e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.013881Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.014068Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.014081Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.2010000318696257e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.015306Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.015427Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.015440Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.2368999705358874e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.016587Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.020311Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.020327Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.5116999747988302e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.021508Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.022989Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.023001Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1183999959030189e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.024245Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.024374Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.024386Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.2118000086047687e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.025496Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.025553Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.025565Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0677999853214715e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.026603Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.026658Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.026670Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0854000720428303e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.027797Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.027853Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.027865Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0490999557077885e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.028964Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.029018Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.029030Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0521000149310566e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.032139Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.032193Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.032205Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0689000191632658e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.033711Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.033768Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.033780Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.090099976863712e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.034929Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.034991Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.035003Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1150000318593811e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.036100Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.036163Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.036175Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0647000635799486e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.038989Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.039075Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.039088Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1968999388045631e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.042001Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.042086Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.042099Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1672000255202875e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.043144Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.043205Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.043216Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0030000339611433e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.045878Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.045951Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.045963Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0648000170476735e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.048889Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.048974Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.048986Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.0908000149356667e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.049998Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.050043Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.050052Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 8.231000720115844e-06,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.053354Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.053438Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.053451Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1793999874498695e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.056904Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.056991Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.057003Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 1.1076000191678759e-05,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.057980Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "attesa_iniziata",
+     "t": "2026-11-05T19:02:56.058035Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": null,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_presa",
+     "t": "2026-11-05T19:02:56.058045Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": 8.873999831848778e-06,
+     "thread": "MainThread"
+    },
+    {
+     "evento": "connessione_resa",
+     "t": "2026-11-05T19:02:56.059680Z",
+     "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "connessione": 2,
+     "motivo": null,
+     "durata_s": null,
+     "thread": "MainThread"
+    }
+   ],
+   "topologia": []
+  }
+ ],
+ "serverStatus_ogni_30s": []
+}

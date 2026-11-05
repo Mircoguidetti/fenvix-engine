@@ -1,0 +1,91 @@
+{
+ "quando": "2026-11-05T19:02:54Z",
+ "versione": "p1-1.6.2",
+ "dbStats": {
+  "objects": 9078595,
+  "dataSize": 3082895517.0,
+  "storageSize": null,
+  "indexSize": null,
+  "totalSize": null,
+  "fsUsedSize": null,
+  "fsTotalSize": null
+ },
+ "dbStats_completo": {
+  "db": "app_data_6",
+  "collections": 3,
+  "views": 0,
+  "objects": 9078595,
+  "avgObjSize": 339.5784829040176,
+  "dataSize": 3082895517.0,
+  "indexes": 7,
+  "scaleFactor": 1,
+  "ok": 1.0,
+  "$clusterTime": {
+   "clusterTime": {
+    "$timestamp": {
+     "t": 1793905373,
+     "i": 2
+    }
+   },
+   "signature": {
+    "hash": {
+     "$binary": {
+      "base64": "bkiLvpNLrBNNcHG5iOtm5OVg7QA=",
+      "subType": "00"
+     }
+    },
+    "keyId": 7704230336049184770
+   }
+  },
+  "operationTime": {
+   "$timestamp": {
+    "t": 1793905373,
+    "i": 2
+   }
+  }
+ },
+ "collezioni": {
+  "eventi": {
+   "count": 3176006,
+   "size": 741178233,
+   "storageSize": null,
+   "totalIndexSize": 183090521,
+   "indexSizes": {
+    "_id_": 83181185,
+    "cliente_ts": 99909336
+   },
+   "avgObjSize": 233
+  },
+  "messaggi": {
+   "count": 4541345,
+   "size": 1545395409,
+   "storageSize": null,
+   "totalIndexSize": 256927315,
+   "indexSizes": {
+    "_id_": 117933696,
+    "cliente_ts": 138993619
+   },
+   "avgObjSize": 340
+  },
+  "ordini": {
+   "count": 1361244,
+   "size": 796321875,
+   "storageSize": null,
+   "totalIndexSize": 119384367,
+   "indexSizes": {
+    "_id_": 36407755,
+    "cliente_ts": 45918154,
+    "stato_ts": 37058458
+   },
+   "avgObjSize": 584
+  }
+ },
+ "oplog": {
+  "count": 504477,
+  "size": 32619643390,
+  "storageSize": null,
+  "maxSize": 16777216
+ },
+ "oplog_finestra_ore": 28.89,
+ "oplog_prima_voce": "2026-11-04T14:09:29Z"
+}

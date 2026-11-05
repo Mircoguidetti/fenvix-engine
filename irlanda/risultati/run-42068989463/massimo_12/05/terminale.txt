@@ -1,0 +1,46 @@
+===== 2026-11-05T19:02:56.489317Z prova_infinite.py giro --db app_data_4 --nuova-cartella --solo-fasi carico_massimo --file stato.json --cartella-dati dati --giro irlanda_massimo_12_05
+Giro finale 'irlanda_massimo_12_05' (versione p1-1.6.2). Clienti attivi mai letti 230, dormienti mai letti 149.
+Il piano usa 0 clienti attivi mai letti su 230 e 0 dormienti su 149 (ogni cliente in una sola fase).
+Ordine delle fasi e minuti STIMATI (pausa di 2 minuti compresa dove c'e'):
+   1. carico_massimo    15.0 min  (a  15.0)
+Totale STIMATO: circa 15 minuti (0.2 ore), piu' circa 6 se la collezione fredda e' accettata.
+[19:02:57] Dati grezzi in: /opt/irlanda/lavoro/massimo_12/05/dati/giro_finale_irlanda_massimo_12_05_20261105T190256Z
+[19:02:57] Pausa di 120 s prima della fase carico_massimo (i grafici di Atlas si separano per fase).
+[19:04:57] ===== carico_massimo (fase 1 di 1; STIMATO 15 minuti) =====
+[19:04:58]   CARICO MASSIMO letture INIZIO 19:04:58 ora del Mac: 64 thread per 3 minuti
+[19:05:28]     71,882 operazioni, ultimi 30 s 2386 al secondo
+[19:05:58]     148,799 operazioni, ultimi 30 s 2550 al secondo
+[19:06:28]     225,501 operazioni, ultimi 30 s 2546 al secondo
+[19:06:58]     302,499 operazioni, ultimi 30 s 2559 al secondo
+[19:07:28]     379,593 operazioni, ultimi 30 s 2556 al secondo
+[19:07:58]     455,794 operazioni, ultimi 30 s 2529 al secondo
+[19:07:59]   CARICO MASSIMO letture FINE 19:07:59: 2520.2 operazioni al secondo; CPU del Mac 122.5% di un core; CPU di Atlas per operazione 126.8 us, per documento 12.08 us
+[19:08:59]   CARICO MASSIMO lotti_w1 INIZIO 19:08:59 ora del Mac: 64 thread per 3 minuti
+[19:09:30]     6,625 operazioni, ultimi 30 s 219 al secondo
+[19:10:00]     13,387 operazioni, ultimi 30 s 225 al secondo
+[19:10:30]     20,031 operazioni, ultimi 30 s 221 al secondo
+[19:11:00]     26,869 operazioni, ultimi 30 s 227 al secondo
+[19:11:30]     33,605 operazioni, ultimi 30 s 224 al secondo
+[19:12:00]     40,599 operazioni, ultimi 30 s 232 al secondo
+[19:12:00]   CARICO MASSIMO lotti_w1 FINE 19:12:00: 224.7 operazioni al secondo; CPU del Mac 62.8% di un core; CPU di Atlas per operazione 15.99 us, per documento 15.99 us
+[19:13:01]   CARICO MASSIMO lotti_majority INIZIO 19:13:01 ora del Mac: 64 thread per 3 minuti
+[19:13:31]     6,245 operazioni, ultimi 30 s 206 al secondo
+[19:14:01]     13,021 operazioni, ultimi 30 s 225 al secondo
+[19:14:31]     19,825 operazioni, ultimi 30 s 225 al secondo
+[19:15:02]     26,605 operazioni, ultimi 30 s 224 al secondo
+[19:15:32]     33,315 operazioni, ultimi 30 s 223 al secondo
+[19:16:01]   CARICO MASSIMO lotti_majority FINE 19:16:01: 223.8 operazioni al secondo; CPU del Mac 64.9% di un core; CPU di Atlas per operazione 12.24 us, per documento 12.24 us
+
+=== RIASSUNTO DEL GIRO FINALE 'irlanda_massimo_12_05' (dai dati grezzi; si rifa' con: riassunto --cartella dati/giro_finale_irlanda_massimo_12_05_20261105T190256Z) ===
+=== FASE carico_massimo: 2026-11-05T19:04:57.350906Z - 2026-11-05T19:16:01.376129Z UTC letture: 2520.2 op/s, CPU Atlas 159.0% di un core, limite: probabilmente il Mac: Python usa circa un core intero;  lotti_w1: 224.7 op/s, CPU Atlas 179.8% di un core, limite: rete del Mac (37 ms per viaggio) o Atlas: NON SO quale;  lotti_majority: 223.8 op/s, CPU Atlas 136.3% di un core, limite: rete del Mac (37 ms per viaggio) o Atlas: NON SO quale
+
+Stato delle fasi:
+  carico_massimo   fatta      fase_13_carico_massimo.json 
+  fine             fatta      fase_23_fine.json 
+
+Fasi non riuscite: atlas_inizio, inizio, Q2, Q3, Q1, Q1d, Q4, Q5, spiega, condizioni, mentre_scrivi, parallelo, scritture, cancellazione, grandi_carica, grandi_lavaggio, grandi_Q2, grandi_Q1, grandi_Q3, grandi_Q4, freddo, atlas_fine. Si rifanno una per una con:  python3 prova_infinite.py giro --solo-fasi atlas_inizio,inizio,Q2,Q3,Q1,Q1d,Q4,Q5,spiega,condizioni,mentre_scrivi,parallelo,scritture,cancellazione,grandi_carica,grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4,freddo,atlas_fine
+
+=== NUMERI DERIVATI (STIMATI, solo dai dati grezzi; dettaglio in RIASSUNTO.json) ===
+  carico_massimo: CPU 130.8% di un core, us per lettura 381.93, per scrittura 21.25
+
+Cartella: /opt/irlanda/lavoro/massimo_12/05/dati/giro_finale_irlanda_massimo_12_05_20261105T190256Z (6 file, elencati con SHA-256 in INDICE.json)

@@ -1,0 +1,7423 @@
+[
+ {
+  "client": "misure",
+  "comandi": [
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:56.886253Z",
+    "comando": "saslContinue",
+    "request_id": 1649760492,
+    "operation_id": 1649760492,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:56.887001Z",
+    "comando": "saslContinue",
+    "request_id": 1649760492,
+    "operation_id": 1649760492,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 745,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:56.887187Z",
+    "comando": "ping",
+    "request_id": 701083781,
+    "operation_id": -2010682954,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:56.887942Z",
+    "comando": "ping",
+    "request_id": 701083781,
+    "operation_id": -2010682954,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 752,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:07:58.797669Z",
+    "comando": "drop",
+    "request_id": -471170945,
+    "operation_id": 981447447,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:07:58.798787Z",
+    "comando": "drop",
+    "request_id": -471170945,
+    "operation_id": 981447447,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1113,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:11:59.859872Z",
+    "comando": "drop",
+    "request_id": 1610184473,
+    "operation_id": 2060214124,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:11:59.860993Z",
+    "comando": "drop",
+    "request_id": 1610184473,
+    "operation_id": 2060214124,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1120,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.381397Z",
+    "comando": "drop",
+    "request_id": -1499003992,
+    "operation_id": 1476711656,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.382492Z",
+    "comando": "drop",
+    "request_id": -1499003992,
+    "operation_id": 1476711656,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2619,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1046,
+    "errore": null
+   }
+  ],
+  "pool": [
+   {
+    "evento": "pool_creato",
+    "t": "2026-11-05T19:02:56.859312Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "pool_creato",
+    "t": "2026-11-05T19:02:56.859917Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "pool_pronto",
+    "t": "2026-11-05T19:02:56.870291Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "pymongo_server_monitor_thread"
+   },
+   {
+    "evento": "pool_pronto",
+    "t": "2026-11-05T19:02:56.870889Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "pymongo_server_monitor_thread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:02:56.871271Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_aperta",
+    "t": "2026-11-05T19:02:56.871299Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_pronta",
+    "t": "2026-11-05T19:02:56.887024Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 0.006498307000583736,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:02:56.887042Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 0.01577403100054653,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:02:56.887965Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:07:58.797527Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:07:58.797563Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 3.528000070218695e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:07:58.798816Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:11:59.859735Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:11:59.859769Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 3.255299998272676e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:11:59.861017Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.381243Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.381280Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 3.608800034271553e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.382525Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   }
+  ],
+  "topologia": [
+   {
+    "evento": "topologia_aperta",
+    "t": "2026-11-05T19:02:56.858893Z",
+    "server": null,
+    "dettagli": null
+   },
+   {
+    "evento": "topologia_cambiata",
+    "t": "2026-11-05T19:02:56.858904Z",
+    "server": null,
+    "dettagli": {
+     "tipo": "ReplicaSetNoPrimary",
+     "server": {
+      "cluster0-shard-00-02.7lvmgr.mongodb.net:27017": {
+       "tipo": "Unknown",
+       "rtt_ms": null,
+       "errore": null
+      },
+      "cluster0-shard-00-00.7lvmgr.mongodb.net:27017": {
+       "tipo": "Unknown",
+       "rtt_ms": null,
+       "errore": null
+      }
+     }
+    }
+   },
+   {
+    "evento": "server_aperto",
+    "t": "2026-11-05T19:02:56.858930Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": null
+   },
+   {
+    "evento": "server_aperto",
+    "t": "2026-11-05T19:02:56.858934Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": null
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:02:56.870227Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 1.013773000522633,
+     "in_attesa": false
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:02:56.870780Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 1.1772660000133328,
+     "in_attesa": false
+    }
+   },
+   {
+    "evento": "server_cambiato",
+    "t": "2026-11-05T19:02:57.859153Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "prima": {
+      "tipo": "Unknown",
+      "rtt_ms": null,
+      "errore": null
+     },
+     "dopo": {
+      "tipo": "RSSecondary",
+      "rtt_ms": 1.013773000522633,
+      "errore": null
+     }
+    }
+   },
+   {
+    "evento": "topologia_cambiata",
+    "t": "2026-11-05T19:02:57.859179Z",
+    "server": null,
+    "dettagli": {
+     "tipo": "ReplicaSetNoPrimary",
+     "server": {
+      "cluster0-shard-00-02.7lvmgr.mongodb.net:27017": {
+       "tipo": "RSSecondary",
+       "rtt_ms": 1.013773000522633,
+       "errore": null
+      },
+      "cluster0-shard-00-00.7lvmgr.mongodb.net:27017": {
+       "tipo": "Unknown",
+       "rtt_ms": null,
+       "errore": null
+      }
+     }
+    }
+   },
+   {
+    "evento": "server_cambiato",
+    "t": "2026-11-05T19:02:57.859196Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "prima": {
+      "tipo": "Unknown",
+      "rtt_ms": null,
+      "errore": null
+     },
+     "dopo": {
+      "tipo": "RSPrimary",
+      "rtt_ms": 1.1772660000133328,
+      "errore": null
+     }
+    }
+   },
+   {
+    "evento": "topologia_cambiata",
+    "t": "2026-11-05T19:02:57.859202Z",
+    "server": null,
+    "dettagli": {
+     "tipo": "ReplicaSetWithPrimary",
+     "server": {
+      "cluster0-shard-00-02.7lvmgr.mongodb.net:27017": {
+       "tipo": "RSSecondary",
+       "rtt_ms": 1.013773000522633,
+       "errore": null
+      },
+      "cluster0-shard-00-00.7lvmgr.mongodb.net:27017": {
+       "tipo": "RSPrimary",
+       "rtt_ms": 1.1772660000133328,
+       "errore": null
+      }
+     }
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:06.877301Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10005.89259500066,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:06.913702Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10043.080518000352,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:16.887077Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.593380999831,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:16.963697Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.890239999513,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:26.897123Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.897570000248,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:27.013715Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.916613999812,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:36.907212Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.946217000106,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:37.063598Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.746972000321,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:46.917217Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.850298999481,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:47.113513Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.776146000113,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:56.927269Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.909983000398,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:57.163578Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.918566000088,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:06.937210Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.797330000765,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:07.213493Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.735298999622,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:16.947222Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.865664000245,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:17.263568Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.902941000255,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:26.957200Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.831568000664,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:27.313736Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.003852000373,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:36.967225Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.883857000204,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:37.363576Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.67959700025,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:46.977234Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.865592000097,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:47.413515Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.759272000301,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:56.987377Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.996894000324,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:57.463558Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.874016000103,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:07.006857Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10019.300665000628,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:07.523428Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10059.711441999752,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:17.035393Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10028.38625699951,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:17.587755Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10064.149041999372,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:27.022345Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9986.77718900035,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:27.629664Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10041.755931000807,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:37.030387Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10007.807599000444,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:37.672534Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10042.72136399959,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:47.059495Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10028.921565999553,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:47.728724Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10056.042367999908,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:57.056761Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9997.109432999423,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:57.763445Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10034.575805000713,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:07.074284Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10017.354305000481,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:07.829823Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10066.22685900038,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:17.080895Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10006.453973000134,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:17.864810Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10034.800155000084,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:27.089823Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.78623600056,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:27.920564Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10055.601561000003,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:37.093865Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.893353999956,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:37.968138Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10047.410561000106,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:47.100001Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10005.963710999822,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:48.021863Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10053.573064000375,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:57.114210Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10013.990507000017,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:58.084443Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10062.435030000415,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:07.135893Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10021.528719000344,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:08.118203Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10033.597445999476,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:17.132304Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9996.255063000717,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:18.197036Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10078.684709999834,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:27.142087Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.620529999665,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:28.218423Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10021.23750300052,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:37.165146Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10022.904292000021,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:38.276813Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10058.222914999533,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:47.177919Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10012.619058000382,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:48.325560Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10048.592221000035,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:57.182393Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10004.326225999648,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:58.363506Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10037.773880000714,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:07.177305Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9994.752018000327,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:08.413589Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.915628000235,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:17.187330Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.838726999988,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:18.463638Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.88897399926,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:27.197365Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.823897000388,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:28.513804Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.001771999632,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:37.197649Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10000.083062000158,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:38.563669Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.700006999956,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:47.207697Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.874486000626,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:48.613733Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.899755999832,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:57.217436Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.563542999786,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:58.663608Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.71992099945,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:07.234267Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10016.610839999885,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:08.714928Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10051.176762000068,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:17.237515Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.05589599975,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:18.763769Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10048.687974000131,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:27.254680Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10017.016103999595,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:28.813524Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.61116800041,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:37.257390Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10002.51511299939,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:38.866900Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10053.229705000376,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:47.267298Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.723264999593,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:48.913781Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10046.73860299954,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:57.308497Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10041.007728000295,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:58.966087Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10052.168364999488,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:07.289680Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9981.01559099996,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:09.021284Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10055.043450000085,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:17.303178Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10013.335358999939,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:19.075605Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10054.152764000719,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:27.307091Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.769711999666,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:29.113524Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10037.780728000143,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:37.318418Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10011.163572000441,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:39.181479Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10067.796737999743,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:47.343814Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10025.194244000886,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:49.219883Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10038.250665000305,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:57.338613Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9994.631603000016,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:59.266938Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10046.924574000514,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:07.347622Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.834705999107,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:09.317891Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.808063000659,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:17.367430Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10019.6304960009,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:19.365332Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10047.311076999904,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:27.367135Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9999.513627999477,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:29.423492Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10057.996490999358,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:37.403684Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10036.391352001374,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:39.473049Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.404921999667,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:47.394569Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9990.703952998956,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:49.514052Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10040.87287600123,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:57.397469Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10002.735482999924,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:59.563745Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.552211001355,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:07.407228Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.602946000086,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:09.613721Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.816800999906,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:17.417251Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.841551000136,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:19.663571Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.697974000082,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:27.427256Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.817871999985,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:29.713768Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.048914999934,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:37.437378Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.93224299964,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:39.763728Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.802835999799,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:47.438152Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10000.565237998671,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:49.813594Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.703720000252,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:57.447564Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.2371740011,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:59.863745Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.984335999397,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:07.491505Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10043.735653000113,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:09.913741Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.816110999018,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:17.484126Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9992.461227000604,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:19.963720Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.82831199959,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:27.487197Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10002.934860000096,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:30.071753Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10107.886583000436,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:37.498032Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10010.694852999222,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:40.063447Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9991.53654499969,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:47.518830Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10020.645631000662,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:50.149214Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10085.596836999684,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:57.525155Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10006.181982000271,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:00.164595Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10015.239157999531,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:07.537574Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10012.276878000193,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:10.213727Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.002923999069,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:17.549246Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10011.5147230008,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:20.266746Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10052.894012998877,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:27.560993Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10011.559971000679,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:30.315317Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10048.412361000373,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:37.578679Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10017.509256998892,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:40.363712Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10048.241325001072,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:47.600796Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10021.973802999128,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:50.427654Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10063.785354999709,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:57.628270Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10027.32889699837,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:00.463679Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10035.86309000093,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:07.683650Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10055.209156000274,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:10.514993Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10051.165976999982,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:17.610260Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9926.420157000393,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:20.647238Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10132.052523000311,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:27.617568Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10007.13310700121,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:30.629079Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9981.681618000948,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:37.656579Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10038.859270000103,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:40.687426Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10058.214108999891,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:47.638008Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9981.266103999587,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:50.718120Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10030.531336999047,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:57.648993Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10010.820710998814,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:16:00.764635Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10046.367287999601,
+     "in_attesa": true
+    }
+   }
+  ]
+ },
+ {
+  "client": "controllo",
+  "comandi": [
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:57.005905Z",
+    "comando": "saslContinue",
+    "request_id": 2044897763,
+    "operation_id": 2044897763,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2624,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:57.006655Z",
+    "comando": "saslContinue",
+    "request_id": 2044897763,
+    "operation_id": 2044897763,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2624,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 751,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:57.006841Z",
+    "comando": "ping",
+    "request_id": 316037584,
+    "operation_id": 706286277,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2624,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:57.007573Z",
+    "comando": "ping",
+    "request_id": 316037584,
+    "operation_id": 706286277,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2624,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 730,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:57.011480Z",
+    "comando": "serverStatus",
+    "request_id": 1708124350,
+    "operation_id": -1935825910,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2624,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:57.014672Z",
+    "comando": "serverStatus",
+    "request_id": 1708124350,
+    "operation_id": -1935825910,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2624,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 3207,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:57.169593Z",
+    "comando": "saslContinue",
+    "request_id": 1540383426,
+    "operation_id": 1540383426,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:57.170603Z",
+    "comando": "saslContinue",
+    "request_id": 1540383426,
+    "operation_id": 1540383426,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1008,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:02:57.170777Z",
+    "comando": "ping",
+    "request_id": 1924736847,
+    "operation_id": -2023245042,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:02:57.171808Z",
+    "comando": "ping",
+    "request_id": 1924736847,
+    "operation_id": -2023245042,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1024,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:03:27.015139Z",
+    "comando": "serverStatus",
+    "request_id": -814392218,
+    "operation_id": -1295041358,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:03:27.019556Z",
+    "comando": "serverStatus",
+    "request_id": -814392218,
+    "operation_id": -1295041358,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 4413,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:03:57.020040Z",
+    "comando": "serverStatus",
+    "request_id": -330529595,
+    "operation_id": -746860223,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:03:57.023164Z",
+    "comando": "serverStatus",
+    "request_id": -330529595,
+    "operation_id": -746860223,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 3122,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:27.023627Z",
+    "comando": "serverStatus",
+    "request_id": -523272721,
+    "operation_id": 646543541,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:27.026790Z",
+    "comando": "serverStatus",
+    "request_id": -523272721,
+    "operation_id": 646543541,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 3162,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.027255Z",
+    "comando": "serverStatus",
+    "request_id": -1644372808,
+    "operation_id": 1581013402,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.030416Z",
+    "comando": "serverStatus",
+    "request_id": -1644372808,
+    "operation_id": 1581013402,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 3157,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.172443Z",
+    "comando": "ping",
+    "request_id": 476994619,
+    "operation_id": -479007208,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.173363Z",
+    "comando": "ping",
+    "request_id": 476994619,
+    "operation_id": -479007208,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 916,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.173535Z",
+    "comando": "hello",
+    "request_id": 805750846,
+    "operation_id": 1602052967,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.174316Z",
+    "comando": "hello",
+    "request_id": 805750846,
+    "operation_id": 1602052967,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 776,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.174495Z",
+    "comando": "replSetGetStatus",
+    "request_id": -712114045,
+    "operation_id": -1615575321,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.175492Z",
+    "comando": "replSetGetStatus",
+    "request_id": -712114045,
+    "operation_id": -1615575321,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 992,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.175651Z",
+    "comando": "hostInfo",
+    "request_id": 253794307,
+    "operation_id": 1675509970,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.176399Z",
+    "comando": "hostInfo",
+    "request_id": 253794307,
+    "operation_id": 1675509970,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 747,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.176524Z",
+    "comando": "serverStatus",
+    "request_id": 598880020,
+    "operation_id": -1385859134,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.179433Z",
+    "comando": "serverStatus",
+    "request_id": 598880020,
+    "operation_id": -1385859134,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 2904,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.179587Z",
+    "comando": "dbStats",
+    "request_id": 1033230258,
+    "operation_id": -2133668898,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.180760Z",
+    "comando": "dbStats",
+    "request_id": 1033230258,
+    "operation_id": -2133668898,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1168,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.181054Z",
+    "comando": "listCollections",
+    "request_id": 1119967542,
+    "operation_id": -785405723,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.185582Z",
+    "comando": "listCollections",
+    "request_id": 1119967542,
+    "operation_id": -785405723,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 4523,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.185876Z",
+    "comando": "listCollections",
+    "request_id": 736278701,
+    "operation_id": 1548884047,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.186829Z",
+    "comando": "listCollections",
+    "request_id": 736278701,
+    "operation_id": 1548884047,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 951,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.187004Z",
+    "comando": "collStats",
+    "request_id": 1016143103,
+    "operation_id": -1559038567,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.193825Z",
+    "comando": "collStats",
+    "request_id": 1016143103,
+    "operation_id": -1559038567,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 6807,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.194067Z",
+    "comando": "aggregate",
+    "request_id": 789377009,
+    "operation_id": 2114668992,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.203322Z",
+    "comando": "aggregate",
+    "request_id": 789377009,
+    "operation_id": 2114668992,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 9249,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.203616Z",
+    "comando": "aggregate",
+    "request_id": -672253889,
+    "operation_id": -232061432,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.208047Z",
+    "comando": "aggregate",
+    "request_id": -672253889,
+    "operation_id": -232061432,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 4424,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.208263Z",
+    "comando": "collStats",
+    "request_id": 1312450709,
+    "operation_id": -933920572,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.218004Z",
+    "comando": "collStats",
+    "request_id": 1312450709,
+    "operation_id": -933920572,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 9735,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.218247Z",
+    "comando": "aggregate",
+    "request_id": -318117141,
+    "operation_id": -1739364707,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.234619Z",
+    "comando": "aggregate",
+    "request_id": -318117141,
+    "operation_id": -1739364707,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 16365,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.234866Z",
+    "comando": "aggregate",
+    "request_id": -1112873017,
+    "operation_id": -1647939557,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.242585Z",
+    "comando": "aggregate",
+    "request_id": -1112873017,
+    "operation_id": -1647939557,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 7709,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.242772Z",
+    "comando": "collStats",
+    "request_id": -710191299,
+    "operation_id": 88652106,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.253536Z",
+    "comando": "collStats",
+    "request_id": -710191299,
+    "operation_id": 88652106,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 10759,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.253765Z",
+    "comando": "aggregate",
+    "request_id": -2067855964,
+    "operation_id": 1639167998,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.271307Z",
+    "comando": "aggregate",
+    "request_id": -2067855964,
+    "operation_id": 1639167998,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 17543,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.271522Z",
+    "comando": "aggregate",
+    "request_id": 1864037147,
+    "operation_id": -387875560,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.290397Z",
+    "comando": "aggregate",
+    "request_id": 1864037147,
+    "operation_id": -387875560,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 18868,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.290612Z",
+    "comando": "collStats",
+    "request_id": -1557483539,
+    "operation_id": -1667321143,
+    "db": "local",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.293691Z",
+    "comando": "collStats",
+    "request_id": -1557483539,
+    "operation_id": -1667321143,
+    "db": "local",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3076,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:04:57.897537Z",
+    "comando": "serverStatus",
+    "request_id": -516532804,
+    "operation_id": -763440723,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:04:57.901127Z",
+    "comando": "serverStatus",
+    "request_id": -516532804,
+    "operation_id": -763440723,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3588,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:05:27.044978Z",
+    "comando": "serverStatus",
+    "request_id": -326160007,
+    "operation_id": -100642174,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:05:27.060444Z",
+    "comando": "serverStatus",
+    "request_id": -326160007,
+    "operation_id": -100642174,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 15463,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:05:57.064041Z",
+    "comando": "serverStatus",
+    "request_id": -877610939,
+    "operation_id": 1669901649,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:05:57.118765Z",
+    "comando": "serverStatus",
+    "request_id": -877610939,
+    "operation_id": 1669901649,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 54722,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:06:27.123620Z",
+    "comando": "serverStatus",
+    "request_id": 524367172,
+    "operation_id": 1349593137,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:06:27.160033Z",
+    "comando": "serverStatus",
+    "request_id": 524367172,
+    "operation_id": 1349593137,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 36406,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:06:57.164918Z",
+    "comando": "serverStatus",
+    "request_id": 1180285542,
+    "operation_id": -2064220166,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:06:57.176280Z",
+    "comando": "serverStatus",
+    "request_id": 1180285542,
+    "operation_id": -2064220166,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 11362,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:07:27.180070Z",
+    "comando": "serverStatus",
+    "request_id": -1430780415,
+    "operation_id": -516657537,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:07:27.199009Z",
+    "comando": "serverStatus",
+    "request_id": -1430780415,
+    "operation_id": -516657537,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 18928,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:07:57.204590Z",
+    "comando": "serverStatus",
+    "request_id": -376243575,
+    "operation_id": 499294072,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:07:57.230900Z",
+    "comando": "serverStatus",
+    "request_id": -376243575,
+    "operation_id": 499294072,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 26310,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:07:58.778766Z",
+    "comando": "serverStatus",
+    "request_id": -1502211246,
+    "operation_id": -1544540143,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:07:58.782141Z",
+    "comando": "serverStatus",
+    "request_id": -1502211246,
+    "operation_id": -1544540143,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3371,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:08:27.231486Z",
+    "comando": "serverStatus",
+    "request_id": -538280061,
+    "operation_id": -989630604,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:08:27.236105Z",
+    "comando": "serverStatus",
+    "request_id": -538280061,
+    "operation_id": -989630604,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 4634,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:08:57.236640Z",
+    "comando": "serverStatus",
+    "request_id": -102537766,
+    "operation_id": -161489439,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:08:57.239993Z",
+    "comando": "serverStatus",
+    "request_id": -102537766,
+    "operation_id": -161489439,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 3349,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:08:59.388806Z",
+    "comando": "serverStatus",
+    "request_id": 1260380298,
+    "operation_id": -403690243,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:08:59.391921Z",
+    "comando": "serverStatus",
+    "request_id": 1260380298,
+    "operation_id": -403690243,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3110,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:09:27.243110Z",
+    "comando": "serverStatus",
+    "request_id": 427601706,
+    "operation_id": -1779079355,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:09:27.463481Z",
+    "comando": "serverStatus",
+    "request_id": 427601706,
+    "operation_id": -1779079355,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 220351,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:09:57.463878Z",
+    "comando": "serverStatus",
+    "request_id": -1199145199,
+    "operation_id": -34098423,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:09:57.800678Z",
+    "comando": "serverStatus",
+    "request_id": -1199145199,
+    "operation_id": -34098423,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 336796,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:10:27.801102Z",
+    "comando": "serverStatus",
+    "request_id": 266428908,
+    "operation_id": 1545707465,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:10:28.247505Z",
+    "comando": "serverStatus",
+    "request_id": 266428908,
+    "operation_id": 1545707465,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 446396,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:10:58.250364Z",
+    "comando": "serverStatus",
+    "request_id": -91694779,
+    "operation_id": -768359430,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:10:58.599422Z",
+    "comando": "serverStatus",
+    "request_id": -91694779,
+    "operation_id": -768359430,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 349052,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:11:28.600606Z",
+    "comando": "serverStatus",
+    "request_id": 1515039957,
+    "operation_id": 1288871156,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:11:28.971643Z",
+    "comando": "serverStatus",
+    "request_id": 1515039957,
+    "operation_id": 1288871156,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 371029,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:11:58.977029Z",
+    "comando": "serverStatus",
+    "request_id": 933399831,
+    "operation_id": 218868372,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:11:59.113319Z",
+    "comando": "serverStatus",
+    "request_id": 933399831,
+    "operation_id": 218868372,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 136284,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:11:59.833272Z",
+    "comando": "serverStatus",
+    "request_id": 1233542120,
+    "operation_id": -1051322360,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:11:59.836590Z",
+    "comando": "serverStatus",
+    "request_id": 1233542120,
+    "operation_id": -1051322360,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3318,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:12:29.113862Z",
+    "comando": "serverStatus",
+    "request_id": 1958599915,
+    "operation_id": -125734582,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:12:29.117252Z",
+    "comando": "serverStatus",
+    "request_id": 1958599915,
+    "operation_id": -125734582,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 3388,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:12:59.117806Z",
+    "comando": "serverStatus",
+    "request_id": 861476958,
+    "operation_id": -1053713307,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:12:59.121970Z",
+    "comando": "serverStatus",
+    "request_id": 861476958,
+    "operation_id": -1053713307,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 4159,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:13:00.398054Z",
+    "comando": "serverStatus",
+    "request_id": -1098046474,
+    "operation_id": -1538570675,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:13:00.402203Z",
+    "comando": "serverStatus",
+    "request_id": -1098046474,
+    "operation_id": -1538570675,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 4144,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:13:29.122385Z",
+    "comando": "serverStatus",
+    "request_id": -1829579615,
+    "operation_id": -1287638464,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:13:29.131510Z",
+    "comando": "serverStatus",
+    "request_id": -1829579615,
+    "operation_id": -1287638464,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 9120,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:13:59.132076Z",
+    "comando": "serverStatus",
+    "request_id": 699799513,
+    "operation_id": -1971479582,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:13:59.141093Z",
+    "comando": "serverStatus",
+    "request_id": 699799513,
+    "operation_id": -1971479582,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 9011,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:14:29.141564Z",
+    "comando": "serverStatus",
+    "request_id": 162988209,
+    "operation_id": 1763426803,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:14:29.155419Z",
+    "comando": "serverStatus",
+    "request_id": 162988209,
+    "operation_id": 1763426803,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 13842,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:14:59.156027Z",
+    "comando": "serverStatus",
+    "request_id": 1554260760,
+    "operation_id": 400428278,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:14:59.164897Z",
+    "comando": "serverStatus",
+    "request_id": 1554260760,
+    "operation_id": 400428278,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 8862,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:15:29.173883Z",
+    "comando": "serverStatus",
+    "request_id": 851123742,
+    "operation_id": 788644273,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:15:29.185777Z",
+    "comando": "serverStatus",
+    "request_id": 851123742,
+    "operation_id": 788644273,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 11886,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:15:59.186168Z",
+    "comando": "serverStatus",
+    "request_id": -337787814,
+    "operation_id": -1925173587,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:15:59.198678Z",
+    "comando": "serverStatus",
+    "request_id": -337787814,
+    "operation_id": -1925173587,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "serverStatus",
+    "commento": null,
+    "durata_us": 12501,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.336819Z",
+    "comando": "serverStatus",
+    "request_id": 861127598,
+    "operation_id": 416378113,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.340745Z",
+    "comando": "serverStatus",
+    "request_id": 861127598,
+    "operation_id": 416378113,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3911,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.382729Z",
+    "comando": "ping",
+    "request_id": -78788441,
+    "operation_id": -454028813,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.383498Z",
+    "comando": "ping",
+    "request_id": -78788441,
+    "operation_id": -454028813,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 765,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.383596Z",
+    "comando": "hello",
+    "request_id": 670752506,
+    "operation_id": 1473643294,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.384406Z",
+    "comando": "hello",
+    "request_id": 670752506,
+    "operation_id": 1473643294,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 801,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.384595Z",
+    "comando": "replSetGetStatus",
+    "request_id": 709146683,
+    "operation_id": -623983904,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.385448Z",
+    "comando": "replSetGetStatus",
+    "request_id": 709146683,
+    "operation_id": -623983904,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 850,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.385581Z",
+    "comando": "hostInfo",
+    "request_id": 804201048,
+    "operation_id": -1373214188,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.386330Z",
+    "comando": "hostInfo",
+    "request_id": 804201048,
+    "operation_id": -1373214188,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 746,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.386425Z",
+    "comando": "serverStatus",
+    "request_id": 2138941886,
+    "operation_id": 2096430280,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.389066Z",
+    "comando": "serverStatus",
+    "request_id": 2138941886,
+    "operation_id": 2096430280,
+    "db": "admin",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 2633,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.389230Z",
+    "comando": "dbStats",
+    "request_id": 932570240,
+    "operation_id": 916661325,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.390436Z",
+    "comando": "dbStats",
+    "request_id": 932570240,
+    "operation_id": 916661325,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1199,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.390654Z",
+    "comando": "listCollections",
+    "request_id": 1057093155,
+    "operation_id": 1153365371,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.391588Z",
+    "comando": "listCollections",
+    "request_id": 1057093155,
+    "operation_id": 1153365371,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 929,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.391779Z",
+    "comando": "listCollections",
+    "request_id": 2108952232,
+    "operation_id": 634398161,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.392798Z",
+    "comando": "listCollections",
+    "request_id": 2108952232,
+    "operation_id": 634398161,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1011,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.392985Z",
+    "comando": "collStats",
+    "request_id": 10875292,
+    "operation_id": 909046999,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.395753Z",
+    "comando": "collStats",
+    "request_id": 10875292,
+    "operation_id": 909046999,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 2762,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.395957Z",
+    "comando": "aggregate",
+    "request_id": -1060016805,
+    "operation_id": -1003924760,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.398803Z",
+    "comando": "aggregate",
+    "request_id": -1060016805,
+    "operation_id": -1003924760,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 2840,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.399004Z",
+    "comando": "aggregate",
+    "request_id": 958816390,
+    "operation_id": -1908313003,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.400087Z",
+    "comando": "aggregate",
+    "request_id": 958816390,
+    "operation_id": -1908313003,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1076,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.400269Z",
+    "comando": "collStats",
+    "request_id": 507254220,
+    "operation_id": -13021997,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.402974Z",
+    "comando": "collStats",
+    "request_id": 507254220,
+    "operation_id": -13021997,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 2698,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.403165Z",
+    "comando": "aggregate",
+    "request_id": 674242191,
+    "operation_id": -498116307,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.405860Z",
+    "comando": "aggregate",
+    "request_id": 674242191,
+    "operation_id": -498116307,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 2688,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.406066Z",
+    "comando": "aggregate",
+    "request_id": -1989005823,
+    "operation_id": -1622811376,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.407124Z",
+    "comando": "aggregate",
+    "request_id": -1989005823,
+    "operation_id": -1622811376,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1050,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.407305Z",
+    "comando": "collStats",
+    "request_id": -1621985388,
+    "operation_id": 1625037733,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.410522Z",
+    "comando": "collStats",
+    "request_id": -1621985388,
+    "operation_id": 1625037733,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3210,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.410705Z",
+    "comando": "aggregate",
+    "request_id": -1202404409,
+    "operation_id": -32018203,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.413888Z",
+    "comando": "aggregate",
+    "request_id": -1202404409,
+    "operation_id": -32018203,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 3176,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.414089Z",
+    "comando": "aggregate",
+    "request_id": -1355741457,
+    "operation_id": 250057609,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.415042Z",
+    "comando": "aggregate",
+    "request_id": -1355741457,
+    "operation_id": 250057609,
+    "db": "app_data_4",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 946,
+    "errore": null
+   },
+   {
+    "evento": "inizio",
+    "t": "2026-11-05T19:16:01.415233Z",
+    "comando": "collStats",
+    "request_id": -2029721818,
+    "operation_id": 324147269,
+    "db": "local",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": null,
+    "errore": null
+   },
+   {
+    "evento": "fatto",
+    "t": "2026-11-05T19:16:01.416644Z",
+    "comando": "collStats",
+    "request_id": -2029721818,
+    "operation_id": 324147269,
+    "db": "local",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione_server": 2628,
+    "thread": "MainThread",
+    "commento": null,
+    "durata_us": 1404,
+    "errore": null
+   }
+  ],
+  "pool": [
+   {
+    "evento": "pool_creato",
+    "t": "2026-11-05T19:02:56.904093Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "pool_creato",
+    "t": "2026-11-05T19:02:56.904593Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "pool_pronto",
+    "t": "2026-11-05T19:02:56.914595Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "pymongo_server_monitor_thread"
+   },
+   {
+    "evento": "pool_pronto",
+    "t": "2026-11-05T19:02:56.918983Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "pymongo_server_monitor_thread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:02:56.919129Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_aperta",
+    "t": "2026-11-05T19:02:56.919154Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_pronta",
+    "t": "2026-11-05T19:02:57.006677Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 0.0054236330006460776,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:02:57.006698Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 0.08757186799994088,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:02:57.007597Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:02:57.011100Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:02:57.011121Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": 2.014399979088921e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:02:57.011270Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_aperta",
+    "t": "2026-11-05T19:02:57.011284Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:02:57.014701Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 1,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_pronta",
+    "t": "2026-11-05T19:02:57.170634Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 0.0023084270005711005,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:02:57.170655Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 0.15938467500018305,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:02:57.171840Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:03:27.014961Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:03:27.014998Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.463499979261542e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:03:27.019586Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:03:57.019864Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:03:57.019902Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.694200040627038e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:03:57.023191Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:27.023449Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:27.023501Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.948500009049894e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:27.026819Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.027077Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.027119Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.055399949720595e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.030445Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.172290Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.172320Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 2.9427999834297225e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.173394Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.173472Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.173487Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 2.863000008801464e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.174340Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.174395Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.174408Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1627999811025802e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.175519Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.175572Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.175583Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 9.807999958866276e-06,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.176412Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.176447Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.176471Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 2.2881999939272646e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.179451Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.179513Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.179524Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0114999895449728e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.180781Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.180841Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.180855Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.2108000191801693e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.185646Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.185737Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.185753Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.4553999790223315e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.186869Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.186934Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.186944Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0165999810851645e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.193850Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.193972Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.193985Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1040000572393183e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.203376Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.203504Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.203517Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.2534999768831767e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.208086Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.208164Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.208179Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.3073000445729122e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.218031Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.218132Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.218149Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.5288000213331543e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.234659Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.234766Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.234781Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.3175000276532955e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.242617Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.242683Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.242695Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1264000022492837e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.253565Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.253655Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.253669Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.324299955740571e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.271336Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.271429Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.271441Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0470999768585898e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.290428Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.290523Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.290535Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.099499968404416e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.293713Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:04:57.897367Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:04:57.897401Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.491100051178364e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:04:57.901160Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:05:27.038551Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:05:27.038595Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 5.054700068285456e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:05:27.060542Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:05:57.062292Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:05:57.062334Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.050999996252358e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:05:57.118807Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:06:27.120339Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:06:27.120381Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.139300017413916e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:06:27.160073Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:06:57.162299Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:06:57.162337Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.863499932776904e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:06:57.176318Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:07:27.179929Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:07:27.179969Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.83850001526298e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:07:27.199055Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:07:57.202995Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:07:57.203030Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.460500010987744e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:07:57.230932Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:07:58.778577Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:07:58.778621Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.251500013197074e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:07:58.782173Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:08:27.231250Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:08:27.231300Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.9897999815584626e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:08:27.236140Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:08:57.236430Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:08:57.236489Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 5.755299935117364e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:08:57.240024Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:08:59.388323Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:08:59.388365Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.2810999730136245e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:08:59.391958Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:09:27.242936Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:09:27.242981Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.4751000132237095e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:09:27.463523Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:09:57.463714Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:09:57.463756Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.192199958197307e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:09:57.800718Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:10:27.800946Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:10:27.800991Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.282000008970499e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:10:28.247550Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:10:58.250145Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:10:58.250183Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.7540999983320944e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:10:58.599477Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:11:28.600418Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:11:28.600475Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 5.5499000154668465e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:11:28.971696Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:11:58.976883Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:11:58.976925Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.991799894720316e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:11:59.113367Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:11:59.833093Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:11:59.833128Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.3615000575082377e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:11:59.836632Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:12:29.113654Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:12:29.113705Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.928700036543887e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:12:29.117286Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:12:59.117592Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:12:59.117643Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.813399937120266e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:12:59.122011Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:13:00.397424Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:13:00.397486Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 6.032900091668125e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:13:00.402248Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:13:29.122234Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:13:29.122275Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.0388998968410306e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:13:29.131547Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:13:59.131858Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:13:59.131913Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 5.258700002741534e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:13:59.141136Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:14:29.141380Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:14:29.141426Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.46700014435919e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:14:29.155480Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:14:59.155871Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:14:59.155914Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 4.018400068162009e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:14:59.164931Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:15:29.167580Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:15:29.167646Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 6.271299935178831e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:15:29.185818Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:15:59.186030Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:15:59.186068Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 3.646000004664529e-05,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:15:59.198715Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "serverStatus"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.336565Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.336626Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 5.863499973202124e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.340801Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.382639Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.382654Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.5174000509432517e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.383513Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.383554Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.383564Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 8.753999281907454e-06,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.384432Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.384506Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.384518Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0771998859127052e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.385475Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.385517Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.385527Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 8.72899909154512e-06,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.386343Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.386374Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.386382Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 7.254000593093224e-06,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.389091Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.389147Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.389158Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0351001037633978e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.390480Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.390539Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.390551Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1112999345641583e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.391624Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.391688Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.391700Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0117000783793628e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.392834Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.392901Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.392913Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0867999662877992e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.395779Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.395868Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.395880Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0542000381974503e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.398835Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.398920Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.398932Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1170999641763046e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.400119Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.400183Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.400196Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1540998457348906e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.403000Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.403077Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.403089Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0686999303288758e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.405892Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.405980Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.405994Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.2856999092036858e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.407155Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.407222Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.407234Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0892999853240326e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.410547Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.410624Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.410635Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.0634999853209592e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.413919Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.414006Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.414018Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1004000043612905e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.415074Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "attesa_iniziata",
+    "t": "2026-11-05T19:16:01.415150Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": null,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_presa",
+    "t": "2026-11-05T19:16:01.415162Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": 1.1049000022467226e-05,
+    "thread": "MainThread"
+   },
+   {
+    "evento": "connessione_resa",
+    "t": "2026-11-05T19:16:01.416669Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "connessione": 2,
+    "motivo": null,
+    "durata_s": null,
+    "thread": "MainThread"
+   }
+  ],
+  "topologia": [
+   {
+    "evento": "topologia_aperta",
+    "t": "2026-11-05T19:02:56.903896Z",
+    "server": null,
+    "dettagli": null
+   },
+   {
+    "evento": "topologia_cambiata",
+    "t": "2026-11-05T19:02:56.903904Z",
+    "server": null,
+    "dettagli": {
+     "tipo": "ReplicaSetNoPrimary",
+     "server": {
+      "cluster0-shard-00-00.7lvmgr.mongodb.net:27017": {
+       "tipo": "Unknown",
+       "rtt_ms": null,
+       "errore": null
+      },
+      "cluster0-shard-00-02.7lvmgr.mongodb.net:27017": {
+       "tipo": "Unknown",
+       "rtt_ms": null,
+       "errore": null
+      }
+     }
+    }
+   },
+   {
+    "evento": "server_aperto",
+    "t": "2026-11-05T19:02:56.903922Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": null
+   },
+   {
+    "evento": "server_aperto",
+    "t": "2026-11-05T19:02:56.903924Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": null
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:02:56.914558Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 0.9401709994563134,
+     "in_attesa": false
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:02:56.918935Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 1.006658000733296,
+     "in_attesa": false
+    }
+   },
+   {
+    "evento": "server_cambiato",
+    "t": "2026-11-05T19:02:57.904104Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "prima": {
+      "tipo": "Unknown",
+      "rtt_ms": null,
+      "errore": null
+     },
+     "dopo": {
+      "tipo": "RSSecondary",
+      "rtt_ms": 0.9401709994563134,
+      "errore": null
+     }
+    }
+   },
+   {
+    "evento": "topologia_cambiata",
+    "t": "2026-11-05T19:02:57.904127Z",
+    "server": null,
+    "dettagli": {
+     "tipo": "ReplicaSetNoPrimary",
+     "server": {
+      "cluster0-shard-00-00.7lvmgr.mongodb.net:27017": {
+       "tipo": "Unknown",
+       "rtt_ms": null,
+       "errore": null
+      },
+      "cluster0-shard-00-02.7lvmgr.mongodb.net:27017": {
+       "tipo": "RSSecondary",
+       "rtt_ms": 0.9401709994563134,
+       "errore": null
+      }
+     }
+    }
+   },
+   {
+    "evento": "server_cambiato",
+    "t": "2026-11-05T19:02:57.904148Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "prima": {
+      "tipo": "Unknown",
+      "rtt_ms": null,
+      "errore": null
+     },
+     "dopo": {
+      "tipo": "RSPrimary",
+      "rtt_ms": 1.006658000733296,
+      "errore": null
+     }
+    }
+   },
+   {
+    "evento": "topologia_cambiata",
+    "t": "2026-11-05T19:02:57.904152Z",
+    "server": null,
+    "dettagli": {
+     "tipo": "ReplicaSetWithPrimary",
+     "server": {
+      "cluster0-shard-00-00.7lvmgr.mongodb.net:27017": {
+       "tipo": "RSPrimary",
+       "rtt_ms": 1.006658000733296,
+       "errore": null
+      },
+      "cluster0-shard-00-02.7lvmgr.mongodb.net:27017": {
+       "tipo": "RSSecondary",
+       "rtt_ms": 0.9401709994563134,
+       "errore": null
+      }
+     }
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:06.928039Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.722941999622,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:06.963769Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10048.784755999804,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:16.937693Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.548642000482,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:17.013600Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.702149999575,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:26.947386Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.573475999787,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:27.063657Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.91705700013,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:36.957269Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.732506000546,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:37.113700Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.93315199954,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:46.967226Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.804989999793,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:47.163688Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.872241999765,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:56.977235Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.896205000587,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:03:57.213690Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.881404999724,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:06.987115Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.76439599981,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:07.263508Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.684294000144,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:16.997281Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10010.04553599978,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:17.313694Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.040416000229,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:27.007290Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.857726000519,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:27.363620Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.809161000667,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:37.017359Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.946801999831,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:37.413652Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.924053999348,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:47.027307Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.836971999903,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:47.463705Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.940017000154,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:57.037180Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.753190999618,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:04:57.514557Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.71284800033,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:07.065548Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10028.221135999956,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:07.567455Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10052.724375000253,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:17.061522Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9995.802032999563,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:17.633144Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10065.508178999153,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:27.084808Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10023.113856999771,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:27.680594Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10047.295338000367,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:37.080122Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9995.168722999551,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:37.708151Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10027.417550999417,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:47.088906Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.634579999125,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:47.760324Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10052.047539999876,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:57.107690Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10018.62584599985,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:05:57.803371Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10042.921726999339,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:07.107127Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9999.27084400042,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:07.855658Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10052.169894999679,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:17.124547Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10017.241766000552,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:17.918350Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10062.552109000535,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:27.137206Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10012.493082999754,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:27.963546Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10045.048900000438,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:37.146350Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.974153000054,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:38.026197Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10062.503058999937,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:47.161511Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10014.975354999478,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:48.055780Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10029.44062000006,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:57.164096Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10002.41628599997,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:06:58.103106Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10047.186715999487,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:07.175250Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10011.011710000275,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:08.163523Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10060.273988000517,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:17.179922Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10004.510108000432,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:18.222137Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10058.459335000407,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:27.203570Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10023.491167999964,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:28.252257Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10029.982375000145,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:37.206790Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.066418999879,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:38.308509Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10056.080772999849,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:47.213926Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10007.002807999925,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:48.352564Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10043.921796000177,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:57.223758Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.691115999885,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:07:58.393760Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10041.063972999837,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:07.227263Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.381561999959,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:08.443629Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.731022999367,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:17.237257Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.882045000268,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:18.493770Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.007132000246,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:27.247291Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.915109999383,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:28.543644Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.744773999919,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:37.257314Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.879521000585,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:38.593707Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.954318000346,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:47.267318Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.836258000178,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:48.643601Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.785659000008,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:57.277344Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.894818999783,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:08:58.693492Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.755924000237,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:07.293659Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10016.138904999934,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:08.743734Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.113254999815,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:17.298432Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10004.634861999875,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:18.793984Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.132610999754,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:27.314256Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10015.664167000068,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:28.843899Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.798584999735,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:37.317721Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.331855999932,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:38.893554Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.516519999997,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:47.328614Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10010.747434000223,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:48.943737Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.05490900021,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:57.357131Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10028.324038000392,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:09:58.998637Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10054.771128000539,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:07.360367Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10003.072346999943,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:09.045138Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10046.342673000254,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:17.371013Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10010.481492000508,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:19.102324Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10057.060728000579,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:27.378287Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10007.126407000214,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:29.151985Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.496675000228,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:37.388232Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.781482000108,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:39.193737Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10041.610584999944,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:47.398350Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.968905998903,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:49.243680Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.809718999313,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:57.407145Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.606471999883,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:10:59.293966Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.170002999948,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:07.457216Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.904483999853,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:09.343575Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.497762998726,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:17.432652Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9975.292290999278,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:19.393856Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.162339999588,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:27.437223Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10004.417509999257,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:29.454594Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10060.611228000198,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:37.447901Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10010.53550100005,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:39.496408Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10041.666974000691,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:47.457558Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.512231999906,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:49.546223Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.668525000016,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:57.467365Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.638315999837,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:11:59.593491Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10047.129083999607,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:07.497331Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10029.768072001389,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:09.643672Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.044207999235,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:17.506921Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.385776000272,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:19.693628Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.805044000095,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:27.507439Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10000.334209998982,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:29.743560Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.784269000156,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:37.517438Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.795336000025,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:39.793754Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.073376,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:47.527393Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.748521000802,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:49.843696Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.818031999166,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:57.537431Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.826778999923,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:12:59.893528Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10049.712052999894,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:07.555257Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10017.616906998228,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:09.944240Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.562988999445,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:17.561682Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10006.23359400015,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:19.999819Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10055.423503999918,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:27.567352Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10005.494209000972,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:30.076538Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10076.588588999584,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:37.577273Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.753632999491,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:40.093506Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10016.827481000291,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:47.592978Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10015.522517000136,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:50.157652Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10064.021868000054,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:13:57.614748Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10021.58880800016,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:00.194317Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10036.532465999699,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:07.607518Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9992.6032759995,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:10.251593Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10057.149775000653,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:17.619285Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10011.598342998695,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:20.296897Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10045.168138998633,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:27.628670Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10009.237067000868,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:30.352430Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10055.405941000572,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:37.641516Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10012.690159999693,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:40.394159Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10041.594251000788,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:47.657903Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10016.234049999184,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:50.450597Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10056.325377998292,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:14:57.872499Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10214.42600499904,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:00.493992Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10043.265938000332,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:07.686006Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9813.357077999171,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:10.547420Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10053.308845999709,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:17.678853Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9992.685611001434,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:20.647666Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10100.104074999763,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:27.687449Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10008.45087000016,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:30.654900Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10007.119735999368,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:37.739023Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10051.395509999566,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:40.695271Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10040.242515999125,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:47.707394Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 9968.19403200061,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:50.744336Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10048.936528999548,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:15:57.721920Z",
+    "server": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10014.337595999677,
+     "in_attesa": true
+    }
+   },
+   {
+    "evento": "battito",
+    "t": "2026-11-05T19:16:00.794553Z",
+    "server": "cluster0-shard-00-02.7lvmgr.mongodb.net:27017",
+    "dettagli": {
+     "ms": 10050.095717000659,
+     "in_attesa": true
+    }
+   }
+  ]
+ }
+]

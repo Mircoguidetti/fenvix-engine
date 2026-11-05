@@ -1,0 +1,7165 @@
+{
+ "versione": "p1-1.6.2",
+ "scritto": "2026-11-05T17:23:01.944972Z",
+ "analisi": {
+  "nota": "STIMATO: numeri derivati dai dati grezzi; le misure dell'API sono medie al minuto",
+  "origini_api": [],
+  "fasi": [
+   {
+    "fase": "inizio",
+    "inizio": "2026-11-05T17:00:24.570868Z",
+    "fine": "2026-11-05T17:00:24.890713Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 0.387,
+     "cpu_us": 63995,
+     "operazioni": {
+      "query": 3,
+      "getmore": 0,
+      "insert": 0,
+      "update": 1,
+      "delete": 0,
+      "command": 285
+     },
+     "documenti": {
+      "returned": 16,
+      "inserted": 0,
+      "updated": 1,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 145671522,
+     "cpu_us_per_lettura": 21331.67,
+     "cpu_us_per_scrittura": 63995.0,
+     "cpu_us_per_documento": 3764.41,
+     "cpu_percento_di_un_core": 16.5,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    }
+   },
+   {
+    "fase": "Q2",
+    "inizio": "2026-11-05T17:02:25.033539Z",
+    "fine": "2026-11-05T17:04:55.033693Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.057,
+     "cpu_us": 3929509,
+     "operazioni": {
+      "query": 1966,
+      "getmore": 0,
+      "insert": 0,
+      "update": 161,
+      "delete": 17,
+      "command": 5863
+     },
+     "documenti": {
+      "returned": 2115,
+      "inserted": 0,
+      "updated": 158,
+      "deleted": 2
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 198392305,
+     "cpu_us_per_lettura": 1998.73,
+     "cpu_us_per_scrittura": 22075.89,
+     "cpu_us_per_documento": 1727.26,
+     "cpu_percento_di_un_core": 2.6,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 600,
+     "find_al_secondo": 12.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q3",
+    "inizio": "2026-11-05T17:06:55.522143Z",
+    "fine": "2026-11-05T17:09:25.522281Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.056,
+     "cpu_us": 6229882,
+     "operazioni": {
+      "query": 1966,
+      "getmore": 0,
+      "insert": 0,
+      "update": 161,
+      "delete": 17,
+      "command": 6857
+     },
+     "documenti": {
+      "returned": 80582,
+      "inserted": 0,
+      "updated": 159,
+      "deleted": 2
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 935944934,
+     "cpu_us_per_lettura": 3168.81,
+     "cpu_us_per_scrittura": 34999.34,
+     "cpu_us_per_documento": 77.16,
+     "cpu_percento_di_un_core": 4.2,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 600,
+     "find_al_secondo": 12.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q1",
+    "inizio": "2026-11-05T17:11:26.070005Z",
+    "fine": "2026-11-05T17:13:56.070191Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.052,
+     "cpu_us": 4444998,
+     "operazioni": {
+      "query": 1966,
+      "getmore": 0,
+      "insert": 0,
+      "update": 161,
+      "delete": 16,
+      "command": 7061
+     },
+     "documenti": {
+      "returned": 37515,
+      "inserted": 0,
+      "updated": 159,
+      "deleted": 2
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1025727210,
+     "cpu_us_per_lettura": 2260.93,
+     "cpu_us_per_scrittura": 25112.98,
+     "cpu_us_per_documento": 117.98,
+     "cpu_percento_di_un_core": 3.0,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 600,
+     "find_al_secondo": 12.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q1d",
+    "inizio": "2026-11-05T17:15:56.626063Z",
+    "fine": "2026-11-05T17:18:26.626198Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.053,
+     "cpu_us": 6353755,
+     "operazioni": {
+      "query": 1966,
+      "getmore": 0,
+      "insert": 0,
+      "update": 150,
+      "delete": 0,
+      "command": 7079
+     },
+     "documenti": {
+      "returned": 37555,
+      "inserted": 0,
+      "updated": 150,
+      "deleted": 0
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1500989779,
+     "cpu_us_per_lettura": 3231.82,
+     "cpu_us_per_scrittura": 42358.37,
+     "cpu_us_per_documento": 168.51,
+     "cpu_percento_di_un_core": 4.2,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 600,
+     "find_al_secondo": 12.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   },
+   {
+    "fase": "Q4",
+    "inizio": "2026-11-05T17:20:27.184719Z",
+    "fine": "2026-11-05T17:22:57.184867Z",
+    "cpu_serverStatus": {
+     "nodo": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+     "secondi": 150.049,
+     "cpu_us": 11573264,
+     "operazioni": {
+      "query": 1967,
+      "getmore": 0,
+      "insert": 0,
+      "update": 162,
+      "delete": 21,
+      "command": 6910
+     },
+     "documenti": {
+      "returned": 483176,
+      "inserted": 0,
+      "updated": 159,
+      "deleted": 3
+     },
+     "pagine_lette_nel_bancone": null,
+     "byte_letti_nel_bancone": null,
+     "byte_scritti_dal_bancone": null,
+     "bancone_byte_dopo": 1716775008,
+     "cpu_us_per_lettura": 5883.71,
+     "cpu_us_per_scrittura": 63241.88,
+     "cpu_us_per_documento": 23.94,
+     "cpu_percento_di_un_core": 7.7,
+     "nota": "STIMATO: la differenza comprende anche i comandi di controllo dello script (istantanee, profiler); CPU del solo nodo a cui e' collegato il client di controllo (il primario)"
+    },
+    "api_primario": {
+     "primario": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+    },
+    "letture": {
+     "find_fredde": 600,
+     "find_al_secondo": 12.0,
+     "profiler_byte_letti_storage_per_find_fredda": {
+      "n": 0
+     },
+     "profiler_us_di_lettura_storage_per_find_fredda": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "api_byte_per_lettura_storage": null,
+     "pagine_per_find_fredda_profiler": null,
+     "us_per_pagina": null,
+     "api_letture_disco_nella_fase": null,
+     "pagine_per_find_api_controllo": null,
+     "nota_controllo_api": "letture del disco della fase (somma al minuto) / find fredde; comprende istantanee, count di controllo e minuti di confine"
+    }
+   }
+  ]
+ },
+ "fasi": [
+  {
+   "fase": "inizio",
+   "inizio": "2026-11-05T17:00:24.570868Z",
+   "fine": "2026-11-05T17:00:24.890713Z",
+   "riassunto": null,
+   "esito": null,
+   "accettata": null
+  },
+  {
+   "fase": "Q2",
+   "inizio": "2026-11-05T17:02:25.033539Z",
+   "fine": "2026-11-05T17:04:55.033693Z",
+   "n": 600,
+   "con_freddo": 600,
+   "errori": 0,
+   "controlli_ok": 600,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 600,
+    "p50": 2.884,
+    "p95": 3.826,
+    "p99": 4.106,
+    "media": 2.959,
+    "min": 1.296,
+    "max": 4.402
+   },
+   "caldo_ms": {
+    "n": 600,
+    "p50": 1.256,
+    "p95": 1.343,
+    "p99": 1.4,
+    "media": 1.24,
+    "min": 0.885,
+    "max": 3.987
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 1.463,
+    "p95": 2.375,
+    "p99": 2.664,
+    "media": 1.529,
+    "min": -0.083,
+    "max": 2.977
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 0.131,
+    "p95": 0.22,
+    "p99": 0.303,
+    "media": 0.131,
+    "min": -0.385,
+    "max": 2.799
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 600,
+    "p50": 1.661,
+    "p95": 2.541,
+    "p99": 2.827,
+    "media": 1.718,
+    "min": -1.348,
+    "max": 3.131
+   },
+   "p50_freddo_meno_p50_caldo": 1.628,
+   "documenti_freddo": {
+    "n": 600,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "media": 1.0,
+    "min": 1,
+    "max": 1
+   },
+   "documenti_caldo": {
+    "n": 600,
+    "p50": 1.0,
+    "p95": 1.0,
+    "p99": 1.0,
+    "media": 1.0,
+    "min": 1,
+    "max": 1
+   },
+   "byte_freddo": {
+    "n": 600,
+    "p50": 596.5,
+    "p95": 787.05,
+    "p99": 817.01,
+    "media": 590.803,
+    "min": 343,
+    "max": 835
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 2.3770999999999995,
+     "freddo_meno_hello_p50": 2.2121
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 2.343,
+     "freddo_meno_hello_p50": 2.1804
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 2.2726999999999995,
+     "freddo_meno_hello_p50": 2.0744000000000002
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 2.1295,
+     "freddo_meno_hello_p50": 1.9383000000000001
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 2.1782000000000004,
+     "freddo_meno_hello_p50": 2.0028
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 2.2062,
+     "freddo_meno_hello_p50": 2.0109000000000004
+    },
+    {
+     "da": 150,
+     "a": 175,
+     "freddo_meno_caldo_p50": 2.0854,
+     "freddo_meno_hello_p50": 1.7531
+    },
+    {
+     "da": 175,
+     "a": 200,
+     "freddo_meno_caldo_p50": 1.776,
+     "freddo_meno_hello_p50": 1.6535000000000002
+    },
+    {
+     "da": 200,
+     "a": 225,
+     "freddo_meno_caldo_p50": 1.7433999999999998,
+     "freddo_meno_hello_p50": 1.4406
+    },
+    {
+     "da": 225,
+     "a": 250,
+     "freddo_meno_caldo_p50": 1.6664999999999999,
+     "freddo_meno_hello_p50": 1.3739999999999999
+    },
+    {
+     "da": 250,
+     "a": 275,
+     "freddo_meno_caldo_p50": 1.6421999999999999,
+     "freddo_meno_hello_p50": 1.3467999999999998
+    },
+    {
+     "da": 275,
+     "a": 300,
+     "freddo_meno_caldo_p50": 1.4963,
+     "freddo_meno_hello_p50": 1.3152
+    },
+    {
+     "da": 300,
+     "a": 325,
+     "freddo_meno_caldo_p50": 1.6599000000000002,
+     "freddo_meno_hello_p50": 1.4308
+    },
+    {
+     "da": 325,
+     "a": 350,
+     "freddo_meno_caldo_p50": 1.5835,
+     "freddo_meno_hello_p50": 1.3364999999999998
+    },
+    {
+     "da": 350,
+     "a": 375,
+     "freddo_meno_caldo_p50": 1.5105,
+     "freddo_meno_hello_p50": 1.2935999999999999
+    },
+    {
+     "da": 375,
+     "a": 400,
+     "freddo_meno_caldo_p50": 1.4465999999999999,
+     "freddo_meno_hello_p50": 1.2224
+    },
+    {
+     "da": 400,
+     "a": 425,
+     "freddo_meno_caldo_p50": 1.4200000000000002,
+     "freddo_meno_hello_p50": 1.2355000000000003
+    },
+    {
+     "da": 425,
+     "a": 450,
+     "freddo_meno_caldo_p50": 1.4275999999999998,
+     "freddo_meno_hello_p50": 1.2813
+    },
+    {
+     "da": 450,
+     "a": 475,
+     "freddo_meno_caldo_p50": 1.4319,
+     "freddo_meno_hello_p50": 1.2500000000000002
+    },
+    {
+     "da": 475,
+     "a": 500,
+     "freddo_meno_caldo_p50": 1.4262000000000001,
+     "freddo_meno_hello_p50": 1.2187000000000001
+    },
+    {
+     "da": 500,
+     "a": 525,
+     "freddo_meno_caldo_p50": 1.5819999999999999,
+     "freddo_meno_hello_p50": 1.4279
+    },
+    {
+     "da": 525,
+     "a": 550,
+     "freddo_meno_caldo_p50": 1.5134999999999998,
+     "freddo_meno_hello_p50": 1.3295000000000001
+    },
+    {
+     "da": 550,
+     "a": 575,
+     "freddo_meno_caldo_p50": 1.5755000000000001,
+     "freddo_meno_hello_p50": 1.4565
+    },
+    {
+     "da": 575,
+     "a": 600,
+     "freddo_meno_caldo_p50": 1.4747000000000001,
+     "freddo_meno_hello_p50": 1.2831000000000001
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 2.857,
+      "p95": 3.768,
+      "p99": 3.93,
+      "media": 2.948,
+      "min": 1.296,
+      "max": 4.402
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.261,
+      "p95": 1.343,
+      "p99": 1.379,
+      "media": 1.243,
+      "min": 0.931,
+      "max": 1.4
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.424,
+      "p95": 2.341,
+      "p99": 2.52,
+      "media": 1.508,
+      "min": -0.083,
+      "max": 2.977
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.136,
+      "p95": 0.21,
+      "p99": 0.237,
+      "media": 0.13,
+      "min": -0.385,
+      "max": 0.34
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.623,
+      "p95": 2.477,
+      "p99": 2.626,
+      "media": 1.705,
+      "min": 0.068,
+      "max": 3.082
+     },
+     "p50_freddo_meno_p50_caldo": 1.596,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 579.0,
+      "p95": 791.05,
+      "p99": 817.01,
+      "media": 583.847,
+      "min": 343,
+      "max": 834
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 2.3341,
+       "freddo_meno_hello_p50": 2.1323
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 2.2021,
+       "freddo_meno_hello_p50": 1.9627000000000001
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 2.1901,
+       "freddo_meno_hello_p50": 2.0519
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.8883999999999999,
+       "freddo_meno_hello_p50": 1.6159
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 1.5596999999999999,
+       "freddo_meno_hello_p50": 1.3245
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 1.4997,
+       "freddo_meno_hello_p50": 1.2877
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.6189000000000002,
+       "freddo_meno_hello_p50": 1.3994000000000002
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 1.5034999999999998,
+       "freddo_meno_hello_p50": 1.2458999999999998
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 1.4215,
+       "freddo_meno_hello_p50": 1.2813
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.4262000000000001,
+       "freddo_meno_hello_p50": 1.2252999999999998
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.5696,
+       "freddo_meno_hello_p50": 1.3547
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 1.5666,
+       "freddo_meno_hello_p50": 1.3648
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 2.914,
+      "p95": 3.835,
+      "p99": 4.193,
+      "media": 2.969,
+      "min": 1.299,
+      "max": 4.396
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.254,
+      "p95": 1.339,
+      "p99": 1.417,
+      "media": 1.237,
+      "min": 0.885,
+      "max": 3.987
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.491,
+      "p95": 2.41,
+      "p99": 2.681,
+      "media": 1.551,
+      "min": -0.046,
+      "max": 2.956
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.128,
+      "p95": 0.237,
+      "p99": 0.318,
+      "media": 0.133,
+      "min": -0.11,
+      "max": 2.799
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.706,
+      "p95": 2.56,
+      "p99": 2.886,
+      "media": 1.732,
+      "min": -1.348,
+      "max": 3.131
+     },
+     "p50_freddo_meno_p50_caldo": 1.661,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 1.0,
+      "p95": 1.0,
+      "p99": 1.0,
+      "media": 1.0,
+      "min": 1,
+      "max": 1
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 602.5,
+      "p95": 783.15,
+      "p99": 817.09,
+      "media": 597.76,
+      "min": 345,
+      "max": 835
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 2.3676,
+       "freddo_meno_hello_p50": 2.2025
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 2.2266000000000004,
+       "freddo_meno_hello_p50": 2.0380000000000003
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 2.1782000000000004,
+       "freddo_meno_hello_p50": 1.9738000000000002
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.8626,
+       "freddo_meno_hello_p50": 1.6539000000000001
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 1.8633,
+       "freddo_meno_hello_p50": 1.6060999999999999
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 1.6694,
+       "freddo_meno_hello_p50": 1.3564000000000003
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.6204,
+       "freddo_meno_hello_p50": 1.4014000000000002
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 1.5086000000000002,
+       "freddo_meno_hello_p50": 1.2833
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 1.4200000000000002,
+       "freddo_meno_hello_p50": 1.2627000000000002
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.431,
+       "freddo_meno_hello_p50": 1.2943000000000002
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.5342000000000002,
+       "freddo_meno_hello_p50": 1.3977000000000002
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 1.4977,
+       "freddo_meno_hello_p50": 1.2831000000000001
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-002545",
+    "cli-000573",
+    "cli-000904",
+    "cli-002337",
+    "cli-003031",
+    "cli-001781",
+    "cli-000791",
+    "cli-000014",
+    "cli-001527",
+    "cli-003073",
+    "cli-000083",
+    "cli-002923",
+    "cli-002574",
+    "cli-001611",
+    "cli-003302",
+    "cli-001194",
+    "cli-003025",
+    "cli-002101",
+    "cli-001098",
+    "cli-003203",
+    "cli-003278",
+    "cli-003040",
+    "cli-001409",
+    "cli-000899",
+    "cli-000107",
+    "cli-003191",
+    "cli-000455",
+    "cli-003256",
+    "cli-000446",
+    "cli-002743",
+    "cli-000210",
+    "cli-001627",
+    "cli-000669",
+    "cli-002024",
+    "cli-001059",
+    "cli-000380",
+    "cli-000110",
+    "cli-001851",
+    "cli-000276",
+    "cli-002411",
+    "cli-001094",
+    "cli-000979",
+    "cli-001119",
+    "cli-001983",
+    "cli-001733",
+    "cli-003352",
+    "cli-003270",
+    "cli-000763",
+    "cli-000091",
+    "cli-001208",
+    "cli-003066",
+    "cli-002151",
+    "cli-001114",
+    "cli-001268",
+    "cli-002749",
+    "cli-002110",
+    "cli-000053",
+    "cli-001874",
+    "cli-000780",
+    "cli-001461",
+    "cli-002406",
+    "cli-000259",
+    "cli-000936",
+    "cli-002621",
+    "cli-003198",
+    "cli-000004",
+    "cli-000087",
+    "cli-002787",
+    "cli-002903",
+    "cli-000082",
+    "cli-003177",
+    "cli-000038",
+    "cli-000422",
+    "cli-002691",
+    "cli-003099",
+    "cli-002769",
+    "cli-001155",
+    "cli-001712",
+    "cli-002475",
+    "cli-000471",
+    "cli-001545",
+    "cli-000123",
+    "cli-001186",
+    "cli-002198",
+    "cli-001394",
+    "cli-000049",
+    "cli-001115",
+    "cli-002382",
+    "cli-002303",
+    "cli-002374",
+    "cli-001559",
+    "cli-003344",
+    "cli-000529",
+    "cli-002340",
+    "cli-002683",
+    "cli-000836",
+    "cli-000472",
+    "cli-002523",
+    "cli-002316",
+    "cli-000190",
+    "cli-003296",
+    "cli-001958",
+    "cli-000949",
+    "cli-002105",
+    "cli-001801",
+    "cli-002943",
+    "cli-001863",
+    "cli-000600",
+    "cli-000319",
+    "cli-000410",
+    "cli-003098",
+    "cli-002904",
+    "cli-002138",
+    "cli-001547",
+    "cli-000012",
+    "cli-002825",
+    "cli-002068",
+    "cli-000519",
+    "cli-003187",
+    "cli-001260",
+    "cli-002015",
+    "cli-002879",
+    "cli-000761",
+    "cli-001118",
+    "cli-002760",
+    "cli-001198",
+    "cli-001109",
+    "cli-002447",
+    "cli-001074",
+    "cli-003254",
+    "cli-002425",
+    "cli-000415",
+    "cli-002488",
+    "cli-001795",
+    "cli-003207",
+    "cli-003264",
+    "cli-003175",
+    "cli-001677",
+    "cli-003124",
+    "cli-001940",
+    "cli-001046",
+    "cli-000550",
+    "cli-002605",
+    "cli-002235",
+    "cli-001529",
+    "cli-000384",
+    "cli-000626",
+    "cli-001826",
+    "cli-001791",
+    "cli-001450",
+    "cli-002347",
+    "cli-001492",
+    "cli-000906",
+    "cli-001979",
+    "cli-001561",
+    "cli-000238",
+    "cli-000001",
+    "cli-001014",
+    "cli-002269",
+    "cli-000354",
+    "cli-003087",
+    "cli-000426",
+    "cli-002137",
+    "cli-000105",
+    "cli-003163",
+    "cli-001220",
+    "cli-002695",
+    "cli-002058",
+    "cli-001044",
+    "cli-001750",
+    "cli-001165",
+    "cli-002045",
+    "cli-000826",
+    "cli-000494",
+    "cli-003345",
+    "cli-001741",
+    "cli-002121",
+    "cli-001951",
+    "cli-003275",
+    "cli-000504",
+    "cli-002952",
+    "cli-003059",
+    "cli-001271",
+    "cli-001197",
+    "cli-002859",
+    "cli-001176",
+    "cli-001724",
+    "cli-001669",
+    "cli-002419",
+    "cli-001369",
+    "cli-002300",
+    "cli-001919",
+    "cli-002385",
+    "cli-001205",
+    "cli-003330",
+    "cli-000255",
+    "cli-001526",
+    "cli-001209",
+    "cli-002095",
+    "cli-002083",
+    "cli-001967",
+    "cli-001769",
+    "cli-001873",
+    "cli-002056",
+    "cli-001465",
+    "cli-001877",
+    "cli-001340",
+    "cli-002591",
+    "cli-002763",
+    "cli-000635",
+    "cli-000546",
+    "cli-002278",
+    "cli-002463",
+    "cli-002535",
+    "cli-002865",
+    "cli-000220",
+    "cli-002378",
+    "cli-000119",
+    "cli-000358",
+    "cli-001882",
+    "cli-001491",
+    "cli-001991",
+    "cli-003360",
+    "cli-002465",
+    "cli-000612",
+    "cli-000248",
+    "cli-001706",
+    "cli-003064",
+    "cli-002054",
+    "cli-003315",
+    "cli-002046",
+    "cli-000496",
+    "cli-001589",
+    "cli-002886",
+    "cli-000569",
+    "cli-001496",
+    "cli-000961",
+    "cli-001241",
+    "cli-002670",
+    "cli-002078",
+    "cli-001587",
+    "cli-002480",
+    "cli-002040",
+    "cli-000067",
+    "cli-001725",
+    "cli-003318",
+    "cli-000085",
+    "cli-001758",
+    "cli-003260",
+    "cli-000655",
+    "cli-001177",
+    "cli-002460",
+    "cli-001129",
+    "cli-001853",
+    "cli-001146",
+    "cli-001090",
+    "cli-002513",
+    "cli-000814",
+    "cli-002602",
+    "cli-000744",
+    "cli-002420",
+    "cli-001145",
+    "cli-002426",
+    "cli-001660",
+    "cli-000599",
+    "cli-001737",
+    "cli-002158",
+    "cli-000732",
+    "cli-001800",
+    "cli-003233",
+    "cli-001082",
+    "cli-000884",
+    "cli-002384",
+    "cli-003120",
+    "cli-000387",
+    "cli-001047",
+    "cli-002822",
+    "cli-001978",
+    "cli-001664",
+    "cli-001614",
+    "cli-002803",
+    "cli-000292",
+    "cli-002332",
+    "cli-003261",
+    "cli-002030",
+    "cli-002296",
+    "cli-002263",
+    "cli-000901",
+    "cli-002773",
+    "cli-001876",
+    "cli-002134",
+    "cli-001134",
+    "cli-001912",
+    "cli-002688",
+    "cli-002461",
+    "cli-002724",
+    "cli-002183",
+    "cli-002863",
+    "cli-001361",
+    "cli-002998",
+    "cli-002142",
+    "cli-001476",
+    "cli-001459",
+    "cli-002870",
+    "cli-001735",
+    "cli-001987",
+    "cli-001240",
+    "cli-000442",
+    "cli-000960",
+    "cli-000986",
+    "cli-002719",
+    "cli-000892",
+    "cli-000590",
+    "cli-001745",
+    "cli-001086",
+    "cli-002736",
+    "cli-002448",
+    "cli-000303",
+    "cli-000251",
+    "cli-001675",
+    "cli-002108",
+    "cli-002931",
+    "cli-000650",
+    "cli-000143",
+    "cli-002564",
+    "cli-002277",
+    "cli-001398",
+    "cli-002154",
+    "cli-002135",
+    "cli-001856",
+    "cli-003018",
+    "cli-002124",
+    "cli-001662",
+    "cli-000167",
+    "cli-001913",
+    "cli-001151",
+    "cli-003265",
+    "cli-000432",
+    "cli-002264",
+    "cli-002606",
+    "cli-002152",
+    "cli-000450",
+    "cli-002754",
+    "cli-002329",
+    "cli-001296",
+    "cli-003072",
+    "cli-001418",
+    "cli-003146",
+    "cli-000693",
+    "cli-001493",
+    "cli-000570",
+    "cli-003091",
+    "cli-002949",
+    "cli-001571",
+    "cli-002433",
+    "cli-000050",
+    "cli-002837",
+    "cli-003046",
+    "cli-000691",
+    "cli-001356",
+    "cli-003272",
+    "cli-000089",
+    "cli-002985",
+    "cli-000098",
+    "cli-003123",
+    "cli-003230",
+    "cli-001498",
+    "cli-003289",
+    "cli-003058",
+    "cli-003174",
+    "cli-001178",
+    "cli-002598",
+    "cli-000851",
+    "cli-003238",
+    "cli-000839",
+    "cli-002689",
+    "cli-000283",
+    "cli-000400",
+    "cli-001759",
+    "cli-001226",
+    "cli-002197",
+    "cli-002266",
+    "cli-000096",
+    "cli-000474",
+    "cli-001312",
+    "cli-002444",
+    "cli-000103",
+    "cli-002170",
+    "cli-003262",
+    "cli-002676",
+    "cli-001336",
+    "cli-001474",
+    "cli-000672",
+    "cli-002060",
+    "cli-000676",
+    "cli-002630",
+    "cli-001642",
+    "cli-000664",
+    "cli-003009",
+    "cli-003365",
+    "cli-000247",
+    "cli-001352",
+    "cli-002241",
+    "cli-000128",
+    "cli-000293",
+    "cli-003113",
+    "cli-000639",
+    "cli-002014",
+    "cli-001248",
+    "cli-002008",
+    "cli-002657",
+    "cli-002753",
+    "cli-001203",
+    "cli-001829",
+    "cli-000317",
+    "cli-002750",
+    "cli-002436",
+    "cli-000662",
+    "cli-000020",
+    "cli-001392",
+    "cli-003042",
+    "cli-000189",
+    "cli-001601",
+    "cli-003105",
+    "cli-001227",
+    "cli-001522",
+    "cli-000396",
+    "cli-000767",
+    "cli-000787",
+    "cli-001954",
+    "cli-001635",
+    "cli-002637",
+    "cli-000116",
+    "cli-000695",
+    "cli-000139",
+    "cli-001726",
+    "cli-001100",
+    "cli-002193",
+    "cli-001106",
+    "cli-001457",
+    "cli-001782",
+    "cli-001986",
+    "cli-003139",
+    "cli-002989",
+    "cli-000702",
+    "cli-001141",
+    "cli-002373",
+    "cli-001441",
+    "cli-002662",
+    "cli-001175",
+    "cli-002547",
+    "cli-001032",
+    "cli-000844",
+    "cli-002022",
+    "cli-003200",
+    "cli-002697",
+    "cli-002455",
+    "cli-001812",
+    "cli-000437",
+    "cli-002616",
+    "cli-000464",
+    "cli-002618",
+    "cli-002770",
+    "cli-002709",
+    "cli-000266",
+    "cli-000652",
+    "cli-001433",
+    "cli-001775",
+    "cli-000697",
+    "cli-000583",
+    "cli-000463",
+    "cli-002586",
+    "cli-002936",
+    "cli-001104",
+    "cli-001995",
+    "cli-000896",
+    "cli-001881",
+    "cli-001646",
+    "cli-000373",
+    "cli-001445",
+    "cli-000900",
+    "cli-001436",
+    "cli-001579",
+    "cli-001270",
+    "cli-000439",
+    "cli-000743",
+    "cli-003045",
+    "cli-002685",
+    "cli-000741",
+    "cli-002167",
+    "cli-001282",
+    "cli-003241",
+    "cli-002702",
+    "cli-000199",
+    "cli-000665",
+    "cli-002678",
+    "cli-000532",
+    "cli-000041",
+    "cli-000762",
+    "cli-001516",
+    "cli-001234",
+    "cli-001105",
+    "cli-002130",
+    "cli-001976",
+    "cli-001250",
+    "cli-001424",
+    "cli-000667",
+    "cli-000325",
+    "cli-000715",
+    "cli-002228",
+    "cli-000094",
+    "cli-001929",
+    "cli-000244",
+    "cli-002927",
+    "cli-003301",
+    "cli-001321",
+    "cli-001626",
+    "cli-001048",
+    "cli-000332",
+    "cli-002895",
+    "cli-002325",
+    "cli-001024",
+    "cli-001419",
+    "cli-001263",
+    "cli-002580",
+    "cli-002189",
+    "cli-002526",
+    "cli-002470",
+    "cli-001142",
+    "cli-003054",
+    "cli-002352",
+    "cli-000515",
+    "cli-002238",
+    "cli-002527",
+    "cli-000663",
+    "cli-001734",
+    "cli-003250",
+    "cli-002192",
+    "cli-002827",
+    "cli-002102",
+    "cli-002673",
+    "cli-001130",
+    "cli-002212",
+    "cli-003137",
+    "cli-003231",
+    "cli-002099",
+    "cli-001870",
+    "cli-002153",
+    "cli-002237",
+    "cli-002942",
+    "cli-003259",
+    "cli-000155",
+    "cli-003377",
+    "cli-003347",
+    "cli-000696",
+    "cli-001393",
+    "cli-000798",
+    "cli-000397",
+    "cli-002815",
+    "cli-003237",
+    "cli-000752",
+    "cli-000019",
+    "cli-001318",
+    "cli-002268",
+    "cli-000716",
+    "cli-000395",
+    "cli-001681",
+    "cli-000485",
+    "cli-000632",
+    "cli-002761",
+    "cli-001908",
+    "cli-001916",
+    "cli-000738",
+    "cli-001636",
+    "cli-000940",
+    "cli-001265",
+    "cli-000048",
+    "cli-001229",
+    "cli-002155",
+    "cli-002567",
+    "cli-002516",
+    "cli-002318",
+    "cli-002856",
+    "cli-002039",
+    "cli-002004",
+    "cli-001095",
+    "cli-002723",
+    "cli-000376",
+    "cli-000269",
+    "cli-002041",
+    "cli-002353",
+    "cli-002320",
+    "cli-001366",
+    "cli-002612",
+    "cli-002607",
+    "cli-001596",
+    "cli-002090",
+    "cli-000967",
+    "cli-003035",
+    "cli-000194"
+   ]
+  },
+  {
+   "fase": "Q3",
+   "inizio": "2026-11-05T17:06:55.522143Z",
+   "fine": "2026-11-05T17:09:25.522281Z",
+   "n": 600,
+   "con_freddo": 600,
+   "errori": 0,
+   "controlli_ok": 600,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 600,
+    "p50": 5.753,
+    "p95": 29.143,
+    "p99": 42.475,
+    "media": 9.077,
+    "min": 1.486,
+    "max": 56.371
+   },
+   "caldo_ms": {
+    "n": 600,
+    "p50": 1.439,
+    "p95": 1.684,
+    "p99": 1.792,
+    "media": 1.422,
+    "min": 1.005,
+    "max": 1.909
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 4.377,
+    "p95": 27.789,
+    "p99": 41.059,
+    "media": 7.722,
+    "min": -0.019,
+    "max": 55.033
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 0.396,
+    "p95": 0.598,
+    "p99": 0.671,
+    "media": 0.363,
+    "min": -1.478,
+    "max": 0.824
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 600,
+    "p50": 4.271,
+    "p95": 27.555,
+    "p99": 40.742,
+    "media": 7.655,
+    "min": 0.208,
+    "max": 54.721
+   },
+   "p50_freddo_meno_p50_caldo": 4.314,
+   "documenti_freddo": {
+    "n": 600,
+    "p50": 43.0,
+    "p95": 100.0,
+    "p99": 100.0,
+    "media": 44.04,
+    "min": 0,
+    "max": 100
+   },
+   "documenti_caldo": {
+    "n": 600,
+    "p50": 43.0,
+    "p95": 100.0,
+    "p99": 100.0,
+    "media": 44.04,
+    "min": 0,
+    "max": 100
+   },
+   "byte_freddo": {
+    "n": 600,
+    "p50": 10003.5,
+    "p95": 23555.15,
+    "p99": 23844.03,
+    "media": 10266.357,
+    "min": 0,
+    "max": 24189
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 20.0481,
+     "freddo_meno_hello_p50": 20.0843
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 17.931800000000003,
+     "freddo_meno_hello_p50": 18.1448
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 14.673599999999999,
+     "freddo_meno_hello_p50": 14.709499999999998
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 18.2005,
+     "freddo_meno_hello_p50": 18.3409
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 10.691500000000001,
+     "freddo_meno_hello_p50": 10.834
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 13.055200000000001,
+     "freddo_meno_hello_p50": 13.2213
+    },
+    {
+     "da": 150,
+     "a": 175,
+     "freddo_meno_caldo_p50": 9.752,
+     "freddo_meno_hello_p50": 9.9661
+    },
+    {
+     "da": 175,
+     "a": 200,
+     "freddo_meno_caldo_p50": 6.8866000000000005,
+     "freddo_meno_hello_p50": 6.9152000000000005
+    },
+    {
+     "da": 200,
+     "a": 225,
+     "freddo_meno_caldo_p50": 1.2481,
+     "freddo_meno_hello_p50": 1.1186
+    },
+    {
+     "da": 225,
+     "a": 250,
+     "freddo_meno_caldo_p50": 5.833600000000001,
+     "freddo_meno_hello_p50": 5.9698
+    },
+    {
+     "da": 250,
+     "a": 275,
+     "freddo_meno_caldo_p50": 7.153499999999999,
+     "freddo_meno_hello_p50": 7.247999999999999
+    },
+    {
+     "da": 275,
+     "a": 300,
+     "freddo_meno_caldo_p50": 5.4134,
+     "freddo_meno_hello_p50": 5.3546
+    },
+    {
+     "da": 300,
+     "a": 325,
+     "freddo_meno_caldo_p50": 5.276800000000001,
+     "freddo_meno_hello_p50": 5.5654
+    },
+    {
+     "da": 325,
+     "a": 350,
+     "freddo_meno_caldo_p50": 6.9434000000000005,
+     "freddo_meno_hello_p50": 7.1573
+    },
+    {
+     "da": 350,
+     "a": 375,
+     "freddo_meno_caldo_p50": 5.1869000000000005,
+     "freddo_meno_hello_p50": 5.1795
+    },
+    {
+     "da": 375,
+     "a": 400,
+     "freddo_meno_caldo_p50": 4.3492,
+     "freddo_meno_hello_p50": 4.5439
+    },
+    {
+     "da": 400,
+     "a": 425,
+     "freddo_meno_caldo_p50": 4.6452,
+     "freddo_meno_hello_p50": 4.8541
+    },
+    {
+     "da": 425,
+     "a": 450,
+     "freddo_meno_caldo_p50": 2.0411,
+     "freddo_meno_hello_p50": 2.0573
+    },
+    {
+     "da": 450,
+     "a": 475,
+     "freddo_meno_caldo_p50": 2.5200000000000005,
+     "freddo_meno_hello_p50": 2.7365000000000004
+    },
+    {
+     "da": 475,
+     "a": 500,
+     "freddo_meno_caldo_p50": 3.6276,
+     "freddo_meno_hello_p50": 3.7203
+    },
+    {
+     "da": 500,
+     "a": 525,
+     "freddo_meno_caldo_p50": 1.1924000000000001,
+     "freddo_meno_hello_p50": 1.138
+    },
+    {
+     "da": 525,
+     "a": 550,
+     "freddo_meno_caldo_p50": 1.7524000000000002,
+     "freddo_meno_hello_p50": 1.8961000000000001
+    },
+    {
+     "da": 550,
+     "a": 575,
+     "freddo_meno_caldo_p50": 2.3523,
+     "freddo_meno_hello_p50": 2.4934000000000003
+    },
+    {
+     "da": 575,
+     "a": 600,
+     "freddo_meno_caldo_p50": 3.2300999999999997,
+     "freddo_meno_hello_p50": 3.4043
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 2.554,
+      "p95": 21.475,
+      "p99": 32.151,
+      "media": 6.457,
+      "min": 1.486,
+      "max": 56.371
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.311,
+      "p95": 1.654,
+      "p99": 1.748,
+      "media": 1.355,
+      "min": 1.005,
+      "max": 1.871
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.148,
+      "p95": 20.098,
+      "p99": 30.836,
+      "media": 5.091,
+      "min": -0.019,
+      "max": 55.033
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.228,
+      "p95": 0.572,
+      "p99": 0.627,
+      "media": 0.293,
+      "min": -1.478,
+      "max": 0.824
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.284,
+      "p95": 20.003,
+      "p99": 30.793,
+      "media": 5.102,
+      "min": 0.208,
+      "max": 54.721
+     },
+     "p50_freddo_meno_p50_caldo": 1.243,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 0.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 26.623,
+      "min": 0,
+      "max": 100
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 0.0,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 26.623,
+      "min": 0,
+      "max": 100
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 0.0,
+      "p95": 22834.3,
+      "p99": 23613.49,
+      "media": 6193.237,
+      "min": 0,
+      "max": 23764
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 1.8020000000000003,
+       "freddo_meno_hello_p50": 1.5745
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 5.0939,
+       "freddo_meno_hello_p50": 5.0457
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.0346000000000002,
+       "freddo_meno_hello_p50": 1.0017999999999998
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.0736999999999999,
+       "freddo_meno_hello_p50": 1.0384999999999998
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 1.1121999999999999,
+       "freddo_meno_hello_p50": 0.8466000000000002
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 1.7746,
+       "freddo_meno_hello_p50": 1.7367
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.1338,
+       "freddo_meno_hello_p50": 0.9340999999999999
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 1.0881999999999998,
+       "freddo_meno_hello_p50": 1.0265
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 1.0384000000000002,
+       "freddo_meno_hello_p50": 0.8885000000000003
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.2711,
+       "freddo_meno_hello_p50": 1.0856999999999999
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.2512,
+       "freddo_meno_hello_p50": 1.2006000000000001
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 1.3144999999999998,
+       "freddo_meno_hello_p50": 1.1965999999999999
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 8.565,
+      "p95": 34.886,
+      "p99": 43.048,
+      "media": 11.696,
+      "min": 1.894,
+      "max": 44.663
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.55,
+      "p95": 1.702,
+      "p99": 1.812,
+      "media": 1.488,
+      "min": 1.02,
+      "max": 1.909
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 7.211,
+      "p95": 33.58,
+      "p99": 41.593,
+      "media": 10.354,
+      "min": 0.548,
+      "max": 43.314
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.476,
+      "p95": 0.611,
+      "p99": 0.675,
+      "media": 0.434,
+      "min": -0.195,
+      "max": 0.767
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 7.037,
+      "p95": 33.229,
+      "p99": 41.292,
+      "media": 10.208,
+      "min": 0.72,
+      "max": 43.053
+     },
+     "p50_freddo_meno_p50_caldo": 7.014,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 71.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 61.457,
+      "min": 0,
+      "max": 100
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 71.5,
+      "p95": 100.0,
+      "p99": 100.0,
+      "media": 61.457,
+      "min": 0,
+      "max": 100
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 16706.0,
+      "p95": 23656.35,
+      "p99": 23929.36,
+      "media": 14339.477,
+      "min": 0,
+      "max": 24189
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 27.580199999999998,
+       "freddo_meno_hello_p50": 27.8631
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 24.0825,
+       "freddo_meno_hello_p50": 24.3805
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 15.1959,
+       "freddo_meno_hello_p50": 15.3103
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 12.6823,
+       "freddo_meno_hello_p50": 12.9813
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 8.9434,
+       "freddo_meno_hello_p50": 9.2576
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 8.481300000000001,
+       "freddo_meno_hello_p50": 8.9586
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 7.686799999999999,
+       "freddo_meno_hello_p50": 7.8713
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 5.7403,
+       "freddo_meno_hello_p50": 6.0002
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 5.0555,
+       "freddo_meno_hello_p50": 5.2859
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 4.6437,
+       "freddo_meno_hello_p50": 4.8622
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.7524000000000002,
+       "freddo_meno_hello_p50": 1.8961000000000001
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 3.5407,
+       "freddo_meno_hello_p50": 3.8655
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "primi_50_freddo_vero": {
+    "n": 50,
+    "con_freddo": 50,
+    "errori": 0,
+    "controlli_ok": 50,
+    "controlli_falliti": 0,
+    "freddo_ms": {
+     "n": 50,
+     "p50": 20.43,
+     "p95": 42.964,
+     "p99": 53.038,
+     "media": 19.772,
+     "min": 2.067,
+     "max": 56.371
+    },
+    "caldo_ms": {
+     "n": 50,
+     "p50": 1.416,
+     "p95": 1.65,
+     "p99": 1.717,
+     "media": 1.41,
+     "min": 1.133,
+     "max": 1.774
+    },
+    "freddo_meno_hello_accoppiato": {
+     "n": 50,
+     "p50": 19.115,
+     "p95": 41.618,
+     "p99": 51.638,
+     "media": 18.442,
+     "min": 0.786,
+     "max": 55.033
+    },
+    "caldo_meno_hello_accoppiato": {
+     "n": 50,
+     "p50": 0.331,
+     "p95": 0.587,
+     "p99": 0.673,
+     "media": 0.344,
+     "min": 0.065,
+     "max": 0.679
+    },
+    "freddo_meno_caldo_stessa_ricerca": {
+     "n": 50,
+     "p50": 18.99,
+     "p95": 41.345,
+     "p99": 51.328,
+     "media": 18.362,
+     "min": 0.837,
+     "max": 54.721
+    },
+    "p50_freddo_meno_p50_caldo": 19.014,
+    "documenti_freddo": {
+     "n": 50,
+     "p50": 35.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 38.96,
+     "min": 0,
+     "max": 100
+    },
+    "documenti_caldo": {
+     "n": 50,
+     "p50": 35.5,
+     "p95": 100.0,
+     "p99": 100.0,
+     "media": 38.96,
+     "min": 0,
+     "max": 100
+    },
+    "byte_freddo": {
+     "n": 50,
+     "p50": 8056.0,
+     "p95": 23488.7,
+     "p99": 23822.92,
+     "media": 9063.28,
+     "min": 0,
+     "max": 24064
+    },
+    "getmore_freddo_totale": 0,
+    "blocchi_25": [
+     {
+      "da": 0,
+      "a": 25,
+      "freddo_meno_caldo_p50": 20.0481,
+      "freddo_meno_hello_p50": 20.0843
+     },
+     {
+      "da": 25,
+      "a": 50,
+      "freddo_meno_caldo_p50": 17.931800000000003,
+      "freddo_meno_hello_p50": 18.1448
+     }
+    ],
+    "profiler_freddo": {
+     "ricerche_trovate_nel_profiler": 0,
+     "ricerche": 50,
+     "millis": {
+      "n": 0
+     },
+     "storage_byte_letti": {
+      "n": 0
+     },
+     "storage_ms_di_lettura": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "storage_byte_letti_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_ms_di_lettura_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "millis_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_non_riportato_da_atlas": 0,
+     "docsExamined": {
+      "n": 0
+     },
+     "keysExamined": {
+      "n": 0
+     },
+     "piani": []
+    },
+    "profiler_caldo": {
+     "ricerche_trovate_nel_profiler": 0,
+     "ricerche": 50,
+     "millis": {
+      "n": 0
+     },
+     "storage_byte_letti": {
+      "n": 0
+     },
+     "storage_ms_di_lettura": {
+      "n": 0
+     },
+     "find_a_0_byte": 0,
+     "su": 0,
+     "storage_byte_letti_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_ms_di_lettura_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "millis_solo_maggiori_di_0": {
+      "n": 0
+     },
+     "storage_non_riportato_da_atlas": 0,
+     "docsExamined": {
+      "n": 0
+     },
+     "keysExamined": {
+      "n": 0
+     },
+     "piani": []
+    }
+   },
+   "clienti": [
+    "cli-001320",
+    "cli-001031",
+    "cli-002066",
+    "cli-000980",
+    "cli-000253",
+    "cli-000377",
+    "cli-003354",
+    "cli-001617",
+    "cli-002845",
+    "cli-000241",
+    "cli-000156",
+    "cli-001697",
+    "cli-002839",
+    "cli-000196",
+    "cli-003033",
+    "cli-000902",
+    "cli-002726",
+    "cli-001689",
+    "cli-001126",
+    "cli-000887",
+    "cli-001116",
+    "cli-000771",
+    "cli-002191",
+    "cli-000272",
+    "cli-000331",
+    "cli-000739",
+    "cli-001093",
+    "cli-000605",
+    "cli-002711",
+    "cli-001143",
+    "cli-002830",
+    "cli-001839",
+    "cli-002400",
+    "cli-000180",
+    "cli-001962",
+    "cli-002690",
+    "cli-000040",
+    "cli-001549",
+    "cli-001998",
+    "cli-001406",
+    "cli-000115",
+    "cli-002525",
+    "cli-002972",
+    "cli-001899",
+    "cli-002781",
+    "cli-001482",
+    "cli-001974",
+    "cli-002250",
+    "cli-000683",
+    "cli-000842",
+    "cli-001389",
+    "cli-001377",
+    "cli-000857",
+    "cli-001550",
+    "cli-001163",
+    "cli-002978",
+    "cli-001083",
+    "cli-000981",
+    "cli-000381",
+    "cli-001332",
+    "cli-002713",
+    "cli-000560",
+    "cli-000267",
+    "cli-002987",
+    "cli-001505",
+    "cli-001027",
+    "cli-002703",
+    "cli-001574",
+    "cli-002529",
+    "cli-003293",
+    "cli-003129",
+    "cli-002149",
+    "cli-001087",
+    "cli-001566",
+    "cli-002388",
+    "cli-001709",
+    "cli-002604",
+    "cli-002660",
+    "cli-003055",
+    "cli-000633",
+    "cli-002338",
+    "cli-002626",
+    "cli-000572",
+    "cli-001893",
+    "cli-002051",
+    "cli-001928",
+    "cli-002312",
+    "cli-002218",
+    "cli-000334",
+    "cli-000852",
+    "cli-000621",
+    "cli-001337",
+    "cli-001869",
+    "cli-002360",
+    "cli-001384",
+    "cli-000323",
+    "cli-002832",
+    "cli-000972",
+    "cli-001896",
+    "cli-002805",
+    "cli-001909",
+    "cli-002171",
+    "cli-001343",
+    "cli-003212",
+    "cli-001961",
+    "cli-002712",
+    "cli-000192",
+    "cli-000920",
+    "cli-002354",
+    "cli-002988",
+    "cli-001120",
+    "cli-001230",
+    "cli-002590",
+    "cli-001530",
+    "cli-002953",
+    "cli-002705",
+    "cli-000581",
+    "cli-000554",
+    "cli-000840",
+    "cli-001206",
+    "cli-000286",
+    "cli-002273",
+    "cli-002430",
+    "cli-002344",
+    "cli-000584",
+    "cli-002423",
+    "cli-002704",
+    "cli-002291",
+    "cli-001707",
+    "cli-000311",
+    "cli-002725",
+    "cli-002762",
+    "cli-001469",
+    "cli-001472",
+    "cli-000366",
+    "cli-002161",
+    "cli-001490",
+    "cli-000215",
+    "cli-002614",
+    "cli-001649",
+    "cli-001715",
+    "cli-002877",
+    "cli-001638",
+    "cli-000991",
+    "cli-000490",
+    "cli-001736",
+    "cli-003239",
+    "cli-000779",
+    "cli-002208",
+    "cli-000329",
+    "cli-001051",
+    "cli-002622",
+    "cli-000540",
+    "cli-002568",
+    "cli-000856",
+    "cli-000687",
+    "cli-001683",
+    "cli-000823",
+    "cli-003219",
+    "cli-002780",
+    "cli-000322",
+    "cli-001169",
+    "cli-001254",
+    "cli-003327",
+    "cli-001720",
+    "cli-002361",
+    "cli-000903",
+    "cli-001586",
+    "cli-001097",
+    "cli-002664",
+    "cli-001973",
+    "cli-002494",
+    "cli-000275",
+    "cli-000928",
+    "cli-002623",
+    "cli-000854",
+    "cli-000858",
+    "cli-003218",
+    "cli-003100",
+    "cli-000461",
+    "cli-002190",
+    "cli-001525",
+    "cli-000723",
+    "cli-003015",
+    "cli-001391",
+    "cli-001152",
+    "cli-001562",
+    "cli-000385",
+    "cli-001772",
+    "cli-000458",
+    "cli-000491",
+    "cli-000996",
+    "cli-001339",
+    "cli-001609",
+    "cli-001386",
+    "cli-003135",
+    "cli-002926",
+    "cli-002792",
+    "cli-002156",
+    "cli-002902",
+    "cli-002700",
+    "cli-001359",
+    "cli-000075",
+    "cli-001499",
+    "cli-001316",
+    "cli-000958",
+    "cli-000093",
+    "cli-001012",
+    "cli-002615",
+    "cli-002531",
+    "cli-002451",
+    "cli-002871",
+    "cli-002248",
+    "cli-001884",
+    "cli-002414",
+    "cli-000225",
+    "cli-001580",
+    "cli-000734",
+    "cli-000781",
+    "cli-002174",
+    "cli-000120",
+    "cli-002245",
+    "cli-001858",
+    "cli-003220",
+    "cli-002912",
+    "cli-003350",
+    "cli-001382",
+    "cli-002187",
+    "cli-001335",
+    "cli-001637",
+    "cli-000631",
+    "cli-000301",
+    "cli-001816",
+    "cli-000465",
+    "cli-002392",
+    "cli-001661",
+    "cli-002371",
+    "cli-001539",
+    "cli-002036",
+    "cli-001841",
+    "cli-001977",
+    "cli-002739",
+    "cli-000513",
+    "cli-002648",
+    "cli-002960",
+    "cli-002483",
+    "cli-003176",
+    "cli-001239",
+    "cli-000291",
+    "cli-000166",
+    "cli-002553",
+    "cli-000973",
+    "cli-000724",
+    "cli-000653",
+    "cli-001237",
+    "cli-000880",
+    "cli-001519",
+    "cli-001414",
+    "cli-002562",
+    "cli-001140",
+    "cli-000456",
+    "cli-001860",
+    "cli-001985",
+    "cli-001980",
+    "cli-002074",
+    "cli-002851",
+    "cli-001088",
+    "cli-002918",
+    "cli-001960",
+    "cli-002009",
+    "cli-000273",
+    "cli-001342",
+    "cli-003150",
+    "cli-003248",
+    "cli-003181",
+    "cli-003112",
+    "cli-001898",
+    "cli-002308",
+    "cli-000718",
+    "cli-003029",
+    "cli-002771",
+    "cli-001815",
+    "cli-000315",
+    "cli-000538",
+    "cli-000604",
+    "cli-003314",
+    "cli-000209",
+    "cli-003083",
+    "cli-000885",
+    "cli-003039",
+    "cli-001914",
+    "cli-002817",
+    "cli-001934",
+    "cli-001537",
+    "cli-002294",
+    "cli-001475",
+    "cli-000236",
+    "cli-002467",
+    "cli-000530",
+    "cli-000043",
+    "cli-001417",
+    "cli-000161",
+    "cli-000939",
+    "cli-002576",
+    "cli-000017",
+    "cli-000745",
+    "cli-001006",
+    "cli-003012",
+    "cli-000227",
+    "cli-001410",
+    "cli-002530",
+    "cli-002345",
+    "cli-002286",
+    "cli-002386",
+    "cli-002543",
+    "cli-000129",
+    "cli-001757",
+    "cli-000846",
+    "cli-001390",
+    "cli-002181",
+    "cli-001504",
+    "cli-001091",
+    "cli-000467",
+    "cli-000419",
+    "cli-000708",
+    "cli-000593",
+    "cli-002561",
+    "cli-000800",
+    "cli-003325",
+    "cli-001353",
+    "cli-000559",
+    "cli-001969",
+    "cli-001397",
+    "cli-002552",
+    "cli-002807",
+    "cli-000364",
+    "cli-003331",
+    "cli-002492",
+    "cli-000390",
+    "cli-000527",
+    "cli-002454",
+    "cli-002861",
+    "cli-002073",
+    "cli-002656",
+    "cli-001753",
+    "cli-001810",
+    "cli-002092",
+    "cli-002599",
+    "cli-001329",
+    "cli-003084",
+    "cli-002080",
+    "cli-001358",
+    "cli-000821",
+    "cli-001308",
+    "cli-000172",
+    "cli-002299",
+    "cli-003152",
+    "cli-001543",
+    "cli-000645",
+    "cli-000518",
+    "cli-001199",
+    "cli-001375",
+    "cli-001467",
+    "cli-002065",
+    "cli-000582",
+    "cli-000611",
+    "cli-002122",
+    "cli-002331",
+    "cli-001330",
+    "cli-002898",
+    "cli-001604",
+    "cli-000217",
+    "cli-001780",
+    "cli-001624",
+    "cli-000221",
+    "cli-000938",
+    "cli-002055",
+    "cli-003013",
+    "cli-001903",
+    "cli-001099",
+    "cli-000077",
+    "cli-001368",
+    "cli-002710",
+    "cli-002663",
+    "cli-002242",
+    "cli-002038",
+    "cli-002457",
+    "cli-000072",
+    "cli-003216",
+    "cli-000118",
+    "cli-002634",
+    "cli-002412",
+    "cli-003225",
+    "cli-001714",
+    "cli-002287",
+    "cli-001844",
+    "cli-002324",
+    "cli-000636",
+    "cli-001333",
+    "cli-000510",
+    "cli-001666",
+    "cli-002640",
+    "cli-001834",
+    "cli-000081",
+    "cli-000860",
+    "cli-001702",
+    "cli-002639",
+    "cli-002858",
+    "cli-001159",
+    "cli-000576",
+    "cli-000352",
+    "cli-001971",
+    "cli-003034",
+    "cli-002974",
+    "cli-003334",
+    "cli-002094",
+    "cli-003305",
+    "cli-002951",
+    "cli-002774",
+    "cli-002007",
+    "cli-002766",
+    "cli-001658",
+    "cli-001783",
+    "cli-000069",
+    "cli-001557",
+    "cli-002844",
+    "cli-003323",
+    "cli-002256",
+    "cli-000760",
+    "cli-000473",
+    "cli-001710",
+    "cli-002948",
+    "cli-002486",
+    "cli-001370",
+    "cli-003243",
+    "cli-000523",
+    "cli-000638",
+    "cli-002717",
+    "cli-000330",
+    "cli-003199",
+    "cli-001507",
+    "cli-001136",
+    "cli-002459",
+    "cli-000827",
+    "cli-003004",
+    "cli-000994",
+    "cli-001576",
+    "cli-000459",
+    "cli-002279",
+    "cli-000628",
+    "cli-000990",
+    "cli-000950",
+    "cli-002603",
+    "cli-001050",
+    "cli-001310",
+    "cli-000512",
+    "cli-001723",
+    "cli-000618",
+    "cli-000562",
+    "cli-001926",
+    "cli-001949",
+    "cli-002860",
+    "cli-002326",
+    "cli-002873",
+    "cli-002088",
+    "cli-001500",
+    "cli-000173",
+    "cli-001538",
+    "cli-001699",
+    "cli-001447",
+    "cli-002672",
+    "cli-002876",
+    "cli-002335",
+    "cli-001848",
+    "cli-001763",
+    "cli-001033",
+    "cli-001766",
+    "cli-001338",
+    "cli-002462",
+    "cli-002025",
+    "cli-000294",
+    "cli-003308",
+    "cli-001847",
+    "cli-001236",
+    "cli-001365",
+    "cli-002075",
+    "cli-002310",
+    "cli-000630",
+    "cli-002777",
+    "cli-000810",
+    "cli-001360",
+    "cli-001214",
+    "cli-003050",
+    "cli-001647",
+    "cli-000152",
+    "cli-003221",
+    "cli-002651",
+    "cli-000932",
+    "cli-000030",
+    "cli-002578",
+    "cli-000952",
+    "cli-001901",
+    "cli-001440",
+    "cli-001630",
+    "cli-000394",
+    "cli-003303",
+    "cli-002665",
+    "cli-001694",
+    "cli-002915",
+    "cli-000254",
+    "cli-003000",
+    "cli-003226",
+    "cli-000565",
+    "cli-000968",
+    "cli-001968",
+    "cli-002841",
+    "cli-002818",
+    "cli-003136",
+    "cli-001349",
+    "cli-001156",
+    "cli-002157",
+    "cli-000689",
+    "cli-001144",
+    "cli-002082",
+    "cli-000386",
+    "cli-001212",
+    "cli-002283",
+    "cli-002227",
+    "cli-000908",
+    "cli-001600",
+    "cli-001196",
+    "cli-000168",
+    "cli-001428",
+    "cli-002215",
+    "cli-000313",
+    "cli-003195",
+    "cli-001314",
+    "cli-002020",
+    "cli-002512",
+    "cli-001286",
+    "cli-000843",
+    "cli-001754",
+    "cli-001752",
+    "cli-000966",
+    "cli-000809",
+    "cli-003128",
+    "cli-002932",
+    "cli-001640",
+    "cli-002732",
+    "cli-002313",
+    "cli-000164",
+    "cli-002669",
+    "cli-000183",
+    "cli-000588",
+    "cli-001722",
+    "cli-001602",
+    "cli-000157",
+    "cli-000202",
+    "cli-001618",
+    "cli-002489",
+    "cli-002653",
+    "cli-001284",
+    "cli-003291",
+    "cli-001110",
+    "cli-002123",
+    "cli-003294",
+    "cli-002679",
+    "cli-003353",
+    "cli-002404",
+    "cli-000233",
+    "cli-003223",
+    "cli-002869",
+    "cli-000947",
+    "cli-002402",
+    "cli-002415",
+    "cli-002379",
+    "cli-001824",
+    "cli-000416",
+    "cli-002139",
+    "cli-001792",
+    "cli-000934",
+    "cli-003357",
+    "cli-001948",
+    "cli-003190",
+    "cli-000503",
+    "cli-001648",
+    "cli-002178",
+    "cli-001187",
+    "cli-000552",
+    "cli-002707",
+    "cli-000370",
+    "cli-000343",
+    "cli-003158",
+    "cli-002103",
+    "cli-001875",
+    "cli-001701",
+    "cli-000915",
+    "cli-002096",
+    "cli-001984",
+    "cli-003082"
+   ]
+  },
+  {
+   "fase": "Q1",
+   "inizio": "2026-11-05T17:11:26.070005Z",
+   "fine": "2026-11-05T17:13:56.070191Z",
+   "n": 600,
+   "con_freddo": 600,
+   "errori": 0,
+   "controlli_ok": 600,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 600,
+    "p50": 2.624,
+    "p95": 8.013,
+    "p99": 10.988,
+    "media": 3.583,
+    "min": 2.058,
+    "max": 19.882
+   },
+   "caldo_ms": {
+    "n": 600,
+    "p50": 1.409,
+    "p95": 1.483,
+    "p99": 1.573,
+    "media": 1.458,
+    "min": 1.061,
+    "max": 30.89
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 1.221,
+    "p95": 6.586,
+    "p99": 9.592,
+    "media": 2.164,
+    "min": 0.731,
+    "max": 18.42
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 0.286,
+    "p95": 0.366,
+    "p99": 0.432,
+    "media": 0.339,
+    "min": -1.952,
+    "max": 29.751
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 600,
+    "p50": 1.242,
+    "p95": 6.555,
+    "p99": 9.5,
+    "media": 2.125,
+    "min": -28.088,
+    "max": 18.408
+   },
+   "p50_freddo_meno_p50_caldo": 1.215,
+   "documenti_freddo": {
+    "n": 600,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "documenti_caldo": {
+    "n": 600,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "byte_freddo": {
+    "n": 600,
+    "p50": 6799.0,
+    "p95": 7390.3,
+    "p99": 7603.25,
+    "media": 6812.637,
+    "min": 5928,
+    "max": 7937
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 8.055200000000001,
+     "freddo_meno_hello_p50": 8.1065
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 4.4296,
+     "freddo_meno_hello_p50": 4.5104
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 2.6209,
+     "freddo_meno_hello_p50": 2.4788
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 1.9433000000000002,
+     "freddo_meno_hello_p50": 1.9967000000000001
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 1.8281,
+     "freddo_meno_hello_p50": 1.7308000000000001
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 1.5205000000000002,
+     "freddo_meno_hello_p50": 1.4824000000000002
+    },
+    {
+     "da": 150,
+     "a": 175,
+     "freddo_meno_caldo_p50": 1.5631000000000002,
+     "freddo_meno_hello_p50": 1.5170000000000001
+    },
+    {
+     "da": 175,
+     "a": 200,
+     "freddo_meno_caldo_p50": 1.0152000000000003,
+     "freddo_meno_hello_p50": 0.9828999999999999
+    },
+    {
+     "da": 200,
+     "a": 225,
+     "freddo_meno_caldo_p50": 1.2434,
+     "freddo_meno_hello_p50": 1.2758
+    },
+    {
+     "da": 225,
+     "a": 250,
+     "freddo_meno_caldo_p50": 1.0472000000000001,
+     "freddo_meno_hello_p50": 1.0643000000000002
+    },
+    {
+     "da": 250,
+     "a": 275,
+     "freddo_meno_caldo_p50": 1.1054,
+     "freddo_meno_hello_p50": 1.1235000000000002
+    },
+    {
+     "da": 275,
+     "a": 300,
+     "freddo_meno_caldo_p50": 1.0758,
+     "freddo_meno_hello_p50": 1.0677999999999999
+    },
+    {
+     "da": 300,
+     "a": 325,
+     "freddo_meno_caldo_p50": 1.169,
+     "freddo_meno_hello_p50": 1.1723
+    },
+    {
+     "da": 325,
+     "a": 350,
+     "freddo_meno_caldo_p50": 1.1779999999999997,
+     "freddo_meno_hello_p50": 1.1876
+    },
+    {
+     "da": 350,
+     "a": 375,
+     "freddo_meno_caldo_p50": 1.2666,
+     "freddo_meno_hello_p50": 1.2155999999999998
+    },
+    {
+     "da": 375,
+     "a": 400,
+     "freddo_meno_caldo_p50": 1.2501,
+     "freddo_meno_hello_p50": 1.1548000000000003
+    },
+    {
+     "da": 400,
+     "a": 425,
+     "freddo_meno_caldo_p50": 1.2753,
+     "freddo_meno_hello_p50": 1.2359
+    },
+    {
+     "da": 425,
+     "a": 450,
+     "freddo_meno_caldo_p50": 1.2071,
+     "freddo_meno_hello_p50": 1.1653
+    },
+    {
+     "da": 450,
+     "a": 475,
+     "freddo_meno_caldo_p50": 1.2157,
+     "freddo_meno_hello_p50": 1.1526
+    },
+    {
+     "da": 475,
+     "a": 500,
+     "freddo_meno_caldo_p50": 1.2535999999999998,
+     "freddo_meno_hello_p50": 1.2237
+    },
+    {
+     "da": 500,
+     "a": 525,
+     "freddo_meno_caldo_p50": 1.1688,
+     "freddo_meno_hello_p50": 1.1635999999999997
+    },
+    {
+     "da": 525,
+     "a": 550,
+     "freddo_meno_caldo_p50": 1.1004999999999998,
+     "freddo_meno_hello_p50": 1.0554000000000001
+    },
+    {
+     "da": 550,
+     "a": 575,
+     "freddo_meno_caldo_p50": 1.0889,
+     "freddo_meno_hello_p50": 1.0372
+    },
+    {
+     "da": 575,
+     "a": 600,
+     "freddo_meno_caldo_p50": 1.0782000000000003,
+     "freddo_meno_hello_p50": 1.0233
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 2.962,
+      "p95": 8.754,
+      "p99": 10.858,
+      "media": 3.9,
+      "min": 2.172,
+      "max": 17.683
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.409,
+      "p95": 1.476,
+      "p99": 1.517,
+      "media": 1.5,
+      "min": 1.169,
+      "max": 30.89
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.507,
+      "p95": 7.269,
+      "p99": 9.508,
+      "media": 2.468,
+      "min": 0.731,
+      "max": 16.484
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.286,
+      "p95": 0.352,
+      "p99": 0.41,
+      "media": 0.384,
+      "min": 0.103,
+      "max": 29.751
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.556,
+      "p95": 7.309,
+      "p99": 9.5,
+      "media": 2.4,
+      "min": -28.088,
+      "max": 16.234
+     },
+     "p50_freddo_meno_p50_caldo": 1.552,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 6771.5,
+      "p95": 7396.15,
+      "p99": 7592.36,
+      "media": 6804.333,
+      "min": 5945,
+      "max": 7702
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 6.6758,
+       "freddo_meno_hello_p50": 6.7814
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 3.1463,
+       "freddo_meno_hello_p50": 3.1369
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.6281,
+       "freddo_meno_hello_p50": 1.5961
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.433,
+       "freddo_meno_hello_p50": 1.397
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 1.8524,
+       "freddo_meno_hello_p50": 1.7851000000000001
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 1.1331000000000002,
+       "freddo_meno_hello_p50": 1.1261999999999999
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.1712000000000002,
+       "freddo_meno_hello_p50": 1.1723
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 1.3289000000000002,
+       "freddo_meno_hello_p50": 1.2155999999999998
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 1.7107,
+       "freddo_meno_hello_p50": 1.7998000000000003
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.1661000000000001,
+       "freddo_meno_hello_p50": 1.1638000000000002
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.128,
+       "freddo_meno_hello_p50": 1.0458999999999998
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 1.1414,
+       "freddo_meno_hello_p50": 1.0397999999999998
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 2.544,
+      "p95": 7.32,
+      "p99": 11.011,
+      "media": 3.266,
+      "min": 2.058,
+      "max": 19.882
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.409,
+      "p95": 1.502,
+      "p99": 1.735,
+      "media": 1.417,
+      "min": 1.061,
+      "max": 4.587
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.154,
+      "p95": 5.933,
+      "p99": 9.614,
+      "media": 1.859,
+      "min": 0.762,
+      "max": 18.42
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.286,
+      "p95": 0.378,
+      "p99": 0.534,
+      "media": 0.295,
+      "min": -1.952,
+      "max": 3.407
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.163,
+      "p95": 5.879,
+      "p99": 9.492,
+      "media": 1.849,
+      "min": 0.575,
+      "max": 18.408
+     },
+     "p50_freddo_meno_p50_caldo": 1.135,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 6822.0,
+      "p95": 7385.25,
+      "p99": 7603.32,
+      "media": 6820.94,
+      "min": 5928,
+      "max": 7937
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 5.9805,
+       "freddo_meno_hello_p50": 5.9826
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 1.9433000000000002,
+       "freddo_meno_hello_p50": 1.9967000000000001
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.5205000000000002,
+       "freddo_meno_hello_p50": 1.4824000000000002
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.0152000000000003,
+       "freddo_meno_hello_p50": 1.0323999999999998
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 0.9905000000000002,
+       "freddo_meno_hello_p50": 1.0129000000000001
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 1.0708999999999997,
+       "freddo_meno_hello_p50": 1.0605999999999998
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.1779999999999997,
+       "freddo_meno_hello_p50": 1.1876
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 1.1973999999999998,
+       "freddo_meno_hello_p50": 1.1706000000000003
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 1.1146,
+       "freddo_meno_hello_p50": 1.1133
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.2535999999999998,
+       "freddo_meno_hello_p50": 1.2299999999999998
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.1381000000000001,
+       "freddo_meno_hello_p50": 1.1458
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 1.0476999999999999,
+       "freddo_meno_hello_p50": 1.0205
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-000580",
+    "cli-002052",
+    "cli-003217",
+    "cli-002585",
+    "cli-002812",
+    "cli-003283",
+    "cli-002243",
+    "cli-001888",
+    "cli-000071",
+    "cli-001906",
+    "cli-003189",
+    "cli-003215",
+    "cli-000333",
+    "cli-000064",
+    "cli-003090",
+    "cli-002017",
+    "cli-002636",
+    "cli-001957",
+    "cli-001727",
+    "cli-002539",
+    "cli-000160",
+    "cli-001029",
+    "cli-002970",
+    "cli-002297",
+    "cli-002635",
+    "cli-001620",
+    "cli-002975",
+    "cli-000271",
+    "cli-000296",
+    "cli-000433",
+    "cli-000941",
+    "cli-003116",
+    "cli-001868",
+    "cli-003067",
+    "cli-002759",
+    "cli-002064",
+    "cli-001738",
+    "cli-001937",
+    "cli-002204",
+    "cli-000088",
+    "cli-000008",
+    "cli-000150",
+    "cli-000470",
+    "cli-002617",
+    "cli-001534",
+    "cli-001659",
+    "cli-002466",
+    "cli-002327",
+    "cli-002107",
+    "cli-000923",
+    "cli-002026",
+    "cli-002409",
+    "cli-002362",
+    "cli-003043",
+    "cli-000084",
+    "cli-000480",
+    "cli-001718",
+    "cli-000984",
+    "cli-002376",
+    "cli-000486",
+    "cli-001823",
+    "cli-002128",
+    "cli-001174",
+    "cli-001053",
+    "cli-003133",
+    "cli-000758",
+    "cli-000951",
+    "cli-001054",
+    "cli-001796",
+    "cli-002505",
+    "cli-002519",
+    "cli-000859",
+    "cli-003095",
+    "cli-002339",
+    "cli-002925",
+    "cli-001166",
+    "cli-001687",
+    "cli-000477",
+    "cli-002996",
+    "cli-001108",
+    "cli-002417",
+    "cli-002093",
+    "cli-000681",
+    "cli-001147",
+    "cli-000427",
+    "cli-002809",
+    "cli-000766",
+    "cli-002117",
+    "cli-000338",
+    "cli-001013",
+    "cli-000287",
+    "cli-000849",
+    "cli-003122",
+    "cli-001305",
+    "cli-001449",
+    "cli-000705",
+    "cli-002199",
+    "cli-002765",
+    "cli-002401",
+    "cli-002722",
+    "cli-001653",
+    "cli-001603",
+    "cli-002403",
+    "cli-003126",
+    "cli-001955",
+    "cli-000478",
+    "cli-002048",
+    "cli-001621",
+    "cli-000690",
+    "cli-000302",
+    "cli-000997",
+    "cli-002878",
+    "cli-001023",
+    "cli-000006",
+    "cli-002752",
+    "cli-001696",
+    "cli-000029",
+    "cli-003253",
+    "cli-001443",
+    "cli-000606",
+    "cli-001607",
+    "cli-003179",
+    "cli-000342",
+    "cli-001693",
+    "cli-000306",
+    "cli-001989",
+    "cli-000341",
+    "cli-000312",
+    "cli-001479",
+    "cli-000514",
+    "cli-001171",
+    "cli-000926",
+    "cli-000890",
+    "cli-003368",
+    "cli-003378",
+    "cli-002450",
+    "cli-000624",
+    "cli-001285",
+    "cli-002240",
+    "cli-002053",
+    "cli-002674",
+    "cli-000658",
+    "cli-002350",
+    "cli-001676",
+    "cli-002575",
+    "cli-000336",
+    "cli-000627",
+    "cli-000882",
+    "cli-001257",
+    "cli-001773",
+    "cli-001897",
+    "cli-001011",
+    "cli-001037",
+    "cli-001001",
+    "cli-001739",
+    "cli-001481",
+    "cli-002290",
+    "cli-000011",
+    "cli-002820",
+    "cli-000668",
+    "cli-002928",
+    "cli-000629",
+    "cli-000677",
+    "cli-001711",
+    "cli-000298",
+    "cli-001742",
+    "cli-000435",
+    "cli-000245",
+    "cli-002265",
+    "cli-001210",
+    "cli-000086",
+    "cli-000148",
+    "cli-000561",
+    "cli-001778",
+    "cli-001632",
+    "cli-002028",
+    "cli-001060",
+    "cli-003285",
+    "cli-001291",
+    "cli-000795",
+    "cli-001625",
+    "cli-001548",
+    "cli-000833",
+    "cli-002194",
+    "cli-002206",
+    "cli-002019",
+    "cli-002499",
+    "cli-002554",
+    "cli-002659",
+    "cli-000533",
+    "cli-001379",
+    "cli-001808",
+    "cli-000544",
+    "cli-000773",
+    "cli-001556",
+    "cli-002921",
+    "cli-000054",
+    "cli-003057",
+    "cli-000417",
+    "cli-000126",
+    "cli-001153",
+    "cli-001670",
+    "cli-002848",
+    "cli-001009",
+    "cli-000076",
+    "cli-003154",
+    "cli-003094",
+    "cli-002229",
+    "cli-002601",
+    "cli-000506",
+    "cli-000717",
+    "cli-000505",
+    "cli-003343",
+    "cli-000720",
+    "cli-000250",
+    "cli-002469",
+    "cli-001572",
+    "cli-001150",
+    "cli-000918",
+    "cli-002003",
+    "cli-002555",
+    "cli-003369",
+    "cli-002006",
+    "cli-000452",
+    "cli-002694",
+    "cli-002563",
+    "cli-002159",
+    "cli-001478",
+    "cli-001692",
+    "cli-000174",
+    "cli-001272",
+    "cli-000948",
+    "cli-001902",
+    "cli-002071",
+    "cli-000987",
+    "cli-001216",
+    "cli-002883",
+    "cli-000113",
+    "cli-000731",
+    "cli-002667",
+    "cli-003063",
+    "cli-000023",
+    "cli-002941",
+    "cli-001266",
+    "cli-000061",
+    "cli-003295",
+    "cli-000881",
+    "cli-001663",
+    "cli-003348",
+    "cli-001779",
+    "cli-001972",
+    "cli-001035",
+    "cli-001387",
+    "cli-002714",
+    "cli-003280",
+    "cli-001923",
+    "cli-000024",
+    "cli-001426",
+    "cli-000493",
+    "cli-002889",
+    "cli-000346",
+    "cli-002495",
+    "cli-003341",
+    "cli-000878",
+    "cli-000104",
+    "cli-000149",
+    "cli-001201",
+    "cli-002836",
+    "cli-002874",
+    "cli-002016",
+    "cli-001042",
+    "cli-002285",
+    "cli-001180",
+    "cli-002456",
+    "cli-001063",
+    "cli-002234",
+    "cli-002797",
+    "cli-000231",
+    "cli-000208",
+    "cli-002696",
+    "cli-002619",
+    "cli-000549",
+    "cli-001007",
+    "cli-002610",
+    "cli-001551",
+    "cli-001485",
+    "cli-003108",
+    "cli-000026",
+    "cli-000021",
+    "cli-000475",
+    "cli-001021",
+    "cli-000647",
+    "cli-001298",
+    "cli-003227",
+    "cli-001157",
+    "cli-002405",
+    "cli-002994",
+    "cli-000489",
+    "cli-001325",
+    "cli-000613",
+    "cli-000204",
+    "cli-001852",
+    "cli-001135",
+    "cli-002211",
+    "cli-003101",
+    "cli-000671",
+    "cli-002955",
+    "cli-000007",
+    "cli-001713",
+    "cli-000817",
+    "cli-001326",
+    "cli-002521",
+    "cli-001132",
+    "cli-003321",
+    "cli-001994",
+    "cli-001732",
+    "cli-001160",
+    "cli-001650",
+    "cli-002893",
+    "cli-001748",
+    "cli-002655",
+    "cli-002944",
+    "cli-002232",
+    "cli-003074",
+    "cli-002795",
+    "cli-001840",
+    "cli-002652",
+    "cli-003351",
+    "cli-003188",
+    "cli-001080",
+    "cli-002393",
+    "cli-003109",
+    "cli-000114",
+    "cli-000642",
+    "cli-000402",
+    "cli-002509",
+    "cli-001719",
+    "cli-002920",
+    "cli-001064",
+    "cli-000721",
+    "cli-002984",
+    "cli-000974",
+    "cli-001004",
+    "cli-002112",
+    "cli-000808",
+    "cli-000355",
+    "cli-000257",
+    "cli-001435",
+    "cli-001416",
+    "cli-002909",
+    "cli-001381",
+    "cli-002276",
+    "cli-002306",
+    "cli-000969",
+    "cli-001154",
+    "cli-000556",
+    "cli-001872",
+    "cli-001497",
+    "cli-001184",
+    "cli-002511",
+    "cli-001685",
+    "cli-000873",
+    "cli-002772",
+    "cli-000165",
+    "cli-001922",
+    "cli-002070",
+    "cli-001880",
+    "cli-001191",
+    "cli-001256",
+    "cli-002730",
+    "cli-001026",
+    "cli-000476",
+    "cli-002961",
+    "cli-002849",
+    "cli-001438",
+    "cli-001313",
+    "cli-001704",
+    "cli-001793",
+    "cli-000005",
+    "cli-000937",
+    "cli-000692",
+    "cli-002262",
+    "cli-000644",
+    "cli-000226",
+    "cli-001261",
+    "cli-002557",
+    "cli-000543",
+    "cli-001388",
+    "cli-002319",
+    "cli-001953",
+    "cli-000571",
+    "cli-003049",
+    "cli-000541",
+    "cli-001131",
+    "cli-002721",
+    "cli-000799",
+    "cli-001764",
+    "cli-001970",
+    "cli-001857",
+    "cli-000894",
+    "cli-000441",
+    "cli-001528",
+    "cli-000392",
+    "cli-003156",
+    "cli-001996",
+    "cli-001578",
+    "cli-002881",
+    "cli-002001",
+    "cli-000453",
+    "cli-001672",
+    "cli-001275",
+    "cli-001350",
+    "cli-003170",
+    "cli-000742",
+    "cli-001674",
+    "cli-000260",
+    "cli-000577",
+    "cli-002956",
+    "cli-000065",
+    "cli-000907",
+    "cli-000820",
+    "cli-002160",
+    "cli-001845",
+    "cli-002213",
+    "cli-000279",
+    "cli-000913",
+    "cli-000625",
+    "cli-000013",
+    "cli-000175",
+    "cli-000010",
+    "cli-001502",
+    "cli-003310",
+    "cli-000794",
+    "cli-002611",
+    "cli-002597",
+    "cli-002098",
+    "cli-000871",
+    "cli-000992",
+    "cli-001231",
+    "cli-003299",
+    "cli-002115",
+    "cli-002397",
+    "cli-002536",
+    "cli-002789",
+    "cli-001518",
+    "cli-001577",
+    "cli-000187",
+    "cli-003333",
+    "cli-001641",
+    "cli-002559",
+    "cli-002288",
+    "cli-001036",
+    "cli-000770",
+    "cli-001252",
+    "cli-000935",
+    "cli-001583",
+    "cli-002686",
+    "cli-000195",
+    "cli-003145",
+    "cli-001975",
+    "cli-000016",
+    "cli-000379",
+    "cli-000222",
+    "cli-001803",
+    "cli-002981",
+    "cli-001162",
+    "cli-001988",
+    "cli-002698",
+    "cli-001374",
+    "cli-002680",
+    "cli-002929",
+    "cli-001767",
+    "cli-002127",
+    "cli-000609",
+    "cli-000776",
+    "cli-001123",
+    "cli-001686",
+    "cli-001293",
+    "cli-001655",
+    "cli-000163",
+    "cli-000784",
+    "cli-001413",
+    "cli-000537",
+    "cli-001657",
+    "cli-000596",
+    "cli-000592",
+    "cli-003103",
+    "cli-002650",
+    "cli-001570",
+    "cli-001546",
+    "cli-003048",
+    "cli-000725",
+    "cli-002441",
+    "cli-002592",
+    "cli-003114",
+    "cli-001222",
+    "cli-000246",
+    "cli-001935",
+    "cli-000121",
+    "cli-001161",
+    "cli-001380",
+    "cli-000684",
+    "cli-003309",
+    "cli-001716",
+    "cli-000015",
+    "cli-000449",
+    "cli-002369",
+    "cli-002502",
+    "cli-003071",
+    "cli-001770",
+    "cli-001946",
+    "cli-002275",
+    "cli-000424",
+    "cli-001560",
+    "cli-000656",
+    "cli-002114",
+    "cli-002901",
+    "cli-000931",
+    "cli-000654",
+    "cli-000178",
+    "cli-000806",
+    "cli-001103",
+    "cli-002764",
+    "cli-002106",
+    "cli-000500",
+    "cli-001656",
+    "cli-000448",
+    "cli-001070",
+    "cli-002214",
+    "cli-000956",
+    "cli-003297",
+    "cli-003247",
+    "cli-000666",
+    "cli-002620",
+    "cli-002085",
+    "cli-000261",
+    "cli-000853",
+    "cli-001287",
+    "cli-001295",
+    "cli-001488",
+    "cli-002188",
+    "cli-000616",
+    "cli-001262",
+    "cli-001963",
+    "cli-002427",
+    "cli-002216",
+    "cli-002826",
+    "cli-003153",
+    "cli-000274",
+    "cli-000412",
+    "cli-001344",
+    "cli-003102",
+    "cli-000945",
+    "cli-002259",
+    "cli-003193",
+    "cli-002284",
+    "cli-001532",
+    "cli-002500",
+    "cli-003335",
+    "cli-001299",
+    "cli-002608",
+    "cli-000640",
+    "cli-000688",
+    "cli-000405",
+    "cli-000207",
+    "cli-002280",
+    "cli-001907",
+    "cli-001003",
+    "cli-001408",
+    "cli-002708",
+    "cli-000977",
+    "cli-001446",
+    "cli-002166",
+    "cli-000712",
+    "cli-002184",
+    "cli-000483",
+    "cli-000788",
+    "cli-003228",
+    "cli-003367",
+    "cli-003346",
+    "cli-002246",
+    "cli-002645",
+    "cli-000864",
+    "cli-000145",
+    "cli-000585",
+    "cli-001838",
+    "cli-002295",
+    "cli-001484",
+    "cli-002720",
+    "cli-000099",
+    "cli-002497",
+    "cli-002854",
+    "cli-001956",
+    "cli-000284",
+    "cli-002969",
+    "cli-003141",
+    "cli-000499",
+    "cli-003326",
+    "cli-002304",
+    "cli-002342"
+   ]
+  },
+  {
+   "fase": "Q1d",
+   "inizio": "2026-11-05T17:15:56.626063Z",
+   "fine": "2026-11-05T17:18:26.626198Z",
+   "n": 600,
+   "con_freddo": 600,
+   "errori": 0,
+   "controlli_ok": 600,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 600,
+    "p50": 8.649,
+    "p95": 13.782,
+    "p99": 16.38,
+    "media": 7.231,
+    "min": 1.524,
+    "max": 20.664
+   },
+   "caldo_ms": {
+    "n": 600,
+    "p50": 1.395,
+    "p95": 1.505,
+    "p99": 1.566,
+    "media": 1.396,
+    "min": 1.057,
+    "max": 1.92
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 7.286,
+    "p95": 12.346,
+    "p99": 14.991,
+    "media": 5.847,
+    "min": 0.198,
+    "max": 19.15
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 0.315,
+    "p95": 0.4,
+    "p99": 0.471,
+    "media": 0.308,
+    "min": -3.299,
+    "max": 0.701
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 600,
+    "p50": 7.262,
+    "p95": 12.277,
+    "p99": 14.914,
+    "media": 5.835,
+    "min": 0.217,
+    "max": 19.181
+   },
+   "p50_freddo_meno_p50_caldo": 7.254,
+   "documenti_freddo": {
+    "n": 600,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "documenti_caldo": {
+    "n": 600,
+    "p50": 20.0,
+    "p95": 20.0,
+    "p99": 20.0,
+    "media": 20.0,
+    "min": 20,
+    "max": 20
+   },
+   "byte_freddo": {
+    "n": 600,
+    "p50": 6810.5,
+    "p95": 7394.15,
+    "p99": 7609.17,
+    "media": 6808.507,
+    "min": 5784,
+    "max": 7844
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 7.901800000000001,
+     "freddo_meno_hello_p50": 7.7849
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 3.0012999999999996,
+     "freddo_meno_hello_p50": 2.9896
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 9.0504,
+     "freddo_meno_hello_p50": 9.1216
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 9.3475,
+     "freddo_meno_hello_p50": 9.3737
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 3.5016000000000007,
+     "freddo_meno_hello_p50": 3.5417000000000005
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 8.069600000000001,
+     "freddo_meno_hello_p50": 8.1773
+    },
+    {
+     "da": 150,
+     "a": 175,
+     "freddo_meno_caldo_p50": 2.9905,
+     "freddo_meno_hello_p50": 2.9712000000000005
+    },
+    {
+     "da": 175,
+     "a": 200,
+     "freddo_meno_caldo_p50": 3.6290999999999993,
+     "freddo_meno_hello_p50": 3.6834999999999996
+    },
+    {
+     "da": 200,
+     "a": 225,
+     "freddo_meno_caldo_p50": 9.540500000000002,
+     "freddo_meno_hello_p50": 9.523100000000001
+    },
+    {
+     "da": 225,
+     "a": 250,
+     "freddo_meno_caldo_p50": 8.9992,
+     "freddo_meno_hello_p50": 8.9494
+    },
+    {
+     "da": 250,
+     "a": 275,
+     "freddo_meno_caldo_p50": 5.5262,
+     "freddo_meno_hello_p50": 5.566700000000001
+    },
+    {
+     "da": 275,
+     "a": 300,
+     "freddo_meno_caldo_p50": 6.9918000000000005,
+     "freddo_meno_hello_p50": 6.909600000000001
+    },
+    {
+     "da": 300,
+     "a": 325,
+     "freddo_meno_caldo_p50": 8.6298,
+     "freddo_meno_hello_p50": 8.6806
+    },
+    {
+     "da": 325,
+     "a": 350,
+     "freddo_meno_caldo_p50": 7.41,
+     "freddo_meno_hello_p50": 7.3942000000000005
+    },
+    {
+     "da": 350,
+     "a": 375,
+     "freddo_meno_caldo_p50": 1.5923,
+     "freddo_meno_hello_p50": 1.7366
+    },
+    {
+     "da": 375,
+     "a": 400,
+     "freddo_meno_caldo_p50": 8.3949,
+     "freddo_meno_hello_p50": 8.488299999999999
+    },
+    {
+     "da": 400,
+     "a": 425,
+     "freddo_meno_caldo_p50": 7.5748999999999995,
+     "freddo_meno_hello_p50": 7.534
+    },
+    {
+     "da": 425,
+     "a": 450,
+     "freddo_meno_caldo_p50": 7.8219,
+     "freddo_meno_hello_p50": 7.8897
+    },
+    {
+     "da": 450,
+     "a": 475,
+     "freddo_meno_caldo_p50": 2.6649000000000003,
+     "freddo_meno_hello_p50": 2.6642
+    },
+    {
+     "da": 475,
+     "a": 500,
+     "freddo_meno_caldo_p50": 1.5920999999999998,
+     "freddo_meno_hello_p50": 1.6161999999999999
+    },
+    {
+     "da": 500,
+     "a": 525,
+     "freddo_meno_caldo_p50": 1.0473000000000001,
+     "freddo_meno_hello_p50": 1.0831000000000002
+    },
+    {
+     "da": 525,
+     "a": 550,
+     "freddo_meno_caldo_p50": 7.7879000000000005,
+     "freddo_meno_hello_p50": 7.7735
+    },
+    {
+     "da": 550,
+     "a": 575,
+     "freddo_meno_caldo_p50": 8.1892,
+     "freddo_meno_hello_p50": 8.197099999999999
+    },
+    {
+     "da": 575,
+     "a": 600,
+     "freddo_meno_caldo_p50": 6.955399999999999,
+     "freddo_meno_hello_p50": 7.013299999999999
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 2.959,
+      "p95": 13.536,
+      "p99": 15.17,
+      "media": 5.992,
+      "min": 1.968,
+      "max": 16.403
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.386,
+      "p95": 1.501,
+      "p99": 1.574,
+      "media": 1.388,
+      "min": 1.065,
+      "max": 1.585
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.606,
+      "p95": 12.067,
+      "p99": 13.636,
+      "media": 4.6,
+      "min": 0.565,
+      "max": 14.944
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.311,
+      "p95": 0.38,
+      "p99": 0.449,
+      "media": 0.306,
+      "min": -0.029,
+      "max": 0.508
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.609,
+      "p95": 12.056,
+      "p99": 13.587,
+      "media": 4.604,
+      "min": 0.541,
+      "max": 14.944
+     },
+     "p50_freddo_meno_p50_caldo": 1.573,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 6806.5,
+      "p95": 7425.65,
+      "p99": 7626.42,
+      "media": 6802.027,
+      "min": 5784,
+      "max": 7803
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 1.2536,
+       "freddo_meno_hello_p50": 1.0399999999999998
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 1.5184000000000002,
+       "freddo_meno_hello_p50": 1.465
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.9302000000000001,
+       "freddo_meno_hello_p50": 1.8737000000000001
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 1.1463999999999999,
+       "freddo_meno_hello_p50": 1.1169
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 8.9992,
+       "freddo_meno_hello_p50": 8.9607
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 2.3139,
+       "freddo_meno_hello_p50": 2.2950999999999997
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.221,
+       "freddo_meno_hello_p50": 1.2159000000000002
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 2.4029,
+       "freddo_meno_hello_p50": 2.3754
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 2.2457000000000003,
+       "freddo_meno_hello_p50": 2.2705
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.1651000000000002,
+       "freddo_meno_hello_p50": 1.1316
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.0455999999999999,
+       "freddo_meno_hello_p50": 1.0831000000000002
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 6.5572,
+       "freddo_meno_hello_p50": 6.6077
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 9.899,
+      "p95": 14.247,
+      "p99": 18.005,
+      "media": 8.471,
+      "min": 1.524,
+      "max": 20.664
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.399,
+      "p95": 1.505,
+      "p99": 1.561,
+      "media": 1.405,
+      "min": 1.057,
+      "max": 1.92
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 8.584,
+      "p95": 12.854,
+      "p99": 16.571,
+      "media": 7.093,
+      "min": 0.198,
+      "max": 19.15
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.321,
+      "p95": 0.411,
+      "p99": 0.474,
+      "media": 0.31,
+      "min": -3.299,
+      "max": 0.701
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 8.479,
+      "p95": 12.824,
+      "p99": 16.444,
+      "media": 7.066,
+      "min": 0.217,
+      "max": 19.181
+     },
+     "p50_freddo_meno_p50_caldo": 8.501,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 20.0,
+      "p95": 20.0,
+      "p99": 20.0,
+      "media": 20.0,
+      "min": 20,
+      "max": 20
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 6812.5,
+      "p95": 7367.4,
+      "p99": 7606.0,
+      "media": 6814.987,
+      "min": 5926,
+      "max": 7844
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 9.694700000000001,
+       "freddo_meno_hello_p50": 9.8733
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 10.7405,
+       "freddo_meno_hello_p50": 10.6872
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 8.069600000000001,
+       "freddo_meno_hello_p50": 8.1773
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 9.0641,
+       "freddo_meno_hello_p50": 9.186599999999999
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 9.4786,
+       "freddo_meno_hello_p50": 9.367899999999999
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 7.335500000000001,
+       "freddo_meno_hello_p50": 7.3278
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 8.7694,
+       "freddo_meno_hello_p50": 8.7645
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 8.6755,
+       "freddo_meno_hello_p50": 8.674199999999999
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 7.9908,
+       "freddo_meno_hello_p50": 7.979900000000001
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 7.1652,
+       "freddo_meno_hello_p50": 7.174099999999999
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 7.9682,
+       "freddo_meno_hello_p50": 7.992900000000001
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 8.0136,
+       "freddo_meno_hello_p50": 8.0306
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-000670",
+    "cli-002086",
+    "cli-002077",
+    "cli-000594",
+    "cli-002091",
+    "cli-000957",
+    "cli-000045",
+    "cli-003234",
+    "cli-002281",
+    "cli-002906",
+    "cli-001274",
+    "cli-002328",
+    "cli-003142",
+    "cli-000484",
+    "cli-002957",
+    "cli-003062",
+    "cli-002767",
+    "cli-002119",
+    "cli-001595",
+    "cli-002136",
+    "cli-000369",
+    "cli-001401",
+    "cli-003328",
+    "cli-001861",
+    "cli-003204",
+    "cli-001030",
+    "cli-000634",
+    "cli-002207",
+    "cli-000870",
+    "cli-000305",
+    "cli-002823",
+    "cli-002429",
+    "cli-000482",
+    "cli-001288",
+    "cli-001633",
+    "cli-001107",
+    "cli-000307",
+    "cli-000398",
+    "cli-000551",
+    "cli-002370",
+    "cli-001506",
+    "cli-001052",
+    "cli-002835",
+    "cli-002632",
+    "cli-001517",
+    "cli-000567",
+    "cli-000874",
+    "cli-000517",
+    "cli-002755",
+    "cli-000610",
+    "cli-000700",
+    "cli-002718",
+    "cli-001396",
+    "cli-000140",
+    "cli-000037",
+    "cli-002012",
+    "cli-000848",
+    "cli-000092",
+    "cli-000418",
+    "cli-003117",
+    "cli-001221",
+    "cli-001910",
+    "cli-000146",
+    "cli-002649",
+    "cli-002740",
+    "cli-002104",
+    "cli-000911",
+    "cli-002791",
+    "cli-003202",
+    "cli-000555",
+    "cli-000807",
+    "cli-000060",
+    "cli-001850",
+    "cli-002253",
+    "cli-000959",
+    "cli-001121",
+    "cli-000714",
+    "cli-002221",
+    "cli-001806",
+    "cli-000219",
+    "cli-001076",
+    "cli-001347",
+    "cli-000181",
+    "cli-002514",
+    "cli-000921",
+    "cli-002305",
+    "cli-000408",
+    "cli-001028",
+    "cli-001501",
+    "cli-001217",
+    "cli-001232",
+    "cli-000263",
+    "cli-001999",
+    "cli-000558",
+    "cli-000240",
+    "cli-000363",
+    "cli-002111",
+    "cli-000922",
+    "cli-002005",
+    "cli-003020",
+    "cli-002176",
+    "cli-002966",
+    "cli-000212",
+    "cli-000837",
+    "cli-000575",
+    "cli-002533",
+    "cli-002913",
+    "cli-001925",
+    "cli-002808",
+    "cli-000802",
+    "cli-002907",
+    "cli-000868",
+    "cli-000344",
+    "cli-001678",
+    "cli-000100",
+    "cli-000414",
+    "cli-002034",
+    "cli-001371",
+    "cli-001555",
+    "cli-000786",
+    "cli-002756",
+    "cli-002993",
+    "cli-000097",
+    "cli-003161",
+    "cli-000910",
+    "cli-002677",
+    "cli-001691",
+    "cli-002200",
+    "cli-001062",
+    "cli-001225",
+    "cli-000347",
+    "cli-001148",
+    "cli-003371",
+    "cli-000025",
+    "cli-003069",
+    "cli-002097",
+    "cli-001751",
+    "cli-002424",
+    "cli-000528",
+    "cli-001290",
+    "cli-003269",
+    "cli-000350",
+    "cli-002847",
+    "cli-002043",
+    "cli-000479",
+    "cli-001594",
+    "cli-000824",
+    "cli-002693",
+    "cli-003324",
+    "cli-000579",
+    "cli-001833",
+    "cli-002532",
+    "cli-002867",
+    "cli-000701",
+    "cli-003081",
+    "cli-002442",
+    "cli-002741",
+    "cli-003014",
+    "cli-002938",
+    "cli-002658",
+    "cli-000393",
+    "cli-000122",
+    "cli-002647",
+    "cli-001843",
+    "cli-003183",
+    "cli-001695",
+    "cli-002381",
+    "cli-003076",
+    "cli-002282",
+    "cli-002322",
+    "cli-001202",
+    "cli-000112",
+    "cli-002270",
+    "cli-003319",
+    "cli-002196",
+    "cli-003061",
+    "cli-002367",
+    "cli-002057",
+    "cli-002023",
+    "cli-003252",
+    "cli-000136",
+    "cli-000027",
+    "cli-000051",
+    "cli-002002",
+    "cli-000481",
+    "cli-002148",
+    "cli-003024",
+    "cli-001190",
+    "cli-002935",
+    "cli-002799",
+    "cli-002255",
+    "cli-000252",
+    "cli-001458",
+    "cli-000879",
+    "cli-003173",
+    "cli-000141",
+    "cli-001523",
+    "cli-002222",
+    "cli-000239",
+    "cli-000623",
+    "cli-001536",
+    "cli-002980",
+    "cli-000557",
+    "cli-001643",
+    "cli-002349",
+    "cli-000009",
+    "cli-001613",
+    "cli-002579",
+    "cli-002566",
+    "cli-002968",
+    "cli-001477",
+    "cli-002866",
+    "cli-002205",
+    "cli-001679",
+    "cli-003051",
+    "cli-002434",
+    "cli-002701",
+    "cli-001790",
+    "cli-002804",
+    "cli-001420",
+    "cli-003080",
+    "cli-000888",
+    "cli-002032",
+    "cli-000469",
+    "cli-003078",
+    "cli-003085",
+    "cli-001690",
+    "cli-000365",
+    "cli-000917",
+    "cli-001915",
+    "cli-000812",
+    "cli-001002",
+    "cli-002885",
+    "cli-002986",
+    "cli-000522",
+    "cli-000815",
+    "cli-002587",
+    "cli-001228",
+    "cli-001448",
+    "cli-000637",
+    "cli-003268",
+    "cli-000117",
+    "cli-000768",
+    "cli-002613",
+    "cli-002225",
+    "cli-002031",
+    "cli-002317",
+    "cli-001412",
+    "cli-002061",
+    "cli-000144",
+    "cli-001942",
+    "cli-002474",
+    "cli-000063",
+    "cli-000339",
+    "cli-001168",
+    "cli-003311",
+    "cli-002481",
+    "cli-001182",
+    "cli-003149",
+    "cli-001473",
+    "cli-002862",
+    "cli-000237",
+    "cli-002018",
+    "cli-000863",
+    "cli-001315",
+    "cli-000411",
+    "cli-003162",
+    "cli-002355",
+    "cli-000574",
+    "cli-002173",
+    "cli-002546",
+    "cli-002788",
+    "cli-002641",
+    "cli-000704",
+    "cli-002853",
+    "cli-002302",
+    "cli-002757",
+    "cli-001894",
+    "cli-002778",
+    "cli-001173",
+    "cli-001158",
+    "cli-000169",
+    "cli-001941",
+    "cli-003229",
+    "cli-002855",
+    "cli-001189",
+    "cli-002542",
+    "cli-001746",
+    "cli-000130",
+    "cli-001575",
+    "cli-002573",
+    "cli-000326",
+    "cli-003077",
+    "cli-002786",
+    "cli-002063",
+    "cli-002971",
+    "cli-001348",
+    "cli-003182",
+    "cli-002202",
+    "cli-001425",
+    "cli-003089",
+    "cli-000359",
+    "cli-001056",
+    "cli-000509",
+    "cli-001444",
+    "cli-000171",
+    "cli-003332",
+    "cli-000142",
+    "cli-000893",
+    "cli-001645",
+    "cli-000388",
+    "cli-000018",
+    "cli-001606",
+    "cli-000304",
+    "cli-001181",
+    "cli-000200",
+    "cli-003178",
+    "cli-001887",
+    "cli-000999",
+    "cli-002947",
+    "cli-000803",
+    "cli-002446",
+    "cli-003235",
+    "cli-002510",
+    "cli-000828",
+    "cli-000138",
+    "cli-003131",
+    "cli-000927",
+    "cli-003092",
+    "cli-000822",
+    "cli-000431",
+    "cli-000203",
+    "cli-003021",
+    "cli-001039",
+    "cli-000916",
+    "cli-002226",
+    "cli-002487",
+    "cli-001362",
+    "cli-003125",
+    "cli-001113",
+    "cli-002965",
+    "cli-003279",
+    "cli-000759",
+    "cli-001819",
+    "cli-003068",
+    "cli-001582",
+    "cli-001489",
+    "cli-002890",
+    "cli-003287",
+    "cli-003192",
+    "cli-002220",
+    "cli-002643",
+    "cli-002129",
+    "cli-002779",
+    "cli-000643",
+    "cli-003340",
+    "cli-002990",
+    "cli-001952",
+    "cli-002076",
+    "cli-000886",
+    "cli-000058",
+    "cli-002375",
+    "cli-002558",
+    "cli-002244",
+    "cli-003236",
+    "cli-002979",
+    "cli-001535",
+    "cli-001567",
+    "cli-001301",
+    "cli-001665",
+    "cli-001688",
+    "cli-000507",
+    "cli-000793",
+    "cli-001798",
+    "cli-002748",
+    "cli-000501",
+    "cli-001610",
+    "cli-000403",
+    "cli-002833",
+    "cli-001423",
+    "cli-002728",
+    "cli-001179",
+    "cli-001429",
+    "cli-002383",
+    "cli-002377",
+    "cli-002431",
+    "cli-000710",
+    "cli-001842",
+    "cli-001520",
+    "cli-002321",
+    "cli-000466",
+    "cli-000185",
+    "cli-000646",
+    "cli-002785",
+    "cli-001931",
+    "cli-001385",
+    "cli-002544",
+    "cli-002396",
+    "cli-002958",
+    "cli-001765",
+    "cli-001323",
+    "cli-000389",
+    "cli-003115",
+    "cli-000374",
+    "cli-002999",
+    "cli-002013",
+    "cli-001930",
+    "cli-002729",
+    "cli-002050",
+    "cli-000988",
+    "cli-002819",
+    "cli-001057",
+    "cli-001066",
+    "cli-001703",
+    "cli-001317",
+    "cli-002625",
+    "cli-003277",
+    "cli-001267",
+    "cli-000838",
+    "cli-001541",
+    "cli-002230",
+    "cli-000213",
+    "cli-002089",
+    "cli-001243",
+    "cli-002954",
+    "cli-001207",
+    "cli-002522",
+    "cli-000521",
+    "cli-000205",
+    "cli-003006",
+    "cli-002432",
+    "cli-000235",
+    "cli-000047",
+    "cli-003375",
+    "cli-003282",
+    "cli-002394",
+    "cli-002692",
+    "cli-001936",
+    "cli-000905",
+    "cli-003286",
+    "cli-003274",
+    "cli-001612",
+    "cli-000404",
+    "cli-001251",
+    "cli-002540",
+    "cli-001010",
+    "cli-002596",
+    "cli-000495",
+    "cli-003307",
+    "cli-000191",
+    "cli-002517",
+    "cli-000835",
+    "cli-000614",
+    "cli-003134",
+    "cli-003374",
+    "cli-000602",
+    "cli-002742",
+    "cli-003194",
+    "cli-002479",
+    "cli-000351",
+    "cli-002341",
+    "cli-001846",
+    "cli-001820",
+    "cli-001483",
+    "cli-003358",
+    "cli-002453",
+    "cli-003240",
+    "cli-001904",
+    "cli-001744",
+    "cli-002995",
+    "cli-000353",
+    "cli-002644",
+    "cli-003003",
+    "cli-003096",
+    "cli-001890",
+    "cli-003032",
+    "cli-002699",
+    "cli-001900",
+    "cli-000867",
+    "cli-002908",
+    "cli-003017",
+    "cli-002445",
+    "cli-002916",
+    "cli-002172",
+    "cli-001016",
+    "cli-001788",
+    "cli-000348",
+    "cli-001402",
+    "cli-003151",
+    "cli-000608",
+    "cli-002033",
+    "cli-001964",
+    "cli-001078",
+    "cli-000963",
+    "cli-003196",
+    "cli-002798",
+    "cli-002806",
+    "cli-003079",
+    "cli-003157",
+    "cli-001077",
+    "cli-003088",
+    "cli-002179",
+    "cli-000111",
+    "cli-003011",
+    "cli-000942",
+    "cli-001463",
+    "cli-002738",
+    "cli-002924",
+    "cli-000834",
+    "cli-002368",
+    "cli-000034",
+    "cli-003093",
+    "cli-001584",
+    "cli-003165",
+    "cli-000841",
+    "cli-003159",
+    "cli-000159",
+    "cli-000137",
+    "cli-003164",
+    "cli-000615",
+    "cli-001018",
+    "cli-000133",
+    "cli-002790",
+    "cli-000443",
+    "cli-002330",
+    "cli-002846",
+    "cli-002289",
+    "cli-001879",
+    "cli-000993",
+    "cli-000914",
+    "cli-000340",
+    "cli-000750",
+    "cli-002917",
+    "cli-002464",
+    "cli-001068",
+    "cli-000976",
+    "cli-001809",
+    "cli-002042",
+    "cli-000457",
+    "cli-002399",
+    "cli-002508",
+    "cli-000218",
+    "cli-002258",
+    "cli-003363",
+    "cli-001128",
+    "cli-003138",
+    "cli-002485",
+    "cli-000258",
+    "cli-002675",
+    "cli-001167",
+    "cli-002118",
+    "cli-003290",
+    "cli-001749",
+    "cli-001590",
+    "cli-000242",
+    "cli-002435",
+    "cli-001034",
+    "cli-001020",
+    "cli-003022",
+    "cli-000327",
+    "cli-001411",
+    "cli-001495",
+    "cli-002380",
+    "cli-002087",
+    "cli-000349",
+    "cli-002100",
+    "cli-002387",
+    "cli-001025",
+    "cli-000895",
+    "cli-002716",
+    "cli-001235",
+    "cli-002775",
+    "cli-000819",
+    "cli-003023",
+    "cli-001102",
+    "cli-002534",
+    "cli-000184",
+    "cli-002348",
+    "cli-001096",
+    "cli-000707",
+    "cli-001639",
+    "cli-000861",
+    "cli-000193",
+    "cli-003180",
+    "cli-002210",
+    "cli-000989",
+    "cli-000031",
+    "cli-000883",
+    "cli-003288",
+    "cli-002506",
+    "cli-001367",
+    "cli-000620",
+    "cli-002991",
+    "cli-003118",
+    "cli-000039",
+    "cli-003001",
+    "cli-000747",
+    "cli-003281",
+    "cli-001383",
+    "cli-000553"
+   ]
+  },
+  {
+   "fase": "Q4",
+   "inizio": "2026-11-05T17:20:27.184719Z",
+   "fine": "2026-11-05T17:22:57.184867Z",
+   "n": 600,
+   "con_freddo": 600,
+   "errori": 0,
+   "controlli_ok": 600,
+   "controlli_falliti": 0,
+   "freddo_ms": {
+    "n": 600,
+    "p50": 7.473,
+    "p95": 66.486,
+    "p99": 125.404,
+    "media": 15.933,
+    "min": 1.337,
+    "max": 179.812
+   },
+   "caldo_ms": {
+    "n": 600,
+    "p50": 2.466,
+    "p95": 3.487,
+    "p99": 3.955,
+    "media": 2.543,
+    "min": 1.105,
+    "max": 40.911
+   },
+   "freddo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 6.151,
+    "p95": 65.259,
+    "p99": 124.046,
+    "media": 14.59,
+    "min": -0.027,
+    "max": 178.529
+   },
+   "caldo_meno_hello_accoppiato": {
+    "n": 600,
+    "p50": 1.372,
+    "p95": 2.389,
+    "p99": 2.851,
+    "media": 1.409,
+    "min": -37.413,
+    "max": 39.867
+   },
+   "freddo_meno_caldo_stessa_ricerca": {
+    "n": 600,
+    "p50": 4.557,
+    "p95": 63.888,
+    "p99": 121.97,
+    "media": 13.389,
+    "min": -32.8,
+    "max": 176.393
+   },
+   "p50_freddo_meno_p50_caldo": 5.007,
+   "documenti_freddo": {
+    "n": 600,
+    "p50": 278.5,
+    "p95": 500.0,
+    "p99": 500.0,
+    "media": 267.665,
+    "min": 0,
+    "max": 500
+   },
+   "documenti_caldo": {
+    "n": 600,
+    "p50": 278.5,
+    "p95": 500.0,
+    "p99": 500.0,
+    "media": 267.665,
+    "min": 0,
+    "max": 500
+   },
+   "byte_freddo": {
+    "n": 600,
+    "p50": 95324.0,
+    "p95": 171823.1,
+    "p99": 173098.26,
+    "media": 91069.343,
+    "min": 0,
+    "max": 174051
+   },
+   "getmore_freddo_totale": 0,
+   "blocchi_25": [
+    {
+     "da": 0,
+     "a": 25,
+     "freddo_meno_caldo_p50": 59.138,
+     "freddo_meno_hello_p50": 60.3653
+    },
+    {
+     "da": 25,
+     "a": 50,
+     "freddo_meno_caldo_p50": 16.2284,
+     "freddo_meno_hello_p50": 16.8697
+    },
+    {
+     "da": 50,
+     "a": 75,
+     "freddo_meno_caldo_p50": 25.619799999999998,
+     "freddo_meno_hello_p50": 26.536499999999997
+    },
+    {
+     "da": 75,
+     "a": 100,
+     "freddo_meno_caldo_p50": 31.572100000000002,
+     "freddo_meno_hello_p50": 32.7128
+    },
+    {
+     "da": 100,
+     "a": 125,
+     "freddo_meno_caldo_p50": 13.8732,
+     "freddo_meno_hello_p50": 14.657499999999999
+    },
+    {
+     "da": 125,
+     "a": 150,
+     "freddo_meno_caldo_p50": 15.600399999999999,
+     "freddo_meno_hello_p50": 17.2195
+    },
+    {
+     "da": 150,
+     "a": 175,
+     "freddo_meno_caldo_p50": 9.3785,
+     "freddo_meno_hello_p50": 10.4839
+    },
+    {
+     "da": 175,
+     "a": 200,
+     "freddo_meno_caldo_p50": 10.6736,
+     "freddo_meno_hello_p50": 12.6044
+    },
+    {
+     "da": 200,
+     "a": 225,
+     "freddo_meno_caldo_p50": 7.6538,
+     "freddo_meno_hello_p50": 8.751000000000001
+    },
+    {
+     "da": 225,
+     "a": 250,
+     "freddo_meno_caldo_p50": 7.0837,
+     "freddo_meno_hello_p50": 8.8506
+    },
+    {
+     "da": 250,
+     "a": 275,
+     "freddo_meno_caldo_p50": 4.3858999999999995,
+     "freddo_meno_hello_p50": 5.3229
+    },
+    {
+     "da": 275,
+     "a": 300,
+     "freddo_meno_caldo_p50": 5.333699999999999,
+     "freddo_meno_hello_p50": 7.3567
+    },
+    {
+     "da": 300,
+     "a": 325,
+     "freddo_meno_caldo_p50": 4.6712,
+     "freddo_meno_hello_p50": 5.9155999999999995
+    },
+    {
+     "da": 325,
+     "a": 350,
+     "freddo_meno_caldo_p50": 3.1627,
+     "freddo_meno_hello_p50": 4.7851
+    },
+    {
+     "da": 350,
+     "a": 375,
+     "freddo_meno_caldo_p50": 5.0043,
+     "freddo_meno_hello_p50": 6.926499999999999
+    },
+    {
+     "da": 375,
+     "a": 400,
+     "freddo_meno_caldo_p50": 3.6423,
+     "freddo_meno_hello_p50": 4.3521
+    },
+    {
+     "da": 400,
+     "a": 425,
+     "freddo_meno_caldo_p50": 3.9172000000000002,
+     "freddo_meno_hello_p50": 5.8518
+    },
+    {
+     "da": 425,
+     "a": 450,
+     "freddo_meno_caldo_p50": 4.1074,
+     "freddo_meno_hello_p50": 6.2540000000000004
+    },
+    {
+     "da": 450,
+     "a": 475,
+     "freddo_meno_caldo_p50": 3.0235000000000003,
+     "freddo_meno_hello_p50": 4.1152999999999995
+    },
+    {
+     "da": 475,
+     "a": 500,
+     "freddo_meno_caldo_p50": 3.3577000000000004,
+     "freddo_meno_hello_p50": 5.362500000000001
+    },
+    {
+     "da": 500,
+     "a": 525,
+     "freddo_meno_caldo_p50": 2.9375999999999998,
+     "freddo_meno_hello_p50": 4.0063
+    },
+    {
+     "da": 525,
+     "a": 550,
+     "freddo_meno_caldo_p50": 2.4703999999999997,
+     "freddo_meno_hello_p50": 3.2673999999999994
+    },
+    {
+     "da": 550,
+     "a": 575,
+     "freddo_meno_caldo_p50": 2.7735,
+     "freddo_meno_hello_p50": 4.3548
+    },
+    {
+     "da": 575,
+     "a": 600,
+     "freddo_meno_caldo_p50": 2.9196,
+     "freddo_meno_hello_p50": 3.6772
+    }
+   ],
+   "profiler_freddo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "profiler_caldo": {
+    "ricerche_trovate_nel_profiler": 0,
+    "ricerche": 600,
+    "millis": {
+     "n": 0
+    },
+    "storage_byte_letti": {
+     "n": 0
+    },
+    "storage_ms_di_lettura": {
+     "n": 0
+    },
+    "find_a_0_byte": 0,
+    "su": 0,
+    "storage_byte_letti_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_ms_di_lettura_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "millis_solo_maggiori_di_0": {
+     "n": 0
+    },
+    "storage_non_riportato_da_atlas": 0,
+    "docsExamined": {
+     "n": 0
+    },
+    "keysExamined": {
+     "n": 0
+    },
+    "piani": []
+   },
+   "per_gruppo": {
+    "attivi": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 3.039,
+      "p95": 34.905,
+      "p99": 61.482,
+      "media": 9.059,
+      "min": 1.337,
+      "max": 83.913
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 1.653,
+      "p95": 3.348,
+      "p99": 3.513,
+      "media": 2.022,
+      "min": 1.105,
+      "max": 40.911
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 1.667,
+      "p95": 33.42,
+      "p99": 60.342,
+      "media": 7.723,
+      "min": -0.027,
+      "max": 82.577
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 0.605,
+      "p95": 2.283,
+      "p99": 2.498,
+      "media": 0.968,
+      "min": 0.063,
+      "max": 39.867
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 1.381,
+      "p95": 31.812,
+      "p99": 59.189,
+      "media": 7.036,
+      "min": -32.8,
+      "max": 80.773
+     },
+     "p50_freddo_meno_p50_caldo": 1.386,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 83.5,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 148.39,
+      "min": 0,
+      "max": 500
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 83.5,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 148.39,
+      "min": 0,
+      "max": 500
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 28463.0,
+      "p95": 168679.85,
+      "p99": 170699.93,
+      "media": 50491.907,
+      "min": 0,
+      "max": 172521
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 8.4936,
+       "freddo_meno_hello_p50": 8.8832
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 22.6914,
+       "freddo_meno_hello_p50": 23.689
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 1.1214,
+       "freddo_meno_hello_p50": 0.9633
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 2.7646,
+       "freddo_meno_hello_p50": 3.3301999999999996
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 4.3016000000000005,
+       "freddo_meno_hello_p50": 5.4613
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 1.8624000000000005,
+       "freddo_meno_hello_p50": 2.8491000000000004
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 1.0260999999999998,
+       "freddo_meno_hello_p50": 0.9267999999999998
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 1.4704000000000002,
+       "freddo_meno_hello_p50": 1.5145000000000002
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 1.1231,
+       "freddo_meno_hello_p50": 1.0815
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 1.1272,
+       "freddo_meno_hello_p50": 1.1947
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 1.2027,
+       "freddo_meno_hello_p50": 1.0108
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 1.4452,
+       "freddo_meno_hello_p50": 1.6777
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    },
+    "dormienti": {
+     "n": 300,
+     "con_freddo": 300,
+     "errori": 0,
+     "controlli_ok": 300,
+     "controlli_falliti": 0,
+     "freddo_ms": {
+      "n": 300,
+      "p50": 9.52,
+      "p95": 93.498,
+      "p99": 148.538,
+      "media": 22.806,
+      "min": 2.571,
+      "max": 179.812
+     },
+     "caldo_ms": {
+      "n": 300,
+      "p50": 3.253,
+      "p95": 3.559,
+      "p99": 3.966,
+      "media": 3.064,
+      "min": 1.315,
+      "max": 39.816
+     },
+     "freddo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 8.159,
+      "p95": 91.976,
+      "p99": 147.282,
+      "media": 21.457,
+      "min": 1.257,
+      "max": 178.529
+     },
+     "caldo_meno_hello_accoppiato": {
+      "n": 300,
+      "p50": 2.193,
+      "p95": 2.448,
+      "p99": 2.92,
+      "media": 1.851,
+      "min": -37.413,
+      "max": 38.761
+     },
+     "freddo_meno_caldo_stessa_ricerca": {
+      "n": 300,
+      "p50": 6.309,
+      "p95": 89.83,
+      "p99": 145.045,
+      "media": 19.742,
+      "min": -24.251,
+      "max": 176.393
+     },
+     "p50_freddo_meno_p50_caldo": 6.267,
+     "documenti_freddo": {
+      "n": 300,
+      "p50": 486.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 386.94,
+      "min": 18,
+      "max": 500
+     },
+     "documenti_caldo": {
+      "n": 300,
+      "p50": 486.0,
+      "p95": 500.0,
+      "p99": 500.0,
+      "media": 386.94,
+      "min": 18,
+      "max": 500
+     },
+     "byte_freddo": {
+      "n": 300,
+      "p50": 164071.5,
+      "p95": 172320.4,
+      "p99": 173437.3,
+      "media": 131646.78,
+      "min": 6740,
+      "max": 174051
+     },
+     "getmore_freddo_totale": 0,
+     "blocchi_25": [
+      {
+       "da": 0,
+       "a": 25,
+       "freddo_meno_caldo_p50": 89.4672,
+       "freddo_meno_hello_p50": 91.51530000000001
+      },
+      {
+       "da": 25,
+       "a": 50,
+       "freddo_meno_caldo_p50": 46.071799999999996,
+       "freddo_meno_hello_p50": 48.1196
+      },
+      {
+       "da": 50,
+       "a": 75,
+       "freddo_meno_caldo_p50": 22.7178,
+       "freddo_meno_hello_p50": 24.947599999999998
+      },
+      {
+       "da": 75,
+       "a": 100,
+       "freddo_meno_caldo_p50": 13.9002,
+       "freddo_meno_hello_p50": 15.8818
+      },
+      {
+       "da": 100,
+       "a": 125,
+       "freddo_meno_caldo_p50": 10.1583,
+       "freddo_meno_hello_p50": 12.568900000000001
+      },
+      {
+       "da": 125,
+       "a": 150,
+       "freddo_meno_caldo_p50": 6.734599999999999,
+       "freddo_meno_hello_p50": 8.4382
+      },
+      {
+       "da": 150,
+       "a": 175,
+       "freddo_meno_caldo_p50": 5.6251,
+       "freddo_meno_hello_p50": 7.4569
+      },
+      {
+       "da": 175,
+       "a": 200,
+       "freddo_meno_caldo_p50": 5.447899999999999,
+       "freddo_meno_hello_p50": 7.4001
+      },
+      {
+       "da": 200,
+       "a": 225,
+       "freddo_meno_caldo_p50": 4.8671,
+       "freddo_meno_hello_p50": 6.899000000000001
+      },
+      {
+       "da": 225,
+       "a": 250,
+       "freddo_meno_caldo_p50": 4.4267,
+       "freddo_meno_hello_p50": 6.242100000000001
+      },
+      {
+       "da": 250,
+       "a": 275,
+       "freddo_meno_caldo_p50": 3.9878,
+       "freddo_meno_hello_p50": 5.6404000000000005
+      },
+      {
+       "da": 275,
+       "a": 300,
+       "freddo_meno_caldo_p50": 3.6411000000000002,
+       "freddo_meno_hello_p50": 5.5882000000000005
+      }
+     ],
+     "profiler_freddo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     },
+     "profiler_caldo": {
+      "ricerche_trovate_nel_profiler": 0,
+      "ricerche": 300,
+      "millis": {
+       "n": 0
+      },
+      "storage_byte_letti": {
+       "n": 0
+      },
+      "storage_ms_di_lettura": {
+       "n": 0
+      },
+      "find_a_0_byte": 0,
+      "su": 0,
+      "storage_byte_letti_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_ms_di_lettura_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "millis_solo_maggiori_di_0": {
+       "n": 0
+      },
+      "storage_non_riportato_da_atlas": 0,
+      "docsExamined": {
+       "n": 0
+      },
+      "keysExamined": {
+       "n": 0
+      },
+      "piani": []
+     }
+    }
+   },
+   "clienti": [
+    "cli-002800",
+    "cli-001376",
+    "cli-002413",
+    "cli-000737",
+    "cli-003166",
+    "cli-002824",
+    "cli-003205",
+    "cli-002000",
+    "cli-000289",
+    "cli-000234",
+    "cli-001513",
+    "cli-001245",
+    "cli-000603",
+    "cli-000855",
+    "cli-002595",
+    "cli-002336",
+    "cli-002219",
+    "cli-000730",
+    "cli-003206",
+    "cli-002084",
+    "cli-000420",
+    "cli-001730",
+    "cli-002165",
+    "cli-001280",
+    "cli-001306",
+    "cli-002888",
+    "cli-002251",
+    "cli-000694",
+    "cli-001563",
+    "cli-002437",
+    "cli-002638",
+    "cli-000357",
+    "cli-000526",
+    "cli-001799",
+    "cli-000825",
+    "cli-000488",
+    "cli-002880",
+    "cli-001061",
+    "cli-000002",
+    "cli-002356",
+    "cli-000965",
+    "cli-000297",
+    "cli-001188",
+    "cli-000229",
+    "cli-000924",
+    "cli-002892",
+    "cli-003002",
+    "cli-001378",
+    "cli-001075",
+    "cli-000847",
+    "cli-000713",
+    "cli-000722",
+    "cli-001122",
+    "cli-001593",
+    "cli-000651",
+    "cli-002186",
+    "cli-000046",
+    "cli-002035",
+    "cli-001623",
+    "cli-000265",
+    "cli-000897",
+    "cli-001246",
+    "cli-001138",
+    "cli-002389",
+    "cli-002267",
+    "cli-001049",
+    "cli-003106",
+    "cli-002458",
+    "cli-001544",
+    "cli-002593",
+    "cli-002062",
+    "cli-003209",
+    "cli-002684",
+    "cli-003038",
+    "cli-001249",
+    "cli-002821",
+    "cli-001911",
+    "cli-000362",
+    "cli-001224",
+    "cli-000057",
+    "cli-001531",
+    "cli-000607",
+    "cli-000270",
+    "cli-000052",
+    "cli-002027",
+    "cli-001871",
+    "cli-002120",
+    "cli-000925",
+    "cli-001253",
+    "cli-000769",
+    "cli-000804",
+    "cli-003140",
+    "cli-002372",
+    "cli-000534",
+    "cli-000777",
+    "cli-002581",
+    "cli-001568",
+    "cli-003300",
+    "cli-002126",
+    "cli-002857",
+    "cli-002311",
+    "cli-001294",
+    "cli-001605",
+    "cli-001631",
+    "cli-000109",
+    "cli-000188",
+    "cli-001324",
+    "cli-001849",
+    "cli-000578",
+    "cli-001822",
+    "cli-003246",
+    "cli-000801",
+    "cli-002029",
+    "cli-000074",
+    "cli-000818",
+    "cli-001470",
+    "cli-001045",
+    "cli-002945",
+    "cli-002801",
+    "cli-000310",
+    "cli-000070",
+    "cli-002930",
+    "cli-003056",
+    "cli-001111",
+    "cli-000032",
+    "cli-000264",
+    "cli-000589",
+    "cli-000445",
+    "cli-002257",
+    "cli-001700",
+    "cli-000726",
+    "cli-001223",
+    "cli-000487",
+    "cli-002977",
+    "cli-001654",
+    "cli-000454",
+    "cli-000746",
+    "cli-001164",
+    "cli-001279",
+    "cli-000831",
+    "cli-003320",
+    "cli-001204",
+    "cli-000998",
+    "cli-000492",
+    "cli-002449",
+    "cli-001233",
+    "cli-002293",
+    "cli-001172",
+    "cli-001124",
+    "cli-003185",
+    "cli-000876",
+    "cli-001787",
+    "cli-001319",
+    "cli-000703",
+    "cli-002359",
+    "cli-002365",
+    "cli-001430",
+    "cli-001667",
+    "cli-002872",
+    "cli-002140",
+    "cli-003086",
+    "cli-001259",
+    "cli-000406",
+    "cli-001817",
+    "cli-002565",
+    "cli-001886",
+    "cli-000850",
+    "cli-000102",
+    "cli-001992",
+    "cli-001762",
+    "cli-000699",
+    "cli-003184",
+    "cli-001466",
+    "cli-001149",
+    "cli-001837",
+    "cli-000281",
+    "cli-002343",
+    "cli-001480",
+    "cli-001684",
+    "cli-001211",
+    "cli-001921",
+    "cli-000182",
+    "cli-003263",
+    "cli-000774",
+    "cli-002933",
+    "cli-001307",
+    "cli-000709",
+    "cli-002144",
+    "cli-000719",
+    "cli-000382",
+    "cli-002044",
+    "cli-000278",
+    "cli-002628",
+    "cli-001309",
+    "cli-001794",
+    "cli-001982",
+    "cli-000796",
+    "cli-001616",
+    "cli-000740",
+    "cli-003168",
+    "cli-001081",
+    "cli-001811",
+    "cli-003245",
+    "cli-000711",
+    "cli-000436",
+    "cli-003255",
+    "cli-000547",
+    "cli-000324",
+    "cli-001950",
+    "cli-001855",
+    "cli-003026",
+    "cli-001471",
+    "cli-001511",
+    "cli-000566",
+    "cli-002422",
+    "cli-000211",
+    "cli-000891",
+    "cli-000898",
+    "cli-002600",
+    "cli-001785",
+    "cli-000078",
+    "cli-000975",
+    "cli-001510",
+    "cli-001993",
+    "cli-000751",
+    "cli-003284",
+    "cli-003336",
+    "cli-000764",
+    "cli-002169",
+    "cli-001278",
+    "cli-002642",
+    "cli-002357",
+    "cli-003111",
+    "cli-002443",
+    "cli-001183",
+    "cli-002884",
+    "cli-003258",
+    "cli-003359",
+    "cli-000782",
+    "cli-002195",
+    "cli-003041",
+    "cli-000772",
+    "cli-001821",
+    "cli-001468",
+    "cli-001608",
+    "cli-002810",
+    "cli-000502",
+    "cli-000055",
+    "cli-001827",
+    "cli-001588",
+    "cli-001192",
+    "cli-003214",
+    "cli-001193",
+    "cli-001540",
+    "cli-002538",
+    "cli-000022",
+    "cli-000775",
+    "cli-002478",
+    "cli-001542",
+    "cli-001073",
+    "cli-001427",
+    "cli-000277",
+    "cli-001813",
+    "cli-000216",
+    "cli-001133",
+    "cli-000597",
+    "cli-001040",
+    "cli-002624",
+    "cli-001918",
+    "cli-002067",
+    "cli-000520",
+    "cli-000933",
+    "cli-003224",
+    "cli-000430",
+    "cli-000830",
+    "cli-002163",
+    "cli-001831",
+    "cli-002588",
+    "cli-002891",
+    "cli-001990",
+    "cli-000889",
+    "cli-002145",
+    "cli-001959",
+    "cli-003197",
+    "cli-001740",
+    "cli-000765",
+    "cli-003338",
+    "cli-000321",
+    "cli-002125",
+    "cli-003257",
+    "cli-001213",
+    "cli-002047",
+    "cli-001866",
+    "cli-000000",
+    "cli-000548",
+    "cli-000056",
+    "cli-002490",
+    "cli-000531",
+    "cli-002571",
+    "cli-001454",
+    "cli-000228",
+    "cli-001415",
+    "cli-001965",
+    "cli-002735",
+    "cli-002834",
+    "cli-001345",
+    "cli-002421",
+    "cli-000223",
+    "cli-001802",
+    "cli-000308",
+    "cli-002239",
+    "cli-003208",
+    "cli-000978",
+    "cli-002408",
+    "cli-001864",
+    "cli-001242",
+    "cli-001432",
+    "cli-002864",
+    "cli-002964",
+    "cli-001462",
+    "cli-002887",
+    "cli-002661",
+    "cli-001598",
+    "cli-001889",
+    "cli-001127",
+    "cli-002180",
+    "cli-000285",
+    "cli-002570",
+    "cli-000201",
+    "cli-000816",
+    "cli-001303",
+    "cli-001932",
+    "cli-000869",
+    "cli-002896",
+    "cli-002072",
+    "cli-002900",
+    "cli-000177",
+    "cli-001437",
+    "cli-003053",
+    "cli-000447",
+    "cli-002813",
+    "cli-003121",
+    "cli-001756",
+    "cli-002416",
+    "cli-000423",
+    "cli-002706",
+    "cli-001089",
+    "cli-001170",
+    "cli-002249",
+    "cli-002504",
+    "cli-000256",
+    "cli-002143",
+    "cli-001439",
+    "cli-000754",
+    "cli-001351",
+    "cli-003037",
+    "cli-002037",
+    "cli-001943",
+    "cli-001431",
+    "cli-000372",
+    "cli-002010",
+    "cli-000068",
+    "cli-002476",
+    "cli-001885",
+    "cli-001302",
+    "cli-001818",
+    "cli-000944",
+    "cli-000290",
+    "cli-001920",
+    "cli-000542",
+    "cli-002471",
+    "cli-000299",
+    "cli-001895",
+    "cli-001761",
+    "cli-001055",
+    "cli-001456",
+    "cli-001112",
+    "cli-002897",
+    "cli-002011",
+    "cli-002838",
+    "cli-001832",
+    "cli-000497",
+    "cli-000792",
+    "cli-001346",
+    "cli-002363",
+    "cli-002992",
+    "cli-000595",
+    "cli-000601",
+    "cli-001774",
+    "cli-002472",
+    "cli-003249",
+    "cli-000127",
+    "cli-001264",
+    "cli-000158",
+    "cli-002021",
+    "cli-002482",
+    "cli-002541",
+    "cli-001828",
+    "cli-002307",
+    "cli-000962",
+    "cli-001805",
+    "cli-003201",
+    "cli-002428",
+    "cli-002132",
+    "cli-000753",
+    "cli-003171",
+    "cli-001195",
+    "cli-000790",
+    "cli-000409",
+    "cli-002254",
+    "cli-000444",
+    "cli-000131",
+    "cli-002589",
+    "cli-002905",
+    "cli-000300",
+    "cli-000539",
+    "cli-000320",
+    "cli-001092",
+    "cli-000617",
+    "cli-001085",
+    "cli-001564",
+    "cli-000797",
+    "cli-003213",
+    "cli-002334",
+    "cli-000268",
+    "cli-000378",
+    "cli-003167",
+    "cli-002816",
+    "cli-000151",
+    "cli-000591",
+    "cli-003075",
+    "cli-002079",
+    "cli-001292",
+    "cli-000757",
+    "cli-003070",
+    "cli-001814",
+    "cli-000368",
+    "cli-002484",
+    "cli-002734",
+    "cli-002116",
+    "cli-000042",
+    "cli-001038",
+    "cli-000425",
+    "cli-000028",
+    "cli-003143",
+    "cli-001524",
+    "cli-003027",
+    "cli-001581",
+    "cli-002631",
+    "cli-000154",
+    "cli-002681",
+    "cli-002997",
+    "cli-003312",
+    "cli-002515",
+    "cli-000206",
+    "cli-001464",
+    "cli-001460",
+    "cli-003107",
+    "cli-003316",
+    "cli-002737",
+    "cli-000101",
+    "cli-000375",
+    "cli-001372",
+    "cli-000106",
+    "cli-000525",
+    "cli-000080",
+    "cli-001825",
+    "cli-000813",
+    "cli-001776",
+    "cli-000079",
+    "cli-000929",
+    "cli-003028",
+    "cli-000337",
+    "cli-003373",
+    "cli-000451",
+    "cli-000498",
+    "cli-000674",
+    "cli-001022",
+    "cli-002528",
+    "cli-002793",
+    "cli-000685",
+    "cli-001058",
+    "cli-001622",
+    "cli-002584",
+    "cli-001421",
+    "cli-002271",
+    "cli-002828",
+    "cli-003110",
+    "cli-002794",
+    "cli-002333",
+    "cli-001281",
+    "cli-002133",
+    "cli-001865",
+    "cli-003266",
+    "cli-001487",
+    "cli-000982",
+    "cli-001328",
+    "cli-002247",
+    "cli-002162",
+    "cli-001859",
+    "cli-002438",
+    "cli-002782",
+    "cli-002261",
+    "cli-000563",
+    "cli-001944",
+    "cli-002922",
+    "cli-001797",
+    "cli-003211",
+    "cli-001373",
+    "cli-000361",
+    "cli-001634",
+    "cli-001789",
+    "cli-000586",
+    "cli-000648",
+    "cli-001407",
+    "cli-000132",
+    "cli-000749",
+    "cli-000135",
+    "cli-002811",
+    "cli-002301",
+    "cli-002493",
+    "cli-001771",
+    "cli-001238",
+    "cli-003052",
+    "cli-001137",
+    "cli-000460",
+    "cli-000124",
+    "cli-001924",
+    "cli-000134",
+    "cli-002439",
+    "cli-003372",
+    "cli-003127",
+    "cli-002629",
+    "cli-001451",
+    "cli-002569",
+    "cli-000971",
+    "cli-003010",
+    "cli-002745",
+    "cli-000598",
+    "cli-000832",
+    "cli-000059",
+    "cli-002131",
+    "cli-001005",
+    "cli-002937",
+    "cli-000399",
+    "cli-003361",
+    "cli-000003",
+    "cli-002560",
+    "cli-002358",
+    "cli-002582",
+    "cli-003242",
+    "cli-002418",
+    "cli-002298",
+    "cli-002840",
+    "cli-001215",
+    "cli-001558",
+    "cli-001777",
+    "cli-002654",
+    "cli-000413",
+    "cli-000162",
+    "cli-002850",
+    "cli-002609",
+    "cli-001395",
+    "cli-000622",
+    "cli-001331",
+    "cli-001629",
+    "cli-001322",
+    "cli-002963",
+    "cli-002440",
+    "cli-000675",
+    "cli-002203",
+    "cli-002556",
+    "cli-001079",
+    "cli-001117",
+    "cli-002668",
+    "cli-000728",
+    "cli-001357",
+    "cli-000335",
+    "cli-001708",
+    "cli-002733",
+    "cli-001673",
+    "cli-002150",
+    "cli-001363",
+    "cli-001289",
+    "cli-001585",
+    "cli-001729",
+    "cli-002182",
+    "cli-000785",
+    "cli-000153",
+    "cli-000735",
+    "cli-002260",
+    "cli-002914",
+    "cli-003355",
+    "cli-002572",
+    "cli-000035",
+    "cli-000360",
+    "cli-000468",
+    "cli-001721",
+    "cli-000875",
+    "cli-001933"
+   ]
+  }
+ ]
+}

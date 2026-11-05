@@ -1,0 +1,94 @@
+{
+ "nome": "m30_singoli_b",
+ "cartella": "/opt/irlanda/lavoro/dati/m10s/giro_finale_m30_singoli_b_20261105T172302Z",
+ "versione": "p1-1.6.2",
+ "fasi": {
+  "pausa prima di Q2": [
+   {
+    "inizio": "2026-11-05T17:23:02.792539Z",
+    "fine": "2026-11-05T17:25:02.792680Z"
+   }
+  ],
+  "Q2": [
+   {
+    "inizio": "2026-11-05T17:25:02.792717Z",
+    "sessione": "20261105T172302Z",
+    "file": "fase_03_Q2.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:27:33.254007Z"
+   }
+  ],
+  "pausa prima di Q3": [
+   {
+    "inizio": "2026-11-05T17:27:33.257831Z",
+    "fine": "2026-11-05T17:29:33.258010Z"
+   }
+  ],
+  "Q3": [
+   {
+    "inizio": "2026-11-05T17:29:33.258062Z",
+    "sessione": "20261105T172302Z",
+    "file": "fase_04_Q3.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:32:03.829859Z"
+   }
+  ],
+  "pausa prima di Q1": [
+   {
+    "inizio": "2026-11-05T17:32:03.834448Z",
+    "fine": "2026-11-05T17:34:03.834615Z"
+   }
+  ],
+  "Q1": [
+   {
+    "inizio": "2026-11-05T17:34:03.834659Z",
+    "sessione": "20261105T172302Z",
+    "file": "fase_05_Q1.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:36:34.387406Z"
+   }
+  ],
+  "pausa prima di Q1d": [
+   {
+    "inizio": "2026-11-05T17:36:34.391703Z",
+    "fine": "2026-11-05T17:38:34.391866Z"
+   }
+  ],
+  "Q1d": [
+   {
+    "inizio": "2026-11-05T17:38:34.391909Z",
+    "sessione": "20261105T172302Z",
+    "file": "fase_06_Q1d.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:41:04.951809Z"
+   }
+  ],
+  "pausa prima di Q4": [
+   {
+    "inizio": "2026-11-05T17:41:04.956172Z",
+    "fine": "2026-11-05T17:43:04.956328Z"
+   }
+  ],
+  "Q4": [
+   {
+    "inizio": "2026-11-05T17:43:04.956375Z",
+    "sessione": "20261105T172302Z",
+    "file": "fase_07_Q4.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T17:45:35.555187Z"
+   }
+  ]
+ },
+ "sessioni": [
+  {
+   "inizio": "2026-11-05T17:23:02.776581Z",
+   "fasi_chieste": [
+    "Q2",
+    "Q3",
+    "Q1",
+    "Q1d",
+    "Q4"
+   ]
+  }
+ ]
+}
