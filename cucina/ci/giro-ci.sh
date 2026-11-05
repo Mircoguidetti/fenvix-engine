@@ -51,7 +51,7 @@ spesa() { # aggiunge i minuti passati dall'ultima volta (almeno 1) con le macchi
   pm=$(python3 "$QUI/tipi.py" spesa-minuto "$DISCO_GB" $tipi)
   SPESA=$(python3 -c "import sys; print(f'{float(sys.argv[1]) + float(sys.argv[2]) * int(sys.argv[3]):.6f}')" "$SPESA" "$pm" "$min")
   MAC_MIN=$(( MAC_MIN + min * $(wc -w <<<"$tipi") ))
-  echo "SPESA: $(virgola "$SPESA") \$ finora a $(( (ora - T0) / 60 )) minuti (stima per eccesso; macchine vive: ${tipi:-nessuna}; $(python3 -c "import sys; print(f'{int(sys.argv[1])/60:.1f}'.replace('.', ','))" "$MAC_MIN") ore-macchina; S3 $(virgola "$S3_FISSO") in conto dall'inizio), tetto $(virgola "$TETTO_DOLLARI") \$"
+  echo "SPESA: $(virgola "$SPESA") \$ finora a $(( (ora - T0) / 60 )) minuti (stima per eccesso; macchine vive: ${VIVE:-nessuna, conto il cliente}; $(python3 -c "import sys; print(f'{int(sys.argv[1])/60:.1f}'.replace('.', ','))" "$MAC_MIN") ore-macchina; S3 $(virgola "$S3_FISSO") in conto dall'inizio), tetto $(virgola "$TETTO_DOLLARI") \$"
 }
 ESITO=""
 # un minuto della giornata: attesa, credenziali, spesa, blocco, ultima riga del cliente. Codice 1 = basta aspettare.
@@ -154,7 +154,8 @@ for TIPO in "${LISTA[@]}"; do
   ESITI+=("$K $TIPO: ${f:-NON FATTA}")
   echo "taglia $K ($TIPO): ${f:-NON FATTA}; fermo il server"
   metti "$P/ferma" "1"
-  for _ in $(seq 1 18); do c_e "$P/fermato" && break; sleep 10; done
+  # dopo un blocco (spesa, tempo, cliente spento) non si aspetta: le macchine sono gia' cancellate o si cancellano ora
+  [ -z "$ESITO" ] && for _ in $(seq 1 18); do c_e "$P/fermato" && break; sleep 10; done
   c_e "$P/fermato" && echo "server $K fermato da se' (log nel bucket)" || echo "server $K non ha risposto a 'ferma' in 3 minuti: lo cancello"
   aws ec2 terminate-instances --instance-ids "$ID_SRV" >/dev/null 2>&1
   aws ec2 wait instance-terminated --instance-ids "$ID_SRV" 2>/dev/null || echo "attesa della cancellazione del server $K non riuscita: la rifa' pulizia.sh"
@@ -162,7 +163,7 @@ for TIPO in "${LISTA[@]}"; do
 done
 echo "fine delle taglie: avviso il cliente"
 metti cliente/basta "1"
-for _ in $(seq 1 20); do c_e cliente/fine.json && break; sleep 15; done
+[ -z "$ESITO" ] && for _ in $(seq 1 20); do c_e cliente/fine.json && break; sleep 15; done
 FINE=$(aws s3 cp "s3://$BUCKET/cliente/fine.json" - 2>/dev/null | jq -r '.esito // "NON_SO"' 2>/dev/null)
 [ -n "$ESITO" ] || ESITO=${FINE:-CLIENTE_SENZA_FINE}
 aws ec2 terminate-instances --instance-ids "$ID_CLIENTE" >/dev/null 2>&1
