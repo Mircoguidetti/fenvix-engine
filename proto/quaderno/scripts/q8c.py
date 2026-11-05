@@ -273,8 +273,9 @@ def run_phase(level, ph):
     cpu_ok = (cpu.get('max_core_mean_pct') or 100) <= 90.0
     noisy_logs = sorted({(1000 + i) % LOGS for i in range(len(kinds))})
     per_log = res.get('per_log', [])
-    commits = sum(st1[g]['st'].get(st1[g]['leader'][0], {}).get('commit_index', 0) - st0[g]['st'].get(st0[g]['leader'][0], {}).get('commit_index', 0)
-                  for g in range(LOGS) if st0[g]['leader'] and st1[g]['leader'])
+    per_log_commits = [max((s.get('commit_index', 0) for s in st1[g]['st'].values()), default=0) - max((s.get('commit_index', 0) for s in st0[g]['st'].values()), default=0)
+                       for g in range(LOGS)]
+    commits = sum(per_log_commits)
     diags = []
     for g in range(LOGS):
         try:
@@ -284,7 +285,7 @@ def run_phase(level, ph):
     r = {'t_start': t0, 'tag': TAG, 'logs': LOGS, 'level': level, 'phase': ph, 'noisy': kinds, 'noisy_logs': noisy_logs, 'n_normal': n_normal,
          'env': {k: v for k, v in ENV.items() if k.startswith('PQ_') or k.startswith('Q8_')}, 'normal': res, 'percore': cpu,
          'replica_cores': rep_cores, 'gen_normal_cores': gen_cores, 'asked_per_s': asked, 'sent_ok': sent_ok, 'cpu_ok': cpu_ok,
-         'valid': sent_ok and cpu_ok, 'recs_per_s_total': commits / el,
+         'valid': sent_ok and cpu_ok, 'recs_per_s_total': commits / el, 'recs_per_s_per_log': [c / el for c in per_log_commits],
          'disk': {k: (d1.get(k, 0) - d0.get(k, 0)) / el for k in ('writes', 'flush', 'sectors_w')},
          'leaders_before': [x['leader'] for x in st0], 'leaders_after': [x['leader'] for x in st1],
          'leader_diag': diags, 'noisy_kills': sum(g.kills for g in gens), 'noisy_gen_cpu_s': sum(g.cpu for g in gens),

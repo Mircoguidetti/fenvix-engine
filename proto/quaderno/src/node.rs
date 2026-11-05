@@ -439,13 +439,13 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                                 let q = if sh.lanes_on && sh.is_leader.load(std::sync::atomic::Ordering::Relaxed) {
                                     match q {
                                         Req::Commit(c) => {
-                                            door_push(&sh, &t, &enter, vec![(Reply::One { conn: rtx.clone(), id }, c)]);
+                                            door_push(&sh, &t, &enter, vec![(Reply::One { conn: rtx.clone(), id }, c)]).await;
                                             continue;
                                         }
                                         Req::CommitBatch(v) => {
                                             let agg = Arc::new(Mutex::new(Agg { conn: rtx.clone(), id, res: vec![None; v.len()], left: v.len() }));
                                             let items = v.into_iter().enumerate().map(|(k, c)| (Reply::Part { agg: agg.clone(), k }, c)).collect();
-                                            door_push(&sh, &t, &enter, items);
+                                            door_push(&sh, &t, &enter, items).await;
                                             continue;
                                         }
                                         other => other,
@@ -2111,7 +2111,9 @@ impl Node {
 }
 
 /// Q8c: the door first (per-database token bucket), then the lanes. Without the door, straight to the lanes.
-fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<(Reply, CommitReq)>>) + Send + Sync>, items: Vec<(Reply, CommitReq)>) {
+/// A database over its cap by more than `max_wait_ms` blocks this connection (it waits outside: no reply, no CPU per
+/// try) for at most `block_max_ms`, then is rejected with `Busy` (reason 6); with `PQ_DOOR_BLOCK=0` it is rejected at once.
+async fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<(Reply, CommitReq)>>) + Send + Sync>, items: Vec<(Reply, CommitReq)>) {
     let Some(door) = &sh.door else {
         lane_push(sh, t, items);
         return;
@@ -2130,11 +2132,32 @@ fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<(Reply
     }
     for (db, v, bytes) in by_db {
         let n = v.len() as u64;
-        door.admit(db, n, bytes, v, enter.clone(), |v, ms| {
-            for (r, _) in v {
-                r.send(&Resp::Busy { retry_ms: ms, reason: 6 });
+        let mut v = v;
+        let t0 = Instant::now();
+        loop {
+            match door.admit(db, n, bytes, v, enter.clone()) {
+                Ok(()) => break,
+                Err((back, ms)) => {
+                    let blocked = t0.elapsed().as_millis() as u64;
+                    if door.cfg.block && blocked < door.cfg.block_max_ms {
+                        let pause = (ms as u64).min(door.cfg.block_max_ms - blocked).max(1);
+                        {
+                            let mut st = door.st.lock();
+                            st.blocked += 1;
+                            st.blocked_ms += pause;
+                        }
+                        tokio::time::sleep(Duration::from_millis(pause)).await;
+                        v = back;
+                        continue;
+                    }
+                    door.st.lock().rejected += 1;
+                    for (r, _) in back {
+                        r.send(&Resp::Busy { retry_ms: ms, reason: 6 });
+                    }
+                    break;
+                }
             }
-        });
+        }
     }
 }
 

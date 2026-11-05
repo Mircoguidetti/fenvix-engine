@@ -1372,6 +1372,10 @@ fn corsie_record(doc: &Bytes) -> Vec<Write> {
 
 struct CorsieAcc {
     h: Histogram<u64>,
+    /// Q8c: latency from the actual send (the open-loop tick can fire up to ~1 ms after its scheduled instant)
+    h_send: Histogram<u64>,
+    /// Q8c: round trip of a request the replica answers at once (like the "hello" subtracted in the Atlas numbers)
+    ping: Histogram<u64>,
     /// per secondo della misura: istogramma (per vedere quando succede qualcosa)
     per_s: Vec<Histogram<u64>>,
     ok: u64,
@@ -1395,7 +1399,7 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
     let nlogs = cls.len();
     use rand::Rng;
     let pool: Arc<Vec<Bytes>> = Arc::new(if c.mode == "big" { (0..4).map(|_| { let mut v = vec![0u8; c.big_kb << 10]; rand::thread_rng().fill(&mut v[..]); Bytes::from(v) }).collect() } else { (0..2048).map(|_| json_doc(c.doc)).collect() });
-    let acc = Arc::new(Mutex::new(CorsieAcc { h: hist(), per_s: (0..c.secs.min(900) + 2).map(|_| hist()).collect(), ok: 0, busy_retries: 0, rejected: 0, unknown: 0, conflict: 0, dropped: 0, per_log: (0..nlogs).map(|_| hist()).collect() }));
+    let acc = Arc::new(Mutex::new(CorsieAcc { h: hist(), h_send: hist(), ping: hist(), per_s: (0..c.secs.min(900) + 2).map(|_| hist()).collect(), ok: 0, busy_retries: 0, rejected: 0, unknown: 0, conflict: 0, dropped: 0, per_log: (0..nlogs).map(|_| hist()).collect() }));
     let stop = Arc::new(AtomicBool::new(false));
     let measuring = Arc::new(AtomicBool::new(false));
     let t_meas = Arc::new(Mutex::new(Instant::now()));
@@ -1404,11 +1408,12 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
     let deadline = Duration::from_millis(c.deadline_ms);
     let record = {
         let (acc, measuring, t_meas) = (acc.clone(), measuring.clone(), t_meas.clone());
-        move |sched: Instant, lg: usize, outs: Vec<Outcome>| {
+        move |sched: Instant, sent_at: Instant, lg: usize, outs: Vec<Outcome>| {
             if !measuring.load(Relaxed) {
                 return;
             }
             let us = sched.elapsed().as_micros() as u64;
+            let us_send = sent_at.elapsed().as_micros() as u64;
             let sec = sched.saturating_duration_since(*t_meas.lock()).as_secs() as usize;
             let mut a = acc.lock();
             for o in outs {
@@ -1417,6 +1422,7 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
                         a.ok += 1;
                         a.busy_retries += busy as u64;
                         a.h.record(us.max(1)).ok();
+                        a.h_send.record(us_send.max(1)).ok();
                         a.per_log[lg].record(us.max(1)).ok();
                         if sec < a.per_s.len() {
                             a.per_s[sec].record(us.max(1)).ok();
@@ -1460,8 +1466,9 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
                 let doc = pool[rand::random::<usize>() % pool.len()].clone();
                 let cr = CommitReq { txn: txn_id(), db, read_pos: cl.seen.load(Relaxed), mode: Mode::Validated, writes: corsie_record(&doc), reads: vec![], session: None };
                 sent.fetch_add(1, Relaxed);
+                let ts = Instant::now();
                 let o = cl.commit(&cr, deadline).await;
-                record(sched, log_of(dbn, nlogs), vec![o]);
+                record(sched, ts, log_of(dbn, nlogs), vec![o]);
             }
         }))
     } else {
@@ -1490,8 +1497,9 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
                             .map(|_| CommitReq { txn: txn_id(), db, read_pos: rp, mode: Mode::Validated, writes: corsie_record(&pool[rand::random::<usize>() % pool.len()]), reads: vec![], session: None })
                             .collect();
                         sent.fetch_add(cs.len() as u64, Relaxed);
+                        let ts = Instant::now();
                         let rs = cl.commit_batch(&cs, deadline).await;
-                        record(sched, lg, rs);
+                        record(sched, ts, lg, rs);
                     }));
                 }
                 let _ = tokio::time::timeout(Duration::from_millis(every), async {
@@ -1509,6 +1517,23 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
     } else {
         None
     };
+    // Q8c: ping every 50 ms to each log (served at once by the network thread of the replica)
+    {
+        let (cls, acc, measuring, stop) = (cls.clone(), acc.clone(), measuring.clone(), stop.clone());
+        tokio::spawn(async move {
+            while !stop.load(Relaxed) {
+                for cl in &cls {
+                    let t = Instant::now();
+                    if let Some(Resp::Pos(_)) = cl.call_leader(&Req::Wait { pos: 0, timeout_ms: 0 }, Duration::from_secs(1)).await {
+                        if measuring.load(Relaxed) {
+                            acc.lock().ping.record((t.elapsed().as_micros() as u64).max(1)).ok();
+                        }
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+        });
+    }
     // resoconto periodico su stderr (per i generatori rumorosi, che vengono uccisi senza arrivare alla fine)
     {
         let (acc, sent, label, stop) = (acc.clone(), sent.clone(), c.label.clone(), stop.clone());
@@ -1549,6 +1574,8 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
                "lat": {"n": a.h.len(), "p50_us": a.h.value_at_quantile(0.5), "p90_us": a.h.value_at_quantile(0.9), "p99_us": a.h.value_at_quantile(0.99),
                        "p999_us": a.h.value_at_quantile(0.999), "p9999_us": a.h.value_at_quantile(0.9999), "max_us": a.h.max(), "mean_us": a.h.mean()},
                "per_s_n_p50_p99_max": per_s, "logs": nlogs,
+               "lat_send": {"n": a.h_send.len(), "p50_us": a.h_send.value_at_quantile(0.5), "p99_us": a.h_send.value_at_quantile(0.99), "p999_us": a.h_send.value_at_quantile(0.999), "max_us": a.h_send.max()},
+               "ping": {"n": a.ping.len(), "p50_us": a.ping.value_at_quantile(0.5), "p99_us": a.ping.value_at_quantile(0.99)},
                "per_log": a.per_log.iter().map(|h| json!({"n": h.len(), "p50_us": h.value_at_quantile(0.5), "p99_us": h.value_at_quantile(0.99), "p999_us": h.value_at_quantile(0.999), "max_us": h.max()})).collect::<Vec<_>>(),
                "diag": cl.diag.json()})
     );

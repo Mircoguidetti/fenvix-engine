@@ -25,6 +25,10 @@ pub struct DoorCfg {
     pub bytes_per_s: f64,
     pub burst_s: f64,
     pub max_wait_ms: u64,
+    /// over `max_wait_ms`: block the connection (TCP backpressure, no reply, no CPU per refused try) instead of
+    /// rejecting, for at most `block_max_ms` in all; then reject
+    pub block: bool,
+    pub block_max_ms: u64,
 }
 
 impl DoorCfg {
@@ -36,6 +40,8 @@ impl DoorCfg {
             bytes_per_s: g("PQ_DOOR_MBS", 2.0) * 1048576.0,
             burst_s: g("PQ_DOOR_BURST_S", 0.1),
             max_wait_ms: g("PQ_DOOR_WAIT_MS", 1000.0) as u64,
+            block: std::env::var("PQ_DOOR_BLOCK").map(|x| x != "0").unwrap_or(true),
+            block_max_ms: g("PQ_DOOR_BLOCK_MAX_MS", 10000.0) as u64,
         }
     }
 }
@@ -60,6 +66,9 @@ struct Bucket<T> {
 #[derive(Default, Clone, Debug, serde::Serialize)]
 pub struct DoorStats {
     pub now: u64,
+    /// connection pauses (blocking mode) and their total time
+    pub blocked: u64,
+    pub blocked_ms: u64,
     pub waited: u64,
     pub rejected: u64,
     pub waiting: u64,
@@ -110,7 +119,9 @@ impl<T: Send + 'static> Door<T> {
 
     /// From a network thread: `enter` runs now (in this thread) for the commits that may enter, or later from the
     /// database's drainer task; rejected commits get `reject(item, retry_ms)` at once.
-    pub fn admit(self: &Arc<Self>, db: Db, recs: u64, bytes: u64, item: T, enter: Arc<dyn Fn(Vec<T>) + Send + Sync>, reject: impl FnOnce(T, u32)) {
+    /// `Err((item, ms))` = it would wait more than `max_wait_ms`: the caller either blocks its connection for `ms`
+    /// and tries again (`block`, the commit waits outside without any reply) or rejects it with `Busy`.
+    pub fn admit(self: &Arc<Self>, db: Db, recs: u64, bytes: u64, item: T, enter: Arc<dyn Fn(Vec<T>) + Send + Sync>) -> Result<(), (T, u32)> {
         let now = Instant::now();
         match self.judge(&db, recs, bytes, now) {
             Verdict::Now => {
@@ -118,8 +129,7 @@ impl<T: Send + 'static> Door<T> {
                 enter(vec![item]);
             }
             Verdict::Reject(ms) => {
-                self.st.lock().rejected += 1;
-                reject(item, ms);
+                return Err((item, ms));
             }
             Verdict::At(t) => {
                 let spawn = {
@@ -142,6 +152,7 @@ impl<T: Send + 'static> Door<T> {
                 }
             }
         }
+        Ok(())
     }
 
     async fn drain(self: Arc<Self>, db: Db, enter: Arc<dyn Fn(Vec<T>) + Send + Sync>) {
@@ -192,7 +203,7 @@ mod tests {
     use super::*;
 
     fn cfg(rps: f64, burst_s: f64, wait_ms: u64) -> DoorCfg {
-        DoorCfg { on: true, recs_per_s: rps, bytes_per_s: 1e12, burst_s, max_wait_ms: wait_ms }
+        DoorCfg { on: true, recs_per_s: rps, bytes_per_s: 1e12, burst_s, max_wait_ms: wait_ms, block: false, block_max_ms: 0 }
     }
 
     #[test]
@@ -269,7 +280,7 @@ mod tests {
         });
         let t0 = Instant::now();
         for k in 0..500u64 {
-            d.admit(db, 1, 100, k, enter.clone(), |_, _| panic!("no reject expected"));
+            assert!(d.admit(db, 1, 100, k, enter.clone()).is_ok(), "no reject expected");
         }
         tokio::time::sleep(Duration::from_millis(700)).await;
         let v = got.lock().clone();
