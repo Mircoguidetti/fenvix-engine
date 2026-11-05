@@ -1057,12 +1057,17 @@ impl Server {
         let plan = plan_for(&indexes, &opts);
         let mut exec = None;
         if verbosity != "queryPlanner" {
+            // K1: the time of the execution, as mongod measures it (it was always 0)
+            let t0 = std::time::Instant::now();
             let (docs, stats, _) = find_docs(&mut g, coll, &indexes, &opts).await?;
+            let ms = t0.elapsed().as_millis() as i64;
             let n = docs.len().saturating_sub(skip.max(0) as usize);
             let n = if limit > 0 { n.min(limit as usize) } else { n };
-            exec = Some((n, stats));
+            exec = Some((n, stats, ms));
         }
         drop(g);
+        let exec_ms = exec.as_ref().map(|e| e.2).unwrap_or(0);
+        let exec = exec.map(|(n, st, _)| (n, st));
         let winning = winning_plan(&plan, &indexes, &filter, &sort, limit, skip, projection.as_ref(), &exec);
         let mut qp = doc! {
             "namespace": ns.clone(),
@@ -1113,7 +1118,7 @@ impl Server {
                 doc! {
                     "executionSuccess": true,
                     "nReturned": n as i32,
-                    "executionTimeMillis": 0,
+                    "executionTimeMillis": crate::capped::n32(exec_ms),
                     "totalKeysExamined": if matches!(plan, Plan::Coll { .. }) { 0 } else { stats.keys as i32 },
                     "totalDocsExamined": stats.docs as i32,
                     "executionStages": winning,
