@@ -62,6 +62,9 @@ pub struct Config {
     pub disk_ro: u64,
     /// allarme se il record non su S3 più vecchio supera questi secondi
     pub alarm_s: u64,
+    /// Q8c: extra delay before this replica's first election (spreads the leaders of the logs of a cell over the
+    /// machines: each log has a preferred leader, the other two replicas wait this much longer at start)
+    pub first_elect_delay_ms: u64,
 }
 
 /// Costi stimati in RAM per il conto unico della memoria (byte). Tarati confrontando il conto con l'RSS misurato.
@@ -110,6 +113,8 @@ pub struct Shared {
     /// Q8: questa replica è il leader (pubblicato dal thread principale): solo allora i commit vanno nelle corsie
     pub is_leader: std::sync::atomic::AtomicBool,
     pub lane_wake: std::sync::atomic::AtomicBool,
+    /// Q8c: per-database cap at the door (token bucket in the network threads, before the lanes)
+    pub door: Option<Arc<crate::door::Door<Vec<(Reply, CommitReq)>>>>,
 }
 
 /// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
@@ -350,7 +355,16 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
         eprintln!("replica {}: corsie accese {:?}", cfg.id, lcfg);
     }
     let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default(), repl_sent_off: Default::default(),
-        lanes_on: lcfg.on, lanes: Mutex::new(Lanes::new(lcfg)), is_leader: Default::default(), lane_wake: Default::default() });
+        lanes_on: lcfg.on, lanes: Mutex::new(Lanes::new(lcfg)), is_leader: Default::default(), lane_wake: Default::default(),
+        door: {
+            let dc = crate::door::DoorCfg::from_env();
+            if dc.on {
+                eprintln!("replica {}: door on {:?}", cfg.id, dc);
+                Some(Arc::new(crate::door::Door::new(dc)))
+            } else {
+                None
+            }
+        } });
     let mut peers = vec![];
     {
         let _g = rt.enter();
@@ -412,6 +426,11 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                         }
                     });
                     let mut r = FrameReader::new(rd);
+                    // Q8c: commits let in by the door (now or later, from the database's drainer) go to the lanes
+                    let enter: Arc<dyn Fn(Vec<Vec<(Reply, CommitReq)>>) + Send + Sync> = {
+                        let (sh, t) = (sh.clone(), t.clone());
+                        Arc::new(move |v: Vec<Vec<(Reply, CommitReq)>>| lane_push(&sh, &t, v.into_iter().flatten().collect()))
+                    };
                     while let Ok(body) = r.next().await {
                         match dec_req(body) {
                             Ok((id, q)) => {
@@ -420,13 +439,13 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                                 let q = if sh.lanes_on && sh.is_leader.load(std::sync::atomic::Ordering::Relaxed) {
                                     match q {
                                         Req::Commit(c) => {
-                                            lane_push(&sh, &t, vec![(Reply::One { conn: rtx.clone(), id }, c)]);
+                                            door_push(&sh, &t, &enter, vec![(Reply::One { conn: rtx.clone(), id }, c)]);
                                             continue;
                                         }
                                         Req::CommitBatch(v) => {
                                             let agg = Arc::new(Mutex::new(Agg { conn: rtx.clone(), id, res: vec![None; v.len()], left: v.len() }));
                                             let items = v.into_iter().enumerate().map(|(k, c)| (Reply::Part { agg: agg.clone(), k }, c)).collect();
-                                            lane_push(&sh, &t, items);
+                                            door_push(&sh, &t, &enter, items);
                                             continue;
                                         }
                                         other => other,
@@ -445,6 +464,14 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                         }
                     }
                 });
+            }
+        });
+    }
+    if let Some(d) = sh.door.clone() {
+        rt.spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(10)).await;
+                d.gc();
             }
         });
     }
@@ -637,7 +664,7 @@ impl Node {
             reads: vec![],
             need_hb: false,
             hb_seq: 0,
-            election_deadline: now + rand_ms(cfg.elect_min_ms, cfg.elect_max_ms),
+            election_deadline: now + rand_ms(cfg.elect_min_ms, cfg.elect_max_ms) + Duration::from_millis(cfg.first_elect_delay_ms),
             last_heard_leader: now - Duration::from_secs(3600),
             prevotes: HashSet::new(),
             prevote_term: 0,
@@ -1734,7 +1761,8 @@ impl Node {
             repl_sent: self.repl_sent + self.sh.repl_sent_off.load(std::sync::atomic::Ordering::Relaxed),
             delayed: self.delayed_n,
             diag: format!(
-                "{{\"tappe\":{},\"corsie\":{},\"in_volo_byte\":{},\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                "{{\"porta\":{},\"tappe\":{},\"corsie\":{},\"in_volo_byte\":{},\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                self.sh.door.as_ref().map(|d| serde_json::to_string(&d.stats()).unwrap()).unwrap_or_else(|| "null".into()),
                 {
                     let q = |h: &hdrhistogram::Histogram<u64>| format!("[{},{},{},{}]", h.value_at_quantile(0.5), h.value_at_quantile(0.99), h.value_at_quantile(0.999), h.max());
                     format!("{{\"durevole_primo\":{},\"copia_primo\":{},\"conferma\":{},\"giro\":{},\"attesa_corsia_leggeri\":{}}}", q(&self.h_dur_first), q(&self.h_ack_first), q(&self.h_commit), q(&self.h_loop), self.sh.lanes.lock().light_q())
@@ -2079,6 +2107,34 @@ impl Node {
             self.sw(18, t);
         }
         self.pending.entry(idx).or_default().push(reply);
+    }
+}
+
+/// Q8c: the door first (per-database token bucket), then the lanes. Without the door, straight to the lanes.
+fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<(Reply, CommitReq)>>) + Send + Sync>, items: Vec<(Reply, CommitReq)>) {
+    let Some(door) = &sh.door else {
+        lane_push(sh, t, items);
+        return;
+    };
+    // the commits of one database in a batch are charged as one block (keeps their order, one decision)
+    let mut by_db: Vec<(Db, Vec<(Reply, CommitReq)>, u64)> = vec![];
+    for (r, c) in items {
+        let b = crate::door::bytes_of(&c);
+        match by_db.iter_mut().find(|x| x.0 == c.db) {
+            Some(x) => {
+                x.2 += b;
+                x.1.push((r, c));
+            }
+            None => by_db.push((c.db, vec![(r, c)], b)),
+        }
+    }
+    for (db, v, bytes) in by_db {
+        let n = v.len() as u64;
+        door.admit(db, n, bytes, v, enter.clone(), |v, ms| {
+            for (r, _) in v {
+                r.send(&Resp::Busy { retry_ms: ms, reason: 6 });
+            }
+        });
     }
 }
 

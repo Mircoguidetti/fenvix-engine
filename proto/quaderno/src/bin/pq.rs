@@ -48,6 +48,15 @@ fn mem_total_mb() -> u64 {
         .unwrap_or(4096)
 }
 
+/// Q8c: several logs in the cell: `--replicas a,b,c;d,e,f;...` (one group of three replicas per log)
+fn clusters(a: &Args) -> Vec<Arc<Cluster>> {
+    a.s("replicas", "127.0.0.1:7200,127.0.0.1:7201,127.0.0.1:7202")
+        .split(';')
+        .filter(|g| !g.is_empty())
+        .map(|g| Cluster::new(g.split(',').map(String::from).collect(), a.u("conns", 16) as usize))
+        .collect()
+}
+
 fn cluster(a: &Args) -> Arc<Cluster> {
     let addrs: Vec<String> = a.s("replicas", "127.0.0.1:7200,127.0.0.1:7201,127.0.0.1:7202").split(',').map(String::from).collect();
     Cluster::new(addrs, a.u("conns", 16) as usize)
@@ -92,6 +101,7 @@ fn main() -> anyhow::Result<()> {
                 disk_hard: a.u("disk-hard-mb", 0) << 20,
                 disk_ro: a.u("disk-ro-mb", 0) << 20,
                 alarm_s: a.u("alarm-s", 120),
+                first_elect_delay_ms: a.u("first-elect-delay-ms", 0),
             })?;
         }
         "proxy" => {
@@ -146,7 +156,7 @@ fn main() -> anyhow::Result<()> {
         "corsie" => {
             let r = rt(a.u("threads", 2) as usize);
             r.block_on(bench::corsie(
-                cluster(&a),
+                clusters(&a),
                 bench::CorsieCfg {
                     db_from: a.u("db-from", 0),
                     dbs: a.u("dbs", 1),

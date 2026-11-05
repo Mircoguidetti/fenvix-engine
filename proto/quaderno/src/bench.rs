@@ -1380,12 +1380,22 @@ struct CorsieAcc {
     unknown: u64,
     conflict: u64,
     dropped: u64,
+    /// Q8c: latency per log of the cell (to compare the normals on the noisy neighbour's log with the others)
+    per_log: Vec<Histogram<u64>>,
 }
 
-pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
+/// Q8c: database -> log of the cell (like a Kafka partition). Fixed rule for the tests: database number modulo the
+/// number of logs (in the product it is a directory entry, so a database can be moved).
+pub fn log_of(db_num: u64, logs: usize) -> usize {
+    (db_num % logs as u64) as usize
+}
+
+pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
+    let cl = cls[0].clone();
+    let nlogs = cls.len();
     use rand::Rng;
     let pool: Arc<Vec<Bytes>> = Arc::new(if c.mode == "big" { (0..4).map(|_| { let mut v = vec![0u8; c.big_kb << 10]; rand::thread_rng().fill(&mut v[..]); Bytes::from(v) }).collect() } else { (0..2048).map(|_| json_doc(c.doc)).collect() });
-    let acc = Arc::new(Mutex::new(CorsieAcc { h: hist(), per_s: (0..c.secs.min(900) + 2).map(|_| hist()).collect(), ok: 0, busy_retries: 0, rejected: 0, unknown: 0, conflict: 0, dropped: 0 }));
+    let acc = Arc::new(Mutex::new(CorsieAcc { h: hist(), per_s: (0..c.secs.min(900) + 2).map(|_| hist()).collect(), ok: 0, busy_retries: 0, rejected: 0, unknown: 0, conflict: 0, dropped: 0, per_log: (0..nlogs).map(|_| hist()).collect() }));
     let stop = Arc::new(AtomicBool::new(false));
     let measuring = Arc::new(AtomicBool::new(false));
     let t_meas = Arc::new(Mutex::new(Instant::now()));
@@ -1394,7 +1404,7 @@ pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
     let deadline = Duration::from_millis(c.deadline_ms);
     let record = {
         let (acc, measuring, t_meas) = (acc.clone(), measuring.clone(), t_meas.clone());
-        move |sched: Instant, outs: Vec<Outcome>| {
+        move |sched: Instant, lg: usize, outs: Vec<Outcome>| {
             if !measuring.load(Relaxed) {
                 return;
             }
@@ -1407,6 +1417,7 @@ pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
                         a.ok += 1;
                         a.busy_retries += busy as u64;
                         a.h.record(us.max(1)).ok();
+                        a.per_log[lg].record(us.max(1)).ok();
                         if sec < a.per_s.len() {
                             a.per_s[sec].record(us.max(1)).ok();
                         }
@@ -1421,32 +1432,36 @@ pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
     let record = Arc::new(record);
     // posizione di lettura di partenza: quella confermata adesso (con 0 la convalida rifiuterebbe ogni commit di un
     // database la cui finestra è già stata potata)
-    for _ in 0..50 {
-        if let Some(Resp::Pos(p)) = cl.call_leader(&Req::Confirmed, Duration::from_secs(2)).await {
-            cl.seen.fetch_max(p, Relaxed);
-            break;
+    for cl in &cls {
+        for _ in 0..50 {
+            if let Some(Resp::Pos(p)) = cl.call_leader(&Req::Confirmed, Duration::from_secs(2)).await {
+                cl.seen.fetch_max(p, Relaxed);
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
         }
-        tokio::time::sleep(Duration::from_millis(100)).await;
     }
     // flusso costante (steady e big): la k-esima scrittura va al database db_from + k % dbs, all'istante pianificato
     let gen = if c.rate > 0.0 && c.mode != "burst" {
-        let (cl, pool, sem, sent, record, acc) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), acc.clone());
+        let (cls, pool, sem, sent, record, acc) = (Arc::new(cls.clone()), pool.clone(), sem.clone(), sent.clone(), record.clone(), acc.clone());
         let (from, dbs) = (c.db_from, c.dbs);
         let k = Arc::new(AtomicU64::new(0));
         Some(open_loop(c.rate * c.dbs as f64, stop.clone(), move |sched| {
-            let (cl, pool, sem, sent, record, acc, k) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), acc.clone(), k.clone());
+            let (cls, pool, sem, sent, record, acc, k) = (cls.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), acc.clone(), k.clone());
             async move {
                 let Ok(_p) = sem.try_acquire() else {
                     acc.lock().dropped += 1;
                     return;
                 };
                 let n = k.fetch_add(1, Relaxed);
-                let db = db_id(from + n % dbs);
+                let dbn = from + n % dbs;
+                let cl = cls[log_of(dbn, nlogs)].clone();
+                let db = db_id(dbn);
                 let doc = pool[rand::random::<usize>() % pool.len()].clone();
                 let cr = CommitReq { txn: txn_id(), db, read_pos: cl.seen.load(Relaxed), mode: Mode::Validated, writes: corsie_record(&doc), reads: vec![], session: None };
                 sent.fetch_add(1, Relaxed);
                 let o = cl.commit(&cr, deadline).await;
-                record(sched, vec![o]);
+                record(sched, log_of(dbn, nlogs), vec![o]);
             }
         }))
     } else {
@@ -1454,13 +1469,16 @@ pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
     };
     // raffiche: ogni `burst_every_ms` un'onda di `burst` record in lotti da `batch` (CommitBatch), tutti insieme
     let bgen = if c.mode == "burst" {
-        let (cl, pool, sem, sent, record, stop) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), stop.clone());
+        let (cls, pool, sem, sent, record, stop) = (cls.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), stop.clone());
         let (from, dbs, burst, batch, every) = (c.db_from, c.dbs, c.burst, c.batch.max(1), c.burst_every_ms);
         Some(tokio::spawn(async move {
             let mut wave = 0u64;
             while !stop.load(Relaxed) {
                 let sched = Instant::now();
-                let db = db_id(from + wave % dbs);
+                let dbn = from + wave % dbs;
+                let lg = log_of(dbn, nlogs);
+                let cl = cls[lg].clone();
+                let db = db_id(dbn);
                 wave += 1;
                 let mut hs = vec![];
                 for _ in 0..burst.div_ceil(batch) {
@@ -1473,7 +1491,7 @@ pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
                             .collect();
                         sent.fetch_add(cs.len() as u64, Relaxed);
                         let rs = cl.commit_batch(&cs, deadline).await;
-                        record(sched, rs);
+                        record(sched, lg, rs);
                     }));
                 }
                 let _ = tokio::time::timeout(Duration::from_millis(every), async {
@@ -1530,6 +1548,8 @@ pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
                "conflict": a.conflict, "dropped": a.dropped,
                "lat": {"n": a.h.len(), "p50_us": a.h.value_at_quantile(0.5), "p90_us": a.h.value_at_quantile(0.9), "p99_us": a.h.value_at_quantile(0.99),
                        "p999_us": a.h.value_at_quantile(0.999), "p9999_us": a.h.value_at_quantile(0.9999), "max_us": a.h.max(), "mean_us": a.h.mean()},
-               "per_s_n_p50_p99_max": per_s, "diag": cl.diag.json()})
+               "per_s_n_p50_p99_max": per_s, "logs": nlogs,
+               "per_log": a.per_log.iter().map(|h| json!({"n": h.len(), "p50_us": h.value_at_quantile(0.5), "p99_us": h.value_at_quantile(0.99), "p999_us": h.value_at_quantile(0.999), "max_us": h.max()})).collect::<Vec<_>>(),
+               "diag": cl.diag.json()})
     );
 }

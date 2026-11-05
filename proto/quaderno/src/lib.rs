@@ -9,3 +9,4 @@ pub mod flusher;
 pub mod proxy;
 pub mod spill;
 pub mod lanes;
+pub mod door;
