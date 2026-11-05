@@ -1,3 +1,2 @@
 24a1b1fa887f796f0c9b04fc0ea8077e  ./vecchio/risultati_p1.json
 2a74b47d056af50dd28c8676b1f13bcf  ./vecchio/risultati_p1.json.usati.log
-IN CORSO run 42062402988 programma carica dal 2026-11-05T16:14:58Z

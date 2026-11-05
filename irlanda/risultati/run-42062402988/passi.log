@@ -1,0 +1,5 @@
+2026-11-05T16:16:10Z inizio; macchina 8 vCPU; Python 3.12.3; programma carica
+2026-11-05T16:16:10Z stringa di connessione letta (non scritta da nessuna parte) e cancellata dal bucket
+2026-11-05T16:16:11Z file di stato arrivati: 2 file (vecchio )
+2026-11-05T16:16:11Z IP pubblico della macchina: 52.211.187.63 (da aggiungere alla lista di accesso di Atlas, come 52.211.187.63/32)
+2026-11-05T16:16:28Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 30 minuti
