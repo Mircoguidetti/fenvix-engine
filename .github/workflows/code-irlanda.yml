@@ -1,0 +1,219 @@
+# P1 · giro corto dall'Irlanda per le code lente di Atlas M30 (2026-11-05). Modello: M31 (m31-freddo-s3.yml).
+# Un solo innesco: un push sul branch code-irlanda che aggiunge o cambia irlanda/comando.json. Il campo "modo":
+#   "permessi" = solo controllo dei permessi e del segreto, 0 $ (letture, --dry-run, bucket vuoto creato e cancellato);
+#                se nello stesso commit ci sono anche i due file di stato, anche il loro controllo a secco;
+#   "giro"     = il giro: nello STESSO commit devono esserci anche irlanda/risultati_p1.json e
+#                irlanda/risultati_p1.json.usati.log (copiati dal Mac DOPO il giro M30). Prima di spendere: md5 dello
+#                script, piano a secco con lo script stesso, guardia contro un file di stato vecchio, permessi. Poi una
+#                c7i.xlarge in eu-west-1 fa Q2, Q3, Q1 (50 clienti attivi mai letti per fase) con lo script p1-1.6.2
+#                non modificato, e restituisce i due file di stato aggiornati;
+#   "smonta"   = solo pulizia e verifica.
+#   {"modo": "giro", "forza": true} supera la guardia sul file di stato (solo se il coordinatore dice si').
+# Un commit che non cambia irlanda/comando.json non fa niente su AWS (modo "niente").
+# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (lo stesso di M31: ruolo fenvix-gha-tests, policy
+# fenvix-coldread-test); la macchina usa il ruolo fenvix-coldread-machine (solo bucket fenvix-coldread-*). Stesso tag
+# (project=fenvix-coldread) e stesso gruppo di concorrenza di M31: le due prove non girano mai insieme, cosi' la pulizia
+# di una non tocca la macchina dell'altra. La stringa di connessione sta nel secret DEMO_DB_URI: passa dal runner al
+# bucket privato (oggetto segreto/uri) e la macchina la legge e cancella l'oggetto subito; mai in file, mai nei log.
+# Spesa: riga "SPESA" ogni minuto; blocco a 5 $ (regola del fondatore 2026-11-04); pulizia e controllo finale sempre.
+# FRENO D'EMERGENZA: il bottone "Cancel workflow" nella pagina della run (la pulizia gira lo stesso).
+name: code-irlanda
+on:
+  push:
+    branches: [code-irlanda]
+    paths: ['irlanda/comando.json']
+permissions:
+  id-token: write
+  contents: write
+concurrency:
+  group: fenvix-m31
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_REGION: eu-west-1
+      IRL_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      DEMO_DB_URI: ${{ secrets.DEMO_DB_URI }}
+      I: irlanda
+      TIPO: c7i.xlarge
+      PREZZO_ORA: "0.1915"       # c7i.xlarge on-demand eu-west-1, DICHIARATO (doit.com, 2026-11-04, come M31)
+      TETTO_DOLLARI: "5"         # blocco della spesa stimata (fondatore, RULES.md 2026-11-04)
+      RUOLO_MACCHINA: fenvix-coldread-machine
+      BUCKET: fenvix-coldread-irl-${{ github.run_id }}
+      IRL_OUT: /tmp/irl-out
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Maschera account, ruolo e password; modo dal file di comando
+        id: mode
+        run: |
+          [ -n "$IRL_ROLE" ] || { echo "secret AWS_ROLE_ARN mancante"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$IRL_ROLE"); role=${IRL_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          # la password della stringa di connessione (anche decodificata): GitHub maschera solo la stringa intera
+          if [ -n "$DEMO_DB_URI" ]; then
+            python3 - <<'PY'
+          import os, re, urllib.parse
+          m = re.match(r"mongodb(\+srv)?://([^@/]+)@", os.environ["DEMO_DB_URI"])
+          if m and ":" in m.group(2):
+              p = m.group(2).split(":", 1)[1]
+              for x in {p, urllib.parse.unquote(p)}:
+                  if len(x) >= 4:
+                      print(f"::add-mask::{x}")
+          PY
+          fi
+          echo "IRL_ACCT=$acct" >> "$GITHUB_ENV"
+          echo "IRL_INIZIO=$(date -u -d '2 minutes ago' +%FT%TZ)" >> "$GITHUB_ENV"
+          cambiati=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD)
+          modo=$(jq -r '.modo // "niente"' "$I"/comando.json 2>/dev/null || echo niente)
+          forza=$(jq -r 'if .forza == true then "1" else "0" end' "$I"/comando.json 2>/dev/null || echo 0)
+          # solo un comando.json aggiunto o cambiato in questo commit puo' far partire qualcosa su AWS
+          grep -qx "$I"/comando.json <<<"$cambiati" || modo=niente
+          case "$modo" in permessi|giro|smonta) ;; *) modo=niente;; esac
+          stato_nuovo=0
+          if grep -qx "$I"/risultati_p1.json <<<"$cambiati" && grep -qx "$I"/risultati_p1.json.usati.log <<<"$cambiati"; then stato_nuovo=1; fi
+          if [ "$modo" = giro ] && [ "$stato_nuovo" = 0 ]; then
+            echo "::error title=File di stato::per il modo giro, risultati_p1.json e risultati_p1.json.usati.log vanno caricati NELLO STESSO commit di comando.json (copie fresche dal Mac, dopo il giro M30). Niente fatto su AWS."
+            modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"
+          fi
+          { echo "modo=$modo"; echo "forza=$forza"; echo "stato_nuovo=$stato_nuovo"; } | tee -a "$GITHUB_OUTPUT"
+          echo "modo: $modo" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Rifiutato (file di stato mancanti nel commit)
+        if: steps.mode.outputs.rifiuto == '1'
+        run: exit 1
+
+      - name: Librerie Python per la macchina (Ubuntu 24.04, Python 3.12) e pacco (niente AWS)
+        if: steps.mode.outputs.modo == 'giro' || (steps.mode.outputs.modo == 'permessi' && steps.mode.outputs.stato_nuovo == '1')
+        run: |
+          mkdir -p /tmp/pacco
+          /usr/bin/python3 -m pip install -q --target /tmp/pacco/vendor --only-binary=:all: --implementation cp \
+            --python-version 3.12 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 \
+            'pymongo>=4.6,<5' backports.zstd boto3
+          cp "$I"/prova_infinite.py "$I"/esegui.sh "$I"/s3io.py "$I"/attendi_db.py "$I"/opzioni.txt /tmp/pacco/
+          tar czf /tmp/irlanda.tar.gz -C /tmp/pacco .
+          sha256sum /tmp/irlanda.tar.gz | tee -a "$GITHUB_STEP_SUMMARY"
+          md5sum /tmp/pacco/prova_infinite.py | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Controllo dei file di stato e piano a secco con lo script (0 $, nessuna connessione)
+        if: steps.mode.outputs.modo == 'giro' || (steps.mode.outputs.modo == 'permessi' && steps.mode.outputs.stato_nuovo == '1')
+        env:
+          FORZA: ${{ steps.mode.outputs.forza }}
+        run: |
+          mkdir -p /tmp/stato && cp "$I"/risultati_p1.json "$I"/risultati_p1.json.usati.log /tmp/stato/
+          PYTHONPATH=/tmp/pacco/vendor /usr/bin/python3 "$I"/controlla_stato.py /tmp/stato | tee /tmp/controllo-stato.txt
+          grep -q "^STATO: PRONTO" /tmp/controllo-stato.txt
+          { echo '```'; cat /tmp/controllo-stato.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Credenziali AWS (OIDC, 1 h)
+        if: steps.mode.outputs.modo != 'niente'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Controllo dei permessi e del segreto (0 $)
+        if: steps.mode.outputs.modo == 'permessi' || steps.mode.outputs.modo == 'giro'
+        run: bash "$I"/ci/permessi.sh
+
+      - name: Credenziali fresche per il giro
+        if: steps.mode.outputs.modo == 'giro'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Il giro (bucket, macchina, IP per Atlas, attesa con la spesa ogni minuto, risultati)
+        id: giro
+        if: steps.mode.outputs.modo == 'giro'
+        continue-on-error: true
+        env:
+          STATO_DIR: /tmp/stato
+        run: bash "$I"/ci/giro-ci.sh
+
+      - name: Credenziali per la pulizia
+        if: always() && steps.mode.outputs.modo != 'niente' && steps.mode.outputs.modo != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Recupero dei risultati con le credenziali fresche, prima della pulizia
+        if: always() && steps.mode.outputs.modo == 'giro'
+        run: bash "$I"/ci/recupera.sh
+
+      - name: Pulizia (macchine con il tag, bucket fenvix-coldread-*) e verifica
+        if: always() && steps.mode.outputs.modo != 'niente' && steps.mode.outputs.modo != ''
+        run: bash "$I"/ci/pulizia.sh
+
+      - name: Nessun segreto nei risultati (altrimenti non si pubblica niente)
+        id: segreti
+        if: always() && steps.mode.outputs.modo == 'giro'
+        run: |
+          [ -d "$IRL_OUT" ] || { echo "niente risultati"; exit 0; }
+          python3 "$I"/ci/controlla_segreti.py "$IRL_OUT"
+          echo "pulito=1" >> "$GITHUB_OUTPUT"
+
+      - name: Pubblico i risultati sul branch (senza l'account)
+        if: always() && steps.segreti.outputs.pulito == '1'
+        run: |
+          R="$I"/risultati/run-${{ github.run_id }}
+          mkdir -p "$R" && cp -r "$IRL_OUT"/. "$R"/ && rm -f "$R"/.salito.json
+          grep -rl "$IRL_ACCT" "$R" | xargs -r sed -i "s/$IRL_ACCT/<ACCOUNT_ID>/g"
+          ! grep -rq "$IRL_ACCT" "$R" || { echo "account ancora nei risultati: non pubblico"; exit 1; }
+          find "$R" -type f -size +90M -print -delete   # oltre il limite di GitHub: restano nell'artifact
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          git add "$R" && git commit -qm "P1 Irlanda run ${{ github.run_id }}: risultati e file di stato aggiornati" || true
+          for _ in 1 2 3; do git pull --rebase -q origin code-irlanda && git push -q origin HEAD:code-irlanda && break; sleep 5; done
+
+      - name: I due file di stato aggiornati, da riportare sul Mac (artifact irlanda-stato)
+        if: always() && steps.segreti.outputs.pulito == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: irlanda-stato-${{ github.run_id }}
+          path: |
+            /tmp/irl-out/stato/risultati_p1.json
+            /tmp/irl-out/stato/risultati_p1.json.usati.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Tutti i risultati come artifact (se il push non riesce)
+        if: always() && steps.segreti.outputs.pulito == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: irlanda-risultati-${{ github.run_id }}
+          path: /tmp/irl-out
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Credenziali fresche per il controllo finale
+        if: always() && steps.mode.outputs.modo != 'niente' && steps.mode.outputs.modo != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 900
+          mask-aws-account-id: true
+
+      - name: Controllo finale (macchine, dischi, Elastic IP, bucket) - RIMASTO niente oppure ALLARME e job rosso
+        if: always() && steps.mode.outputs.modo != 'niente' && steps.mode.outputs.modo != ''
+        run: bash "$I"/ci/controllo-finale.sh
+
+      - name: Esito del giro
+        if: always() && steps.mode.outputs.modo == 'giro'
+        run: |
+          echo "esito del passo del giro: ${{ steps.giro.outcome }}"
+          [ "${{ steps.giro.outcome }}" = success ]

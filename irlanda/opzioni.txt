@@ -1,0 +1,1 @@
+giro --file risultati_p1.json --cartella-dati dati --giro irlanda --nuova-cartella --solo-fasi Q2,Q3,Q1 --n-q2 50 --n-q3 50 --n-q1 50 --dorm-q2 0 --dorm-q3 0 --dorm-q1 0
