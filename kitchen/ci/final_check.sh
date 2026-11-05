@@ -9,7 +9,7 @@
 #   - security groups with that tag.
 # Nothing: "RIMASTO: niente" (the words of RULES.md), exit 0. Something (or a read that fails): "ALLARME: rimasto ..."
 # with the list, an ::error:: annotation, the step summary starts with the ALLARME, exit 1 (red job).
-# A kept pantry (fenvix-kitchen-pantry-*, founder's choice A2) is not something left behind: it is listed as KEPT,
+# A kept pantry (fenvix-kitchen-pantry-<digits>, founder's choice A2) is not something left behind: it is listed as KEPT,
 # with its creation date, and does not make the job red.
 # CM_START: start of the run in UTC (YYYY-MM-DDTHH:MM:SSZ), set by the first step of the workflow. Missing: last 24 hours.
 set -u
@@ -45,8 +45,9 @@ look "unattached EBS disks" aws ec2 describe-volumes --filters Name=status,Value
 FILTER='.Addresses[] | "address \(.PublicIp) (\(.AllocationId // "?"))"'
 look "Elastic IPs" aws ec2 describe-addresses --filters "$TAGF"
 
-# 4. buckets fenvix-coldread-*
-FILTER='.Buckets[].Name | select(startswith("fenvix-coldread-")) | "bucket \(.)"'
+# 4. buckets fenvix-coldread-*, and fenvix-kitchen-pantry-* that is not a kept pantry (K7: for example the empty bucket
+# of the permission check, fenvix-kitchen-pantry-check-<run>, if its deletion failed)
+FILTER='.Buckets[].Name | select(startswith("fenvix-coldread-") or (startswith("fenvix-kitchen-pantry-") and (test("^fenvix-kitchen-pantry-[0-9]+$") | not))) | "bucket \(.)"'
 look "S3 buckets" aws s3api list-buckets
 
 # 5. tagged security groups
@@ -55,7 +56,7 @@ look "security groups" aws ec2 describe-security-groups --filters "$TAGF"
 
 S=${GITHUB_STEP_SUMMARY:-/dev/null}
 # kept pantries (founder's choice A2): listed, not an alarm
-kept=$(aws s3api list-buckets --output json 2>/dev/null | jq -r '.Buckets[] | select(.Name | startswith("fenvix-kitchen-pantry-")) | "\(.Name) (created \(.CreationDate))"' 2>/dev/null)
+kept=$(aws s3api list-buckets --output json 2>/dev/null | jq -r '.Buckets[] | select(.Name | test("^fenvix-kitchen-pantry-[0-9]+$")) | "\(.Name) (created \(.CreationDate))"' 2>/dev/null)
 [ -n "$kept" ] && while IFS= read -r k; do echo "KEPT: pantry $k; its objects expire after 3 days, mode drop-pantry deletes it now" | tee -a "$S"; done <<<"$kept"
 if [ ${#left[@]} -eq 0 ] && [ ${#unknown[@]} -eq 0 ]; then
   echo "RIMASTO: niente (final check: machines, disks, IP addresses, buckets, security groups in eu-west-1, since $START)" | tee -a "$S"

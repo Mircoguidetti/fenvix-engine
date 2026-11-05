@@ -3,7 +3,8 @@ and per kind: compacted SSTs (memtable flushes and compaction output), WAL SSTs,
 machine before our server starts and after it stops, at every size: if the counts move a lot during a round, the
 compaction was still busy (the cold reads depend on how many level-0 SSTs there are).
 One LIST of the bucket (about 1 request per 1,000 objects: $0.005 per 1,000, DECLARED S3 price).
-Usage: sst_count.py BUCKET OUT_JSON LABEL   (prints one summary line)"""
+Usage: sst_count.py BUCKET OUT_JSON LABEL   (prints one summary line)
+OUT ending in .jsonl: the record is appended as one line (K5: the count every 5 minutes during a size)."""
 import datetime as dt
 import json
 import os
@@ -47,7 +48,11 @@ def main():
                 tot[f] += x[f]
     rec = {"label": label, "t": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "total": tot,
            "per_database": per_db}
-    json.dump(rec, open(out, "w"), indent=1)
+    if out.endswith(".jsonl"):
+        with open(out, "a") as f:
+            f.write(json.dumps(rec, separators=(",", ":")) + "\n")
+    else:
+        json.dump(rec, open(out, "w"), indent=1)
     l0 = sum(d.get("compacted", {}).get("sst", 0) for d in per_db.values())
     print(f"SST {label}: {tot['sst']} SST ({tot['sst_bytes'] / 2**30:.2f} GiB), compacted {l0}, "
           f"{tot['objects']} objects ({tot['bytes'] / 2**30:.2f} GiB) in {len(per_db)} databases")

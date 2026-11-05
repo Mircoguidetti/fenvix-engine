@@ -27,7 +27,7 @@ export CM_ACCT=123456789012 CM_ROLE=arn:aws:iam::123456789012:role/fake
 export CA_DIR=$W/ca BIN=$W/bin
 CM_PW=$(openssl rand -hex 24); export CM_PW
 # for the "machines" (the user-data runs here): no real shutdown, short pauses, the server on 127.0.0.1
-export SETTLE_STEP_S=5 SETTLE_MAX_MIN=1
+export SETTLE_STEP_S=5 SETTLE_MAX_MIN=4 SST_EVERY_S=${SST_EVERY_S:-10}
 export LOCAL_TEST=1 FAKE_IP=127.0.0.1 FAKE_SERVER_IP=127.0.0.1 DB_PORT=${DB_PORT:-27764} PUSH_S=10 DOWNLOAD_RETRY_S=1
 export MINUTE_S=${MINUTE_S:-15} MUTE_MIN=${MUTE_MIN:-40} CEILING_MIN=${CEILING_MIN:-200} LOCAL_VENDOR=1
 mkdir -p "$BIN/mongo-server-x86_64" "$BIN/mongo-server-aarch64"
@@ -42,7 +42,7 @@ aws iam add-role-to-instance-profile --instance-profile-name fenvix-coldread-mac
 echo 16.0 > "$SANDBOX/vcpu-quota"
 T0=$(date +%s)
 echo "== 0. program and load plan, shrunk (same steps and phases, small numbers)"
-python3 "$C/irlanda/rimpicciolisci.py" "$C/programs" small-programs > /dev/null
+python3 "$C/irlanda/prova-locale/rimpicciolisci.py" "$C/programs" small-programs > /dev/null
 python3 - "$C/load-plans/m30-corto.txt" small-load-plan.txt <<'PY'
 import re, sys
 out = []
@@ -130,6 +130,7 @@ run_once() { # run_once NAME MODE PANTRY LOAD LOADER SIZES
   export PANTRY_MODE=$2 PANTRY=$3 LOAD=$4 LOADER=$5 SIZES=$6 GITHUB_RUN_ID=$RANDOM
   export BUCKET=fenvix-coldread-cm-$GITHUB_RUN_ID CM_OUT=$W/out-$name GITHUB_STEP_SUMMARY=$W/summary-$name.md
   export GITHUB_ENV=$W/github-$name.env PACKAGES=$W/packages-$name CM_START
+  export SERVER_OPTIONS=${SERVER_OPTIONS:-} PREPARE=${PREPARE:-} FRESH_PANTRY=${FRESH_PANTRY:-0}
   CM_START=$(date -u -d '1 minute ago' +%FT%TZ)
   echo "== run $name: pantry $PANTRY ($PANTRY_MODE), load $LOAD (${LOADER:-no loader}), sizes $SIZES"
   local pc=0; [ "$PANTRY_MODE" != new ] && pc=1
@@ -143,6 +144,7 @@ run_once() { # run_once NAME MODE PANTRY LOAD LOADER SIZES
   local CI="$C/ci"
   C="$W/kitchen-$name" ATLAS_TGZ="$W/atlas-$name.tgz" bash "$CI/packages.sh" > "packages-$name.txt" 2>&1; echo "packages: code $?; $(grep -E "^(client|server)" "packages-$name.txt" | tr '\n' ' ' | cut -c1-260)"
   local t; t=$(date +%s)
+  echo "per size: server options ${SERVER_OPTIONS:-default}, prepare ${PREPARE:-default}, fresh pantry ${FRESH_PANTRY:-0}"
   bash "$C/ci/run.sh" > "run-$name.log" 2>&1; echo "run.sh: code $? in $(( $(date +%s) - t )) s"
   grep -E "^(run:|pantry|cook [0-9]+:|outcome)|BLOCCO" "run-$name.log"; grep "^SPESA" "run-$name.log" | tail -1
   bash "$C/ci/fetch_results.sh"
@@ -152,13 +154,26 @@ run_once() { # run_once NAME MODE PANTRY LOAD LOADER SIZES
   cat "$CM_OUT/client/steps.log" | grep -E "load finished|MERGE|PLANS|size [0-9]+ \(|outcomes|finish" | cut -c1-200
 }
 KEEP=fenvix-kitchen-pantry-$RANDOM$RANDOM
-run_once 1 keep "$KEEP" 1 c7i.xlarge '["c7i.large","c7g.large"]'
-run_once 2 existing "$KEEP" 0 "" '["m7i.large"]'
+# run 1: K5 side by side (size 1 without the prepare step, size 2 with it), each on its own fresh copy of the pantry (K3)
+SERVER_OPTIONS="" PREPARE='[false,true]' FRESH_PANTRY=1 run_once 1 keep "$KEEP" 1 c7i.xlarge '["c7i.large","c7g.large"]'
+# run 2: the kept pantry, one size with its own server options (K6), the default prepare step, no copy
+SERVER_OPTIONS='["--block-cache-mb 512 --meta-cache-mb 128"]' PREPARE="" FRESH_PANTRY=0 run_once 2 existing "$KEEP" 0 "" '["m7i.large"]'
+echo "== K2: a kept pantry older than the limit is refused before any machine (limit set below zero here)"
+( export PANTRY_MODE=existing PANTRY=$KEEP LOAD=0 LOADER="" SIZES='["m7i.large"]' GITHUB_RUN_ID=$RANDOM KEPT_MAX_DAYS=-1
+  export BUCKET=fenvix-coldread-cm-$GITHUB_RUN_ID CM_OUT=$W/out-age GITHUB_STEP_SUMMARY=$W/summary-age.md PACKAGES=$W/packages-2
+  bash "$C/ci/run.sh" > run-age.log 2>&1; echo "run.sh: code $?; $(grep -E 'more than|created' run-age.log | head -1)"
+  grep -q "more than -1" run-age.log && echo "K2: REFUSED as expected" || echo "K2: NOT REFUSED (problem)"
+  bash "$C/ci/cleanup.sh" > cleanup-age.txt 2>&1; echo "cleanup: $(grep -E 'RIMASTO|ALLARME' cleanup-age.txt)" )
 echo "== mode drop-pantry (cleanup and final check only)"
 DROP_PANTRY=$KEEP bash "$C/ci/cleanup.sh" > cleanup-drop.txt 2>&1; echo "cleanup: code $?; $(grep -E 'kept pantry deleted|KEPT|RIMASTO|ALLARME' cleanup-drop.txt | tr '\n' ' ')"
 bash "$C/ci/final_check.sh" > final-drop.txt 2>&1; echo "final check: code $?; $(tr '\n' ' ' < final-drop.txt)"
+echo "== K7: a permission-check bucket left behind is an ALLARME (not KEPT) and the cleanup deletes it"
+aws s3api create-bucket --bucket fenvix-kitchen-pantry-check-1 --create-bucket-configuration LocationConstraint=eu-west-1 > /dev/null
+bash "$C/ci/final_check.sh" > final-k7.txt 2>&1; echo "final check with the bucket: code $? $(grep -oE 'ALLARME[^;]*|KEPT[^;]*' final-k7.txt | head -1)"
+bash "$C/ci/cleanup.sh" > cleanup-k7.txt 2>&1; echo "cleanup: $(grep -E 'bucket deleted|RIMASTO|ALLARME' cleanup-k7.txt | tr '\n' ' ')"
+bash "$C/ci/final_check.sh" > final-k7b.txt 2>&1; echo "final check after: code $? $(head -1 final-k7b.txt | cut -c1-40)"
 if [ -n "${BLOCK_TEST:-}" ]; then
-  SPEND_CAP=0.30 run_once block new "fenvix-coldread-cmd-$RANDOM" 1 c7i.xlarge '["c7i.large"]'
+  SERVER_OPTIONS="" PREPARE="" FRESH_PANTRY=0 SPEND_CAP=0.30 run_once block new "fenvix-coldread-cmd-$RANDOM" 1 c7i.xlarge '["c7i.large"]'
 fi
 kill $MOTO 2>/dev/null
 pgrep -f "mongo-server --listen 0.0.0.0:$DB_PORT" > /dev/null && echo "WARNING: a mongo-server is still alive" || echo "no mongo-server left alive"

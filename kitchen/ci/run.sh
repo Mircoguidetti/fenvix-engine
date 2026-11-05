@@ -13,7 +13,10 @@
 # block at $SPEND_CAP. Cleanup is in cleanup.sh (always runs).
 # Variables from the workflow: BUCKET, PANTRY, PANTRY_MODE (new|keep|existing), LOAD (0|1), LOADER, SIZES (JSON),
 # CLIENT, SPEND_CAP, MACHINE_ROLE, CM_ACCT, CM_ROLE, CM_PW (password of the run, masked), CA_DIR, PACKAGES, DISK_GB,
-# CEILING_MIN.
+# CEILING_MIN; K2c: SERVER_OPTIONS (JSON list, one string per size, K6), PREPARE (JSON list of true/false per size, K5),
+# FRESH_PANTRY (1 = K3: every size reads its own server-side copy of the pantry as it was right after the load).
+# K2 (reviewer of K2b): an existing kept pantry created more than KEPT_MAX_DAYS (2) days ago is refused: its objects
+# expire on the third day, the SSTs written by the load before the manifest that names them (a broken database).
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 source "$HERE/user_data.sh"
@@ -27,6 +30,8 @@ DISK_GB=${DISK_GB:-20}; SPEND_CAP=${SPEND_CAP:-5}
 # the m30-corto data: about 25 GB of BSON); if a cook has no counters (an engine without K1), S3_FALLBACK once (upper
 # bound for one load of the m30-corto data: about 25 GB, about 1 PUT per WAL flush plus compaction, STIMATO).
 S3_MARGIN=${S3_MARGIN:-0.10}; S3_FALLBACK=${S3_FALLBACK:-1.50}; PANTRY_GB=${PANTRY_GB:-60}
+SERVER_OPTIONS=${SERVER_OPTIONS:-}; PREPARE=${PREPARE:-}; FRESH_PANTRY=${FRESH_PANTRY:-0}; KEPT_MAX_DAYS=${KEPT_MAX_DAYS:-2}
+COPY_DOLLARS=0   # K3: the COPY and LIST requests of the per-size copies ($0.005 per 1,000, DECLARED S3 price)
 RUN=${GITHUB_RUN_ID:-0}
 renew() { # fresh OIDC credentials for another hour, without leaving the step (like M31 and Ireland)
   [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || { LAST_RENEW=$(date +%s); return 0; }
@@ -55,8 +60,8 @@ s3_dollars() { # S3 so far: the cooks' own counters (price included), plus margi
     case "$d" in ""|none|null) fb=1 ;; *) tot=$(py "import sys; print(float(sys.argv[1]) + float(sys.argv[2]))" "$tot" "$d") ;; esac
   done
   hours=$(py "import sys; print((int(sys.argv[1]) - int(sys.argv[2])) / 3600)" "$(date +%s)" "$T0")
-  py "import sys; t, fb, m, f, gb, h = map(float, sys.argv[1:]); print(f'{t + m + fb * f + gb * 0.023 / 730 * h:.6f}')" \
-    "$tot" "$fb" "$S3_MARGIN" "$S3_FALLBACK" "$PANTRY_GB" "$hours"
+  py "import sys; t, fb, m, f, gb, h, c = map(float, sys.argv[1:]); print(f'{t + m + fb * f + gb * 0.023 / 730 * h * (2 if c else 1) + c:.6f}')" \
+    "$tot" "$fb" "$S3_MARGIN" "$S3_FALLBACK" "$PANTRY_GB" "$hours" "$COPY_DOLLARS"
 }
 spend() { # adds the minutes since last time (at least 1) with the machines alive now; prints the SPESA line
   local now min types pm s3
@@ -108,7 +113,11 @@ left_min() { echo $(( CEILING_MIN - ($(date +%s) - T0) / 60 + 5 )); }
 
 [ -n "${CM_PW:-}" ] || { echo "password of the run missing"; exit 1; }
 mapfile -t LIST < <(python3 "$HERE/machine_types.py" check-sizes "$SIZES" 4) || exit 1
-echo "run: load $LOAD (loader ${LOADER:-none}); sizes ${LIST[*]:-none}; client $CLIENT; pantry $PANTRY ($PANTRY_MODE); cap $SPEND_CAP \$; $CEILING_MIN minutes"
+# per-size options (K6, K5), normalized as in the workflow's "decide" (one entry per size; defaults of size_options.py)
+mapfile -t SO < <(python3 "$HERE/size_options.py" "$SIZES" "${SERVER_OPTIONS:-null}" "${PREPARE:-null}") && [ ${#SO[@]} = 2 ] \
+  || { echo "per-size options refused: ${SO[*]:-}"; exit 1; }
+SERVER_OPTIONS=${SO[0]}; PREPARE=${SO[1]}
+echo "run: load $LOAD (loader ${LOADER:-none}); sizes ${LIST[*]:-none}; client $CLIENT; pantry $PANTRY ($PANTRY_MODE); server options $SERVER_OPTIONS; prepare $PREPARE; fresh pantry per size $FRESH_PANTRY; cap $SPEND_CAP \$; $CEILING_MIN minutes"
 echo "1/5 buckets"
 new_bucket() { # new_bucket NAME DAYS
   aws s3api create-bucket --bucket "$1" --create-bucket-configuration LocationConstraint=eu-west-1 >/dev/null || return 1
@@ -122,6 +131,13 @@ case "$PANTRY_MODE" in
   keep) new_bucket "$PANTRY" 3 || exit 1; echo "pantry $PANTRY: new and KEPT after the run (objects expire after 3 days)" ;;
   existing) aws s3api head-bucket --bucket "$PANTRY" || { echo "pantry $PANTRY not found"; exit 1; }
     aws s3 ls "s3://$PANTRY/kitchen-states/" >/dev/null 2>&1 || { echo "pantry $PANTRY has no kitchen-states/: no finished load"; exit 1; }
+    # K2: no pantry on its third day (one LIST of the buckets, $0)
+    born=$(aws s3api list-buckets --output json | jq -r --arg b "$PANTRY" '.Buckets[] | select(.Name == $b) | .CreationDate')
+    age=$(py "import sys, datetime as d; b = d.datetime.fromisoformat(sys.argv[1].replace('Z', '+00:00')); print(f'{(d.datetime.now(d.timezone.utc) - b).total_seconds() / 86400:.2f}')" "$born") \
+      || { echo "pantry $PANTRY: creation date not readable ($born)"; exit 1; }
+    py "import sys; sys.exit(0 if float(sys.argv[1]) <= float(sys.argv[2]) else 1)" "$age" "$KEPT_MAX_DAYS" \
+      || { echo "pantry $PANTRY created $age days ago, more than $KEPT_MAX_DAYS: its objects expire on the third day (load again)"; exit 1; }
+    echo "pantry $PANTRY: created $age days ago (at most $KEPT_MAX_DAYS)"
     echo "pantry $PANTRY: existing, loaded by an earlier run, kept" ;;
   *) echo "pantry mode not valid: $PANTRY_MODE"; exit 1 ;;
 esac
@@ -166,10 +182,35 @@ COOK_LIST=()
 [ "$LOAD" = 1 ] && COOK_LIST+=("$LOADER")
 COOK_LIST+=("${LIST[@]}")
 K=$([ "$LOAD" = 1 ] && echo -1 || echo 0)
+size_field() { # size_field JSON_LIST INDEX DEFAULT: entry INDEX (0-based) of a JSON list from the command
+  py "import json, sys; l = json.loads(sys.argv[1]) if sys.argv[1] else []; i = int(sys.argv[2]); v = l[i] if 0 <= i < len(l) else json.loads(sys.argv[3]); print(json.dumps(v) if not isinstance(v, str) else v)" "$1" "$2" "$3"; }
+copy_pantry() { # copy_pantry TARGET: K3, a server-side copy of the pantry (no download), with its COPY requests in SPESA
+  local t0 n
+  new_bucket "$1" 1 || return 1
+  t0=$(date +%s)
+  aws s3 sync "s3://$PANTRY" "s3://$1" --exclude 'kitchen-states/*' --only-show-errors || return 1
+  n=$(aws s3api list-objects-v2 --bucket "$1" --query 'length(Contents || `[]`)' --output text 2>/dev/null || echo 0)
+  COPY_DOLLARS=$(py "import sys; print(f'{float(sys.argv[1]) + (int(sys.argv[2]) + 10) * 0.005 / 1000:.6f}')" "$COPY_DOLLARS" "$n")
+  echo "fresh pantry for this size: $1, $n objects copied server-side in $(( $(date +%s) - t0 )) s"
+}
 for TYPE in "${COOK_LIST[@]}"; do
   K=$((K + 1)); P=server-$K
   [ -n "$OUTCOME" ] && break
   exists client/end.json && { echo "the client has already finished: no cook $K"; break; }
+  # the pantry this cook works on, its server options (K6) and the prepare step (K5); cook 0 (the loader): the engine as
+  # it is, on the pantry
+  COOK_PANTRY=$PANTRY; COOK_OPTS=""; COOK_PREP=false
+  if [ "$K" -ge 1 ]; then
+    COOK_OPTS=$(size_field "$SERVER_OPTIONS" $((K - 1)) '""'); COOK_PREP=$(size_field "$PREPARE" $((K - 1)) false)
+    if [ "$FRESH_PANTRY" = 1 ]; then
+      renew || echo "credential renewal failed before the copy for cook $K"
+      COOK_PANTRY=fenvix-coldread-cmw-$RUN-$K
+      copy_pantry "$COOK_PANTRY" || { echo "cook $K: the copy of the pantry failed"; OUTCOMES+=("$K $TYPE: COPY_FAILED"); OUTCOME=COPY_FAILED; break; }
+    fi
+  fi
+  py "import json, sys; print(json.dumps({'pantry': sys.argv[1], 'server_options': sys.argv[2]}))" "$COOK_PANTRY" "$COOK_OPTS" > "$OUT/config-$K.json"
+  aws s3 cp "$OUT/config-$K.json" "s3://$BUCKET/$P/config.json" --only-show-errors || { echo "cook $K: config not written"; OUTCOME=NO_BUCKET; break; }
+  echo "cook $K: pantry $COOK_PANTRY; server options '${COOK_OPTS}'; prepare $COOK_PREP"
   # C2: fresh credentials right before the presigned link and the launch
   renew || echo "credential renewal failed before cook $K"
   UD=$(mktemp)
@@ -182,7 +223,7 @@ for TYPE in "${COOK_LIST[@]}"; do
   IP_CERT=${FAKE_SERVER_IP:-$IP_SRV}
   echo "cook $K: $([ "$K" = 0 ] && echo loader || echo size) $TYPE $ID_SRV, private IP $IP_SRV"
   pem=$(mktemp); bash "$HERE/certs.sh" server "$CA_DIR" "$IP_CERT" "$pem" && aws s3 cp "$pem" "s3://$BUCKET/$P/server.pem" --only-show-errors; rm -f "$pem"
-  put "$P/go.json" "{\"type\": \"$TYPE\", \"k\": $K}"
+  put "$P/go.json" "{\"type\": \"$TYPE\", \"k\": $K, \"pantry\": \"$COOK_PANTRY\", \"prepare\": $COOK_PREP}"
   while ! exists "client/done-$K.json"; do
     minute || break
     exists client/end.json && { exists "client/done-$K.json" || echo "the client finished without cook $K"; break; }
@@ -196,6 +237,9 @@ for TYPE in "${COOK_LIST[@]}"; do
   exists "$P/stopped" && echo "cook $K stopped by itself (logs, SST count and S3 counters in the bucket)" || echo "cook $K did not answer 'stop' in 3 minutes: terminating it"
   aws ec2 terminate-instances --instance-ids "$ID_SRV" >/dev/null 2>&1
   aws ec2 wait instance-terminated --instance-ids "$ID_SRV" 2>/dev/null || echo "waiting for the termination of cook $K failed: cleanup.sh does it again"
+  if [ "$COOK_PANTRY" != "$PANTRY" ]; then   # K3: the copy goes away with its size (cleanup.sh deletes it anyway)
+    renew || true; aws s3 rb "s3://$COOK_PANTRY" --force >/dev/null 2>&1 && echo "copy $COOK_PANTRY deleted" || echo "copy $COOK_PANTRY not deleted: cleanup.sh does it"
+  fi
   spend
   [ "$K" = 0 ] && [ "$f" != LOADED ] && { echo "the load did not finish: no size"; OUTCOME=${OUTCOME:-LOAD_FAILED}; break; }
 done
@@ -229,4 +273,5 @@ grep -rl "$CM_ACCT" "$OUT" 2>/dev/null | xargs -r sed -i "s/$CM_ACCT/<ACCOUNT_ID
     tail -1 "$d/validita-macchina.txt" 2>/dev/null; echo '```'
   done; } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
 [ "$OUTCOME" = BLOCCO_SPESA ] && echo "::warning title=BLOCCO_SPESA::estimated spend >= $SPEND_CAP \$: run stopped, cleanup started"
+[ "$OUTCOME" = NON_UNO_A_UNO ] && echo "::error title=NON_UNO_A_UNO::our cook did not serve exactly the clients of the plan (client/size-*/reads.json)"
 case "$OUTCOME" in FINITO|FINITO_MACCHINA_LIMITE|LOADED_ONLY) exit 0 ;; *) exit 1 ;; esac

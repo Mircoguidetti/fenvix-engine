@@ -18,7 +18,8 @@ d=$(mktemp -d)
 vendor "$d" x86_64 'pymongo>=4.6,<5' backports.zstd boto3
 cp "$C"/irlanda/prova_infinite.py "$C"/irlanda/programma.py "$C"/irlanda/simula_programma.py "$C"/irlanda/somma_massimo.py \
   "$C"/irlanda/controlla_parallelo.py "$C"/irlanda/cpu_macchina.py "$d"/
-cp "$C"/client.sh "$C"/s3io.py "$C"/wait_db.py "$C"/load.py "$C"/load_until.py "$C"/merge_states.py "$C"/compare_plans.py "$C"/settle.py "$d"/
+cp "$C"/client.sh "$C"/s3io.py "$C"/wait_db.py "$C"/load.py "$C"/load_until.py "$C"/merge_states.py "$C"/compare_plans.py "$C"/settle.py \
+  "$C"/open_all.py "$C"/check_reads.py "$d"/
 cp "$C/programs/$PROGRAM/passi.txt" "$d"/passi.txt
 cp "$C/load-plans/$LOAD_PLAN.txt" "$d"/load-plan.txt
 cp "$ATLAS_TGZ" "$d"/atlas-states.tar.gz

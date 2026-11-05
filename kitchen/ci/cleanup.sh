@@ -11,7 +11,9 @@ set -u
 ids=$(aws ec2 describe-instances --filters Name=tag:project,Values=fenvix-coldread Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down --query 'Reservations[].Instances[].InstanceId' --output text 2>/dev/null) || { echo "NON SO: cannot read the machines"; exit 1; }
 # shellcheck disable=SC2086
 if [ -n "$ids" ]; then aws ec2 terminate-instances --instance-ids $ids >/dev/null && echo "machines terminated: $ids"; aws ec2 wait instance-terminated --instance-ids $ids || true; fi
-for b in $(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null | tr '\t' '\n' | grep '^fenvix-coldread-'); do
+# fenvix-coldread-* (run bucket, pantry not kept, the per-size copies of K3) and the permission check's test bucket
+# fenvix-kitchen-pantry-check-* (K7); never a kept pantry fenvix-kitchen-pantry-<digits>
+for b in $(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null | tr '\t' '\n' | grep -E '^fenvix-coldread-|^fenvix-kitchen-pantry-check-'); do
   aws s3 rb "s3://$b" --force >/dev/null && echo "bucket deleted: $b"; done
 if [ -n "${DROP_PANTRY:-}" ]; then
   [[ "$DROP_PANTRY" =~ ^fenvix-kitchen-pantry-[0-9]+$ ]] || { echo "ALLARME: drop-pantry name not valid: $DROP_PANTRY"; exit 1; }
@@ -29,9 +31,9 @@ for _ in $(seq 1 18); do
   sleep 10
 done
 m=$(aws ec2 describe-instances --filters Name=tag:project,Values=fenvix-coldread Name=instance-state-name,Values=pending,running,stopping,stopped --query 'length(Reservations[].Instances[])' --output text 2>/dev/null || echo "?")
-b=$(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null | tr '\t' '\n' | grep -c '^fenvix-coldread-' || true)
+b=$(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null | tr '\t' '\n' | grep -cE '^fenvix-coldread-|^fenvix-kitchen-pantry-check-' || true)
 g=$(aws ec2 describe-security-groups --filters Name=tag:project,Values=fenvix-coldread --query 'length(SecurityGroups)' --output text 2>/dev/null || echo "?")
-for k in $(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null | tr '\t' '\n' | grep '^fenvix-kitchen-pantry-'); do
+for k in $(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null | tr '\t' '\n' | grep -E '^fenvix-kitchen-pantry-[0-9]+$'); do
   echo "KEPT: pantry $k (founder's choice; its objects expire after 3 days)"; done
 if [ "$m" = "0" ] && [ "$b" = "0" ] && [ "$g" = "0" ]; then echo "RIMASTO: niente" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"; else
   echo "ALLARME: machines $m, buckets $b, security groups $g" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"; exit 1; fi

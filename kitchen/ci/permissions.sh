@@ -74,7 +74,10 @@ bucket_try() { # bucket_try NAME LABEL
   try "s3:DeleteBucket ($L)" aws s3api delete-bucket --bucket "$P"
 }
 bucket_try "fenvix-coldread-cm-perm-${GITHUB_RUN_ID:-0}" "run bucket"
-[ "${PANTRY_CHECK:-0}" = 1 ] && bucket_try "fenvix-kitchen-pantry-${GITHUB_RUN_ID:-0}0" "kept pantry, needs the new IAM lines"
+# K7: the test bucket of the kept-pantry permission is "fenvix-kitchen-pantry-check-<run>" (same IAM prefix): the final
+# check calls KEPT only a real kept pantry (fenvix-kitchen-pantry-<digits>), so this one, if its deletion failed, is an
+# ALLARME and cleanup.sh deletes it.
+[ "${PANTRY_CHECK:-0}" = 1 ] && bucket_try "fenvix-kitchen-pantry-check-${GITHUB_RUN_ID:-0}" "kept pantry, needs the new IAM lines"
 try "s3:ListAllMyBuckets" aws s3api list-buckets --query 'length(Buckets)'
 if [ ${#missing[@]} -eq 0 ]; then echo "PERMESSI: tutti presenti" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"; else
   { echo "PERMESSI MANCANTI:"; printf -- '- %s\n' "${missing[@]}"; } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"; exit 1; fi

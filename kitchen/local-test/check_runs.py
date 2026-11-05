@@ -122,4 +122,67 @@ for o in outs:
         print(f"   {o}: {len(sp)} SPESA lines; last: {sp[-1].strip() if sp else 'none'}")
         if not sp or not re.search(r"S3 [0-9,]+ \$ from the cooks", sp[-1]):
             problems.append(f"{o}: SPESA line without S3")
+print("7. K4, on the client after every size: the clients our cook served, phase by phase, against the plan:")
+for o in outs:
+    for z in sorted(glob.glob(os.path.join(W, o, "client", "size-*"))):
+        t = os.path.join(z, "reads.txt")
+        last = open(t).read().strip().splitlines()[-1] if os.path.exists(t) else "reads.txt missing"
+        ok = last.startswith("READS: ONE TO ONE")
+        problems += [] if ok else [f"{o}/{os.path.basename(z)}: {last}"]
+        print(f"   {'OK  ' if ok else 'DIFF'} {o}/{os.path.basename(z)}: {last}")
+
+
+def ts(x):
+    import datetime as dt
+    return dt.datetime.fromisoformat(x.replace("Z", "+00:00")).timestamp()
+
+
+print("8. K5, compaction during the measures (SST count of the cook every SST_EVERY_S) and the cold start:")
+for o in outs:
+    cfg = {}
+    for z in sorted(glob.glob(os.path.join(W, o, "client", "size-*"))):
+        k = os.path.basename(z).split("-")[1]
+        pl = os.path.join(z, "passi.log")
+        if not os.path.exists(pl):
+            continue
+        lines = open(pl).read().splitlines()
+        starts = [r for r in lines if " passo " in r and "codice" not in r and ("giro" in r or "massimo" in r)]
+        t_start = ts(lines[0].split()[0]) if lines else None
+        # the read-only part of the round: until the first step with phase "fine" or the maximum load
+        w = next((ts(r.split()[0]) for r in starts if "--solo-fasi fine" in r or " massimo " in r), None)
+        sd = os.path.join(W, o, f"server-{k}", "sst-during.jsonl")
+        rows = [json.loads(x) for x in open(sd)] if os.path.exists(sd) else []
+        reads = [r for r in rows if t_start and w and t_start <= ts(r["t"]) <= w]
+        comp = lambda r: sum(d.get("compacted", {}).get("sst", 0) for d in r["per_database"].values())
+        wal = lambda r: sum(d.get("wal", {}).get("sst", 0) for d in r["per_database"].values())
+        moved = walr = None
+        if len(reads) >= 2:
+            moved = sorted({comp(r) for r in reads})
+            walr = (min(wal(r) for r in reads), max(wal(r) for r in reads))
+        prep = os.path.exists(os.path.join(z, "settle.json"))
+        settle = open(os.path.join(z, "settle.txt")).read().strip().splitlines()[-1] if prep else "no prepare step"
+        cache = None
+        for f in glob.glob(os.path.join(z, "dati", "*", "*", "fase_*_inizio.json")):
+            b = (json.load(open(f)).get("bancone_primario") or {})
+            cache = b.get("byte_nel_bancone")
+        if not rows:
+            problems.append(f"{o}/size-{k}: no SST count during the size")
+        print(f"   {o}/size-{k}: prepare {prep} ({settle}); SST samples during the size {len(rows)}, in the read-only part "
+              f"{len(reads)}: compacted SSTs seen {moved} ({'NO compaction' if moved and len(moved) == 1 else 'compaction or flush'} "
+              f"while reading); WAL SSTs in the read-only part {walr} (the profiler's entries are writes); cache at "
+              f"phase inizio {cache} bytes")
+print("9. K3, a fresh copy of the pantry for every size; K6, server options per size:")
+for o in outs:
+    n = o.replace("out-", "")
+    log = os.path.join(W, f"run-{n}.log")
+    if os.path.exists(log):
+        for r in open(log):
+            if r.startswith(("fresh pantry for this size", "copy fenvix-coldread-cmw")) or (r.startswith("cook ") and "server options" in r):
+                print(f"   {o}: {r.strip()}")
+    for s in sorted(glob.glob(os.path.join(W, o, "server-*"))):
+        c = os.path.join(s, "server-command.txt")
+        if os.path.exists(c):
+            cmd = open(c).read()
+            extra = cmd.split("server.pem", 1)[-1].strip()
+            print(f"   {o}/{os.path.basename(s)}: options after the fixed ones: '{extra}'")
 print("CHECKS: " + ("ALL OK" if not problems else f"{len(problems)} PROBLEMS: " + "; ".join(problems[:10])))

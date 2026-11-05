@@ -19,12 +19,21 @@
 #       "engine":      ref of fenvix-engine to build mongo-server from ["server-per-script"];
 #       "atlas_states": code-irlanda commit with the Atlas state files the Atlas round started from ["501c8fd"];
 #       "client":      client machine [the program's macchina.txt]; a different one is allowed but is NOT one to one;
+#       "server_options": K6, one string per size with options for mongo-server on that cook (for example
+#                      ["--block-cache-mb 4096 --meta-cache-mb 1024"]); [the engine's defaults]. Only --name value tokens,
+#                      never the options server.sh sets itself (store, bucket, listen, TLS, auth...);
+#       "prepare":     K5, true or one true/false per size: before the round, on the size's cook, open every database
+#                      (listCollections) and wait for the pantry to calm down (settle.py) [false: in the K2c local test
+#                      it changed nothing, the compaction during the measures comes from the round's own writes];
+#       "fresh_pantry": K3, true = every size reads its own server-side copy of the pantry as it was right after the load
+#                      (copied before the size, deleted after it) instead of the pantry the earlier sizes wrote into
+#                      [false: needed only with more than one size on the same pantry, founder's A2 road 1 or A6 road b];
 #   "teardown"    = cleanup and check only;
 #   "drop-pantry" = delete the kept pantry named in "pantry", then cleanup and check.
 # A commit that does not change kitchen/command.json does nothing on AWS (mode "none").
 # No keys: OIDC role from the secret AWS_ROLE_ARN (the one of M31 and Ireland: role fenvix-gha-tests, policy
 # fenvix-coldread-test); the machines use the role fenvix-coldread-machine. Same tag (project=fenvix-coldread) and same
-# concurrency group as M31 and Ireland: the tests never run together, so the cleanup of one cannot touch the machines of
+# concurrency group as M31 and Ireland, on the job "run" (K1): the tests never run together, so the cleanup of one cannot touch the machines of
 # another. The server password is new for every run, born on the runner, masked, and reaches the machines only through
 # the private bucket; the TLS certificates are born on the runner (the CA key never leaves it).
 # Spend: a SPESA line every minute (machines, plus S3 from our server's own request counters); block at $5 (founder's
@@ -38,9 +47,9 @@ on:
 permissions:
   id-token: write
   contents: write
-concurrency:
-  group: fenvix-m31
-  cancel-in-progress: false
+# K1 (reviewer of K2b): the concurrency group shared with M31 and Ireland is on the job "run" only, not on the whole
+# workflow, so a commit with "none" (or a refused command) never takes the waiting place of that group and never cancels
+# an Ireland or M31 run waiting in it (GitHub keeps one pending run per group).
 env:
   RUST_TOOLCHAIN: "1.97.0"
 jobs:
@@ -61,6 +70,9 @@ jobs:
       pantry_mode: ${{ steps.c.outputs.pantry_mode }}
       atlas_states: ${{ steps.c.outputs.atlas_states }}
       client: ${{ steps.c.outputs.client }}
+      server_options: ${{ steps.c.outputs.server_options }}
+      prepare: ${{ steps.c.outputs.prepare }}
+      fresh_pantry: ${{ steps.c.outputs.fresh_pantry }}
       refused: ${{ steps.c.outputs.refused }}
     steps:
       - uses: actions/checkout@v4
@@ -104,13 +116,21 @@ jobs:
             [ "$mode" = run ] && [ "$sizes" = "[]" ] && no "no load and no size: nothing to do"
           fi
           [ "$mode" = drop-pantry ] && [ "$pantry_mode" != existing ] && no "drop-pantry needs \"pantry\": the name of the kept pantry"
+          # K6, K5, K3: per-size server options, the prepare step, a fresh copy of the pantry for every size
+          server_options=$(jq -c '.server_options // null' "$C" 2>/dev/null) || no "server_options not readable"
+          prepare=$(jq -c '.prepare // null' "$C" 2>/dev/null) || no "prepare not readable"
+          python3 kitchen/ci/size_options.py "$sizes" "$server_options" "$prepare" > /tmp/o.txt || no "$(cat /tmp/o.txt)"
+          server_options=$(sed -n 1p /tmp/o.txt); prepare=$(sed -n 2p /tmp/o.txt)
+          fresh=$(jq -r '.fresh_pantry // false' "$C")
+          case "$fresh" in true) fresh_pantry=1 ;; false) fresh_pantry=0 ;; *) no "fresh_pantry: true or false" ;; esac
           archs=$(python3 kitchen/ci/machine_types.py archs "$sizes" "$loader")
           x86=0; arm=0
           [ "$mode" = run ] && { grep -qw x86_64 <<<"$archs" && x86=1; grep -qw aarch64 <<<"$archs" && arm=1; }
           { echo "mode=$mode"; echo "sizes=$sizes"; echo "engine=$engine"; echo "x86=$x86"; echo "arm=$arm"; echo "program=$program"
             echo "load=$load"; echo "loader=$loader"; echo "pantry=$pantry"; echo "pantry_mode=$pantry_mode"
-            echo "atlas_states=$atlas"; echo "client=$client"; } | tee -a "$GITHUB_OUTPUT"
-          echo "mode: $mode; program $program; sizes $sizes; load $load (loader $loader); pantry $pantry ($pantry_mode); engine $engine; Atlas states $atlas; client $client" >> "$GITHUB_STEP_SUMMARY"
+            echo "atlas_states=$atlas"; echo "client=$client"; echo "server_options=$server_options"; echo "prepare=$prepare"
+            echo "fresh_pantry=$fresh_pantry"; } | tee -a "$GITHUB_OUTPUT"
+          echo "mode: $mode; program $program; sizes $sizes; load $load (loader $loader); pantry $pantry ($pantry_mode); engine $engine; Atlas states $atlas; client $client; server options $server_options; prepare $prepare; fresh pantry per size $fresh_pantry" >> "$GITHUB_STEP_SUMMARY"
           [ "$client" = "$(cut -d' ' -f1 "kitchen/programs/$program/macchina.txt")" ] || echo "::warning title=Not one to one::client $client is not the one of the program: carico_massimo is not comparable with Atlas"
       - name: Refused (wrong command, nothing done on AWS)
         if: steps.c.outputs.refused == '1'
@@ -174,6 +194,9 @@ jobs:
     if: always() && needs.decide.outputs.mode != 'none' && needs.decide.outputs.mode != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 355
+    concurrency:
+      group: fenvix-m31
+      cancel-in-progress: false
     env:
       AWS_PAGER: ""
       AWS_DEFAULT_REGION: eu-west-1
@@ -189,6 +212,9 @@ jobs:
       PANTRY_MODE: ${{ needs.decide.outputs.pantry_mode }}
       ATLAS_STATES: ${{ needs.decide.outputs.atlas_states }}
       CLIENT: ${{ needs.decide.outputs.client }}
+      SERVER_OPTIONS: ${{ needs.decide.outputs.server_options }}
+      PREPARE: ${{ needs.decide.outputs.prepare }}
+      FRESH_PANTRY: ${{ needs.decide.outputs.fresh_pantry }}
       C: kitchen
       SPEND_CAP: "5"             # block of the estimated spend (founder, RULES.md 2026-11-04)
       MACHINE_ROLE: fenvix-coldread-machine

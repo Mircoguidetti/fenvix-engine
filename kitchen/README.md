@@ -1,4 +1,4 @@
-# Minimal kitchen (K2, corrected by K2b, 2026-11-05)
+# Minimal kitchen (K2, corrected by K2b and K2c, 2026-11-05)
 
 Our server (`mongo-server`, data only on S3) on EC2 in eu-west-1, measured ONE TO ONE with the Atlas M30 round from
 Ireland: the same program (`programs/m30-corto/passi.txt`, code-irlanda), run by the same `programma.py`, with the
@@ -13,8 +13,12 @@ How one to one is kept:
   Atlas round started from (code-irlanda, `atlas_states`, default 501c8fd, CATENA checked) and only our order `_id`s
   from our load; `compare_plans.py` runs the whole program dry on both and must say `PLANS: SAME`;
 - same client machine and copies: the program's `macchina.txt` (c7i.2xlarge, 5 copies);
-- cold cooks: the load runs on its own cook 0 (switched off after the load and after `settle.py`); every size runs on
-  a new machine with a new process, from the same state files.
+- cold cooks: the load runs on its own cook 0 (switched off after the load and after `settle.py`, which now waits at
+  least 150 s so the loader's databases close and their compaction runs); every size runs on a new machine with a new
+  process, from the same state files;
+- checked after the fact (K2c, K4): `check_reads.py` on the client after every size compares the clients our cook
+  really served, phase by phase, with the plan; otherwise the size is `NON_UNO_A_UNO` and the job is red;
+- visible compaction (K5): the cook counts the SSTs of its pantry every 5 minutes (`sst-during.jsonl`).
 
 Files:
 - `.github/workflows/minimal-kitchen.yml`: the workflow (trigger: commit of `kitchen/command.json`; modes
@@ -22,12 +26,18 @@ Files:
   Examples: `{"mode": "run", "sizes": ["m7i.large"]}` (load and one size, pantry deleted at the end);
   `{"mode": "run", "sizes": [], "keep_pantry": true}` then `{"mode": "run", "sizes": ["m7i.large"], "pantry":
   "fenvix-kitchen-pantry-<run>"}` (load once, then one run per size); `{"mode": "drop-pantry", "pantry": "..."}`.
-- `irlanda/`, `programs/`: verbatim copies from code-irlanda 501c8fd, checked by `SOURCES.md5` (never edit them).
+  K2c fields: `"server_options": ["--block-cache-mb 4096 --meta-cache-mb 1024"]` (K6, per size; checked by
+  `ci/size_options.py`), `"prepare": true` (K5, off by default), `"fresh_pantry": true` (K3: every size reads its own
+  server-side copy of the pantry as loaded; needed with more than one size on the same pantry). A kept pantry older
+  than 2 days is refused (K2).
+- `irlanda/`, `programs/`: verbatim copies from code-irlanda 501c8fd, checked by `SOURCES.md5` (never edit them;
+  `programs/NAME/` is `irlanda/programmi/NAME/` in code-irlanda).
 - Client machine: `client.sh`, `load.py`, `load_until.py`, `settle.py`, `merge_states.py`, `compare_plans.py`,
-  `s3io.py`, `wait_db.py`.
+  `check_reads.py` (K4), `open_all.py` (K5 prepare step), `s3io.py`, `wait_db.py`.
 - Server machine: `server.sh`, `create_user.py`, `s3_counters.py` (S3 requests for the SPESA line), `sst_count.py`
-  (SSTs in the pantry at the start and the end of every cook), `server-options.txt` (empty: the engine as it is).
-- `ci/`: runner side. `run.sh` (the run), `permissions.sh`, `atlas_states.sh`, `packages.sh`, `machine_types.py`
+  (SSTs in the pantry at the start, every 5 minutes and at the end of every cook), `server-options.txt` (empty: the
+  engine as it is; per-size `server_options` replace it).
+- `ci/`: runner side. `run.sh` (the run), `size_options.py` (K6/K5 fields), `permissions.sh`, `atlas_states.sh`, `packages.sh`, `machine_types.py`
   (allowed types, vCPU, DECLARED prices), `certs.sh`, `user_data.sh`, `fetch_results.sh`, `cleanup.sh`,
   `final_check.sh`, `check_secrets.py`.
 - `local-test/`: the $0 test with fake AWS (moto), a fake Atlas and our real mongo-server on a fake S3

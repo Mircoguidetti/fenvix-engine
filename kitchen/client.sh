@@ -11,7 +11,8 @@
 #   - every size starts from those same state files, on a NEW cold cook (C1): every size reads the clients Atlas read.
 # Flow: password -> Atlas state files (from the package) -> if this run loads: wait for cook 0, load, our state files
 # into the pantry (kitchen-states/), "done-0" (the runner switches cook 0 off) / otherwise our state files from the
-# pantry -> merge -> dry comparison -> for every size K: wait for cook K, the program, "done-K" -> results, power off.
+# pantry -> merge -> dry comparison -> for every size K: wait for cook K, (K5) open every database and settle, the
+# program, (K4) the reads against the plan, "done-K" -> results, power off.
 # Usage: client.sh RUN_BUCKET   (client.env from the runner: PANTRY, LOAD; no secrets)
 set -u
 cd "$(dirname "$0")" || exit 1
@@ -21,7 +22,7 @@ export AWS_DEFAULT_REGION=eu-west-1 AWS_REGION=eu-west-1
 export PYTHONPATH="$PWD/vendor" PYTHONUNBUFFERED=1   # the script's lines reach the log at once (the script is unchanged)
 PY=${PY:-python3}
 SCRIPT_MD5=8396ca455557baaa4e3a9b1f881451f9
-WAIT_COOK_MIN=${WAIT_COOK_MIN:-30}
+WAIT_COOK_MIN=${WAIT_COOK_MIN:-45}   # K3: the runner may copy the pantry before launching a cook
 WAIT_DB_MIN=${WAIT_DB_MIN:-15}
 PUSH_S=${PUSH_S:-30}
 mkdir -p out work
@@ -63,6 +64,8 @@ wait_cook() { # wait_cook K: wait for "go" and then "ready" of cook K; sets TYPE
     sleep 10
   done
   TYPE=$($PY -c "import json,sys; print(json.loads(sys.argv[1])['type'])" "$go")
+  COOK_PANTRY=$($PY -c "import json,sys; print(json.loads(sys.argv[1]).get('pantry') or sys.argv[2])" "$go" "$PANTRY")
+  COOK_PREP=$($PY -c "import json,sys; print('1' if json.loads(sys.argv[1]).get('prepare') else '0')" "$go")
   t0=$(date +%s); ready=""
   while :; do
     ready=$($PY s3io.py text "$BUCKET" "server-$k/ready.json" 2>/dev/null) && [ -n "$ready" ] && break
@@ -106,7 +109,7 @@ if [ "$LOAD" = 1 ]; then
   echo "$(( $(date +%s) - t0 ))" > out/load-seconds.txt
   if [ "$rc" != 0 ]; then done_k 0 '{"outcome": "LOAD_FAILED"}'; finish LOAD_FAILED; fi
   # the loader's compaction calms down before the loader is switched off (risk 1 of the reviewer, C6)
-  $PY settle.py "$PANTRY" "${SETTLE_MAX_MIN:-20}" "${SETTLE_STEP_S:-60}" out/settle.json > out/settle.txt 2>&1
+  $PY settle.py "$PANTRY" "${SETTLE_MAX_MIN:-20}" "${SETTLE_STEP_S:-60}" out/settle.json "${SETTLE_MIN_S:-150}" > out/settle.txt 2>&1
   step "$(tail -1 out/settle.txt)"
   $PY s3io.py push "$PANTRY" loaded kitchen-states/ 2>> out/push-errors.log
   cp -r loaded out/loaded-states
@@ -138,6 +141,17 @@ while :; do
   ln -s "$PWD/out/size-$K" "$Z/out"
   ( cd "$Z/lavoro/stati" && find . -type f | sort | xargs -r md5sum ) > "out/size-$K/states-in.md5"
   $PY cpu_macchina.py "out/size-$K/cpu-macchina.log" 5 & SIZE_CPU=$!
+  # K5: open every database on this cook (listCollections, a reader: no write, nothing measured), keep them open and wait
+  # for the pantry to calm down; then the round. The SST counts of the cook (sst-during.jsonl) show whether the
+  # compaction still runs during the measures.
+  if [ "$COOK_PREP" = 1 ]; then
+    t0=$(date +%s)
+    $PY open_all.py "$((${SETTLE_MAX_MIN:-20} * 60 + 120))" "out/size-$K/open-all.json" > "out/size-$K/open-all.txt" 2>&1 & OPEN_PID=$!
+    sleep 5
+    $PY settle.py "$COOK_PANTRY" "${SETTLE_MAX_MIN:-20}" "${SETTLE_STEP_S:-60}" "out/size-$K/settle.json" "${SETTLE_MIN_S:-150}" > "out/size-$K/settle.txt" 2>&1
+    kill "$OPEN_PID" 2>/dev/null; wait "$OPEN_PID" 2>/dev/null
+    step "size $K ($TYPE): prepared in $(( $(date +%s) - t0 )) s: $(head -1 "out/size-$K/open-all.txt"); $(tail -1 "out/size-$K/settle.txt")"
+  fi
   URI_GIRO="${FENVIX_P1_URI}&maxConnecting=${MAX_CONNECTING:-200}"
   step "size $K ($TYPE): program $PROGRAM starts (maxConnecting in the round's string, like from Ireland)"
   ( cd "$Z" && URI_GIRO=$URI_GIRO $PY programma.py passi.txt ) > "out/size-$K/programma.txt" 2>&1
@@ -147,6 +161,12 @@ while :; do
   outcome=FINITO
   [ "$rc" = 0 ] || outcome="INCOMPLETO_CODICE_$rc"
   grep -q "ATTENZIONE: almeno una fase NON VALIDA" "out/size-$K/validita-macchina.txt" 2>/dev/null && outcome="${outcome}_MACCHINA_LIMITE"
+  # K4 (reviewer of K2b): the clients our cook really served, phase by phase, against the plan (plans.json is the same
+  # plan: compare_plans.py said SAME); otherwise the size is NON_UNO_A_UNO
+  $PY check_reads.py pristine "$Z/lavoro/stati" passi.txt "$Z/lavoro" "out/size-$K/reads.json" > "out/size-$K/reads.txt" 2>&1
+  rr=$?
+  step "size $K ($TYPE): $(tail -1 "out/size-$K/reads.txt")"
+  [ "$rr" = 0 ] || case "$outcome" in FINITO*) outcome=NON_UNO_A_UNO ;; esac   # an incomplete size stays INCOMPLETO
   step "size $K ($TYPE): $outcome; $(tail -1 "out/size-$K/passi.log" 2>/dev/null)"
   outcomes+=("$K:$outcome")
   done_k "$K" "{\"outcome\": \"$outcome\", \"type\": \"$TYPE\"}"
@@ -155,6 +175,7 @@ step "outcomes of the sizes: ${outcomes[*]:-none}"
 all=FINITO
 [ ${#outcomes[@]} -gt 0 ] || all=$([ "$LOAD" = 1 ] && echo LOADED_ONLY || echo NO_SIZE)
 for e in "${outcomes[@]}"; do
-  case "${e#*:}" in FINITO) ;; FINITO_MACCHINA_LIMITE) [ "$all" = FINITO ] && all=FINITO_MACCHINA_LIMITE ;; *) all=INCOMPLETO ;; esac
+  case "${e#*:}" in FINITO) ;; FINITO_MACCHINA_LIMITE) [ "$all" = FINITO ] && all=FINITO_MACCHINA_LIMITE ;;
+    NON_UNO_A_UNO) [ "$all" = INCOMPLETO ] || all=NON_UNO_A_UNO ;; *) all=INCOMPLETO ;; esac
 done
 finish "$all"
