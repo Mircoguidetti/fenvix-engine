@@ -91,7 +91,8 @@ jobs:
           case "$tipo" in
             c7i.8xlarge) prezzo=1.532; copie_serie=20;;
             c7i.4xlarge) prezzo=0.766; copie_serie=10;;
-            *) echo "::error title=Tipo::tipo $tipo non previsto (c7i.8xlarge o c7i.4xlarge)"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; tipo=c7i.8xlarge; prezzo=1.532; copie_serie=20;;
+            c7i.2xlarge) prezzo=0.383; copie_serie=5;;  # piano B se la quota di vCPU resta 8 (2026-11-05)
+            *) echo "::error title=Tipo::tipo $tipo non previsto (c7i.8xlarge, c7i.4xlarge o c7i.2xlarge)"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; tipo=c7i.8xlarge; prezzo=1.532; copie_serie=20;;
           esac
           copie=$(jq -r ".copie // $copie_serie" "$I"/comando.json 2>/dev/null || echo "$copie_serie")
           [[ "$copie" =~ ^[0-9]+$ ]] && [ "$copie" -ge 1 ] && [ "$copie" -le 40 ] || { echo "::error title=Copie::copie $copie fuori da 1-40"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; copie=$copie_serie; }
