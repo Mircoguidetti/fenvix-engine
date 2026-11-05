@@ -508,6 +508,19 @@ impl Window {
     /// Validazione (solo leader). `check_writes`: ogni chiave scritta è una dipendenza `valore` (modalità validata).
     /// `deps`: dipendenze dichiarate. Conflitto se una chiave ha una versione (o una versione strutturale, per `esiste`)
     /// più recente di `read_pos`.
+    /// Q8c: true when a validated commit with this read position can only fail (its read position is older than the
+    /// start of the window: `validate` returns a conflict). The window start only moves forward, so a network thread can
+    /// answer it at once, before the door, the lanes and the leader's main thread.
+    pub fn read_pos_too_old(&self, db: &Db, read_pos: Pos) -> bool {
+        match self.db(db) {
+            Some(d) => {
+                let d = d.read();
+                read_pos < d.trim_pos || read_pos < d.spill_upto
+            }
+            None => false,
+        }
+    }
+
     pub fn validate(&self, db: &Db, read_pos: Pos, writes: &[Write], check_writes: bool, deps: &[(Bytes, Dep)]) -> Result<(), Bytes> {
         if !check_writes && deps.is_empty() {
             return Ok(());

@@ -115,6 +115,8 @@ pub struct Shared {
     pub lane_wake: std::sync::atomic::AtomicBool,
     /// Q8c: per-database cap at the door (token bucket in the network threads, before the lanes)
     pub door: Option<Arc<crate::door::Door<Vec<(Reply, CommitReq)>>>>,
+    /// Q8c: commits answered "conflict" in the network thread because their read position was older than the window
+    pub stale_early: std::sync::atomic::AtomicU64,
 }
 
 /// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
@@ -355,7 +357,7 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
         eprintln!("replica {}: corsie accese {:?}", cfg.id, lcfg);
     }
     let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default(), repl_sent_off: Default::default(),
-        lanes_on: lcfg.on, lanes: Mutex::new(Lanes::new(lcfg)), is_leader: Default::default(), lane_wake: Default::default(),
+        lanes_on: lcfg.on, lanes: Mutex::new(Lanes::new(lcfg)), is_leader: Default::default(), lane_wake: Default::default(), stale_early: Default::default(),
         door: {
             let dc = crate::door::DoorCfg::from_env();
             if dc.on {
@@ -1762,7 +1764,11 @@ impl Node {
             delayed: self.delayed_n,
             diag: format!(
                 "{{\"porta\":{},\"tappe\":{},\"corsie\":{},\"in_volo_byte\":{},\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
-                self.sh.door.as_ref().map(|d| serde_json::to_string(&d.stats()).unwrap()).unwrap_or_else(|| "null".into()),
+                {
+                    let mut v = self.sh.door.as_ref().map(|d| serde_json::to_value(d.stats()).unwrap()).unwrap_or(serde_json::json!({}));
+                    v["stale_early"] = serde_json::json!(self.sh.stale_early.load(std::sync::atomic::Ordering::Relaxed));
+                    v.to_string()
+                },
                 {
                     let q = |h: &hdrhistogram::Histogram<u64>| format!("[{},{},{},{}]", h.value_at_quantile(0.5), h.value_at_quantile(0.99), h.value_at_quantile(0.999), h.max());
                     format!("{{\"durevole_primo\":{},\"copia_primo\":{},\"conferma\":{},\"giro\":{},\"attesa_corsia_leggeri\":{}}}", q(&self.h_dur_first), q(&self.h_ack_first), q(&self.h_commit), q(&self.h_loop), self.sh.lanes.lock().light_q())
@@ -2118,6 +2124,16 @@ async fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<
         lane_push(sh, t, items);
         return;
     };
+    // stale commits (read position older than the window) are answered before the door: they must not spend the
+    // database's budget nor keep its connection waiting
+    let (stale, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|(_, c)| c.mode == Mode::Validated && sh.win.read_pos_too_old(&c.db, c.read_pos));
+    for (r, c) in stale {
+        sh.stale_early.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        r.send(&Resp::Conflict(c.writes.first().map(|w| w.key.clone()).unwrap_or_default()));
+    }
+    if items.is_empty() {
+        return;
+    }
     // the commits of one database in a batch are charged as one block (keeps their order, one decision)
     let mut by_db: Vec<(Db, Vec<(Reply, CommitReq)>, u64)> = vec![];
     for (r, c) in items {
@@ -2165,6 +2181,21 @@ async fn door_push(sh: &Arc<Shared>, t: &Sender<Ev>, enter: &Arc<dyn Fn(Vec<Vec<
 fn lane_push(sh: &Arc<Shared>, t: &Sender<Ev>, items: Vec<(Reply, CommitReq)>) {
     let now = Instant::now();
     let mut rej = vec![];
+    // Q8c: a validated commit whose read position is older than the window can only get a conflict: answer it here
+    // (same answer as the main thread), so commits that waited too long outside never cost the leader anything
+    let items: Vec<(Reply, CommitReq)> = items
+        .into_iter()
+        .filter_map(|(r, c)| {
+            if c.mode == Mode::Validated && sh.win.read_pos_too_old(&c.db, c.read_pos) {
+                let k = c.writes.first().map(|w| w.key.clone()).unwrap_or_default();
+                rej.push((r, Resp::Conflict(k)));
+                sh.stale_early.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                None
+            } else {
+                Some((r, c))
+            }
+        })
+        .collect();
     {
         let mut l = sh.lanes.lock();
         for (r, c) in items {

@@ -39,9 +39,9 @@ impl DoorCfg {
             recs_per_s: g("PQ_DOOR_RECS", 1000.0),
             bytes_per_s: g("PQ_DOOR_MBS", 2.0) * 1048576.0,
             burst_s: g("PQ_DOOR_BURST_S", 0.1),
-            max_wait_ms: g("PQ_DOOR_WAIT_MS", 1000.0) as u64,
+            max_wait_ms: g("PQ_DOOR_WAIT_MS", 500.0) as u64,
             block: std::env::var("PQ_DOOR_BLOCK").map(|x| x != "0").unwrap_or(true),
-            block_max_ms: g("PQ_DOOR_BLOCK_MAX_MS", 10000.0) as u64,
+            block_max_ms: g("PQ_DOOR_BLOCK_MAX_MS", 1000.0) as u64,
         }
     }
 }

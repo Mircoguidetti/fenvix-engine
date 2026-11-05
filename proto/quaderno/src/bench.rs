@@ -1524,7 +1524,10 @@ pub async fn corsie(cls: Vec<Arc<Cluster>>, c: CorsieCfg) {
             while !stop.load(Relaxed) {
                 for cl in &cls {
                     let t = Instant::now();
-                    if let Some(Resp::Pos(_)) = cl.call_leader(&Req::Wait { pos: 0, timeout_ms: 0 }, Duration::from_secs(1)).await {
+                    if let Some(Resp::Pos(p)) = cl.call_leader(&Req::Wait { pos: 0, timeout_ms: 0 }, Duration::from_secs(1)).await {
+                        // like a front-end that follows the log: the read position of new commits stays recent even
+                        // for a database whose own commits are not being confirmed (throttled)
+                        cl.seen.fetch_max(p, Relaxed);
                         if measuring.load(Relaxed) {
                             acc.lock().ping.record((t.elapsed().as_micros() as u64).max(1)).ok();
                         }
