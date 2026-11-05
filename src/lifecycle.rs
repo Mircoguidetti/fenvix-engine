@@ -357,6 +357,22 @@ fn flush_old_memtables() {
     }
 }
 
+/// The open writers (T1: the maps loop looks at their manifests).
+pub fn open_writers() -> Vec<(String, Db)> {
+    WRITER_DBS.lock().unwrap().iter().map(|(k, v)| (k.clone(), v.clone())).collect()
+}
+
+/// Install the waiter's two-floor counter (T1, `counter.rs`) as the shared cache instead of `install_shared_cache`:
+/// `ram_bytes` of RAM, and `disk_bytes` on `disk_dir` when given. False if a cache is installed already.
+pub fn install_counter(ram_bytes: u64, disk_dir: Option<std::path::PathBuf>, disk_bytes: u64) -> std::io::Result<bool> {
+    let c = crate::counter::Counter::new(ram_bytes, disk_dir, disk_bytes)?;
+    if DB_CACHE.set(c.split_cache()).is_err() {
+        return Ok(false);
+    }
+    let _ = crate::counter::COUNTER.set(c);
+    Ok(true)
+}
+
 fn cache_scope() -> Option<(Arc<dyn slatedb::db_cache::DbCache>, u64)> {
     DB_CACHE.get().map(|c| (Arc::clone(c), CACHE_SCOPE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)))
 }

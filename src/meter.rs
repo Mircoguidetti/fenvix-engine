@@ -152,6 +152,23 @@ pub struct CacheStats {
 }
 
 pub fn cache_stats() -> Option<CacheStats> {
+    if CACHES.get().is_none() {
+        // the waiter's counter (T1) instead of the two foyer caches
+        let c = crate::counter::COUNTER.get()?;
+        let (mu, _, du, dn, _) = c.ram_usage();
+        let m = &c.m;
+        return Some(CacheStats {
+            block_usage: du,
+            block_capacity: c.ram_capacity(),
+            block_entries: dn,
+            meta_usage: mu,
+            meta_capacity: 0,
+            hits: m.hits_ram.load(Relaxed) + m.hits_disk.load(Relaxed) + m.maps_hits.load(Relaxed),
+            misses: m.misses.load(Relaxed) + m.maps_misses.load(Relaxed),
+            loaded_bytes: m.loaded_bytes.load(Relaxed),
+            inserted_bytes: m.inserted_bytes.load(Relaxed),
+        });
+    }
     let (b, m) = CACHES.get()?;
     Some(CacheStats {
         block_usage: b.usage(),

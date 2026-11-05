@@ -3621,10 +3621,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bincode",
  "bytes",
  "clap",
  "foyer",
  "futures",
+ "libc",
  "object_store",
  "rand 0.8.8",
  "serde",
