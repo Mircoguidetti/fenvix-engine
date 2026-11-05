@@ -19,7 +19,13 @@ database rumorosi tutti insieme, di tipi diversi).
 import json, os, signal, subprocess, sys, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', 'pq')
+PQ = os.environ.get('PQ_BIN') or (os.path.join(HERE, 'pq') if os.path.exists(os.path.join(HERE, 'pq')) else os.path.join(HERE, '..', 'target', 'release', 'pq'))
+# Q8 su AWS (aws-q8/macchina.sh): le repliche sono su altre macchine, già accese, con lo scaricatore finto già acceso;
+# qui niente gruppo da accendere, niente core da fissare per le repliche; i generatori sui core 0-1 (normali) e 2-3
+# (rumorosi) della macchina dei generatori. CPU, disco e memoria delle repliche li scrive campiona.py su ogni replica.
+REMOTE = os.environ.get('Q8_REMOTE') == '1'
+RA = ['--replicas', os.environ['Q8_REPLICAS']] if REMOTE else []
+CPU_N, CPU_R = ('0,1', '2,3') if REMOTE else ('3', '3')
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 HZ = os.sysconf('SC_CLK_TCK')
 
@@ -63,7 +69,7 @@ def cluster(*a):
 
 
 def status():
-    o = sh([PQ, 'status'], timeout=20).stdout
+    o = sh([PQ, 'status'] + RA, timeout=20).stdout
     return [json.loads(l) for l in o.splitlines() if l.strip()]
 
 
@@ -111,8 +117,9 @@ def snap(reps):
 def delta(a, b, reps):
     el = b['t'] - a['t']
     r = {'secs': el, 'disk': {k: b['disk'][k] - a['disk'][k] for k in b['disk']}}
-    r['disk']['MB_s'] = r['disk']['sectors_w'] * 512 / el / 1e6
-    r['disk']['util_pct'] = r['disk']['io_ms'] / el / 10
+    if r['disk']:
+        r['disk']['MB_s'] = r['disk']['sectors_w'] * 512 / el / 1e6
+        r['disk']['util_pct'] = r['disk']['io_ms'] / el / 10
     for k in reps:
         x, y = a[k], b[k]
         r[k] = {'cores': (y['cpu'] - x['cpu']) / el if None not in (x['cpu'], y['cpu']) else None,
@@ -133,7 +140,7 @@ class Gen:
         self.cpu = 0.0
 
     def cmd(self):
-        return ['nice', '-n', '5', 'taskset', '-c', '3', PQ, 'corsie', '--db-from', str(self.db_from), '--dbs', '1', '--secs', '100000', '--warm', '0',
+        return ['nice', '-n', '5', 'taskset', '-c', CPU_R, PQ, 'corsie'] + RA + [ '--db-from', str(self.db_from), '--dbs', '1', '--secs', '100000', '--warm', '0',
                 '--label', f'{self.name}-{self.db_from}', '--threads', '2', '--conns', '16'] + self.gargs
 
     def start(self):
@@ -174,6 +181,8 @@ def noisy_for(phase, level):
 
 
 def run_level(level):
+    if REMOTE:
+        return run_phases(level, {}, [s['id'] for s in status() if s.get('role') == 'Leader'][0])
     cluster('up', '--fresh', '--no-proxy', '--mem-cap-mb', os.environ.get('PQ_MEMCAP', '3000'), '--window-ms', WINDOW)
     if os.environ.get('Q8_FLUSHER', '1') == '1':
         cluster('flusher-up', '--null', '1', '--age-ms', os.environ.get('Q8_FLUSH_AGE_MS', '2000'), '--interval-ms', os.environ.get('Q8_FLUSH_INTERVAL_MS', '500'), '--hot-db', '0')
@@ -195,11 +204,16 @@ def run_level(level):
             pin(v, '2' if pin_mode == 'a' else str(1 + fol.index(k)))
         else:
             pin(v, '3')
+    run_phases(level, reps, lid)
+    cluster('down')
+
+
+def run_phases(level, reps, lid):
     # riscaldamento: i database normali scrivono per Q8_PREWARM secondi prima della prima fase (con il riciclo il
     # disco va a regime solo quando i primi segmenti sono usciti dal registro)
     pw = int(os.environ.get('Q8_PREWARM', '40'))
     if pw > 0:
-        sh(['chrt', '-f', '20', 'taskset', '-c', '3', PQ, 'corsie', '--db-from', '0', '--dbs', str(level), '--rate', '100', '--secs', str(pw), '--warm', '0',
+        sh(['chrt', '-f', '20', 'taskset', '-c', CPU_N, PQ, 'corsie'] + RA + ['--db-from', '0', '--dbs', str(level), '--rate', '100', '--secs', str(pw), '--warm', '0',
             '--label', 'riscaldamento', '--threads', '2', '--conns', '16'], timeout=pw + 60)
     phases = ['nessuno'] if level == 1 else PHASES
     for ph in phases:
@@ -211,11 +225,12 @@ def run_level(level):
         for g in gens:
             g.start()
         time.sleep(3)
-        normal = subprocess.Popen(['chrt', '-f', '20', 'taskset', '-c', '3', PQ, 'corsie', '--db-from', '0', '--dbs', str(n_normal), '--rate', '100', '--doc', '1900',
+        normal = subprocess.Popen(['chrt', '-f', '20', 'taskset', '-c', CPU_N, PQ, 'corsie'] + RA + ['--db-from', '0', '--dbs', str(n_normal), '--rate', '100', '--doc', '1900',
                                    '--secs', str(secs), '--warm', str(WARM), '--label', 'normali', '--threads', '2', '--conns', '16', '--deadline-ms', '10000'],
                                   stdout=subprocess.PIPE, stderr=log, text=True)
         time.sleep(WARM)
-        sh([PQ, 'reset'], timeout=20)
+        sh([PQ, 'reset'] + RA, timeout=20)
+        t_start = time.time()
         s0 = snap(reps)
         st0 = {s['id']: s for s in status() if 'id' in s}
         time.sleep(secs)
@@ -230,7 +245,7 @@ def run_level(level):
             diag = json.loads(st1[lid]['diag'])
         except Exception:
             diag = {}
-        r = {'tag': TAG, 'lanes': LANES, 'prealloc_mbs': ENV.get('PQ_PREALLOC_MBS'), 'env': {k: v for k, v in ENV.items() if k.startswith('PQ_') or k.startswith('Q8_')}, 'level': level, 'phase': ph, 'noisy': kinds, 'n_normal': n_normal, 'window_ms': WINDOW,
+        r = {'t_start': t_start, 't_end': time.time(), 'tag': TAG, 'lanes': LANES, 'prealloc_mbs': ENV.get('PQ_PREALLOC_MBS'), 'env': {k: v for k, v in ENV.items() if k.startswith('PQ_') or k.startswith('Q8_')}, 'level': level, 'phase': ph, 'noisy': kinds, 'n_normal': n_normal, 'window_ms': WINDOW,
              'normal': res, 'sys': delta(s0, s1, reps), 'leader': f'r{lid}', 'leader_after': [f'r{i}' for i in lead1],
              'term_change': st1.get(lid, {}).get('term') != st0.get(lid, {}).get('term'),
              'leader_diag': diag, 'mem_used_mb': {f'r{i}': s.get('mem_used', 0) >> 20 for i, s in st1.items()},
@@ -240,8 +255,9 @@ def run_level(level):
         with open(os.path.join(OUT, 'corsie.jsonl'), 'a') as f:
             f.write(json.dumps(r) + '\n')
         L = res['lat']
+        capo = r['sys'].get(r['leader'], {}).get('cores') or 0
         print(f"{TAG} livello {level} fase {ph}: normali {n_normal} p50 {L['p50_us']/1000:.2f} p99 {L['p99_us']/1000:.2f} p99.9 {L['p999_us']/1000:.2f} max {L['max_us']/1000:.1f} ms "
-              f"n {L['n']} rifiutati {res['rejected']} ignoti {res['unknown']} | totale {r['recs_per_s_total']:.0f} rec/s, capo {r['sys'][r['leader']]['cores']:.2f} core, disco {r['sys']['disk']['MB_s']:.1f} MB/s",
+              f"n {L['n']} rifiutati {res['rejected']} ignoti {res['unknown']} | totale {r['recs_per_s_total']:.0f} rec/s, capo {capo:.2f} core, disco {r['sys']['disk'].get('MB_s', 0):.1f} MB/s",
               flush=True)
         # quiete tra le fasi: corsie vuote
         time.sleep(6)
