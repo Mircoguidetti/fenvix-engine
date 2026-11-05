@@ -1,0 +1,9 @@
+q8b livello 1 fase nessuno: normali 1 p50 2.65 p99 4.93 p99.9 35.87 max 125.4 ms n 12001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.08 core, disco 2.7 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 11%
+q8b livello 2 fase nessuno: normali 2 p50 2.50 p99 4.31 p99.9 14.46 max 55.3 ms n 24001 rifiutati 0 ignoti 0 | totale 201 rec/s, capo 0.11 core, disco 7.1 MB/s | generatore normali 0.03 core, chiesti 200 inviati 200/s, macchina 18%
+q8b livello 2 fase mille: normali 1 p50 1.85 p99 4.96 p99.9 28.54 max 87.1 ms n 12001 rifiutati 0 ignoti 0 | totale 1103 rec/s, capo 0.31 core, disco 28.3 MB/s | generatore normali 0.02 core, chiesti 100 inviati 100/s, macchina 45%
+q8b livello 2 fase ventimila: normali 1 p50 2.30 p99 13.73 p99.9 48.13 max 133.4 ms n 12001 rifiutati 0 ignoti 0 | totale 1302 rec/s, capo 0.48 core, disco 29.6 MB/s | generatore normali 0.02 core, chiesti 100 inviati 100/s, macchina 76%
+q8b livello 2 fase raffiche: normali 1 p50 1.97 p99 32.26 p99.9 73.02 max 139.6 ms n 12001 rifiutati 0 ignoti 0 | totale 903 rec/s, capo 0.29 core, disco 22.5 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 42%
+q8b livello 2 fase mega: normali 1 p50 2.44 p99 7.08 p99.9 30.35 max 56.4 ms n 12001 rifiutati 0 ignoti 0 | totale 104 rec/s, capo 0.13 core, disco 15.8 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 19%
+q8b livello 2 fase muore: normali 1 p50 2.08 p99 6.02 p99.9 28.70 max 59.8 ms n 12001 rifiutati 0 ignoti 0 | totale 1115 rec/s, capo 0.35 core, disco 26.3 MB/s | generatore normali 0.02 core, chiesti 100 inviati 100/s, macchina 52%
+q8b livello 2 fase dieci: normali 1 p50 2.13 p99 10.97 p99.9 35.30 max 85.3 ms n 12001 rifiutati 0 ignoti 0 | totale 1303 rec/s, capo 0.48 core, disco 30.9 MB/s | generatore normali 0.02 core, chiesti 100 inviati 100/s, macchina 75%
+fine q8b
