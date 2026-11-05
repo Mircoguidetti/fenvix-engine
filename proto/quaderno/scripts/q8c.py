@@ -20,7 +20,7 @@ Env: PQ_DOOR=1 PQ_DOOR_RECS=... (door), PQ_CORSIE=1 (lanes), PQ_RICICLA=1, Q8_RE
 import json, os, signal, subprocess, sys, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', 'pq')
+PQ = os.environ.get('PQ_BIN') or (os.path.join(HERE, 'pq') if os.path.exists(os.path.join(HERE, 'pq')) else os.path.join(HERE, '..', 'target', 'release', 'pq'))
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 REMOTE = os.environ.get('Q8_REMOTE') == '1'
 HZ = os.sysconf('SC_CLK_TCK')
@@ -282,7 +282,7 @@ def run_phase(level, ph):
             diags.append(json.loads(st1[g]['st'][st1[g]['leader'][0]]['diag']))
         except Exception:
             diags.append({})
-    r = {'t_start': t0, 'tag': TAG, 'logs': LOGS, 'level': level, 'phase': ph, 'noisy': kinds, 'noisy_logs': noisy_logs, 'n_normal': n_normal,
+    r = {'t_start': t0, 't_end': t0 + el, 'secs': el, 'tag': TAG, 'logs': LOGS, 'level': level, 'phase': ph, 'noisy': kinds, 'noisy_logs': noisy_logs, 'n_normal': n_normal,
          'env': {k: v for k, v in ENV.items() if k.startswith('PQ_') or k.startswith('Q8_')}, 'normal': res, 'percore': cpu,
          'replica_cores': rep_cores, 'gen_normal_cores': gen_cores, 'asked_per_s': asked, 'sent_ok': sent_ok, 'cpu_ok': cpu_ok,
          'valid': sent_ok and cpu_ok, 'recs_per_s_total': commits / el, 'recs_per_s_per_log': [c / el for c in per_log_commits],

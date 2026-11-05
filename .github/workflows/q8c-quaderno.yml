@@ -1,0 +1,131 @@
+# Q8c · the shared log "like Atlas" on real AWS (eu-west-1): a cell of LOGS logs (default 4), each with three copies
+# in three zones (one machine per zone holds one copy of every log, with its gp3 disk), and one generator machine. Same
+# test as local (proto/quaderno/scripts/q8c.py): levels 1, 2, 20, 50, 100 databases, seven noisy-neighbour phases,
+# per-core CPU on every machine. IT DOES NOT START BY ITSELF: only the founder starts it, with a commit that adds or
+# changes proto/quaderno/aws-q8c/comando.json on branch quaderno-come-atlas (see aws-q8c/README.md). Field "modo":
+#   "permessi" = permission and vCPU quota check only, 0 $;  "prova" = the day (STIMATO 1,5-3,5 $, cap 5 $);  "smonta" = cleanup.
+# Spesa: riga SPESA ogni minuto, BLOCCO a 5 $ (TETTO_DOLLARI) con pulizia. Ultimo passo, sempre: controllo finale,
+# "RIMASTO: niente" o ALLARME e job rosso. Freno d'emergenza: "Cancel workflow" nella pagina della run (la pulizia gira).
+name: q8c-quaderno
+on:
+  push:
+    branches: [quaderno-come-atlas]
+    paths: ['proto/quaderno/aws-q8c/comando.json']
+permissions:
+  id-token: write
+  contents: write
+concurrency:
+  group: fenvix-coldread
+  cancel-in-progress: false
+jobs:
+  run:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 200
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_REGION: eu-west-1
+      Q8_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      G: proto/quaderno/aws-q8c
+      # vCPU quota 8 (NOW.md 2026-11-05): four c7i.large = 8 vCPU. With the quota at 16: c7i.xlarge for both, PREZZO_ORA 0.1915
+      TIPO_REPLICA: c7i.large
+      TIPO_GEN: c7i.large
+      LOGS: "4"
+      LIVELLI: "1,2,20,50,100"
+      PREZZO_ORA: "0.0958"       # c7i.large on-demand eu-west-1: half of c7i.xlarge 0.1915 (DICHIARATO doit.com, via M31); STIMATO
+      TETTO_DOLLARI: "5"         # regola del fondatore, RULES.md 2026-11-04
+      RUOLO_MACCHINA: fenvix-coldread-machine
+      BUCKET: fenvix-coldread-q8-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Maschera account e ruolo; modo dal file di comando
+        id: mode
+        run: |
+          [ -n "$Q8_ROLE" ] || { echo "secret AWS_ROLE_ARN mancante"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$Q8_ROLE"); role=${Q8_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          echo "Q8_ACCT=$acct" >> "$GITHUB_ENV"
+          echo "Q8_INIZIO=$(date -u -d '2 minutes ago' +%FT%TZ)" >> "$GITHUB_ENV"
+          modo=$(jq -r '.modo // "smonta"' $G/comando.json 2>/dev/null || echo smonta)
+          git diff --name-only --diff-filter=AM HEAD~1 HEAD | grep -qx $G/comando.json || modo=smonta
+          case "$modo" in permessi|prova|smonta) ;; *) modo=smonta;; esac
+          echo "modo=$modo" | tee -a "$GITHUB_OUTPUT" "$GITHUB_STEP_SUMMARY"
+
+      - name: Credenziali AWS (OIDC, 1 h)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Controllo dei permessi (0 $)
+        if: steps.mode.outputs.modo != 'smonta'
+        run: bash $G/permessi.sh
+
+      - name: Costruisco il quaderno (sul runner, niente AWS)
+        if: steps.mode.outputs.modo == 'prova'
+        run: |
+          cd proto/quaderno && cargo build --release --locked --bin pq
+          mkdir -p /tmp/pacco && cp target/release/pq scripts/q8c.py aws-q8c/macchina.sh aws-q8c/campiona.py /tmp/pacco/ && strip /tmp/pacco/pq
+          tar czf /tmp/q8-giornata.tar.gz -C /tmp/pacco pq q8c.py macchina.sh campiona.py
+          sha256sum /tmp/q8-giornata.tar.gz | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Credenziali fresche per la giornata
+        if: steps.mode.outputs.modo == 'prova'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: La giornata (bucket, 4 macchine, attesa con la spesa ogni minuto, risultati)
+        id: prova
+        if: steps.mode.outputs.modo == 'prova'
+        continue-on-error: true
+        run: bash $G/giornata.sh
+
+      - name: Credenziali per la pulizia
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Recupero dei risultati prima della pulizia
+        if: always() && steps.mode.outputs.modo == 'prova'
+        run: bash $G/recupera.sh
+
+      - name: Pulizia (macchine con il tag, bucket fenvix-coldread-*)
+        if: always()
+        run: bash $G/pulizia.sh
+
+      - name: Pubblico i risultati sul branch (senza l'account)
+        if: always() && steps.mode.outputs.modo == 'prova'
+        run: |
+          R=proto/quaderno/results/q8c-aws-${{ github.run_id }}
+          [ -d /tmp/q8-out ] || exit 0
+          mkdir -p "$R" && cp -r /tmp/q8-out/. "$R/"
+          grep -rl "$Q8_ACCT" "$R" 2>/dev/null | xargs -r sed -i "s/$Q8_ACCT/<ACCOUNT_ID>/g"
+          git config user.name "fenvix-q8"; git config user.email "q8@users.noreply.github.com"
+          git add "$R" && git commit -qm "Q8c: risultati della giornata AWS ${{ github.run_id }}" && git push || echo "push dei risultati non riuscito"
+
+      - name: Credenziali per il controllo finale
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 900
+          mask-aws-account-id: true
+
+      - name: Controllo finale (RIMASTO niente o ALLARME)
+        if: always()
+        run: bash $G/controllo-finale.sh
