@@ -1,5 +1,5 @@
 #!/bin/bash
-# M31 · controllo dei permessi, 0 $: letture, --dry-run e un bucket vuoto creato e cancellato subito.
+# M31 · controllo dei permessi, 0 $ (GetMetricData: 1 metrica, circa 0,00001 $): letture, --dry-run e un bucket vuoto creato e cancellato subito.
 # Scrive per ogni permesso "OK" o "MANCA", e alla fine l'elenco di quello che manca.
 set -u
 manca=()
@@ -13,6 +13,10 @@ VPC=$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0
 prova "ec2:DescribeSubnets" aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC" Name=default-for-az,Values=true --query 'Subnets[0].SubnetId' --output text
 prova "ec2:DescribeInstances" aws ec2 describe-instances --filters Name=tag:project,Values=fenvix-coldread --query 'length(Reservations)'
 prova "ec2:DescribeVolumes (controllo finale)" aws ec2 describe-volumes --filters Name=tag:project,Values=fenvix-coldread --query 'length(Volumes)'
+prova "cloudwatch:ListMetrics (modo metriche)" aws cloudwatch list-metrics --namespace AWS/EC2 --metric-name CPUUtilization --max-items 1 --query 'length(Metrics)'
+CW_FINE=$(date -u +%FT%TZ); CW_INIZIO=$(date -u -d '10 minutes ago' +%FT%TZ)
+prova "cloudwatch:GetMetricData (modo metriche)" aws cloudwatch get-metric-data --start-time "$CW_INIZIO" --end-time "$CW_FINE" \
+  --metric-data-queries '[{"Id":"q","MetricStat":{"Metric":{"Namespace":"AWS/EC2","MetricName":"CPUUtilization"},"Period":300,"Stat":"Average"}}]' --query 'length(MetricDataResults)'
 prova "ec2:DescribeAddresses (controllo finale)" aws ec2 describe-addresses --filters Name=tag:project,Values=fenvix-coldread --query 'length(Addresses)'
 prova "iam:GetInstanceProfile ($RUOLO_MACCHINA, creato a mano dal fondatore)" aws iam get-instance-profile --instance-profile-name "$RUOLO_MACCHINA" --query 'InstanceProfile.Roles[0].RoleName' --output text
 SUBNET=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC" Name=default-for-az,Values=true --query 'sort_by(Subnets,&AvailabilityZone)[0].SubnetId' --output text 2>/dev/null)

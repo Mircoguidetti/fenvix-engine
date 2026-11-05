@@ -23,6 +23,9 @@ letture_nuove = next(b for b in blocchi if b.get("Sid") == "Letture")  # il bloc
 github = json.loads(json.dumps(creata))
 github["Statement"] = [letture_nuove if s.get("Sid") == "Letture" else s for s in github["Statement"]]
 assert sum(s.get("Sid") == "Letture" for s in github["Statement"]) == 1
+# il blocco "DA FARE" del modo metriche (M31 metriche CloudWatch, 2026-11-05): si aggiunge in fondo
+cloudwatch = next(b for b in blocchi if b.get("Sid") == "ReadCloudWatchMetrics")
+github["Statement"].append(cloudwatch)
 
 # la policy GitHub col restringimento: senza image/* nei servizi, più la regola di Canonical
 ristretta = json.loads(json.dumps(github))
@@ -106,6 +109,7 @@ richieste_github = (
      ("ec2:DescribeVolumes", "*", {}), ("ec2:DescribeAddresses", "*", {}),  # controllo finale (M31 tetto 5 $)
      ("iam:GetInstanceProfile", f"arn:aws:iam::{ACCT}:instance-profile/fenvix-coldread-machine", {}),
      ("s3:ListAllMyBuckets", "*", {}),
+     ("cloudwatch:ListMetrics", "*", {}), ("cloudwatch:GetMetricData", "*", {}),  # modo metriche e permessi.sh
      ("ec2:TerminateInstances", f"{E}:instance/i-0123", {"ec2:ResourceTag/project": "fenvix-coldread"})]
     + run_instances() + bucket(BP) + bucket(B)
 )
@@ -120,6 +124,8 @@ rifiuti_github = [
     ("leggere il profilo vecchio", ("iam:GetInstanceProfile", f"arn:aws:iam::{ACCT}:instance-profile/fenvix-m31-macchina", {})),
     ("bucket col prefisso vecchio fenvix-m31-", ("s3:CreateBucket", "arn:aws:s3:::fenvix-m31-12345", {})),
     ("bucket di un altro progetto", ("s3:GetObject", "arn:aws:s3:::fenvix-prod/x", {})),
+    ("scrivere metriche CloudWatch", ("cloudwatch:PutMetricData", "*", {})),
+    ("cancellare allarmi CloudWatch", ("cloudwatch:DeleteAlarms", "*", {})),
 ]
 richieste_macchina = [
     ("s3:GetObject", f"arn:aws:s3:::{B}/p1/x.sst", {}), ("s3:PutObject", f"arn:aws:s3:::{B}/risultati/fine.json", {}),
@@ -143,7 +149,7 @@ def conta(ok, riga):
 
 print("== fenvix-coldread-test com'è oggi (prima della modifica DA FARE): le due letture nuove mancano, tutto il resto c'è")
 for a, r, c in richieste_github:
-    nuova = a in ("ec2:DescribeVolumes", "ec2:DescribeAddresses")
+    nuova = a in ("ec2:DescribeVolumes", "ec2:DescribeAddresses", "cloudwatch:ListMetrics", "cloudwatch:GetMetricData")
     conta(permesso(creata, a, r, c) != nuova, ("manca      " if nuova else "permesso   ") + f"{a} {r}")
 conta(not any(s.get("Effect") == "Allow" and any(x for x in lista(s["Action"]) if not x.startswith(("ec2:Describe", "s3:ListAllMyBuckets")))
               for s in [letture_nuove]) and letture_nuove["Resource"] == "*", "il blocco nuovo ha solo letture (Describe e ListAllMyBuckets) su \"*\"")

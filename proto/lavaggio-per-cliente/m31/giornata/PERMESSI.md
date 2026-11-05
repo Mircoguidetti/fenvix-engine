@@ -1,5 +1,20 @@
 # M31 · i permessi in AWS per la giornata (nomi "coldread")
 
+## DA FARE PRIMA DEL MODO "metriche" (M31 metriche CloudWatch, 2026-11-05): un blocco in più
+
+Il modo `{"modo": "metriche", "run": "<id>"}` di comando.json scarica le metriche CloudWatch della macchina della
+giornata. Servono due letture in più, `cloudwatch:GetMetricData` e `cloudwatch:ListMetrics` (CloudWatch non ha ARN per
+le metriche: `Resource` `"*"`). Da questa modifica anche `permessi.sh` le controlla, quindi senza questo blocco anche i
+modi `permessi` e `prova` si fermano su "MANCA".
+
+Dove: console IAM → Roles → `fenvix-gha-tests` → Permissions → policy inline `fenvix-coldread-test` → Edit → JSON.
+Cosa: **aggiungi** in fondo alla lista `Statement` (con una virgola dopo il blocco che oggi è l'ultimo) questo blocco.
+La policy intera, pronta da incollare, è nel rapporto della sessione `sessions/2026-11-05-m31-metriche/RAPPORTO.md`.
+
+```json
+    {"Sid": "ReadCloudWatchMetrics", "Effect": "Allow", "Action": ["cloudwatch:GetMetricData", "cloudwatch:ListMetrics"], "Resource": "*"}
+```
+
 ## DA FARE PRIMA DELLA GIORNATA (M31 blocco a 5 $ e controllo finale, 2026-11-04): una modifica
 
 Il controllo finale (ultimo passo del job) deve leggere anche i dischi EBS e gli indirizzi Elastic IP. Servono due
