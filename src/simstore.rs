@@ -36,23 +36,55 @@ pub struct TripMeter {
 
 pub static TRIPS: TripMeter = TripMeter { trips: AtomicU64::new(0), reads: AtomicU64::new(0), inflight: AtomicU64::new(0), max_inflight: AtomicU64::new(0) };
 
-struct InFlight;
+/// Reads one after the other ("in fila"), better than `trips` when waves overlap: a read's depth is 1 + the largest depth
+/// of the reads that had finished when it started, within one *chain*; a chain ends when no read was in flight for
+/// `CHAIN_GAP`. `last_chain_depth` is the depth of the last (or current) chain: with one query at a time and a pause
+/// longer than the gap before it, the number of reads that query waited for one after the other.
+pub struct ChainMeter {
+    pub chains: u64,
+    pub last_chain_depth: u64,
+    completed_max: u64,
+    idle_since: Option<std::time::Instant>,
+}
+
+pub static CHAIN: std::sync::Mutex<ChainMeter> = std::sync::Mutex::new(ChainMeter { chains: 0, last_chain_depth: 0, completed_max: 0, idle_since: None });
+const CHAIN_GAP: Duration = Duration::from_millis(10);
+
+struct InFlight {
+    depth: u64,
+}
+
+/// `FENVIX_SIM_TRACE=1`: every simulated GET on stderr with its depth (debugging the trips of a query).
+static T0: std::sync::LazyLock<std::time::Instant> = std::sync::LazyLock::new(std::time::Instant::now);
+static TRACE: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| std::env::var_os("FENVIX_SIM_TRACE").is_some());
 
 impl InFlight {
     fn start() -> Self {
         TRIPS.reads.fetch_add(1, Relaxed);
+        let mut c = CHAIN.lock().unwrap();
         let before = TRIPS.inflight.fetch_add(1, Relaxed);
         if before == 0 {
             TRIPS.trips.fetch_add(1, Relaxed);
+            if c.idle_since.map_or(true, |t| t.elapsed() >= CHAIN_GAP) {
+                c.chains += 1;
+                c.completed_max = 0;
+                c.last_chain_depth = 0;
+            }
         }
         TRIPS.max_inflight.fetch_max(before + 1, Relaxed);
-        InFlight
+        let depth = c.completed_max + 1;
+        c.last_chain_depth = c.last_chain_depth.max(depth);
+        InFlight { depth }
     }
 }
 
 impl Drop for InFlight {
     fn drop(&mut self) {
-        TRIPS.inflight.fetch_sub(1, Relaxed);
+        let mut c = CHAIN.lock().unwrap();
+        c.completed_max = c.completed_max.max(self.depth);
+        if TRIPS.inflight.fetch_sub(1, Relaxed) == 1 {
+            c.idle_since = Some(std::time::Instant::now());
+        }
     }
 }
 
@@ -133,6 +165,9 @@ impl ObjectStore for SimS3Store {
 
     async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult> {
         let _f = InFlight::start();
+        if *TRACE {
+            eprintln!("SIMGET start t={:.1} depth={} {} {:?}", T0.elapsed().as_secs_f64() * 1e3, _f.depth, location, options.range);
+        }
         let want = range_len(&options.range);
         let r = self.inner.get_opts(location, options).await?;
         let Some(m) = self.model else { return Ok(r) };
@@ -189,6 +224,48 @@ pub static SPLIT_GET_PIECE: AtomicU64 = AtomicU64::new(256 << 10);
 /// GETs split, and pieces sent for them.
 pub static SPLIT_GETS: AtomicU64 = AtomicU64::new(0);
 pub static SPLIT_PIECES: AtomicU64 = AtomicU64::new(0);
+/// Hedged reads ("richiesta doppia", M31): a ranged GET not answered after this many ms is sent a second time and the
+/// first answer wins (`--hedge-after-ms`, 0 = off). A read that fans out to many requests waits for the slowest one;
+/// the second copy cuts that tail for a few percent more GETs.
+pub static HEDGE_AFTER_MS: AtomicU64 = AtomicU64::new(0);
+/// Second copies sent, and second copies that answered first.
+pub static HEDGES: AtomicU64 = AtomicU64::new(0);
+pub static HEDGE_WINS: AtomicU64 = AtomicU64::new(0);
+
+/// One ranged GET with its body, hedged when `HEDGE_AFTER_MS` > 0.
+async fn get_body(inner: &Arc<dyn ObjectStore>, loc: &Path, o: GetOptions) -> Result<(ObjectMeta, Bytes, object_store::Attributes)> {
+    let one = |o: GetOptions| {
+        let inner = Arc::clone(inner);
+        let loc = loc.clone();
+        async move {
+            let g = inner.get_opts(&loc, o).await?;
+            let meta = g.meta.clone();
+            let attrs = g.attributes.clone();
+            let b = g.bytes().await?;
+            Ok::<_, object_store::Error>((meta, b, attrs))
+        }
+    };
+    let after = HEDGE_AFTER_MS.load(Relaxed);
+    let mut first = Box::pin(one(o.clone()));
+    if after == 0 {
+        return first.await;
+    }
+    tokio::select! {
+        r = &mut first => return r,
+        _ = tokio::time::sleep(Duration::from_millis(after)) => {}
+    }
+    HEDGES.fetch_add(1, Relaxed);
+    let mut second = Box::pin(one(o));
+    tokio::select! {
+        r = &mut first => r,
+        r = &mut second => {
+            if r.is_ok() {
+                HEDGE_WINS.fetch_add(1, Relaxed);
+            }
+            r
+        }
+    }
+}
 
 /// Large ranged GETs as parallel pieces (one trip instead of one long transfer).
 pub struct SplitGetStore {
@@ -226,6 +303,12 @@ impl ObjectStore for SplitGetStore {
         let piece = SPLIT_GET_PIECE.load(Relaxed).max(4096);
         let (start, end) = match &options.range {
             Some(GetRange::Bounded(b)) if min > 0 && !options.head && b.end.saturating_sub(b.start) >= min.max(2 * piece) => (b.start, b.end),
+            Some(GetRange::Bounded(b)) if !options.head && HEDGE_AFTER_MS.load(Relaxed) > 0 => {
+                let r = b.clone();
+                let (meta, body, attributes) = get_body(&self.inner, location, options).await?;
+                let stream = futures::stream::once(async move { Ok(body) }).boxed();
+                return Ok(GetResult { payload: GetResultPayload::Stream(stream), meta, range: r, attributes, extensions: Default::default() });
+            }
             _ => return self.inner.get_opts(location, options).await,
         };
         // Conditions (if_match, version...) stay on every piece: a piece of another version fails like the whole GET would.
@@ -244,13 +327,7 @@ impl ObjectStore for SplitGetStore {
             o.range = Some(GetRange::Bounded(r));
             let inner = Arc::clone(&self.inner);
             let loc = location.clone();
-            async move {
-                let g = inner.get_opts(&loc, o).await?;
-                let meta = g.meta.clone();
-                let attrs = g.attributes.clone();
-                let b = g.bytes().await?;
-                Ok::<_, object_store::Error>((meta, b, attrs))
-            }
+            async move { get_body(&inner, &loc, o).await }
         }))
         .buffered(n)
         .try_collect()

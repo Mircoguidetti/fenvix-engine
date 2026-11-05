@@ -64,15 +64,44 @@ pub fn start(counter: Arc<Counter>, store: Arc<dyn ObjectStore>) {
     tokio::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_millis(MAPS_EVERY_MS.load(Relaxed).max(20))).await;
-            for (id, db) in crate::lifecycle::open_writers() {
-                refresh(&counter, &store, &id, &db);
+            let writers = crate::lifecycle::open_writers();
+            let w: HashSet<String> = writers.iter().map(|(id, _)| id.clone()).collect();
+            for (id, db) in writers {
+                refresh(&counter, &store, &id, Src::W(db));
+            }
+            for (id, r) in crate::lifecycle::open_readers() {
+                if !w.contains(&id) {
+                    refresh(&counter, &store, &id, Src::R(r));
+                }
             }
         }
     });
 }
 
-/// Look at one writer's manifest; warm what is new, forget what left.
-pub fn refresh(counter: &Arc<Counter>, store: &Arc<dyn ObjectStore>, id: &str, db: &slatedb::Db) {
+/// An open database: a writer, or a reader (a woken tenant not written yet).
+#[derive(Clone)]
+pub enum Src {
+    W(slatedb::Db),
+    R(Arc<slatedb::DbReader>),
+}
+
+impl Src {
+    fn manifest(&self) -> slatedb::VersionedManifest {
+        match self {
+            Src::W(d) => d.manifest(),
+            Src::R(r) => r.manifest(),
+        }
+    }
+    async fn warm_sst(&self, id: slatedb::manifest::SsTableId, t: &[CacheTarget]) -> Result<(), slatedb::Error> {
+        match self {
+            Src::W(d) => d.warm_sst(id, t).await,
+            Src::R(r) => r.warm_sst(id, t).await,
+        }
+    }
+}
+
+/// Look at one database's manifest; warm what is new, forget what left.
+pub fn refresh(counter: &Arc<Counter>, store: &Arc<dyn ObjectStore>, id: &str, db: Src) {
     let m = db.manifest();
     let mid = m.id();
     let mut now: HashMap<[u8; 26], SsTableHandle> = HashMap::new();
@@ -142,7 +171,7 @@ pub fn refresh(counter: &Arc<Counter>, store: &Arc<dyn ObjectStore>, id: &str, d
     });
 }
 
-async fn warm_one(db: &slatedb::Db, counter: &Arc<Counter>, reader: &SstReader, sst: [u8; 26], h: SsTableHandle) -> anyhow::Result<()> {
+async fn warm_one(db: &Src, counter: &Arc<Counter>, reader: &SstReader, sst: [u8; 26], h: SsTableHandle) -> anyhow::Result<()> {
     // the three parts at once (warm_sst reads its targets one after the other)
     let (a, b, c) = futures::join!(db.warm_sst(h.id, &[CacheTarget::Index]), db.warm_sst(h.id, &[CacheTarget::Filters]), db.warm_sst(h.id, &[CacheTarget::Stats]));
     a?;

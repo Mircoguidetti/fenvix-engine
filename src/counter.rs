@@ -106,6 +106,8 @@ struct MapSlot {
     entry: CachedEntry,
     size: u64,
     tick: u64,
+    /// A data block of collection indexes or metadata (not an SST index, filter or stats).
+    block: bool,
 }
 
 #[derive(Default)]
@@ -114,6 +116,20 @@ struct Maps {
     lru: BTreeMap<u64, Ck>,
     tick: u64,
     used: u64,
+    /// Of `used`, the map data blocks.
+    block_used: u64,
+}
+
+impl Maps {
+    fn take(&mut self, k: &Ck) -> Option<MapSlot> {
+        let s = self.slots.remove(k)?;
+        self.used -= s.size;
+        if s.block {
+            self.block_used -= s.size;
+        }
+        self.lru.remove(&s.tick);
+        Some(s)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -289,9 +305,7 @@ impl Counter {
             let mut m = self.maps.lock().unwrap();
             let gone: Vec<Ck> = m.slots.keys().filter(|k| ssts.contains(&k.sst)).copied().collect();
             for k in gone {
-                if let Some(s) = m.slots.remove(&k) {
-                    m.used -= s.size;
-                    m.lru.remove(&s.tick);
+                if m.take(&k).is_some() {
                     self.m.maps_forgotten.fetch_add(1, Relaxed);
                 }
             }
@@ -338,15 +352,17 @@ impl Counter {
 
     fn maps_put(&self, k: Ck, e: CachedEntry) {
         let size = e.size() as u64 + 64;
+        let block = self.is_map_block(&k);
         {
             let mut m = self.maps.lock().unwrap();
+            m.take(&k);
             m.tick += 1;
             let t = m.tick;
-            if let Some(old) = m.slots.insert(k, MapSlot { entry: e, size, tick: t }) {
-                m.used -= old.size;
-                m.lru.remove(&old.tick);
-            }
+            m.slots.insert(k, MapSlot { entry: e, size, tick: t, block });
             m.used += size;
+            if block {
+                m.block_used += size;
+            }
             m.lru.insert(t, k);
         }
         if let Some(d) = &self.disk {
@@ -356,11 +372,13 @@ impl Counter {
     }
 
     fn maps_remove(&self, k: &Ck) {
-        let mut m = self.maps.lock().unwrap();
-        if let Some(s) = m.slots.remove(k) {
-            m.used -= s.size;
-            m.lru.remove(&s.tick);
-        }
+        self.maps.lock().unwrap().take(k);
+    }
+
+    /// Bytes of the maps in RAM that are data blocks (collection indexes, metadata); the rest are SST indexes,
+    /// filters and stats.
+    pub fn maps_block_bytes(&self) -> u64 {
+        self.maps.lock().unwrap().block_used
     }
 
     // ---------------------------------------------------------------- data
@@ -433,10 +451,8 @@ impl Counter {
                     }
                     let mut m = self.maps.lock().unwrap();
                     while m.used > self.ram_bytes && out.len() < 64 {
-                        let Some((&t, &k)) = m.lru.iter().next() else { break };
-                        m.lru.remove(&t);
-                        if let Some(s) = m.slots.remove(&k) {
-                            m.used -= s.size;
+                        let Some((_, &k)) = m.lru.iter().next() else { break };
+                        if let Some(s) = m.take(&k) {
                             out.push((k, s.entry, true));
                         }
                     }

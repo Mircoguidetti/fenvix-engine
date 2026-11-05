@@ -33,9 +33,16 @@ pub trait Rd: Send {
     fn note_ttl(&self);
     /// The options of a collection (its default collation).
     fn coll_opts(&mut self, coll: &str) -> impl std::future::Future<Output = anyhow::Result<Option<Arc<crate::collopts::CollOpts>>>> + Send;
+    /// The database's name (T1: the read-ahead of `prefetch.rs` reads it on its own).
+    fn tenant_name(&self) -> Option<String> {
+        None
+    }
 }
 
 impl Rd for Entry {
+    fn tenant_name(&self) -> Option<String> {
+        Some(self.name().to_string())
+    }
     async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
         Entry::get(self, key).await
     }
@@ -60,6 +67,9 @@ impl Rd for Entry {
 }
 
 impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
+    fn tenant_name(&self) -> Option<String> {
+        Some(self.name().to_string())
+    }
     async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
         Entry::get(self, key).await
     }
@@ -84,6 +94,9 @@ impl Rd for tokio::sync::OwnedRwLockWriteGuard<Entry> {
 }
 
 impl Rd for ReadView {
+    fn tenant_name(&self) -> Option<String> {
+        ReadView::tenant_name(self)
+    }
     async fn get(&mut self, key: &[u8]) -> anyhow::Result<Option<Bytes>> {
         ReadView::get(self, key).await
     }
@@ -1197,12 +1210,14 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
             let mut c = IxCursor::new(coll, &indexes[s.idx], s);
             let mut seen: HashSet<Vec<u8>> = HashSet::new();
             let mut batch = want.max(1);
+            let mut last_entry: Option<Bytes> = None;
             'ix: loop {
                 let b = c.next_batch(g, batch).await?;
                 batch = (batch * 2).min(4096);
                 if b.is_empty() {
                     break;
                 }
+                last_entry = b.last().cloned();
                 stats.keys += b.len();
                 let ids: Vec<Vec<u8>> = b
                     .iter()
@@ -1219,6 +1234,12 @@ async fn find_docs_with(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &F
                             break 'ix;
                         }
                     }
+                }
+            }
+            // T1: read ahead on a signal (one interval: a client's entries, maybe with a date bound)
+            if c.ivs.len() == 1 && o.ov.is_none() {
+                if let Some(t) = g.tenant_name() {
+                    crate::prefetch::note(&t, coll, &c.ivs[0].0, &c.ivs[0].1, c.reverse, last_entry.as_deref());
                 }
             }
         }

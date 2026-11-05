@@ -783,6 +783,9 @@ impl Server {
                 "extra_info.user_time_us / system_time_us": "CPU of this process (getrusage)",
             },
         });
+        if let Some(Bson::Document(f)) = d.get_mut("fenvix") {
+            f.insert("waiter", waiter_stats());
+        }
     }
 
     fn host_info(&self) -> Document {
@@ -1642,3 +1645,44 @@ pub const IMPLEMENTED: &[&str] = &[
     "profile", "reIndex", "refreshSessions", "renameCollection", "revokePrivilegesFromRole", "revokeRolesFromRole", "revokeRolesFromUser", "rolesInfo", "saslContinue", "saslStart", "serverStatus", "setClusterParameter", "setDefaultRWConcern", "setIndexCommitQuorum", "setParameter",
     "startSession", "top", "update", "updateRole", "updateUser", "usersInfo", "validate", "validateDBMetadata", "whatsmyuri",
 ];
+
+/// T1, the waiter's tools: trips to the object store, the two-floor counter, the maps, the read-ahead.
+pub fn waiter_stats() -> Document {
+    use std::sync::atomic::Ordering::Relaxed;
+    use tenant_bench::simstore as ss;
+    let ld = |a: &std::sync::atomic::AtomicU64| a.load(Relaxed) as i64;
+    let mut w = doc! {
+        "trips": ld(&ss::TRIPS.trips), "reads": ld(&ss::TRIPS.reads),
+        "chains": ss::CHAIN.lock().unwrap().chains as i64, "lastChainDepth": ss::CHAIN.lock().unwrap().last_chain_depth as i64, "readsInFlight": ld(&ss::TRIPS.inflight), "maxReadsInFlight": ld(&ss::TRIPS.max_inflight),
+        "splitGets": ld(&ss::SPLIT_GETS), "splitPieces": ld(&ss::SPLIT_PIECES), "hedges": ld(&ss::HEDGES), "hedgeWins": ld(&ss::HEDGE_WINS),
+        "readAhead": {
+            "first": ld(&crate::prefetch::FIRST), "next": ld(&crate::prefetch::NEXT), "docs": ld(&crate::prefetch::DOCS),
+            "fails": ld(&crate::prefetch::FAILS), "busy": ld(&crate::prefetch::BUSY),
+        },
+    };
+    if let Some(c) = tenant_bench::counter::COUNTER.get() {
+        let (mu, mn, du, dn, dp) = c.ram_usage();
+        let (disk_used, disk_maps, disk_n) = c.disk_usage();
+        let (ssts, sst_bytes) = tenant_bench::maps::mapped_totals();
+        let m = &c.m;
+        w.insert("counter", doc! {
+            "ramCapacity": c.ram_capacity() as i64, "diskCapacity": c.disk_capacity() as i64,
+            "mapsRamBytes": mu as i64, "mapsRamBlockBytes": c.maps_block_bytes() as i64, "mapsRamEntries": mn as i64, "mapsDiskBytes": disk_maps as i64,
+            "dataRamBytes": du as i64, "dataRamBlocks": dn as i64, "dataProtectedBytes": dp as i64,
+            "diskBytes": disk_used as i64, "diskEntries": disk_n as i64,
+            "hitsRam": ld(&m.hits_ram), "hitsDisk": ld(&m.hits_disk), "misses": ld(&m.misses),
+            "mapsHits": ld(&m.maps_hits), "mapsMisses": ld(&m.maps_misses),
+            "loadedBytes": ld(&m.loaded_bytes), "insertedBytes": ld(&m.inserted_bytes),
+            "prefetchedIn": ld(&m.prefetched_in), "prefetchedUsed": ld(&m.prefetched_used), "prefetchedEvictedUnused": ld(&m.prefetched_evicted_unused),
+            "promoted": ld(&m.promoted), "toDisk": ld(&m.to_disk), "diskDropped": ld(&m.disk_dropped),
+            "mapsToDisk": ld(&m.maps_to_disk), "mapsDropped": ld(&m.maps_dropped), "mapsForgotten": ld(&m.maps_forgotten),
+        });
+        w.insert("maps", doc! {
+            "sstsMapped": ssts as i64, "sstBytesMapped": sst_bytes as i64,
+            "sstsWarmed": ld(&tenant_bench::maps::MAPS_SSTS), "mapBlocks": ld(&tenant_bench::maps::MAPS_BLOCKS),
+            "runs": ld(&tenant_bench::maps::MAPS_RUNS), "fails": ld(&tenant_bench::maps::MAPS_FAILS),
+            "busy": ld(&tenant_bench::maps::MAPS_BUSY), "lastMs": ld(&tenant_bench::maps::MAPS_LAST_MS),
+        });
+    }
+    w
+}

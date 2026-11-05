@@ -1169,10 +1169,10 @@ impl Entry {
         let t = self.tenant.as_ref().unwrap();
         if let Some(s) = &self.snap {
             let futs: Vec<_> = keys.iter().map(|k| s.get(k.clone())).collect();
-            return Ok(futures::stream::iter(futs).buffered(32).try_collect::<Vec<_>>().await?);
+            return Ok(futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?);
         }
         let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        futures::stream::iter(futs).buffered(32).try_collect().await
+        futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect().await
     }
 
     pub async fn scan_collection(&mut self, coll: &str) -> Result<Vec<Document>> {
@@ -1203,6 +1203,9 @@ impl Entry {
 /// A shared (read) hold on a database. Every read re-checks that this process still owns the tenant before
 /// the result is returned, so a process that lost its lease while the read was in flight returns a retryable
 /// error instead of data. `None` inside means the database does not exist.
+/// Point reads of one `get_many` in flight at once (T1: 512 with the waiter's tools, so up to 512 documents are one trip).
+pub static GET_MANY_PARALLEL: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(32);
+
 pub struct ReadView {
     g: Option<Guard>,
     copts: std::sync::Mutex<HashMap<String, Option<Arc<crate::collopts::CollOpts>>>>,
@@ -1224,6 +1227,14 @@ impl std::ops::Deref for Guard {
 }
 
 impl ReadView {
+    pub fn tenant_name(&self) -> Option<String> {
+        match &self.g {
+            Some(Guard::Read(g)) => Some(g.name.clone()),
+            Some(Guard::Write(g)) => Some(g.name.clone()),
+            None => None,
+        }
+    }
+
     fn done<T>(&self, v: T) -> Result<T> {
         if let Some(g) = &self.g {
             g.leases.check_owner(&g.name)?;
@@ -1283,7 +1294,7 @@ impl ReadView {
         }
         let t = g.tenant.as_ref().unwrap();
         let futs: Vec<_> = keys.iter().map(|k| t.get(k.clone())).collect();
-        let r = futures::stream::iter(futs).buffered(32).try_collect::<Vec<_>>().await?;
+        let r = futures::stream::iter(futs).buffered(GET_MANY_PARALLEL.load(Relaxed).max(1)).try_collect::<Vec<_>>().await?;
         self.done(r)
     }
 
