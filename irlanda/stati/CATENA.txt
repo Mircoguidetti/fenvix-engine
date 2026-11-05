@@ -1,3 +1,14 @@
+75ea197bd87bcf14403f659f2029a1c3  ./m10c/risultati_p1.json
+d41d8cd98f00b204e9800998ecf8427e  ./m10c/risultati_p1.json.usati.log
+723ebe7492cf3119f4188262dd2695e1  ./m10p/risultati_p1.json
+d41d8cd98f00b204e9800998ecf8427e  ./m10p/risultati_p1.json.usati.log
+8578a07e38c84a84340a5632257948b7  ./m10s/risultati_p1.json
+d41d8cd98f00b204e9800998ecf8427e  ./m10s/risultati_p1.json.usati.log
+93431df6c2fd120a0d6efb781eaf97d3  ./m30c/risultati_p1.json
+d41d8cd98f00b204e9800998ecf8427e  ./m30c/risultati_p1.json.usati.log
+6805cc14cd6bd325809637722780ede8  ./m30p/risultati_p1.json
+d41d8cd98f00b204e9800998ecf8427e  ./m30p/risultati_p1.json.usati.log
+97a2ca548e05be50f86e76d2e2bfd061  ./m30s/risultati_p1.json
+d41d8cd98f00b204e9800998ecf8427e  ./m30s/risultati_p1.json.usati.log
 24a1b1fa887f796f0c9b04fc0ea8077e  ./vecchio/risultati_p1.json
 2a74b47d056af50dd28c8676b1f13bcf  ./vecchio/risultati_p1.json.usati.log
-IN CORSO run 42053678455 programma carica dal 2026-11-05T15:19:02Z

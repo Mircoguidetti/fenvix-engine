@@ -1,0 +1,148 @@
+===== 2026-11-05T15:20:54.500001Z prova_infinite.py carica --file risultati_p1.json --cartella-dati /opt/irlanda/lavoro/dati/m30c --db app_data_5 --gb 9.03 --quota-riservati 0.5 --seme 105 --thread 16 --max-ore-carico 4.3
+[15:20:55] Carico 9.03 GB di documenti BSON, 4623 clienti da circa 2 MB (2311 dormienti riservati alle letture fredde), 16 thread.
+[15:20:57] caricati   0.02 di 9.03 GB (  0.2%), 51,000 documenti,  6.45 MB/s, fine stimata tra   23.9 minuti
+[15:20:57] dbStats: dati 0.018 GB + indici 0.0 GB = 0.02 GB logici (tetto di sicurezza 50 GB)
+[15:21:27] caricati   0.18 di 9.03 GB (  2.0%), 559,000 documenti,  5.49 MB/s, fine stimata tra   27.5 minuti
+[15:21:58] caricati   0.31 di 9.03 GB (  3.5%), 988,000 documenti,  5.06 MB/s, fine stimata tra   29.4 minuti
+[15:22:28] caricati   0.42 di 9.03 GB (  4.6%), 1,326,000 documenti,  4.60 MB/s, fine stimata tra   31.9 minuti
+[15:22:58] caricati   0.50 di 9.03 GB (  5.6%), 1,588,000 documenti,  4.17 MB/s, fine stimata tra   34.9 minuti
+[15:22:58] dbStats: dati 0.506 GB + indici 0.0 GB = 0.51 GB logici (tetto di sicurezza 50 GB)
+[15:23:28] caricati   0.57 di 9.03 GB (  6.3%), 1,811,000 documenti,  3.81 MB/s, fine stimata tra   37.9 minuti
+[15:23:59] caricati   0.64 di 9.03 GB (  7.1%), 2,025,000 documenti,  3.56 MB/s, fine stimata tra   40.2 minuti
+[15:24:29] caricati   0.70 di 9.03 GB (  7.8%), 2,224,000 documenti,  3.36 MB/s, fine stimata tra   42.2 minuti
+[15:24:59] caricati   0.77 di 9.03 GB (  8.5%), 2,432,000 documenti,  3.23 MB/s, fine stimata tra   43.7 minuti
+[15:24:59] dbStats: dati 0.771 GB + indici 0.0 GB = 0.77 GB logici (tetto di sicurezza 50 GB)
+[15:25:29] caricati   0.83 di 9.03 GB (  9.2%), 2,619,000 documenti,  3.09 MB/s, fine stimata tra   45.3 minuti
+[15:25:59] caricati   0.88 di 9.03 GB (  9.8%), 2,795,000 documenti,  2.98 MB/s, fine stimata tra   46.7 minuti
+[15:26:29] caricati   0.93 di 9.03 GB ( 10.3%), 2,939,000 documenti,  2.85 MB/s, fine stimata tra   48.6 minuti
+[15:26:59] caricati   0.98 di 9.03 GB ( 10.8%), 3,085,000 documenti,  2.74 MB/s, fine stimata tra   50.1 minuti
+[15:26:59] dbStats: dati 0.978 GB + indici 0.0 GB = 0.98 GB logici (tetto di sicurezza 50 GB)
+[15:27:29] caricati   1.02 di 9.03 GB ( 11.3%), 3,234,000 documenti,  2.65 MB/s, fine stimata tra   51.5 minuti
+[15:27:59] caricati   1.07 di 9.03 GB ( 11.8%), 3,380,000 documenti,  2.58 MB/s, fine stimata tra   52.7 minuti
+[15:28:29] caricati   1.11 di 9.03 GB ( 12.3%), 3,520,000 documenti,  2.51 MB/s, fine stimata tra   53.9 minuti
+[15:28:59] caricati   1.16 di 9.03 GB ( 12.8%), 3,657,000 documenti,  2.44 MB/s, fine stimata tra   55.0 minuti
+[15:29:01] dbStats: dati 1.161 GB + indici 0.0 GB = 1.16 GB logici (tetto di sicurezza 50 GB)
+[15:29:29] caricati   1.20 di 9.03 GB ( 13.3%), 3,789,000 documenti,  2.38 MB/s, fine stimata tra   56.1 minuti
+[15:29:59] caricati   1.24 di 9.03 GB ( 13.8%), 3,930,000 documenti,  2.34 MB/s, fine stimata tra   56.9 minuti
+[15:30:29] caricati   1.28 di 9.03 GB ( 14.2%), 4,052,000 documenti,  2.28 MB/s, fine stimata tra   57.9 minuti
+[15:30:59] caricati   1.32 di 9.03 GB ( 14.7%), 4,185,000 documenti,  2.24 MB/s, fine stimata tra   58.7 minuti
+[15:31:01] dbStats: dati 1.328 GB + indici 0.0 GB = 1.33 GB logici (tetto di sicurezza 50 GB)
+[15:31:31] caricati   1.37 di 9.03 GB ( 15.1%), 4,326,000 documenti,  2.20 MB/s, fine stimata tra   59.4 minuti
+[15:32:01] caricati   1.41 di 9.03 GB ( 15.6%), 4,463,000 documenti,  2.17 MB/s, fine stimata tra   60.0 minuti
+[15:32:31] caricati   1.45 di 9.03 GB ( 16.1%), 4,598,000 documenti,  2.14 MB/s, fine stimata tra   60.5 minuti
+[15:33:01] caricati   1.50 di 9.03 GB ( 16.6%), 4,732,000 documenti,  2.11 MB/s, fine stimata tra   61.0 minuti
+[15:33:02] dbStats: dati 1.5 GB + indici 0.0 GB = 1.50 GB logici (tetto di sicurezza 50 GB)
+[15:33:32] caricati   1.54 di 9.03 GB ( 17.1%), 4,874,000 documenti,  2.08 MB/s, fine stimata tra   61.4 minuti
+[15:34:02] caricati   1.58 di 9.03 GB ( 17.5%), 5,008,000 documenti,  2.06 MB/s, fine stimata tra   61.7 minuti
+[15:34:32] caricati   1.62 di 9.03 GB ( 18.0%), 5,136,000 documenti,  2.03 MB/s, fine stimata tra   62.2 minuti
+[15:35:02] caricati   1.67 di 9.03 GB ( 18.4%), 5,269,000 documenti,  2.01 MB/s, fine stimata tra   62.4 minuti
+[15:35:02] dbStats: dati 1.669 GB + indici 0.0 GB = 1.67 GB logici (tetto di sicurezza 50 GB)
+[15:35:33] caricati   1.71 di 9.03 GB ( 18.9%), 5,396,000 documenti,  1.99 MB/s, fine stimata tra   62.8 minuti
+[15:36:03] caricati   1.74 di 9.03 GB ( 19.3%), 5,518,000 documenti,  1.97 MB/s, fine stimata tra   63.2 minuti
+[15:36:33] caricati   1.79 di 9.03 GB ( 19.8%), 5,656,000 documenti,  1.95 MB/s, fine stimata tra   63.3 minuti
+[15:37:03] caricati   1.83 di 9.03 GB ( 20.3%), 5,787,000 documenti,  1.94 MB/s, fine stimata tra   63.5 minuti
+[15:37:03] dbStats: dati 1.833 GB + indici 0.0 GB = 1.83 GB logici (tetto di sicurezza 50 GB)
+[15:37:33] caricati   1.87 di 9.03 GB ( 20.7%), 5,920,000 documenti,  1.92 MB/s, fine stimata tra   63.7 minuti
+[15:38:03] caricati   1.91 di 9.03 GB ( 21.2%), 6,049,000 documenti,  1.90 MB/s, fine stimata tra   63.8 minuti
+[15:38:33] caricati   1.95 di 9.03 GB ( 21.6%), 6,169,000 documenti,  1.89 MB/s, fine stimata tra   64.0 minuti
+[15:39:03] caricati   1.99 di 9.03 GB ( 22.1%), 6,302,000 documenti,  1.87 MB/s, fine stimata tra   64.1 minuti
+[15:39:04] dbStats: dati 1.996 GB + indici 0.0 GB = 2.00 GB logici (tetto di sicurezza 50 GB)
+[15:39:34] caricati   2.04 di 9.03 GB ( 22.6%), 6,441,000 documenti,  1.86 MB/s, fine stimata tra   64.1 minuti
+[15:40:04] caricati   2.08 di 9.03 GB ( 23.0%), 6,566,000 documenti,  1.85 MB/s, fine stimata tra   64.2 minuti
+[15:40:34] caricati   2.12 di 9.03 GB ( 23.4%), 6,691,000 documenti,  1.84 MB/s, fine stimata tra   64.3 minuti
+[15:41:04] caricati   2.16 di 9.03 GB ( 23.9%), 6,822,000 documenti,  1.83 MB/s, fine stimata tra   64.3 minuti
+[15:41:05] dbStats: dati 2.16 GB + indici 0.0 GB = 2.16 GB logici (tetto di sicurezza 50 GB)
+[15:41:35] caricati   2.20 di 9.03 GB ( 24.3%), 6,951,000 documenti,  1.81 MB/s, fine stimata tra   64.3 minuti
+[15:42:05] caricati   2.24 di 9.03 GB ( 24.8%), 7,075,000 documenti,  1.80 MB/s, fine stimata tra   64.3 minuti
+[15:42:35] caricati   2.28 di 9.03 GB ( 25.3%), 7,218,000 documenti,  1.80 MB/s, fine stimata tra   64.1 minuti
+[15:43:05] caricati   2.33 di 9.03 GB ( 25.8%), 7,358,000 documenti,  1.79 MB/s, fine stimata tra   63.9 minuti
+[15:43:05] dbStats: dati 2.329 GB + indici 0.0 GB = 2.33 GB logici (tetto di sicurezza 50 GB)
+[15:43:35] caricati   2.37 di 9.03 GB ( 26.3%), 7,499,000 documenti,  1.78 MB/s, fine stimata tra   63.7 minuti
+[15:44:05] caricati   2.42 di 9.03 GB ( 26.8%), 7,645,000 documenti,  1.78 MB/s, fine stimata tra   63.4 minuti
+[15:44:35] caricati   2.45 di 9.03 GB ( 27.2%), 7,758,000 documenti,  1.77 MB/s, fine stimata tra   63.5 minuti
+[15:45:05] caricati   2.49 di 9.03 GB ( 27.6%), 7,878,000 documenti,  1.76 MB/s, fine stimata tra   63.5 minuti
+[15:45:06] dbStats: dati 2.495 GB + indici 0.0 GB = 2.49 GB logici (tetto di sicurezza 50 GB)
+[15:45:36] caricati   2.53 di 9.03 GB ( 28.0%), 7,995,000 documenti,  1.75 MB/s, fine stimata tra   63.5 minuti
+[15:46:06] caricati   2.56 di 9.03 GB ( 28.4%), 8,099,000 documenti,  1.73 MB/s, fine stimata tra   63.6 minuti
+[15:46:36] caricati   2.60 di 9.03 GB ( 28.8%), 8,218,000 documenti,  1.73 MB/s, fine stimata tra   63.6 minuti
+[15:47:06] caricati   2.64 di 9.03 GB ( 29.2%), 8,343,000 documenti,  1.72 MB/s, fine stimata tra   63.5 minuti
+[15:47:06] dbStats: dati 2.641 GB + indici 0.0 GB = 2.64 GB logici (tetto di sicurezza 50 GB)
+[15:47:36] caricati   2.67 di 9.03 GB ( 29.6%), 8,456,000 documenti,  1.71 MB/s, fine stimata tra   63.5 minuti
+[15:48:06] caricati   2.71 di 9.03 GB ( 30.0%), 8,559,000 documenti,  1.70 MB/s, fine stimata tra   63.6 minuti
+[15:48:36] caricati   2.74 di 9.03 GB ( 30.4%), 8,669,000 documenti,  1.69 MB/s, fine stimata tra   63.5 minuti
+[15:49:06] caricati   2.78 di 9.03 GB ( 30.8%), 8,793,000 documenti,  1.68 MB/s, fine stimata tra   63.4 minuti
+[15:49:07] dbStats: dati 2.783 GB + indici 0.0 GB = 2.78 GB logici (tetto di sicurezza 50 GB)
+[15:49:37] caricati   2.82 di 9.03 GB ( 31.2%), 8,916,000 documenti,  1.68 MB/s, fine stimata tra   63.2 minuti
+[15:50:07] caricati   2.86 di 9.03 GB ( 31.6%), 9,030,000 documenti,  1.67 MB/s, fine stimata tra   63.2 minuti
+[15:50:37] caricati   2.89 di 9.03 GB ( 32.0%), 9,146,000 documenti,  1.66 MB/s, fine stimata tra   63.0 minuti
+[15:50:37] thread 14: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:37] thread 12: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 6: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 10: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 2: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 0: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 15: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 1: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:38] thread 5: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 4: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 8: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 9: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 13: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 3: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 7: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:39] thread 11: scrittura non riuscita (1 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:47] thread 14: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:47] thread 12: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:48] thread 6: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:48] thread 10: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:48] thread 2: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:48] thread 0: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:48] thread 15: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:49] thread 5: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:49] [15:50:49] thread 4: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpacethread 1: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+
+[15:50:50] thread 7: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:50] thread 8: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:50] thread 3: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:50] thread 9: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:50] thread 11: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:50:50] thread 13: scrittura non riuscita (2 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:07] caricati   2.89 di 9.03 GB ( 32.0%), 9,146,000 documenti,  1.63 MB/s, fine stimata tra   64.1 minuti
+[15:51:07] dbStats: dati 2.895 GB + indici 0.0 GB = 2.89 GB logici (tetto di sicurezza 50 GB)
+[15:51:07] thread 14: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:07] thread 12: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:08] thread 6: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:08] thread 10: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:08] thread 2: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:08] thread 0: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:08] thread 15: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:09] thread 5: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:09] thread 4: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:09] thread 1: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:10] thread 7: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:10] thread 8: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:11] thread 13: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:11] thread 11: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:11] thread 3: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:11] thread 9: scrittura non riuscita (3 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:37] caricati   2.89 di 9.03 GB ( 32.0%), 9,146,000 documenti,  1.61 MB/s, fine stimata tra   65.2 minuti
+[15:51:37] thread 12: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:37] thread 14: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:38] thread 6: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:38] thread 10: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:38] thread 2: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:38] thread 0: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:38] thread 15: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:39] thread 5: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:39] thread 4: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:39] thread 1: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:40] thread 8: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:40] thread 7: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:42] thread 3: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:42] thread 9: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:42] thread 13: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:51:42] thread 11: scrittura non riuscita (4 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:52:07] caricati   2.89 di 9.03 GB ( 32.0%), 9,146,000 documenti,  1.58 MB/s, fine stimata tra   66.2 minuti
+[15:52:18] thread 12: scrittura non riuscita (5 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:52:18] thread 14: scrittura non riuscita (5 di fila): Replica set writes blocked, reason: InsufficientDiskSpace
+[15:52:23] Caricamento finito (scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace): 2.89 GB, 9,146,000 documenti, 0.52 ore, 1.568 MB/s.

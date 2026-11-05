@@ -1,0 +1,18 @@
+2026-11-05T15:20:54Z passo 1 carica m10s: --db app_data_1 --gb 6.6 --quota-riservati 0.4883 --seme 101 --thread 16 --max-ore-carico 4.3
+2026-11-05T15:20:54Z passo 3 carica m10c: --db app_data_2 --gb 9.03 --quota-riservati 0.5 --seme 102 --thread 16 --max-ore-carico 4.3
+2026-11-05T15:20:54Z passo 5 carica m30s: --db app_data_4 --gb 6.6 --quota-riservati 0.4883 --seme 104 --thread 16 --max-ore-carico 4.3
+2026-11-05T15:20:54Z passo 4 carica m10p: --db app_data_3 --gb 9.67 --quota-riservati 0.4 --seme 103 --thread 16 --max-ore-carico 4.3
+2026-11-05T15:20:54Z passo 7 carica m30c: --db app_data_5 --gb 9.03 --quota-riservati 0.5 --seme 105 --thread 16 --max-ore-carico 4.3
+2026-11-05T15:20:54Z passo 8 carica m30p: --db app_data_6 --gb 9.67 --quota-riservati 0.4 --seme 106 --thread 16 --max-ore-carico 4.3
+2026-11-05T15:52:23Z passo 7 carica m30c: codice 0, motivo 'scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace'
+2026-11-05T15:52:24Z passo 5 carica m30s: codice 0, motivo 'scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace'
+2026-11-05T15:52:24Z passo 6 giro m30s: nessun giro di prima; --db app_data_4 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+2026-11-05T15:52:24Z passo 3 carica m10c: codice 0, motivo 'scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace'
+2026-11-05T15:52:24Z passo 1 carica m10s: codice 0, motivo 'scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace'
+2026-11-05T15:52:24Z passo 2 giro m10s: nessun giro di prima; --db app_data_1 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+2026-11-05T15:52:24Z passo 4 carica m10p: codice 0, motivo 'scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace'
+2026-11-05T15:52:24Z passo 8 carica m30p: codice 0, motivo 'scritture rifiutate: Replica set writes blocked, reason: InsufficientDiskSpace'
+2026-11-05T15:53:41Z passo 6 giro m30s: codice 0; fasi non 'fatta': nessuna
+2026-11-05T15:53:42Z passo 2 giro m10s: codice 0; fasi non 'fatta': nessuna
+2026-11-05T15:53:42Z passo 9: i passi in sottofondo sono finiti
+2026-11-05T15:53:42Z programma finito: errori 6; macchina mai il limite

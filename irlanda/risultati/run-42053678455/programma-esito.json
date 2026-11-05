@@ -1,0 +1,73 @@
+{
+ "passi": 9,
+ "errori": 6,
+ "macchina_mai_limite": true,
+ "esiti": [
+  {
+   "k": 1,
+   "tipo": "carica",
+   "etichetta": "passo_01_m10s_carica",
+   "rc": 0,
+   "fasi": {}
+  },
+  {
+   "k": 2,
+   "tipo": "giro",
+   "etichetta": "passo_02_m10s",
+   "rc": 0,
+   "fasi": {
+    "grandi_carica": [
+     "2026-11-05T15:52:24.647399Z",
+     "2026-11-05T15:53:41.310336Z"
+    ]
+   }
+  },
+  {
+   "k": 3,
+   "tipo": "carica",
+   "etichetta": "passo_03_m10c_carica",
+   "rc": 0,
+   "fasi": {}
+  },
+  {
+   "k": 4,
+   "tipo": "carica",
+   "etichetta": "passo_04_m10p_carica",
+   "rc": 0,
+   "fasi": {}
+  },
+  {
+   "k": 5,
+   "tipo": "carica",
+   "etichetta": "passo_05_m30s_carica",
+   "rc": 0,
+   "fasi": {}
+  },
+  {
+   "k": 6,
+   "tipo": "giro",
+   "etichetta": "passo_06_m30s",
+   "rc": 0,
+   "fasi": {
+    "grandi_carica": [
+     "2026-11-05T15:52:24.572676Z",
+     "2026-11-05T15:53:40.956929Z"
+    ]
+   }
+  },
+  {
+   "k": 7,
+   "tipo": "carica",
+   "etichetta": "passo_07_m30c_carica",
+   "rc": 0,
+   "fasi": {}
+  },
+  {
+   "k": 8,
+   "tipo": "carica",
+   "etichetta": "passo_08_m30p_carica",
+   "rc": 0,
+   "fasi": {}
+  }
+ ]
+}

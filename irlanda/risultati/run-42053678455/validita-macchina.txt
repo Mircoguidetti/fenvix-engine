@@ -1,0 +1,8 @@
+Chi manda il carico non deve essere il limite (RULES.md 2026-11-05): per ogni fase, CPU del processo dello
+script (% di un core, ogni 5 s) e di tutta la macchina (% di tutte le vCPU). VALIDA se p95 del processo < 80 e
+massimo della macchina < 80. Le fasi lunghe meno di 10 s hanno pochi campioni: guardare il massimo.
+
+non misura passo  2 passo_02_m10s                grandi_carica    (caricamento o controllo: non conta)
+non misura passo  6 passo_06_m30s                grandi_carica    (caricamento o controllo: non conta)
+
+MACCHINA: mai il limite in nessuna fase

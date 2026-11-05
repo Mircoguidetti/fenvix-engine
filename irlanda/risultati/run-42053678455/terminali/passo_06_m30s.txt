@@ -1,0 +1,27 @@
+===== 2026-11-05T15:52:24.154815Z prova_infinite.py giro --file risultati_p1.json --cartella-dati /opt/irlanda/lavoro/dati/m30s --db app_data_4 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+Giro finale 'carica_2kb' (versione p1-1.6.2). Clienti attivi mai letti 1730, dormienti mai letti 1649.
+Il piano usa 0 clienti attivi mai letti su 1730 e 0 dormienti su 1649 (ogni cliente in una sola fase).
+Ordine delle fasi e minuti STIMATI (pausa di 2 minuti compresa dove c'e'):
+   1. grandi_carica      0.5 min  (a   0.5) (+15 con grandi_lavaggio: i 2 KB NON sono stati caricati su M10)
+Totale STIMATO: circa 16 minuti (0.3 ore), piu' circa 6 se la collezione fredda e' accettata.
+[15:52:24] Dati grezzi in: /opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T155224Z
+[15:52:24] ===== grandi_carica (fase 1 di 1; STIMATO 0.5 minuti) =====
+[15:52:24] FASE grandi_carica INIZIO 15:52:24 ora del Mac (2026-11-05T15:52:24Z)
+[15:52:24]   Stima del tempo di caricamento dal Mac: 7.2-8.7 minuti per 1.22 GiB (STIMATO da 2,4-2,9 MiB/s, MISURATO ieri su M30 con 4 thread e documenti da 340 byte; con documenti da 2 KB e 8 thread puo' essere piu' veloce). Gia' presenti: 0 MB.
+[15:52:55]     events_large: 0.441 di 1.22 GiB, 14.68 MiB/s di media, fine tra circa 0.9 minuti (MISURATO adesso)
+[15:53:26]     events_large: 0.978 di 1.22 GiB, 16.23 MiB/s di media, fine tra circa 0.3 minuti (MISURATO adesso)
+[15:53:40]   Caricati 1.223 GiB in events_large in 1.3 minuti (16.44 MiB/s, MISURATO), documento medio 1940 byte, errori 0
+[15:53:40] FASE grandi_carica FINE 15:53:40 ora del Mac (2026-11-05T15:53:40Z)
+
+=== RIASSUNTO DEL GIRO FINALE 'carica_2kb' (dai dati grezzi; si rifa' con: riassunto --cartella /opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T155224Z) ===
+=== FASE grandi_carica: 2026-11-05T15:52:24.606007Z - 2026-11-05T15:53:40.896515Z UTC: 1.223 GiB in 1.3 minuti, 16.44 MiB/s
+
+Stato delle fasi:
+  grandi_carica    fatta      fase_16_grandi_carica.json 
+
+Fasi non riuscite: atlas_inizio, inizio, Q2, Q3, Q1, Q1d, Q4, Q5, spiega, condizioni, mentre_scrivi, parallelo, carico_massimo, scritture, cancellazione, grandi_lavaggio, grandi_Q2, grandi_Q1, grandi_Q3, grandi_Q4, freddo, fine, atlas_fine. Si rifanno una per una con:  python3 prova_infinite.py giro --solo-fasi atlas_inizio,inizio,Q2,Q3,Q1,Q1d,Q4,Q5,spiega,condizioni,mentre_scrivi,parallelo,carico_massimo,scritture,cancellazione,grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4,freddo,fine,atlas_fine
+
+=== NUMERI DERIVATI (STIMATI, solo dai dati grezzi; dettaglio in RIASSUNTO.json) ===
+  grandi_carica: CPU 76.6% di un core, us per lettura 567363.2, per scrittura 43.03
+
+Cartella: /opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T155224Z (6 file, elencati con SHA-256 in INDICE.json)
