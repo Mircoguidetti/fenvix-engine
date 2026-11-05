@@ -1177,8 +1177,9 @@ pub const COMPACTION_STALL: Duration = Duration::from_secs(30);
 /// After this long, a pass whose L0 is already below the threshold (only merges of sorted runs left) gives back its
 /// maintenance slot, so that the L0 of the other tenants is not kept waiting behind a long merge.
 pub const COMPACTION_SLOT_HOLD: Duration = Duration::from_secs(30);
-/// How often a pass with its L0 below the threshold reads the compaction state to know whether merges are still running.
-const COMPACTIONS_POLL: Duration = Duration::from_secs(1);
+/// How often a pass with its L0 below the threshold (merges of sorted runs left) reads the manifest and the compaction
+/// state. Each read is a LIST and a GET on S3: a merge can last hours on a large database.
+const MERGE_POLL: Duration = Duration::from_secs(2);
 
 /// Tenants whose running compaction pass must stop now (drop, erase, fork, export, restore want the maintenance lock).
 static PASS_PREEMPT: std::sync::LazyLock<Mutex<HashMap<String, usize>>> = std::sync::LazyLock::new(Default::default);
@@ -1210,6 +1211,17 @@ impl Drop for PreemptGuard {
             }
         }
     }
+}
+
+/// Tenants with a compaction pass running now.
+static PASS_TENANTS: std::sync::LazyLock<Mutex<HashMap<String, usize>>> = std::sync::LazyLock::new(Default::default);
+
+/// Whether the maintenance lock of `id` may be held by a compaction pass only (a pass runs and nothing asked it to stop):
+/// the WAL-only GC of an open writer then runs without the lock. A compaction never touches the WAL directory, and a pass
+/// can last as long as a merge of sorted runs (hours on a large database): waiting for it, the WAL objects of a database
+/// written all along would pile up for that long.
+fn only_compaction_holds(id: &str) -> bool {
+    PASS_TENANTS.lock().unwrap().contains_key(id) && !PASS_PREEMPT.lock().unwrap().contains_key(id)
 }
 
 fn pass_preempted(id: &str, hooks: &PassHooks) -> bool {
@@ -1323,17 +1335,25 @@ pub(crate) async fn compact_tenant_pass_with(
     };
     let mut l0_after = l0_before;
     let mut hooks = hooks;
-    struct Running(bool);
+    struct Running(bool, String);
     impl Drop for Running {
         fn drop(&mut self) {
             PASSES_RUNNING.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
             if self.0 {
                 PASSES_LONG.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
             }
+            let mut m = PASS_TENANTS.lock().unwrap();
+            if let Some(n) = m.get_mut(&self.1) {
+                *n -= 1;
+                if *n == 0 {
+                    m.remove(&self.1);
+                }
+            }
         }
     }
     PASSES_RUNNING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let mut running = Running(false);
+    *PASS_TENANTS.lock().unwrap().entry(id.to_string()).or_default() += 1;
+    let mut running = Running(false, id.to_string());
     let mut last_progress = Instant::now();
     let mut progress_seen = sst_progress(&counting);
     let mut last_active_check: Option<Instant> = None;
@@ -1341,9 +1361,19 @@ pub(crate) async fn compact_tenant_pass_with(
     // Each poll is bounded by what is left of the stall window, and a failed poll ends the polling, not the function:
     // returning early here would leave the compactor running with nobody to stop it.
     let mut poll_err = None;
+    let mut merging = false;
+    let mut last_checkpoint_cleanup = Instant::now();
     loop {
-        // the manifest is read often at first (a small L0 compaction ends in about a second), then every 250 ms
-        tokio::time::sleep(Duration::from_millis(if started.elapsed() < Duration::from_secs(2) { 25 } else { 250 })).await;
+        // the manifest is read often at first (a small L0 compaction ends in about a second), then every 250 ms while the L0
+        // is over the threshold (writes may be waiting), then every `MERGE_POLL` while only merges are left
+        let poll = if started.elapsed() < Duration::from_secs(2) {
+            Duration::from_millis(25)
+        } else if merging {
+            MERGE_POLL
+        } else {
+            Duration::from_millis(250)
+        };
+        tokio::time::sleep(poll).await;
         if pass_preempted(id, &hooks) {
             preempted = true;
             break;
@@ -1369,7 +1399,20 @@ pub(crate) async fn compact_tenant_pass_with(
                 break;
             }
         }
+        // A long pass deletes the checkpoints its compactor left that have expired (one per compaction, 15 min lifetime):
+        // they would otherwise pile up in the manifest until the pass ends. A failure is left to the end of the pass.
+        if last_checkpoint_cleanup.elapsed() >= Duration::from_secs(60) {
+            last_checkpoint_cleanup = Instant::now();
+            let admin = Admin::builder(tenant_path(id), Arc::clone(&cleanup_store)).build();
+            if let Ok(Ok(cps)) = tokio::time::timeout(left, admin.list_checkpoints(None)).await {
+                let now = unix_ms() as i64;
+                for cp in cps.into_iter().filter(|c| c.name.is_none() && c.expire_time.is_some_and(|t| t.timestamp_millis() < now)) {
+                    let _ = tokio::time::timeout(left, admin.delete_checkpoint(cp.id)).await;
+                }
+            }
+        }
         if l0_after >= L0_COMPACT_THRESHOLD {
+            merging = false;
             continue;
         }
         if let Some(f) = &hooks.l0_done {
@@ -1377,13 +1420,13 @@ pub(crate) async fn compact_tenant_pass_with(
         }
         // L0 is below the threshold: the pass is over unless merges of sorted runs are still in flight, which go on
         // (stopped, they would start again from nothing at the next pass).
-        if last_active_check.is_some_and(|t| t.elapsed() < COMPACTIONS_POLL) {
+        if last_active_check.is_some_and(|t| t.elapsed() < MERGE_POLL) {
             continue;
         }
         last_active_check = Some(Instant::now());
         match tokio::time::timeout(left, compactions_active(raw, id)).await {
             Ok(Ok(false)) => break,
-            Ok(Ok(true)) => {}
+            Ok(Ok(true)) => merging = true,
             Ok(Err(e)) => {
                 poll_err = Some(e);
                 break;
@@ -1875,10 +1918,16 @@ pub async fn gc_tenant_ssts(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<bool>
     let admin = Admin::builder(tenant_path(id), Arc::clone(s3)).build();
     let Some(m) = admin.read_manifest(None).await? else { return Ok(false) };
     // (the checkpoints are in the manifest just read: no second read)
-    if !m.segments().is_empty() || !m.checkpoints().is_empty() {
+    // The checkpoints of a running compaction pass (named nothing, with an expiry) do not stop the cleanup: the pass deletes
+    // them when it ends anyway (`compact_tenant_pass`), and a pass can last as long as a merge of sorted runs (hours on a
+    // large database) while the SSTs it already replaced pile up. Their manifests are kept until then. Any other
+    // checkpoint (a fork's pin, a restore point, an export snapshot) still stops it.
+    let foreign = m.checkpoints().iter().any(|c| c.name.is_some() || c.expire_time.is_none());
+    if !m.segments().is_empty() || foreign {
         eprintln!("SSTGC skip tenant={id} (segments or checkpoints present)");
         return Ok(false);
     }
+    let pinned_manifests: std::collections::HashSet<u64> = m.checkpoints().iter().map(|c| c.manifest_id).collect();
     let latest = m.id();
     let mut referenced = std::collections::HashSet::new();
     for v in m.l0() {
@@ -1935,7 +1984,7 @@ pub async fn gc_tenant_ssts(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<bool>
                 number(&file).map_or(true, |n| n >= max_compactions)
             } else {
                 // Manifests: the latest is live; older ones are not needed by the writer or by this process's compactor.
-                file.strip_suffix(".manifest").and_then(|n| n.parse::<u64>().ok()).map_or(true, |n| n >= latest)
+                file.strip_suffix(".manifest").and_then(|n| n.parse::<u64>().ok()).map_or(true, |n| n >= latest || pinned_manifests.contains(&n))
             };
             if live {
                 t.remove(&key);
@@ -2160,13 +2209,16 @@ impl Maintenance {
                         .for_each_concurrent(GC_CONCURRENCY, |id| {
                             let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
                             async move {
-                                // A tenant whose lock is held (a compaction pass, maybe a long merge) is skipped this round:
-                                // waiting here would hold up the GC of every tenant.
+                                // A tenant whose lock is held is skipped this round (waiting here would hold up the GC of every
+                                // tenant), unless the holder is a compaction pass (maybe a long merge): the SSTs it replaces
+                                // must not pile up for its whole length. The SSTs the pass is writing are not referenced yet,
+                                // but they are recorded by the compaction (kept) or younger than SST_GC_MIN_UNREF_SECS.
                                 let lock = maint_lock(&locks, &id);
-                                let Ok(_held) = lock.try_lock() else {
+                                let held = lock.try_lock();
+                                if held.is_err() && !only_compaction_holds(&id) {
                                     GC_SKIPPED_BUSY.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                                     return;
-                                };
+                                }
                                 match gc_tenant_ssts(&s3, &id).await {
                                     Ok(true) => {
                                         let wait = Duration::from_secs(SST_GC_MIN_UNREF_SECS.load(std::sync::atomic::Ordering::Relaxed) + 5);
@@ -2185,10 +2237,11 @@ impl Maintenance {
                             let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
                             async move {
                                 let lock = maint_lock(&locks, &id);
-                                let Ok(_held) = lock.try_lock() else {
+                                let held = lock.try_lock();
+                                if held.is_err() && !only_compaction_holds(&id) {
                                     GC_SKIPPED_BUSY.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                                     return;
-                                };
+                                }
                                 if let Err(e) = gc_tenant_wal(&s3, &id, gc_min_age).await {
                                     log.lock().unwrap().error(format!("wal gc {id}: {e:#}"));
                                 }
