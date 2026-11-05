@@ -9,7 +9,7 @@ set -u
 cd "$(dirname "$0")" || exit 1
 BUCKET=$1
 export AWS_DEFAULT_REGION=eu-west-1 AWS_REGION=eu-west-1
-export PYTHONPATH="$PWD/vendor"
+export PYTHONPATH="$PWD/vendor" PYTHONUNBUFFERED=1   # righe dello script subito nel log (lo script non cambia)
 PY=${PY:-python3}
 MD5_SCRIPT=8396ca455557baaa4e3a9b1f881451f9
 ATTESA_MIN=${ATTESA_MIN:-30}

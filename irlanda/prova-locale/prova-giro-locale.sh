@@ -65,9 +65,9 @@ import json, sys, os
 w = sys.argv[1]
 a = json.load(open(f"{w}/stato/risultati_p1.json")); b = json.load(open(f"{w}/out/stato/risultati_p1.json"))
 la = open(f"{w}/stato/risultati_p1.json.usati.log").read().split("\n"); lb = open(f"{w}/out/stato/risultati_p1.json.usati.log").read().split("\n")
-nuovi = set(b["usati"]) - set(a["usati"])
-print(f"clienti letti prima {len(a['usati'])}, dopo {len(b['usati'])}, nuovi {len(nuovi)}; righe del registro prima {len(la)-1}, dopo {len(lb)-1}")
+nuovi = set(b.get("usati", [])) - set(a.get("usati", []))
+print(f"clienti letti prima {len(a.get('usati', []))}, dopo {len(b.get('usati', []))}, nuovi {len(nuovi)}; righe del registro prima {len(la)-1}, dopo {len(lb)-1}")
 print("registro = file di stato per i nuovi:", {int(x.split()[1]) for x in lb if x.startswith('a ')} == nuovi)
-gf = b["giro_finale"]; print("giro:", gf["nome"], "fasi:", {f: [e["stato"] for e in v] for f, v in gf["fasi"].items()})
+gf = b.get("giro_finale") or {"nome": None, "fasi": {}}; print("giro:", gf["nome"], "fasi:", {f: [e.get("stato") for e in v] for f, v in gf["fasi"].items() if not f.startswith("pausa")})
 PY
 ls "$IRL_OUT" "$IRL_OUT"/dati/* | head -30

@@ -42,6 +42,14 @@ def main():
     d = json.load(open(f_stato))
     if "clienti" not in d:
         esci("il file di stato non ha il caricamento ('clienti')")
+    # gli stessi file gia' usati da un giro dall'Irlanda di prima (stato-in-ingresso.md5 dei risultati sul branch):
+    # rifare il giro con loro rileggerebbe i 150 clienti di quel giro
+    md5_in = hashlib.md5(open(f_stato, "rb").read()).hexdigest()
+    import glob
+    for g in sorted(glob.glob(os.path.join(QUI, "risultati", "*", "stato-in-ingresso.md5"))):
+        if md5_in in open(g).read() and not FORZA:
+            esci(f"questo risultati_p1.json (md5 {md5_in}) e' gia' stato usato da un giro dall'Irlanda "
+                 f"({os.path.basename(os.path.dirname(g))}): servono i file riportati da quel giro")
     righe = sum(1 for _ in open(f_log))
     gf = d.get("giro_finale") or {}
     print(f"OK    stato: {len(d.get('usati', []))} clienti gia' letti nel file, {righe} righe nel registro, "
