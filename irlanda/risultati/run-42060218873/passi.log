@@ -1,0 +1,30 @@
+2026-11-05T15:58:40Z inizio; macchina 8 vCPU; Python 3.12.3; programma carica
+2026-11-05T15:58:41Z stringa di connessione letta (non scritta da nessuna parte) e cancellata dal bucket
+2026-11-05T15:58:41Z file di stato arrivati: 14 file (m10c m10p m10s m30c m30p m30s vecchio )
+2026-11-05T15:58:41Z IP pubblico della macchina: 108.130.140.117 (da aggiungere alla lista di accesso di Atlas, come 108.130.140.117/32)
+2026-11-05T15:58:59Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 30 minuti
+2026-11-05T15:59:44Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 29 minuti
+2026-11-05T16:00:29Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 28 minuti
+2026-11-05T16:01:14Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 27 minuti
+2026-11-05T16:01:59Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 27 minuti
+2026-11-05T16:02:44Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 26 minuti
+2026-11-05T16:03:29Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 25 minuti
+2026-11-05T16:04:14Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 24 minuti
+2026-11-05T16:04:59Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 24 minuti
+2026-11-05T16:05:44Z ATTESA LISTA DI ACCESSO: il database non risponde (ServerSelectionTimeoutError); riprovo tra 30 s, ancora 23 minuti
+2026-11-05T16:06:17Z il database risponde (tentativo 11)
+2026-11-05T16:06:17Z Atlas risponde: parte il programma carica
+2026-11-05T16:06:18Z passo 1 carica m10s: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 3 carica m10c: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 2 giro m10s: giro di prima ('carica_2kb') spostato sotto 'giro_finale_prima_passo_2'; --db app_data_1 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+2026-11-05T16:06:18Z passo 4 carica m10p: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 5 carica m30s: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 7 carica m30c: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 8 carica m30p: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 6 giro m30s: giro di prima ('carica_2kb') spostato sotto 'giro_finale_prima_passo_6'; --db app_data_4 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+2026-11-05T16:06:18Z passo 6 giro m30s: codice 0; fasi non 'fatta': nessuna
+2026-11-05T16:06:18Z passo 2 giro m10s: codice 0; fasi non 'fatta': nessuna
+2026-11-05T16:06:18Z passo 9: i passi in sottofondo sono finiti
+2026-11-05T16:06:18Z programma finito: errori 0; macchina mai il limite
+2026-11-05T16:06:18Z programma finito con codice 0
+2026-11-05T16:06:18Z fine: FINITO

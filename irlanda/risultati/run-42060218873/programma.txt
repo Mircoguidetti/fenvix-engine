@@ -1,0 +1,12 @@
+2026-11-05T16:06:18Z passo 1 carica m10s: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 3 carica m10c: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 2 giro m10s: giro di prima ('carica_2kb') spostato sotto 'giro_finale_prima_passo_2'; --db app_data_1 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+2026-11-05T16:06:18Z passo 4 carica m10p: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 5 carica m30s: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 7 carica m30c: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 8 carica m30p: gia' caricato, non lo rifaccio
+2026-11-05T16:06:18Z passo 6 giro m30s: giro di prima ('carica_2kb') spostato sotto 'giro_finale_prima_passo_6'; --db app_data_4 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+2026-11-05T16:06:18Z passo 6 giro m30s: codice 0; fasi non 'fatta': nessuna
+2026-11-05T16:06:18Z passo 2 giro m10s: codice 0; fasi non 'fatta': nessuna
+2026-11-05T16:06:18Z passo 9: i passi in sottofondo sono finiti
+2026-11-05T16:06:18Z programma finito: errori 0; macchina mai il limite

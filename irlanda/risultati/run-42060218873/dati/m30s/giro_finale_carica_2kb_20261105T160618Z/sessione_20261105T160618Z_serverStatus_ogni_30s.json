@@ -1,0 +1,2654 @@
+[
+ {
+  "t": "2026-11-05T16:06:18.341815Z",
+  "fase": "inizio",
+  "serverStatus": {
+   "host": "atlas-qear04-shard-00-00.7lvmgr.mongodb.net",
+   "version": "9.1.0",
+   "process": "mongod",
+   "uptime": 3055.0,
+   "uptimeMillis": 3051518,
+   "uptimeEstimate": 3051,
+   "localTime": {
+    "$date": "2026-11-05T16:06:18.342Z"
+   },
+   "asserts": {
+    "regular": 0,
+    "warning": 0,
+    "msg": 0,
+    "user": 185687,
+    "tripwire": 0,
+    "rollovers": 0
+   },
+   "catalogStats": {
+    "collections": 24,
+    "capped": 0,
+    "clustered": 0,
+    "timeseries": 0,
+    "views": 0,
+    "internalCollections": 16,
+    "internalViews": 0,
+    "csfle": 0,
+    "queryableEncryption": 0,
+    "systemProfile": 0
+   },
+   "changeStreamPreImages": {
+    "numDocs": 0,
+    "docsInserted": 0
+   },
+   "connections": {
+    "current": 68,
+    "available": 2932,
+    "totalCreated": 1007,
+    "rejected": 0,
+    "active": 8,
+    "queuedForEstablishment": 0,
+    "establishmentRateLimit": {
+     "rejected": 0,
+     "exempted": 841,
+     "interruptedDueToClientDisconnect": 0
+    },
+    "threaded": 68,
+    "limitExempt": 56,
+    "exhaustIsMaster": 0,
+    "exhaustHello": 3,
+    "awaitingTopologyChanges": 7,
+    "backpressureVersions": {
+     "activeCount": {
+      "NoBackpressure": 7,
+      "1": 42,
+      "Other": 19
+     },
+     "totalCount": {
+      "NoBackpressure": 13,
+      "1": 590,
+      "Other": 188
+     }
+    },
+    "loadBalanced": 0,
+    "priority": 0
+   },
+   "extra_info": {
+    "user_time_us": 3182977571,
+    "system_time_us": 207389276
+   },
+   "featureCompatibilityVersion": {
+    "major": 9,
+    "minor": 0,
+    "transitioning": 0
+   },
+   "flowControl": {
+    "isLagged": false
+   },
+   "indexStats": {
+    "count": 55,
+    "features": {
+     "2d": {
+      "count": 0,
+      "accesses": 0
+     },
+     "2dsphere": {
+      "count": 0,
+      "accesses": 0
+     },
+     "2dsphere_bucket": {
+      "count": 0,
+      "accesses": 0
+     },
+     "collation": {
+      "count": 0,
+      "accesses": 0
+     },
+     "compound": {
+      "count": 31,
+      "accesses": 0
+     },
+     "hashed": {
+      "count": 0,
+      "accesses": 0
+     },
+     "id": {
+      "count": 24,
+      "accesses": 0
+     },
+     "normal": {
+      "count": 31,
+      "accesses": 0
+     },
+     "partial": {
+      "count": 0,
+      "accesses": 0
+     },
+     "prepareUnique": {
+      "count": 0,
+      "accesses": 0
+     },
+     "single": {
+      "count": 0,
+      "accesses": 0
+     },
+     "sparse": {
+      "count": 0,
+      "accesses": 0
+     },
+     "text": {
+      "count": 0,
+      "accesses": 0
+     },
+     "ttl": {
+      "count": 0,
+      "accesses": 0
+     },
+     "unique": {
+      "count": 0,
+      "accesses": 0
+     },
+     "wildcard": {
+      "count": 0,
+      "accesses": 0
+     }
+    }
+   },
+   "messageFilter": {
+    "version": "20261029.221353.bac11a37c5feea1dab70f4f9aac1aa23b5706351",
+    "rejectedMessages": 0,
+    "suspiciousMessages": 0,
+    "successfulPluginLoads": 1,
+    "failedPluginLoads": 0
+   },
+   "network": {
+    "bytesIn": 21353525814,
+    "bytesOut": 1758319011,
+    "physicalBytesIn": 6654249052,
+    "physicalBytesOut": 1735158365,
+    "egress": {
+     "bytesIn": 5065310,
+     "bytesOut": 3566757,
+     "physicalBytesIn": 3406686,
+     "physicalBytesOut": 2759001,
+     "numRequests": 10618
+    },
+    "numRequests": 257230,
+    "compression": {
+     "snappy": {
+      "compressor": {
+       "bytesIn": 4408200,
+       "bytesOut": 3251480
+      },
+      "decompressor": {
+       "bytesIn": 3319394,
+       "bytesOut": 5138575
+      }
+     },
+     "zstd": {
+      "compressor": {
+       "bytesIn": 55398993,
+       "bytesOut": 30978669
+      },
+      "decompressor": {
+       "bytesIn": 6615377505,
+       "bytesOut": 21315726236
+      }
+     },
+     "zlib": {
+      "compressor": {
+       "bytesIn": 0,
+       "bytesOut": 0
+      },
+      "decompressor": {
+       "bytesIn": 0,
+       "bytesOut": 0
+      }
+     }
+    },
+    "ingressRequestRateLimiter": {
+     "addedToQueue": 145527,
+     "rejectedAdmissions": 0,
+     "exemptedAdmissions": 86468,
+     "successfulAdmissions": 170689,
+     "attemptedAdmissions": 170689,
+     "averageTimeQueuedMicros": 1e-323,
+     "totalTimeQueuedMicros": 140119116441,
+     "currentQueueDepth": 0
+    }
+   },
+   "opLatencies": {
+    "commands": {
+     "latency": 158797229,
+     "ops": 80037,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "reads": {
+     "latency": 2200688,
+     "ops": 4234,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "writes": {
+     "latency": 167745187495,
+     "ops": 172951,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "transactions": {
+     "latency": 0,
+     "ops": 0,
+     "queryableEncryptionLatencyMicros": 0
+    }
+   },
+   "opWorkingTime": {
+    "commands": {
+     "latency": 65096000,
+     "ops": 80037,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "reads": {
+     "latency": 1289000,
+     "ops": 4234,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "writes": {
+     "latency": 4449911000,
+     "ops": 172951,
+     "queryableEncryptionLatencyMicros": 0
+    },
+    "transactions": {
+     "latency": 0,
+     "ops": 0,
+     "queryableEncryptionLatencyMicros": 0
+    }
+   },
+   "opWriteConcernCounters": {
+    "insert": {
+     "wmajority": 0,
+     "wnum": {
+      "1": 56253351
+     },
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 1,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {
+        "1": 1
+       }
+      }
+     }
+    },
+    "update": {
+     "wmajority": 3915,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 1,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {
+        "1": 1
+       }
+      }
+     }
+    },
+    "delete": {
+     "wmajority": 591,
+     "wnum": {},
+     "wtag": {},
+     "majorityJFalseOverridden": 0,
+     "none": 1,
+     "noneInfo": {
+      "CWWC": {
+       "wmajority": 0,
+       "wnum": {},
+       "wtag": {}
+      },
+      "implicitDefault": {
+       "wmajority": 0,
+       "wnum": {
+        "1": 1
+       }
+      }
+     }
+    }
+   },
+   "opcounters": {
+    "insert": 56253352,
+    "query": 3562,
+    "update": 3916,
+    "delete": 592,
+    "getmore": 0,
+    "command": 90808,
+    "aggregate": 3961
+   },
+   "queryAnalyzers": {
+    "activeCollections": 0,
+    "totalCollections": 0
+   },
+   "querySettings": {
+    "count": 0,
+    "size": 0,
+    "rejectCount": 0,
+    "backfill": {
+     "bufferedRepresentativeQueries": 0
+    }
+   },
+   "queues": {
+    "ingressSessionEstablishment": {
+     "rejectedAdmissions": 0,
+     "successfulAdmissions": 166,
+     "attemptedAdmissions": 166
+    }
+   },
+   "readConcernCounters": {
+    "nonTransactionOps": {
+     "none": 3928,
+     "noneInfo": {
+      "CWRC": {
+       "local": 0,
+       "available": 0,
+       "majority": 0
+      },
+      "implicitDefault": {
+       "local": 3928,
+       "available": 0
+      }
+     },
+     "local": 306,
+     "available": 0,
+     "majority": 0,
+     "snapshot": {
+      "withClusterTime": 0,
+      "withoutClusterTime": 0
+     },
+     "linearizable": 0
+    },
+    "transactionOps": {
+     "none": 0,
+     "noneInfo": {
+      "CWRC": {
+       "local": 0,
+       "majority": 0
+      },
+      "implicitDefault": {
+       "local": 0
+      }
+     },
+     "local": 0,
+     "majority": 0,
+     "snapshot": {
+      "withClusterTime": 0,
+      "withoutClusterTime": 0
+     }
+    }
+   },
+   "readPreferenceCounters": {
+    "executedOnPrimary": {
+     "primary": {
+      "internal": 128,
+      "external": 28
+     },
+     "primaryPreferred": {
+      "internal": 92,
+      "external": 3665
+     },
+     "secondary": {
+      "internal": 0,
+      "external": 0
+     },
+     "secondaryPreferred": {
+      "internal": 0,
+      "external": 0
+     },
+     "nearest": {
+      "internal": 0,
+      "external": 457
+     },
+     "tagged": {
+      "internal": 0,
+      "external": 0
+     }
+    },
+    "executedOnSecondary": {
+     "primary": {
+      "internal": 1,
+      "external": 0
+     },
+     "primaryPreferred": {
+      "internal": 7,
+      "external": 70
+     },
+     "secondary": {
+      "internal": 0,
+      "external": 0
+     },
+     "secondaryPreferred": {
+      "internal": 1,
+      "external": 0
+     },
+     "nearest": {
+      "internal": 5,
+      "external": 11
+     },
+     "tagged": {
+      "internal": 0,
+      "external": 0
+     }
+    }
+   },
+   "repl": {
+    "hosts": [
+     "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+     "cluster0-shard-00-02.7lvmgr.mongodb.net:27017"
+    ],
+    "setName": "atlas-qear04-shard-0",
+    "isWritablePrimary": true,
+    "secondary": false,
+    "primary": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017",
+    "tags": {
+     "cacheState": "READY",
+     "workloadType": "OPERATIONAL",
+     "region": "EU_WEST_1",
+     "diskState": "READY",
+     "availabilityZone": "euw1-az2",
+     "nodeType": "ELECTABLE",
+     "provider": "AWS"
+    },
+    "me": "cluster0-shard-00-00.7lvmgr.mongodb.net:27017"
+   },
+   "scramCache": {
+    "SCRAM-SHA-1": {
+     "count": 0,
+     "hits": 0,
+     "misses": 0
+    },
+    "SCRAM-SHA-256": {
+     "count": 3,
+     "hits": 12,
+     "misses": 5
+    }
+   },
+   "security": {
+    "authentication": {
+     "saslSupportedMechsReceived": 260,
+     "mechanisms": {
+      "GSSAPI": {
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-AWS": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-OIDC": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "MONGODB-X509": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "PLAIN": {
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "SCRAM-SHA-1": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 279,
+         "successful": 279
+        },
+        "clusterAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 279,
+         "successful": 279
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 0,
+         "successful": 0
+        },
+        "authenticate": {
+         "total": 0,
+         "successful": 0
+        }
+       }
+      },
+      "SCRAM-SHA-256": {
+       "ingress": {
+        "speculativeAuthenticate": {
+         "total": 258,
+         "successful": 257
+        },
+        "clusterAuthenticate": {
+         "total": 104,
+         "successful": 104
+        },
+        "authenticate": {
+         "total": 260,
+         "successful": 259
+        }
+       },
+       "egress": {
+        "speculativeAuthenticate": {
+         "total": 15,
+         "successful": 15
+        },
+        "authenticate": {
+         "total": 17,
+         "successful": 17
+        }
+       }
+      }
+     },
+     "totalIngressAuthenticationTimeMicros": 6415270,
+     "totalEgressAuthenticationTimeMicros": 149684
+    },
+    "SSLServerSubjectName": "CN=*.7lvmgr.mongodb.net",
+    "SSLServerCertificateExpirationDate": {
+     "$date": "2027-02-02T07:23:07Z"
+    }
+   },
+   "transactions": {
+    "retryableCommandsCount": 169936,
+    "retriedCommandsCount": 0,
+    "retriedStatementsCount": 0,
+    "transactionsCollectionWriteCount": 276909,
+    "currentActive": 0,
+    "currentInactive": 0,
+    "currentOpen": 0,
+    "totalAborted": 0,
+    "totalAbortedInternal": 0,
+    "totalAbortedExternal": 0,
+    "totalCommitted": 0,
+    "totalCommittedInternal": 0,
+    "totalCommittedExternal": 0,
+    "totalStarted": 0,
+    "totalStartedInternal": 0,
+    "totalStartedExternal": 0,
+    "totalPrepared": 0,
+    "totalPreparedInternal": 0,
+    "totalPreparedExternal": 0,
+    "totalPreparedThenCommitted": 0,
+    "totalPreparedThenCommittedInternal": 0,
+    "totalPreparedThenCommittedExternal": 0,
+    "totalPreparedThenAborted": 0,
+    "totalPreparedThenAbortedInternal": 0,
+    "totalPreparedThenAbortedExternal": 0,
+    "currentPrepared": 0,
+    "retriedWritesDelayMillis": [
+     {
+      "lowerBound": 0,
+      "count": 0
+     },
+     {
+      "lowerBound": 1,
+      "count": 0
+     },
+     {
+      "lowerBound": 10,
+      "count": 0
+     },
+     {
+      "lowerBound": 100,
+      "count": 0
+     },
+     {
+      "lowerBound": 500,
+      "count": 0
+     },
+     {
+      "lowerBound": 1000,
+      "count": 0
+     },
+     {
+      "lowerBound": 5000,
+      "count": 0
+     },
+     {
+      "lowerBound": 10000,
+      "count": 0
+     },
+     {
+      "lowerBound": 30000,
+      "count": 0
+     },
+     {
+      "lowerBound": 60000,
+      "count": 0
+     },
+     {
+      "lowerBound": 180000,
+      "count": 0
+     },
+     {
+      "lowerBound": 300000,
+      "count": 0
+     },
+     {
+      "lowerBound": 600000,
+      "count": 0
+     },
+     {
+      "lowerBound": 1200000,
+      "count": 0
+     }
+    ]
+   },
+   "transportSecurity": {
+    "1.0": 0,
+    "1.1": 0,
+    "1.2": 0,
+    "1.3": 918,
+    "unknown": 0
+   },
+   "wiredTiger": {
+    "cache": {
+     "bytes currently in the cache": 1715320274,
+     "maximum bytes configured": 2147483648,
+     "tracked dirty bytes in the cache": 142517
+    },
+    "load-control": {
+     "read load at the system level": 84,
+     "write load at the system level": 0
+    }
+   },
+   "mem": {
+    "bits": 64,
+    "resident": 3637,
+    "virtual": 9165,
+    "supported": true,
+    "secureAllocByteCount": 1024,
+    "secureAllocBytesInPages": 28672
+   },
+   "metrics": {
+    "apiVersions": {
+     "connection pool": [
+      "default"
+     ],
+     "": [
+      "default"
+     ],
+     "MongoDB Automation Agent v1000.1.3.11500 (git: 9b85ce74b9d61ede3ecdc0a53ce64b29bec2a70c)": [
+      "default"
+     ],
+     "MongoDB Monitoring Module v1000.1.3.11500 (git: 9b85ce74b9d61ede3ecdc0a53ce64b29bec2a70c)": [
+      "default"
+     ],
+     "app-demo": [
+      "default"
+     ],
+     "mongotune 1.19.1+6cd235f": [
+      "default"
+     ]
+    },
+    "aggStageCounters": {
+     "$addFields": 1,
+     "$bucket": 0,
+     "$bucketAuto": 0,
+     "$changeStream": 0,
+     "$changeStreamSplitLargeEvent": 0,
+     "$collStats": 3928,
+     "$count": 0,
+     "$currentOp": 4,
+     "$densify": 0,
+     "$documents": 0,
+     "$facet": 0,
+     "$fill": 0,
+     "$geoNear": 0,
+     "$graphLookup": 0,
+     "$group": 4,
+     "$indexStats": 14,
+     "$limit": 5,
+     "$listCachedAndActiveUsers": 0,
+     "$listCatalog": 0,
+     "$listClusterCatalog": 5,
+     "$listExtensions": 0,
+     "$listLocalSessions": 0,
+     "$listMqlEntities": 0,
+     "$listSampledQueries": 0,
+     "$listSearchIndexes": 0,
+     "$listSessions": 0,
+     "$lookup": 0,
+     "$match": 14,
+     "$merge": 0,
+     "$mergeCursors": 0,
+     "$out": 0,
+     "$planCacheStats": 0,
+     "$project": 10,
+     "$querySettings": 0,
+     "$queryStats": 9,
+     "$queue": 0,
+     "$rankFusion": 0,
+     "$redact": 0,
+     "$replaceRoot": 0,
+     "$replaceWith": 0,
+     "$sample": 0,
+     "$score": 0,
+     "$scoreFusion": 0,
+     "$search": 0,
+     "$searchBeta": 0,
+     "$searchMeta": 0,
+     "$set": 1273,
+     "$setMetadata": 0,
+     "$setVariableFromSubPipeline": 0,
+     "$setWindowFields": 0,
+     "$shardedDataDistribution": 0,
+     "$skip": 0,
+     "$sort": 6,
+     "$sortByCount": 0,
+     "$unionWith": 0,
+     "$unset": 1,
+     "$unwind": 0,
+     "$vectorSearch": 0
+    },
+    "changeStreams": {
+     "cursor": {
+      "batchesReturned": 0,
+      "bytesRead": 0,
+      "bytesReturned": 0,
+      "docsExamined": 0,
+      "docsReturned": 0,
+      "lifespan": {
+       "average": 0.0,
+       "totalCount": 0
+      },
+      "totalOpened": 0,
+      "open": {
+       "pinned": 0,
+       "total": 0
+      }
+     },
+     "error": {
+      "nonRetriable": {
+       "bsonObjectTooLarge": 0,
+       "changeStreamFatalError": 0,
+       "changeStreamHistoryLost": 0,
+       "other": 0
+      },
+      "retriable": {
+       "interruptedDueToReplStateChange": 0,
+       "other": 0
+      }
+     },
+     "option": {
+      "ignoreRemovedShards": 0,
+      "matchCollectionUUIDForUpdateLookup": 0,
+      "resumeAfter": 0,
+      "showExpandedEvents": 0,
+      "showMigrationEvents": 0,
+      "showRawUpdateDescription": 0,
+      "showSystemEvents": 0,
+      "startAfter": 0,
+      "startAtOperationTime": 0,
+      "cursor": {
+       "batchSize": {
+        "(-inf, 1)": {
+         "count": 0
+        },
+        "[1, 10)": {
+         "count": 0
+        },
+        "[10, 100)": {
+         "count": 0
+        },
+        "[100, 1000)": {
+         "count": 0
+        },
+        "[1000, 10000)": {
+         "count": 0
+        },
+        "[10000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "maxTimeMS": {
+        "(-inf, 100)": {
+         "count": 0
+        },
+        "[100, 200)": {
+         "count": 0
+        },
+        "[200, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2000)": {
+         "count": 0
+        },
+        "[2000, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 20000)": {
+         "count": 0
+        },
+        "[20000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 200000)": {
+         "count": 0
+        },
+        "[200000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       }
+      },
+      "fullDocument": {
+       "required": 0,
+       "updateLookup": 0,
+       "whenAvailable": 0
+      },
+      "fullDocumentBeforeChange": {
+       "required": 0,
+       "whenAvailable": 0
+      }
+     },
+     "scope": {
+      "cluster": 0,
+      "collection": 0,
+      "db": 0
+     },
+     "updateLookup": {
+      "enrichBatchesStarted": 0,
+      "aggregation": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      },
+      "express": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      },
+      "sbe": {
+       "found": 0,
+       "latencyMicros": {
+        "(-inf, 50)": {
+         "count": 0
+        },
+        "[50, 100)": {
+         "count": 0
+        },
+        "[100, 250)": {
+         "count": 0
+        },
+        "[250, 500)": {
+         "count": 0
+        },
+        "[500, 1000)": {
+         "count": 0
+        },
+        "[1000, 2500)": {
+         "count": 0
+        },
+        "[2500, 5000)": {
+         "count": 0
+        },
+        "[5000, 10000)": {
+         "count": 0
+        },
+        "[10000, 25000)": {
+         "count": 0
+        },
+        "[25000, 50000)": {
+         "count": 0
+        },
+        "[50000, 100000)": {
+         "count": 0
+        },
+        "[100000, 250000)": {
+         "count": 0
+        },
+        "[250000, 500000)": {
+         "count": 0
+        },
+        "[500000, 1000000)": {
+         "count": 0
+        },
+        "[1000000, inf)": {
+         "count": 0
+        },
+        "totalCount": 0
+       },
+       "notFound": 0,
+       "notHandled": 0
+      }
+     }
+    },
+    "commands": {
+     "<UNKNOWN>": 0,
+     "abortTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "aggregate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 911,
+      "withExtension": {
+       "failed": 0,
+       "succeeded": 0
+      }
+     },
+     "analyze": {
+      "failed": 0,
+      "micros": 0,
+      "rejected": 0,
+      "total": 0,
+      "histograms": {
+       "micros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 256,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        }
+       ]
+      }
+     },
+     "analyzeShardKey": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "appendOplogNote": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "applyOps": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "authenticate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "autoSplitVector": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "buildInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 377
+     },
+     "bulkWrite": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "checkShardingIndex": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "cleanupOrphaned": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "cloneCollectionAsCapped": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterAbortTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterAggregate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0,
+      "withExtension": {
+       "failed": 0,
+       "succeeded": 0
+      }
+     },
+     "clusterBulkWrite": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterCommitTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterCount": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterDelete": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterFind": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterGetMore": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterInsert": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "clusterUpdate": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "collMod": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0,
+      "validationLevel": {
+       "constraint": 0,
+       "default": 0,
+       "moderate": 0,
+       "off": 0,
+       "strict": 0
+      },
+      "validator": {
+       "failed": 0,
+       "jsonSchema": 0,
+       "total": 0
+      }
+     },
+     "collStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 22
+     },
+     "commitTransaction": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "configureQueryAnalyzer": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "connPoolStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 369
+     },
+     "connectionStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 4
+     },
+     "convertToCapped": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "count": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "create": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 1,
+      "validationLevel": {
+       "constraint": 0,
+       "default": 0,
+       "moderate": 0,
+       "off": 0,
+       "strict": 0
+      },
+      "validator": {
+       "failed": 0,
+       "jsonSchema": 0,
+       "total": 0
+      }
+     },
+     "createIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 29
+     },
+     "currentOp": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dataSize": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 10377
+     },
+     "dbStats": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 126
+     },
+     "delete": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 21
+     },
+     "distinct": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "drop": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dropDatabase": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "dropIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "endSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 213
+     },
+     "eseRotateActiveKEK": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "explain": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "exportCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "filemd5": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "find": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 3562
+     },
+     "findAndModify": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "flushRouterConfig": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getClusterParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getCmdLineOpts": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 261
+     },
+     "getDatabaseVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getDefaultRWConcern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 91
+     },
+     "getESECMKIdentifierListStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 84
+     },
+     "getESERotateActiveKEKStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getLog": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 64
+     },
+     "getMore": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 4067
+     },
+     "getShardMap": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "getShardVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "grantPrivilegesToRole": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "grantRolesToRole": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "hello": {
+      "failed": 17,
+      "rejected": 0,
+      "total": 6951
+     },
+     "hostInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 68
+     },
+     "importCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "insert": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 169937
+     },
+     "internalRenameIfOptionsAndIndexesMatch": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "isMaster": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 9571
+     },
+     "killAllSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killAllSessionsByPattern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killCursors": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killOp": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "killSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "listCollections": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 58
+     },
+     "listCommands": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 8
+     },
+     "listDatabases": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 14
+     },
+     "listDatabasesForAllTenants": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "listIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 22
+     },
+     "listSearchIndexes": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "lockInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "logout": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "mapReduce": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "oidcListKeys": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "oidcRefreshKeys": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "ping": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 25737
+     },
+     "planCacheClear": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheClearFilters": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheListFilters": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "planCacheSetFilter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "profile": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "reIndex": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "refreshSessions": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "removeQuerySettings": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "renameCollection": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "replSetGetConfig": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 246
+     },
+     "replSetGetStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 7327
+     },
+     "rolesInfo": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "saslContinue": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 538
+     },
+     "saslStart": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 2
+     },
+     "serverStatus": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 17811
+     },
+     "setClusterParameter": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setDefaultRWConcern": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setFeatureCompatibilityVersion": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setQuerySettings": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "setUserWriteBlockMode": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 3
+     },
+     "shardingState": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "startSession": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "top": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 12
+     },
+     "transitionToShardedCluster": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "update": {
+      "arrayFilters": 0,
+      "failed": 0,
+      "pipeline": 920,
+      "rejected": 0,
+      "total": 3016
+     },
+     "updateESECMKIdentifierList": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "validate": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "validateDBMetadata": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     },
+     "whatsmyuri": {
+      "failed": 0,
+      "rejected": 0,
+      "total": 0
+     }
+    },
+    "cursor": {
+     "moreThanOneBatch": 0,
+     "timedOut": 0,
+     "totalOpened": 0,
+     "lifespan": {
+      "greaterThanOrEqual10Minutes": 0,
+      "lessThan10Minutes": 0,
+      "lessThan15Seconds": 0,
+      "lessThan1Minute": 0,
+      "lessThan1Second": 0,
+      "lessThan30Seconds": 0,
+      "lessThan5Seconds": 0
+     },
+     "open": {
+      "multiTarget": 0,
+      "noTimeout": 0,
+      "pinned": 0,
+      "queuedData": 0,
+      "singleTarget": 0,
+      "total": 0
+     }
+    },
+    "disagg": {
+     "oplog": {
+      "totalBytes": 29879758777,
+      "totalEntries": 281676,
+      "uncompressedBytes": 29836249322
+     }
+    },
+    "disaggStorage": {
+     "catalog": {
+      "activeCollectionsAndIndexes": 93
+     },
+     "logicalSize": {
+      "bytesHot": 70805596676,
+      "bytesOplog": 32615769198
+     },
+     "pali": {
+      "baseRateMBPerSec": 0,
+      "bytesRead": 202081757,
+      "bytesWritten": 85125860382,
+      "readOperations": 14455,
+      "throughputUtilization": 5.555152893066406e-06,
+      "writeOperations": 1173168
+     },
+     "replStatus": {
+      "myState": 1
+     }
+    },
+    "document": {
+     "deleted": 173,
+     "inserted": 56069454,
+     "returned": 6881,
+     "updated": 3692
+    },
+    "dotsAndDollarsFields": {
+     "inserts": 0,
+     "updates": 0
+    },
+    "getLastError": {
+     "wtimeouts": 0,
+     "default": {
+      "unsatisfiable": 0,
+      "wtimeouts": 0
+     },
+     "wtime": {
+      "num": 3043,
+      "totalMillis": 37705
+     }
+    },
+    "logging": {
+     "count": 24212
+    },
+    "operatorCounters": {
+     "expressions": {
+      "$abs": 0,
+      "$acos": 0,
+      "$acosh": 0,
+      "$add": 0,
+      "$allElementsTrue": 0,
+      "$and": 10,
+      "$anyElementTrue": 0,
+      "$arrayElemAt": 0,
+      "$arrayToObject": 5,
+      "$asin": 0,
+      "$asinh": 0,
+      "$atan": 0,
+      "$atan2": 0,
+      "$atanh": 0,
+      "$avg": 0,
+      "$binarySize": 0,
+      "$bitAnd": 0,
+      "$bitNot": 0,
+      "$bitOr": 0,
+      "$bitXor": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$bsonSize": 0,
+      "$ceil": 0,
+      "$cmp": 0,
+      "$concat": 5,
+      "$concatArrays": 0,
+      "$cond": 10,
+      "$const": 14,
+      "$convert": 0,
+      "$cos": 0,
+      "$cosh": 0,
+      "$createObjectId": 0,
+      "$createUUID": 0,
+      "$currentDate": 0,
+      "$dateAdd": 0,
+      "$dateDiff": 0,
+      "$dateFromParts": 0,
+      "$dateFromString": 0,
+      "$dateSubtract": 0,
+      "$dateToParts": 0,
+      "$dateToString": 0,
+      "$dateTrunc": 0,
+      "$dayOfMonth": 0,
+      "$dayOfWeek": 0,
+      "$dayOfYear": 0,
+      "$degreesToRadians": 0,
+      "$deserializeEJSON": 0,
+      "$divide": 0,
+      "$eq": 15,
+      "$exp": 0,
+      "$expr": 0,
+      "$filter": 0,
+      "$first": 5,
+      "$firstN": 0,
+      "$floor": 0,
+      "$function": 0,
+      "$getField": 0,
+      "$gt": 0,
+      "$gte": 0,
+      "$hash": 0,
+      "$hexHash": 0,
+      "$hour": 0,
+      "$ifNull": 0,
+      "$in": 0,
+      "$indexOfArray": 0,
+      "$indexOfBytes": 5,
+      "$indexOfCP": 0,
+      "$isArray": 0,
+      "$isNumber": 0,
+      "$isoDayOfWeek": 0,
+      "$isoWeek": 0,
+      "$isoWeekYear": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$let": 0,
+      "$literal": 0,
+      "$ln": 0,
+      "$log": 0,
+      "$log10": 0,
+      "$lt": 5,
+      "$lte": 0,
+      "$ltrim": 0,
+      "$map": 6,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$meta": 0,
+      "$millisecond": 0,
+      "$min": 0,
+      "$minN": 0,
+      "$minute": 0,
+      "$mod": 0,
+      "$month": 0,
+      "$multiply": 0,
+      "$ne": 15,
+      "$not": 0,
+      "$objectToArray": 6,
+      "$or": 5,
+      "$percentile": 0,
+      "$pow": 0,
+      "$radiansToDegrees": 0,
+      "$rand": 0,
+      "$range": 0,
+      "$reduce": 0,
+      "$regexFind": 0,
+      "$regexFindAll": 0,
+      "$regexMatch": 0,
+      "$replaceAll": 0,
+      "$replaceOne": 0,
+      "$reverseArray": 0,
+      "$round": 0,
+      "$rtrim": 0,
+      "$second": 0,
+      "$serializeEJSON": 0,
+      "$setDifference": 0,
+      "$setEquals": 0,
+      "$setField": 0,
+      "$setIntersection": 0,
+      "$setIsSubset": 0,
+      "$setUnion": 0,
+      "$sigmoid": 0,
+      "$similarityCosine": 0,
+      "$similarityDotProduct": 0,
+      "$similarityEuclidean": 0,
+      "$sin": 0,
+      "$sinh": 0,
+      "$size": 0,
+      "$slice": 0,
+      "$sortArray": 0,
+      "$split": 0,
+      "$sqrt": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$strLenBytes": 10,
+      "$strLenCP": 0,
+      "$strcasecmp": 0,
+      "$substr": 0,
+      "$substrBytes": 20,
+      "$substrCP": 0,
+      "$subtract": 10,
+      "$subtype": 0,
+      "$sum": 0,
+      "$switch": 5,
+      "$tan": 0,
+      "$tanh": 0,
+      "$toArray": 0,
+      "$toBool": 0,
+      "$toDate": 0,
+      "$toDecimal": 0,
+      "$toDouble": 0,
+      "$toHashedIndexKey": 0,
+      "$toInt": 0,
+      "$toLong": 0,
+      "$toLower": 0,
+      "$toObject": 0,
+      "$toObjectId": 0,
+      "$toString": 0,
+      "$toUUID": 0,
+      "$toUpper": 0,
+      "$top": 0,
+      "$topN": 0,
+      "$trim": 0,
+      "$trunc": 0,
+      "$tsIncrement": 0,
+      "$tsSecond": 0,
+      "$type": 0,
+      "$unsetField": 0,
+      "$week": 0,
+      "$year": 0,
+      "$zip": 0
+     },
+     "groupAccumulators": {
+      "$accumulator": 0,
+      "$addToSet": 0,
+      "$avg": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$concatArrays": 0,
+      "$count": 0,
+      "$first": 0,
+      "$firstN": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$min": 0,
+      "$minN": 0,
+      "$percentile": 0,
+      "$push": 0,
+      "$setUnion": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$sum": 4,
+      "$top": 0,
+      "$topN": 0
+     },
+     "match": {
+      "$all": 0,
+      "$alwaysFalse": 0,
+      "$alwaysTrue": 0,
+      "$and": 0,
+      "$bitsAllClear": 0,
+      "$bitsAllSet": 0,
+      "$bitsAnyClear": 0,
+      "$bitsAnySet": 0,
+      "$comment": 0,
+      "$elemMatch": 0,
+      "$eq": 3390,
+      "$exists": 0,
+      "$expr": 0,
+      "$geoIntersects": 0,
+      "$geoWithin": 0,
+      "$gt": 6,
+      "$gte": 0,
+      "$in": 9,
+      "$jsonSchema": 0,
+      "$lt": 10,
+      "$lte": 0,
+      "$mod": 0,
+      "$ne": 6,
+      "$near": 0,
+      "$nearSphere": 0,
+      "$nin": 0,
+      "$nor": 0,
+      "$not": 4,
+      "$or": 0,
+      "$regex": 4,
+      "$sampleRate": 0,
+      "$size": 0,
+      "$text": 0,
+      "$type": 0,
+      "$where": 0
+     },
+     "windowAccumulators": {
+      "$addToSet": 0,
+      "$avg": 0,
+      "$bottom": 0,
+      "$bottomN": 0,
+      "$concatArrays": 0,
+      "$count": 0,
+      "$covariancePop": 0,
+      "$covarianceSamp": 0,
+      "$denseRank": 0,
+      "$derivative": 0,
+      "$documentNumber": 0,
+      "$expMovingAvg": 0,
+      "$first": 0,
+      "$firstN": 0,
+      "$integral": 0,
+      "$last": 0,
+      "$lastN": 0,
+      "$linearFill": 0,
+      "$locf": 0,
+      "$max": 0,
+      "$maxN": 0,
+      "$median": 0,
+      "$mergeObjects": 0,
+      "$min": 0,
+      "$minMaxScaler": 0,
+      "$minN": 0,
+      "$percentile": 0,
+      "$push": 0,
+      "$rank": 0,
+      "$setUnion": 0,
+      "$shift": 0,
+      "$stdDevPop": 0,
+      "$stdDevSamp": 0,
+      "$sum": 0,
+      "$top": 0,
+      "$topN": 0
+     }
+    },
+    "query": {
+     "allowDiskUseFalse": 0,
+     "deleteManyCount": 0,
+     "deleteOneNonTargetedShardedCount": 0,
+     "deleteOneTargetedShardedCount": 0,
+     "deleteOneUnshardedCount": 0,
+     "deleteOneWithoutShardKeyWithIdCount": 0,
+     "deleteOneWithoutShardKeyWithIdRetryCount": 0,
+     "externalRetryableWriteCount": 169936,
+     "findAndModifyNonTargetedShardedCount": 0,
+     "findAndModifyTargetedShardedCount": 0,
+     "findAndModifyUnshardedCount": 0,
+     "internalRetryableWriteCount": 0,
+     "nonRetryableDeleteOneWithoutShardKeyWithIdCount": 0,
+     "nonRetryableUpdateOneWithoutShardKeyWithIdCount": 0,
+     "totalSlowQueryLogs": 10313,
+     "updateDeleteManyDocumentsMaxCount": 0,
+     "updateDeleteManyDocumentsTotalCount": 0,
+     "updateDeleteManyDurationMaxMs": 0,
+     "updateDeleteManyDurationTotalMs": 0,
+     "updateManyCount": 0,
+     "updateOneNonTargetedShardedCount": 0,
+     "updateOneOpStyleBroadcastWithExactIDCount": 0,
+     "updateOneTargetedShardedCount": 0,
+     "updateOneUnshardedCount": 0,
+     "updateOneWithoutShardKeyWithIdCount": 0,
+     "updateOneWithoutShardKeyWithIdRetryCount": 0,
+     "aggregation": {
+      "nonTicketed": {
+       "intervals": 0,
+       "maxMillis": 0,
+       "queries": 0,
+       "totalMillis": 0
+      }
+     },
+     "bucketAuto": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "cbr": {
+      "choseWinningPlan": 0,
+      "count": 0,
+      "micros": 0,
+      "numPlans": 0,
+      "numPlansFailedCostEstimation": 0,
+      "numPlansTiedCostEstimation": 0,
+      "samplingMicros": 0,
+      "histograms": {
+       "micros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ],
+       "numPlans": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 2,
+         "count": 0
+        },
+        {
+         "lowerBound": 4,
+         "count": 0
+        },
+        {
+         "lowerBound": 8,
+         "count": 0
+        },
+        {
+         "lowerBound": 16,
+         "count": 0
+        },
+        {
+         "lowerBound": 32,
+         "count": 0
+        }
+       ],
+       "samplingMicros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ]
+      }
+     },
+     "expressionSimplifier": {
+      "abortedTooLarge": 0,
+      "notSimplified": 895,
+      "simplified": 0,
+      "trivial": 3555
+     },
+     "geoNear": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "graphLookup": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "group": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "hashJoin": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "lookup": {
+      "dynamicIndexedLoopJoin": 0,
+      "hashLookup": 0,
+      "hashLookupSpillToDisk": 0,
+      "hashLookupSpillToDiskBytes": 0,
+      "hashLookupSpilledBytes": 0,
+      "hashLookupSpilledDataStorageSize": 0,
+      "hashLookupSpilledRecords": 0,
+      "hashLookupSpills": 0,
+      "indexedLoopJoin": 0,
+      "nestedLoopJoin": 0
+     },
+     "lookupUnwind": {
+      "dynamicIndexedLoopJoin": 0,
+      "hashLookup": 0,
+      "indexedLoopJoin": 0,
+      "localCollscan": 0,
+      "localComplex": 0,
+      "localIxscanFetch": 0,
+      "nestedLoopJoin": 0
+     },
+     "maxEstimatedScanBytes": {
+      "dryRunWouldReject": 0,
+      "rejected": 0,
+      "rejectedAndOverridden": 0
+     },
+     "multiPlanner": {
+      "allPlansHitMemoryLimit": 0,
+      "choseWinningPlan": 0,
+      "classicCount": 0,
+      "classicMicros": 0,
+      "classicNumPlans": 0,
+      "classicWorks": 0,
+      "switchedToBackupPlan": 0,
+      "histograms": {
+       "classicMicros": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 65536,
+         "count": 0
+        },
+        {
+         "lowerBound": 262144,
+         "count": 0
+        },
+        {
+         "lowerBound": 1048576,
+         "count": 0
+        },
+        {
+         "lowerBound": 4194304,
+         "count": 0
+        },
+        {
+         "lowerBound": 16777216,
+         "count": 0
+        },
+        {
+         "lowerBound": 67108864,
+         "count": 0
+        },
+        {
+         "lowerBound": 268435456,
+         "count": 0
+        },
+        {
+         "lowerBound": 1073741824,
+         "count": 0
+        }
+       ],
+       "classicNumPlans": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 2,
+         "count": 0
+        },
+        {
+         "lowerBound": 4,
+         "count": 0
+        },
+        {
+         "lowerBound": 8,
+         "count": 0
+        },
+        {
+         "lowerBound": 16,
+         "count": 0
+        },
+        {
+         "lowerBound": 32,
+         "count": 0
+        }
+       ],
+       "classicWorks": [
+        {
+         "lowerBound": 0,
+         "count": 0
+        },
+        {
+         "lowerBound": 128,
+         "count": 0
+        },
+        {
+         "lowerBound": 256,
+         "count": 0
+        },
+        {
+         "lowerBound": 512,
+         "count": 0
+        },
+        {
+         "lowerBound": 1024,
+         "count": 0
+        },
+        {
+         "lowerBound": 2048,
+         "count": 0
+        },
+        {
+         "lowerBound": 4096,
+         "count": 0
+        },
+        {
+         "lowerBound": 8192,
+         "count": 0
+        },
+        {
+         "lowerBound": 16384,
+         "count": 0
+        },
+        {
+         "lowerBound": 32768,
+         "count": 0
+        }
+       ]
+      },
+      "rateLimiter": {
+       "allowed": 0,
+       "delayed": 0,
+       "released": 0
+      },
+      "stoppingCondition": {
+       "hitEof": 0,
+       "hitResultsLimit": 0,
+       "hitWorksLimit": 0
+      }
+     },
+     "planCache": {
+      "totalQueryShapes": 0,
+      "totalSizeEstimateBytes": 0,
+      "classic": {
+       "cached_plans_evicted": 0,
+       "hits": 0,
+       "inactive_cached_plans_replaced": 0,
+       "misses": 704,
+       "replanned": 0,
+       "replanned_plan_is_cached_plan": 0,
+       "skipped": 3639
+      },
+      "join": {
+       "hits": 0,
+       "invalidations": 0,
+       "misses": 0
+      },
+      "sbe": {
+       "cached_plans_evicted": 0,
+       "hits": 0,
+       "inactive_cached_plans_replaced": 0,
+       "misses": 0,
+       "replanned": 0,
+       "replanned_plan_is_cached_plan": 0,
+       "skipped": 0
+      }
+     },
+     "planning": {
+      "invocationCount": 998,
+      "fastPath": {
+       "express": 686,
+       "idHack": 6958
+      }
+     },
+     "queryFramework": {
+      "aggregate": {
+       "classicHybrid": 1,
+       "classicOnly": 910,
+       "sbeHybrid": 0,
+       "sbeOnly": 0
+      },
+      "find": {
+       "classic": 3562,
+       "sbe": 0
+      }
+     },
+     "setWindowFields": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     },
+     "sort": {
+      "spillToDisk": 0,
+      "spillToDiskBytes": 0,
+      "totalBytesSorted": 186003,
+      "totalKeysSorted": 109
+     },
+     "spilling": {
+      "fileSpilledStorageSize": 0
+     },
+     "subPlanner": {
+      "classicChoseWinningPlan": 0
+     },
+     "textOr": {
+      "spilledBytes": 0,
+      "spilledDataStorageSize": 0,
+      "spilledRecords": 0,
+      "spills": 0
+     }
+    },
+    "queryExecutor": {
+     "scanned": 7014,
+     "scannedObjects": 10476,
+     "collectionScans": {
+      "nonTailable": 191,
+      "total": 191
+     }
+    },
+    "queryStats": {
+     "maxSizeBytes": 81445437,
+     "numEntries": 29,
+     "numEvicted": 0,
+     "numHmacApplicationErrors": 0,
+     "numPartitions": 5,
+     "numQueryStatsStoreWriteErrors": 0,
+     "numRateLimitedRequests": 180578,
+     "numTopKOptimizations": 5,
+     "queryStatsStoreSizeEstimateBytes": 72342
+    },
+    "timeseries": {
+     "directDeleted": 0,
+     "directUpdated": 0,
+     "measurementDelete": 0,
+     "measurementUpdate": 0,
+     "metaDelete": 0,
+     "metaUpdate": 0
+    },
+    "ttl": {
+     "deletedDocuments": 32,
+     "deletedKeys": 64,
+     "durationMicros": 74739,
+     "examinedDocuments": 32,
+     "examinedKeys": 32,
+     "invalidTTLIndexSkips": 0,
+     "lowPriorityTicketAdmissions": 0,
+     "passes": 50,
+     "queuedForTickets": 0,
+     "subPasses": 50,
+     "ticketAdmissions": 200,
+     "timeProcessingWithTicketsMicros": 78722,
+     "timeQueuedForTicketsMicros": 682096
+    }
+   },
+   "ok": 1.0,
+   "$clusterTime": {
+    "clusterTime": {
+     "$timestamp": {
+      "t": 1793894777,
+      "i": 1
+     }
+    },
+    "signature": {
+     "hash": {
+      "$binary": {
+       "base64": "WDXiOxR8yJMaN71nRGMuI/CD11I=",
+       "subType": "00"
+      }
+     },
+     "keyId": 7704230336049184770
+    }
+   },
+   "operationTime": {
+    "$timestamp": {
+     "t": 1793894777,
+     "i": 1
+    }
+   }
+  }
+ }
+]

@@ -1,0 +1,31 @@
+{
+ "passi": 9,
+ "errori": 0,
+ "macchina_mai_limite": true,
+ "esiti": [
+  {
+   "k": 2,
+   "tipo": "giro",
+   "etichetta": "passo_02_m10s",
+   "rc": 0,
+   "fasi": {
+    "grandi_carica": [
+     "2026-11-05T16:06:18.362864Z",
+     "2026-11-05T16:06:18.451890Z"
+    ]
+   }
+  },
+  {
+   "k": 6,
+   "tipo": "giro",
+   "etichetta": "passo_06_m30s",
+   "rc": 0,
+   "fasi": {
+    "grandi_carica": [
+     "2026-11-05T16:06:18.362657Z",
+     "2026-11-05T16:06:18.448897Z"
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{
+ "nome": "carica_2kb",
+ "cartella": "/opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T160618Z",
+ "versione": "p1-1.6.2",
+ "fasi": {
+  "grandi_carica": [
+   {
+    "inizio": "2026-11-05T16:06:18.362657Z",
+    "sessione": "20261105T160618Z",
+    "file": "fase_16_grandi_carica.json",
+    "stato": "fatta",
+    "fine": "2026-11-05T16:06:18.448897Z"
+   }
+  ]
+ },
+ "sessioni": [
+  {
+   "inizio": "2026-11-05T16:06:18.339266Z",
+   "fasi_chieste": [
+    "grandi_carica"
+   ]
+  }
+ ]
+}

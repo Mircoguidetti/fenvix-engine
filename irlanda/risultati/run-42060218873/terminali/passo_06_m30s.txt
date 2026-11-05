@@ -1,0 +1,24 @@
+===== 2026-11-05T16:06:18.027155Z prova_infinite.py giro --file risultati_p1.json --cartella-dati /opt/irlanda/lavoro/dati/m30s --db app_data_4 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+Giro finale 'carica_2kb' (versione p1-1.6.2). Clienti attivi mai letti 1730, dormienti mai letti 1649.
+Il piano usa 0 clienti attivi mai letti su 1730 e 0 dormienti su 1649 (ogni cliente in una sola fase).
+Ordine delle fasi e minuti STIMATI (pausa di 2 minuti compresa dove c'e'):
+   1. grandi_carica      0.5 min  (a   0.5)
+Totale STIMATO: circa 0 minuti (0.0 ore), piu' circa 6 se la collezione fredda e' accettata.
+[16:06:18] Dati grezzi in: /opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T160618Z
+[16:06:18] ===== grandi_carica (fase 1 di 1; STIMATO 0.5 minuti) =====
+[16:06:18] FASE grandi_carica INIZIO 16:06:18 ora del Mac (2026-11-05T16:06:18Z)
+[16:06:18]   events_large gia' caricata (1.223 GiB): salto il caricamento.
+[16:06:18] FASE grandi_carica FINE 16:06:18 ora del Mac (2026-11-05T16:06:18Z)
+
+=== RIASSUNTO DEL GIRO FINALE 'carica_2kb' (dai dati grezzi; si rifa' con: riassunto --cartella /opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T160618Z) ===
+=== FASE grandi_carica: 2026-11-05T16:06:18.401475Z - 2026-11-05T16:06:18.401518Z UTC
+
+Stato delle fasi:
+  grandi_carica    fatta      fase_16_grandi_carica.json 
+
+Fasi non riuscite: atlas_inizio, inizio, Q2, Q3, Q1, Q1d, Q4, Q5, spiega, condizioni, mentre_scrivi, parallelo, carico_massimo, scritture, cancellazione, grandi_lavaggio, grandi_Q2, grandi_Q1, grandi_Q3, grandi_Q4, freddo, fine, atlas_fine. Si rifanno una per una con:  python3 prova_infinite.py giro --solo-fasi atlas_inizio,inizio,Q2,Q3,Q1,Q1d,Q4,Q5,spiega,condizioni,mentre_scrivi,parallelo,carico_massimo,scritture,cancellazione,grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4,freddo,fine,atlas_fine
+
+=== NUMERI DERIVATI (STIMATI, solo dai dati grezzi; dettaglio in RIASSUNTO.json) ===
+  grandi_carica: CPU 101.0% di un core, us per lettura None, per scrittura None
+
+Cartella: /opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T160618Z (6 file, elencati con SHA-256 in INDICE.json)

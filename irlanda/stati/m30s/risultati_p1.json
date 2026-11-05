@@ -8559,30 +8559,6 @@
    "altri": 1.0
   }
  },
- "giro_finale": {
-  "nome": "carica_2kb",
-  "cartella": "/opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T155224Z",
-  "versione": "p1-1.6.2",
-  "fasi": {
-   "grandi_carica": [
-    {
-     "inizio": "2026-11-05T15:52:24.572676Z",
-     "sessione": "20261105T155224Z",
-     "file": "fase_16_grandi_carica.json",
-     "stato": "fatta",
-     "fine": "2026-11-05T15:53:40.956929Z"
-    }
-   ]
-  },
-  "sessioni": [
-   {
-    "inizio": "2026-11-05T15:52:24.554156Z",
-    "fasi_chieste": [
-     "grandi_carica"
-    ]
-   }
-  ]
- },
  "grandi": {
   "collezione": "events_large",
   "clienti": 1320,
@@ -9915,5 +9891,53 @@
   "fine": "2026-11-05T15:53:40.888395Z"
  },
  "usati": [],
- "usati_grandi": []
+ "usati_grandi": [],
+ "giro_finale_prima_passo_6": {
+  "nome": "carica_2kb",
+  "cartella": "/opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T155224Z",
+  "versione": "p1-1.6.2",
+  "fasi": {
+   "grandi_carica": [
+    {
+     "inizio": "2026-11-05T15:52:24.572676Z",
+     "sessione": "20261105T155224Z",
+     "file": "fase_16_grandi_carica.json",
+     "stato": "fatta",
+     "fine": "2026-11-05T15:53:40.956929Z"
+    }
+   ]
+  },
+  "sessioni": [
+   {
+    "inizio": "2026-11-05T15:52:24.554156Z",
+    "fasi_chieste": [
+     "grandi_carica"
+    ]
+   }
+  ]
+ },
+ "giro_finale": {
+  "nome": "carica_2kb",
+  "cartella": "/opt/irlanda/lavoro/dati/m30s/giro_finale_carica_2kb_20261105T160618Z",
+  "versione": "p1-1.6.2",
+  "fasi": {
+   "grandi_carica": [
+    {
+     "inizio": "2026-11-05T16:06:18.362657Z",
+     "sessione": "20261105T160618Z",
+     "file": "fase_16_grandi_carica.json",
+     "stato": "fatta",
+     "fine": "2026-11-05T16:06:18.448897Z"
+    }
+   ]
+  },
+  "sessioni": [
+   {
+    "inizio": "2026-11-05T16:06:18.339266Z",
+    "fasi_chieste": [
+     "grandi_carica"
+    ]
+   }
+  ]
+ }
 }
