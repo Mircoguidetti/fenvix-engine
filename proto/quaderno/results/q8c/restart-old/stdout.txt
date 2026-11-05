@@ -1,0 +1,9 @@
+round 0 A quiet: kill leader 0 + follower 1 FAIL C=36324 recovered={0: 31718, 1: 31718} commit_after=36324 leader=1 panics=[] segments_before={0: 12, 1: 12, 2: 12}
+round 0 A2 quiet: kill both followers [0, 2] FAIL C=68042 recovered={0: 63431, 2: 63946} commit_after=68042 leader=1 panics=[] segments_before={0: 12, 1: 11, 2: 12}
+round 0 B under load: kill leader 1 + follower 2 FAIL commit_before_kill=68042 converged_commit=None panics=[] last={0: 63431, 1: 105121, 2: 105121}
+round 0 C quiet: kill all three NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [141430, 141430, 141430], "2": [141430, 141430, 141430]}
+round 1 A quiet: kill leader 2 + follower 0 NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [176729, 176729, 176729], "2": [176729, 176729, 176729]}
+round 1 A2 quiet: kill both followers [0, 1] NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [212976, 212976, 212976], "2": [212976, 212976, 212976]}
+round 1 B under load: kill leader 2 + follower 1 FAIL commit_before_kill=230926 converged_commit=None panics=[] last={0: 63431, 1: 267321, 2: 267321}
+round 1 C quiet: kill all three NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [303645, 303645, 303645], "2": [303645, 303645, 303645]}
+RESULT SOME FAIL

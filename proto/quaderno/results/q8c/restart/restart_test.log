@@ -1,0 +1,52 @@
+corsie restart t=5s inviati 14994 confermati(misura) 14970 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36015 confermati(misura) 36015 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 A quiet: kill leader 0 + follower 1 PASS C=36336 recovered={0: 36336, 1: 36336} commit_after=36337 leader=0 panics=[] segments_before={0: 12, 1: 12, 2: 12}
+corsie restart t=5s inviati 14999 confermati(misura) 14994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30000 confermati(misura) 30000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36003 confermati(misura) 36003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 A2 quiet: kill both followers [1, 2] PASS C=72660 recovered={1: 72660, 2: 72660} commit_after=72660 leader=0 panics=[] segments_before={0: 12, 1: 12, 2: 12}
+corsie restart t=5s inviati 14998 confermati(misura) 14996 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30003 confermati(misura) 29998 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 56
+corsie restart t=15s inviati 45006 confermati(misura) 45004 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 56
+corsie restart t=20s inviati 54009 confermati(misura) 54009 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 56
+round 0 B under load: kill leader 0 + follower 2 PASS commit_before_kill=90642 converged_commit=127107 panics=[] last={0: 127107, 1: 127107, 2: 127107}
+corsie restart t=5s inviati 14998 confermati(misura) 14994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29985 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36000 confermati(misura) 36000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 C quiet: kill all three PASS C=163427 recovered={0: 163427, 1: 163427, 2: 163427} commit_after=163428 leader=2 panics=[] segments_before={0: 11, 1: 11, 2: 11}
+corsie restart t=5s inviati 14997 confermati(misura) 14995 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29996 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36006 confermati(misura) 36006 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 A quiet: kill leader 2 + follower 0 PASS C=199754 recovered={2: 199754, 0: 199754} commit_after=199755 leader=2 panics=[] segments_before={0: 11, 1: 11, 2: 11}
+corsie restart t=5s inviati 14997 confermati(misura) 14996 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 30000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36006 confermati(misura) 36006 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 A2 quiet: kill both followers [0, 1] PASS C=236081 recovered={0: 236081, 1: 236081} commit_after=236081 leader=2 panics=[] segments_before={0: 12, 1: 12, 2: 12}
+corsie restart t=5s inviati 14998 confermati(misura) 14997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29997 confermati(misura) 29949 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45013 confermati(misura) 45012 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=20s inviati 54006 confermati(misura) 54006 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 B under load: kill leader 2 + follower 1 PASS commit_before_kill=254070 converged_commit=290531 panics=[] last={0: 290531, 1: 290531, 2: 290531}
+corsie restart t=5s inviati 14994 confermati(misura) 14994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30000 confermati(misura) 29994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36003 confermati(misura) 36003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 C quiet: kill all three PASS C=326856 recovered={0: 326856, 1: 326856, 2: 326856} commit_after=326857 leader=0 panics=[] segments_before={0: 12, 1: 12, 2: 11}
+corsie restart t=5s inviati 14999 confermati(misura) 14997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36000 confermati(misura) 36000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 2 A quiet: kill leader 0 + follower 1 PASS C=363177 recovered={0: 363177, 1: 363177} commit_after=363178 leader=1 panics=[] segments_before={0: 12, 1: 12, 2: 11}
+corsie restart t=5s inviati 14994 confermati(misura) 14994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29999 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36009 confermati(misura) 36009 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 2 A2 quiet: kill both followers [0, 2] PASS C=399507 recovered={0: 399507, 2: 399507} commit_after=399507 leader=1 panics=[] segments_before={0: 11, 1: 11, 2: 12}
+corsie restart t=5s inviati 14998 confermati(misura) 14994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29998 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45004 confermati(misura) 45000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=20s inviati 54003 confermati(misura) 54003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 2 B under load: kill leader 1 + follower 2 PASS commit_before_kill=417531 converged_commit=453928 panics=[] last={0: 453928, 1: 453928, 2: 453928}
+corsie restart t=5s inviati 14998 confermati(misura) 14988 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30013 confermati(misura) 30011 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36006 confermati(misura) 36006 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 2 C quiet: kill all three PASS C=490254 recovered={0: 490254, 1: 490254, 2: 490254} commit_after=490255 leader=0 panics=[] segments_before={0: 11, 1: 12, 2: 12}
+RESULT ALL PASS

@@ -22,6 +22,10 @@ PQ = os.environ.get('PQ_BIN') or os.path.join(HERE, '..', 'target', 'release', '
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 MINIO = os.environ.get('MINIO', '/root/pq-tools/bin/minio')
 N = 3
+# Q8c: several logs per cell on one machine: group g uses PQ_WORK/g{g} and ports shifted by PQ_PORT_OFF (1000*g);
+# PQ_PREF = preferred leader of the group (the other two replicas wait PQ_PREF_DELAY_MS more before their first vote)
+OFF = int(os.environ.get('PQ_PORT_OFF', '0'))
+PREF = os.environ.get('PQ_PREF')
 
 
 def routes():
@@ -29,9 +33,9 @@ def routes():
     for a in range(N):
         for b in range(N):
             if a != b:
-                r.append({'name': f'r{a}->r{b}', 'listen': f'127.0.0.1:{7300 + 10 * a + b}', 'target': f'127.0.0.1:{7100 + b}'})
+                r.append({'name': f'r{a}->r{b}', 'listen': f'127.0.0.1:{OFF + 7300 + 10 * a + b}', 'target': f'127.0.0.1:{OFF + 7100 + b}'})
     for i in range(N):
-        r.append({'name': f'c->r{i}', 'listen': f'127.0.0.1:{7400 + i}', 'target': f'127.0.0.1:{7200 + i}'})
+        r.append({'name': f'c->r{i}', 'listen': f'127.0.0.1:{OFF + 7400 + i}', 'target': f'127.0.0.1:{OFF + 7200 + i}'})
     return r
 
 
@@ -74,14 +78,15 @@ def spawn(name, args, log):
 def replica_args(i, cfg):
     if cfg.get('no_proxy'):
         # giro 4: repliche collegate direttamente, senza proxy (prove di velocità e di CPU)
-        peers = ','.join(f'{b}=127.0.0.1:{7100 + b}' for b in range(N) if b != i)
+        peers = ','.join(f'{b}=127.0.0.1:{OFF + 7100 + b}' for b in range(N) if b != i)
     else:
-        peers = ','.join(f'{b}=127.0.0.1:{7300 + 10 * i + b}' for b in range(N) if b != i)
-    return [PQ, 'replica', '--id', str(i), '--dir', os.path.join(WORK, f'r{i}'), '--peer-listen', f'127.0.0.1:{7100 + i}',
-            '--client-listen', f'127.0.0.1:{7200 + i}', '--peers', peers, '--mem-cap-mb', str(cfg.get('mem_cap_mb', 4096)),
+        peers = ','.join(f'{b}=127.0.0.1:{OFF + 7300 + 10 * i + b}' for b in range(N) if b != i)
+    return [PQ, 'replica', '--id', str(i), '--dir', os.path.join(WORK, f'r{i}'), '--peer-listen', f'127.0.0.1:{OFF + 7100 + i}',
+            '--client-listen', f'127.0.0.1:{OFF + 7200 + i}', '--peers', peers, '--mem-cap-mb', str(cfg.get('mem_cap_mb', 4096)),
             '--window-ms', str(cfg.get('window_ms', 60000)), '--disk-soft-mb', str(cfg.get('disk_soft_mb', 0)),
             '--disk-hard-mb', str(cfg.get('disk_hard_mb', 0)), '--disk-ro-mb', str(cfg.get('disk_ro_mb', 0)),
-            '--alarm-s', str(cfg.get('alarm_s', 120))]
+            '--alarm-s', str(cfg.get('alarm_s', 120)), '--seg-mb', os.environ.get('PQ_SEG_MB', '64'),
+            '--first-elect-delay-ms', os.environ.get('PQ_PREF_DELAY_MS', '3000') if PREF is not None and int(PREF) != i else '0']
 
 
 def start_replica(i):
@@ -89,7 +94,7 @@ def start_replica(i):
     cfg = p.get('cfg', {})
     p[f'r{i}'] = spawn(f'r{i}', replica_args(i, cfg), f'r{i}.log')
     save(p)
-    wait_port(7200 + i)
+    wait_port(OFF + 7200 + i)
 
 
 def ctl(m):
@@ -107,7 +112,7 @@ def base_ctl():
 
 
 def status():
-    out = subprocess.run([PQ, 'status'], capture_output=True, text=True, timeout=20).stdout
+    out = subprocess.run([PQ, 'status', '--replicas', ','.join(f'127.0.0.1:{OFF + 7200 + i}' for i in range(N))], capture_output=True, text=True, timeout=20).stdout
     return [json.loads(l) for l in out.splitlines() if l.strip()]
 
 
@@ -148,7 +153,7 @@ def main():
         ctl(bc)
         p['proxy'] = spawn('proxy', [PQ, 'proxy', '--routes', os.path.join(WORK, 'routes.json'), '--ctl', os.path.join(WORK, 'ctl.json')], 'proxy.log')
         save(p)
-        wait_port(7301)
+        wait_port(OFF + 7301)
         for i in range(N):
             start_replica(i)
         print('leader', leader())

@@ -189,6 +189,8 @@ pub fn spawn_disk(
         .spawn(move || {
             crate::node::set_thread_nice(-10);
             let mut cur: Option<(u32, File)> = None;
+            // end of the last frame written in the current segment (Q8c: tail zeroing on segment switch)
+            let mut cur_end: u64 = 0;
             let mut buf: Vec<u8> = Vec::with_capacity(4 << 20);
             while let Ok(first) = rx.recv() {
                 let mut ops = vec![first];
@@ -205,17 +207,27 @@ pub fn spawn_disk(
                         DiskOp::Append { seg, off, data, last, gen } => {
                             if cur.as_ref().map(|c| c.0) != Some(seg) {
                                 if let Some((_, f)) = cur.take() {
+                                    // Q8c: zero the tail after the last frame of the segment we leave (a recycled
+                                    // segment still has stale bytes there), before its fdatasync and before any byte
+                                    // of the next segment is written: on disk only the last segment can have a dirty tail
+                                    let flen = f.metadata().map(|m| m.len()).unwrap_or(0);
+                                    if recycle_on() && cur_end > 0 && flen > cur_end {
+                                        zero_range(&f, cur_end, flen - cur_end).expect("tail zeroing");
+                                        dirty = true;
+                                    }
                                     if dirty {
                                         f.sync_data().expect("fdatasync");
                                     }
                                 }
                                 cur = Some((seg, open_segment(&dir, seg, seg_bytes)));
+                                cur_end = 0;
                             }
                             buf.clear();
                             for d in &data {
                                 buf.extend_from_slice(d);
                             }
                             cur.as_mut().unwrap().1.write_all_at(&buf, off).expect("scrittura registro");
+                            cur_end = off + buf.len() as u64;
                             dirty = true;
                             last_done = Some((gen, last));
                         }
@@ -228,6 +240,7 @@ pub fn spawn_disk(
                                     dirty = false;
                                 }
                             }
+                            cur_end = 0;
                             // cancella i segmenti dopo `seg`
                             if let Ok(rd) = std::fs::read_dir(&dir) {
                                 for e in rd.flatten() {
@@ -350,16 +363,37 @@ pub fn recover(dir: &Path) -> std::io::Result<(Vec<Recovered>, u32, u64)> {
         }
         let f = OpenOptions::new().write(true).open(seg_path(dir, s))?;
         let len = data.len() as u64;
-        // dopo l'ultimo frame valido: deve essere tutto zero (un frame strappato o vecchio non deve riapparire)
+        // After the last valid frame everything must be zero (a torn or stale frame must never reappear).
         if data[p..].iter().any(|b| *b != 0) {
             zero_range(&f, p as u64, len - p as u64)?;
             f.sync_all()?;
-            stop = true;
+            // Q8c fix (recycling bug found by the Q8b reviewer): a recycled segment that is NOT the last one can hold
+            // stale bytes after its last valid frame (the leader moved to the next segment because the next entry did
+            // not fit). Non-last segments are always complete (the disk thread syncs a segment before opening the
+            // next one), so the stale tail is not the end of the log when the next segment continues the indices.
+            // Only stop (and drop the later segments) when the next segment does not continue the log.
+            let next = segs.iter().copied().find(|x| *x > s);
+            if !next.map(|n| continues(dir, n, out.last().map(|r| (r.entry.index, r.entry.term)))).unwrap_or(false) {
+                stop = true;
+            }
         }
         last_seg = s;
         last_len = p as u64;
     }
     Ok((out, last_seg, last_len))
+}
+
+/// True when the first frame of segment `n` is a valid entry that continues the log after `prev` (index + 1, term
+/// not lower). With no previous entry (everything before was checkpointed away) any valid first frame continues.
+fn continues(dir: &Path, n: u32, prev: Option<(u64, u64)>) -> bool {
+    let Ok(data) = std::fs::read(seg_path(dir, n)) else { return false };
+    match read_frame(&data) {
+        FrameRead::Ok(_, end) => match Entry::decode(Bytes::copy_from_slice(&data[..end])) {
+            Ok(e) => prev.map(|(i, t)| e.index == i + 1 && e.term >= t).unwrap_or(true),
+            Err(_) => false,
+        },
+        _ => false,
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Default)]
@@ -472,5 +506,86 @@ mod tests_riciclo {
         let _ = std::fs::remove_dir_all(&dir);
         assert_eq!(last, 4, "il segmento 4 (voci durevoli e confermate) deve sopravvivere");
         assert_eq!(idx, (401..=650).collect::<Vec<_>>());
+    }
+    /// Q8c: several recycled segments in a row, none of them the last one, each with stale old entries in its tail.
+    /// Recovery keeps every entry, twice in a row (the first recovery zeroes the stale tails).
+    #[test]
+    fn q8c_many_recycled_segments_not_last() {
+        let seg_bytes = 256 << 10;
+        let dir = std::env::temp_dir().join(format!("pq-q8c-many-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let spare = dir.join("spare.log");
+        let mut next = 1001u64;
+        for seg in 3..=7u32 {
+            // an old full segment (indices far below the log start) becomes the spare, then segment `seg`
+            write_seg(&dir, 90 + seg, 1, 230, seg_bytes);
+            recycle(&seg_path(&dir, 90 + seg), &spare, &dir, seg_bytes).unwrap();
+            std::fs::rename(&spare, seg_path(&dir, seg)).unwrap();
+            // fewer new entries than the old ones: stale entries remain after the last valid frame
+            let n = 150 + (seg as u64 * 7) % 40;
+            write_seg(&dir, seg, next, next + n - 1, seg_bytes);
+            next += n;
+        }
+        for round in 0..2 {
+            let (v, last, _) = recover(&dir).unwrap();
+            let idx: Vec<u64> = v.iter().map(|r| r.entry.index).collect();
+            assert_eq!(last, 7, "round {round}: the last segment must survive");
+            assert_eq!(idx, (1001..next).collect::<Vec<_>>(), "round {round}: no confirmed entry lost, no stale entry back");
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Q8c: a stale tail followed by a segment that does NOT continue the indices is still the end of the log
+    /// (the old safety rule is kept: later segments are dropped).
+    #[test]
+    fn q8c_gap_after_dirty_tail_still_stops() {
+        let seg_bytes = 256 << 10;
+        let dir = std::env::temp_dir().join(format!("pq-q8c-gap-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let spare = dir.join("spare.log");
+        write_seg(&dir, 9, 1, 230, seg_bytes);
+        recycle(&seg_path(&dir, 9), &spare, &dir, seg_bytes).unwrap();
+        std::fs::rename(&spare, seg_path(&dir, 3)).unwrap();
+        write_seg(&dir, 3, 401, 600, seg_bytes);
+        // segment 4 starts at 700: a hole of 99 entries, not a continuation
+        write_seg(&dir, 4, 700, 720, seg_bytes);
+        let (v, last, _) = recover(&dir).unwrap();
+        let idx: Vec<u64> = v.iter().map(|r| r.entry.index).collect();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(idx, (401..=600).collect::<Vec<_>>());
+        assert_eq!(last, 3);
+    }
+
+    /// Q8c: the disk thread itself, with recycling on. A dirty spare becomes segment 1; the log moves to segment 2
+    /// before segment 1 is full. The tail of segment 1 must be zero on disk (written before segment 2), and recovery
+    /// must return every entry.
+    #[test]
+    fn q8c_disk_thread_zeroes_tail_on_switch() {
+        std::env::set_var("PQ_RICICLA", "1");
+        let seg_bytes = 256 << 10;
+        let dir = std::env::temp_dir().join(format!("pq-q8c-disk-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let spare = dir.join("spare.log");
+        write_seg(&dir, 50, 1, 230, seg_bytes);
+        recycle(&seg_path(&dir, 50), &spare, &dir, seg_bytes).unwrap();
+        let (tx, rx) = crossbeam_channel::unbounded();
+        let (dtx, drx) = crossbeam_channel::unbounded::<u64>();
+        spawn_disk(dir.clone(), rx, seg_bytes, move |_, l| { let _ = dtx.send(l); }, Vec::new);
+        let a: Vec<Bytes> = (1001..=1100).map(ent).collect();
+        let end1: u64 = a.iter().map(|b| b.len() as u64).sum();
+        tx.send(DiskOp::Append { seg: 1, off: 0, data: a, last: 1100, gen: 0 }).unwrap();
+        while drx.recv().unwrap() < 1100 {}
+        let b: Vec<Bytes> = (1101..=1150).map(ent).collect();
+        tx.send(DiskOp::Append { seg: 2, off: 0, data: b, last: 1150, gen: 0 }).unwrap();
+        while drx.recv().unwrap() < 1150 {}
+        let d1 = std::fs::read(seg_path(&dir, 1)).unwrap();
+        assert!(d1[end1 as usize..].iter().all(|x| *x == 0), "stale tail of segment 1 not zeroed");
+        drop(tx);
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        let (v, last, _) = recover(&dir).unwrap();
+        let idx: Vec<u64> = v.iter().map(|r| r.entry.index).collect();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(last, 2);
+        assert_eq!(idx, (1001..=1150).collect::<Vec<_>>());
     }
 }

@@ -1,0 +1,35 @@
+corsie restart t=5s inviati 14999 confermati(misura) 14997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29998 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36003 confermati(misura) 36003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 A quiet: kill leader 0 + follower 1 FAIL C=36324 recovered={0: 31718, 1: 31718} commit_after=36324 leader=1 panics=[] segments_before={0: 12, 1: 12, 2: 12}
+corsie restart t=5s inviati 14998 confermati(misura) 14991 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30003 confermati(misura) 30000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36003 confermati(misura) 36003 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 A2 quiet: kill both followers [0, 2] FAIL C=68042 recovered={0: 63431, 2: 63946} commit_after=68042 leader=1 panics=[] segments_before={0: 12, 1: 11, 2: 12}
+corsie restart t=5s inviati 14997 confermati(misura) 0 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29994 confermati(misura) 16489 rifiutati 0 ignoti 13456 scartati 0 rifiuti_freno 25
+corsie restart t=15s inviati 45013 confermati(misura) 31526 rifiutati 0 ignoti 13456 scartati 0 rifiuti_freno 25
+corsie restart t=20s inviati 54009 confermati(misura) 40553 rifiutati 0 ignoti 13456 scartati 0 rifiuti_freno 25
+round 0 B under load: kill leader 1 + follower 2 FAIL commit_before_kill=68042 converged_commit=None panics=[] last={0: 63431, 1: 105121, 2: 105121}
+corsie restart t=5s inviati 14997 confermati(misura) 14995 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30001 confermati(misura) 29997 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 36006 confermati(misura) 36006 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 0 C quiet: kill all three NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [141430, 141430, 141430], "2": [141430, 141430, 141430]}
+corsie restart t=5s inviati 14998 confermati(misura) 14990 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30000 confermati(misura) 29994 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 34998 confermati(misura) 34998 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+round 1 A quiet: kill leader 2 + follower 0 NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [176729, 176729, 176729], "2": [176729, 176729, 176729]}
+corsie restart t=5s inviati 14766 confermati(misura) 14748 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 912
+corsie restart t=10s inviati 29967 confermati(misura) 29909 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 1312
+corsie restart t=15s inviati 36042 confermati(misura) 36042 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 1670
+round 1 A2 quiet: kill both followers [0, 1] NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [212976, 212976, 212976], "2": [212976, 212976, 212976]}
+corsie restart t=5s inviati 14998 confermati(misura) 14991 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 29955 confermati(misura) 19200 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=15s inviati 45033 confermati(misura) 45000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 1368
+corsie restart t=20s inviati 54000 confermati(misura) 54000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 1368
+round 1 B under load: kill leader 2 + follower 1 FAIL commit_before_kill=230926 converged_commit=None panics=[] last={0: 63431, 1: 267321, 2: 267321}
+corsie restart t=5s inviati 14988 confermati(misura) 14934 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 0
+corsie restart t=10s inviati 30003 confermati(misura) 28096 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 1204
+corsie restart t=15s inviati 36117 confermati(misura) 36117 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 7126
+round 1 C quiet: kill all three NOT CAUGHT UP {"0": [63431, 63413, 63431], "1": [303645, 303645, 303645], "2": [303645, 303645, 303645]}
+RESULT SOME FAIL
