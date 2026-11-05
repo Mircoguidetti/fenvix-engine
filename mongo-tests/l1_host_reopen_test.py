@@ -100,7 +100,8 @@ def main():
             db.items.insert_many([{"_id": n + i, "pad": rnd.randbytes(1000).hex()} for i in range(1000)])
             n += 1000
         def bg():
-            return c.admin.command("serverStatus")["fenvix"]["backgroundReads"]
+            # a binary without the background meter (before L1) has no such section: zeros, and that check fails
+            return c.admin.command("serverStatus").get("fenvix", {}).get("backgroundReads", {"gets": 0, "bytes": 0})
         bad_warm, bad_cold, bg_grew = [], [], 0
         for r in range(ROUNDS):
             time.sleep(IDLE + 4)  # the database closes (idle)
