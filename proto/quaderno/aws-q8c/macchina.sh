@@ -26,10 +26,11 @@ for g in $(seq 0 $((LOGS - 1))); do
   p=$((7200 + 1000 * g)); GRUPPI="$GRUPPI${GRUPPI:+;}$IP0:$p,$IP1:$p,$IP2:$p"
 done
 # same log configuration as the local Q8c run: lanes (reserve 200 records/s, cell cap 2 MB/s over the reserve),
-# segment recycling (with the Q8c fix), the per-database door (1,000 records/s and 2 MB/s, 0.1 s burst, 1 s outside,
-# then the connection blocks), 10 s window; plus zstd 1 on the replication stream (less cross-zone traffic)
+# segment recycling (with the Q8c fix), the per-database door (1,000 records/s and 2 MB/s, 0.1 s burst, at most 0.5 s
+# waiting outside, beyond that an immediate retryable reject with the exact wait), 10 s window; plus zstd 1 on the
+# replication stream (less cross-zone traffic)
 export PQ_CORSIE=1 PQ_RICICLA=1 PQ_PREALLOC_MBS=64 PQ_RISERVA_RECS=200 PQ_CELLA_MBS=${CELLA_MBS:-2} PQ_SOPRA_FRAZ=0.5 PQ_ZSTD=1
-export PQ_DOOR=1 PQ_DOOR_RECS=${DOOR_RECS:-1000} PQ_DOOR_MBS=${DOOR_MBS:-2} PQ_DOOR_BURST_S=0.1 PQ_DOOR_WAIT_MS=1000
+export PQ_DOOR=1 PQ_DOOR_RECS=${DOOR_RECS:-1000} PQ_DOOR_MBS=${DOOR_MBS:-2} PQ_DOOR_BURST_S=0.1 PQ_DOOR_WAIT_MS=500
 case "$RUOLO" in
   r0|r1|r2)
     i=${RUOLO#r}

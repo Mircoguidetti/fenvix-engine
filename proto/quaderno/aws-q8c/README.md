@@ -15,7 +15,7 @@ La stessa prova fatta in locale da `scripts/q8c.py`, su macchine vere in eu-west
 - livelli 1 (tre volte), 2, 20, 50, 100 database; le sette fasi (nessuno, 1.000/s, 20.000/s, raffiche da 50.000, record
   da 1 MB, vicino che muore e riparte, il 10% rumorosi insieme); 60 s di misura per fase (120 s con 1–2 normali);
 - configurazione del quaderno uguale alla prova locale Q8c: corsie, riciclo dei segmenti (con la correzione di Q8c),
-  la porta per database (1.000 record/s e 2 MB/s, 0,1 s di scorta, 1 s in fila fuori, poi la connessione si ferma),
+  la porta per database (1.000 record/s e 2 MB/s, 0,1 s di scorta, al più 0,5 s in fila fuori, oltre un rifiuto subito con il tempo d'attesa giusto, deciso prima di leggere il resto del messaggio),
   finestra 10 s; in più la replica compressa (zstd 1).
 - CPU per core ogni secondo su tutte e quattro le macchine (`campiona.py` sulle copie, `q8c.py` sui generatori). Una
   fase vale solo se nessun core di nessuna macchina è sopra il 90% in media e il generatore dei normali ha mandato
