@@ -1,0 +1,10 @@
+q8b livello 1 fase nessuno: normali 1 p50 2.55 p99 9.78 p99.9 33.82 max 73.5 ms n 12001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.10 core, disco 2.7 MB/s | generatore normali 0.04 core, chiesti 100 inviati 100/s, macchina 17%
+q8b livello 1 fase nessuno: normali 1 p50 2.53 p99 4.91 p99.9 15.08 max 44.6 ms n 12001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.08 core, disco 2.7 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 16%
+fine q8b
+controllo30 livello 30 fase nessuno: normali 30 p50 2.00 p99 9.65 p99.9 37.05 max 55.9 ms n 180009 rifiutati 0 ignoti 0 | totale 3009 rec/s, capo 0.38 core, disco 51.8 MB/s | generatore normali 0.14 core, chiesti 3000 inviati 3000/s, macchina 56%
+fine controllo30
+senzacorsie livello 1 fase nessuno: normali 1 p50 2.49 p99 4.85 p99.9 12.90 max 25.6 ms n 12001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.08 core, disco 2.7 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 12%
+senzacorsie livello 2 fase ventimila: normali 1 p50 10.13 p99 114.69 p99.9 223.74 max 271.1 ms n 12002 rifiutati 0 ignoti 0 | totale 20127 rec/s, capo 0.64 core, disco 165.0 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 97%
+senzacorsie livello 2 fase raffiche: normali 1 p50 2.12 p99 1559.55 p99.9 1909.76 max 2008.1 ms n 12001 rifiutati 0 ignoti 0 | totale 5104 rec/s, capo 0.20 core, disco 46.2 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 29%
+fine senzacorsie
+FINE-CONTROLLI

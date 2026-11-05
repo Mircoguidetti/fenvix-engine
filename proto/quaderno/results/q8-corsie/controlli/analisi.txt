@@ -1,0 +1,7 @@
+===== controllo30
+  manca il riferimento (livello 1)
+===== senzacorsie
+  riferimento, un database da solo (1 ripetizioni): p50 2.49, p99 4.85, p99,9 12.90 ms (mediane); forchetta p99 4.85–4.85, p99,9 12.90–12.90
+  livello   2 ventimila normali   1: p50  10.13 p99  114.69 (+109.84) p99,9  223.74 (+210.84) max   271.1 ms n  12002 MUORE  | tot  20127 rec/s, rumorosi ammessi      0/s sopra la riserva, capo 0.64 core, copie 0.47/0.44, disco 165.0 MB/s   973 scritture/s per copia, RSS 1503/1804/1300 MB; normali rifiutati 0, ignoti 0, ritentativi 0
+  livello   2 raffiche  normali   1: p50   2.12 p99 1559.55 (+1554.70) p99,9 1909.76 (+1896.86) max  2008.1 ms n  12001 MUORE  | tot   5104 rec/s, rumorosi ammessi      0/s sopra la riserva, capo 0.20 core, copie 0.15/0.14, disco  46.2 MB/s   298 scritture/s per copia, RSS 865/835/928 MB; normali rifiutati 0, ignoti 0, ritentativi 0
+  -> livello 2: MUORE; peggioramento massimo p99 +1554.70 ms, p99,9 +1896.86 ms
