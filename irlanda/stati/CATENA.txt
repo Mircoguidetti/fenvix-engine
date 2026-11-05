@@ -12,4 +12,3 @@ de2c908df5a08d122abd030da9f76992  ./m30s/risultati_p1.json
 d41d8cd98f00b204e9800998ecf8427e  ./m30s/risultati_p1.json.usati.log
 24a1b1fa887f796f0c9b04fc0ea8077e  ./vecchio/risultati_p1.json
 2a74b47d056af50dd28c8676b1f13bcf  ./vecchio/risultati_p1.json.usati.log
-IN CORSO run 42063539122 programma m10-tutto dal 2026-11-05T16:21:39Z
