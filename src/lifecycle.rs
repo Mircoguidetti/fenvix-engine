@@ -272,9 +272,12 @@ static DB_CACHE: std::sync::OnceLock<Arc<dyn slatedb::db_cache::DbCache>> = std:
 static CACHE_SCOPE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 pub fn install_shared_cache(block_bytes: u64, meta_bytes: u64) {
-    use slatedb::db_cache::foyer::{FoyerCache, FoyerCacheOptions};
-    let block: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(FoyerCache::new_with_opts(FoyerCacheOptions { max_capacity: block_bytes, ..Default::default() }));
-    let meta: Arc<dyn slatedb::db_cache::DbCache> = Arc::new(FoyerCache::new_with_opts(FoyerCacheOptions { max_capacity: meta_bytes, ..Default::default() }));
+    // slatedb's foyer cache, metered (`meter.rs`): serverStatus reports its size and lookups
+    let block_m = Arc::new(crate::meter::MeteredCache::new(block_bytes));
+    let meta_m = Arc::new(crate::meter::MeteredCache::new(meta_bytes));
+    let _ = crate::meter::CACHES.set((Arc::clone(&block_m), Arc::clone(&meta_m)));
+    let block: Arc<dyn slatedb::db_cache::DbCache> = block_m;
+    let meta: Arc<dyn slatedb::db_cache::DbCache> = meta_m;
     let split = slatedb::db_cache::SplitCache::new().with_block_cache(Some(block)).with_meta_cache(Some(meta)).build();
     let _ = DB_CACHE.set(Arc::new(split));
 }

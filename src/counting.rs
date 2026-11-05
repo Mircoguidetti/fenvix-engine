@@ -399,6 +399,7 @@ impl ObjectStore for CountingStore {
                 tokio::time::sleep(std::time::Duration::from_millis(d)).await;
             }
         }
+        let is_head = options.head;
         let counter = if options.head {
             &self.counters.head
         } else if options.range.is_some() {
@@ -442,6 +443,9 @@ impl ObjectStore for CountingStore {
         }
         let bytes = res.as_ref().map(|r| r.range.end - r.range.start).unwrap_or(0);
         self.counters.get_bytes.fetch_add(bytes, Relaxed);
+        if !is_head {
+            crate::meter::note_get(bytes, t0.elapsed());
+        }
         self.trace.end(token, bytes);
         res
     }

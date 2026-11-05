@@ -3,4 +3,5 @@
 
 pub mod counting;
 pub mod lifecycle;
+pub mod meter;
 pub mod warm;

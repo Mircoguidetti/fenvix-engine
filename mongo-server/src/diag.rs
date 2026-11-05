@@ -675,6 +675,7 @@ impl Server {
             set_path(&mut d, "mem.virtual", Bson::Int32((virt * 4096 / 1048576) as i32));
         }
         set_path(&mut d, "mem.supported", Bson::Boolean(true));
+        self.real_process_and_cache_stats(&mut d);
         set_path(&mut d, "featureCompatibilityVersion.major", Bson::Int32(7));
         if rs {
             let h = self.hello_doc();
@@ -704,6 +705,81 @@ impl Server {
         }
         d.insert("ok", 1.0);
         Ok(d)
+    }
+
+    /// K1: the numbers of this process instead of the template's (which were mongod's of the recording, or zero).
+    /// - `extra_info`: CPU of the process (getrusage), peak memory, page faults, context switches, threads;
+    /// - `wiredTiger.cache`: the shared block and metadata cache (the "bancone") and the object-store traffic, under the
+    ///   names mongod uses, so a tool written for mongod reads them (mapping below and in `fenvix.mapping`);
+    /// - `fenvix`: the same numbers under their own names, with the S3 request counts.
+    fn real_process_and_cache_stats(&self, d: &mut Document) {
+        let mut ru: libc::rusage = unsafe { std::mem::zeroed() };
+        if unsafe { libc::getrusage(libc::RUSAGE_SELF, &mut ru) } == 0 {
+            let us = |t: libc::timeval| t.tv_sec as i64 * 1_000_000 + t.tv_usec as i64;
+            set_path(d, "extra_info.user_time_us", Bson::Int64(us(ru.ru_utime)));
+            set_path(d, "extra_info.system_time_us", Bson::Int64(us(ru.ru_stime)));
+            set_path(d, "extra_info.maximum_resident_set_kb", Bson::Int64(ru.ru_maxrss as i64));
+            set_path(d, "extra_info.input_blocks", Bson::Int64(ru.ru_inblock as i64));
+            set_path(d, "extra_info.output_blocks", Bson::Int64(ru.ru_oublock as i64));
+            set_path(d, "extra_info.page_reclaims", Bson::Int64(ru.ru_minflt as i64));
+            set_path(d, "extra_info.page_faults", Bson::Int64(ru.ru_majflt as i64));
+            set_path(d, "extra_info.voluntary_context_switches", Bson::Int64(ru.ru_nvcsw as i64));
+            set_path(d, "extra_info.involuntary_context_switches", Bson::Int64(ru.ru_nivcsw as i64));
+        }
+        if let Some(n) = std::fs::read_to_string("/proc/self/status").ok().and_then(|s| s.lines().find(|l| l.starts_with("Threads:")).and_then(|l| l.split_whitespace().nth(1)).and_then(|x| x.parse::<i64>().ok())) {
+            set_path(d, "extra_info.threads", Bson::Int64(n));
+        }
+        let c = &self.dbs.global.counters;
+        let ld = |a: &std::sync::atomic::AtomicU64| a.load(Relaxed) as i64;
+        let gets = ld(&c.get) + ld(&c.get_range);
+        let puts = ld(&c.put) + ld(&c.multipart_part);
+        let cs = tenant_bench::meter::cache_stats().unwrap_or_default();
+        let in_cache = (cs.block_usage + cs.meta_usage) as i64;
+        let wt = [
+            ("bytes currently in the cache", in_cache),
+            ("maximum bytes configured", (cs.block_capacity + cs.meta_capacity) as i64),
+            ("bytes read into cache", ld(&c.get_bytes)),
+            ("pages read into cache", gets),
+            ("bytes written from cache", ld(&c.put_bytes)),
+            ("pages written from cache", puts),
+            ("pages requested from the cache", (cs.hits + cs.misses) as i64),
+            ("bytes belonging to page images in the cache", (cs.block_usage) as i64),
+            ("pages currently held in the cache", cs.block_entries as i64),
+        ];
+        for (k, v) in wt {
+            if let Some(Bson::Document(w)) = d.get_mut("wiredTiger") {
+                if let Some(Bson::Document(cache)) = w.get_mut("cache") {
+                    cache.insert(k, Bson::Int64(v));
+                    continue;
+                }
+                w.insert("cache", doc! { k: Bson::Int64(v) });
+            } else {
+                d.insert("wiredTiger", doc! { "cache": { k: Bson::Int64(v) } });
+            }
+        }
+        d.insert("fenvix", doc! {
+            "cache": {
+                "blockBytes": cs.block_usage as i64, "blockCapacity": cs.block_capacity as i64, "blockEntries": cs.block_entries as i64,
+                "metaBytes": cs.meta_usage as i64, "metaCapacity": cs.meta_capacity as i64,
+                "hits": cs.hits as i64, "misses": cs.misses as i64,
+                "bytesLoadedByFetch": cs.loaded_bytes as i64, "bytesInserted": cs.inserted_bytes as i64,
+            },
+            "s3": {
+                "get": ld(&c.get), "getRange": ld(&c.get_range), "head": ld(&c.head), "list": ld(&c.list), "put": ld(&c.put),
+                "multipartPart": ld(&c.multipart_part), "copy": ld(&c.copy), "delete": ld(&c.delete),
+                "getBytes": ld(&c.get_bytes), "putBytes": ld(&c.put_bytes),
+            },
+            "mapping": {
+                "wiredTiger.cache.bytes currently in the cache": "bytes held by the shared block + metadata cache (RAM)",
+                "wiredTiger.cache.maximum bytes configured": "--block-cache-mb + --meta-cache-mb",
+                "wiredTiger.cache.bytes read into cache": "bytes of S3 GET bodies (whole and ranged)",
+                "wiredTiger.cache.pages read into cache": "S3 GET requests (whole and ranged)",
+                "wiredTiger.cache.bytes written from cache": "bytes of S3 PUT bodies",
+                "wiredTiger.cache.pages written from cache": "S3 PUT requests (and multipart parts)",
+                "wiredTiger.cache.pages requested from the cache": "lookups of the shared cache (hits + misses)",
+                "extra_info.user_time_us / system_time_us": "CPU of this process (getrusage)",
+            },
+        });
     }
 
     fn host_info(&self) -> Document {
