@@ -1,0 +1,36 @@
+fotografia: 8 pile (5 L0), MB [2, 3, 3, 3, 3, 17, 31, 71]; sul bancone con la quota 0.02: 5 pile, 15 MB
+riscaldo 2 s, 40 clienti, 421 GET: indici 223 KB, filtri 2332 KB
+AVVISO serie dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+serie dormienti (20): Q1 freddo p50 89.2 p99 316.8; Q1d 89.1 128.7; Q2 66.4 149.0; Q3 83.9 134.0; Q4 (20) 103.4 223.4; caldo Q1 p50 0.30; GET per find 2.38; doppie 0.000
+AVVISO serie attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+serie attivi (20): Q1 freddo p50 270.1 p99 436.8; Q1d 301.6 391.1; Q2 64.2 164.9; Q3 273.5 396.1; Q4 (20) 295.2 448.0; caldo Q1 p50 0.37; GET per find 6.81; doppie 0.000
+AVVISO parallelo dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo dormienti (20): Q1 freddo p50 49.0 p99 159.4; Q1d 44.3 138.4; Q2 72.0 140.6; Q3 42.9 77.0; Q4 (20) 53.7 131.1; caldo Q1 p50 0.26; GET per find 2.24; doppie 0.000
+AVVISO parallelo attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo attivi (20): Q1 freddo p50 71.4 p99 160.6; Q1d 57.6 160.6; Q2 76.0 124.7; Q3 65.0 129.3; Q4 (20) 70.4 177.6; caldo Q1 p50 0.38; GET per find 6.82; doppie 0.000
+AVVISO parallelo+ra256 dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+ra256 dormienti (20): Q1 freddo p50 42.8 p99 127.5; Q1d 43.9 110.4; Q2 83.5 119.5; Q3 37.8 154.4; Q4 (20) 47.0 122.9; caldo Q1 p50 0.31; GET per find 2.26; doppie 0.000
+AVVISO parallelo+ra256 attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+ra256 attivi (20): Q1 freddo p50 71.2 p99 213.9; Q1d 67.9 127.6; Q2 66.6 213.0; Q3 65.4 114.0; Q4 (20) 74.6 178.6; caldo Q1 p50 0.32; GET per find 6.80; doppie 0.000
+AVVISO parallelo+bancone dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+bancone dormienti (20): Q1 freddo p50 39.7 p99 89.8; Q1d 39.4 86.3; Q2 70.5 167.8; Q3 42.1 111.8; Q4 (20) 53.3 116.1; caldo Q1 p50 0.29; GET per find 2.07; doppie 0.000
+AVVISO parallelo+bancone attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+bancone attivi (20): Q1 freddo p50 43.4 p99 119.5; Q1d 53.2 129.4; Q2 59.2 132.5; Q3 44.3 127.8; Q4 (20) 49.3 90.2; caldo Q1 p50 0.34; GET per find 2.77; doppie 0.000
+AVVISO parallelo+doppia dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+doppia dormienti (20): Q1 freddo p50 45.7 p99 94.8; Q1d 49.4 87.2; Q2 85.0 133.6; Q3 45.3 73.4; Q4 (20) 60.7 155.0; caldo Q1 p50 0.30; GET per find 2.41; doppie 0.150
+AVVISO parallelo+doppia attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+doppia attivi (20): Q1 freddo p50 59.2 p99 121.0; Q1d 71.7 109.1; Q2 73.6 140.6; Q3 69.3 164.1; Q4 (20) 78.1 118.0; caldo Q1 p50 0.36; GET per find 7.15; doppie 0.340
+AVVISO parallelo+bancone+doppia dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+bancone+doppia dormienti (20): Q1 freddo p50 40.4 p99 74.4; Q1d 39.4 81.0; Q2 75.0 120.9; Q3 43.4 69.1; Q4 (20) 64.4 104.2; caldo Q1 p50 0.29; GET per find 2.10; doppie 0.040
+AVVISO parallelo+bancone+doppia attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+bancone+doppia attivi (20): Q1 freddo p50 45.6 p99 93.0; Q1d 48.1 97.9; Q2 64.9 173.0; Q3 50.6 93.9; Q4 (20) 45.8 107.8; caldo Q1 p50 0.32; GET per find 2.90; doppie 0.120
+AVVISO parallelo+bancone+doppia+ra256 dormienti: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+bancone+doppia+ra256 dormienti (20): Q1 freddo p50 41.8 p99 117.7; Q1d 48.9 105.3; Q2 90.7 142.6; Q3 42.5 84.5; Q4 (20) 46.8 114.3; caldo Q1 p50 0.30; GET per find 2.11; doppie 0.110
+AVVISO parallelo+bancone+doppia+ra256 attivi: Q4 su 20 clienti, meno dei 60 di p1-1.5
+parallelo+bancone+doppia+ra256 attivi (20): Q1 freddo p50 54.5 p99 106.5; Q1d 54.8 91.5; Q2 58.3 158.7; Q3 60.8 100.3; Q4 (20) 48.9 84.2; caldo Q1 p50 0.35; GET per find 2.87; doppie 0.150
+insieme 10 Q1: p50 76.9 p99 116.4 (30 find su 30 con clienti già letti nelle varianti)
+insieme 10 Q2: p50 85.1 p99 136.4 (30 find su 30 con clienti già letti nelle varianti)
+insieme 10 Q3: p50 77.4 p99 143.6 (30 find su 30 con clienti già letti nelle varianti)
+Q5 indice_100: freddo p50 455.9 ms p99 633.6, GET p50 79, documenti p50 100
+Q5 indice_tutte: freddo p50 28909.6 ms p99 28909.6, GET p50 1739, documenti p50 37804
+Q5 senza indice: 3226 ms, 20 GET, 109 MB, trovati 37804

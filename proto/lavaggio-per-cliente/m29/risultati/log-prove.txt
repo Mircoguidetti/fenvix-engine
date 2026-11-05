@@ -1,0 +1,25 @@
+06:25:35 inizio m29-8gb
+9.6G	data/m29-8gb
+08:49:20 fine m29-8gb
+08:49:20 inizio m29-1gb-b64-nessuna
+1.3G	data/m29-1gb-b64-nessuna
+09:07:37 fine m29-1gb-b64-nessuna
+09:07:37 inizio m29-1gb-b64-lz4
+545M	data/m29-1gb-b64-lz4
+09:25:55 fine m29-1gb-b64-lz4
+09:25:55 inizio m29-1gb-b64-zstd1
+389M	data/m29-1gb-b64-zstd1
+09:44:18 fine m29-1gb-b64-zstd1
+09:44:18 inizio m29-1gb-b4-nessuna
+1.3G	data/m29-1gb-b4-nessuna
+10:02:36 fine m29-1gb-b4-nessuna
+10:02:36 inizio m29-1gb-b4-lz4
+669M	data/m29-1gb-b4-lz4
+10:20:56 fine m29-1gb-b4-lz4
+10:20:56 inizio m29-1gb-b64-nessuna-senzalav
+2.5G	data/m29-1gb-b64-nessuna-senzalav
+10:38:56 fine m29-1gb-b64-nessuna-senzalav
+10:38:56 inizio m29-4gb
+5.8G	data/m29-4gb
+11:51:05 fine m29-4gb
+11:51:05 tutto fatto

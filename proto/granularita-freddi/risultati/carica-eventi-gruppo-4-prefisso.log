@@ -1,0 +1,33 @@
+giorno 0: 240000 documenti, 2 s, L0 8, sorted run 0, PUT 70
+giorno 1: 480000 documenti, 15 s, L0 4, sorted run 2, PUT 193
+giorno 2: 720000 documenti, 24 s, L0 7, sorted run 3, PUT 292
+giorno 3: 960000 documenti, 30 s, L0 8, sorted run 4, PUT 383
+giorno 4: 1200000 documenti, 38 s, L0 6, sorted run 3, PUT 533
+giorno 5: 1440000 documenti, 49 s, L0 8, sorted run 4, PUT 625
+giorno 6: 1680000 documenti, 64 s, L0 3, sorted run 6, PUT 762
+giorno 7: 1920000 documenti, 71 s, L0 7, sorted run 4, PUT 868
+giorno 8: 2160000 documenti, 80 s, L0 8, sorted run 5, PUT 961
+giorno 9: 2400000 documenti, 91 s, L0 4, sorted run 7, PUT 1107
+giorno 10: 2640000 documenti, 100 s, L0 5, sorted run 5, PUT 1232
+giorno 11: 2880000 documenti, 110 s, L0 4, sorted run 4, PUT 1379
+giorno 12: 3120000 documenti, 122 s, L0 8, sorted run 5, PUT 1488
+giorno 13: 3360000 documenti, 138 s, L0 3, sorted run 4, PUT 1639
+giorno 14: 3600000 documenti, 144 s, L0 5, sorted run 5, PUT 1735
+giorno 15: 3840000 documenti, 151 s, L0 7, sorted run 6, PUT 1847
+giorno 16: 4080000 documenti, 159 s, L0 6, sorted run 5, PUT 1968
+giorno 17: 4320000 documenti, 165 s, L0 8, sorted run 6, PUT 2068
+giorno 18: 4560000 documenti, 178 s, L0 6, sorted run 5, PUT 2211
+giorno 19: 4800000 documenti, 189 s, L0 8, sorted run 6, PUT 2311
+giorno 20: 5040000 documenti, 200 s, L0 6, sorted run 8, PUT 2446
+giorno 21: 5280000 documenti, 207 s, L0 6, sorted run 6, PUT 2560
+giorno 22: 5520000 documenti, 226 s, L0 2, sorted run 5, PUT 2727
+giorno 23: 5760000 documenti, 236 s, L0 5, sorted run 3, PUT 2853
+giorno 24: 6000000 documenti, 244 s, L0 7, sorted run 4, PUT 2953
+giorno 25: 6240000 documenti, 250 s, L0 8, sorted run 5, PUT 3056
+giorno 26: 6480000 documenti, 264 s, L0 4, sorted run 4, PUT 3212
+giorno 27: 6720000 documenti, 272 s, L0 7, sorted run 5, PUT 3321
+giorno 28: 6960000 documenti, 285 s, L0 8, sorted run 6, PUT 3426
+giorno 29: 7200000 documenti, 300 s, L0 4, sorted run 5, PUT 3590
+lavaggio: 6:[(40, 4), (39, 4), (35, 4), (28, 4), (0, 8)]
+lavaggio: 2:[(41, 4), (40, 4), (39, 4), (35, 4), (28, 4), (0, 8)]
+pulizia: 684 file tolti, 7582483013 byte; scatole vive 30

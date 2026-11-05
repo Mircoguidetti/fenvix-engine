@@ -1,0 +1,6 @@
+{"blocco":4096,"codec":"lz4","comp_mbs_core":357.87265303985373,"decomp_mbs_core":2077.5465495291214,"mb_crudi":65.15393733978271,"rapporto":2.215440869907177,"secondi_comp":0.183447353,"tipo":"banco-compressione"}
+{"blocco":4096,"codec":"zstd1","comp_mbs_core":100.8070845997786,"decomp_mbs_core":128.08382710570206,"mb_crudi":65.15393733978271,"rapporto":3.0306619676423505,"secondi_comp":0.657601457,"tipo":"banco-compressione"}
+{"blocco":4096,"codec":"zstd3","comp_mbs_core":95.61452627777862,"decomp_mbs_core":187.2513998884398,"mb_crudi":65.15393733978271,"rapporto":3.058973812605073,"secondi_comp":0.681575864,"tipo":"banco-compressione"}
+{"blocco":65536,"codec":"lz4","comp_mbs_core":482.9865442812965,"decomp_mbs_core":2222.0149245845173,"mb_crudi":65.13170146942139,"rapporto":2.7668730829391364,"secondi_comp":0.134919851,"tipo":"banco-compressione"}
+{"blocco":65536,"codec":"zstd1","comp_mbs_core":362.09826638473436,"decomp_mbs_core":879.7539167061302,"mb_crudi":65.13170146942139,"rapporto":3.8939412132694113,"secondi_comp":0.179981091,"tipo":"banco-compressione"}
+{"blocco":65536,"codec":"zstd3","comp_mbs_core":269.27278596585694,"decomp_mbs_core":671.3777828456425,"mb_crudi":65.13170146942139,"rapporto":3.925517831464385,"secondi_comp":0.246458363,"tipo":"banco-compressione"}

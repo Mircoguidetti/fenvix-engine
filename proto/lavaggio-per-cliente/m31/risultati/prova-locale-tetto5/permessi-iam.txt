@@ -1,0 +1,54 @@
+== permessi.sh con la policy oggi
+OK    sts:GetCallerIdentity
+OK    ssm:GetParameter (AMI Ubuntu 24.04 pubblica)
+OK    ec2:DescribeVpcs
+OK    ec2:DescribeSubnets
+OK    ec2:DescribeInstances
+MANCA ec2:DescribeVolumes (controllo finale): 
+An error occurred (AccessDenied) when calling the DescribeVolumes operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:DescribeVolumes
+MANCA ec2:DescribeAddresses (controllo finale): 
+An error occurred (AccessDenied) when calling the DescribeAddresses operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:DescribeAddresses
+MANCA iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore): 
+An error occurred (AccessDenied) when calling the GetInstanceProfile operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: iam:GetInstanceProfile
+MANCA ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso): 
+An error occurred (AccessDenied) when calling the RunInstances operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:RunInstances
+OK    s3:CreateBucket
+OK    s3:PutBucketPublicAccessBlock
+OK    s3:PutBucketTagging
+OK    s3:PutLifecycleConfiguration
+OK    s3:PutObject
+OK    s3:GetObject
+OK    s3:ListBucket
+OK    s3:DeleteObject
+OK    s3:DeleteBucket
+OK    s3:ListAllMyBuckets
+PERMESSI MANCANTI:
+- ec2:DescribeVolumes (controllo finale)
+- ec2:DescribeAddresses (controllo finale)
+- iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore)
+- ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso)
+== permessi.sh con la policy aggiornata
+OK    sts:GetCallerIdentity
+OK    ssm:GetParameter (AMI Ubuntu 24.04 pubblica)
+OK    ec2:DescribeVpcs
+OK    ec2:DescribeSubnets
+OK    ec2:DescribeInstances
+OK    ec2:DescribeVolumes (controllo finale)
+OK    ec2:DescribeAddresses (controllo finale)
+MANCA iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore): 
+An error occurred (AccessDenied) when calling the GetInstanceProfile operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: iam:GetInstanceProfile
+MANCA ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso): 
+An error occurred (AccessDenied) when calling the RunInstances operation: User: arn:aws:iam::123456789012:user/gha is not authorized to perform: ec2:RunInstances
+OK    s3:CreateBucket
+OK    s3:PutBucketPublicAccessBlock
+OK    s3:PutBucketTagging
+OK    s3:PutLifecycleConfiguration
+OK    s3:PutObject
+OK    s3:GetObject
+OK    s3:ListBucket
+OK    s3:DeleteObject
+OK    s3:DeleteBucket
+OK    s3:ListAllMyBuckets
+PERMESSI MANCANTI:
+- iam:GetInstanceProfile (fenvix-coldread-machine, creato a mano dal fondatore)
+- ec2:RunInstances c7i.xlarge con tag, ruolo e disco (iam:PassRole compreso)

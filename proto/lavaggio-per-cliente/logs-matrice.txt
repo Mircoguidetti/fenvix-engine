@@ -1,0 +1,7 @@
+10:16:21 cliente-c0-s0-l1-0.25gb
+10:19:03 cliente-c0-s0-l0-0.25gb
+10:19:26 cliente-c4-s0-l1-0.25gb
+10:22:13 cliente-c2-s0-l1-0.25gb
+10:25:32 cliente-c6-s0-l1-0.25gb
+10:27:58 cliente-c4-s16-l1-0.25gb
+10:38:49 oggi-c0-s0-l1-0.25gb
