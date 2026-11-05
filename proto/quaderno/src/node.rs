@@ -298,6 +298,10 @@ pub struct Node {
     h_ack: hdrhistogram::Histogram<u64>,
     h_commit: hdrhistogram::Histogram<u64>,
     h_loop: hdrhistogram::Histogram<u64>,
+    /// Q8: tappe misurate sul record PIÙ VECCHIO di ogni gruppo (quello che ha aspettato di più): aggiunta ->
+    /// durevole sul capo, aggiunta -> conferma della prima copia di riserva
+    h_dur_first: hdrhistogram::Histogram<u64>,
+    h_ack_first: hdrhistogram::Histogram<u64>,
     // ---- Q8: corsie
     lane_cfg: LaneCfg,
     /// (indice, byte) dei record ammessi dalle corsie e non ancora durevoli sul disco del capo
@@ -651,6 +655,8 @@ impl Node {
             h_ack: hdrhistogram::Histogram::new(3).unwrap(),
             h_commit: hdrhistogram::Histogram::new(3).unwrap(),
             h_loop: hdrhistogram::Histogram::new(3).unwrap(),
+            h_dur_first: hdrhistogram::Histogram::new(3).unwrap(),
+            h_ack_first: hdrhistogram::Histogram::new(3).unwrap(),
             lane_cfg: LaneCfg::from_env(),
             infl: VecDeque::new(),
             infl_bytes: 0,
@@ -995,6 +1001,9 @@ impl Node {
                         if let Some(sl) = self.slot(nd) {
                             self.h_durable.record(sl.t.elapsed().as_micros() as u64).ok();
                         }
+                        if let Some(sl) = self.slot(self.durable + 1) {
+                            self.h_dur_first.record(sl.t.elapsed().as_micros() as u64).ok();
+                        }
                     }
                     self.durable = self.durable.max(nd);
                     while let Some(&(i, b)) = self.infl.front() {
@@ -1180,12 +1189,22 @@ impl Node {
         p.acked_seq = p.acked_seq.max(seq);
         if ok {
             if ack > p.matched {
+                // Q8: la prima voce appena confermata da questa copia (la più vecchia del gruppo), solo se è la
+                // copia più avanti (quella che decide la conferma a 2 su 3)
+                let first = p.matched + 1;
+                let lead = self.peers.iter().map(|q| q.matched).max().unwrap_or(0);
+                let tf = if first > lead { self.log.get((first.saturating_sub(self.front)) as usize).map(|s| s.t.elapsed().as_micros() as u64) } else { None };
+                let p = self.peers.iter_mut().find(|p| p.id == from).unwrap();
                 p.matched = ack;
                 let t = self.log.get((ack.saturating_sub(self.front)) as usize).map(|s| s.t.elapsed().as_micros() as u64);
                 if let Some(t) = t {
                     self.h_ack.record(t).ok();
                 }
+                if let Some(t) = tf {
+                    self.h_ack_first.record(t).ok();
+                }
             }
+            let p = self.peers.iter_mut().find(|p| p.id == from).unwrap();
             if p.probing {
                 p.probing = false;
                 p.next = p.matched + 1;
@@ -1715,7 +1734,11 @@ impl Node {
             repl_sent: self.repl_sent + self.sh.repl_sent_off.load(std::sync::atomic::Ordering::Relaxed),
             delayed: self.delayed_n,
             diag: format!(
-                "{{\"corsie\":{},\"in_volo_byte\":{},\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                "{{\"tappe\":{},\"corsie\":{},\"in_volo_byte\":{},\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                {
+                    let q = |h: &hdrhistogram::Histogram<u64>| format!("[{},{},{},{}]", h.value_at_quantile(0.5), h.value_at_quantile(0.99), h.value_at_quantile(0.999), h.max());
+                    format!("{{\"durevole_primo\":{},\"copia_primo\":{},\"conferma\":{},\"giro\":{},\"attesa_corsia_leggeri\":{}}}", q(&self.h_dur_first), q(&self.h_ack_first), q(&self.h_commit), q(&self.h_loop), self.sh.lanes.lock().light_q())
+                },
                 self.sh.lanes.lock().json(),
                 self.infl_bytes,
                 self.h_durable.value_at_quantile(0.5),
@@ -1769,6 +1792,22 @@ impl Node {
             // servite dai thread di rete (serve_local): qui non arrivano
             Req::CommitBatch(_) | Req::Get { .. } | Req::Scan { .. } | Req::Wait { .. } | Req::Flushable { .. } | Req::Pending { .. } | Req::FlushState { .. } | Req::Status => {
                 reply.send(&Resp::Err("richiesta servita dai thread di rete".into()));
+            }
+            Req::Dump { from_index: u64::MAX, .. } => {
+                // Q8: azzera i cronometri (inizio della misura di una fase), solo sul leader
+                if self.role != Role::Leader {
+                    reply.send(&Resp::NotLeader(self.leader));
+                    return;
+                }
+                for h in [&mut self.h_durable, &mut self.h_ack, &mut self.h_commit, &mut self.h_loop, &mut self.h_dur_first, &mut self.h_ack_first] {
+                    h.reset();
+                }
+                self.sw = [Sw::default(); 19];
+                self.rounds = 0;
+                self.rounds_over = 0;
+                self.rounds_over_cpu = 0;
+                self.sh.lanes.lock().reset_stats();
+                reply.send(&Resp::Dump(vec![]));
             }
             Req::Dump { from_index, max } => {
                 let mut v = vec![];
@@ -1979,7 +2018,7 @@ impl Node {
                 buf.extend(l.drain());
             } else if self.infl_bytes < self.lane_cfg.cap_bytes {
                 let budget = self.lane_cfg.cap_bytes - self.infl_bytes;
-                l.pump(budget, self.infl_bytes == 0, &mut buf);
+                l.pump2(budget, self.infl_bytes, &mut buf);
             }
         }
         for it in buf.drain(..) {

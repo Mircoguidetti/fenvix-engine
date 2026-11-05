@@ -175,21 +175,32 @@ def noisy_for(phase, level):
 
 def run_level(level):
     cluster('up', '--fresh', '--no-proxy', '--mem-cap-mb', os.environ.get('PQ_MEMCAP', '3000'), '--window-ms', WINDOW)
-    cluster('flusher-up', '--null', '1', '--age-ms', '2000', '--interval-ms', '500', '--hot-db', '0')
+    if os.environ.get('Q8_FLUSHER', '1') == '1':
+        cluster('flusher-up', '--null', '1', '--age-ms', os.environ.get('Q8_FLUSH_AGE_MS', '2000'), '--interval-ms', os.environ.get('Q8_FLUSH_INTERVAL_MS', '500'), '--hot-db', '0')
     time.sleep(2)
     p = pids()
     st = status()
     lid = [s['id'] for s in st if s.get('role') == 'Leader'][0]
     reps = {f'r{i}': p[f'r{i}'] for i in range(3)}
+    # disposizione sui core: "a" = capo 0-1, copie di riserva insieme sul 2, resto sul 3; "b" = una replica per core
+    # (capo 0, copie 1 e 2), resto sul 3
+    pin_mode = os.environ.get('Q8_PIN', 'a')
+    fol = [k for k in p if k.startswith('r') and k != f'r{lid}']
     for k, v in p.items():
         if k == 'cfg':
             continue
         if k == f'r{lid}':
-            pin(v, '0,1')
+            pin(v, '0,1' if pin_mode == 'a' else '0')
         elif k.startswith('r'):
-            pin(v, '2')
+            pin(v, '2' if pin_mode == 'a' else str(1 + fol.index(k)))
         else:
             pin(v, '3')
+    # riscaldamento: i database normali scrivono per Q8_PREWARM secondi prima della prima fase (con il riciclo il
+    # disco va a regime solo quando i primi segmenti sono usciti dal registro)
+    pw = int(os.environ.get('Q8_PREWARM', '40'))
+    if pw > 0:
+        sh(['chrt', '-f', '20', 'taskset', '-c', '3', PQ, 'corsie', '--db-from', '0', '--dbs', str(level), '--rate', '100', '--secs', str(pw), '--warm', '0',
+            '--label', 'riscaldamento', '--threads', '2', '--conns', '16'], timeout=pw + 60)
     phases = ['nessuno'] if level == 1 else PHASES
     for ph in phases:
         kinds = noisy_for(ph, level)
@@ -204,6 +215,7 @@ def run_level(level):
                                    '--secs', str(secs), '--warm', str(WARM), '--label', 'normali', '--threads', '2', '--conns', '16', '--deadline-ms', '10000'],
                                   stdout=subprocess.PIPE, stderr=log, text=True)
         time.sleep(WARM)
+        sh([PQ, 'reset'], timeout=20)
         s0 = snap(reps)
         st0 = {s['id']: s for s in status() if 'id' in s}
         time.sleep(secs)
@@ -218,7 +230,7 @@ def run_level(level):
             diag = json.loads(st1[lid]['diag'])
         except Exception:
             diag = {}
-        r = {'tag': TAG, 'lanes': LANES, 'prealloc_mbs': ENV.get('PQ_PREALLOC_MBS'), 'env': {k: v for k, v in ENV.items() if k.startswith('PQ_')}, 'level': level, 'phase': ph, 'noisy': kinds, 'n_normal': n_normal, 'window_ms': WINDOW,
+        r = {'tag': TAG, 'lanes': LANES, 'prealloc_mbs': ENV.get('PQ_PREALLOC_MBS'), 'env': {k: v for k, v in ENV.items() if k.startswith('PQ_') or k.startswith('Q8_')}, 'level': level, 'phase': ph, 'noisy': kinds, 'n_normal': n_normal, 'window_ms': WINDOW,
              'normal': res, 'sys': delta(s0, s1, reps), 'leader': f'r{lid}', 'leader_after': [f'r{i}' for i in lead1],
              'term_change': st1.get(lid, {}).get('term') != st0.get(lid, {}).get('term'),
              'leader_diag': diag, 'mem_used_mb': {f'r{i}': s.get('mem_used', 0) >> 20 for i, s in st1.items()},

@@ -92,6 +92,27 @@ fn prealloc_paced(path: &Path, size: u64, mbs: u64) -> std::io::Result<()> {
     f.sync_all()
 }
 
+/// Q8: riciclo dei segmenti (`PQ_RICICLA=1`). Un segmento uscito dal registro non si cancella: diventa il segmento
+/// di scorta. Si accorcia alla taglia del segmento, si azzerano i primi 64 KB, fdatasync, e si rinomina in
+/// `spare.log`. I blocchi restano allocati e già scritti (niente metadati al fdatasync, come con gli zeri), ma il
+/// disco non scrive più due volte ogni byte del registro (prima zeri, poi dati) e non fa il `discard` della
+/// cancellazione. Il recupero è già sicuro con i resti vecchi: si ferma alla prima voce con indice non contiguo
+/// (le voci vecchie hanno indici più bassi dell'inizio del registro) e azzera la coda dell'ultimo segmento.
+pub fn recycle_on() -> bool {
+    std::env::var("PQ_RICICLA").map(|x| x == "1").unwrap_or(false)
+}
+
+fn recycle(path: &Path, spare: &Path, dir: &Path, seg_bytes: u64) -> std::io::Result<()> {
+    let f = OpenOptions::new().write(true).open(path)?;
+    f.set_len(seg_bytes)?;
+    f.write_all_at(&vec![0u8; 64 << 10], 0)?;
+    f.sync_all()?;
+    drop(f);
+    std::fs::rename(path, spare)?;
+    sync_dir(dir);
+    Ok(())
+}
+
 fn prealloc_mbs() -> u64 {
     std::env::var("PQ_PREALLOC_MBS").ok().and_then(|x| x.parse().ok()).unwrap_or(0)
 }
@@ -125,6 +146,15 @@ pub fn spawn_disk(
             .name("prealloc".into())
             .spawn(move || loop {
                 let spare = dir.join("spare.log");
+                // con il riciclo si aspetta fino a 3 s un segmento uscito dal registro prima di scriverne uno di zeri
+                if !spare.exists() && recycle_on() {
+                    for _ in 0..30 {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        if spare.exists() {
+                            break;
+                        }
+                    }
+                }
                 if !spare.exists() {
                     let tmp = dir.join("spare.tmp");
                     let mbs = prealloc_mbs();
@@ -138,14 +168,22 @@ pub fn spawn_disk(
             .unwrap();
     }
     let (del_tx, del_rx) = crossbeam_channel::unbounded::<PathBuf>();
-    std::thread::Builder::new()
-        .name("cancella-seg".into())
-        .spawn(move || {
-            while let Ok(p) = del_rx.recv() {
-                let _ = std::fs::remove_file(p);
-            }
-        })
-        .unwrap();
+    {
+        let dir = dir.clone();
+        std::thread::Builder::new()
+            .name("cancella-seg".into())
+            .spawn(move || {
+                let rec = recycle_on();
+                while let Ok(p) = del_rx.recv() {
+                    let spare = dir.join("spare.log");
+                    if rec && !spare.exists() && recycle(&p, &spare, &dir, seg_bytes).is_ok() {
+                        continue;
+                    }
+                    let _ = std::fs::remove_file(p);
+                }
+            })
+            .unwrap();
+    }
     std::thread::Builder::new()
         .name("disk".into())
         .spawn(move || {
@@ -352,4 +390,64 @@ pub fn unhex16(s: &str) -> Option<[u8; 16]> {
         o[i] = u8::from_str_radix(&s[2 * i..2 * i + 2], 16).ok()?;
     }
     Some(o)
+}
+
+#[cfg(test)]
+mod tests_riciclo {
+    use super::*;
+    use crate::codec::{Body, Entry, Kind, Write};
+
+    fn ent(i: u64) -> Bytes {
+        let w = vec![Write { key: Bytes::from(format!("doc/{i}")), kind: Kind::Put, val: Bytes::from(vec![7u8; 1000]) }];
+        Entry::encode(1, i, i << 16, Body::Rec { txn: [1; 16], db: [2; 16], session: None, writes: w }).raw
+    }
+
+    fn write_seg(dir: &Path, seg: u32, from: u64, to: u64, seg_bytes: u64) {
+        let p = seg_path(dir, seg);
+        if !p.exists() {
+            prealloc(&p, seg_bytes).unwrap();
+        }
+        let f = OpenOptions::new().write(true).open(&p).unwrap();
+        let mut off = 0;
+        for i in from..=to {
+            let r = ent(i);
+            f.write_all_at(&r, off).unwrap();
+            off += r.len() as u64;
+        }
+        f.sync_all().unwrap();
+    }
+
+    #[test]
+    fn recupero_con_segmento_riciclato() {
+        let seg_bytes = 256 << 10;
+        let dir = std::env::temp_dir().join(format!("pq-riciclo-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        // segmento 1: voci 1..200 (circa 220 KB), segmento 2: voci 201..400
+        write_seg(&dir, 1, 1, 200, seg_bytes);
+        write_seg(&dir, 2, 201, 400, seg_bytes);
+        // il segmento 1 esce dal registro e diventa la scorta, poi il segmento 3
+        let spare = dir.join("spare.log");
+        recycle(&seg_path(&dir, 1), &spare, &dir, seg_bytes).unwrap();
+        // caso A: crollo subito dopo il cambio di nome (niente scritto nel segmento 3)
+        std::fs::rename(&spare, seg_path(&dir, 3)).unwrap();
+        let (v, last, len) = recover(&dir).unwrap();
+        assert_eq!(v.first().unwrap().entry.index, 201);
+        assert_eq!(v.last().unwrap().entry.index, 400);
+        assert_eq!((last, len), (3, 0));
+        // caso B: nel segmento 3 (riciclato e azzerato dal recupero di prima? no: lo ricicliamo di nuovo da sporco)
+        std::fs::remove_file(seg_path(&dir, 3)).unwrap();
+        write_seg(&dir, 9, 1, 200, seg_bytes);
+        recycle(&seg_path(&dir, 9), &spare, &dir, seg_bytes).unwrap();
+        std::fs::rename(&spare, seg_path(&dir, 3)).unwrap();
+        // scritte solo 100 voci nuove (circa 110 KB, oltre i 64 KB azzerati): dopo restano voci vecchie valide
+        write_seg(&dir, 3, 401, 500, seg_bytes);
+        let (v, last, _) = recover(&dir).unwrap();
+        let idx: Vec<u64> = v.iter().map(|r| r.entry.index).collect();
+        assert_eq!(idx, (201..=500).collect::<Vec<_>>(), "nessuna voce vecchia deve riapparire");
+        assert_eq!(last, 3);
+        // la coda vecchia è stata azzerata: un secondo recupero dà lo stesso risultato
+        let (v2, _, _) = recover(&dir).unwrap();
+        assert_eq!(v2.len(), 300);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

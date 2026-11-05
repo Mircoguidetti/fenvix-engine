@@ -42,6 +42,13 @@ pub struct LaneCfg {
     pub max_recs: usize,
     pub max_bytes: u64,
     pub max_wait_ms: u64,
+    /// riserva garantita per database (record/s e byte/s): i commit dentro la riserva passano sempre per primi
+    pub res_recs: f64,
+    pub res_bytes: f64,
+    /// tetto di cella per quello che sta SOPRA la riserva (byte/s per tutta la cella; 0 = nessun tetto) e quota del
+    /// tetto del lotto che può andare a quel traffico (il resto resta libero per i record dentro la riserva)
+    pub cell_bytes: f64,
+    pub be_frac: f64,
 }
 
 impl LaneCfg {
@@ -57,6 +64,10 @@ impl LaneCfg {
             max_recs: g("PQ_CORSIA_MAX_REC", 4000.0) as usize,
             max_bytes: (g("PQ_CORSIA_MAX_MB", 8.0) * 1048576.0) as u64,
             max_wait_ms: g("PQ_CORSIA_MAX_MS", 200.0) as u64,
+            res_recs: g("PQ_RISERVA_RECS", 0.0),
+            res_bytes: g("PQ_RISERVA_MB", 1.0) * 1048576.0,
+            cell_bytes: g("PQ_CELLA_MBS", 0.0) * 1048576.0,
+            be_frac: g("PQ_SOPRA_FRAZ", 0.5),
         }
     }
 }
@@ -78,6 +89,8 @@ struct Lane<R> {
     bytes: u64,
     tok_r: f64,
     tok_b: f64,
+    res_r: f64,
+    res_b: f64,
     last: Instant,
     deficit: u64,
     active: bool,
@@ -106,6 +119,8 @@ pub struct LaneStats {
     pub wait_light_p99_us: u64,
     pub wait_light_max_us: u64,
     pub wait_all_p99_us: u64,
+    pub admitted_res: u64,
+    pub admitted_over: u64,
 }
 
 pub struct Lanes<R> {
@@ -117,6 +132,8 @@ pub struct Lanes<R> {
     pub brake: u8,
     h_light: hdrhistogram::Histogram<u64>,
     h_all: hdrhistogram::Histogram<u64>,
+    cell_tok: f64,
+    cell_last: Instant,
 }
 
 pub enum Push<R> {
@@ -135,6 +152,8 @@ impl<R> Lanes<R> {
             brake: 0,
             h_light: hdrhistogram::Histogram::new_with_bounds(1, 60_000_000, 2).unwrap(),
             h_all: hdrhistogram::Histogram::new_with_bounds(1, 60_000_000, 2).unwrap(),
+            cell_tok: 0.0,
+            cell_last: Instant::now(),
         }
     }
 
@@ -151,12 +170,14 @@ impl<R> Lanes<R> {
         let db = c.db;
         let st = &mut self.st;
         let ring = &mut self.ring;
-        let (qr, qb, bs) = (cfg.quota_recs, cfg.quota_bytes, cfg.burst_s);
+        let (qr, qb, bs, rr, rb) = (cfg.quota_recs, cfg.quota_bytes, cfg.burst_s, cfg.res_recs, cfg.res_bytes);
         let l = self.map.entry(db).or_insert_with(|| Lane {
             q: VecDeque::new(),
             bytes: 0,
             tok_r: qr * bs,
             tok_b: qb * bs,
+            res_r: rr,
+            res_b: rb,
             last: now,
             deficit: 0,
             active: false,
@@ -197,14 +218,76 @@ impl<R> Lanes<R> {
     /// Dal thread principale del capo: giro equo fino a `budget` byte (sempre almeno un record se `budget` è pieno e
     /// niente è in volo: un record più grande del tetto passa da solo).
     pub fn pump(&mut self, budget: u64, inflight_zero: bool, out: &mut Vec<Item<R>>) {
+        self.pump2(budget, if inflight_zero { 0 } else { 1 }, out)
+    }
+
+    /// Ammissione in due passate. Prima la riserva: ogni corsia attiva, a turno, fa entrare i commit coperti dalla
+    /// sua riserva garantita (al più un quanto a turno). Poi quello che sta sopra la riserva, con il giro equo, ma solo
+    /// finché i byte in volo restano sotto `be_frac` del tetto e c'è credito nel tetto di cella: così un record dentro
+    /// la riserva trova sempre posto nel giro di disco successivo. Con la riserva a 0 (predefinito) si salta la
+    /// prima passata e tutto è come prima (giro equo e quota).
+    pub fn pump2(&mut self, budget: u64, inflight: u64, out: &mut Vec<Item<R>>) {
         if self.ring.is_empty() {
             return;
         }
         let now = Instant::now();
-        let (qr, qb, bs, quantum, cap) = (self.cfg.quota_recs, self.cfg.quota_bytes, self.cfg.burst_s, self.cfg.quantum, self.cfg.cap_bytes);
+        let c = self.cfg.clone();
+        let (qr, qb, bs, quantum, cap) = (c.quota_recs, c.quota_bytes, c.burst_s, c.quantum, c.cap_bytes);
         let mut taken = 0u64;
-        // `alone`: niente in volo e niente preso in questa chiamata: un record più grande del tetto può passare da solo
-        let mut alone = inflight_zero;
+        // ricarica dei gettoni di tutte le corsie attive e della cella
+        for db in self.ring.iter() {
+            let l = self.map.get_mut(db).unwrap();
+            let dt = now.duration_since(l.last).as_secs_f64();
+            l.last = now;
+            l.tok_r = (l.tok_r + qr * dt).min(qr * bs);
+            l.tok_b = (l.tok_b + qb * dt).min(qb * bs);
+            l.res_r = (l.res_r + c.res_recs * dt).min(c.res_recs * bs);
+            l.res_b = (l.res_b + c.res_bytes * dt).min(c.res_bytes * bs);
+        }
+        if c.cell_bytes > 0.0 {
+            let dt = now.duration_since(self.cell_last).as_secs_f64();
+            self.cell_last = now;
+            // scorta di 100 ms del tetto di cella
+            self.cell_tok = (self.cell_tok + c.cell_bytes * dt).min(c.cell_bytes * 0.1);
+        }
+        // ---- passata 1: dentro la riserva
+        if c.res_recs > 0.0 {
+            let n = self.ring.len();
+            for _ in 0..n {
+                let Some(db) = self.ring.pop_front() else { break };
+                let l = self.map.get_mut(&db).unwrap();
+                let mut lane_taken = 0u64;
+                while let Some(f) = l.q.front() {
+                    if l.res_r < 1.0 || l.res_b < f.bytes as f64 || l.tok_r < 1.0 || l.tok_b < f.bytes as f64 {
+                        break;
+                    }
+                    if lane_taken + f.bytes > quantum && lane_taken > 0 {
+                        break;
+                    }
+                    if taken + f.bytes > budget && !(taken == 0 && inflight == 0) {
+                        break;
+                    }
+                    let it = l.q.pop_front().unwrap();
+                    l.res_r -= 1.0;
+                    l.res_b -= it.bytes as f64;
+                    l.tok_r -= 1.0;
+                    l.tok_b -= it.bytes as f64;
+                    lane_taken += it.bytes;
+                    taken += it.bytes;
+                    self.st.admitted_res += 1;
+                    Self::admit(&mut self.st, &mut self.h_all, &mut self.h_light, l, it, now, out);
+                }
+                if l.q.is_empty() {
+                    l.active = false;
+                    l.deficit = 0;
+                } else {
+                    self.ring.push_back(db);
+                }
+            }
+        }
+        // ---- passata 2: sopra la riserva, giro equo, con il margine del tetto e il tetto di cella
+        let be_cap = if c.res_recs > 0.0 { (cap as f64 * c.be_frac) as u64 } else { u64::MAX };
+        let mut alone = inflight == 0 && taken == 0;
         'outer: for _pass in 0..64 {
             let n = self.ring.len();
             if n == 0 {
@@ -214,28 +297,30 @@ impl<R> Lanes<R> {
             for _ in 0..n {
                 let Some(db) = self.ring.pop_front() else { break };
                 let l = self.map.get_mut(&db).unwrap();
-                let dt = now.duration_since(l.last).as_secs_f64();
-                l.last = now;
-                l.tok_r = (l.tok_r + qr * dt).min(qr * bs);
-                l.tok_b = (l.tok_b + qb * dt).min(qb * bs);
                 let fb = l.q.front().map(|f| f.bytes).unwrap_or(0);
-                // senza gettoni: la corsia aspetta la ricarica (non prende credito e non perde il posto nel giro)
                 if l.tok_r < 1.0 || (l.tok_b < fb as f64 && l.tok_b < qb * bs) {
                     self.ring.push_back(db);
                     continue;
                 }
+                let over_ok = |taken: u64, b: u64, cell_tok: f64| -> bool {
+                    (inflight + taken + b <= be_cap || (inflight + taken == 0)) && (c.cell_bytes <= 0.0 || cell_tok >= b as f64 || (cell_tok >= c.cell_bytes * 0.1 - 1.0))
+                };
                 if taken + fb > budget && !(taken == 0 && alone) {
                     if fb > cap {
-                        // record più grande del tetto: aspetta un giro in cui il disco è libero, senza fermare gli altri
                         self.ring.push_back(db);
                         continue;
                     }
-                    // tetto pieno: la corsia resta in testa SENZA prendere credito (il suo turno non è passato)
                     self.ring.push_front(db);
                     self.st.capped += 1;
                     break 'outer;
                 }
-                // il turno della corsia: un quanto di credito (un record grande lo prende tutto, se passa da solo)
+                let covered = c.res_recs > 0.0 && l.res_r >= 1.0 && l.res_b >= fb as f64;
+                if !covered && !over_ok(taken, fb, self.cell_tok) {
+                    // niente margine per il traffico sopra la riserva: si aspetta il prossimo giro di disco
+                    self.ring.push_front(db);
+                    self.st.capped += 1;
+                    break 'outer;
+                }
                 l.deficit += quantum.max(if alone && taken == 0 { fb } else { 0 });
                 while let Some(f) = l.q.front() {
                     if f.bytes > l.deficit {
@@ -248,32 +333,34 @@ impl<R> Lanes<R> {
                         self.st.capped += 1;
                         break;
                     }
+                    let covered = c.res_recs > 0.0 && l.res_r >= 1.0 && l.res_b >= f.bytes as f64;
+                    if !covered && !over_ok(taken, f.bytes, self.cell_tok) {
+                        self.st.capped += 1;
+                        break;
+                    }
                     let it = l.q.pop_front().unwrap();
                     l.deficit -= it.bytes;
-                    l.bytes -= it.bytes;
                     l.tok_r -= 1.0;
                     l.tok_b -= it.bytes as f64;
-                    l.sec_r += 1;
-                    l.sec_b += it.bytes;
+                    if l.res_r >= 1.0 && l.res_b >= it.bytes as f64 && c.res_recs > 0.0 {
+                        l.res_r -= 1.0;
+                        l.res_b -= it.bytes as f64;
+                        self.st.admitted_res += 1;
+                    } else {
+                        if c.cell_bytes > 0.0 {
+                            self.cell_tok -= it.bytes as f64;
+                        }
+                        self.st.admitted_over += 1;
+                    }
                     taken += it.bytes;
                     alone = false;
                     progress = true;
-                    let w = now.duration_since(it.t).as_micros() as u64;
-                    self.h_all.record(w.max(1)).ok();
-                    if !l.heavy {
-                        self.h_light.record(w.max(1)).ok();
-                    }
-                    self.st.max_wait_us = self.st.max_wait_us.max(w);
-                    self.st.queued_recs -= 1;
-                    self.st.queued_bytes -= it.bytes;
-                    self.st.admitted += 1;
-                    out.push(it);
+                    Self::admit(&mut self.st, &mut self.h_all, &mut self.h_light, l, it, now, out);
                 }
                 if l.q.is_empty() {
                     l.active = false;
                     l.deficit = 0;
                 } else {
-                    // il credito avanzato resta, ma mai più di un quanto (niente accumulo da giri passati)
                     l.deficit = l.deficit.min(quantum);
                     self.ring.push_back(db);
                 }
@@ -285,6 +372,22 @@ impl<R> Lanes<R> {
                 break;
             }
         }
+    }
+
+    fn admit(st: &mut LaneStats, h_all: &mut hdrhistogram::Histogram<u64>, h_light: &mut hdrhistogram::Histogram<u64>, l: &mut Lane<R>, it: Item<R>, now: Instant, out: &mut Vec<Item<R>>) {
+        l.bytes -= it.bytes;
+        l.sec_r += 1;
+        l.sec_b += it.bytes;
+        let w = now.duration_since(it.t).as_micros() as u64;
+        h_all.record(w.max(1)).ok();
+        if !l.heavy {
+            h_light.record(w.max(1)).ok();
+        }
+        st.max_wait_us = st.max_wait_us.max(w);
+        st.queued_recs -= 1;
+        st.queued_bytes -= it.bytes;
+        st.admitted += 1;
+        out.push(it);
     }
 
     /// Tutto quello che è in coda (cambio di guida): il chiamante risponde NotLeader.
@@ -323,12 +426,24 @@ impl<R> Lanes<R> {
         self.st.wait_all_p99_us = self.h_all.value_at_quantile(0.99);
     }
 
+    pub fn light_q(&self) -> String {
+        let h = &self.h_light;
+        format!("[{},{},{},{}]", h.value_at_quantile(0.5), h.value_at_quantile(0.99), h.value_at_quantile(0.999), h.max())
+    }
+
+    pub fn reset_stats(&mut self) {
+        let (q, b) = (self.st.queued_recs, self.st.queued_bytes);
+        self.st = LaneStats { queued_recs: q, queued_bytes: b, ..Default::default() };
+        self.h_light.reset();
+        self.h_all.reset();
+    }
+
     pub fn json(&self) -> String {
         let s = &self.st;
         format!(
-            "{{\"accese\":{},\"spinti\":{},\"ammessi\":{},\"rifiuti_quota\":{},\"rifiuti_freno\":{},\"rifiuti_tutti\":{},\"giri_al_tetto\":{},\"in_coda\":{},\"in_coda_byte\":{},\"corsie\":{},\"attive\":{},\"attesa_max_us\":{},\"attesa_leggeri_p99_us\":{},\"attesa_leggeri_max_us\":{},\"attesa_tutti_p99_us\":{},\"freno\":{}}}",
+            "{{\"accese\":{},\"spinti\":{},\"ammessi\":{},\"rifiuti_quota\":{},\"rifiuti_freno\":{},\"rifiuti_tutti\":{},\"giri_al_tetto\":{},\"in_coda\":{},\"in_coda_byte\":{},\"corsie\":{},\"attive\":{},\"attesa_max_us\":{},\"attesa_leggeri_p99_us\":{},\"attesa_leggeri_max_us\":{},\"attesa_tutti_p99_us\":{},\"ammessi_riserva\":{},\"ammessi_sopra\":{},\"freno\":{}}}",
             self.cfg.on, s.pushed, s.admitted, s.rej_quota, s.rej_brake, s.rej_all, s.capped, s.queued_recs, s.queued_bytes, s.lanes, s.active, s.max_wait_us,
-            s.wait_light_p99_us, s.wait_light_max_us, s.wait_all_p99_us, self.brake
+            s.wait_light_p99_us, s.wait_light_max_us, s.wait_all_p99_us, s.admitted_res, s.admitted_over, self.brake
         )
     }
 }
@@ -346,7 +461,7 @@ mod tests {
     }
 
     fn cfg() -> LaneCfg {
-        LaneCfg { on: true, quota_recs: 5000.0, quota_bytes: 16.0 * 1048576.0, burst_s: 1.0, cap_bytes: 256 << 10, quantum: 16 << 10, max_recs: 4000, max_bytes: 8 << 20, max_wait_ms: 200 }
+        LaneCfg { on: true, quota_recs: 5000.0, quota_bytes: 16.0 * 1048576.0, burst_s: 1.0, cap_bytes: 256 << 10, quantum: 16 << 10, max_recs: 4000, max_bytes: 8 << 20, max_wait_ms: 200, res_recs: 0.0, res_bytes: 1048576.0, cell_bytes: 0.0, be_frac: 0.5 }
     }
 
     #[test]
@@ -422,6 +537,48 @@ mod tests {
         l.pump(200 << 10, false, &mut out);
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].reply, 2);
+    }
+
+    #[test]
+    fn riserva_prima_del_traffico_sopra() {
+        // con la riserva accesa: B ha 3.000 record in coda (sopra la riserva), A ne ha uno. Con metà tetto già in
+        // volo il traffico sopra la riserva aspetta, A entra.
+        let mut cf = cfg();
+        cf.res_recs = 200.0;
+        let mut l: Lanes<u32> = Lanes::new(cf);
+        let now = Instant::now();
+        for i in 0..3000 {
+            let _ = l.push(i, c(2, 1900), now);
+        }
+        let mut out = vec![];
+        // B consuma tutta la sua riserva (200 record) e un po' di traffico sopra
+        for _ in 0..10 {
+            l.pump2(256 << 10, 0, &mut out);
+        }
+        assert!(out.len() > 200);
+        out.clear();
+        let _ = l.push(99_999, c(1, 1900), now);
+        l.pump2(128 << 10, 130 << 10, &mut out);
+        assert_eq!(out.len(), 1, "solo A (dentro la riserva) con il volo sopra metà tetto");
+        assert_eq!(out[0].reply, 99_999);
+    }
+
+    #[test]
+    fn tetto_di_cella_sopra_la_riserva() {
+        let mut cf = cfg();
+        cf.res_recs = 100.0;
+        cf.burst_s = 1.0;
+        cf.cell_bytes = 1048576.0; // 1 MB/s per tutto quello sopra la riserva, scorta 100 ms
+        let mut l: Lanes<u32> = Lanes::new(cf);
+        let now = Instant::now();
+        for i in 0..3000 {
+            let _ = l.push(i, c(2, 1900), now);
+        }
+        let mut out = vec![];
+        std::thread::sleep(std::time::Duration::from_millis(120));
+        l.pump2(64 << 20, 0, &mut out);
+        // riserva 100 record + circa 100 KB sopra (scorta di 100 ms di 1 MB/s) = circa 150 record
+        assert!(out.len() >= 100 && out.len() < 200, "{}", out.len());
     }
 
     #[test]

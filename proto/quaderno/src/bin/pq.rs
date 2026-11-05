@@ -134,6 +134,15 @@ fn main() -> anyhow::Result<()> {
             r.block_on(bench::lotti(cluster(&a), a.f("rate", 4000.0), a.u("batch", 1) as usize, a.u("clients", 64) as usize, a.u("secs", 20), a.u("warm", 5),
                 a.u("keys", 1) as usize, a.u("val", 200) as usize, a.u("dbs", 100), a.u("real", 0), a.f("reads", 0.0)));
         }
+        "reset" => {
+            // Q8: azzera i cronometri del leader (inizio della misura di una fase)
+            let r = rt(1);
+            r.block_on(async {
+                let cl = cluster(&a);
+                let ok = cl.call_leader(&quaderno::codec::Req::Dump { from_index: u64::MAX, max: 0 }, std::time::Duration::from_secs(5)).await.is_some();
+                println!("{{\"reset\":{ok}}}");
+            });
+        }
         "corsie" => {
             let r = rt(a.u("threads", 2) as usize);
             r.block_on(bench::corsie(
