@@ -123,6 +123,8 @@ echo "{\"esito\": \"$esito\", \"minuti\": $m, \"macchina\": \"$TIPO\", \"id\": \
 grep -rl "$IRL_ACCT" "$OUT" 2>/dev/null | xargs -r sed -i "s/$IRL_ACCT/<ACCOUNT_ID>/g"
 { [ "$esito" = BLOCCO_SPESA ] && echo "# BLOCCO: spesa stimata arrivata al tetto di $TETTO_DOLLARI \$"
   echo "## P1 Irlanda: $esito, $m minuti"; echo "$riga_ip"; echo
-  echo "**Adesso: togli $IP/32 dalla lista di accesso di Atlas.**"; echo; cat "$OUT/spesa.txt"; echo '```'; tail -20 "$OUT/passi.log" 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+  echo "**Adesso: togli $IP/32 dalla lista di accesso di Atlas.**"; echo; cat "$OUT/spesa.txt"; echo '```'; tail -20 "$OUT/passi.log" 2>/dev/null; echo '```'
+  echo "### Parallelo (connessioni) e carico massimo (somma delle copie)"; echo '```'
+  tail -1 "$OUT/parallelo-connessioni.txt" 2>/dev/null; grep -E "^(CARICO|[a-z_0-9]+:|  VERDETTO)" "$OUT/massimo-somma.txt" 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 [ "$esito" = BLOCCO_SPESA ] && echo "::warning title=BLOCCO_SPESA::spesa stimata ≥ $TETTO_DOLLARI \$: giro fermato, pulizia partita"
 [ "$esito" = FINITO ]
