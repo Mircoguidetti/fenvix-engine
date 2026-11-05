@@ -1,0 +1,320 @@
+# K2 · la cucina minima su AWS (2026-11-05): il NOSTRO server (mongo-server, dati solo su S3) su una EC2 in eu-west-1,
+# contro lo script di Atlas (prova_infinite.py p1-1.6.2 NON modificato) da una seconda EC2 nella stessa zona, con lo
+# stesso metodo del giro dall'Irlanda su Atlas M30 (code-irlanda). Modello: code-irlanda.yml (a sua volta da M31).
+# Un solo innesco: un push sul branch cucina-minima che aggiunge o cambia cucina/comando.json. Il campo "modo":
+#   "permessi" = solo controllo dei permessi, 0 $ (letture, --dry-run di tutte le taglie e dei gruppi di sicurezza,
+#                bucket vuoto creato e cancellato, quota di vCPU e scelta della macchina cliente);
+#   "giro"     = la giornata: compila mongo-server (x86_64 e, se serve, aarch64 per le Graviton) dal ref "motore"
+#                (di serie main), poi su AWS: bucket dei dati, macchina cliente, e per ogni taglia di "taglie" una
+#                macchina server, una alla volta, sugli STESSI dati (caricati una volta sola, alla prima taglia, con lo
+#                script: carica --gb 10 come su Atlas). Per ogni taglia: Q2, Q3, Q1 (50 clienti attivi mai letti
+#                ciascuna), parallelo 10 e 50 insieme, carico_massimo con "copie" copie dello script insieme.
+#                Facoltativi in comando.json:
+#                  "taglie":  lista, di serie ["c7i.large"]; ammesse c7i.large, c7i.xlarge, m7i.large, c7g.medium,
+#                             c7g.large, m7g.large, t4g.small; al massimo 4;
+#                  "motore":  ref di fenvix-engine da cui compilare mongo-server, di serie "main"; per il server di K1:
+#                             "server-per-script" (quando il revisore di K1 dice che e' pronto);
+#                  "gb":      GB da caricare, di serie 10 (come su Atlas);
+#                  "cliente": c7i.xlarge, c7i.2xlarge, c7i.4xlarge o c7i.8xlarge; di serie "auto" (la piu' grande che
+#                             sta nella quota di vCPU insieme alla taglia piu' grande);
+#                  "copie":   di serie secondo il cliente (2, 5, 10, 20);
+#   "smonta"   = solo pulizia e verifica.
+# Un commit che non cambia cucina/comando.json non fa niente su AWS (modo "niente").
+# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (lo stesso di M31 e dell'Irlanda: ruolo fenvix-gha-tests, policy
+# fenvix-coldread-test); le macchine usano il ruolo fenvix-coldread-machine (solo bucket fenvix-coldread-*). Stesso tag
+# (project=fenvix-coldread) e stesso gruppo di concorrenza di M31 e dell'Irlanda: le prove non girano mai insieme, cosi'
+# la pulizia di una non tocca le macchine dell'altra. La password del server e' nuova a ogni giornata, nasce sul runner,
+# e' mascherata nei log e passa alle macchine solo dal bucket privato; i certificati TLS nascono sul runner (la chiave
+# della CA non lo lascia mai).
+# Spesa: riga "SPESA" ogni minuto; blocco a 5 $ (regola del fondatore 2026-11-04); pulizia e controllo finale sempre.
+# FRENO D'EMERGENZA: il bottone "Cancel workflow" nella pagina della run (la pulizia gira lo stesso).
+name: cucina-minima
+on:
+  push:
+    branches: [cucina-minima]
+    paths: ['cucina/comando.json']
+permissions:
+  id-token: write
+  contents: write
+concurrency:
+  group: fenvix-m31
+  cancel-in-progress: false
+env:
+  RUST_TOOLCHAIN: "1.97.0"
+jobs:
+  decidi:
+    if: github.repository == 'Mircoguidetti/fenvix-engine'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      modo: ${{ steps.c.outputs.modo }}
+      taglie: ${{ steps.c.outputs.taglie }}
+      motore: ${{ steps.c.outputs.motore }}
+      x86: ${{ steps.c.outputs.x86 }}
+      arm: ${{ steps.c.outputs.arm }}
+      gb: ${{ steps.c.outputs.gb }}
+      cliente: ${{ steps.c.outputs.cliente }}
+      copie: ${{ steps.c.outputs.copie }}
+      rifiuto: ${{ steps.c.outputs.rifiuto }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Il comando (cucina/comando.json)
+        id: c
+        run: |
+          C=cucina/comando.json
+          rif() { echo "::error title=Comando::$1"; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; echo "modo=niente" >> "$GITHUB_OUTPUT"; exit 0; }
+          cambiati=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD)
+          modo=$(jq -r '.modo // "niente"' "$C" 2>/dev/null || echo niente)
+          grep -qx "$C" <<<"$cambiati" || modo=niente
+          case "$modo" in permessi|giro|smonta) ;; *) modo=niente;; esac
+          taglie=$(jq -c '.taglie // ["c7i.large"]' "$C" 2>/dev/null) || rif "taglie non leggibili"
+          python3 cucina/ci/tipi.py controlla-taglie "$taglie" > /tmp/t.txt || rif "$(cat /tmp/t.txt)"
+          archi=$(python3 cucina/ci/tipi.py archi "$taglie")
+          motore=$(jq -r '.motore // "main"' "$C")
+          [[ "$motore" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$ ]] || rif "motore non valido: $motore"
+          gb=$(jq -r '.gb // 10' "$C")
+          python3 -c "import sys; g=float(sys.argv[1]); sys.exit(0 if 0.001 <= g <= 30 else 1)" "$gb" 2>/dev/null || rif "gb fuori da 0,001-30: $gb"
+          cliente=$(jq -r '.cliente // "auto"' "$C"); copie=$(jq -r '.copie // "auto"' "$C")
+          [[ "$cliente" =~ ^(auto|c7i\.xlarge|c7i\.2xlarge|c7i\.4xlarge|c7i\.8xlarge)$ ]] || rif "cliente non ammesso: $cliente"
+          [[ "$copie" = auto ]] || { [[ "$copie" =~ ^[0-9]+$ ]] && [ "$copie" -ge 1 ] && [ "$copie" -le 40 ]; } || rif "copie fuori da 1-40: $copie"
+          x86=0; arm=0
+          [ "$modo" = giro ] && { x86=1; grep -qw aarch64 <<<"$archi" && arm=1; grep -qw x86_64 <<<"$archi" || x86=0; }
+          { echo "modo=$modo"; echo "taglie=$taglie"; echo "motore=$motore"; echo "x86=$x86"; echo "arm=$arm"
+            echo "gb=$gb"; echo "cliente=$cliente"; echo "copie=$copie"; } | tee -a "$GITHUB_OUTPUT"
+          echo "modo: $modo; taglie $taglie; motore $motore; gb $gb; cliente $cliente; copie $copie" >> "$GITHUB_STEP_SUMMARY"
+      - name: Rifiutato (comando sbagliato, niente fatto su AWS)
+        if: steps.c.outputs.rifiuto == '1'
+        run: exit 1
+
+  compila-x86:
+    needs: decidi
+    if: needs.decidi.outputs.x86 == '1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decidi.outputs.motore }}
+          persist-credentials: false
+      - name: Compila mongo-server (x86_64, Ubuntu 24.04 come la macchina)
+        run: |
+          command -v rustup >/dev/null || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.cargo/bin:$PATH"; }
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          t0=$(date +%s)
+          cargo +"$RUST_TOOLCHAIN" build --release --locked -p mongo-server
+          echo "compilazione x86_64: $(( $(date +%s) - t0 )) s, commit $(git rev-parse HEAD), sha256 $(sha256sum target/release/mongo-server | cut -d' ' -f1)" | tee -a "$GITHUB_STEP_SUMMARY"
+          git rev-parse HEAD > target/release/motore-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mongo-server-x86_64
+          path: |
+            target/release/mongo-server
+            target/release/motore-commit.txt
+          retention-days: 1
+
+  compila-arm:
+    needs: decidi
+    if: needs.decidi.outputs.arm == '1'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decidi.outputs.motore }}
+          persist-credentials: false
+      - name: Compila mongo-server (aarch64 per le Graviton, Ubuntu 24.04 come la macchina)
+        run: |
+          command -v rustup >/dev/null || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.cargo/bin:$PATH"; }
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          t0=$(date +%s)
+          cargo +"$RUST_TOOLCHAIN" build --release --locked -p mongo-server
+          [ "$(uname -m)" = aarch64 ] || { echo "::error::il runner non e' aarch64"; exit 1; }
+          echo "compilazione aarch64: $(( $(date +%s) - t0 )) s, commit $(git rev-parse HEAD), sha256 $(sha256sum target/release/mongo-server | cut -d' ' -f1)" | tee -a "$GITHUB_STEP_SUMMARY"
+          git rev-parse HEAD > target/release/motore-commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mongo-server-aarch64
+          path: |
+            target/release/mongo-server
+            target/release/motore-commit.txt
+          retention-days: 1
+
+  run:
+    needs: [decidi, compila-x86, compila-arm]
+    if: always() && needs.decidi.outputs.modo != 'niente' && needs.decidi.outputs.modo != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    env:
+      AWS_PAGER: ""
+      AWS_DEFAULT_REGION: eu-west-1
+      AWS_REGION: eu-west-1
+      CM_ROLE: ${{ secrets.AWS_ROLE_ARN }}
+      MODO: ${{ needs.decidi.outputs.modo }}
+      TAGLIE: ${{ needs.decidi.outputs.taglie }}
+      GB: ${{ needs.decidi.outputs.gb }}
+      CLIENTE_CHIESTO: ${{ needs.decidi.outputs.cliente }}
+      COPIE_CHIESTE: ${{ needs.decidi.outputs.copie }}
+      C: cucina
+      TETTO_DOLLARI: "5"         # blocco della spesa stimata (fondatore, RULES.md 2026-11-04)
+      RUOLO_MACCHINA: fenvix-coldread-machine
+      BUCKET: fenvix-coldread-cm-${{ github.run_id }}
+      BUCKET_DATI: fenvix-coldread-cmd-${{ github.run_id }}
+      CM_OUT: /tmp/cm-out
+      PACCHI: /tmp/pacchi
+      CA_DIR: /tmp/ca
+      TETTO_MIN: "315"           # la giornata smette di aspettare dopo 315 minuti; le macchine si spengono da sole poco dopo
+      DISCO_GB: "20"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Maschera account e ruolo; password nuova della giornata (mascherata)
+        run: |
+          [ -n "$CM_ROLE" ] || { echo "secret AWS_ROLE_ARN mancante"; exit 1; }
+          acct=$(cut -d: -f5 <<<"$CM_ROLE"); role=${CM_ROLE##*/}
+          echo "::add-mask::$acct"; echo "::add-mask::$role"
+          pw=$(openssl rand -hex 24); echo "::add-mask::$pw"
+          { echo "CM_ACCT=$acct"; echo "CM_PW=$pw"; echo "CM_INIZIO=$(date -u -d '2 minutes ago' +%FT%TZ)"; } >> "$GITHUB_ENV"
+
+      - name: La compilazione e' andata? (solo per il giro)
+        if: env.MODO == 'giro'
+        run: |
+          ok=1
+          [ "${{ needs.decidi.outputs.x86 }}" = 1 ] && [ "${{ needs.compila-x86.result }}" != success ] && { echo "::error::compilazione x86_64: ${{ needs.compila-x86.result }}"; ok=0; }
+          [ "${{ needs.decidi.outputs.arm }}" = 1 ] && [ "${{ needs.compila-arm.result }}" != success ] && { echo "::error::compilazione aarch64: ${{ needs.compila-arm.result }}"; ok=0; }
+          [ "$ok" = 1 ]
+
+      - name: Il programma compilato
+        if: env.MODO == 'giro'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mongo-server-*
+          path: /tmp/bin
+
+      - name: Credenziali AWS (OIDC, 1 h)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Controllo dei permessi e della quota; scelta della macchina cliente (0 $)
+        if: env.MODO == 'permessi' || env.MODO == 'giro'
+        run: bash "$C"/ci/permessi.sh
+
+      - name: Pacchi per le macchine e certificati (niente AWS)
+        if: env.MODO == 'giro'
+        run: |
+          set -euo pipefail
+          mkdir -p "$PACCHI"
+          vendor() { # vendor CARTELLA CPU PACCHETTI...: librerie Python per Ubuntu 24.04 (Python 3.12) della macchina
+            local d=$1 cpu=$2; shift 2
+            /usr/bin/python3 -m pip install -q --target "$d/vendor" --only-binary=:all: --implementation cp --python-version 3.12 \
+              --platform "manylinux_2_28_$cpu" --platform "manylinux_2_17_$cpu" --platform "manylinux2014_$cpu" "$@"
+          }
+          # cliente (x86_64): lo script e i suoi aiutanti, come l'Irlanda
+          d=/tmp/p-cliente; mkdir -p "$d"
+          vendor "$d" x86_64 'pymongo>=4.6,<5' backports.zstd boto3
+          cp "$C"/prova_infinite.py "$C"/esegui-cliente.sh "$C"/s3io.py "$C"/attendi_db.py "$C"/opzioni.txt "$C"/massimo.txt \
+            "$C"/carica.txt "$C"/cpu_macchina.py "$C"/somma_massimo.py "$C"/controlla_parallelo.py "$C"/prepara_stato.py "$d"/
+          bash "$C"/ci/certificati.sh ca "$CA_DIR"; cp "$CA_DIR"/ca.pem "$d"/
+          { echo "COPIE=$COPIE"; echo "GB=$GB"; } > "$d"/cliente.env
+          tar czf "$PACCHI"/cliente.tar.gz -C "$d" .
+          md5sum "$d"/prova_infinite.py | tee -a "$GITHUB_STEP_SUMMARY"
+          # server: una per CPU che serve
+          for cpu in x86_64 aarch64; do
+            [ -x /tmp/bin/mongo-server-$cpu/mongo-server ] || chmod +x /tmp/bin/mongo-server-$cpu/mongo-server 2>/dev/null || continue
+            d=/tmp/p-server-$cpu; mkdir -p "$d"
+            vendor "$d" "$cpu" 'pymongo>=4.6,<5' boto3
+            cp /tmp/bin/mongo-server-$cpu/mongo-server /tmp/bin/mongo-server-$cpu/motore-commit.txt "$C"/esegui-server.sh "$C"/s3io.py \
+              "$C"/crea_utente.py "$C"/cpu_macchina.py "$C"/server.txt "$d"/
+            chmod +x "$d"/mongo-server
+            echo "BUCKET_DATI=$BUCKET_DATI" > "$d"/server.env
+            tar czf "$PACCHI"/server-$cpu.tar.gz -C "$d" .
+            echo "server $cpu: motore $(cat "$d"/motore-commit.txt), sha256 $(sha256sum "$d"/mongo-server | cut -d' ' -f1)" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+          ls -la "$PACCHI"
+
+      - name: Credenziali fresche per la giornata
+        if: env.MODO == 'giro'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: La giornata (bucket, gruppi, macchine, taglie una alla volta, spesa ogni minuto, risultati)
+        id: giro
+        if: env.MODO == 'giro'
+        continue-on-error: true
+        run: bash "$C"/ci/giro-ci.sh
+
+      - name: Credenziali per la pulizia
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Recupero dei risultati con le credenziali fresche, prima della pulizia
+        if: always() && env.MODO == 'giro'
+        run: bash "$C"/ci/recupera.sh
+
+      - name: Pulizia (macchine con il tag, bucket fenvix-coldread-*, gruppi di sicurezza) e verifica
+        if: always()
+        run: bash "$C"/ci/pulizia.sh
+
+      - name: Nessun segreto nei risultati (altrimenti non si pubblica niente)
+        id: segreti
+        if: always() && env.MODO == 'giro'
+        run: |
+          [ -d "$CM_OUT" ] || { echo "niente risultati"; exit 0; }
+          python3 "$C"/ci/controlla_segreti.py "$CM_OUT"
+          echo "pulito=1" >> "$GITHUB_OUTPUT"
+
+      - name: Pubblico i risultati sul branch (senza l'account)
+        if: always() && steps.segreti.outputs.pulito == '1'
+        run: |
+          R="$C"/risultati/run-${{ github.run_id }}
+          mkdir -p "$R" && cp -r "$CM_OUT"/. "$R"/ && find "$R" -name .salito.json -delete
+          grep -rl "$CM_ACCT" "$R" | xargs -r sed -i "s/$CM_ACCT/<ACCOUNT_ID>/g"
+          ! grep -rq "$CM_ACCT" "$R" || { echo "account ancora nei risultati: non pubblico"; exit 1; }
+          find "$R" -type f -size +90M -print -delete   # oltre il limite di GitHub: restano nell'artifact
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          git add "$R" && git commit -qm "Cucina minima run ${{ github.run_id }}: risultati" || true
+          for _ in 1 2 3; do git pull --rebase -q origin cucina-minima && git push -q origin HEAD:cucina-minima && break; sleep 5; done
+
+      - name: Tutti i risultati come artifact (se il push non riesce)
+        if: always() && steps.segreti.outputs.pulito == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucina-risultati-${{ github.run_id }}
+          path: /tmp/cm-out
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Credenziali fresche per il controllo finale
+        if: always()
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 900
+          mask-aws-account-id: true
+
+      - name: Controllo finale (macchine, dischi, Elastic IP, bucket, gruppi) - RIMASTO niente oppure ALLARME e job rosso
+        if: always()
+        run: bash "$C"/ci/controllo-finale.sh
+
+      - name: Esito della giornata
+        if: always() && env.MODO == 'giro'
+        run: |
+          echo "esito del passo della giornata: ${{ steps.giro.outcome }}"
+          [ "${{ steps.giro.outcome }}" = success ]
