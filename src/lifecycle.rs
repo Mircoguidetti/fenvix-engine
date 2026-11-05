@@ -1192,8 +1192,8 @@ pub static PASSES_PREEMPTED: std::sync::atomic::AtomicU64 = std::sync::atomic::A
 
 /// Ask the running compaction pass of `id` (if any) to stop, for as long as the returned guard lives. Taken before the
 /// tenant's maintenance lock by work that cannot wait for a merge of sorted runs to end (it can last hours on a large
-/// database): the pass stops its compactor at once (the merges in flight are lost, their output is garbage) and gives
-/// back the lock.
+/// database): once its L0 is below the threshold (the L0 compaction is short and the work that preempts needs it) the pass
+/// stops its compactor (the merges in flight are lost, their output is garbage) and gives back the lock.
 pub fn preempt_compaction(id: &str) -> PreemptGuard {
     *PASS_PREEMPT.lock().unwrap().entry(id.to_string()).or_default() += 1;
     PreemptGuard(id.to_string())
@@ -1374,10 +1374,6 @@ pub(crate) async fn compact_tenant_pass_with(
             Duration::from_millis(250)
         };
         tokio::time::sleep(poll).await;
-        if pass_preempted(id, &hooks) {
-            preempted = true;
-            break;
-        }
         let p = sst_progress(&counting);
         if p != progress_seen {
             progress_seen = p;
@@ -1412,11 +1408,18 @@ pub(crate) async fn compact_tenant_pass_with(
             }
         }
         if l0_after >= L0_COMPACT_THRESHOLD {
+            // A preemption waits for the L0 to be compacted (as long as it makes progress): the work that preempts writes
+            // to the database too (a restore, a fork's source) and would find its L0 full, with no pass able to run.
             merging = false;
             continue;
         }
         if let Some(f) = &hooks.l0_done {
             f(l0_after);
+        }
+        // Only the merges of sorted runs are left: they stop on request (they can last hours).
+        if pass_preempted(id, &hooks) {
+            preempted = true;
+            break;
         }
         // L0 is below the threshold: the pass is over unless merges of sorted runs are still in flight, which go on
         // (stopped, they would start again from nothing at the next pass).
