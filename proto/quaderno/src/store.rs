@@ -450,4 +450,27 @@ mod tests_riciclo {
         assert_eq!(v2.len(), 300);
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    /// Revisore Q8b: un segmento riciclato che NON è l'ultimo (il registro è passato al segmento dopo perché la voce
+    /// successiva non ci stava) ha in coda byte vecchi. Il recupero non deve cancellare i segmenti successivi.
+    #[test]
+    fn rev_q8b_segmento_riciclato_non_ultimo() {
+        let seg_bytes = 256 << 10;
+        let dir = std::env::temp_dir().join(format!("pq-riciclo-rev-{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let spare = dir.join("spare.log");
+        // un segmento vecchio quasi pieno (voci 1..230) diventa la scorta
+        write_seg(&dir, 9, 1, 230, seg_bytes);
+        recycle(&seg_path(&dir, 9), &spare, &dir, seg_bytes).unwrap();
+        std::fs::rename(&spare, seg_path(&dir, 3)).unwrap();
+        // nel segmento 3 entrano le voci 401..600 e il registro passa al 4 (qui prima della fine del segmento: la coda
+        // del segmento 3 ha ancora le voci vecchie, come quando la voce successiva non ci sta)
+        write_seg(&dir, 3, 401, 600, seg_bytes);
+        write_seg(&dir, 4, 601, 650, seg_bytes);
+        let (v, last, _) = recover(&dir).unwrap();
+        let idx: Vec<u64> = v.iter().map(|r| r.entry.index).collect();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(last, 4, "il segmento 4 (voci durevoli e confermate) deve sopravvivere");
+        assert_eq!(idx, (401..=650).collect::<Vec<_>>());
+    }
 }
