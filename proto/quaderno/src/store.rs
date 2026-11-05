@@ -69,6 +69,33 @@ fn prealloc(path: &Path, size: u64) -> std::io::Result<()> {
     f.sync_all()
 }
 
+/// Q8: come `prealloc`, ma a passo: blocchi da 1 MB, fdatasync dopo ogni blocco e al più `mbs` MB/s
+/// (`PQ_PREALLOC_MBS`). Prima il segmento di scorta da 64 MB si scriveva tutto insieme con un solo sync alla fine:
+/// sullo stesso disco fermava il fdatasync del registro (MISURATO in Q8: un colpo da 60–130 ms a ogni cambio di
+/// segmento con tre repliche sullo stesso disco).
+fn prealloc_paced(path: &Path, size: u64, mbs: u64) -> std::io::Result<()> {
+    let f = OpenOptions::new().create(true).truncate(true).write(true).open(path)?;
+    let z = vec![0u8; 1 << 20];
+    let t0 = std::time::Instant::now();
+    let mut p = 0u64;
+    while p < size {
+        let n = ((size - p) as usize).min(z.len());
+        f.write_all_at(&z[..n], p)?;
+        f.sync_data()?;
+        p += n as u64;
+        let due = std::time::Duration::from_secs_f64(p as f64 / (mbs as f64 * 1048576.0));
+        let el = t0.elapsed();
+        if due > el {
+            std::thread::sleep(due - el);
+        }
+    }
+    f.sync_all()
+}
+
+fn prealloc_mbs() -> u64 {
+    std::env::var("PQ_PREALLOC_MBS").ok().and_then(|x| x.parse().ok()).unwrap_or(0)
+}
+
 fn open_segment(dir: &Path, seg: u32, size: u64) -> File {
     let p = seg_path(dir, seg);
     if !p.exists() {
@@ -100,7 +127,9 @@ pub fn spawn_disk(
                 let spare = dir.join("spare.log");
                 if !spare.exists() {
                     let tmp = dir.join("spare.tmp");
-                    if prealloc(&tmp, seg_bytes).is_ok() && std::fs::rename(&tmp, &spare).is_ok() {
+                    let mbs = prealloc_mbs();
+                    let r = if mbs > 0 { prealloc_paced(&tmp, seg_bytes, mbs) } else { prealloc(&tmp, seg_bytes) };
+                    if r.is_ok() && std::fs::rename(&tmp, &spare).is_ok() {
                         sync_dir(&dir);
                     }
                 }

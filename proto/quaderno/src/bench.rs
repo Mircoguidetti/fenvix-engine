@@ -1330,3 +1330,206 @@ pub async fn lotti(cl: Arc<Cluster>, rate: f64, batch: usize, clients: usize, se
                "unknown": unk.load(Relaxed), "rejected": rej.load(Relaxed), "diag": cl.diag.json()})
     );
 }
+
+// ------------------------------------------------------------------------------------------------ Q8 · corsie
+
+/// Q8: configurazione di un generatore della prova delle corsie (un processo per gruppo di database).
+pub struct CorsieCfg {
+    /// database `db_from .. db_from + dbs`
+    pub db_from: u64,
+    pub dbs: u64,
+    /// record al secondo PER database (ciclo aperto); 0 = nessun flusso costante
+    pub rate: f64,
+    /// "steady" (flusso costante), "burst" (raffiche), "big" (record grandi a `rate`)
+    pub mode: String,
+    pub doc: usize,
+    pub big_kb: usize,
+    pub burst: usize,
+    pub burst_every_ms: u64,
+    pub batch: usize,
+    pub inflight: usize,
+    pub deadline_ms: u64,
+    pub warm: u64,
+    pub secs: u64,
+    pub label: String,
+}
+
+/// Record della prova: un inserimento di un documento JSON da `doc` byte (1,9 KB come P1) con due voci d'indice
+/// (userId e createdAt), modalità validata alla posizione vista dal client.
+fn corsie_record(doc: &Bytes) -> Vec<Write> {
+    use rand::Rng;
+    let mut g = rand::thread_rng();
+    let id = format!("{:024x}", g.gen::<u128>() & ((1u128 << 96) - 1));
+    let user = format!("{:024x}", g.gen::<u128>() & ((1u128 << 96) - 1));
+    let when = format!("2026-{:02}-{:02}T{:02}:{:02}:{:02}", g.gen_range(1..13), g.gen_range(1..29), g.gen_range(0..24), g.gen_range(0..60), g.gen_range(0..60));
+    let idb = Bytes::from(id.clone().into_bytes()).slice(..12);
+    vec![
+        Write { key: doc_key(&id), kind: Kind::Put, val: doc.clone() },
+        Write { key: Bytes::from(format!("ix/1/{user}/{id}")), kind: Kind::Put, val: idb.clone() },
+        Write { key: Bytes::from(format!("ix/2/{when}/{id}")), kind: Kind::Put, val: idb },
+    ]
+}
+
+struct CorsieAcc {
+    h: Histogram<u64>,
+    /// per secondo della misura: istogramma (per vedere quando succede qualcosa)
+    per_s: Vec<Histogram<u64>>,
+    ok: u64,
+    busy_retries: u64,
+    rejected: u64,
+    unknown: u64,
+    conflict: u64,
+    dropped: u64,
+}
+
+pub async fn corsie(cl: Arc<Cluster>, c: CorsieCfg) {
+    use rand::Rng;
+    let pool: Arc<Vec<Bytes>> = Arc::new(if c.mode == "big" { (0..4).map(|_| { let mut v = vec![0u8; c.big_kb << 10]; rand::thread_rng().fill(&mut v[..]); Bytes::from(v) }).collect() } else { (0..2048).map(|_| json_doc(c.doc)).collect() });
+    let acc = Arc::new(Mutex::new(CorsieAcc { h: hist(), per_s: (0..c.secs.min(900) + 2).map(|_| hist()).collect(), ok: 0, busy_retries: 0, rejected: 0, unknown: 0, conflict: 0, dropped: 0 }));
+    let stop = Arc::new(AtomicBool::new(false));
+    let measuring = Arc::new(AtomicBool::new(false));
+    let t_meas = Arc::new(Mutex::new(Instant::now()));
+    let sem = Arc::new(tokio::sync::Semaphore::new(c.inflight));
+    let sent = Arc::new(AtomicU64::new(0));
+    let deadline = Duration::from_millis(c.deadline_ms);
+    let record = {
+        let (acc, measuring, t_meas) = (acc.clone(), measuring.clone(), t_meas.clone());
+        move |sched: Instant, outs: Vec<Outcome>| {
+            if !measuring.load(Relaxed) {
+                return;
+            }
+            let us = sched.elapsed().as_micros() as u64;
+            let sec = sched.saturating_duration_since(*t_meas.lock()).as_secs() as usize;
+            let mut a = acc.lock();
+            for o in outs {
+                match o {
+                    Outcome::Committed { busy, .. } => {
+                        a.ok += 1;
+                        a.busy_retries += busy as u64;
+                        a.h.record(us.max(1)).ok();
+                        if sec < a.per_s.len() {
+                            a.per_s[sec].record(us.max(1)).ok();
+                        }
+                    }
+                    Outcome::Rejected(_) => a.rejected += 1,
+                    Outcome::Unknown => a.unknown += 1,
+                    Outcome::Conflict(_) => a.conflict += 1,
+                }
+            }
+        }
+    };
+    let record = Arc::new(record);
+    // posizione di lettura di partenza: quella confermata adesso (con 0 la convalida rifiuterebbe ogni commit di un
+    // database la cui finestra è già stata potata)
+    for _ in 0..50 {
+        if let Some(Resp::Pos(p)) = cl.call_leader(&Req::Confirmed, Duration::from_secs(2)).await {
+            cl.seen.fetch_max(p, Relaxed);
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+    // flusso costante (steady e big): la k-esima scrittura va al database db_from + k % dbs, all'istante pianificato
+    let gen = if c.rate > 0.0 && c.mode != "burst" {
+        let (cl, pool, sem, sent, record, acc) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), acc.clone());
+        let (from, dbs) = (c.db_from, c.dbs);
+        let k = Arc::new(AtomicU64::new(0));
+        Some(open_loop(c.rate * c.dbs as f64, stop.clone(), move |sched| {
+            let (cl, pool, sem, sent, record, acc, k) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), acc.clone(), k.clone());
+            async move {
+                let Ok(_p) = sem.try_acquire() else {
+                    acc.lock().dropped += 1;
+                    return;
+                };
+                let n = k.fetch_add(1, Relaxed);
+                let db = db_id(from + n % dbs);
+                let doc = pool[rand::random::<usize>() % pool.len()].clone();
+                let cr = CommitReq { txn: txn_id(), db, read_pos: cl.seen.load(Relaxed), mode: Mode::Validated, writes: corsie_record(&doc), reads: vec![], session: None };
+                sent.fetch_add(1, Relaxed);
+                let o = cl.commit(&cr, deadline).await;
+                record(sched, vec![o]);
+            }
+        }))
+    } else {
+        None
+    };
+    // raffiche: ogni `burst_every_ms` un'onda di `burst` record in lotti da `batch` (CommitBatch), tutti insieme
+    let bgen = if c.mode == "burst" {
+        let (cl, pool, sem, sent, record, stop) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone(), stop.clone());
+        let (from, dbs, burst, batch, every) = (c.db_from, c.dbs, c.burst, c.batch.max(1), c.burst_every_ms);
+        Some(tokio::spawn(async move {
+            let mut wave = 0u64;
+            while !stop.load(Relaxed) {
+                let sched = Instant::now();
+                let db = db_id(from + wave % dbs);
+                wave += 1;
+                let mut hs = vec![];
+                for _ in 0..burst.div_ceil(batch) {
+                    let (cl, pool, sem, sent, record) = (cl.clone(), pool.clone(), sem.clone(), sent.clone(), record.clone());
+                    hs.push(tokio::spawn(async move {
+                        let _p = sem.acquire().await;
+                        let rp = cl.seen.load(Relaxed);
+                        let cs: Vec<CommitReq> = (0..batch)
+                            .map(|_| CommitReq { txn: txn_id(), db, read_pos: rp, mode: Mode::Validated, writes: corsie_record(&pool[rand::random::<usize>() % pool.len()]), reads: vec![], session: None })
+                            .collect();
+                        sent.fetch_add(cs.len() as u64, Relaxed);
+                        let rs = cl.commit_batch(&cs, deadline).await;
+                        record(sched, rs);
+                    }));
+                }
+                let _ = tokio::time::timeout(Duration::from_millis(every), async {
+                    for h in hs {
+                        let _ = h.await;
+                    }
+                })
+                .await;
+                let el = sched.elapsed();
+                if el < Duration::from_millis(every) {
+                    tokio::time::sleep(Duration::from_millis(every) - el).await;
+                }
+            }
+        }))
+    } else {
+        None
+    };
+    // resoconto periodico su stderr (per i generatori rumorosi, che vengono uccisi senza arrivare alla fine)
+    {
+        let (acc, sent, label, stop) = (acc.clone(), sent.clone(), c.label.clone(), stop.clone());
+        tokio::spawn(async move {
+            let t0 = Instant::now();
+            while !stop.load(Relaxed) {
+                tokio::time::sleep(Duration::from_secs(5)).await;
+                let a = acc.lock();
+                eprintln!("corsie {label} t={:.0}s inviati {} confermati(misura) {} rifiutati {} ignoti {} scartati {} rifiuti_freno {}", t0.elapsed().as_secs_f64(), sent.load(Relaxed), a.ok, a.rejected, a.unknown, a.dropped, a.busy_retries);
+            }
+        });
+    }
+    tokio::time::sleep(Duration::from_secs(c.warm)).await;
+    *t_meas.lock() = Instant::now();
+    let sent0 = sent.load(Relaxed);
+    measuring.store(true, Relaxed);
+    let t0 = Instant::now();
+    tokio::time::sleep(Duration::from_secs(c.secs)).await;
+    let el = t0.elapsed().as_secs_f64();
+    let sent1 = sent.load(Relaxed);
+    // si aspettano gli esiti dei record pianificati nella misura (al più la scadenza), poi si chiude
+    stop.store(true, Relaxed);
+    tokio::time::sleep(Duration::from_millis(c.deadline_ms.min(3000) + 500)).await;
+    measuring.store(false, Relaxed);
+    if let Some(g) = gen {
+        g.abort();
+    }
+    if let Some(g) = bgen {
+        g.abort();
+    }
+    let a = acc.lock();
+    let per_s: Vec<serde_json::Value> = a.per_s.iter().take(c.secs as usize).map(|h| json!([h.len(), h.value_at_quantile(0.5), h.value_at_quantile(0.99), h.max()])).collect();
+    println!(
+        "{}",
+        json!({"bench": "corsie", "label": c.label, "mode": c.mode, "db_from": c.db_from, "dbs": c.dbs, "rate_per_db": c.rate, "doc": c.doc, "secs": el,
+               "sent_per_s": (sent1 - sent0) as f64 / el, "ok": a.ok, "ok_per_s": a.ok as f64 / el, "busy_retries": a.busy_retries, "rejected": a.rejected, "unknown": a.unknown,
+               "conflict": a.conflict, "dropped": a.dropped,
+               "lat": {"n": a.h.len(), "p50_us": a.h.value_at_quantile(0.5), "p90_us": a.h.value_at_quantile(0.9), "p99_us": a.h.value_at_quantile(0.99),
+                       "p999_us": a.h.value_at_quantile(0.999), "p9999_us": a.h.value_at_quantile(0.9999), "max_us": a.h.max(), "mean_us": a.h.mean()},
+               "per_s_n_p50_p99_max": per_s, "diag": cl.diag.json()})
+    );
+}

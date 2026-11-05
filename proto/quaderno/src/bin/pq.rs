@@ -134,6 +134,28 @@ fn main() -> anyhow::Result<()> {
             r.block_on(bench::lotti(cluster(&a), a.f("rate", 4000.0), a.u("batch", 1) as usize, a.u("clients", 64) as usize, a.u("secs", 20), a.u("warm", 5),
                 a.u("keys", 1) as usize, a.u("val", 200) as usize, a.u("dbs", 100), a.u("real", 0), a.f("reads", 0.0)));
         }
+        "corsie" => {
+            let r = rt(a.u("threads", 2) as usize);
+            r.block_on(bench::corsie(
+                cluster(&a),
+                bench::CorsieCfg {
+                    db_from: a.u("db-from", 0),
+                    dbs: a.u("dbs", 1),
+                    rate: a.f("rate", 100.0),
+                    mode: a.s("mode", "steady"),
+                    doc: a.u("doc", 1900) as usize,
+                    big_kb: a.u("big-kb", 1024) as usize,
+                    burst: a.u("burst", 50_000) as usize,
+                    burst_every_ms: a.u("burst-every-ms", 15_000),
+                    batch: a.u("batch", 1000) as usize,
+                    inflight: a.u("inflight", 20_000) as usize,
+                    deadline_ms: a.u("deadline-ms", 10_000),
+                    warm: a.u("warm", 5),
+                    secs: a.u("secs", 60),
+                    label: a.s("label", ""),
+                },
+            ));
+        }
         "hot" => {
             let r = rt(a.u("threads", 2) as usize);
             r.block_on(bench::hot(cluster(&a), &a.s("mode", "blind"), a.u("clients", 64) as usize, a.u("secs", 30), a.u("max-attempts", 50) as u32));
@@ -173,6 +195,7 @@ fn main() -> anyhow::Result<()> {
                     size_bytes: a.u("size-kb", 1024) << 10,
                     pressure: a.f("pressure", 0.7),
                     pressure_rate: a.u("pressure-mbs", 64) << 20,
+                    null: a.u("null", 0) == 1,
                 },
             ))?;
         }

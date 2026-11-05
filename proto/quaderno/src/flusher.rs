@@ -37,6 +37,10 @@ pub struct FlushCfg {
     pub pressure: f64,
     /// limite di velocità dello scarico per pressione (byte/s verso S3)
     pub pressure_rate: u64,
+    /// Q8: scaricatore finto, senza S3 (`--null 1`): legge i record (scaricabili) e conferma lo scarico al registro
+    /// con un etag finto, senza scrivere niente e senza tenere lo stato. Serve solo a far potare la finestra nelle
+    /// prove del quaderno su una macchina senza MinIO.
+    pub null: bool,
 }
 
 #[derive(Default)]
@@ -179,6 +183,9 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
                 let mut maxp = 0;
                 for rcd in rs {
                     for w in &rcd.writes {
+                        if c.null {
+                            continue;
+                        }
                         let k = (*db, w.key.clone());
                         let nv = match w.kind {
                             Kind::Put => Some(w.val.clone()),
@@ -197,6 +204,21 @@ pub async fn run(cl: Arc<Cluster>, c: FlushCfg) -> anyhow::Result<()> {
                 items.push((*db, maxp));
             }
             let sst = sst.freeze();
+            if c.null {
+                let et = Bytes::from_static(b"null");
+                for ch in items.chunks(4000) {
+                    let it = ch.iter().map(|(d, p)| (*d, *p, et.clone())).collect();
+                    match cl.call_leader(&Req::FlushDone { items: it }, Duration::from_secs(30)).await {
+                        Some(Resp::Committed(_)) => {}
+                        _ => errors += 1,
+                    }
+                }
+                tot_recs += n;
+                if !more {
+                    break;
+                }
+                continue;
+            }
             let name = format!("g{g:03}/d-{:016x}-{:032x}.sst", items.iter().map(|x| x.1).max().unwrap(), rand::random::<u128>());
             if let Err(e) = store.put(&Path::from(name.clone()), PutPayload::from(sst.clone())).await {
                 eprintln!("put {name}: {e}");

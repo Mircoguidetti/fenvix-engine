@@ -23,6 +23,7 @@ use crate::codec::*;
 use crate::net::{spawn_out_link, FrameReader, Out, ZJob};
 use crate::store::{self, Ckpt, DiskOp, RaftState};
 use crate::window::{Loc, Window};
+use crate::lanes::{Item, LaneCfg, Lanes, Push};
 use parking_lot::Mutex;
 use tokio::sync::watch;
 use bytes::{Bytes, BytesMut};
@@ -77,6 +78,8 @@ pub enum Ev {
     Disk(u64, u64),
     /// run della dispensa scritto: per ogni database, fino a che posizione i record possono uscire dalla RAM
     Spilled(u64, Vec<(Db, Pos)>),
+    /// Q8: c'è qualcosa nelle corsie (sveglia il thread principale)
+    LaneWake,
 }
 
 /// Richiesta al thread della dispensa.
@@ -101,6 +104,12 @@ pub struct Shared {
     pub brake: std::sync::atomic::AtomicU8,
     /// commit rifiutati dal freno nel thread di rete
     pub fast_busy: std::sync::atomic::AtomicU64,
+    /// Q8: corsie per database, riempite dai thread di rete e svuotate dal thread principale con il giro equo
+    pub lanes: Mutex<Lanes<Reply>>,
+    pub lanes_on: bool,
+    /// Q8: questa replica è il leader (pubblicato dal thread principale): solo allora i commit vanno nelle corsie
+    pub is_leader: std::sync::atomic::AtomicBool,
+    pub lane_wake: std::sync::atomic::AtomicBool,
 }
 
 /// Cronometro per tipo di lavoro del thread principale (criterio: nessun blocco sopra 1 ms).
@@ -131,11 +140,12 @@ pub struct Sw {
 
 /// Destinatario di una risposta: una richiesta sola, oppure un posto in un lotto (`CommitBatch`). Il lotto parte con
 /// un solo messaggio quando tutti i suoi commit hanno un esito.
-enum Reply {
+pub enum Reply {
     One { conn: UnboundedSender<Vec<u8>>, id: u64 },
-    Part { agg: std::rc::Rc<std::cell::RefCell<Agg>>, k: usize },
+    /// Q8: `Arc<Mutex>` (prima `Rc<RefCell>`): un lotto può essere messo in corsia da un thread di rete
+    Part { agg: Arc<Mutex<Agg>>, k: usize },
 }
-struct Agg {
+pub struct Agg {
     conn: UnboundedSender<Vec<u8>>,
     id: u64,
     res: Vec<Option<Resp>>,
@@ -148,7 +158,7 @@ impl Reply {
                 let _ = conn.send(enc_resp(*id, r));
             }
             Reply::Part { agg, k } => {
-                let mut a = agg.borrow_mut();
+                let mut a = agg.lock();
                 if a.res[*k].is_some() {
                     return;
                 }
@@ -288,6 +298,12 @@ pub struct Node {
     h_ack: hdrhistogram::Histogram<u64>,
     h_commit: hdrhistogram::Histogram<u64>,
     h_loop: hdrhistogram::Histogram<u64>,
+    // ---- Q8: corsie
+    lane_cfg: LaneCfg,
+    /// (indice, byte) dei record ammessi dalle corsie e non ancora durevoli sul disco del capo
+    infl: VecDeque<(u64, u64)>,
+    infl_bytes: u64,
+    lane_buf: Vec<Item<Reply>>,
 }
 
 fn rand_ms(a: u64, b: u64) -> Duration {
@@ -325,7 +341,12 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
     let io_threads = std::env::var("PQ_IO_THREADS").ok().and_then(|x| x.parse().ok()).unwrap_or(2);
     let io_nice: i32 = std::env::var("PQ_IO_NICE").ok().and_then(|x| x.parse().ok()).unwrap_or(-10);
     let rt = tokio::runtime::Builder::new_multi_thread().worker_threads(io_threads).on_thread_start(move || set_thread_nice(io_nice)).enable_all().build()?;
-    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default(), repl_sent_off: Default::default() });
+    let lcfg = LaneCfg::from_env();
+    if lcfg.on {
+        eprintln!("replica {}: corsie accese {:?}", cfg.id, lcfg);
+    }
+    let sh = Arc::new(Shared { win: Window::new(false, cfg.dir.clone()), readable: watch::channel(0).0, status: Mutex::new(Status::default()), brake: Default::default(), fast_busy: Default::default(), repl_sent_off: Default::default(),
+        lanes_on: lcfg.on, lanes: Mutex::new(Lanes::new(lcfg)), is_leader: Default::default(), lane_wake: Default::default() });
     let mut peers = vec![];
     {
         let _g = rt.enter();
@@ -390,6 +411,25 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                     while let Ok(body) = r.next().await {
                         match dec_req(body) {
                             Ok((id, q)) => {
+                                // Q8: sul leader, con le corsie accese, i commit vanno nella corsia del loro database
+                                // (non nel canale unico del thread principale)
+                                let q = if sh.lanes_on && sh.is_leader.load(std::sync::atomic::Ordering::Relaxed) {
+                                    match q {
+                                        Req::Commit(c) => {
+                                            lane_push(&sh, &t, vec![(Reply::One { conn: rtx.clone(), id }, c)]);
+                                            continue;
+                                        }
+                                        Req::CommitBatch(v) => {
+                                            let agg = Arc::new(Mutex::new(Agg { conn: rtx.clone(), id, res: vec![None; v.len()], left: v.len() }));
+                                            let items = v.into_iter().enumerate().map(|(k, c)| (Reply::Part { agg: agg.clone(), k }, c)).collect();
+                                            lane_push(&sh, &t, items);
+                                            continue;
+                                        }
+                                        other => other,
+                                    }
+                                } else {
+                                    q
+                                };
                                 // letture e richieste di servizio: qui, senza passare dal thread principale
                                 if let Some(q) = serve_local(&sh, &rtx, id, q) {
                                     if t.send(Ev::Client(rtx.clone(), id, q)).is_err() {
@@ -611,6 +651,10 @@ impl Node {
             h_ack: hdrhistogram::Histogram::new(3).unwrap(),
             h_commit: hdrhistogram::Histogram::new(3).unwrap(),
             h_loop: hdrhistogram::Histogram::new(3).unwrap(),
+            lane_cfg: LaneCfg::from_env(),
+            infl: VecDeque::new(),
+            infl_bytes: 0,
+            lane_buf: vec![],
             cfg,
         };
         n.sh.win.genesis.store(genesis, std::sync::atomic::Ordering::Relaxed);
@@ -865,6 +909,7 @@ impl Node {
             }
             let t1 = Instant::now();
             self.tick();
+            self.pump_lanes();
             let t = Instant::now();
             self.submit_disk();
             self.sw(12, t);
@@ -916,7 +961,7 @@ impl Node {
             Ev::Client(_, _, Req::Get { .. }) => 1,
             Ev::Client(..) => 15,
             Ev::Disk(..) => 5,
-            Ev::Spilled(..) => 15,
+            Ev::Spilled(..) | Ev::LaneWake => 15,
         };
         self.handle_ev(ev);
         self.sw(k, t);
@@ -936,12 +981,13 @@ impl Node {
                     Reply::One { conn, id }.send(&Resp::NotLeader(self.leader));
                     return;
                 }
-                let agg = std::rc::Rc::new(std::cell::RefCell::new(Agg { conn, id, res: vec![None; v.len()], left: v.len() }));
+                let agg = Arc::new(Mutex::new(Agg { conn, id, res: vec![None; v.len()], left: v.len() }));
                 for (k, c) in v.into_iter().enumerate() {
                     self.on_commit(Reply::Part { agg: agg.clone(), k }, c);
                 }
             }
             Ev::Client(conn, id, q) => self.on_req(Reply::One { conn, id }, q),
+            Ev::LaneWake => {}
             Ev::Disk(gen, last) => {
                 if gen == self.gen {
                     let nd = last.min(self.last_index());
@@ -951,6 +997,13 @@ impl Node {
                         }
                     }
                     self.durable = self.durable.max(nd);
+                    while let Some(&(i, b)) = self.infl.front() {
+                        if i > self.durable {
+                            break;
+                        }
+                        self.infl.pop_front();
+                        self.infl_bytes -= b;
+                    }
                 }
                 if self.role == Role::Leader {
                     self.maybe_commit();
@@ -985,6 +1038,9 @@ impl Node {
             }
         }
         self.role = Role::Follower;
+        self.sh.is_leader.store(false, std::sync::atomic::Ordering::Relaxed);
+        self.infl.clear();
+        self.infl_bytes = 0;
         self.publish_brake();
         self.leader = -1;
         self.verified = 0;
@@ -997,6 +1053,9 @@ impl Node {
         self.flush_index();
         eprintln!("replica {}: guida, mandato {} (indice {})", self.me(), self.term, self.last_index());
         self.role = Role::Leader;
+        self.infl.clear();
+        self.infl_bytes = 0;
+        self.sh.is_leader.store(true, std::sync::atomic::Ordering::Relaxed);
         self.publish_brake();
         self.leader = self.me() as i32;
         self.leader_since = Instant::now();
@@ -1656,7 +1715,9 @@ impl Node {
             repl_sent: self.repl_sent + self.sh.repl_sent_off.load(std::sync::atomic::Ordering::Relaxed),
             delayed: self.delayed_n,
             diag: format!(
-                "{{\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                "{{\"corsie\":{},\"in_volo_byte\":{},\"durable_p50_p99\":[{},{}],\"ack_p50_p99\":[{},{}],\"commit_p50_p99\":[{},{}],\"giro_max_us\":{},\"giri\":{},\"giri_sopra_1ms\":{},\"giri_sopra_1ms_di_cpu\":{},\"cronometro\":{}}}",
+                self.sh.lanes.lock().json(),
+                self.infl_bytes,
                 self.h_durable.value_at_quantile(0.5),
                 self.h_durable.value_at_quantile(0.99),
                 self.h_ack.value_at_quantile(0.5),
@@ -1819,6 +1880,13 @@ impl Node {
                 }
             }
         }
+        // Q8: freno di cella per database (le corsie rifiutano solo i pesanti con i livelli 2 e 4; tutti con 9)
+        if self.lane_cfg.on {
+            let lb = if self.brake == 3 || (self.brake == 4 && self.mem_used > c.mem_cap / 5 * 6) { 9 } else { self.brake };
+            let mut l = self.sh.lanes.lock();
+            l.brake = lb;
+            l.every_second();
+        }
         self.tokens.retain(|db, _| self.tok_rate.contains_key(db));
         for db in self.tok_rate.keys() {
             self.tokens.entry(*db).or_insert(0.0);
@@ -1893,6 +1961,43 @@ impl Node {
         self.commit_now(reply, c);
     }
 
+    /// Q8: giro equo sulle corsie fino al tetto del lotto (byte ammessi e non ancora durevoli sul disco del capo).
+    fn pump_lanes(&mut self) {
+        if !self.lane_cfg.on {
+            return;
+        }
+        self.sh.lane_wake.store(false, std::sync::atomic::Ordering::Relaxed);
+        let mut buf = std::mem::take(&mut self.lane_buf);
+        {
+            let mut l = self.sh.lanes.lock();
+            if l.queued() == 0 {
+                drop(l);
+                self.lane_buf = buf;
+                return;
+            }
+            if self.role != Role::Leader {
+                buf.extend(l.drain());
+            } else if self.infl_bytes < self.lane_cfg.cap_bytes {
+                let budget = self.lane_cfg.cap_bytes - self.infl_bytes;
+                l.pump(budget, self.infl_bytes == 0, &mut buf);
+            }
+        }
+        for it in buf.drain(..) {
+            if self.role != Role::Leader {
+                it.reply.send(&Resp::NotLeader(self.leader));
+                continue;
+            }
+            let before = self.last_index();
+            *self.rate_cnt.entry(it.c.db).or_insert(0) += 1;
+            self.commit_now(it.reply, it.c);
+            if self.last_index() > before {
+                self.infl.push_back((self.last_index(), it.bytes));
+                self.infl_bytes += it.bytes;
+            }
+        }
+        self.lane_buf = buf;
+    }
+
     fn commit_now(&mut self, reply: Reply, c: CommitReq) {
         // stesso id (o stessa sessione) già nel registro: stessa posizione
         let dup = self.txns.get(&c.txn).copied().or_else(|| c.session.as_ref().and_then(|s| self.sessions.get(&(s.lsid.clone(), s.txn_number)).copied()));
@@ -1935,6 +2040,26 @@ impl Node {
             self.sw(18, t);
         }
         self.pending.entry(idx).or_default().push(reply);
+    }
+}
+
+/// Q8: dal thread di rete, commit nelle corsie; i rifiutati (corsia piena, freno) ricevono subito la risposta.
+fn lane_push(sh: &Arc<Shared>, t: &Sender<Ev>, items: Vec<(Reply, CommitReq)>) {
+    let now = Instant::now();
+    let mut rej = vec![];
+    {
+        let mut l = sh.lanes.lock();
+        for (r, c) in items {
+            if let Push::Reject(r, resp) = l.push(r, c, now) {
+                rej.push((r, resp));
+            }
+        }
+    }
+    for (r, resp) in rej {
+        r.send(&resp);
+    }
+    if !sh.lane_wake.swap(true, std::sync::atomic::Ordering::Relaxed) {
+        let _ = t.send(Ev::LaneWake);
     }
 }
 
