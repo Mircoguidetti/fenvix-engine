@@ -26,6 +26,9 @@ PQ = os.environ.get('PQ_BIN') or (os.path.join(HERE, 'pq') if os.path.exists(os.
 REMOTE = os.environ.get('Q8_REMOTE') == '1'
 RA = ['--replicas', os.environ['Q8_REPLICAS']] if REMOTE else []
 CPU_N, CPU_R = ('0,1', '2,3') if REMOTE else ('3', '3')
+# Q8b: macchine con meno core (es. 2): Q8_CPU_N e Q8_CPU_R scelgono i core dei generatori normali e rumorosi
+CPU_N = os.environ.get('Q8_CPU_N', CPU_N)
+CPU_R = os.environ.get('Q8_CPU_R', CPU_R)
 WORK = os.environ.get('PQ_WORK', '/root/pq-work')
 HZ = os.sysconf('SC_CLK_TCK')
 
@@ -107,8 +110,16 @@ def diskstats():
     return {}
 
 
-def snap(reps):
-    s = {'t': time.time(), 'disk': diskstats()}
+def mach():
+    f = open('/proc/stat').readline().split()[1:]
+    v = [int(x) for x in f]
+    return v[3] + v[4], sum(v)
+
+
+def snap(reps, extra=None):
+    s = {'t': time.time(), 'disk': diskstats(), 'mach': mach()}
+    for k, pid in (extra or {}).items():
+        s['x_' + k] = proc_cpu(pid)
     for k, pid in reps.items():
         s[k] = {'cpu': proc_cpu(pid), 'main': proc_cpu(pid, pid), 'rss_kb': proc_kv(pid, 'status', 'VmRSS'), 'wbytes': proc_kv(pid, 'io', 'write_bytes'), 'wchar': proc_kv(pid, 'io', 'wchar')}
     return s
@@ -117,6 +128,11 @@ def snap(reps):
 def delta(a, b, reps):
     el = b['t'] - a['t']
     r = {'secs': el, 'disk': {k: b['disk'][k] - a['disk'][k] for k in b['disk']}}
+    idle, tot = b['mach'][0] - a['mach'][0], b['mach'][1] - a['mach'][1]
+    r['machine_busy_pct'] = 100.0 * (1 - idle / tot) if tot else None
+    for k in b:
+        if k.startswith('x_'):
+            r[k[2:] + '_cores'] = (b[k] - a[k]) / el if None not in (a.get(k), b[k]) else None
     if r['disk']:
         r['disk']['MB_s'] = r['disk']['sectors_w'] * 512 / el / 1e6
         r['disk']['util_pct'] = r['disk']['io_ms'] / el / 10
@@ -198,6 +214,10 @@ def run_level(level):
     for k, v in p.items():
         if k == 'cfg':
             continue
+        if pin_mode == 'd':
+            # Q8b, macchina a 2 core: capo sul core 0, copie di riserva e scaricatore sul core 1
+            pin(v, '0' if k == f'r{lid}' else '1')
+            continue
         if k == f'r{lid}':
             pin(v, '0,1' if pin_mode == 'a' else '0')
         elif k.startswith('r'):
@@ -231,10 +251,13 @@ def run_phases(level, reps, lid):
         time.sleep(WARM)
         sh([PQ, 'reset'] + RA, timeout=20)
         t_start = time.time()
-        s0 = snap(reps)
+        xp = {'gen_normali': normal.pid}
+        for g in gens:
+            xp[f'gen_{g.name}_{g.db_from}'] = g.p.pid
+        s0 = snap(reps, xp)
         st0 = {s['id']: s for s in status() if 'id' in s}
         time.sleep(secs)
-        s1 = snap(reps)
+        s1 = snap(reps, xp)
         st1 = {s['id']: s for s in status() if 'id' in s}
         out = normal.communicate(timeout=120)[0]
         res = json.loads(out.strip().splitlines()[-1])
@@ -257,7 +280,8 @@ def run_phases(level, reps, lid):
         L = res['lat']
         capo = r['sys'].get(r['leader'], {}).get('cores') or 0
         print(f"{TAG} livello {level} fase {ph}: normali {n_normal} p50 {L['p50_us']/1000:.2f} p99 {L['p99_us']/1000:.2f} p99.9 {L['p999_us']/1000:.2f} max {L['max_us']/1000:.1f} ms "
-              f"n {L['n']} rifiutati {res['rejected']} ignoti {res['unknown']} | totale {r['recs_per_s_total']:.0f} rec/s, capo {capo:.2f} core, disco {r['sys']['disk'].get('MB_s', 0):.1f} MB/s",
+              f"n {L['n']} rifiutati {res['rejected']} ignoti {res['unknown']} | totale {r['recs_per_s_total']:.0f} rec/s, capo {capo:.2f} core, disco {r['sys']['disk'].get('MB_s', 0):.1f} MB/s | "
+              f"generatore normali {r['sys'].get('gen_normali_cores') or 0:.2f} core, chiesti {n_normal * 100} inviati {res.get('sent_per_s', 0):.0f}/s, macchina {r['sys'].get('machine_busy_pct') or 0:.0f}%",
               flush=True)
         # quiete tra le fasi: corsie vuote
         time.sleep(6)
