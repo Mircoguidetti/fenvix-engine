@@ -105,6 +105,8 @@ async fn run(ctl: &Arc<Ctl>, db: &str, ancestors: &[String], fresh: bool) -> Api
         }
         return Err(close_pending_error(db));
     }
+    // a compaction pass running (maybe a long merge) stops instead of making this wait for it
+    let _preempt = tenant_bench::lifecycle::preempt_compaction(db);
     let lock = maint_lock(&ctl.lc.maint_locks, db);
     let _maint = lock.lock().await;
     // Ownership: no other process may write while the objects go (nothing to own when no data is left).

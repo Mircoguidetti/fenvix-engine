@@ -209,6 +209,8 @@ async fn fork_leased(ctl: &Arc<Ctl>, mut g: tokio::sync::OwnedRwLockWriteGuard<c
 async fn do_fork(ctl: &Arc<Ctl>, g: &mut crate::dbs::Entry, src: &str, target: &str, mode: &str, chain: &[String], list: &Option<Vec<crate::netguard::Net>>) -> ApiResult<Option<u64>> {
     // `list`: the source's allow list, read by fork() (and served for the branch from [`FORKING`] since then).
     quiesce(ctl, g, src).await?;
+    // a compaction pass running (maybe a long merge) stops instead of making this wait for it
+    let _preempt = tenant_bench::lifecycle::preempt_compaction(src);
     let lock = maint_lock(&ctl.lc.maint_locks, src);
     let _maint = lock.lock().await;
     ctl.dbs.leases.acquire(src).await?;

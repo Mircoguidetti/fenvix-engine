@@ -817,6 +817,8 @@ impl Entry {
     /// lock so no compaction or GC pass can write into it while (or after) it is being deleted:
     /// a pass that finds no manifest does nothing. Repeats the listing until the prefix is empty.
     pub async fn drop_database(&mut self) -> Result<()> {
+        // a compaction pass running (maybe a long merge) stops instead of making the drop wait for it
+        let _preempt = tenant_bench::lifecycle::preempt_compaction(&self.name);
         let lock = tenant_bench::lifecycle::maint_lock(&self.lc.maint_locks, &self.name);
         let _held = lock.lock().await;
         // Ownership first: a process that does not own the database (another one serves it) is refused here, before it
@@ -981,7 +983,6 @@ impl Entry {
         Ok(o)
     }
 
-    /// The default collation of a collection whose options were loaded by [`Entry::coll_opts`] (none otherwise).
     /// The stored storage counters of a collection (`collstat.rs`), latest state: from memory after the first read.
     pub async fn sstat(&mut self, coll: &str) -> Result<Option<crate::collstat::CollStat>> {
         let k = crate::collstat::key(coll);
@@ -995,6 +996,7 @@ impl Entry {
         Ok(v)
     }
 
+    /// The default collation of a collection whose options were loaded by [`Entry::coll_opts`] (none otherwise).
     pub fn collation_of(&self, coll: &str) -> Option<Arc<crate::collation::Collation>> {
         self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.collation.clone())
     }

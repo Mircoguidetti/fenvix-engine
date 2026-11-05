@@ -357,8 +357,9 @@ fn flush_old_memtables() {
     }
 }
 
-fn cache_scope() -> Option<(Arc<dyn slatedb::db_cache::DbCache>, u64)> {
-    DB_CACHE.get().map(|c| (Arc::clone(c), CACHE_SCOPE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)))
+/// The shared cache with the scope `scope`, or a fresh scope.
+fn cache_scope_in(scope: Option<u64>) -> Option<(Arc<dyn slatedb::db_cache::DbCache>, u64)> {
+    DB_CACHE.get().map(|c| (Arc::clone(c), scope.unwrap_or_else(|| CACHE_SCOPE.fetch_add(1, std::sync::atomic::Ordering::Relaxed))))
 }
 
 /// The shared block and metadata cache, when installed (`install_shared_cache`).
@@ -404,6 +405,13 @@ pub fn relaxed_window(id: &str) -> Duration {
 }
 
 pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb::DbBuilder<String> {
+    writer_builder_in(id, store, None)
+}
+
+/// [`writer_builder`] in the cache scope `scope` (`None`: a fresh one). A reader upgraded to a writer passes its own scope:
+/// the blocks the reader cached stay warm for the writer (same database, same immutable objects). With a fresh scope every
+/// first write after a wake (the profiler's entries too) left the database with a cold cache.
+pub(crate) fn writer_builder_in(id: &str, store: &Arc<dyn ObjectStore>, scope: Option<u64>) -> slatedb::DbBuilder<String> {
     let mut settings = writer_settings();
     let relaxed = relaxed_window(id);
     let local = LOCAL_LOG_FLUSH_SECS.load(std::sync::atomic::Ordering::Relaxed);
@@ -415,7 +423,7 @@ pub(crate) fn writer_builder(id: &str, store: &Arc<dyn ObjectStore>) -> slatedb:
         settings.flush_interval = Some(relaxed);
     }
     let b = Db::builder(tenant_path(id), crate::counting::owned(store, id)).with_settings(settings).with_block_cache_policy(flush_cache_policy());
-    match cache_scope() {
+    match cache_scope_in(scope) {
         Some((c, scope)) => {
             WRITER_SCOPE.lock().unwrap().insert(id.to_string(), scope);
             b.with_db_cache(c, scope)
@@ -458,13 +466,14 @@ fn reader_options(skip_wal_replay: bool) -> DbReaderOptions {
     o
 }
 
-async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool) -> Result<DbReader> {
+/// Open a reader in the cache scope `scope` (`None`: a fresh one); also returns the scope used.
+async fn open_reader(store: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, skip_wal_replay: bool, scope: Option<u64>) -> Result<(DbReader, Option<u64>)> {
     let b = DbReader::builder(tenant_path(&id), crate::counting::owned(store, &id.to_string())).with_reader_mode(DbReaderMode::FollowLatest).with_options(reader_options(skip_wal_replay));
-    let b = match cache_scope() {
-        Some((c, scope)) => b.with_db_cache(c, scope),
-        None => b,
+    let (b, used) = match cache_scope_in(scope) {
+        Some((c, scope)) => (b.with_db_cache(c, scope), Some(scope)),
+        None => (b, None),
     };
-    Ok(b.build().await?)
+    Ok((b.build().await?, used))
 }
 
 // ---------------------------------------------------------------------------
@@ -500,6 +509,17 @@ impl CompactionQueue {
                 let _ = self.tx.send(Some(id.to_string()));
                 true
             }
+        }
+    }
+
+    /// Tell the waiters of `id` its L0 now (the pass goes on with the merges of sorted runs; later requests join it).
+    fn notify(&self, id: &str, l0: usize) {
+        let waiters = match self.pending.lock().unwrap().get_mut(id) {
+            Some(w) if !w.is_empty() => std::mem::take(w),
+            _ => return,
+        };
+        for w in waiters {
+            let _ = w.send(l0);
         }
     }
 
@@ -554,7 +574,8 @@ impl Lifecycle {
         let db = writer_builder(&id, &self.store).build().await?;
         self.touched.lock().unwrap().insert(id.clone(), Instant::now());
         writer_opened(&id, &db);
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0 })
+        let scope = writer_scope(&id);
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Writer(db)), unclean: false, l0_at_wake: 0, scope })
     }
 
     pub fn new(counting: Arc<CountingStore>, queue: Option<Arc<CompactionQueue>>) -> Arc<Self> {
@@ -577,9 +598,14 @@ impl Lifecycle {
     /// speculative `skip_wal_replay` reader open; nothing is served before both finish.
     pub async fn wake(self: &Arc<Self>, id: impl std::fmt::Display) -> Result<Tenant> {
         let id = id.to_string();
+        // Opening the database is background work: its reads are not charged to the command that needed it (meter.rs).
+        crate::meter::background(&id.clone(), self.wake_inner(id)).await
+    }
+
+    async fn wake_inner(self: &Arc<Self>, id: String) -> Result<Tenant> {
         let marker = marker_path(&id);
-        let (reader, head) = tokio::join!(open_reader(&self.store, &id, true), self.store.head(&marker));
-        let mut reader = reader?;
+        let (reader, head) = tokio::join!(open_reader(&self.store, &id, true, None), self.store.head(&marker));
+        let (mut reader, scope) = reader?;
         let clean = match head {
             Ok(_) => true,
             Err(object_store::Error::NotFound { .. }) => false,
@@ -588,11 +614,11 @@ impl Lifecycle {
         if !clean {
             // Possible unflushed WAL: the speculative reader may be missing data. Reopen with replay.
             reader.close().await?;
-            reader = open_reader(&self.store, &id, false).await?;
+            reader = open_reader(&self.store, &id, false, scope).await?.0;
             self.stats.lock().unwrap().unclean_wakes += 1;
         }
         let l0_at_wake = reader.manifest().l0().len();
-        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake })
+        Ok(Tenant { group: Default::default(), lc: Arc::clone(self), id, mode: Some(Mode::Reader(reader)), unclean: !clean, l0_at_wake, scope })
     }
 }
 
@@ -792,6 +818,8 @@ pub struct Tenant {
     /// The wake took the unclean path (marker missing).
     pub unclean: bool,
     pub l0_at_wake: usize,
+    /// Cache scope of the reader or writer (kept by the upgrade to a writer, see [`writer_builder_in`]).
+    scope: Option<u64>,
 }
 
 impl Tenant {
@@ -846,6 +874,12 @@ impl Tenant {
         if self.is_writer() {
             return Ok(());
         }
+        // Background work, like the open (meter.rs): the writer's open reads are not charged to the write that needed it.
+        let id = self.id.clone();
+        crate::meter::background(&id, self.upgrade_inner()).await
+    }
+
+    async fn upgrade_inner(&mut self) -> Result<()> {
         if self.lc.l0_guard && self.l0_at_wake >= L0_GUARD {
             if let Some(q) = &self.lc.queue {
                 let started = Instant::now();
@@ -872,7 +906,7 @@ impl Tenant {
         let marker = marker_path(&self.id);
         let (del, db) = tokio::join!(
             store.delete(&marker),
-            writer_builder(&self.id, store).build()
+            writer_builder_in(&self.id, store, self.scope).build()
         );
         match del {
             Ok(()) | Err(object_store::Error::NotFound { .. }) => {}
@@ -1129,12 +1163,81 @@ pub async fn l0_count(raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) ->
 /// compactor (`CompactorBuilder::run`) with its own request counter. The harness
 /// polls the manifest through `raw` (not counted) to know when to stop it.
 pub async fn compact_tenant(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display) -> Result<Option<CompactionRecord>> {
-    compact_tenant_within(s3, raw, id, Duration::from_secs(30), COMPACTOR_STOP_LIMIT).await
+    compact_tenant_within(s3, raw, id, COMPACTION_STALL, COMPACTOR_STOP_LIMIT).await
 }
 
-async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, pass: Duration, stop_limit: Duration) -> Result<Option<CompactionRecord>> {
+async fn compact_tenant_within(s3: &Arc<dyn ObjectStore>, raw: &Arc<dyn ObjectStore>, id: impl std::fmt::Display, stall: Duration, stop_limit: Duration) -> Result<Option<CompactionRecord>> {
     let warm = crate::warm::COMPACTION_WARM.load(std::sync::atomic::Ordering::Relaxed);
-    compact_tenant_pass(s3, raw, id, pass, stop_limit, warm).await
+    compact_tenant_pass(s3, raw, id, stall, stop_limit, warm).await
+}
+
+/// A compaction pass stops when its compactor moved no compacted-SST bytes for this long (the store does not answer, or
+/// nothing can make progress). It is not a limit on the pass: a pass that makes progress runs until its work is done.
+pub const COMPACTION_STALL: Duration = Duration::from_secs(30);
+/// After this long, a pass whose L0 is already below the threshold (only merges of sorted runs left) gives back its
+/// maintenance slot, so that the L0 of the other tenants is not kept waiting behind a long merge.
+pub const COMPACTION_SLOT_HOLD: Duration = Duration::from_secs(30);
+/// How often a pass with its L0 below the threshold reads the compaction state to know whether merges are still running.
+const COMPACTIONS_POLL: Duration = Duration::from_secs(1);
+
+/// Tenants whose running compaction pass must stop now (drop, erase, fork, export, restore want the maintenance lock).
+static PASS_PREEMPT: std::sync::LazyLock<Mutex<HashMap<String, usize>>> = std::sync::LazyLock::new(Default::default);
+/// Passes running now, and those that gave back their maintenance slot (long merges).
+pub static PASSES_RUNNING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static PASSES_LONG: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Passes that ended because their compactor made no progress for `COMPACTION_STALL`, and passes stopped on request.
+pub static PASSES_STALLED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static PASSES_PREEMPTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Ask the running compaction pass of `id` (if any) to stop, for as long as the returned guard lives. Taken before the
+/// tenant's maintenance lock by work that cannot wait for a merge of sorted runs to end (it can last hours on a large
+/// database): the pass stops its compactor at once (the merges in flight are lost, their output is garbage) and gives
+/// back the lock.
+pub fn preempt_compaction(id: &str) -> PreemptGuard {
+    *PASS_PREEMPT.lock().unwrap().entry(id.to_string()).or_default() += 1;
+    PreemptGuard(id.to_string())
+}
+
+pub struct PreemptGuard(String);
+
+impl Drop for PreemptGuard {
+    fn drop(&mut self) {
+        let mut m = PASS_PREEMPT.lock().unwrap();
+        if let Some(n) = m.get_mut(&self.0) {
+            *n -= 1;
+            if *n == 0 {
+                m.remove(&self.0);
+            }
+        }
+    }
+}
+
+fn pass_preempted(id: &str, hooks: &PassHooks) -> bool {
+    hooks.stop.as_ref().is_some_and(|s| s.load(std::sync::atomic::Ordering::Relaxed)) || PASS_PREEMPT.lock().unwrap().contains_key(id)
+}
+
+/// What a pass tells the maintenance loop while it runs (`Maintenance` gives one to each pass it starts).
+#[derive(Default)]
+pub struct PassHooks {
+    /// Called whenever the pass sees its L0 below the threshold (waiters of the queue are told at once, not when the merges
+    /// of sorted runs that follow are over).
+    pub l0_done: Option<Box<dyn Fn(usize) + Send + Sync>>,
+    /// Called once, when the pass gives back its maintenance slot (see `COMPACTION_SLOT_HOLD`).
+    pub release_slot: Option<Box<dyn FnOnce() + Send>>,
+    /// Set when the maintenance shuts down: the pass stops.
+    pub stop: Option<Arc<std::sync::atomic::AtomicBool>>,
+}
+
+/// Compacted-SST bytes and requests the pass's compactor made so far (reading its sources, writing its output): its progress.
+fn sst_progress(c: &CountingStore) -> u64 {
+    use std::sync::atomic::Ordering::Relaxed;
+    c.counters.get_cat[2].load(Relaxed) + c.counters.put_cat[2].load(Relaxed) + c.counters.multipart_part.load(Relaxed) + c.counters.put_bytes.load(Relaxed)
+}
+
+/// Whether some compaction of the tenant is still submitted, scheduled or running.
+async fn compactions_active(raw: &Arc<dyn ObjectStore>, id: &str) -> Result<bool> {
+    let admin = Admin::builder(tenant_path(id), Arc::clone(raw)).build();
+    Ok(admin.read_compactions(None).await?.is_some_and(|c| c.recent_compactions().any(|x| x.active())))
 }
 
 /// One compaction pass; with `warm`, the output that replaces blocks an open writer has in the shared block cache is read
@@ -1143,9 +1246,34 @@ pub(crate) async fn compact_tenant_pass(
     s3: &Arc<dyn ObjectStore>,
     raw: &Arc<dyn ObjectStore>,
     id: impl std::fmt::Display,
-    pass: Duration,
+    stall: Duration,
     stop_limit: Duration,
     warm: bool,
+) -> Result<Option<CompactionRecord>> {
+    compact_tenant_pass_with(s3, raw, id, stall, stop_limit, warm, PassHooks::default()).await
+}
+
+/// One compaction pass (see the module comment and `compact_tenant_pass`).
+///
+/// The pass runs a standalone compactor until the tenant's L0 is below the threshold and no compaction of the tenant is
+/// still in flight. It used to be stopped after 30 s whatever it was doing: a merge of sorted runs that needs longer (a
+/// large database, a slow store, a busy machine) was stopped every time, started again from the beginning at the next
+/// pass (slatedb keeps no progress below one output SST of 256 MB), left its partial output in the store, and the L0
+/// compaction that ran beside it was lost too; the failed pass then paused the tenant's compaction (up to 60 s), its L0
+/// reached `l0_max_ssts` and its writes stopped. Now a pass ends:
+/// - when its work is done (L0 below the threshold, no compaction active): success;
+/// - when its compactor moved no compacted-SST byte for `stall`: failure (the store does not answer);
+/// - when it is preempted (`preempt_compaction`) or the maintenance shuts down: not a failure.
+/// A merge of sorted runs is never stopped while it makes progress; once the L0 is below the threshold and the pass has
+/// held its maintenance slot for `COMPACTION_SLOT_HOLD`, it gives the slot back (`PassHooks::release_slot`).
+pub(crate) async fn compact_tenant_pass_with(
+    s3: &Arc<dyn ObjectStore>,
+    raw: &Arc<dyn ObjectStore>,
+    id: impl std::fmt::Display,
+    stall: Duration,
+    stop_limit: Duration,
+    warm: bool,
+    hooks: PassHooks,
 ) -> Result<Option<CompactionRecord>> {
     let id = id.to_string();
     let id = id.as_str();
@@ -1193,25 +1321,91 @@ pub(crate) async fn compact_tenant_pass(
         let c = Arc::clone(&compactor);
         tokio::spawn(async move { c.run().await })
     };
-    let deadline = Instant::now() + pass;
     let mut l0_after = l0_before;
-    // Each poll is bounded by what is left of the pass, and a failed poll ends the polling, not the function: returning
-    // early here would leave the compactor running with nobody to stop it.
+    let mut hooks = hooks;
+    struct Running(bool);
+    impl Drop for Running {
+        fn drop(&mut self) {
+            PASSES_RUNNING.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+            if self.0 {
+                PASSES_LONG.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+    }
+    PASSES_RUNNING.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let mut running = Running(false);
+    let mut last_progress = Instant::now();
+    let mut progress_seen = sst_progress(&counting);
+    let mut last_active_check: Option<Instant> = None;
+    let (mut stalled, mut preempted) = (false, false);
+    // Each poll is bounded by what is left of the stall window, and a failed poll ends the polling, not the function:
+    // returning early here would leave the compactor running with nobody to stop it.
     let mut poll_err = None;
-    while Instant::now() < deadline {
-        tokio::time::sleep(Duration::from_millis(25)).await;
-        let left = deadline.saturating_duration_since(Instant::now()).max(Duration::from_millis(100));
+    loop {
+        // the manifest is read often at first (a small L0 compaction ends in about a second), then every 250 ms
+        tokio::time::sleep(Duration::from_millis(if started.elapsed() < Duration::from_secs(2) { 25 } else { 250 })).await;
+        if pass_preempted(id, &hooks) {
+            preempted = true;
+            break;
+        }
+        let p = sst_progress(&counting);
+        if p != progress_seen {
+            progress_seen = p;
+            last_progress = Instant::now();
+        }
+        if last_progress.elapsed() >= stall {
+            stalled = true;
+            break;
+        }
+        let left = stall.saturating_sub(last_progress.elapsed()).max(Duration::from_millis(100));
         match tokio::time::timeout(left, l0_count(raw, id)).await {
             Ok(Ok(n)) => l0_after = n,
             Ok(Err(e)) => {
                 poll_err = Some(e);
                 break;
             }
-            Err(_) => break,
+            Err(_) => {
+                stalled = true;
+                break;
+            }
         }
-        if l0_after < L0_COMPACT_THRESHOLD {
-            break;
+        if l0_after >= L0_COMPACT_THRESHOLD {
+            continue;
         }
+        if let Some(f) = &hooks.l0_done {
+            f(l0_after);
+        }
+        // L0 is below the threshold: the pass is over unless merges of sorted runs are still in flight, which go on
+        // (stopped, they would start again from nothing at the next pass).
+        if last_active_check.is_some_and(|t| t.elapsed() < COMPACTIONS_POLL) {
+            continue;
+        }
+        last_active_check = Some(Instant::now());
+        match tokio::time::timeout(left, compactions_active(raw, id)).await {
+            Ok(Ok(false)) => break,
+            Ok(Ok(true)) => {}
+            Ok(Err(e)) => {
+                poll_err = Some(e);
+                break;
+            }
+            Err(_) => {
+                stalled = true;
+                break;
+            }
+        }
+        if started.elapsed() >= COMPACTION_SLOT_HOLD {
+            if let Some(release) = hooks.release_slot.take() {
+                release();
+                running.0 = true;
+                PASSES_LONG.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+    }
+    if stalled {
+        PASSES_STALLED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+    if preempted {
+        PASSES_PREEMPTED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     }
     // `Compactor::stop` stops only the tasks `run` has already registered. Called while `run` is still starting (its first
     // reads of the manifest hang or retry while the store does not answer), it returns at once; `run` then registers its
@@ -1294,7 +1488,12 @@ pub(crate) async fn compact_tenant_pass(
             }
         }
     }
-    anyhow::ensure!(l0_after < L0_COMPACT_THRESHOLD, "compaction of tenant {id} did not finish (L0 {l0_after})");
+    anyhow::ensure!(
+        l0_after < L0_COMPACT_THRESHOLD || preempted,
+        "compaction of tenant {id} made no progress for {:?} (L0 {l0_after}, pass {:.1} s)",
+        stall,
+        started.elapsed().as_secs_f64()
+    );
     {
         use std::sync::atomic::Ordering::Relaxed;
         let snap = counting.counters.snapshot();
@@ -1690,6 +1889,19 @@ pub async fn gc_tenant_ssts(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<bool>
             referenced.insert(v.sst.id.value().to_string());
         }
     }
+    // The output an unfinished compaction has already recorded is kept: a later pass resumes the compaction from it.
+    if let Some(c) = admin.read_compactions(None).await? {
+        for x in c.recent_compactions().filter(|x| x.active()) {
+            for h in x.output_ssts() {
+                referenced.insert(h.id.value().to_string());
+            }
+            for sub in x.ctx().map(|ctx| ctx.subcompactions().as_slice()).unwrap_or_default() {
+                for h in sub.output_ssts() {
+                    referenced.insert(h.id.value().to_string());
+                }
+            }
+        }
+    }
     let min_unref = Duration::from_secs(SST_GC_MIN_UNREF_SECS.load(Relaxed));
     let now = Instant::now();
     let base = tenant_path(id);
@@ -1768,6 +1980,9 @@ pub async fn gc_tenant_ssts(s3: &Arc<dyn ObjectStore>, id: &str) -> Result<bool>
     Ok(waiting > 0)
 }
 
+/// GC passes skipped because the tenant's maintenance lock was held (a compaction pass): they run at a later round.
+pub static GC_SKIPPED_BUSY: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Errors kept in `MaintenanceLog::errors` (the oldest are dropped; `errors_total` counts them all).
 pub const MAINT_ERRORS_KEPT: usize = 1000;
 
@@ -1801,6 +2016,9 @@ pub struct Maintenance {
     gc_task: tokio::task::JoinHandle<()>,
     workers: usize,
     sem: Arc<Semaphore>,
+    /// Set by `shutdown`: running passes stop. `passes`: pass tasks not finished yet.
+    stopping: Arc<std::sync::atomic::AtomicBool>,
+    passes: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl Maintenance {
@@ -1819,16 +2037,31 @@ impl Maintenance {
     ) -> Self {
         let log = Arc::new(Mutex::new(MaintenanceLog::default()));
         let sem = Arc::new(Semaphore::new(workers));
+        let stopping = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let passes = Arc::new(std::sync::atomic::AtomicU64::new(0));
         let dispatcher = {
-            let (s3, raw, queue, log, sem, locks) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), sem.clone(), locks.clone());
+            let (s3, raw, queue, log, sem, locks, stopping, passes) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), sem.clone(), locks.clone(), stopping.clone(), passes.clone());
             tokio::spawn(async move {
                 while let Some(Some(id)) = rx.recv().await {
                     let permit = sem.clone().acquire_owned().await.unwrap();
-                    let (s3, raw, queue, log, locks) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), locks.clone());
+                    let (s3, raw, queue, log, locks, stopping) = (s3.clone(), raw.clone(), queue.clone(), log.clone(), locks.clone(), stopping.clone());
+                    passes.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    let passes = passes.clone();
                     tokio::spawn(async move {
                         let lock = maint_lock(&locks, &id);
                         let _held = lock.lock().await;
-                        let l0_after = match compact_tenant(&s3, &raw, &id).await {
+                        // The slot goes back to the dispatcher when the pass becomes a long merge, or when it ends.
+                        let slot = Arc::new(Mutex::new(Some(permit)));
+                        let hooks = {
+                            let (q, qid, slot) = (queue.clone(), id.clone(), slot.clone());
+                            PassHooks {
+                                l0_done: Some(Box::new(move |l0| q.notify(&qid, l0))),
+                                release_slot: Some(Box::new(move || drop(slot.lock().unwrap().take()))),
+                                stop: Some(stopping),
+                            }
+                        };
+                        let warm = crate::warm::COMPACTION_WARM.load(std::sync::atomic::Ordering::Relaxed);
+                        let l0_after = match compact_tenant_pass_with(&s3, &raw, &id, COMPACTION_STALL, COMPACTOR_STOP_LIMIT, warm, hooks).await {
                             Ok(Some(rec)) => {
                                 compaction_succeeded(&id);
                                 let l0 = rec.l0_after;
@@ -1847,7 +2080,8 @@ impl Maintenance {
                             }
                         };
                         queue.finish(&id, l0_after);
-                        drop(permit);
+                        drop(slot.lock().unwrap().take());
+                        passes.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
                     });
                 }
             })
@@ -1926,8 +2160,13 @@ impl Maintenance {
                         .for_each_concurrent(GC_CONCURRENCY, |id| {
                             let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
                             async move {
+                                // A tenant whose lock is held (a compaction pass, maybe a long merge) is skipped this round:
+                                // waiting here would hold up the GC of every tenant.
                                 let lock = maint_lock(&locks, &id);
-                                let _held = lock.lock().await;
+                                let Ok(_held) = lock.try_lock() else {
+                                    GC_SKIPPED_BUSY.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                    return;
+                                };
                                 match gc_tenant_ssts(&s3, &id).await {
                                     Ok(true) => {
                                         let wait = Duration::from_secs(SST_GC_MIN_UNREF_SECS.load(std::sync::atomic::Ordering::Relaxed) + 5);
@@ -1946,7 +2185,10 @@ impl Maintenance {
                             let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
                             async move {
                                 let lock = maint_lock(&locks, &id);
-                                let _held = lock.lock().await;
+                                let Ok(_held) = lock.try_lock() else {
+                                    GC_SKIPPED_BUSY.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                    return;
+                                };
                                 if let Err(e) = gc_tenant_wal(&s3, &id, gc_min_age).await {
                                     log.lock().unwrap().error(format!("wal gc {id}: {e:#}"));
                                 }
@@ -1957,10 +2199,15 @@ impl Maintenance {
                     // when tens of tenants a second go idle (the backlog then grows without bound).
                     futures::stream::iter(due)
                         .for_each_concurrent(GC_CONCURRENCY, |id| {
-                            let (s3, log, locks) = (s3.clone(), log.clone(), locks.clone());
+                            let (s3, log, locks, touched) = (s3.clone(), log.clone(), locks.clone(), touched.clone());
                             async move {
                                 let lock = maint_lock(&locks, &id);
-                                let _held = lock.lock().await;
+                                let Ok(_held) = lock.try_lock() else {
+                                    // busy (a compaction pass): due again at the next round
+                                    GC_SKIPPED_BUSY.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                    touched.lock().unwrap().entry(id.clone()).or_insert_with(|| Instant::now().checked_sub(gc_after).unwrap_or_else(Instant::now));
+                                    return;
+                                };
                                 match gc_tenant_closed(&s3, &id, gc_min_age).await {
                                     Ok(rec) => log.lock().unwrap().gcs.push(rec),
                                     Err(e) => log.lock().unwrap().error(format!("gc {id}: {e:#}")),
@@ -1971,16 +2218,22 @@ impl Maintenance {
                 }
             })
         };
-        Self { log, queue, dispatcher, watch_stop, l0_watch, gc_stop, gc_task, workers, sem }
+        Self { log, queue, dispatcher, watch_stop, l0_watch, gc_stop, gc_task, workers, sem, stopping, passes }
     }
 
     /// Stop accepting work and wait for in-flight compactions and the GC loop.
     pub async fn shutdown(self) -> Arc<Mutex<MaintenanceLog>> {
-        self.watch_stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        use std::sync::atomic::Ordering::Relaxed;
+        self.watch_stop.store(true, Relaxed);
         let _ = self.l0_watch.await;
         self.queue.stop();
         let _ = self.dispatcher.await;
+        // Running passes stop now (a merge of sorted runs can last hours); each ends within its compactor's stop limit.
+        self.stopping.store(true, Relaxed);
         let _ = self.sem.acquire_many(self.workers as u32).await;
+        while self.passes.load(Relaxed) > 0 {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
         self.gc_stop.store(true, std::sync::atomic::Ordering::Relaxed);
         let _ = self.gc_task.await;
         self.log
@@ -2151,6 +2404,102 @@ mod tests {
         assert!(next.get(b"last").await.unwrap().is_some());
         assert!(next.get(b"buffered").await.unwrap().is_some(), "abandon uploads the WAL buffer");
         next.close_with_options(slatedb::config::CloseOptions { flush_type: None }).await.unwrap();
+    }
+
+    /// A store whose GETs of compacted SSTs each take `ms` milliseconds (a slow store, or a busy machine).
+    #[derive(Debug)]
+    struct Slow {
+        inner: Arc<dyn ObjectStore>,
+        ms: u64,
+    }
+
+    impl std::fmt::Display for Slow {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "Slow({})", self.inner)
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl ObjectStore for Slow {
+        async fn put_opts(&self, l: &Path, p: PutPayload, o: object_store::PutOptions) -> object_store::Result<object_store::PutResult> {
+            self.inner.put_opts(l, p, o).await
+        }
+        async fn put_multipart_opts(&self, l: &Path, o: object_store::PutMultipartOptions) -> object_store::Result<Box<dyn object_store::MultipartUpload>> {
+            self.inner.put_multipart_opts(l, o).await
+        }
+        async fn get_opts(&self, l: &Path, o: object_store::GetOptions) -> object_store::Result<object_store::GetResult> {
+            if l.as_ref().contains("/compacted/") {
+                tokio::time::sleep(Duration::from_millis(self.ms)).await;
+            }
+            self.inner.get_opts(l, o).await
+        }
+        fn delete_stream(&self, l: futures::stream::BoxStream<'static, object_store::Result<Path>>) -> futures::stream::BoxStream<'static, object_store::Result<Path>> {
+            self.inner.delete_stream(l)
+        }
+        fn list(&self, p: Option<&Path>) -> futures::stream::BoxStream<'static, object_store::Result<object_store::ObjectMeta>> {
+            self.inner.list(p)
+        }
+        async fn list_with_delimiter(&self, p: Option<&Path>) -> object_store::Result<object_store::ListResult> {
+            self.inner.list_with_delimiter(p).await
+        }
+        async fn copy_opts(&self, f: &Path, t: &Path, o: object_store::CopyOptions) -> object_store::Result<()> {
+            self.inner.copy_opts(f, t, o).await
+        }
+    }
+
+    /// A tenant whose L0 holds `n` SSTs of about `mb` MB of random values each.
+    async fn tenant_with_l0(raw: &Arc<dyn ObjectStore>, id: &str, n: usize, mb: usize) {
+        use rand::RngCore;
+        let db = Db::builder(tenant_path(id), Arc::clone(raw)).with_settings(writer_settings()).build().await.unwrap();
+        let mut rng = rand::thread_rng();
+        for i in 0..n {
+            for j in 0..mb * 16 {
+                let mut v = vec![0u8; 64 * 1024];
+                rng.fill_bytes(&mut v);
+                db.put(format!("k{j:06}-{i:03}").as_bytes(), &v).await.unwrap();
+            }
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+        }
+        assert!(db.manifest().l0().len() >= L0_COMPACT_THRESHOLD);
+        db.close().await.unwrap();
+    }
+
+    /// L1: a compaction that needs longer than the stall window, but makes progress all along, finishes in one pass. Before,
+    /// every pass was stopped after 30 s whatever it was doing ("did not finish (L0 8)"), the next one started the same
+    /// compaction from the beginning, and a database whose compactions need longer (large, slow store, busy machine) never
+    /// compacted again: its L0 stayed full and its writes stopped.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn compaction_pass_longer_than_its_stall_window_finishes() {
+        let id = "test-compact-long";
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        tenant_with_l0(&raw, id, 8, 4).await;
+        let s3: Arc<dyn ObjectStore> = Arc::new(Slow { inner: Arc::clone(&raw), ms: 400 });
+        let stall = Duration::from_secs(1);
+        let rec = compact_tenant_pass(&s3, &raw, id, stall, COMPACTOR_STOP_LIMIT, false).await.expect("the pass failed").expect("no pass");
+        eprintln!("compaction pass: {:.2} s, L0 {} -> {}", rec.secs, rec.l0_before, rec.l0_after);
+        assert!(rec.l0_after < L0_COMPACT_THRESHOLD, "L0 {} after the pass", rec.l0_after);
+        assert!(rec.secs > 2.0 * stall.as_secs_f64(), "the compaction took {:.2} s: not longer than the stall window, the test proves nothing", rec.secs);
+        assert!(!compactions_active(&raw, id).await.unwrap(), "a compaction is still active after the pass");
+    }
+
+    /// L1: a pass is stopped at once by `preempt_compaction` (drop, erase, fork, export, restore) and that is not a failure.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn compaction_pass_stops_when_preempted() {
+        let id = "test-compact-preempt";
+        let raw: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        tenant_with_l0(&raw, id, 6, 2).await;
+        let s3: Arc<dyn ObjectStore> = Arc::new(Slow { inner: Arc::clone(&raw), ms: 400 });
+        let pass = {
+            let (s3, raw) = (Arc::clone(&s3), Arc::clone(&raw));
+            tokio::spawn(async move { compact_tenant_pass(&s3, &raw, id, Duration::from_secs(30), COMPACTOR_STOP_LIMIT, false).await })
+        };
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let t0 = Instant::now();
+        let guard = preempt_compaction(id);
+        let r = tokio::time::timeout(Duration::from_secs(20), pass).await.expect("the pass did not stop").unwrap();
+        drop(guard);
+        assert!(r.is_ok(), "a preempted pass is not a failure: {:?}", r.err());
+        assert!(t0.elapsed() < Duration::from_secs(10), "the pass took {:?} to stop", t0.elapsed());
     }
 
     /// The store stops answering while a compaction pass starts and stays down past the pass's deadline: `Compactor::stop`
