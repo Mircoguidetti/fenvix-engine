@@ -712,7 +712,7 @@ impl Server {
 
     /// K1: the numbers of this process instead of the template's (which were mongod's of the recording, or zero).
     /// - `extra_info`: CPU of the process (getrusage), peak memory, page faults, context switches, threads;
-    /// - `wiredTiger.cache`: the shared block and metadata cache (the "bancone") and the object-store traffic, under the
+    /// - `wiredTiger.cache`: the shared block and metadata cache and the object-store traffic, under the
     ///   names mongod uses, so a tool written for mongod reads them (mapping below and in `fenvix.mapping`);
     /// - `fenvix`: the same numbers under their own names, with the S3 request counts.
     fn real_process_and_cache_stats(&self, d: &mut Document) {

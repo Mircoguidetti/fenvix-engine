@@ -1,4 +1,4 @@
-//! Meters for the server's statistics (K1): the shared block and metadata cache (the "bancone") with its size, hits and
+//! Meters for the server's statistics (K1): the shared block and metadata cache with its size, hits and
 //! misses, and the object-store reads of one operation (bytes and time read from S3), for `serverStatus` and the profiler.
 //!
 //! - [`MeteredCache`] is slatedb's foyer cache (same weigher, same deduplicated fetch) that also says how many bytes it
