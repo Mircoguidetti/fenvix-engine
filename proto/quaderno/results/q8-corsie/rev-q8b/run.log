@@ -1,0 +1,40 @@
++ cd /home/claude/fenvix-engine/proto/quaderno
++ source results/q8-corsie/env-q8b.sh
+++ export PQ_CORSIE=1 PQ_RICICLA=1 PQ_PREALLOC_MBS=64 PQ_RISERVA_RECS=200 PQ_CELLA_MBS=2 PQ_SOPRA_FRAZ=0.5
+++ PQ_CORSIE=1
+++ PQ_RICICLA=1
+++ PQ_PREALLOC_MBS=64
+++ PQ_RISERVA_RECS=200
+++ PQ_CELLA_MBS=2
+++ PQ_SOPRA_FRAZ=0.5
+++ export Q8_PIN=d Q8_CPU_N=0,1 Q8_CPU_R=0,1 PQ_WORK=/root/pq-work
+++ Q8_PIN=d
+++ Q8_CPU_N=0,1
+++ Q8_CPU_R=0,1
+++ PQ_WORK=/root/pq-work
++ O=results/q8-corsie/rev-q8b
++ mkdir -p results/q8-corsie/rev-q8b
++ SP=7884
++ python3 scripts/corsie.py results/q8-corsie/rev-q8b --lanes 1 --levels 1 --tag rev-a
++ python3 /tmp/claude-0/s/percore.py results/q8-corsie/rev-q8b/percore.jsonl
+rev-a livello 1 fase nessuno: normali 1 p50 2.65 p99 5.39 p99.9 19.70 max 33.2 ms n 12001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.08 core, disco 2.7 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 13%
+fine rev-a
++ python3 scripts/corsie.py results/q8-corsie/rev-q8b --lanes 1 --levels 20 --phases nessuno,ventimila --tag rev-a
+rev-a livello 20 fase nessuno: normali 20 p50 1.65 p99 11.26 p99.9 44.35 max 78.8 ms n 120008 rifiutati 0 ignoti 0 | totale 2008 rec/s, capo 0.38 core, disco 40.9 MB/s | generatore normali 0.12 core, chiesti 2000 inviati 2000/s, macchina 56%
+rev-a livello 20 fase ventimila: normali 19 p50 3.26 p99 24.35 p99.9 60.16 max 92.0 ms n 114026 rifiutati 0 ignoti 0 | totale 3111 rec/s, capo 0.50 core, disco 53.6 MB/s | generatore normali 0.11 core, chiesti 1900 inviati 1900/s, macchina 85%
+fine rev-a
++ python3 scripts/corsie.py results/q8-corsie/rev-q8b --lanes 1 --levels 1 --tag rev-a2
+rev-a2 livello 1 fase nessuno: normali 1 p50 2.41 p99 5.08 p99.9 19.65 max 49.6 ms n 12001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.09 core, disco 2.7 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 15%
+fine rev-a2
++ python3 scripts/corsie.py results/q8-corsie/rev-q8b --lanes 1 --levels 20 --phases nessuno,ventimila --tag rev-a2
+rev-a2 livello 20 fase nessuno: normali 20 p50 2.31 p99 10.72 p99.9 33.25 max 56.9 ms n 120010 rifiutati 0 ignoti 0 | totale 2008 rec/s, capo 0.36 core, disco 41.0 MB/s | generatore normali 0.11 core, chiesti 2000 inviati 2000/s, macchina 55%
+rev-a2 livello 20 fase ventimila: normali 19 p50 3.37 p99 23.58 p99.9 52.38 max 83.7 ms n 114013 rifiutati 0 ignoti 0 | totale 3111 rec/s, capo 0.50 core, disco 53.1 MB/s | generatore normali 0.12 core, chiesti 1900 inviati 1900/s, macchina 86%
+fine rev-a2
++ Q8_CPU_R=1
++ python3 scripts/corsie.py results/q8-corsie/rev-q8b --lanes 1 --levels 20 --phases nessuno,ventimila --tag rev-b
+rev-b livello 20 fase nessuno: normali 20 p50 2.16 p99 14.21 p99.9 66.37 max 118.7 ms n 120012 rifiutati 0 ignoti 0 | totale 2008 rec/s, capo 0.37 core, disco 40.8 MB/s | generatore normali 0.12 core, chiesti 2000 inviati 2000/s, macchina 55%
+rev-b livello 20 fase ventimila: normali 19 p50 3.24 p99 23.95 p99.9 56.29 max 74.6 ms n 114011 rifiutati 0 ignoti 0 | totale 3104 rec/s, capo 0.58 core, disco 56.1 MB/s | generatore normali 0.12 core, chiesti 1900 inviati 1900/s, macchina 85%
+fine rev-b
++ kill 7884
++ echo FINE
+FINE

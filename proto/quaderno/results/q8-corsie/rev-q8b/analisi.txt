@@ -1,0 +1,12 @@
+===== rev-a
+  riferimento, un database da solo (1 ripetizioni): p50 2.65, p99 5.39, p99,9 19.70 ms (mediane); forchetta p99 5.39–5.39, p99,9 19.70–19.70
+  livello  20 nessuno   normali  20: p50   1.65 p99   11.26 (  +5.88) p99,9   44.35 ( +24.66) max    78.8 ms n 120008 MUORE  | tot   2008 rec/s, rumorosi ammessi      0/s sopra la riserva, capo 0.38 core, copie 0.27/0.27, disco  40.9 MB/s  2233 scritture/s per copia, RSS 258/261/262 MB; normali rifiutati 0, ignoti 0, ritentativi 0
+  livello  20 ventimila normali  19: p50   3.26 p99   24.35 ( +18.96) p99,9   60.16 ( +40.46) max    92.0 ms n 114026 MUORE  | tot   3111 rec/s, rumorosi ammessi   1000/s sopra la riserva, capo 0.50 core, copie 0.25/0.24, disco  53.6 MB/s  2065 scritture/s per copia, RSS 347/345/365 MB; normali rifiutati 0, ignoti 0, ritentativi 0
+  -> livello 20: MUORE; peggioramento massimo p99 +18.96 ms, p99,9 +40.46 ms
+===== rev-a2
+  riferimento, un database da solo (1 ripetizioni): p50 2.41, p99 5.08, p99,9 19.65 ms (mediane); forchetta p99 5.08–5.08, p99,9 19.65–19.65
+  livello  20 nessuno   normali  20: p50   2.31 p99   10.72 (  +5.64) p99,9   33.25 ( +13.60) max    56.9 ms n 120010 MUORE  | tot   2008 rec/s, rumorosi ammessi      0/s sopra la riserva, capo 0.36 core, copie 0.26/0.26, disco  41.0 MB/s  2254 scritture/s per copia, RSS 262/265/262 MB; normali rifiutati 0, ignoti 0, ritentativi 0
+  livello  20 ventimila normali  19: p50   3.37 p99   23.58 ( +18.50) p99,9   52.38 ( +32.74) max    83.7 ms n 114013 MUORE  | tot   3111 rec/s, rumorosi ammessi   1000/s sopra la riserva, capo 0.50 core, copie 0.26/0.25, disco  53.1 MB/s  2015 scritture/s per copia, RSS 363/354/343 MB; normali rifiutati 0, ignoti 0, ritentativi 0
+  -> livello 20: MUORE; peggioramento massimo p99 +18.50 ms, p99,9 +32.74 ms
+===== rev-b
+  manca il riferimento (livello 1)
