@@ -1,1 +1,0 @@
-carica --gb 10 --file risultati_p1.json

@@ -1,1 +1,0 @@
-giro --nuova-cartella --solo-fasi carico_massimo

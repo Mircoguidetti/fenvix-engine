@@ -1,0 +1,18 @@
+# K2b · what our kitchen loads before the m30-corto round: the databases that round reads, loaded like on Atlas.
+# One line per step: STATE COMMAND OPTIONS. STATE is the state-file name used by programs/m30-corto/passi.txt.
+# Steps of the same STATE run one after the other; different STATEs run at the same time (one Python process per
+# database, like the Atlas load: code-irlanda programmi/carica/passi.txt, 16 threads each).
+# 'carica' lines are the Atlas lines word for word (same database, size, dormant share, seed, threads); load.py checks
+# them against the Atlas state file and stops each load at the fraction Atlas reached (load_until.py). The old
+# database fenvix_p1 was loaded on 2026-11-04 with script p1-1.0, whose load code is identical to p1-1.6.2 (checked
+# function by function by K2b): --gb 10, default seed 42, 4 threads, 30% dormant; it reached 100% on Atlas.
+# 'giro ... grandi_carica' lines load the 2 KB collection (events_large), like on Atlas (whole, never cut).
+# m10c and m30c (app_data_2, app_data_5) are not loaded: m30-corto never reads them.
+m10s carica --db app_data_1 --gb 6.6 --quota-riservati 0.4883 --seme 101 --thread 16 --max-ore-carico 4.3
+m10s giro --db app_data_1 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+m10p carica --db app_data_3 --gb 9.67 --quota-riservati 0.4 --seme 103 --thread 16 --max-ore-carico 4.3
+m30s carica --db app_data_4 --gb 6.6 --quota-riservati 0.4883 --seme 104 --thread 16 --max-ore-carico 4.3
+m30s giro --db app_data_4 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --grandi-gib 1.22 --grandi-clienti 1320 --grandi-thread 8 --pausa-s 0
+m30p carica --db app_data_6 --gb 9.67 --quota-riservati 0.4 --seme 106 --thread 16 --max-ore-carico 4.3
+vecchio carica --db fenvix_p1 --gb 10 --seme 42 --thread 4
+vecchio giro --db fenvix_p1 --nuova-cartella --giro carica_2kb --solo-fasi grandi_carica --pausa-s 0

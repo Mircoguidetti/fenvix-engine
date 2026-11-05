@@ -1,0 +1,12 @@
+#!/bin/bash
+# Kitchen local test (K2, from P1 Ireland) · fake `shutdown` of a machine: writes what it is asked; "now" = the machine
+# powers off, that is (power-off = termination) terminate-instances on moto and the end of its processes. "+N" is only
+# written down (the real minutes are not waited in a test).
+echo "$(date +%T) shutdown $*" >> "$(dirname "$MACHINE_DIR")/shutdown.log"
+for a in "$@"; do
+  if [ "$a" = now ]; then
+    aws ec2 terminate-instances --instance-ids "$MACHINE_ID" > /dev/null 2>&1
+    exit 0
+  fi
+done
+exit 0
