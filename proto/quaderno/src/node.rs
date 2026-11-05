@@ -433,7 +433,47 @@ pub fn start(cfg: Config) -> anyhow::Result<()> {
                         let (sh, t) = (sh.clone(), t.clone());
                         Arc::new(move |v: Vec<Vec<(Reply, CommitReq)>>| lane_push(&sh, &t, v.into_iter().flatten().collect()))
                     };
-                    while let Ok(body) = r.next().await {
+                    let mut nframes = 0u64;
+                    'frames: while let Ok(body) = r.next().await {
+                        // Q8c: a connection with many frames already buffered must not keep a network thread for
+                        // itself (the other databases' connections share the same two threads)
+                        nframes += 1;
+                        if nframes % 32 == 0 {
+                            tokio::task::yield_now().await;
+                        }
+                        // Q8c: the door looks at the database of a commit frame BEFORE decoding it. A database over
+                        // its cap pauses this connection (nothing is read: TCP backpressure) and, after
+                        // `block_max_ms`, the whole frame gets one `Busy` without its records ever being decoded: an
+                        // over-cap neighbour costs the leader almost nothing per frame it sends
+                        if let (Some(door), true) = (&sh.door, sh.lanes_on && sh.is_leader.load(std::sync::atomic::Ordering::Relaxed)) {
+                            if let Some((id, n, db)) = peek_commit(&body) {
+                                let max_wait = Duration::from_millis(door.cfg.max_wait_ms);
+                                let t0 = Instant::now();
+                                loop {
+                                    let w = door.would_wait(&db);
+                                    if w <= max_wait {
+                                        break;
+                                    }
+                                    let blocked = t0.elapsed();
+                                    if door.cfg.block && blocked < Duration::from_millis(door.cfg.block_max_ms) {
+                                        let pause = (w - max_wait).min(Duration::from_millis(door.cfg.block_max_ms) - blocked).max(Duration::from_millis(1));
+                                        {
+                                            let mut st = door.st.lock();
+                                            st.blocked += 1;
+                                            st.blocked_ms += pause.as_millis() as u64;
+                                        }
+                                        tokio::time::sleep(pause).await;
+                                        continue;
+                                    }
+                                    let ms = ((w - max_wait).as_millis() as u32).max(100);
+                                    door.st.lock().rejected += 1;
+                                    let busy = Resp::Busy { retry_ms: ms, reason: 6 };
+                                    let resp = if body[8] == 12 { Resp::Batch(vec![busy; n as usize]) } else { busy };
+                                    let _ = rtx.send(enc_resp(id, &resp));
+                                    continue 'frames;
+                                }
+                            }
+                        }
                         match dec_req(body) {
                             Ok((id, q)) => {
                                 // Q8: sul leader, con le corsie accese, i commit vanno nella corsia del loro database

@@ -1,0 +1,10 @@
+corsie raff t=5s inviati 50000 confermati(misura) 3000 rifiutati 0 ignoti 0 scartati 0 rifiuti_freno 1000
+corsie raff t=10s inviati 68000 confermati(misura) 3000 rifiutati 0 ignoti 1000 scartati 0 rifiuti_freno 1000
+corsie raff t=15s inviati 100000 confermati(misura) 3000 rifiutati 0 ignoti 47000 scartati 0 rifiuti_freno 1000
+corsie raff t=20s inviati 139000 confermati(misura) 3000 rifiutati 0 ignoti 47000 scartati 0 rifiuti_freno 1000
+corsie raff t=25s inviati 150000 confermati(misura) 4000 rifiutati 0 ignoti 47000 scartati 0 rifiuti_freno 1000
+corsie raff t=30s inviati 186000 confermati(misura) 4000 rifiutati 0 ignoti 68000 scartati 0 rifiuti_freno 1000
+corsie raff t=35s inviati 200000 confermati(misura) 4000 rifiutati 0 ignoti 96000 scartati 0 rifiuti_freno 1000
+corsie raff t=40s inviati 249000 confermati(misura) 4000 rifiutati 0 ignoti 96000 scartati 0 rifiuti_freno 1000
+corsie raff t=45s inviati 250000 confermati(misura) 5000 rifiutati 0 ignoti 96000 scartati 0 rifiuti_freno 1000
+corsie raff t=50s inviati 300000 confermati(misura) 5000 rifiutati 0 ignoti 135000 scartati 0 rifiuti_freno 1000

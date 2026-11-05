@@ -1,0 +1,12 @@
+Q8c diagnosis of the door mode (1 log, level 2: one normal at 100/s + one noisy on the same log, 40 s, this 2-core box).
+n-<case>.json = normal's result (lat_send = from the actual send, us); raff-<case>.log = the noisy generator.
+A-base     bursts, door blocking (connection paused up to 1 s)            normal p99 172 ms
+B-small    same, fdatasync batch cap 32 KB and cell cap 0.5 MB/s          p99 148 ms (batch size is not the cause)
+C-nodoor   bursts, no door                                                p99 16.8 ms
+D-mille    noisy at 1,000/s (= the cap), door                             p99 3.9 ms
+E-noblock  bursts, door rejecting at once (no blocking)                   p99 5.5 ms
+F-doorhigh bursts, door with a cap so high it never acts                  p99 16.1 ms
+G-20k-noblock  noisy 20,000/s open loop, door rejecting                   p99 15.0 ms, noisy gets 49,843 in 50 s (its cap)
+H-20k-block    same, door blocking                                        p99 31.6 ms (max 241), noisy gets ~0
+I-raff     bursts, final code (reject + peek before decode + yield)       p99 5.3 ms, noisy gets 50,000 in 50 s
+J-20k      20,000/s, final code                                           p99 14.5 ms, noisy gets 49,871 in 50 s

@@ -40,7 +40,10 @@ impl DoorCfg {
             bytes_per_s: g("PQ_DOOR_MBS", 2.0) * 1048576.0,
             burst_s: g("PQ_DOOR_BURST_S", 0.1),
             max_wait_ms: g("PQ_DOOR_WAIT_MS", 500.0) as u64,
-            block: std::env::var("PQ_DOOR_BLOCK").map(|x| x != "0").unwrap_or(true),
+            // Q8c measured: blocking the connection made the normals' p99 worse (150-170 ms with bursts, 32 ms with 20,000/s) and
+            // gave the throttled database almost nothing (its commits went stale in the socket); rejecting at once with the
+            // retry time gave p99 5.5 / 15 ms and exactly the cap to the neighbour. Default: reject.
+            block: std::env::var("PQ_DOOR_BLOCK").map(|x| x == "1").unwrap_or(false),
             block_max_ms: g("PQ_DOOR_BLOCK_MAX_MS", 1000.0) as u64,
         }
     }
@@ -179,6 +182,17 @@ impl<T: Send + 'static> Door<T> {
                 Some(t) => tokio::time::sleep_until(t.into()).await,
                 None => return,
             }
+        }
+    }
+
+    /// Read-only: how long a new commit of `db` would wait outside now (zero if it may enter). Used before decoding a
+    /// frame: a database over its cap is paused or refused without decoding its records.
+    pub fn would_wait(&self, db: &Db) -> Duration {
+        let now = Instant::now();
+        let burst = Duration::from_secs_f64(self.cfg.burst_s);
+        match self.map.lock().get(db) {
+            Some(b) => b.tat.checked_sub(burst).map(|x| x.saturating_duration_since(now)).unwrap_or_default(),
+            None => Duration::ZERO,
         }
     }
 

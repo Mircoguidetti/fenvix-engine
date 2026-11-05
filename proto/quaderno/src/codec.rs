@@ -1028,3 +1028,35 @@ mod tests {
         assert!(pos_to_bson_ts(pos_make(1_700_000_000_124, 0)) > pos_to_bson_ts(pos_make(1_700_000_000_123, 65535)));
     }
 }
+
+/// Q8c: (request id, number of commits, database of the first commit) of a Commit or CommitBatch frame, read from the
+/// fixed offsets of the encoding without decoding the records; None for any other request.
+pub fn peek_commit(body: &[u8]) -> Option<(u64, u32, Db)> {
+    let id = u64::from_le_bytes(body.get(0..8)?.try_into().ok()?);
+    match *body.get(8)? {
+        1 => Some((id, 1, body.get(9 + 16..9 + 32)?.try_into().ok()?)),
+        12 => {
+            let n = u32::from_le_bytes(body.get(9..13)?.try_into().ok()?);
+            if n == 0 {
+                return None;
+            }
+            Some((id, n, body.get(13 + 16..13 + 32)?.try_into().ok()?))
+        }
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests_peek {
+    use super::*;
+    #[test]
+    fn peek_reads_id_count_and_db() {
+        let c = |db: u8| CommitReq { txn: [9; 16], db: [db; 16], read_pos: 77, mode: Mode::Validated, writes: vec![], reads: vec![], session: None };
+        let one = enc_req(5, &Req::Commit(c(3)));
+        assert_eq!(peek_commit(&one[8..]), Some((5, 1, [3; 16])));
+        let many = enc_req(6, &Req::CommitBatch(vec![c(4), c(4), c(7)]));
+        assert_eq!(peek_commit(&many[8..]), Some((6, 3, [4; 16])));
+        let other = enc_req(7, &Req::Status);
+        assert_eq!(peek_commit(&other[8..]), None);
+    }
+}
