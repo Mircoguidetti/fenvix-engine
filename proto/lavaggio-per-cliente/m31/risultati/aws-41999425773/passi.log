@@ -1,0 +1,11 @@
+2026-11-05T09:10:16Z inizio; macchina 4 vCPU, 7 GB
+2026-11-05T09:10:16Z carica p1
+2026-11-05T09:42:34Z copia p1
+2026-11-05T09:43:00Z tempi p1
+2026-11-05T09:54:55Z carica d2k
+2026-11-05T10:01:15Z copia d2k
+2026-11-05T10:01:17Z tempi d2k
+2026-11-05T10:02:40Z scrivi lotto 1 flush 100
+2026-11-05T10:05:40Z scrivi lotto 1 flush 10
+2026-11-05T10:08:41Z scrivi lotto 100 flush 100
+2026-11-05T10:11:52Z fine

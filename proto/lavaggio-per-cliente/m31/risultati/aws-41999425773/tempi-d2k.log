@@ -1,0 +1,20 @@
+fotografia: 9 pile (6 L0), MB [3, 3, 4, 3, 3, 4, 15, 112, 738]; sul bancone con la quota 0.02: 7 pile, 38 MB
+riscaldo 1 s, 200 clienti, 1680 GET: indici 1407 KB, filtri 2841 KB
+AVVISO parallelo dormienti: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo dormienti (50): Q1 freddo p50 28.5 p99 55.2; Q1d 29.6 62.4; Q2 51.0 104.3; Q3 26.4 114.8; Q4 (50) 29.3 120.9; caldo Q1 p50 0.26; GET per find 1.65; doppie 0.000
+AVVISO parallelo attivi: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo attivi (50): Q1 freddo p50 49.1 p99 67.5; Q1d 48.5 93.5; Q2 48.5 83.7; Q3 47.5 74.9; Q4 (50) 56.9 123.3; caldo Q1 p50 0.45; GET per find 7.54; doppie 0.000
+AVVISO parallelo+bancone dormienti: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo+bancone dormienti (50): Q1 freddo p50 28.5 p99 45.6; Q1d 28.5 60.8; Q2 49.4 77.9; Q3 26.3 49.0; Q4 (50) 30.0 70.5; caldo Q1 p50 0.37; GET per find 1.26; doppie 0.000
+AVVISO parallelo+bancone attivi: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo+bancone attivi (50): Q1 freddo p50 30.2 p99 94.5; Q1d 29.0 61.6; Q2 52.2 124.0; Q3 30.3 72.6; Q4 (50) 46.8 82.1; caldo Q1 p50 0.43; GET per find 2.07; doppie 0.000
+AVVISO parallelo+doppia dormienti: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo+doppia dormienti (50): Q1 freddo p50 26.9 p99 63.7; Q1d 29.1 53.1; Q2 47.7 125.6; Q3 26.3 50.3; Q4 (50) 30.9 73.0; caldo Q1 p50 0.29; GET per find 1.72; doppie 0.088
+AVVISO parallelo+doppia attivi: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo+doppia attivi (50): Q1 freddo p50 50.1 p99 92.0; Q1d 47.1 72.9; Q2 49.8 81.6; Q3 48.4 66.7; Q4 (50) 54.9 95.4; caldo Q1 p50 0.42; GET per find 7.74; doppie 0.316
+AVVISO parallelo+bancone+doppia dormienti: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo+bancone+doppia dormienti (50): Q1 freddo p50 27.9 p99 53.4; Q1d 27.3 42.8; Q2 48.9 77.6; Q3 25.4 34.0; Q4 (50) 29.4 62.6; caldo Q1 p50 0.39; GET per find 1.30; doppie 0.032
+AVVISO parallelo+bancone+doppia attivi: Q4 su 50 clienti, meno dei 60 di p1-1.5
+parallelo+bancone+doppia attivi (50): Q1 freddo p50 29.7 p99 67.7; Q1d 29.9 43.0; Q2 50.1 74.5; Q3 28.3 44.8; Q4 (50) 37.8 86.9; caldo Q1 p50 0.35; GET per find 2.21; doppie 0.120
+Q5 indice_100: freddo p50 NaN ms p99 NaN, GET p50 NaN, documenti p50 NaN
+Q5 indice_tutte: freddo p50 NaN ms p99 NaN, GET p50 NaN, documenti p50 NaN
