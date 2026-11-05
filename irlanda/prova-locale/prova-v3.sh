@@ -58,10 +58,12 @@ echo "== 2. i programmi rimpiccioliti"
 python3 "$QUI/rimpicciolisci.py" "$I/programmi" rep/irlanda/programmi
 mkdir -p pacco && python3 -m pip install -q --target pacco/vendor 'pymongo>=4.6,<5' backports.zstd boto3 > pip.log 2>&1
 tot_err=0
-for PROG in carica m10-a m10-b m10-massimo m30-a m30-b m30-massimo; do
+# PROGRAMMI: quali programmi, in fila (di serie i sette della v3; per i giri in un solo programma, correzione B3 del
+# revisore: PROGRAMMI="carica m10-tutto m30-tutto" oppure "carica m10-tutto-16 m30-tutto-16")
+for PROG in ${PROGRAMMI:-carica m10-a m10-b m10-massimo m30-a m30-b m30-massimo}; do
   echo "== programma $PROG"
   read -r TIPO TETTO < rep/irlanda/programmi/$PROG/macchina.txt
-  case "$TIPO" in c7i.xlarge) PREZZO_ORA=0.1915;; c7i.4xlarge) PREZZO_ORA=0.766;; c7i.8xlarge) PREZZO_ORA=1.532;; esac
+  case "$TIPO" in c7i.xlarge) PREZZO_ORA=0.1915;; c7i.2xlarge) PREZZO_ORA=0.383;; c7i.4xlarge) PREZZO_ORA=0.766;; c7i.8xlarge) PREZZO_ORA=1.532;; esac
   export TIPO PREZZO_ORA TETTO_MACCHINA_MIN=$TETTO TETTO_MIN=$((TETTO + 15)) BUCKET=fenvix-coldread-irl-$RANDOM
   export IRL_OUT=$W/out-$PROG GITHUB_STEP_SUMMARY=$W/summary-$PROG.md IRL_PACCO=$W/irlanda-$PROG.tar.gz
   # (workflow) CATENA
