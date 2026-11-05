@@ -943,6 +943,103 @@ mod tests {
         db.close().await.unwrap();
     }
 
+    /// Reviewer (R-T1): a wave of passing clients (each reads a few documents once, or twice in a row like a page
+    /// refresh) must not push out the clients that come back often.
+    async fn passing_wave(reads_per_passer: usize) -> (u64, u64) {
+        passing_wave_ram(reads_per_passer, 2 << 20).await
+    }
+
+    async fn passing_wave_ram(reads_per_passer: usize, ram: u64) -> (u64, u64) {
+        // 2 MiB of RAM: about 0.4 MiB of maps (index and filters of 40 MB of documents), the rest for data; the 60
+        // blocks of the active clients (about 0.25 MiB) fit the protected share many times
+        let c = Counter::new(ram, None, 0).unwrap();
+        let store: Arc<dyn ObjectStore> = Arc::new(InMemory::new());
+        {
+            let db = Db::builder("t", Arc::clone(&store)).with_db_cache_disabled().build().await.unwrap();
+            let val = vec![3u8; 1000];
+            for i in 0..40000u32 {
+                db.put(format!("doc/k{i:06}"), &val).await.unwrap();
+            }
+            db.flush_with_options(slatedb::config::FlushOptions { flush_type: slatedb::config::FlushType::MemTable }).await.unwrap();
+            db.close().await.unwrap();
+        }
+        let db = Db::builder("t", Arc::clone(&store)).with_db_cache(c.split_cache(), 1).build().await.unwrap();
+        // 3 active clients, 20 documents each (60 blocks, about 240 KiB: fits the protected share), read 3 times
+        let hot: Vec<u32> = (0..60u32).map(|i| i * 17).collect();
+        for _ in 0..3 {
+            for &i in &hot {
+                db.get(format!("doc/k{i:06}")).await.unwrap().unwrap();
+            }
+        }
+        // the wave: 300 passing clients, 20 documents each, never seen before
+        let mut x: u64 = 12345;
+        for n in 0..300 {
+            let mut keys = Vec::new();
+            for _ in 0..20 {
+                x = x.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+                keys.push(2000 + (x >> 33) as u32 % 38000);
+            }
+            for _ in 0..reads_per_passer {
+                for k in &keys {
+                    db.get(format!("doc/k{k:06}")).await.unwrap().unwrap();
+                }
+            }
+            // the active clients come back now and then (every 25 passers: 500 passing blocks, about the RAM)
+            if n % 25 == 24 {
+                for &i in &hot {
+                    db.get(format!("doc/k{i:06}")).await.unwrap().unwrap();
+                }
+            }
+        }
+        let h0 = c.m.hits_ram.load(Relaxed);
+        let m0 = c.m.misses.load(Relaxed);
+        for &i in &hot {
+            db.get(format!("doc/k{i:06}")).await.unwrap().unwrap();
+        }
+        let r = (c.m.hits_ram.load(Relaxed) - h0, c.m.misses.load(Relaxed) - m0);
+        let (mu, _, du, _, dp) = c.ram_usage();
+        eprintln!("REV wave {reads_per_passer}: maps {mu} B, data {du} B, protected {dp} B, promoted {}", c.m.promoted.load(Relaxed));
+        db.close().await.unwrap();
+        r
+    }
+
+    #[tokio::test]
+    async fn rev_passing_wave_read_once() {
+        let (hits, misses) = passing_wave(1).await;
+        eprintln!("REV wave read once: hot hits {hits} misses {misses}");
+        assert!(hits >= 50, "passing clients (read once) pushed out the active ones: {hits} hits, {misses} misses");
+    }
+
+    /// Reviewer (R-T1): when the pinned maps take most of the RAM (here about 0.4 MiB of 0.5 MiB; at 1 TB they are
+    /// larger than any RAM), the data of the active clients gets no room: the RAM floor serves only maps.
+    #[tokio::test]
+    async fn rev_maps_leave_room_for_active_data() {
+        let (hits, misses) = passing_wave_ram(1, 512 << 10).await;
+        eprintln!("REV maps crowd out data: hot hits {hits} misses {misses}");
+        assert!(hits >= 50, "pinned maps left no RAM for the active clients: {hits} hits, {misses} misses");
+    }
+
+    #[tokio::test]
+    async fn rev_passing_wave_read_twice() {
+        let (hits, misses) = passing_wave(2).await;
+        eprintln!("REV wave read twice: hot hits {hits} misses {misses}");
+        assert!(hits >= 50, "passing clients (read twice in a row) pushed out the active ones: {hits} hits, {misses} misses");
+    }
+
+    /// Reviewer (R-T1): RAM the counter keeps per entry it knows about (disk index + segment list + map-block set).
+    #[test]
+    fn rev_bookkeeping_sizes() {
+        eprintln!(
+            "REV sizes: Ck {} Loc {} (Ck,Loc) {} MapSlot {} (Ck,MapSlot) {} Slot {}",
+            std::mem::size_of::<Ck>(),
+            std::mem::size_of::<Loc>(),
+            std::mem::size_of::<(Ck, Loc)>(),
+            std::mem::size_of::<MapSlot>(),
+            std::mem::size_of::<(Ck, MapSlot)>(),
+            std::mem::size_of::<Slot>()
+        );
+    }
+
     #[tokio::test]
     async fn two_floors_end_to_end() {
         // a small db through the counter: RAM tiny, disk floor on: every read value is right, maps stay pinned,
