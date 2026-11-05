@@ -1,0 +1,2 @@
+provagen-libero livello 100 fase nessuno: normali 100 p50 2.69 p99 121.53 p99.9 268.29 max 328.4 ms n 200070 rifiutati 0 ignoti 0 | totale 9984 rec/s, capo 0.52 core, disco 96.2 MB/s | generatore normali 0.29 core, chiesti 10000 inviati 10000/s, macchina 79%
+fine provagen-libero

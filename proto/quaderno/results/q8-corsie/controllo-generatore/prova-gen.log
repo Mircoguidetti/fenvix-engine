@@ -1,0 +1,3 @@
+provagen livello 1 fase nessuno: normali 1 p50 2.26 p99 3.86 p99.9 6.06 max 15.8 ms n 2001 rifiutati 0 ignoti 0 | totale 100 rec/s, capo 0.08 core, disco 2.7 MB/s | generatore normali 0.03 core, chiesti 100 inviati 100/s, macchina 13%
+provagen livello 100 fase nessuno: normali 100 p50 2.64 p99 67.01 p99.9 219.78 max 272.9 ms n 200060 rifiutati 0 ignoti 0 | totale 10027 rec/s, capo 0.50 core, disco 95.9 MB/s | generatore normali 0.28 core, chiesti 10000 inviati 10000/s, macchina 78%
+fine provagen
