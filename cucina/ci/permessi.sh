@@ -1,7 +1,7 @@
 #!/bin/bash
 # Cucina minima (K2; da P1 Irlanda permessi.sh) · controllo dei permessi, 0 $: letture, --dry-run, un bucket vuoto creato
 # e cancellato subito. In piu' rispetto all'Irlanda: TUTTE le taglie del server ammesse (anche Graviton, immagine
-# arm64), i gruppi di sicurezza (--dry-run), e la scelta della macchina cliente secondo la quota di vCPU.
+# arm64), i gruppi di sicurezza (creati e cancellati davvero: sono gratis), e la scelta della macchina cliente secondo la quota di vCPU.
 # Scrive per ogni permesso "OK" o "MANCA", e alla fine l'elenco di quello che manca.
 # Variabili: TAGLIE (lista JSON delle taglie della giornata), CLIENTE_CHIESTO e COPIE_CHIESTE ("auto" o un valore),
 # RUOLO_MACCHINA, DISCO_GB. Se GITHUB_ENV c'e', ci scrive CLIENTE e COPIE scelti.
@@ -21,8 +21,18 @@ prova "ec2:DescribeInstances" aws ec2 describe-instances --filters Name=tag:proj
 prova "ec2:DescribeVolumes (controllo finale)" aws ec2 describe-volumes --filters Name=tag:project,Values=fenvix-coldread --query 'length(Volumes)'
 prova "ec2:DescribeAddresses (controllo finale)" aws ec2 describe-addresses --filters Name=tag:project,Values=fenvix-coldread --query 'length(Addresses)'
 prova "ec2:DescribeSecurityGroups (pulizia e controllo finale)" aws ec2 describe-security-groups --filters Name=tag:project,Values=fenvix-coldread --query 'length(SecurityGroups)'
-prova "ec2:CreateSecurityGroup con il tag" aws ec2 create-security-group --dry-run --group-name fenvix-coldread-cm-permessi --description "cucina minima prova" \
+# gruppi di sicurezza: si creano davvero (sono gratis), si apre la porta dall'uno all'altro e si cancellano subito
+G="fenvix-coldread-cm-permessi-${GITHUB_RUN_ID:-0}"
+prova "ec2:CreateSecurityGroup con il tag (cliente)" aws ec2 create-security-group --group-name "$G-cliente" --description "cucina minima prova permessi" \
   --vpc-id "$VPC" --tag-specifications "ResourceType=security-group,Tags=[{Key=project,Value=fenvix-coldread}]"
+prova "ec2:CreateSecurityGroup con il tag (server)" aws ec2 create-security-group --group-name "$G-server" --description "cucina minima prova permessi" \
+  --vpc-id "$VPC" --tag-specifications "ResourceType=security-group,Tags=[{Key=project,Value=fenvix-coldread}]"
+gid() { aws ec2 describe-security-groups --filters Name=group-name,Values="$1" --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null; }
+GC=$(gid "$G-cliente"); GS=$(gid "$G-server")
+prova "ec2:AuthorizeSecurityGroupIngress (27017 solo dal gruppo cliente)" aws ec2 authorize-security-group-ingress --group-id "$GS" \
+  --ip-permissions "IpProtocol=tcp,FromPort=27017,ToPort=27017,UserIdGroupPairs=[{GroupId=$GC}]"
+prova "ec2:DeleteSecurityGroup (server)" aws ec2 delete-security-group --group-id "$GS"
+prova "ec2:DeleteSecurityGroup (cliente)" aws ec2 delete-security-group --group-id "$GC"
 prova "iam:GetInstanceProfile ($RUOLO_MACCHINA)" aws iam get-instance-profile --instance-profile-name "$RUOLO_MACCHINA" --query 'InstanceProfile.Roles[0].RoleName' --output text
 SUBNET=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC" Name=default-for-az,Values=true --query 'sort_by(Subnets,&AvailabilityZone)[0].SubnetId' --output text 2>/dev/null)
 declare -A AMI
@@ -52,8 +62,7 @@ if q=$(aws service-quotas get-service-quota --service-code ec2 --quota-code L-12
 else
   echo "MANCA servicequotas:GetServiceQuota: $(head -c 300 <<<"$q")"; manca+=("servicequotas:GetServiceQuota")
 fi
-# ec2:TerminateInstances, AuthorizeSecurityGroupIngress e DeleteSecurityGroup non si provano qui: con la condizione sul
-# tag un --dry-run su una risorsa finta non dice niente. Li prova la giornata stessa (e la pulizia lo scrive).
+# ec2:TerminateInstances non si prova qui: con la condizione sul tag un --dry-run su una macchina finta non dice niente.
 P=fenvix-coldread-cm-permessi-${GITHUB_RUN_ID:-0}
 prova "s3:CreateBucket" aws s3api create-bucket --bucket "$P" --create-bucket-configuration LocationConstraint=eu-west-1
 prova "s3:PutBucketPublicAccessBlock" aws s3api put-public-access-block --bucket "$P" --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true

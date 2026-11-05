@@ -1,5 +1,5 @@
 #!/bin/bash
-# Prova locale P1 Irlanda (copia di M31) · finto `shutdown` della macchina: scrive cosa gli chiedono; "now" = la macchina si spegne, cioè
+# Prova locale cucina minima (K2; copia di P1 Irlanda) · finto `shutdown` della macchina: scrive cosa gli chiedono; "now" = la macchina si spegne, cioè
 # (spegnimento = cancellazione) terminate-instances su moto e fine dei suoi processi. "+N" si registra soltanto
 # (240 minuti veri non si aspettano in una prova).
 echo "$(date +%T) shutdown $*" >> "$(dirname "$IRL_DIR")/shutdown.log"

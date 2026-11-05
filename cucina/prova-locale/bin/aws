@@ -1,0 +1,65 @@
+#!/bin/bash
+# Prova locale cucina minima (K2; copia di P1 Irlanda) · finto `aws`: passa tutto all'AWS CLI vero puntato su moto (S3, EC2, IAM, SSM finti in locale),
+# e in più fa da "macchina": `ec2 run-instances` esegue lo user-data qui, in una cartella a parte, con un `shutdown`
+# finto; `ec2 terminate-instances` uccide anche i processi della macchina. Guasti a comando:
+#   $SANDBOX/guasto-presign  -> `s3 presign` dà un link rotto (scaricamento fallito, C1)
+#   $SANDBOX/scadute         -> le credenziali "vecchia" sono scadute (rinnovo fallito, C3)
+#   $SANDBOX/guasto-pulizia  -> `ec2 terminate-instances` e `s3 rb` dicono "fatto" ma non fanno niente (pulizia che
+#                               lascia di proposito macchine e bucket: il controllo finale deve scrivere ALLARME);
+#                               `ec2 wait` fallisce subito invece che dopo 10 minuti
+#   $SANDBOX/guasto-json     -> `ec2 describe-instances` risponde con un JSON rotto e codice 0
+# Non tocca AWS vero: senza MOTO_URL si rifiuta.
+set -u
+VERO=${AWS_VERO:-/usr/local/bin/aws}
+[ -n "${MOTO_URL:-}" ] && [ -n "${SANDBOX:-}" ] || { echo "aws finto: mancano MOTO_URL o SANDBOX" >&2; exit 2; }
+if [ -e "$SANDBOX/scadute" ] && [ "${AWS_ACCESS_KEY_ID:-}" = vecchia ]; then
+  echo "An error occurred (ExpiredToken): The security token included in the request is expired" >&2; exit 255
+fi
+echo "$(date +%T) ${AWS_ACCESS_KEY_ID:-?} $*" >> "$SANDBOX/aws-chiamate.log"
+reale() { "$VERO" --endpoint-url "$MOTO_URL" "$@"; }
+if [ -e "$SANDBOX/guasto-pulizia" ] && { [ "$1 ${2:-}" = "ec2 terminate-instances" ] || [ "$1 ${2:-}" = "s3 rb" ]; }; then
+  echo "$(date +%T) GUASTO-PULIZIA finta: $*" >> "$SANDBOX/aws-chiamate.log"; exit 0
+fi
+if [ -e "$SANDBOX/guasto-json" ] && [ "$1 ${2:-}" = "ec2 describe-instances" ]; then
+  echo '{"Reservations": [ rotto'; exit 0   # risposta rotta con codice 0: il controllo finale deve dire NON SO
+fi
+if [ -e "$SANDBOX/guasto-pulizia" ] && [ "$1 ${2:-}" = "ec2 wait" ]; then
+  echo "Waiter InstanceTerminated failed (guasto-pulizia finta)" >&2; exit 255   # un vero waiter fallirebbe dopo 10 minuti
+fi
+case "$1 ${2:-}" in
+  "service-quotas get-service-quota")
+    # moto non ha Service Quotas: la quota di vCPU finta si sceglie con $SANDBOX/quota-vcpu (di serie 64)
+    cat "$SANDBOX/quota-vcpu" 2>/dev/null || echo 64.0; exit 0;;
+  "ssm get-parameter")
+    # moto non ha i parametri pubblici di Canonical: un'immagine qualsiasi di moto
+    reale ec2 describe-images --query 'Images[0].ImageId' --output text; exit $? ;;
+  "s3 presign")
+    if [ -e "$SANDBOX/guasto-presign" ]; then echo "http://127.0.0.1:9/link-rotto"; exit 0; fi
+    reale "$@"; exit $? ;;
+  "ec2 run-instances")
+    for a in "$@"; do [ "$a" = --dry-run ] && { reale "$@"; exit $?; }; done
+    ud=""; prev=""
+    for a in "$@"; do [ "$prev" = --user-data ] && ud=${a#file://}; prev=$a; done
+    udcopy=$(mktemp "$SANDBOX/ud.XXXX"); cp "$ud" "$udcopy"
+    out=$(reale "$@") || exit $?
+    # il comando chiede anche [InstanceId,PrivateIpAddress]: la prima parola e' l'id
+    id=${out%%[[:space:]]*}
+    md="$SANDBOX/macchina-$id"; mkdir -p "$md"
+    # la macchina: lo user-data con il suo shutdown finto e le credenziali del suo ruolo; il tipo come TIPO_FINTO
+    tipo=""; prev=""; for a in "$@"; do [ "$prev" = --instance-type ] && tipo=$a; prev=$a; done
+    ( export CM_DIR="$md/opt" IRL_DIR="$md/opt" IRL_ID="$id" TIPO_FINTO="$tipo" PATH="$SANDBOX/bin-macchina:$PATH" AWS_ACCESS_KEY_ID=macchina AWS_SECRET_ACCESS_KEY=macchina
+      unset AWS_SESSION_TOKEN
+      exec setsid bash "$udcopy" > "$md/user-data.log" 2>&1 ) &
+    echo $! > "$md/pid"
+    echo "$out"; exit 0 ;;
+  "ec2 terminate-instances")
+    reale "$@"; rc=$?
+    for a in "$@"; do
+      if [ -f "$SANDBOX/macchina-$a/pid" ]; then
+        p=$(cat "$SANDBOX/macchina-$a/pid"); kill -TERM -- "-$p" 2>/dev/null; pkill -TERM -s "$p" 2>/dev/null
+        echo "$(date +%T) terminata $a" >> "$SANDBOX/macchina-$a/stato.log"
+      fi
+    done
+    exit $rc ;;
+  *) reale "$@"; exit $? ;;
+esac

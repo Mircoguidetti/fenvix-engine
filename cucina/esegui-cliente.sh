@@ -117,6 +117,12 @@ while :; do
   $PY prepara_stato.py lavoro/risultati_p1.json "$NOME" | tee -a out/passi.log
   ( cd lavoro && $PY prova_infinite.py "${OPZIONI[@]}" --giro "$NOME" --a-secco "${EXTRA[@]}" ) > "out/taglia-$K/piano.txt" 2>&1
   passo "piano: $(grep -E "^Il piano usa" "out/taglia-$K/piano.txt" | head -1)"
+  if grep -q "^FERMO" "out/taglia-$K/piano.txt"; then
+    # clienti attivi mai letti finiti (con 10 GB sono circa 3.500, STIMATO: bastano per circa 10 taglie da 330)
+    passo "taglia $K: FERMO nel piano a secco: $(grep -A1 "^FERMO" "out/taglia-$K/piano.txt" | head -2 | tr '\n' ' ')"
+    esiti+=("$K:CLIENTI_INSUFFICIENTI"); echo '{"esito": "CLIENTI_INSUFFICIENTI"}' > "out/taglia-$K/fatto.json"
+    sali; $PY s3io.py metti "$BUCKET" "cliente/fatto-$K.json" "out/taglia-$K/fatto.json"; continue
+  fi
   # 6. il giro (Q2, Q3, Q1, parallelo 10 e 50). maxConnecting nella stringa, come dall'Irlanda (il driver di serie apre
   # al massimo 2 connessioni alla volta per server); le copie del carico massimo NON lo hanno.
   URI_GIRO="${FENVIX_P1_URI}&maxConnecting=${MAX_CONNECTING:-200}"
