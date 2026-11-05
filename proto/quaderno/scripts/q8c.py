@@ -40,6 +40,8 @@ SECS_SMALL = int(opt(args, '--secs-small', '120'))
 WARM = int(opt(args, '--warm', '10'))
 TAG = opt(args, '--tag', f'q8c-logs{LOGS}')
 REF_REPEATS = int(opt(args, '--ref-repeats', '3'))
+# first normal database (Q8c diagnosis: --normal-from 1 puts a level-2 normal on another log than the neighbour 1000)
+NORMAL_FROM = int(opt(args, '--normal-from', '0'))
 WINDOW = opt(args, '--window-ms', '10000')
 os.makedirs(OUT, exist_ok=True)
 ENV = dict(os.environ, PQ_BIN=PQ)
@@ -240,7 +242,7 @@ def run_phase(level, ph):
     for g in gens:
         g.start()
     time.sleep(3)
-    normal = subprocess.Popen(['chrt', '-f', '20', PQ, 'corsie', '--replicas', all_addrs(), '--db-from', '0', '--dbs', str(n_normal), '--rate', '100', '--doc', '1900',
+    normal = subprocess.Popen(['chrt', '-f', '20', PQ, 'corsie', '--replicas', all_addrs(), '--db-from', str(NORMAL_FROM), '--dbs', str(n_normal), '--rate', '100', '--doc', '1900',
                                '--secs', str(secs), '--warm', str(WARM), '--label', 'normali', '--threads', '2', '--conns', '16', '--deadline-ms', '10000'],
                               stdout=subprocess.PIPE, stderr=LOGF, text=True)
     time.sleep(WARM)
