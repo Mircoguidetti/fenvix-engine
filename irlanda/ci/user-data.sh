@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# P1 Irlanda · lo user-data della macchina (lo usa giro-ci.sh e la prova locale). Come M31 (revisore M31, C1):
+# P1 Irlanda (v2) · lo user-data della macchina (lo usa giro-ci.sh e la prova locale). Come M31 (revisore M31, C1):
 # lo spegnimento a TETTO_MACCHINA_MIN minuti e' la PRIMA riga, prima di scaricare qualsiasi cosa; se lo scaricamento
 # o il tar falliscono la macchina si spegne subito (spegnimento = cancellazione, impostato al lancio).
 # scrivi_user_data URL BUCKET  ->  stampa lo script che la macchina esegue all'avvio.

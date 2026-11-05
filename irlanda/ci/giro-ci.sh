@@ -1,7 +1,7 @@
 #!/bin/bash
 # P1 Irlanda · il giro da GitHub Actions (modello: M31 giornata-ci.sh). Bucket nuovo; nel bucket il pacco (script,
 # librerie Python), la stringa di connessione (oggetto cancellato dalla macchina appena letto) e i due file di stato;
-# una c7i.xlarge in eu-west-1 con il ruolo fenvix-coldread-machine; l'IP pubblico della macchina nel log (da mettere
+# una macchina $TIPO (c7i.8xlarge di serie) in eu-west-1 con il ruolo fenvix-coldread-machine; l'IP pubblico della macchina nel log (da mettere
 # nella lista di accesso di Atlas); attesa con la riga SPESA ogni minuto; risultati in $OUT. La pulizia e' in
 # pulizia.sh (gira sempre, if: always()).
 # Variabili dal workflow: BUCKET, TIPO, PREZZO_ORA, TETTO_DOLLARI, RUOLO_MACCHINA, IRL_ACCT, IRL_ROLE, DEMO_DB_URI,
@@ -24,7 +24,7 @@ rinnova() { # credenziali OIDC nuove per un'altra ora, senza uscire dallo step (
   ULTIMO_RINNOVO=$(date +%s)
 }
 # Spesa stimata PER ECCESSO (regola del fondatore 2026-11-04: blocco a TETTO_DOLLARI, di serie 5 $). Come M31: ogni
-# minuto si contano le macchine con il tag ancora vive (almeno 1). Per macchina: c7i.xlarge al prezzo DICHIARATO, disco
+# minuto si contano le macchine con il tag ancora vive (almeno 1). Per macchina: $TIPO al prezzo PREZZO_ORA del workflow, disco
 # gp3 da DISCO_GB GB, IPv4 pubblico; S3: 0,02 $ fissi (poche centinaia di PUT e GET). Atlas NON e' contato qui: il
 # cluster M30 si paga a parte (circa 0,77 $ l'ora, MISURATO in P1) e gira comunque fino al Terminate.
 TETTO_DOLLARI=${TETTO_DOLLARI:-5}; MAC_MIN=0; N_MAC=1

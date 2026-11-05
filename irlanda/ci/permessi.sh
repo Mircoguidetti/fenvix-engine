@@ -1,5 +1,5 @@
 #!/bin/bash
-# P1 Irlanda (copia di M31 permessi.sh, stessi permessi della giornata M31) · controllo dei permessi, 0 $ (GetMetricData: 1 metrica, circa 0,00001 $): letture, --dry-run e un bucket vuoto creato e cancellato subito.
+# P1 Irlanda v2 (da M31 permessi.sh; in piu': il tipo di macchina grande e la quota di vCPU) · controllo dei permessi, 0 $ (GetMetricData: 1 metrica, circa 0,00001 $): letture, --dry-run e un bucket vuoto creato e cancellato subito.
 # Scrive per ogni permesso "OK" o "MANCA", e alla fine l'elenco di quello che manca.
 set -u
 manca=()
@@ -24,8 +24,21 @@ SUBNET=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC" Name=defau
 AMI=$(aws ssm get-parameter --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id --query Parameter.Value --output text 2>/dev/null)
 prova "ec2:RunInstances $TIPO con tag, ruolo e disco (iam:PassRole compreso)" aws ec2 run-instances --dry-run --image-id "$AMI" --instance-type "$TIPO" --subnet-id "$SUBNET" \
   --associate-public-ip-address --iam-instance-profile Name="$RUOLO_MACCHINA" --instance-initiated-shutdown-behavior terminate \
-  --metadata-options HttpTokens=required,HttpEndpoint=enabled --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=16,VolumeType=gp3,DeleteOnTermination=true}' \
+  --metadata-options HttpTokens=required,HttpEndpoint=enabled --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=${DISCO_GB:-20},VolumeType=gp3,DeleteOnTermination=true}" \
   --tag-specifications "ResourceType=instance,Tags=[{Key=project,Value=fenvix-coldread},{Key=Name,Value=fenvix-coldread-irlanda}]" "ResourceType=volume,Tags=[{Key=project,Value=fenvix-coldread}]"
+# la quota di vCPU on-demand (famiglie standard A, C, D, H, I, M, R, T, Z: codice L-1216C47A, DICHIARATO da AWS):
+# il --dry-run di RunInstances NON la controlla. c7i.8xlarge = 32 vCPU, c7i.4xlarge = 16.
+case "$TIPO" in c7i.8xlarge) servono=32;; c7i.4xlarge) servono=16;; c7i.2xlarge) servono=8;; *) servono=4;; esac
+if q=$(aws service-quotas get-service-quota --service-code ec2 --quota-code L-1216C47A --query Quota.Value --output text 2>&1); then
+  if python3 -c "import sys; sys.exit(0 if float(sys.argv[1]) >= float(sys.argv[2]) else 1)" "$q" "$servono" 2>/dev/null; then
+    echo "OK    servicequotas:GetServiceQuota: quota vCPU on-demand standard $q, servono $servono ($TIPO)"
+  else
+    echo "MANCA quota vCPU: $q vCPU on-demand standard, ne servono $servono per $TIPO. Prova \"tipo\": \"c7i.4xlarge\" (16 vCPU) o chiedi l'aumento della quota (Service Quotas, L-1216C47A)"
+    manca+=("quota vCPU $q < $servono")
+  fi
+else
+  echo "MANCA servicequotas:GetServiceQuota: $(head -c 300 <<<"$q")"; manca+=("servicequotas:GetServiceQuota")
+fi
 # ec2:TerminateInstances non si prova qui: con la condizione sul tag un --dry-run su una macchina finta non dice niente.
 P=fenvix-coldread-irl-permessi-${GITHUB_RUN_ID:-0}
 prova "s3:CreateBucket" aws s3api create-bucket --bucket "$P" --create-bucket-configuration LocationConstraint=eu-west-1

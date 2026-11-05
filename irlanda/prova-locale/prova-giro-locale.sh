@@ -16,7 +16,7 @@ export SANDBOX=$W/sandbox; mkdir -p "$SANDBOX"; cp -r "$QUI/bin" "$QUI/bin-macch
 export MOTO_URL=http://127.0.0.1:$PORTA AWS_ENDPOINT_URL=http://127.0.0.1:$PORTA
 export AWS_DEFAULT_REGION=eu-west-1 AWS_REGION=eu-west-1 AWS_PAGER="" AWS_ACCESS_KEY_ID=fresca AWS_SECRET_ACCESS_KEY=fresca
 export NO_PROXY=127.0.0.1,localhost no_proxy=127.0.0.1,localhost
-export TIPO=c7i.xlarge PREZZO_ORA=0.1915 TETTO_DOLLARI=5 RUOLO_MACCHINA=fenvix-coldread-machine
+export TIPO=c7i.8xlarge PREZZO_ORA=1.532 TETTO_DOLLARI=5 COPIE=${COPIE:-3} RUOLO_MACCHINA=fenvix-coldread-machine
 export IRL_ACCT=123456789012 IRL_ROLE=arn:aws:iam::123456789012:role/finto BUCKET=fenvix-coldread-irl-$RANDOM
 export IRL_OUT=$W/out GITHUB_STEP_SUMMARY=$W/summary.md IRL_PACCO=$W/irlanda.tar.gz
 export DEMO_DB_URI="mongodb://127.0.0.1:$DBP/?replicaSet=rs0"
@@ -38,14 +38,20 @@ mkdir -p carico && cp "$I/prova_infinite.py" carico/
 ( cd carico && FENVIX_P1_URI=$DEMO_DB_URI python3 prova_infinite.py carica --gb 0.02 --mb-cliente 0.03 --thread 2 --lotto 200 \
     --file risultati_p1.json > carica.log 2>&1 ); echo "carica: codice $?"; tail -2 carico/carica.log
 : > carico/risultati_p1.json.usati.log
+# come dopo il giro M30: un giro_finale con i quattro livelli del parallelo gia' fatti (senza prepara_stato.py il
+# parallelo dall'Irlanda verrebbe saltato)
+python3 -c "import json; f='carico/risultati_p1.json'; d=json.load(open(f)); d['giro_finale']={'nome': 'm30', 'cartella': 'giro_finale_m30_FINTA', 'fasi': {}, 'parallelo_livelli_fatti': ['L1', 'L10', 'L50', 'L100']}; json.dump(d, open(f, 'w'))"
 ferma_db
 mkdir -p stato && cp carico/risultati_p1.json carico/risultati_p1.json.usati.log stato/
 md5sum stato/* > stato-prima.md5
 echo "== 2. il pacco come nel workflow (librerie per il Python di questa macchina)"
 mkdir -p pacco && python3 -m pip install -q --target pacco/vendor 'pymongo>=4.6,<5' backports.zstd boto3 > pip.log 2>&1
-cp "$I/prova_infinite.py" "$I/esegui.sh" "$I/s3io.py" "$I/attendi_db.py" "$I/opzioni.txt" pacco/
+cp "$I/prova_infinite.py" "$I/esegui.sh" "$I/s3io.py" "$I/attendi_db.py" "$I/opzioni.txt" "$I/massimo.txt" \
+  "$I/cpu_macchina.py" "$I/somma_massimo.py" "$I/controlla_parallelo.py" pacco/
+echo "$COPIE" > pacco/copie.txt
 tar czf "$IRL_PACCO" -C pacco .
 echo "== 3. controllo dei file di stato e piano a secco"
+python3 "$I/prepara_stato.py" stato/risultati_p1.json
 PYTHONPATH=$W/pacco/vendor python3 "$I/controlla_stato.py" stato | grep -E "^(OK|FERMO|STATO)"
 echo "== 4. permessi (moto)"
 bash "$I/ci/permessi.sh" | tail -3
@@ -71,3 +77,9 @@ print("registro = file di stato per i nuovi:", {int(x.split()[1]) for x in lb if
 gf = b.get("giro_finale") or {"nome": None, "fasi": {}}; print("giro:", gf["nome"], "fasi:", {f: [e.get("stato") for e in v] for f, v in gf["fasi"].items() if not f.startswith("pausa")})
 PY
 ls "$IRL_OUT" "$IRL_OUT"/dati/* | head -30
+echo "== 8. parallelo e carico massimo"
+cat "$IRL_OUT/parallelo-connessioni.txt"
+cat "$IRL_OUT/massimo-somma.txt"
+grep -E "carico_massimo|ATTENZIONE|connessioni del parallelo" "$IRL_OUT/passi.log"
+python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('chiavi giro:', sorted(k for k in d if k.startswith('giro_finale')), '- nome', d['giro_finale']['nome'], '- livelli fatti', d['giro_finale'].get('parallelo_livelli_fatti'))" "$IRL_OUT/stato/risultati_p1.json"
+ls "$IRL_OUT/massimo"; wc -l < "$IRL_OUT/cpu-macchina.log"

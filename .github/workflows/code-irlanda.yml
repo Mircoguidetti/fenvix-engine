@@ -1,12 +1,17 @@
-# P1 · giro corto dall'Irlanda per le code lente di Atlas M30 (2026-11-05). Modello: M31 (m31-freddo-s3.yml).
+# P1 · giro dall'Irlanda su Atlas M30, versione 2 (2026-11-05): Q2, Q3, Q1, parallelo 10 e 50, carico massimo a piu'
+# copie. Modello: M31 (m31-freddo-s3.yml).
 # Un solo innesco: un push sul branch code-irlanda che aggiunge o cambia irlanda/comando.json. Il campo "modo":
 #   "permessi" = solo controllo dei permessi e del segreto, 0 $ (letture, --dry-run, bucket vuoto creato e cancellato);
 #                se nello stesso commit ci sono anche i due file di stato, anche il loro controllo a secco;
 #   "giro"     = il giro: nello STESSO commit devono esserci anche irlanda/risultati_p1.json e
 #                irlanda/risultati_p1.json.usati.log (copiati dal Mac DOPO il giro M30). Prima di spendere: md5 dello
-#                script, piano a secco con lo script stesso, guardia contro un file di stato vecchio, permessi. Poi una
-#                c7i.xlarge in eu-west-1 fa Q2, Q3, Q1 (50 clienti attivi mai letti per fase) con lo script p1-1.6.2
-#                non modificato, e restituisce i due file di stato aggiornati;
+#                script, preparazione del file di stato (prepara_stato.py: il giro M30 sotto un'altra chiave, se no il
+#                parallelo salterebbe i livelli 10 e 50), piano a secco con lo script stesso, guardia contro un file
+#                di stato vecchio, permessi e quota di vCPU. Poi una c7i.8xlarge in eu-west-1 fa, con lo script p1-1.6.2
+#                non modificato: Q2, Q3, Q1 (50 clienti attivi mai letti per fase), parallelo 10 e 50 insieme (180
+#                clienti), poi carico_massimo con "copie" copie dello script insieme (file di stato copiati, mai il
+#                vero), e restituisce i due file di stato aggiornati. Facoltativi in comando.json: "tipo"
+#                (c7i.8xlarge di serie, oppure c7i.4xlarge) e "copie" (di serie 20; con c7i.4xlarge 10);
 #   "smonta"   = solo pulizia e verifica.
 #   {"modo": "giro", "forza": true} supera la guardia sul file di stato (solo se il coordinatore dice si').
 # Un commit che non cambia irlanda/comando.json non fa niente su AWS (modo "niente").
@@ -32,7 +37,7 @@ jobs:
   run:
     if: github.repository == 'Mircoguidetti/fenvix-engine'
     runs-on: ubuntu-24.04
-    timeout-minutes: 150
+    timeout-minutes: 175
     env:
       AWS_PAGER: ""
       AWS_DEFAULT_REGION: eu-west-1
@@ -40,12 +45,14 @@ jobs:
       IRL_ROLE: ${{ secrets.AWS_ROLE_ARN }}
       DEMO_DB_URI: ${{ secrets.DEMO_DB_URI }}
       I: irlanda
-      TIPO: c7i.xlarge
-      PREZZO_ORA: "0.1915"       # c7i.xlarge on-demand eu-west-1, DICHIARATO (doit.com, 2026-11-04, come M31)
+      # TIPO, PREZZO_ORA e COPIE li scrive il primo passo (da comando.json): c7i.8xlarge di serie
       TETTO_DOLLARI: "5"         # blocco della spesa stimata (fondatore, RULES.md 2026-11-04)
       RUOLO_MACCHINA: fenvix-coldread-machine
       BUCKET: fenvix-coldread-irl-${{ github.run_id }}
       IRL_OUT: /tmp/irl-out
+      TETTO_MACCHINA_MIN: "120"  # la macchina si spegne (= si cancella) da sola dopo 120 minuti
+      TETTO_MIN: "130"           # il runner smette di aspettare dopo 130 minuti
+      DISCO_GB: "20"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,6 +84,18 @@ jobs:
           # solo un comando.json aggiunto o cambiato in questo commit puo' far partire qualcosa su AWS
           grep -qx "$I"/comando.json <<<"$cambiati" || modo=niente
           case "$modo" in permessi|giro|smonta) ;; *) modo=niente;; esac
+          # la macchina: c7i.8xlarge (32 vCPU) di serie; c7i.4xlarge (16 vCPU) se la quota di vCPU non basta.
+          # Prezzi on-demand eu-west-1: c7i.xlarge 0,1915 $/h DICHIARATO (come M31); gli altri in proporzione ai vCPU
+          # (STIMATO: nella famiglia c7i il prezzo cresce con i vCPU).
+          tipo=$(jq -r '.tipo // "c7i.8xlarge"' "$I"/comando.json 2>/dev/null || echo c7i.8xlarge)
+          case "$tipo" in
+            c7i.8xlarge) prezzo=1.532; copie_serie=20;;
+            c7i.4xlarge) prezzo=0.766; copie_serie=10;;
+            *) echo "::error title=Tipo::tipo $tipo non previsto (c7i.8xlarge o c7i.4xlarge)"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; tipo=c7i.8xlarge; prezzo=1.532; copie_serie=20;;
+          esac
+          copie=$(jq -r ".copie // $copie_serie" "$I"/comando.json 2>/dev/null || echo "$copie_serie")
+          [[ "$copie" =~ ^[0-9]+$ ]] && [ "$copie" -ge 1 ] && [ "$copie" -le 40 ] || { echo "::error title=Copie::copie $copie fuori da 1-40"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; copie=$copie_serie; }
+          { echo "TIPO=$tipo"; echo "PREZZO_ORA=$prezzo"; echo "COPIE=$copie"; } | tee -a "$GITHUB_ENV"
           stato_nuovo=0
           if grep -qx "$I"/risultati_p1.json <<<"$cambiati" && grep -qx "$I"/risultati_p1.json.usati.log <<<"$cambiati"; then stato_nuovo=1; fi
           if [ "$modo" = giro ] && [ "$stato_nuovo" = 0 ]; then
@@ -86,7 +105,7 @@ jobs:
           { echo "modo=$modo"; echo "forza=$forza"; echo "stato_nuovo=$stato_nuovo"; } | tee -a "$GITHUB_OUTPUT"
           echo "modo: $modo" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Rifiutato (file di stato mancanti nel commit)
+      - name: Rifiutato (file di stato mancanti nel commit, o tipo o copie sbagliati)
         if: steps.mode.outputs.rifiuto == '1'
         run: exit 1
 
@@ -97,7 +116,9 @@ jobs:
           /usr/bin/python3 -m pip install -q --target /tmp/pacco/vendor --only-binary=:all: --implementation cp \
             --python-version 3.12 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 \
             'pymongo>=4.6,<5' backports.zstd boto3
-          cp "$I"/prova_infinite.py "$I"/esegui.sh "$I"/s3io.py "$I"/attendi_db.py "$I"/opzioni.txt /tmp/pacco/
+          cp "$I"/prova_infinite.py "$I"/esegui.sh "$I"/s3io.py "$I"/attendi_db.py "$I"/opzioni.txt "$I"/massimo.txt \
+            "$I"/cpu_macchina.py "$I"/somma_massimo.py "$I"/controlla_parallelo.py /tmp/pacco/
+          echo "$COPIE" > /tmp/pacco/copie.txt
           tar czf /tmp/irlanda.tar.gz -C /tmp/pacco .
           sha256sum /tmp/irlanda.tar.gz | tee -a "$GITHUB_STEP_SUMMARY"
           md5sum /tmp/pacco/prova_infinite.py | tee -a "$GITHUB_STEP_SUMMARY"
@@ -108,7 +129,10 @@ jobs:
           FORZA: ${{ steps.mode.outputs.forza }}
         run: |
           mkdir -p /tmp/stato && cp "$I"/risultati_p1.json "$I"/risultati_p1.json.usati.log /tmp/stato/
-          PYTHONPATH=/tmp/pacco/vendor /usr/bin/python3 "$I"/controlla_stato.py /tmp/stato | tee /tmp/controllo-stato.txt
+          # il giro M30 sotto 'giro_finale_prima_di_irlanda' (se no il parallelo salta i livelli 10 e 50)
+          /usr/bin/python3 "$I"/prepara_stato.py /tmp/stato/risultati_p1.json | tee /tmp/controllo-stato.txt
+          grep -q "^OK" /tmp/controllo-stato.txt
+          PYTHONPATH=/tmp/pacco/vendor /usr/bin/python3 "$I"/controlla_stato.py /tmp/stato | tee -a /tmp/controllo-stato.txt
           grep -q "^STATO: PRONTO" /tmp/controllo-stato.txt
           { echo '```'; cat /tmp/controllo-stato.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
