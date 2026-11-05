@@ -54,7 +54,7 @@ for tag, rs in by_tag.items():
             c = r.get('leader_diag', {}).get('corsie', {})
             s = r.get('sys', {})
             lead = s.get(r.get('leader', ''), {})
-            fol = [s[k]['cores'] for k in ('r0', 'r1', 'r2') if k in s and k != r.get('leader')]
+            fol = [s[k]["cores"] or 0 for k in ('r0', 'r1', 'r2') if k in s and k != r.get('leader')]
             disk = s.get('disk', {})
             print(f'  livello {lv:3d} {r["phase"]:9s} normali {r["n_normal"]:3d}: p50 {p50:6.2f} p99 {p99:7.2f} ({d99:+7.2f}) p99,9 {p999:7.2f} ({d999:+7.2f}) max {mx:7.1f} ms n {n:6d} {v:6s} | '
                   f'tot {r["recs_per_s_total"]:6.0f} rec/s, rumorosi ammessi {c.get("ammessi_sopra", 0) / max(s.get("secs", 1), 1):6.0f}/s sopra la riserva, '
