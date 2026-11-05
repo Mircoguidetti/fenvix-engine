@@ -1,0 +1,6 @@
+# Giro M10, carico massimo: 20 copie dello script insieme su una c7i.8xlarge (un processo Python usa circa un core: la
+# macchina resta sotto l'80%), ognuna con una COPIA del file di stato di m10s (letture a caldo di clienti gia' letti,
+# insert a lotti w=1 e majority, 64 fili per copia). Quale variante: quella che la quota di vCPU dell'account permette
+# (8 vCPU: m10-massimo; 16: m10-massimo-16; 32: m10-massimo-32). Con meno copie il verdetto puo' essere "COPIE"
+# (il numero e' un minimo per Atlas, non il suo limite).
+massimo m10s 20 --db app_data_1 --nuova-cartella --solo-fasi carico_massimo

@@ -5,7 +5,7 @@
 # nella lista di accesso di Atlas); attesa con la riga SPESA ogni minuto; risultati in $OUT. La pulizia e' in
 # pulizia.sh (gira sempre, if: always()).
 # Variabili dal workflow: BUCKET, TIPO, PREZZO_ORA, TETTO_DOLLARI, RUOLO_MACCHINA, IRL_ACCT, IRL_ROLE, DEMO_DB_URI,
-# STATO_DIR (cartella con risultati_p1.json e risultati_p1.json.usati.log).
+# STATO_DIR (cartella con una sottocartella per database: risultati_p1.json e risultati_p1.json.usati.log).
 set -uo pipefail
 QUI=$(cd "$(dirname "$0")" && pwd)
 source "$QUI/user-data.sh"
@@ -54,8 +54,8 @@ aws s3api put-bucket-tagging --bucket "$BUCKET" --tagging "TagSet=[{Key=project,
 aws s3api put-bucket-lifecycle-configuration --bucket "$BUCKET" --lifecycle-configuration '{"Rules":[{"ID":"scade","Status":"Enabled","Filter":{},"Expiration":{"Days":1},"AbortIncompleteMultipartUpload":{"DaysAfterInitiation":1}}]}'
 echo "2/6 pacco, file di stato e stringa di connessione nel bucket (la stringa non passa da file ne' da log)"
 aws s3 cp "$PACCO" "s3://$BUCKET/programma/irlanda.tar.gz" --only-show-errors || exit 1
-aws s3 cp "$STATO_DIR/risultati_p1.json" "s3://$BUCKET/stato/risultati_p1.json" --only-show-errors || exit 1
-aws s3 cp "$STATO_DIR/risultati_p1.json.usati.log" "s3://$BUCKET/stato/risultati_p1.json.usati.log" --only-show-errors || exit 1
+tar czf /tmp/stati.tar.gz -C "$STATO_DIR" . || exit 1
+aws s3 cp /tmp/stati.tar.gz "s3://$BUCKET/stato/stati.tar.gz" --only-show-errors || exit 1
 printf '%s' "$DEMO_DB_URI" | aws s3 cp - "s3://$BUCKET/segreto/uri" --only-show-errors || exit 1
 URL=$(aws s3 presign "s3://$BUCKET/programma/irlanda.tar.gz" --expires-in 7200)
 echo "3/6 rete e immagine"
@@ -124,7 +124,9 @@ grep -rl "$IRL_ACCT" "$OUT" 2>/dev/null | xargs -r sed -i "s/$IRL_ACCT/<ACCOUNT_
 { [ "$esito" = BLOCCO_SPESA ] && echo "# BLOCCO: spesa stimata arrivata al tetto di $TETTO_DOLLARI \$"
   echo "## P1 Irlanda: $esito, $m minuti"; echo "$riga_ip"; echo
   echo "**Adesso: togli $IP/32 dalla lista di accesso di Atlas.**"; echo; cat "$OUT/spesa.txt"; echo '```'; tail -20 "$OUT/passi.log" 2>/dev/null; echo '```'
-  echo "### Parallelo (connessioni) e carico massimo (somma delle copie)"; echo '```'
-  tail -1 "$OUT/parallelo-connessioni.txt" 2>/dev/null; grep -E "^(CARICO|[a-z_0-9]+:|  VERDETTO)" "$OUT/massimo-somma.txt" 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+  echo "### Macchina, parallelo (connessioni) e carico massimo (somma delle copie)"; echo '```'
+  tail -1 "$OUT/validita-macchina.txt" 2>/dev/null; grep -h "NON VALIDA" "$OUT/validita-macchina.txt" 2>/dev/null | head -20
+  for f in "$OUT"/parallelo-connessioni-passo-*.txt; do [ -f "$f" ] && echo "$(basename "$f"): $(tail -1 "$f")"; done
+  grep -hE "^(CARICO|[a-z_0-9]+:|  VERDETTO)" "$OUT"/massimo-somma-passo-*.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 [ "$esito" = BLOCCO_SPESA ] && echo "::warning title=BLOCCO_SPESA::spesa stimata ≥ $TETTO_DOLLARI \$: giro fermato, pulizia partita"
 [ "$esito" = FINITO ]

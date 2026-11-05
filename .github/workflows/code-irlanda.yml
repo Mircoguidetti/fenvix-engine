@@ -1,25 +1,22 @@
-# P1 · giro dall'Irlanda su Atlas M30, versione 2 (2026-11-05): Q2, Q3, Q1, parallelo 10 e 50, carico massimo a piu'
-# copie. Modello: M31 (m31-freddo-s3.yml).
+# P1 · giri dall'Irlanda su Atlas M10 e M30, versione 3 (sessione "analisi Irlanda", 2026-11-05). Modello: M31.
 # Un solo innesco: un push sul branch code-irlanda che aggiunge o cambia irlanda/comando.json. Il campo "modo":
-#   "permessi" = solo controllo dei permessi e del segreto, 0 $ (letture, --dry-run, bucket vuoto creato e cancellato);
-#                se nello stesso commit ci sono anche i due file di stato, anche il loro controllo a secco;
-#   "giro"     = il giro: nello STESSO commit devono esserci anche irlanda/risultati_p1.json e
-#                irlanda/risultati_p1.json.usati.log (copiati dal Mac DOPO il giro M30). Prima di spendere: md5 dello
-#                script, preparazione del file di stato (prepara_stato.py: il giro M30 sotto un'altra chiave, se no il
-#                parallelo salterebbe i livelli 10 e 50), piano a secco con lo script stesso, guardia contro un file
-#                di stato vecchio, permessi e quota di vCPU. Poi una c7i.8xlarge in eu-west-1 fa, con lo script p1-1.6.2
-#                non modificato: Q2, Q3, Q1 (50 clienti attivi mai letti per fase), parallelo 10 e 50 insieme (180
-#                clienti), poi carico_massimo con "copie" copie dello script insieme (file di stato copiati, mai il
-#                vero), e restituisce i due file di stato aggiornati. Facoltativi in comando.json: "tipo"
-#                (c7i.8xlarge di serie, oppure c7i.4xlarge) e "copie" (di serie 20; con c7i.4xlarge 10);
+#   "permessi" = solo controllo dei permessi e del segreto, 0 $; in piu' il controllo a secco del programma, se c'e'
+#                il campo "programma";
+#   "giro"     = il programma irlanda/programmi/NOME/passi.txt ("programma": "NOME"): carica, m10-a, m10-b,
+#                m10-massimo, m30-a, m30-b, m30-massimo. La macchina e il tetto di minuti stanno in
+#                programmi/NOME/macchina.txt. I file di stato stanno in irlanda/stati/ (uno per database) e li passa da
+#                un giro all'altro il workflow stesso: li manda alla macchina, li riprende e li rimette sul branch con
+#                stati/CATENA.txt (md5). Prima di spendere: md5 dello script, CATENA (file di stato non toccati a mano,
+#                nessun giro "IN CORSO" rimasto a meta'), controllo a secco di tutto il programma con lo script stesso
+#                (simula_programma.py: nessun cliente letto due volte, nessun FERMO, nessun livello saltato), permessi e
+#                quota di vCPU. Poi la macchina in eu-west-1 fa il programma con lo script p1-1.6.2 non modificato;
 #   "smonta"   = solo pulizia e verifica.
-#   {"modo": "giro", "forza": true} supera la guardia sul file di stato (solo se il coordinatore dice si').
+#   {"modo": "giro", "programma": "...", "forza": true} supera la guardia "IN CORSO" (solo se il coordinatore dice si').
 # Un commit che non cambia irlanda/comando.json non fa niente su AWS (modo "niente").
-# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (lo stesso di M31: ruolo fenvix-gha-tests, policy
-# fenvix-coldread-test); la macchina usa il ruolo fenvix-coldread-machine (solo bucket fenvix-coldread-*). Stesso tag
-# (project=fenvix-coldread) e stesso gruppo di concorrenza di M31: le due prove non girano mai insieme, cosi' la pulizia
-# di una non tocca la macchina dell'altra. La stringa di connessione sta nel secret DEMO_DB_URI: passa dal runner al
-# bucket privato (oggetto segreto/uri) e la macchina la legge e cancella l'oggetto subito; mai in file, mai nei log.
+# Nessuna chiave: ruolo OIDC dal secret AWS_ROLE_ARN (ruolo fenvix-gha-tests, policy fenvix-coldread-test); la macchina
+# usa il ruolo fenvix-coldread-machine (solo bucket fenvix-coldread-*). Stesso tag (project=fenvix-coldread) e stesso
+# gruppo di concorrenza di M31. La stringa di connessione sta nel secret DEMO_DB_URI: passa dal runner al bucket privato
+# (oggetto segreto/uri) e la macchina la legge e cancella l'oggetto subito; mai in file, mai nei log.
 # Spesa: riga "SPESA" ogni minuto; blocco a 5 $ (regola del fondatore 2026-11-04); pulizia e controllo finale sempre.
 # FRENO D'EMERGENZA: il bottone "Cancel workflow" nella pagina della run (la pulizia gira lo stesso).
 name: code-irlanda
@@ -37,7 +34,7 @@ jobs:
   run:
     if: github.repository == 'Mircoguidetti/fenvix-engine'
     runs-on: ubuntu-24.04
-    timeout-minutes: 175
+    timeout-minutes: 355
     env:
       AWS_PAGER: ""
       AWS_DEFAULT_REGION: eu-west-1
@@ -45,13 +42,13 @@ jobs:
       IRL_ROLE: ${{ secrets.AWS_ROLE_ARN }}
       DEMO_DB_URI: ${{ secrets.DEMO_DB_URI }}
       I: irlanda
-      # TIPO, PREZZO_ORA e COPIE li scrive il primo passo (da comando.json): c7i.8xlarge di serie
+      # TIPO, PREZZO_ORA, PROGRAMMA e i tetti li scrive il primo passo (da programmi/NOME/macchina.txt)
       TETTO_DOLLARI: "5"         # blocco della spesa stimata (fondatore, RULES.md 2026-11-04)
       RUOLO_MACCHINA: fenvix-coldread-machine
       BUCKET: fenvix-coldread-irl-${{ github.run_id }}
       IRL_OUT: /tmp/irl-out
-      TETTO_MACCHINA_MIN: "120"  # la macchina si spegne (= si cancella) da sola dopo 120 minuti
-      TETTO_MIN: "130"           # il runner smette di aspettare dopo 130 minuti
+      # TETTO_MACCHINA_MIN (la macchina si spegne = si cancella da sola) e TETTO_MIN (il runner smette di aspettare)
+      # li scrive il primo passo da programmi/NOME/macchina.txt
       DISCO_GB: "20"
     steps:
       - uses: actions/checkout@v4
@@ -84,29 +81,31 @@ jobs:
           # solo un comando.json aggiunto o cambiato in questo commit puo' far partire qualcosa su AWS
           grep -qx "$I"/comando.json <<<"$cambiati" || modo=niente
           case "$modo" in permessi|giro|smonta) ;; *) modo=niente;; esac
-          # la macchina: c7i.8xlarge (32 vCPU) di serie; c7i.4xlarge (16 vCPU) se la quota di vCPU non basta.
-          # Prezzi on-demand eu-west-1: c7i.xlarge 0,1915 $/h DICHIARATO (come M31); gli altri in proporzione ai vCPU
-          # (STIMATO: nella famiglia c7i il prezzo cresce con i vCPU).
-          tipo=$(jq -r '.tipo // "c7i.8xlarge"' "$I"/comando.json 2>/dev/null || echo c7i.8xlarge)
-          case "$tipo" in
-            c7i.8xlarge) prezzo=1.532; copie_serie=20;;
-            c7i.4xlarge) prezzo=0.766; copie_serie=10;;
-            c7i.2xlarge) prezzo=0.383; copie_serie=5;;  # piano B se la quota di vCPU resta 8 (2026-11-05)
-            *) echo "::error title=Tipo::tipo $tipo non previsto (c7i.8xlarge, c7i.4xlarge o c7i.2xlarge)"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; tipo=c7i.8xlarge; prezzo=1.532; copie_serie=20;;
-          esac
-          copie=$(jq -r ".copie // $copie_serie" "$I"/comando.json 2>/dev/null || echo "$copie_serie")
-          [[ "$copie" =~ ^[0-9]+$ ]] && [ "$copie" -ge 1 ] && [ "$copie" -le 40 ] || { echo "::error title=Copie::copie $copie fuori da 1-40"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; copie=$copie_serie; }
-          { echo "TIPO=$tipo"; echo "PREZZO_ORA=$prezzo"; echo "COPIE=$copie"; } | tee -a "$GITHUB_ENV"
-          stato_nuovo=0
-          if grep -qx "$I"/risultati_p1.json <<<"$cambiati" && grep -qx "$I"/risultati_p1.json.usati.log <<<"$cambiati"; then stato_nuovo=1; fi
-          if [ "$modo" = giro ] && [ "$stato_nuovo" = 0 ]; then
-            echo "::error title=File di stato::per il modo giro, risultati_p1.json e risultati_p1.json.usati.log vanno caricati NELLO STESSO commit di comando.json (copie fresche dal Mac, dopo il giro M30). Niente fatto su AWS."
-            modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"
+          # il programma e la sua macchina (programmi/NOME/macchina.txt: "TIPO MINUTI"). Prezzi on-demand eu-west-1:
+          # c7i.xlarge 0,1915 $/h DICHIARATO (come M31); gli altri in proporzione ai vCPU (STIMATO).
+          prog=$(jq -r '.programma // ""' "$I"/comando.json 2>/dev/null || echo "")
+          tipo=c7i.xlarge; tetto=60
+          if [ -n "$prog" ]; then
+            if [[ "$prog" =~ ^[a-z0-9-]+$ ]] && [ -f "$I/programmi/$prog/passi.txt" ] && [ -f "$I/programmi/$prog/macchina.txt" ]; then
+              read -r tipo tetto < "$I/programmi/$prog/macchina.txt"
+            else
+              echo "::error title=Programma::programma '$prog' non trovato in $I/programmi/"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"
+            fi
+          elif [ "$modo" = giro ]; then
+            echo "::error title=Programma::per il modo giro serve il campo \"programma\""; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"
           fi
+          case "$tipo" in
+            c7i.xlarge) prezzo=0.1915;; c7i.2xlarge) prezzo=0.383;; c7i.4xlarge) prezzo=0.766;; c7i.8xlarge) prezzo=1.532;;
+            *) echo "::error title=Tipo::tipo $tipo non previsto"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; tipo=c7i.xlarge; prezzo=0.1915;;
+          esac
+          [[ "$tetto" =~ ^[0-9]+$ ]] && [ "$tetto" -ge 10 ] && [ "$tetto" -le 330 ] || { echo "::error title=Tetto::tetto $tetto minuti fuori da 10-330"; modo=niente; echo "rifiuto=1" >> "$GITHUB_OUTPUT"; tetto=60; }
+          { echo "PROGRAMMA=$prog"; echo "TETTO_MACCHINA_MIN=$tetto"; echo "TETTO_MIN=$((tetto + 15))"; } | tee -a "$GITHUB_ENV"
+          { echo "TIPO=$tipo"; echo "PREZZO_ORA=$prezzo"; } | tee -a "$GITHUB_ENV"
+          stato_nuovo=0; [ -n "$prog" ] && stato_nuovo=1
           { echo "modo=$modo"; echo "forza=$forza"; echo "stato_nuovo=$stato_nuovo"; } | tee -a "$GITHUB_OUTPUT"
           echo "modo: $modo" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Rifiutato (file di stato mancanti nel commit, o tipo o copie sbagliati)
+      - name: Rifiutato (programma, tipo o tetto sbagliati)
         if: steps.mode.outputs.rifiuto == '1'
         run: exit 1
 
@@ -117,25 +116,41 @@ jobs:
           /usr/bin/python3 -m pip install -q --target /tmp/pacco/vendor --only-binary=:all: --implementation cp \
             --python-version 3.12 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 \
             'pymongo>=4.6,<5' backports.zstd boto3
-          cp "$I"/prova_infinite.py "$I"/esegui.sh "$I"/s3io.py "$I"/attendi_db.py "$I"/opzioni.txt "$I"/massimo.txt \
+          cp "$I"/prova_infinite.py "$I"/esegui.sh "$I"/s3io.py "$I"/attendi_db.py "$I"/programma.py \
             "$I"/cpu_macchina.py "$I"/somma_massimo.py "$I"/controlla_parallelo.py /tmp/pacco/
-          echo "$COPIE" > /tmp/pacco/copie.txt
+          cp "$I/programmi/$PROGRAMMA/passi.txt" /tmp/pacco/passi.txt
+          echo "$PROGRAMMA" > /tmp/pacco/programma.txt
           tar czf /tmp/irlanda.tar.gz -C /tmp/pacco .
           sha256sum /tmp/irlanda.tar.gz | tee -a "$GITHUB_STEP_SUMMARY"
           md5sum /tmp/pacco/prova_infinite.py | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Controllo dei file di stato e piano a secco con lo script (0 $, nessuna connessione)
+      - name: CATENA dei file di stato e controllo a secco di tutto il programma (0 $, nessuna connessione)
         if: steps.mode.outputs.modo == 'giro' || (steps.mode.outputs.modo == 'permessi' && steps.mode.outputs.stato_nuovo == '1')
         env:
           FORZA: ${{ steps.mode.outputs.forza }}
         run: |
-          mkdir -p /tmp/stato && cp "$I"/risultati_p1.json "$I"/risultati_p1.json.usati.log /tmp/stato/
-          # il giro M30 sotto 'giro_finale_prima_di_irlanda' (se no il parallelo salta i livelli 10 e 50)
-          /usr/bin/python3 "$I"/prepara_stato.py /tmp/stato/risultati_p1.json | tee /tmp/controllo-stato.txt
-          grep -q "^OK" /tmp/controllo-stato.txt
-          PYTHONPATH=/tmp/pacco/vendor /usr/bin/python3 "$I"/controlla_stato.py /tmp/stato | tee -a /tmp/controllo-stato.txt
+          set -o pipefail
+          # 1. i file di stato sono quelli lasciati dall'ultimo giro (o messi dalla sessione di analisi): md5 in CATENA
+          ( cd "$I"/stati && grep -v '^IN CORSO' CATENA.txt | md5sum -c --quiet ) | tee /tmp/controllo-stato.txt \
+            || { echo "FERMO: i file di stato non sono quelli di CATENA.txt (toccati a mano?)" | tee -a /tmp/controllo-stato.txt; exit 1; }
+          if grep -q '^IN CORSO' "$I"/stati/CATENA.txt && [ "$FORZA" != 1 ]; then
+            echo "FERMO: $(grep '^IN CORSO' "$I"/stati/CATENA.txt): un giro di prima non ha riportato i file di stato. Senza quei file si rileggerebbero clienti gia' letti. Scrivi al coordinatore." | tee -a /tmp/controllo-stato.txt; exit 1
+          fi
+          # 2. tutto il programma a secco, con lo script vero, su una copia
+          rm -rf /tmp/stato /tmp/stato-sim && mkdir -p /tmp/stato && cp -r "$I"/stati/. /tmp/stato/ && rm -f /tmp/stato/CATENA.txt
+          cp -r /tmp/stato /tmp/stato-sim
+          PYTHONPATH=/tmp/pacco/vendor /usr/bin/python3 "$I"/simula_programma.py /tmp/stato-sim "$PROGRAMMA" | tee -a /tmp/controllo-stato.txt
           grep -q "^STATO: PRONTO" /tmp/controllo-stato.txt
-          { echo '```'; cat /tmp/controllo-stato.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '```'; grep -E "FERMO|^==|^ - |totale|restano|NESSUN|STATO" /tmp/controllo-stato.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: CATENA "IN CORSO" sul branch prima di spendere (se il giro non riporta i file di stato, il prossimo si ferma)
+        if: steps.mode.outputs.modo == 'giro'
+        run: |
+          git config user.name github-actions; git config user.email actions@users.noreply.github.com
+          { grep -v '^IN CORSO' "$I"/stati/CATENA.txt; echo "IN CORSO run ${{ github.run_id }} programma $PROGRAMMA dal $(date -u +%FT%TZ)"; } > /tmp/catena && cp /tmp/catena "$I"/stati/CATENA.txt
+          git add "$I"/stati/CATENA.txt && git commit -qm "P1 Irlanda: $PROGRAMMA IN CORSO (run ${{ github.run_id }})"
+          ok=0; for _ in 1 2 3; do git pull --rebase -q origin code-irlanda && git push -q origin HEAD:code-irlanda && { ok=1; break; }; sleep 5; done
+          [ "$ok" = 1 ] || { echo "FERMO: non riesco a scrivere IN CORSO sul branch: non spendo"; exit 1; }
 
       - name: Credenziali AWS (OIDC, 1 h)
         if: steps.mode.outputs.modo != 'niente'
@@ -201,17 +216,26 @@ jobs:
           ! grep -rq "$IRL_ACCT" "$R" || { echo "account ancora nei risultati: non pubblico"; exit 1; }
           find "$R" -type f -size +90M -print -delete   # oltre il limite di GitHub: restano nell'artifact
           git config user.name github-actions; git config user.email actions@users.noreply.github.com
-          git add "$R" && git commit -qm "P1 Irlanda run ${{ github.run_id }}: risultati e file di stato aggiornati" || true
+          # i file di stato tornati dalla macchina diventano quelli del branch, con la CATENA nuova
+          if [ -d "$IRL_OUT/stati" ] && [ -n "$(ls -A "$IRL_OUT/stati" 2>/dev/null)" ]; then
+            cp -r "$IRL_OUT"/stati/. "$I"/stati/
+            ( cd "$I"/stati && find . -type f ! -name CATENA.txt | sort | xargs md5sum ) > /tmp/catena && cp /tmp/catena "$I"/stati/CATENA.txt
+            git add "$I"/stati
+          elif ! grep -q "parte il programma" "$IRL_OUT/passi.log" 2>/dev/null; then
+            # la macchina non ha mai cominciato il programma: nessun cliente letto, si toglie IN CORSO
+            grep -v '^IN CORSO' "$I"/stati/CATENA.txt > /tmp/catena && cp /tmp/catena "$I"/stati/CATENA.txt; git add "$I"/stati/CATENA.txt
+          else
+            echo "::warning title=File di stato::il programma e' partito ma i file di stato non sono tornati: CATENA resta IN CORSO (il prossimo giro si ferma)"
+          fi
+          git add "$R" && git commit -qm "P1 Irlanda run ${{ github.run_id }} ($PROGRAMMA): risultati e file di stato aggiornati" || true
           for _ in 1 2 3; do git pull --rebase -q origin code-irlanda && git push -q origin HEAD:code-irlanda && break; sleep 5; done
 
-      - name: I due file di stato aggiornati, da riportare sul Mac (artifact irlanda-stato)
+      - name: I file di stato aggiornati (artifact irlanda-stato, copia di riserva di quelli rimessi sul branch)
         if: always() && steps.segreti.outputs.pulito == '1'
         uses: actions/upload-artifact@v4
         with:
           name: irlanda-stato-${{ github.run_id }}
-          path: |
-            /tmp/irl-out/stato/risultati_p1.json
-            /tmp/irl-out/stato/risultati_p1.json.usati.log
+          path: /tmp/irl-out/stati
           if-no-files-found: warn
           retention-days: 7
 
