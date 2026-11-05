@@ -2,26 +2,26 @@
 # in fila, IDENTICI, nello stesso ordine, su una sola macchina c7i.4xlarge (16 vCPU, solo se la quota sale a 16). Un solo commit del fondatore e
 # zero passaggi di mano tra le tre parti. Il carico massimo (10 copie) resta l'ultimo passo.
 # -- parte A (m30-a)
-giro m30s --db app_data_10 --nuova-cartella --giro m30_singoli --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 --dorm-q1 300 --dorm-q1d 300 --dorm-q4 300
+giro m30s --db app_data_4 --nuova-cartella --giro m30_singoli --solo-fasi inizio,Q2,Q3,Q1,Q1d,Q4 --n-q2 300 --n-q3 300 --n-q1 300 --n-q1d 300 --n-q4 300 --dorm-q2 300 --dorm-q3 300 --dorm-q1 300 --dorm-q1d 300 --dorm-q4 300
 giro vecchio --db fenvix_p1 --nuova-cartella --giro m30_vecchi --solo-fasi Q2,Q3,Q1,Q1d,Q4 --n-q2 46 --n-q3 46 --n-q1 46 --n-q1d 46 --n-q4 46 --dorm-q2 4 --dorm-q3 4 --dorm-q1 3 --dorm-q1d 3 --dorm-q4 3
 giro vecchio --db fenvix_p1 --nuova-cartella --giro m30_vecchi_q5 --solo-fasi Q5 --q5-stato consegnato
-giro m30s --db app_data_10 --nuova-cartella --giro m30_q5_nuovo --solo-fasi Q5 --q5-stato nuovo
-giro m30s --db app_data_10 --nuova-cartella --giro m30_q5_pagato --solo-fasi Q5 --q5-stato pagato
-giro m30s --db app_data_10 --nuova-cartella --giro m30_q5_spedito --solo-fasi Q5 --q5-stato spedito
-giro m30s --db app_data_10 --nuova-cartella --giro m30_q5_consegnato --solo-fasi Q5 --q5-stato consegnato
-giro m30s --db app_data_10 --nuova-cartella --giro m30_q5_reso --solo-fasi Q5 --q5-stato reso
-giro m30s --db app_data_10 --nuova-cartella --giro m30_2kb --solo-fasi grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4 --grandi-clienti 1320 --grandi-n-q2 300 --grandi-n-q1 300 --grandi-n-q3 300 --grandi-n-q4 300
+giro m30s --db app_data_4 --nuova-cartella --giro m30_q5_nuovo --solo-fasi Q5 --q5-stato nuovo
+giro m30s --db app_data_4 --nuova-cartella --giro m30_q5_pagato --solo-fasi Q5 --q5-stato pagato
+giro m30s --db app_data_4 --nuova-cartella --giro m30_q5_spedito --solo-fasi Q5 --q5-stato spedito
+giro m30s --db app_data_4 --nuova-cartella --giro m30_q5_consegnato --solo-fasi Q5 --q5-stato consegnato
+giro m30s --db app_data_4 --nuova-cartella --giro m30_q5_reso --solo-fasi Q5 --q5-stato reso
+giro m30s --db app_data_4 --nuova-cartella --giro m30_2kb --solo-fasi grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4 --grandi-clienti 1320 --grandi-n-q2 300 --grandi-n-q1 300 --grandi-n-q3 300 --grandi-n-q4 300
 giro vecchio --db fenvix_p1 --nuova-cartella --giro m30_vecchi_2kb --solo-fasi grandi_lavaggio,grandi_Q2,grandi_Q1,grandi_Q3,grandi_Q4 --grandi-n-q2 88 --grandi-n-q1 88 --grandi-n-q3 88 --grandi-n-q4 88
-giro m30c --db app_data_11 --nuova-cartella --giro m30_spiega --solo-fasi spiega
+giro m30c --db app_data_5 --nuova-cartella --giro m30_spiega --solo-fasi spiega
 # -- parte B (m30-b)
-giro m30c --db app_data_11 --nuova-cartella --giro m30_condizioni --solo-fasi condizioni,mentre_scrivi --n-condizione 300
-dormienti m30c --db app_data_11 --nuova-cartella --giro m30_condizioni_dorm --solo-fasi condizioni,mentre_scrivi --n-condizione 300
-giro m30p --db app_data_12 --nuova-cartella --giro m30_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
-dormienti m30p --db app_data_12 --nuova-cartella --giro m30_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
-giro m30s --db app_data_10 --nuova-cartella --giro m30_scritture --solo-fasi scritture,cancellazione --n-cancella 20
-giro m30s --db app_data_10 --nuova-cartella --giro m30_fine_s --solo-fasi fine
-giro m30c --db app_data_11 --nuova-cartella --giro m30_fine_c --solo-fasi fine
-giro m30p --db app_data_12 --nuova-cartella --giro m30_fine_p --solo-fasi fine
+giro m30c --db app_data_5 --nuova-cartella --giro m30_condizioni --solo-fasi condizioni,mentre_scrivi --n-condizione 300
+dormienti m30c --db app_data_5 --nuova-cartella --giro m30_condizioni_dorm --solo-fasi condizioni,mentre_scrivi --n-condizione 300
+giro m30p --db app_data_6 --nuova-cartella --giro m30_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
+dormienti m30p --db app_data_6 --nuova-cartella --giro m30_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
+giro m30s --db app_data_4 --nuova-cartella --giro m30_scritture --solo-fasi scritture,cancellazione --n-cancella 20
+giro m30s --db app_data_4 --nuova-cartella --giro m30_fine_s --solo-fasi fine
+giro m30c --db app_data_5 --nuova-cartella --giro m30_fine_c --solo-fasi fine
+giro m30p --db app_data_6 --nuova-cartella --giro m30_fine_p --solo-fasi fine
 giro vecchio --db fenvix_p1 --nuova-cartella --giro m30_fine_vecchio --solo-fasi fine
 # -- carico massimo (m30-massimo-16)
-massimo m30s 10 --db app_data_10 --nuova-cartella --solo-fasi carico_massimo
+massimo m30s 10 --db app_data_4 --nuova-cartella --solo-fasi carico_massimo

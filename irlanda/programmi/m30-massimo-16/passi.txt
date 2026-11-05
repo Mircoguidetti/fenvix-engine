@@ -3,4 +3,4 @@
 # insert a lotti w=1 e majority, 64 fili per copia). Quale variante: quella che la quota di vCPU dell'account permette
 # (8 vCPU: m30-massimo; 16: m30-massimo-16; 32: m30-massimo-32). Con meno copie il verdetto puo' essere "COPIE"
 # (il numero e' un minimo per Atlas, non il suo limite).
-massimo m30s 10 --db app_data_10 --nuova-cartella --solo-fasi carico_massimo
+massimo m30s 10 --db app_data_4 --nuova-cartella --solo-fasi carico_massimo

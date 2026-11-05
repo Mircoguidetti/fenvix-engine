@@ -1,11 +1,11 @@
 # Giro M10, parte B. Condizioni (L49 secondario, L50 secondario, L51 majority) e letture mentre si scrive
 # (M1-M4): 300 attivi e 300 dormienti per cella. Parallelo a 10, 50 e 100 insieme: 300 letture per ricerca e livello
 # (attivi Q2, Q3, Q1; dormienti Q2, Q1). Poi scritture (S1-S20 e volume), cancellazione (S21, S22), fine.
-giro m10c --db app_data_8 --nuova-cartella --giro m10_condizioni --solo-fasi condizioni,mentre_scrivi --n-condizione 300
-dormienti m10c --db app_data_8 --nuova-cartella --giro m10_condizioni_dorm --solo-fasi condizioni,mentre_scrivi --n-condizione 300
-giro m10p --db app_data_9 --nuova-cartella --giro m10_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
-dormienti m10p --db app_data_9 --nuova-cartella --giro m10_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
-giro m10s --db app_data_7 --nuova-cartella --giro m10_scritture --solo-fasi scritture,cancellazione --n-cancella 20
-giro m10s --db app_data_7 --nuova-cartella --giro m10_fine_s --solo-fasi fine
-giro m10c --db app_data_8 --nuova-cartella --giro m10_fine_c --solo-fasi fine
-giro m10p --db app_data_9 --nuova-cartella --giro m10_fine_p --solo-fasi fine
+giro m10c --db app_data_2 --nuova-cartella --giro m10_condizioni --solo-fasi condizioni,mentre_scrivi --n-condizione 300
+dormienti m10c --db app_data_2 --nuova-cartella --giro m10_condizioni_dorm --solo-fasi condizioni,mentre_scrivi --n-condizione 300
+giro m10p --db app_data_3 --nuova-cartella --giro m10_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
+dormienti m10p --db app_data_3 --nuova-cartella --giro m10_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
+giro m10s --db app_data_1 --nuova-cartella --giro m10_scritture --solo-fasi scritture,cancellazione --n-cancella 20
+giro m10s --db app_data_1 --nuova-cartella --giro m10_fine_s --solo-fasi fine
+giro m10c --db app_data_2 --nuova-cartella --giro m10_fine_c --solo-fasi fine
+giro m10p --db app_data_3 --nuova-cartella --giro m10_fine_p --solo-fasi fine
