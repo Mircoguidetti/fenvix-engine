@@ -668,9 +668,50 @@ fn visible(d: &Document, o: &FindOpts) -> bool {
     }
 }
 
+/// What the reads of one command examined, for its profiler entry (K1): keys and documents examined and the plan of
+/// its first read, as mongod's `planSummary` writes it. Set around a command by the server (`EXEC_NOTE.scope`).
+#[derive(Clone, Debug, Default)]
+pub struct ExecNote {
+    pub keys: u64,
+    pub docs: u64,
+    pub plan: Option<String>,
+}
+
+tokio::task_local! {
+    pub static EXEC_NOTE: std::cell::RefCell<ExecNote>;
+}
+
+/// mongod's `planSummary` of a plan: `COLLSCAN`, `IDHACK`, `IXSCAN { a: 1, b: -1 }` (an `$or`: its branches, comma separated).
+pub fn plan_summary(plan: &Plan, indexes: &[IndexDef]) -> String {
+    match plan {
+        Plan::Coll { .. } => "COLLSCAN".to_string(),
+        Plan::Id(_) => "IDHACK".to_string(),
+        Plan::Ix(s) => match indexes.get(s.idx) {
+            Some(i) => format!("IXSCAN {}", crate::update::fmt_doc(&i.key_pattern())),
+            None => "IXSCAN".to_string(),
+        },
+        Plan::Or(v) => v.iter().map(|p| plan_summary(p, indexes)).collect::<Vec<_>>().join(", "),
+    }
+}
+
 /// Documents matching `o.filter`, in plan order (sort not applied unless the index provides it). A `$text` condition
 /// needs a text index; the documents of such a query carry their text score in the hidden [`crate::text::SCORE_KEY`] field.
 pub async fn find_docs(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
+    let r = find_docs_any(g, coll, indexes, o).await;
+    if let Ok((_, st, plan)) = &r {
+        let _ = EXEC_NOTE.try_with(|c| {
+            let mut n = c.borrow_mut();
+            n.keys += if matches!(plan, Plan::Coll { .. }) { 0 } else { st.keys as u64 };
+            n.docs += st.docs as u64;
+            if n.plan.is_none() {
+                n.plan = Some(plan_summary(plan, indexes));
+            }
+        });
+    }
+    r
+}
+
+async fn find_docs_any(g: &mut impl Rd, coll: &str, indexes: &[IndexDef], o: &FindOpts<'_>) -> R<(Vec<Document>, Stats, Plan)> {
     crate::js::validate_filter(o.filter)?;
     if let Hint::Index(i) = &o.hint {
         if matches!(indexes.get(*i).map(|x| &x.kind), Some(index::Kind::Wildcard(_))) && !index::wild_hint_ok(indexes, *i, o.filter) {

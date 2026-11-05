@@ -149,6 +149,8 @@ pub struct Diag {
     prof: Mutex<HashMap<String, Prof>>,
     /// slowms and sampleRate are server-wide
     prof_global: Mutex<(i64, f64)>,
+    /// Profile entries waiting to be written, by database, and the databases whose writer task runs.
+    prof_queue: Mutex<(HashMap<String, Vec<Document>>, std::collections::HashSet<String>)>,
     pub filters: Mutex<HashMap<String, Vec<Document>>>,
     log: Mutex<(u64, VecDeque<String>)>,
     rwc: Mutex<Option<Document>>,
@@ -173,6 +175,7 @@ impl Default for Diag {
             top: Default::default(),
             prof: Default::default(),
             prof_global: Mutex::new((100, 1.0)),
+            prof_queue: Default::default(),
             filters: Default::default(),
             log: Default::default(),
             rwc: Default::default(),
@@ -1148,20 +1151,23 @@ impl Server {
         Ok(reply)
     }
 
-    /// After a command ran: write its profile entry when the database profiles.
-    pub(crate) async fn profile_record(&self, db: &str, name: &str, cmd: &Document, r: &R<Document>, micros: i64, conn: i64) {
+    /// After a command ran: its profile entry, when the database profiles (written by [`Server::profile_enqueue`]).
+    /// `io` is what the command read from the object store (requests, bytes, microseconds: `storage.data`), `note` the keys
+    /// and documents its reads examined and the plan of the first one (K1: they were 0 and COLLSCAN).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn profile_record(&self, db: &str, name: &str, cmd: &Document, r: &R<Document>, micros: i64, conn: i64, io: (u64, u64, u64), note: &crate::coll::ExecNote) -> Option<Document> {
         let p = self.diag.prof_of(db);
         if p.level == 0 || db == "admin" && name == "profile" || matches!(name, "profile" | "hello" | "isMaster" | "ismaster" | "ping" | "saslStart" | "saslContinue" | "endSessions") {
-            return;
+            return None;
         }
         let ns_target = cmd.get(name).and_then(|v| v.as_str()).unwrap_or("");
         if ns_target == "system.profile" || (name == "getMore" && cmd.get_str("collection").ok() == Some("system.profile")) {
-            return;
+            return None;
         }
         let millis = micros / 1000;
         let (slowms, sample) = *self.diag.prof_global.lock().unwrap();
         if p.level == 1 && p.filter.is_none() && millis < slowms {
-            return;
+            return None;
         }
         let (op, ns) = op_kind(name, db, cmd);
         let reply = r.as_ref().ok();
@@ -1196,7 +1202,11 @@ impl Server {
             "update" | "delete" => cmd.get_array(if name == "update" { "updates" } else { "deletes" }).ok().and_then(|a| a.first()).and_then(|b| b.as_document()).map(stmt_filter).unwrap_or_default(),
             _ => Document::new(),
         };
-        let plan = if filter.len() == 1 && filter.get("_id").map(|v| !matches!(v, Bson::Document(_))).unwrap_or(false) { "IDHACK" } else { "COLLSCAN" };
+        let plan_guess = if filter.len() == 1 && filter.get("_id").map(|v| !matches!(v, Bson::Document(_))).unwrap_or(false) { "IDHACK" } else { "COLLSCAN" };
+        let plan_s: String = note.plan.clone().unwrap_or_else(|| plan_guess.to_string());
+        let plan = plan_s.as_str();
+        let (keys_x, docs_x) = (note.keys as i64, note.docs as i64);
+        let stage_of = |p: &str| if p.starts_with("IXSCAN") { "FETCH" } else if p == "IDHACK" { "IDHACK" } else { "COLLSCAN" };
         let hash = |salt: &str| format!("{:08X}", md5_hex(format!("{salt}{}", crate::update::fmt_doc(&filter)).as_bytes())[..8].chars().fold(0_u32, |a, c| a.wrapping_mul(31).wrapping_add(c as u32)));
         let exhausted = reply.and_then(|d| d.get_document("cursor").ok()).map(|c| matches!(c.get("id"), Some(Bson::Int64(0)))).unwrap_or(true);
         let locks_r = || Bson::Document(doc! { "FeatureCompatibilityVersion": { "acquireCount": { "r": Bson::Int64(1) } }, "Global": { "acquireCount": { "r": Bson::Int64(1) } } });
@@ -1205,13 +1215,16 @@ impl Server {
         let resp_len = reply.map(|d| d.to_vec().map(|v| v.len()).unwrap_or(0)).unwrap_or(0) as i32;
         let mut e = doc! { "op": op, "ns": ns, "command": command };
         match (op, name) {
-            ("query", _) => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": nreturned, "nBatches": 1, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec(if plan == "IDHACK" { "IDHACK" } else { "COLLSCAN" }, nreturned) }),
+            ("query", _) => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "nBatches": 1, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec(stage_of(plan), nreturned) }),
             ("insert", _) => e.extend(doc! { "ninserted": count("n") as i32, "keysInserted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32 }),
-            ("update", _) => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": count("n"), "nMatched": count("n") as i32, "nModified": count("nModified") as i32, "nUpserted": reply.and_then(|d| d.get_array("upserted").ok()).map(|a| a.len()).unwrap_or(0) as i32, "keysInserted": 0, "keysDeleted": 0, "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("UPDATE", 0) }),
-            ("remove", _) => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": count("n"), "ndeleted": count("n") as i32, "keysDeleted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("DELETE", 0) }),
-            _ if batch_len.is_some() || matches!(name, "count" | "distinct") => e.extend(doc! { "keysExamined": 0_i64, "docsExamined": nreturned, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0) }),
+            ("update", _) => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "nMatched": count("n") as i32, "nModified": count("nModified") as i32, "nUpserted": reply.and_then(|d| d.get_array("upserted").ok()).map(|a| a.len()).unwrap_or(0) as i32, "keysInserted": 0, "keysDeleted": 0, "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("UPDATE", 0) }),
+            ("remove", _) => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "ndeleted": count("n") as i32, "keysDeleted": Bson::Int64(count("n") * 2), "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0), "execStats": exec("DELETE", 0) }),
+            _ if batch_len.is_some() || matches!(name, "count" | "distinct") => e.extend(doc! { "keysExamined": keys_x, "docsExamined": docs_x, "cursorExhausted": exhausted, "numYield": 0, "nreturned": nreturned as i32, "queryHash": hash("q"), "planCacheKey": hash("p"), "queryFramework": "classic", "locks": locks_r(), "flowControl": {}, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32, "planSummary": plan, "planningTimeMicros": Bson::Int64(0) }),
             _ => e.extend(doc! { "numYield": 0, "locks": locks_w(), "flowControl": { "acquireCount": Bson::Int64(1) }, "responseLength": resp_len, "protocol": "op_msg", "cpuNanos": Bson::Int64(micros * 1000), "millis": millis as i32 }),
         }
+        // what the operation read from the object store (S3): mongod's bytes and time read from disk into its cache
+        e.insert("storage", doc! { "data": { "bytesRead": Bson::Int64(io.1 as i64), "timeReadingMicros": Bson::Int64(io.2 as i64) } });
+        e.insert("fenvixS3Gets", Bson::Int64(io.0 as i64));
         e.insert("ts", Bson::DateTime(bson::DateTime::now()));
         e.insert("client", client);
         e.insert("allUsers", Vec::<Bson>::new());
@@ -1226,21 +1239,63 @@ impl Server {
             let mut probe = e.clone();
             probe.insert("millis", millis as i32);
             if !crate::query::matches(&probe, f).unwrap_or(false) {
-                return;
+                return None;
             }
         } else if sample < 1.0 && rand::random::<f64>() >= sample {
-            return;
+            return None;
         }
-        let _ = self.write_profile(db, e).await;
+        Some(e)
     }
 
-    async fn write_profile(&self, db: &str, entry: Document) -> R<()> {
+    /// Queue a profile entry; a task of its own writes the queue of the database (in order, in batches), after the
+    /// replies (K1: the write was part of every profiled operation, an S3 write before the reply).
+    pub(crate) fn profile_enqueue(self: &Arc<Self>, db: &str, entry: Document) {
+        let start = {
+            let mut q = self.diag.prof_queue.lock().unwrap();
+            q.0.entry(db.to_string()).or_default().push(entry);
+            q.1.insert(db.to_string())
+        };
+        if start {
+            let me = Arc::clone(self);
+            let db = db.to_string();
+            tokio::spawn(async move { me.profile_drain(&db).await });
+        }
+    }
+
+    async fn profile_drain(&self, db: &str) {
+        loop {
+            let batch = {
+                let mut q = self.diag.prof_queue.lock().unwrap();
+                match q.0.remove(db) {
+                    Some(v) if !v.is_empty() => v,
+                    _ => {
+                        q.1.remove(db);
+                        return;
+                    }
+                }
+            };
+            if let Err(e) = self.write_profile(db, batch).await {
+                eprintln!("profiler: entries of {db} not written: {}", e.msg);
+            }
+        }
+    }
+
+    /// Wait until the profile entries queued for `db` are written (a reader of `system.profile` sees them all).
+    pub(crate) async fn profile_flush(&self, db: &str) {
+        let t0 = Instant::now();
+        while self.diag.prof_queue.lock().unwrap().1.contains(db) && t0.elapsed() < std::time::Duration::from_secs(30) {
+            tokio::time::sleep(std::time::Duration::from_millis(2)).await;
+        }
+    }
+
+    async fn write_profile(&self, db: &str, entries: Vec<Document>) -> R<()> {
         let names = self.dbs.lock(db).await.collections().await?;
         if !names.iter().any(|n| n == "system.profile") {
             self.create(db, &doc! { "create": "system.profile", "capped": true, "size": 1048576 }).await?;
         }
         let mut none = None;
-        self.insert(db, &doc! { "insert": "system.profile", "documents": [entry] }, &mut none).await?;
+        let docs: Vec<Bson> = entries.into_iter().map(Bson::Document).collect();
+        self.insert(db, &doc! { "insert": "system.profile", "documents": docs }, &mut none).await?;
         Ok(())
     }
 
@@ -1531,6 +1586,11 @@ impl Server {
 fn sha_empty() -> Vec<u8> {
     use sha2::{Digest, Sha256};
     Sha256::digest(b"").to_vec()
+}
+
+/// A command that reads `system.profile` (it waits for the queued profile entries first).
+pub(crate) fn reads_profile(name: &str, cmd: &Document) -> bool {
+    matches!(name, "find" | "aggregate" | "count" | "distinct") && cmd.get_str(name).ok() == Some("system.profile")
 }
 
 fn op_kind(name: &str, db: &str, cmd: &Document) -> (&'static str, String) {
