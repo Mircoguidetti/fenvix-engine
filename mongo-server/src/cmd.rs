@@ -761,6 +761,8 @@ impl Server {
         if capped.is_some() {
             ops.push(Op::Put(crate::capped::stat_key(coll), doc! { "docs": 0_i64, "bytes": 0_i64 }.to_vec()?));
         }
+        // a new collection: its storage counters start from zero (collstat.rs)
+        ops.push(crate::collstat::CollStat::default().op(coll));
         g.apply(ops).await?;
         let uuid = g.collection_uuid(coll).await?;
         drop(g);

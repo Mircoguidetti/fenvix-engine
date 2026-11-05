@@ -31,6 +31,7 @@ mod cmd_changes;
 mod collation;
 mod collmod_index;
 mod collopts;
+mod collstat;
 mod coll;
 mod cmd_data;
 mod cmd_index;

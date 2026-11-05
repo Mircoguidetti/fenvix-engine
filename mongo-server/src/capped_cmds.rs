@@ -158,6 +158,8 @@ impl Server {
         ops.extend(w.final_ops()?);
         ops.push(Op::Put(crate::collopts::meta_key(coll), new.to_vec()?));
         ops.push(Op::Put(crate::capped::stat_key(coll), doc! { "docs": n, "bytes": bytes }.to_vec()?));
+        // rewritten here without its storage counters: counted again when asked (collstat.rs)
+        ops.push(Op::Delete(crate::collstat::key(coll)));
         g.apply(ops).await?;
         g.forget_coll_opts(coll);
         Ok(ok())
@@ -203,7 +205,8 @@ impl Server {
             w.put(&mut g, &to, &ns, &mut [], &d, None).await?;
         }
         crate::capped::enforce(&mut g, db, &mut w, &[], &to).await?;
-        let mut ops = vec![Entry::collections_op(&names)?, Op::Put(crate::collopts::meta_key(&to), raw.to_vec()?)];
+        let mut ops = vec![Entry::collections_op(&names)?, Op::Put(crate::collopts::meta_key(&to), raw.to_vec()?), Op::Delete(crate::collstat::key(&to))];
+        w.stat.clear();
         ops.extend(w.final_ops()?);
         g.apply(ops).await?;
         Ok(ok())

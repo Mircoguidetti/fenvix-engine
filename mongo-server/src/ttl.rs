@@ -98,7 +98,8 @@ pub async fn sweep_coll(g: &mut Entry, coll: &str, now_ms: i64, max_passes: usiz
                     n += 1;
                 }
             }
-            let ops = std::mem::take(&mut w.ops);
+            let mut ops = std::mem::take(&mut w.ops);
+            ops.extend(crate::collstat::ops_for(g, &mut w.stat).await?);
             let events = std::mem::take(&mut w.events);
             g.apply(ops).await?;
             g.changes.publish(events);

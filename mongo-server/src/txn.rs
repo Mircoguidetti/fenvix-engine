@@ -346,7 +346,11 @@ impl Server {
         } else if conflict {
             Err(MongoError::write_conflict())
         } else {
-            match txn.w.final_ops() {
+            let stat_ops = crate::collstat::ops_for(&mut g, &mut txn.w.stat).await;
+            match stat_ops.map_err(MongoError::from).and_then(|st| txn.w.final_ops().map(|mut o| {
+                o.extend(st);
+                o
+            })) {
                 Ok(mut ops) => {
                     if writes {
                         ops.push(crate::retry::txn_outcome_op(&tc.lsid, txn.number));

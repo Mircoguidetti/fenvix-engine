@@ -165,6 +165,9 @@ pub struct Entry {
     pub(crate) nat: HashMap<String, (u64, u64)>,
     /// Collection options (default collation) by collection; cleared with `nat`.
     pub(crate) copts: HashMap<String, Option<Arc<crate::collopts::CollOpts>>>,
+    /// Storage counters of the collections (`collstat.rs`), by stored key, as the latest state has them (`None`: none
+    /// stored); follows every write of the keys (`apply_mode`); cleared with `copts`.
+    pub(crate) sstat: HashMap<Vec<u8>, Option<crate::collstat::CollStat>>,
     /// Stored metadata values of the open tenant (see [`META_CACHE`]); cleared with `copts`.
     meta: Mutex<MetaCache>,
 }
@@ -246,6 +249,7 @@ impl Dbs {
                     inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    sstat: HashMap::new(),
                     meta: Default::default(),
                 }))
             })
@@ -322,6 +326,7 @@ impl Dbs {
                         inflight: self.inflight_counter(name),
                     nat: HashMap::new(),
                     copts: HashMap::new(),
+                    sstat: HashMap::new(),
                     meta: Default::default(),
                     }))
                 })
@@ -549,6 +554,7 @@ impl Entry {
     pub async fn abandon(&mut self) -> bool {
         self.nat.clear();
         self.copts.clear();
+        self.sstat.clear();
         self.meta_clear();
         if let Some(l) = crate::locallog::get() {
             // Ownership is lost: what was not uploaded can no longer be (another process owns the database). A restart must
@@ -609,6 +615,7 @@ impl Entry {
                 }
                 self.nat.clear();
         self.copts.clear();
+        self.sstat.clear();
         self.meta_clear();
                 self.tenant = Some(t);
                 self.wakes += 1;
@@ -635,6 +642,7 @@ impl Entry {
         let had = self.tenant.is_some();
         self.nat.clear();
         self.copts.clear();
+        self.sstat.clear();
         self.meta_clear();
         if let Some(t) = self.tenant.take() {
             crate::fair::note_written(&self.name, 0, true);
@@ -743,6 +751,7 @@ impl Entry {
             lease::log("acquired", &self.name, &self.leases.holder, "takeover_from=- new=true");
             self.nat.clear();
         self.copts.clear();
+        self.sstat.clear();
         self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;
@@ -761,12 +770,26 @@ impl Entry {
                 }
             }
         }
-        if ops.iter().any(|o| match o { Op::Put(k, _) | Op::Delete(k) => k.starts_with(b"meta/") }) {
+        if ops.iter().any(|o| match o { Op::Put(k, _) | Op::Delete(k) => is_meta_key(k) }) {
             // the metadata cache must not answer with the value this batch replaces (see `META_CACHE`)
             self.meta_clear();
         }
         crate::fair::note_written(&self.name, ops.iter().map(|o| match o { Op::Put(k, v) => k.len() + v.len(), Op::Delete(k) => k.len() } as u64).sum(), false);
+        let sstat_ops: Vec<(Vec<u8>, Option<crate::collstat::CollStat>)> = ops
+            .iter()
+            .filter_map(|o| match o {
+                Op::Put(k, v) if k.starts_with(crate::collstat::PREFIX) => Some((k.clone(), crate::collstat::CollStat::from_bytes(v))),
+                Op::Delete(k) if k.starts_with(crate::collstat::PREFIX) => Some((k.clone(), None)),
+                _ => None,
+            })
+            .collect();
         let staged = self.tenant.as_mut().unwrap().stage(ops).await;
+        if staged.is_ok() {
+            // the counters in memory follow the latest state (`collstat.rs`)
+            self.sstat.extend(sstat_ops);
+        } else {
+            self.sstat.clear();
+        }
         self.sync_gauges();
         tenant_bench::lifecycle::note_write(&self.name);
         if let Some(t) = self.tenant.as_ref() {
@@ -810,6 +833,7 @@ impl Entry {
         }
         self.nat.clear();
         self.copts.clear();
+        self.sstat.clear();
         self.meta_clear();
         if let Some(t) = self.tenant.take() {
             t.close().await?;
@@ -958,6 +982,19 @@ impl Entry {
     }
 
     /// The default collation of a collection whose options were loaded by [`Entry::coll_opts`] (none otherwise).
+    /// The stored storage counters of a collection (`collstat.rs`), latest state: from memory after the first read.
+    pub async fn sstat(&mut self, coll: &str) -> Result<Option<crate::collstat::CollStat>> {
+        let k = crate::collstat::key(coll);
+        if let Some(v) = self.sstat.get(&k) {
+            return Ok(v.clone());
+        }
+        let v = self.get_live(&k).await?.and_then(|b| crate::collstat::CollStat::from_bytes(&b));
+        if self.tenant.is_some() {
+            self.sstat.insert(k, v.clone());
+        }
+        Ok(v)
+    }
+
     pub fn collation_of(&self, coll: &str) -> Option<Arc<crate::collation::Collation>> {
         self.copts.get(coll).and_then(|o| o.as_ref()).and_then(|o| o.collation.clone())
     }
@@ -1079,6 +1116,7 @@ impl Entry {
             self.leases.acquire(&self.name).await?;
             self.nat.clear();
         self.copts.clear();
+        self.sstat.clear();
         self.meta_clear();
             self.tenant = Some(self.lc.create(&self.name).await?);
             self.absent = false;

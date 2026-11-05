@@ -1286,6 +1286,8 @@ pub struct Writes {
     pub extra: Vec<Op>,
     /// Capped collections: how this write set moves the (document count, byte count) of each.
     pub cap_delta: HashMap<String, (i64, i64)>,
+    /// How this write set moves the storage counters of each collection it writes (`collstat.rs`).
+    pub stat: HashMap<String, crate::collstat::Delta>,
     /// A document is being dropped by the cap, not by a user: no counts, no change event.
     quiet: bool,
     /// `bypassDocumentValidation` of the command that writes.
@@ -1294,7 +1296,7 @@ pub struct Writes {
 
 impl Writes {
     pub fn new() -> Self {
-        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), quiet: false, bypass_validation: false }
+        Writes { ops: Vec::new(), ov: HashMap::new(), claims: HashMap::new(), released: HashSet::new(), indexes_dirty: false, meta: HashMap::new(), names: None, snap_seq: None, txn_id: None, events: Vec::new(), pending_update: None, seqs: HashMap::new(), extra: Vec::new(), cap_delta: HashMap::new(), stat: HashMap::new(), quiet: false, bypass_validation: false }
     }
 
     /// The collection validator on a document that is written: `old` is what an update started from.
@@ -1476,9 +1478,26 @@ impl Writes {
             },
         };
         // Commit to the write set.
+        let entry_val_len = crate::natural::entry_value(seq).len() as i64;
+        let st = self.stat.entry(coll.to_string()).or_default();
+        match old {
+            None => {
+                st.docs += 1;
+                st.bytes += bytes.len() as i64;
+                st.id_bytes += id_enc.len() as i64;
+            }
+            Some(o) => st.bytes += bytes.len() as i64 - o.to_vec()?.len() as i64,
+        }
         for (i, add, rem, mk) in plans {
             let idx = &mut indexes[i];
             let prefix = idx.prefix(coll);
+            let st = self.stat.entry(coll.to_string()).or_default();
+            for c in &rem {
+                st.index(&idx.name, -((entry_key(&prefix, c, &id_enc).len() as i64) + entry_val_len));
+            }
+            for c in &add {
+                st.index(&idx.name, entry_key(&prefix, c, &id_enc).len() as i64 + entry_val_len);
+            }
             for c in rem {
                 self.ops.push(Op::Delete(entry_key(&prefix, &c, &id_enc)));
                 self.claims.remove(&(i, c.clone()));
@@ -1548,27 +1567,38 @@ impl Writes {
         }
         self.check_conflict(g, &doc_key(coll, &id))?;
         let id_enc = encode_sortable(&id);
+        let k = doc_key(coll, &id);
+        let seq = match self.seqs.get(&k) {
+            Some(s) => Some(*s),
+            None => crate::natural::stored_seq(g, &k).await?,
+        };
+        let entry_val_len = crate::natural::entry_value(seq).len() as i64;
+        let mut st = crate::collstat::Delta { docs: -1, bytes: -(old.to_vec()?.len() as i64), id_bytes: -(id_enc.len() as i64), ..Default::default() };
         for (i, idx) in indexes.iter().enumerate() {
             if !idx.has_entries() || idx.state == State::Dropping {
                 continue;
             }
             let prefix = idx.prefix(coll);
             for c in idx.entries(old)?.0.into_keys() {
+                st.index(&idx.name, -((entry_key(&prefix, &c, &id_enc).len() as i64) + entry_val_len));
                 self.ops.push(Op::Delete(entry_key(&prefix, &c, &id_enc)));
                 self.claims.remove(&(i, c.clone()));
                 self.released.insert((i, c, id_enc.clone()));
             }
         }
-        let k = doc_key(coll, &id);
         if let (Some(c), true) = (g.collation_of(coll), crate::collopts::has_string(&id)) {
             let ck = crate::collopts::idc_key(coll, &c, &id);
             self.ops.push(Op::Delete(ck.clone()));
             self.ov.insert(ck, None);
         }
-        let seq = match self.seqs.remove(&k) {
-            Some(s) => Some(s),
-            None => crate::natural::stored_seq(g, &k).await?,
-        };
+        self.seqs.remove(&k);
+        let e = self.stat.entry(coll.to_string()).or_default();
+        e.docs += st.docs;
+        e.bytes += st.bytes;
+        e.id_bytes += st.id_bytes;
+        for (n, b) in st.idx {
+            e.index(&n, b);
+        }
         if let Some(s) = seq {
             self.ops.push(Op::Delete(crate::natural::key(coll, s)));
         }

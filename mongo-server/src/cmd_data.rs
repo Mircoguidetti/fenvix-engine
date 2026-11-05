@@ -45,6 +45,18 @@ impl Server {
         Ok(docs)
     }
 
+    /// Like [`Server::matching`], stopping after the first `want` matches (in plan order) when `want` is given.
+    pub(crate) async fn matching_upto(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str, filter: &Document, hint: Option<&Bson>, ov: Option<&crate::coll::Overlay>, want: Option<usize>) -> R<Vec<Document>> {
+        let indexes = self.load_indexes(g, db, coll).await?;
+        let hint = resolve_hint(&indexes, hint)?;
+        let specs = index::ttl_specs(&indexes);
+        let (mut docs, _, _) = find_docs(g, coll, &indexes, &FindOpts { filter, sort: &[], want, hint, ttl: ttl_ctx(&specs), ov }).await?;
+        if let Some(w) = want {
+            docs.truncate(w);
+        }
+        Ok(docs)
+    }
+
     /// Every visible document of a collection (TTL-expired ones hidden).
     pub(crate) async fn scan_visible(&self, g: &mut impl crate::coll::Rd, db: &str, coll: &str) -> R<Vec<Document>> {
         self.matching(g, db, coll, &Document::new(), None, None).await
@@ -199,13 +211,15 @@ impl Server {
         let filter = cmd.get_document("query").cloned().unwrap_or_default();
         let skip = int_arg(cmd.get("skip")).unwrap_or(0).max(0) as usize;
         let limit = int_arg(cmd.get("limit")).unwrap_or(0).unsigned_abs() as usize;
+        // with a limit, the scan stops once skip + limit documents matched (it used to read every match first)
+        let want = (limit > 0).then(|| limit.saturating_add(skip));
         let n = if tx.is_none() {
             let mut g = self.dbs.read(db).await?;
-            self.matching(&mut g, db, coll, &filter, cmd.get("hint"), None).await?.len()
+            self.matching_upto(&mut g, db, coll, &filter, cmd.get("hint"), None, want).await?.len()
         } else {
             let mut g = self.dbs.lock(db).await;
             attach(&mut g, tx);
-            self.matching(&mut *g, db, coll, &filter, cmd.get("hint"), tx_ov(tx)).await?.len()
+            self.matching_upto(&mut *g, db, coll, &filter, cmd.get("hint"), tx_ov(tx), want).await?.len()
         };
         let mut n = n.saturating_sub(skip);
         if limit > 0 {
@@ -409,8 +423,8 @@ impl Server {
             d.insert("storageStats", st);
         }
         if spec.contains_key("count") {
-            let n = self.storage_stats(g, db, coll).await?.get_i32("count").unwrap_or(0);
-            d.insert("count", n);
+            let n = self.coll_counters(g, coll).await?.docs;
+            d.insert("count", crate::capped::n32(n));
         }
         Ok(vec![d])
     }
@@ -603,7 +617,9 @@ impl Server {
         if coll == "system.views" {
             events.clear();
         }
-        let ops = w.final_ops()?;
+        let stat_ops = crate::collstat::ops_for(g, &mut w.stat).await?;
+        let mut ops = w.final_ops()?;
+        ops.extend(stat_ops);
         g.apply(ops).await?;
         if created {
             // a collection made by a write: its `create` event comes first
