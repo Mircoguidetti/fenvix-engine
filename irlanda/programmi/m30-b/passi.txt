@@ -1,12 +1,12 @@
 # Giro M30, parte B. Condizioni (L49 secondario, L50 secondario, L51 majority) e letture mentre si scrive
 # (M1-M4): 300 attivi e 300 dormienti per cella. Parallelo a 10, 50 e 100 insieme: 300 letture per ricerca e livello
 # (attivi Q2, Q3, Q1; dormienti Q2, Q1). Poi scritture (S1-S20 e volume), cancellazione (S21, S22), fine.
-giro m30c --db app_data_5 --nuova-cartella --giro m30_condizioni --solo-fasi condizioni,mentre_scrivi --n-condizione 300
-dormienti m30c --db app_data_5 --nuova-cartella --giro m30_condizioni_dorm --solo-fasi condizioni,mentre_scrivi --n-condizione 300
-giro m30p --db app_data_6 --nuova-cartella --giro m30_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
-dormienti m30p --db app_data_6 --nuova-cartella --giro m30_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
-giro m30s --db app_data_4 --nuova-cartella --giro m30_scritture --solo-fasi scritture,cancellazione --n-cancella 20
-giro m30s --db app_data_4 --nuova-cartella --giro m30_fine_s --solo-fasi fine
-giro m30c --db app_data_5 --nuova-cartella --giro m30_fine_c --solo-fasi fine
-giro m30p --db app_data_6 --nuova-cartella --giro m30_fine_p --solo-fasi fine
+giro m30c --db app_data_11 --nuova-cartella --giro m30_condizioni --solo-fasi condizioni,mentre_scrivi --n-condizione 300
+dormienti m30c --db app_data_11 --nuova-cartella --giro m30_condizioni_dorm --solo-fasi condizioni,mentre_scrivi --n-condizione 300
+giro m30p --db app_data_12 --nuova-cartella --giro m30_parallelo --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q3,Q1
+dormienti m30p --db app_data_12 --nuova-cartella --giro m30_parallelo_dorm --solo-fasi parallelo --livelli 10,50,100 --par-lotti 30,6,3 --par-query Q2,Q1
+giro m30s --db app_data_10 --nuova-cartella --giro m30_scritture --solo-fasi scritture,cancellazione --n-cancella 20
+giro m30s --db app_data_10 --nuova-cartella --giro m30_fine_s --solo-fasi fine
+giro m30c --db app_data_11 --nuova-cartella --giro m30_fine_c --solo-fasi fine
+giro m30p --db app_data_12 --nuova-cartella --giro m30_fine_p --solo-fasi fine
 giro vecchio --db fenvix_p1 --nuova-cartella --giro m30_fine_vecchio --solo-fasi fine
