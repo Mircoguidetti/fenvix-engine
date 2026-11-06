@@ -29,6 +29,9 @@ async function langgraphJs() {
   const { AIMessage, HumanMessage } = await import('@langchain/core/messages');
   const client = new MongoClient(URI);
   const saver = new MongoDBSaver({ client, dbName: 'e2e_langgraph_js' });
+  // the JS package creates its indexes only here (the Python one in its constructor); see results/ours-noindex/NOTE.md
+  const setupErrors = await saver.setup();
+  if (setupErrors.length) throw setupErrors[0];
   const graph = new StateGraph(MessagesAnnotation)
     .addNode('agent', async (state, config) => {
       const { thread_id: u, turn: t } = config.configurable;
