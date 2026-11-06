@@ -1563,6 +1563,11 @@ impl Writes {
         }
         self.ops.push(Op::Put(k.clone(), bytes));
         self.ov.insert(k, Some(new.clone()));
+        if crate::e1::skip_change_log() {
+            // E1 study, measurement only (`E1_UNSAFE_SKIP_CHANGE_LOG=1`): no change event, to measure the CPU cost of
+            // building and keeping one (change streams then miss these writes).
+            return Ok(());
+        }
         let db = ns.split('.').next().unwrap_or("").to_string();
         let images = g.images_of(coll);
         let mut spec = match (old, self.pending_update.take()) {

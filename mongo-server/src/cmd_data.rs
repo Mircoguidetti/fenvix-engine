@@ -698,7 +698,8 @@ impl Server {
                 if ordered { break } else { continue }
             }
             // An expired-but-not-yet-removed document still holds its _id and its unique keys.
-            if w.exists(&mut g, coll, &id).await? {
+            // (E1 study, measurement only: `E1_UNSAFE_SKIP_ID_CHECK=1` skips this check to measure its CPU cost.)
+            if !crate::e1::skip_id_check() && w.exists(&mut g, coll, &id).await? {
                 let mut e = MongoError::duplicate_key_c(&ns, "_id_", &doc! { "_id": 1 }, &doc! { "_id": id.clone() }, g.collation_of(coll).as_deref());
                 if kind.as_ref().map(|k| k.clustered.is_some()).unwrap_or(false) {
                     // (a clustered collection has no _id index to name)
